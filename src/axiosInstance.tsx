@@ -1,13 +1,12 @@
 import axios from 'axios';
 
 const api = axios.create({
-  baseURL: 'http://localhost:5000/api/v1', // Replace with your API base URL
+  baseURL: 'https://uat.gatewayabroadeducations.com/api/v1',
   headers: {
     'Content-Type': 'application/json',
   },
 });
 
-// Add request interceptor for authorization if needed
 api.interceptors.request.use(
   (config) => {
     const token = localStorage.getItem('accessToken');
@@ -21,7 +20,6 @@ api.interceptors.request.use(
   }
 );
 
-// Add response interceptor to handle errors
 api.interceptors.response.use(
   (response) => response,
   (error) => {

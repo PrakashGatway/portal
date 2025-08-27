@@ -9,7 +9,7 @@ export const ProtectedRoute = ({ roles }: any) => {
   if (loading) return <FullScreenLoader />;
 
   if (!user) {
-    // window.location.href = "https://www.gatewayabroadeducations.com";
+    window.location.href = "https://www.gatewayabroadeducations.com";
     return null
   }
 

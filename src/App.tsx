@@ -14,7 +14,6 @@ import CreateQuery from "./pages/OtherPage/Queries";
 import QueryDetail from "./pages/OtherPage/QueryDetail";
 import QueryList from "./pages/OtherPage/QueriesList";
 import PagesManagement from "./pages/Website/Pages";
-import ApiSwitchManagement from "./pages/Website/Entities";
 import EntityManagement from "./pages/Website/Entities";
 import ComingSoon from "./pages/OtherPage/ComingSoon";
 

@@ -25,14 +25,11 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     const initializeAuth = async () => {
       try {
         const accessToken = localStorage.getItem('accessToken') || sessionStorage.getItem('accessToken');
-        
-        if (accessToken) {
-          setToken(accessToken);
-          api.defaults.headers.common['Authorization'] = `Bearer ${accessToken}`;
-          await fetchUserProfile();
-        }
+
+        setToken(accessToken);
+        api.defaults.headers.common['Authorization'] = `Bearer ${accessToken}`;
+        await fetchUserProfile();
       } catch (err) {
-        console.error('Auth initialization error:', err);
         logout();
       } finally {
         setLoading(false);
@@ -47,9 +44,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       setLoading(true);
       const response = await api.get('/auth/me'); // Adjust endpoint as needed
       setUser(response.data?.data);
-      console.log(response.data)
     } catch (err) {
-      console.error('Failed to fetch user profile:', err);
       logout();
       throw err;
     } finally {
@@ -57,16 +52,17 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     }
   };
 
-  const logout = () => {
+  const logout = async () => {
     // localStorage.removeItem('accessToken');
     // localStorage.removeItem('refreshToken');
     // sessionStorage.removeItem('accessToken');
     // sessionStorage.removeItem('refreshToken');
-    
+    await api.get("auth/logout");
     setUser(null);
     setToken(null);
     delete api.defaults.headers.common['Authorization'];
-    // navigate('/signin');
+    window.location.href = "https://www.gatewayabroadeducations.com";
+
   };
 
   const value = {
