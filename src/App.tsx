@@ -16,6 +16,7 @@ import QueryList from "./pages/OtherPage/QueriesList";
 import PagesManagement from "./pages/Website/Pages";
 import ApiSwitchManagement from "./pages/Website/Entities";
 import EntityManagement from "./pages/Website/Entities";
+import ComingSoon from "./pages/OtherPage/ComingSoon";
 
 // Define roles
 export const ROLES = {
@@ -41,6 +42,7 @@ export default function App() {
             <Route element={<AppLayout />}>
               <Route index path="/" element={<Home />} />
               <Route path="/profile" element={<UserProfiles />} />
+              <Route path="/coming" element={<ComingSoon />} />
 
               <Route path="/query" element={<CreateQuery />} />
               <Route path="/queries" element={<QueryList />} />
@@ -50,17 +52,17 @@ export default function App() {
                 <Route path="/packages" element={<CommissionPackages />} />
                 <Route path="/users" element={<UserListPage />} />
               </Route>
-              <Route element={<ProtectedRoute roles={[ROLES.EDITOR,ROLES.ADMIN]} />}>
+
+              <Route path="*" element={<ComingSoon />} />
+
+              <Route element={<ProtectedRoute roles={[ROLES.EDITOR, ROLES.ADMIN]} />}>
                 <Route path="/pages" element={<PagesManagement />} />
                 <Route path="/entities" element={<EntityManagement />} />
-
               </Route>
-
             </Route>
           </Route>
 
           <Route path="/unauthorized" element={<NotFound />} />
-          <Route path="*" element={<NotFound />} />
         </Routes>
       </AuthProvider>
     </Router>

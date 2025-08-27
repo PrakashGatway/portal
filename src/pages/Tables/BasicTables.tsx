@@ -7,8 +7,8 @@ export default function BasicTables() {
   return (
     <>
       <PageMeta
-        title="React.js Basic Tables Dashboard | JupiterPay - Next.js Admin Dashboard Template"
-        description="This is React.js Basic Tables Dashboard page for JupiterPay - React.js Tailwind CSS Admin Dashboard Template"
+        title="React.js Basic Tables Dashboard | Gateway Abroad  - Next.js Admin Dashboard Template"
+        description="This is React.js Basic Tables Dashboard page for Gateway Abroad  - React.js Tailwind CSS Admin Dashboard Template"
       />
       <PageBreadcrumb pageTitle="Basic Tables" />
       <div className="space-y-6">

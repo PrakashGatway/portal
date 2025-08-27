@@ -164,7 +164,7 @@ const EducationAnalytics = () => {
   };
 
   return (
-    <div className="max-w-full px-4 sm:px-6 lg:px-8">
+    <div className="max-w-full px-4 sm:px-3 lg:px-3">
       <PageMeta
         title="Learning Analytics Dashboard"
         description="Comprehensive view of your learning progress and activities"

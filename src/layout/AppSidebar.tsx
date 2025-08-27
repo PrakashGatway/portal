@@ -39,10 +39,21 @@ const navItems: NavItem[] = [
     path: "/users",
   },
   {
+    icon: <TableIcon />,
+    name: "Courses",
+    subItems: [
+      { name: "Add Course", path: "/add-course", icon: <TableIcon />, },
+      { name: "Categories", path: "/categories", icon: <TableIcon />, },
+      { name: "Course list", path: "/courses", icon: <TableIcon />, },
+      { name: "Modules", path: "/modules", icon: <TableIcon />, }
+    ]
+  },
+  {
     icon: <BoxIcon />,
     name: "Batch Management",
     path: "/packages",
   },
+
   {
     icon: <TableIcon />,
     name: "Web Management",
@@ -64,10 +75,31 @@ const navItemsUser: NavItem[] = [
     path: "/",
   },
   {
-    icon: <PlugInIcon />,
-    name: "Transations Reports",
-    path: "/chargeback",
+    name: "Refer & Earn",
+    path: "/refer-and-earn",
+    icon: <PieChartIcon />
   },
+  {
+    name: "Mock Tests",
+    path: "/mock",
+    icon: <PieChartIcon />
+  },
+  {
+    name: "Practice Tests",
+    path: "/tests",
+    icon: <PieChartIcon />
+  },
+  {
+    name: "My Courses",
+    path: "/my-courses",
+    icon: <TableIcon />
+  },
+  {
+    icon: <LockIcon />,
+    name: "Study material",
+    path: "/study-material"
+  },
+
 ];
 
 const othersItems: NavItem[] = [
@@ -77,6 +109,18 @@ const othersItems: NavItem[] = [
     path: "/profile",
   },
   {
+    icon: <LockIcon />,
+    name: "My Offers",
+    path: "/offers"
+  },
+
+  {
+    icon: <DollarLineIcon />,
+    name: "Transactions",
+    path: "/transactions"
+  },
+
+  {
     name: "Support Ticket",
     icon: <PageIcon />,
     subItems: [
@@ -84,14 +128,11 @@ const othersItems: NavItem[] = [
       { name: "View Tickets", path: "/queries" }
     ],
   },
-  // {
-  //   icon: <PieChartIcon />,
-  //   name: "Developer Section",
-  //   subItems: [
-  //     { name: "Callback Whitelist", path: "/callbackurls" },
-  //     { name: "Ip Whitelist", path: "/ipwhitelist" },
-  //   ],
-  // },
+  {
+    name: "Contact",
+    icon: <LockIcon />,
+    path: "/contact"
+  }
 ];
 
 const AppSidebar: React.FC = () => {
@@ -244,6 +285,7 @@ const AppSidebar: React.FC = () => {
                         : "menu-dropdown-item-inactive"
                         }`}
                     >
+                      {subItem.icon}
                       {subItem.name}
                       <span className="flex items-center gap-1 ml-auto">
                         {subItem.new && (

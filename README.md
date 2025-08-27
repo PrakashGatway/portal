@@ -1,18 +1,18 @@
-# JupiterPay React - Free React Tailwind Admin Dashboard Template
+# Gateway Abroad  React - Free React Tailwind Admin Dashboard Template
 
-JupiterPay is a free and open-source admin dashboard template built on **React and Tailwind CSS**, providing developers
+Gateway Abroad  is a free and open-source admin dashboard template built on **React and Tailwind CSS**, providing developers
 with everything they need to create a comprehensive, data-driven back-end,
 dashboard, or admin panel solution for upcoming web projects.
 
-With JupiterPay, you get access to all the necessary dashboard UI components, elements, and pages required to build a
+With Gateway Abroad , you get access to all the necessary dashboard UI components, elements, and pages required to build a
 feature-rich and complete dashboard or admin panel. Whether you're building dashboard or admin panel for a complex web
-application or a simple website, JupiterPay is the perfect solution to help you get up and running quickly.
+application or a simple website, Gateway Abroad  is the perfect solution to help you get up and running quickly.
 
-![JupiterPay React.js Dashboard Preview](./banner.png)
+![Gateway Abroad  React.js Dashboard Preview](./banner.png)
 
 ## Overview
 
-JupiterPay provides essential UI components and layouts for building feature-rich, data-driven admin dashboards and
+Gateway Abroad  provides essential UI components and layouts for building feature-rich, data-driven admin dashboards and
 control panels. It's built on:
 
 - React 19
@@ -21,28 +21,28 @@ control panels. It's built on:
 
 ### Quick Links
 
-- [✨ Visit Website](https://JupiterPay.com)
-- [📄 Documentation](https://JupiterPay.com/docs)
-- [⬇️ Download](https://JupiterPay.com/download)
+- [✨ Visit Website](https://Gateway Abroad .com)
+- [📄 Documentation](https://Gateway Abroad .com/docs)
+- [⬇️ Download](https://Gateway Abroad .com/download)
 - [🖌️ Figma Design File (Community Edition)](https://www.figma.com/community/file/1214477970819985778)
-- [⚡ Get PRO Version](https://JupiterPay.com/pricing)
+- [⚡ Get PRO Version](https://Gateway Abroad .com/pricing)
 
 ### Demos
 
-- [Free Version](https://free-react-demo.JupiterPay.com/)
-- [Pro Version](https://react-demo.JupiterPay.com)
+- [Free Version](https://free-react-demo.Gateway Abroad .com/)
+- [Pro Version](https://react-demo.Gateway Abroad .com)
 
 ### Other Versions
 
-- [HTML Version](https://github.com/JupiterPay/JupiterPay-free-tailwind-dashboard-template)
-- [Next.js Version](https://github.com/JupiterPay/free-nextjs-admin-dashboard)
-- [Vue.js Version](https://github.com/JupiterPay/vue-tailwind-admin-dashboard)
+- [HTML Version](https://github.com/Gateway Abroad /Gateway Abroad -free-tailwind-dashboard-template)
+- [Next.js Version](https://github.com/Gateway Abroad /free-nextjs-admin-dashboard)
+- [Vue.js Version](https://github.com/Gateway Abroad /vue-tailwind-admin-dashboard)
 
 ## Installation
 
 ### Prerequisites
 
-To get started with JupiterPay, ensure you have the following prerequisites installed and set up:
+To get started with Gateway Abroad , ensure you have the following prerequisites installed and set up:
 
 - Node.js 18.x or later (recommended to use Node.js 20.x or later)
 
@@ -51,7 +51,7 @@ To get started with JupiterPay, ensure you have the following prerequisites inst
 Clone the repository using the following command:
 
 ```bash
-git clone https://github.com/JupiterPay/free-react-tailwind-admin-dashboard.git
+git clone https://github.com/Gateway Abroad /free-react-tailwind-admin-dashboard.git
 ```
 
 > Windows Users: place the repository near the root of your drive if you face issues while cloning.
@@ -75,7 +75,7 @@ git clone https://github.com/JupiterPay/free-react-tailwind-admin-dashboard.git
 
 ## Components
 
-JupiterPay is a pre-designed starting point for building a web-based dashboard using React.js and Tailwind CSS. The
+Gateway Abroad  is a pre-designed starting point for building a web-based dashboard using React.js and Tailwind CSS. The
 template includes:
 
 - Sophisticated and accessible sidebar
@@ -105,7 +105,7 @@ All components are built with React and styled using Tailwind CSS for easy custo
 - Complete Figma design file
 - Email support
 
-To learn more about pro version features and pricing, visit our [pricing page](https://JupiterPay.com/pricing).
+To learn more about pro version features and pricing, visit our [pricing page](https://Gateway Abroad .com/pricing).
 
 ## Changelog
 
@@ -155,7 +155,7 @@ A major update with comprehensive redesign and modern React patterns implementat
 - Migrated charts to ApexCharts
 - Revised authentication system
 
-[Read more](https://JupiterPay.com/docs/update-logs/react) on this release.
+[Read more](https://Gateway Abroad .com/docs/update-logs/react) on this release.
 
 ### Version 1.3.7 - [June 20, 2024]
 
@@ -176,15 +176,15 @@ A major update with comprehensive redesign and modern React patterns implementat
 
 ### Version 1.2.0 - [Apr 28, 2023]
 
-- Add Typescript in JupiterPay React.
+- Add Typescript in Gateway Abroad  React.
 
 ### Version 1.0.0 - Initial Release - [Mar 13, 2023]
 
-- Initial release of JupiterPay React.
+- Initial release of Gateway Abroad  React.
 
 ## License
 
-JupiterPay React.js Free Version is released under the MIT License.
+Gateway Abroad  React.js Free Version is released under the MIT License.
 
 ## Support
 
