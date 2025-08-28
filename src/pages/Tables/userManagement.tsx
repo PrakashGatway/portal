@@ -20,7 +20,7 @@ export default function UserMetaAdmin() {
       const { data } = await axios.get(`/user-meta/${userId}`);
       setUserMeta(data.data);
     } catch (error) {
-      toast.error(error.response?.data?.message || 'Failed to fetch user meta');
+      toast.error(error.message || 'Failed to fetch user meta');
     } finally {
       setLoading(false);
     }
@@ -33,7 +33,7 @@ export default function UserMetaAdmin() {
         await axios.delete(`/api/user/meta/${userId}`);
         toast.success('User meta deleted successfully');
       } catch (error) {
-        toast.error(error.response?.data?.message || 'Deletion failed');
+        toast.error(error.message || 'Deletion failed');
       } finally {
         setLoading(false);
       }

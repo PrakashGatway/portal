@@ -89,7 +89,7 @@ const EWalletToMainWalletSettlement = () => {
       }
     } catch (error) {
       toast.error(
-        error.response?.data?.message ||
+        error.message ||
         "Transfer failed. Please try again later."
       );
     }

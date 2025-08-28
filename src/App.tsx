@@ -16,6 +16,7 @@ import QueryList from "./pages/OtherPage/QueriesList";
 import PagesManagement from "./pages/Website/Pages";
 import EntityManagement from "./pages/Website/Entities";
 import ComingSoon from "./pages/OtherPage/ComingSoon";
+import CategoryManagement from "./pages/Courses/Categories";
 
 // Define roles
 export const ROLES = {
@@ -50,6 +51,7 @@ export default function App() {
               <Route element={<ProtectedRoute roles={[ROLES.ADMIN]} />}>
                 <Route path="/packages" element={<CommissionPackages />} />
                 <Route path="/users" element={<UserListPage />} />
+                <Route path="/categories" element={<CategoryManagement />} />
               </Route>
 
               <Route path="*" element={<ComingSoon />} />

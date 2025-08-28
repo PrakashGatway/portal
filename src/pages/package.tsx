@@ -202,7 +202,7 @@ const CommissionPackages = () => {
             currentPackage ? closeEditModal() : closeAddModal();
         } catch (error) {
             console.error("Error saving package:", error);
-            toast.error(error.response?.data?.message || "Failed to save package");
+            toast.error(error.message || "Failed to save package");
         }
     };
 

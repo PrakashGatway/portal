@@ -61,7 +61,7 @@ const PagesManagement = () => {
             closeDeleteModal();
         } catch (error) {
             console.error("Error deleting page:", error);
-            toast.error(error.response?.data?.message || "Failed to delete page");
+            toast.error(error.message || "Failed to delete page");
         }
     };
 
@@ -73,7 +73,7 @@ const PagesManagement = () => {
             setPages(data.data);
             setTotal(data.totalCount || data.data.length);
         } catch (error) {
-            toast.error(error.response?.data?.message || "Failed to fetch pages");
+            toast.error(error.message || "Failed to fetch pages");
         } finally {
             setLoading(false);
         }
@@ -145,7 +145,7 @@ const PagesManagement = () => {
             closeModal();
             fetchPages();
         } catch (error) {
-            toast.error(error.response?.data?.message || "Operation failed");
+            toast.error(error.message || "Operation failed");
         } finally {
             setLoading(false);
         }

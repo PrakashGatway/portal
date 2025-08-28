@@ -1,7 +1,6 @@
 import { createContext, useContext, useEffect, useState } from 'react';
 import { useNavigate } from 'react-router';
-import api from '../axiosInstance'; // Import your axios instance
-
+import api from '../axiosInstance';
 
 type AuthContextType = {
   user: any | null;
@@ -42,7 +41,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const fetchUserProfile = async () => {
     try {
       setLoading(true);
-      const response = await api.get('/auth/me'); // Adjust endpoint as needed
+      const response = await api.get('/auth/me');
       setUser(response.data?.data);
     } catch (err) {
       logout();
@@ -62,7 +61,6 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     setToken(null);
     delete api.defaults.headers.common['Authorization'];
     window.location.href = "https://www.gatewayabroadeducations.com";
-
   };
 
   const value = {

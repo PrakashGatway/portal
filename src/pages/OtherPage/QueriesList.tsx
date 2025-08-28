@@ -41,7 +41,7 @@ export default function QueryList() {
       setQueries(response.data.data);
       setTotal(response.data.pagination.total);
     } catch (error) {
-      toast.error(error.response?.data?.message || "Failed to fetch queries");
+      toast.error(error.message || "Failed to fetch queries");
     } finally {
       setLoading(false);
     }

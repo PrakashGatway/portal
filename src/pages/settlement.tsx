@@ -121,7 +121,7 @@ const EWalletToBankSettlement = () => {
       }
     } catch (error) {
       toast.error(
-        error.response?.data?.message ||
+        error.message ||
         "Settlement failed. Please try again later."
       );
     }

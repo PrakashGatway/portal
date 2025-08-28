@@ -59,7 +59,7 @@ export default function CreateQuery() {
       reset();
       setFile(null);
     } catch (error) {
-      toast.error(error.response?.data?.message || "Failed to submit query");
+      toast.error(error.message || "Failed to submit query");
     } finally {
       setLoading(false);
     }

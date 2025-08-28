@@ -43,7 +43,7 @@ export default function QueryDetail() {
       setPriority(data.data.priority);
       setNotes(data.data.resolutionNotes || "");
     } catch (error) {
-      toast.error(error.response?.data?.message || "Failed to fetch query");
+      toast.error(error.message || "Failed to fetch query");
       navigate("/queries");
     } finally {
       setLoading(false);
@@ -63,7 +63,7 @@ export default function QueryDetail() {
       setQuery(data.data);
       toast.success("Query updated successfully");
     } catch (error) {
-      toast.error(error.response?.data?.message || "Failed to update query");
+      toast.error(error.message || "Failed to update query");
     } finally {
       setUpdating(false);
     }

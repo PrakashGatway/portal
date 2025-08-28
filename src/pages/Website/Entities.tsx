@@ -186,7 +186,7 @@ const EntityManagement = () => {
             closeEditModal();
         } catch (error) {
             console.error("Error updating entity:", error);
-            toast.error(error.response?.data?.message || "Failed to update entity");
+            toast.error(error.message || "Failed to update entity");
         }
     };
 
@@ -200,7 +200,7 @@ const EntityManagement = () => {
             closeDeleteModal();
         } catch (error) {
             console.error("Error deleting entity:", error);
-            toast.error(error.response?.data?.message || "Failed to delete entity");
+            toast.error(error.message || "Failed to delete entity");
         }
     };
 

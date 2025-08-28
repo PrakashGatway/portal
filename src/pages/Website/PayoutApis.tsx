@@ -50,7 +50,7 @@ const PayoutApisTable = () => {
       setApis(data.data);
       setTotal(data.totalCount);
     } catch (error) {
-      toast.error(error.response?.data?.message || "Failed to fetch APIs");
+      toast.error(error.message || "Failed to fetch APIs");
     } finally {
       setLoading(false);
     }
@@ -80,7 +80,7 @@ const PayoutApisTable = () => {
       ));
       toast.success(`API is now ${data.isActive ? "active" : "inactive"}`);
     } catch (error) {
-      toast.error(error.response?.data?.message || "Failed to toggle status");
+      toast.error(error.message || "Failed to toggle status");
     }
   };
 
@@ -131,7 +131,7 @@ const PayoutApisTable = () => {
       closeModal();
       fetchApis();
     } catch (error) {
-      toast.error(error.response?.data?.message || "Operation failed");
+      toast.error(error.message || "Operation failed");
     } finally {
       setLoading(false);
     }

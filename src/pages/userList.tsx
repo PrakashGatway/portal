@@ -135,7 +135,7 @@ const UserListPage = () => {
       setEditModalOpen(false);
     } catch (error) {
       console.error("Error saving user:", error);
-      toast.error(error.response?.data?.message || "Failed to save user");
+      toast.error(error.message || "Failed to save user");
     }
   };
 

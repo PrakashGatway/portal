@@ -88,7 +88,7 @@ export default function UserMetaCard({ user }: any) {
       closeModal();
     } catch (error) {
       console.error("Failed to update profile:", error);
-      toast.error(error.response?.data?.message || "Failed to update profile");
+      toast.error(error.message || "Failed to update profile");
     } finally {
       setIsLoading(false);
     }

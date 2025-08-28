@@ -39,7 +39,7 @@ const SettingsPage = () => {
       toast.success("Password changed successfully");
       resetPasswordForm();
     } catch (error) {
-      toast.error(error.response?.data?.message || "Failed to change password");
+      toast.error(error.message || "Failed to change password");
     } finally {
       setLoading(false);
     }
