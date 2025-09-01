@@ -17,6 +17,13 @@ import PagesManagement from "./pages/Website/Pages";
 import EntityManagement from "./pages/Website/Entities";
 import ComingSoon from "./pages/OtherPage/ComingSoon";
 import CategoryManagement from "./pages/Courses/Categories";
+import CategoryTree from "./pages/Courses/CategoryTree";
+import CourseManagement from "./pages/Courses/Courses";
+import CourseSteppedForm from "./pages/Courses/CourseSteps";
+import ModuleManagement from "./pages/Courses/Modules";
+import ContentManagement from "./pages/Content/Contents";
+import StudentLiveClass from "./pages/liveClass/Studentlive";
+import TeacherLiveClass from "./pages/liveClass/Teacherlive";
 
 // Define roles
 export const ROLES = {
@@ -52,6 +59,14 @@ export default function App() {
                 <Route path="/packages" element={<CommissionPackages />} />
                 <Route path="/users" element={<UserListPage />} />
                 <Route path="/categories" element={<CategoryManagement />} />
+                <Route path="/courses" element={<CourseManagement />} />
+                <Route path="/modules" element={<ModuleManagement />} />
+                <Route path="/live-classes" element={<ContentManagement type="LiveClasses" />} />
+                <Route path="/recorded-classes" element={<ContentManagement type="RecordedClasses" />} />
+                <Route path="/tests" element={<ContentManagement type="Tests" />} />
+                <Route path="/study-materials" element={<ContentManagement type="StudyMaterials" />} />
+                <Route path="/liveclass/:classId" element={<StudentLiveClass />} />
+                <Route path="/teacherclass/:classId" element={<TeacherLiveClass />} />
               </Route>
 
               <Route path="*" element={<ComingSoon />} />

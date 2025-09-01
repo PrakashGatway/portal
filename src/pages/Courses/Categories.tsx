@@ -1,4 +1,3 @@
-// components/admin/CategoryManagement.jsx
 import { useState, useEffect } from "react";
 import moment from "moment";
 import { useModal } from "../../hooks/useModal";
@@ -10,6 +9,8 @@ import Select from "../../components/form/Select";
 import { toast } from "react-toastify";
 import api from "../../axiosInstance";
 import { Eye, Pencil, Trash2 } from "lucide-react";
+import DynamicIcon from "../../components/DynamicIcon";
+import CategoryTree from "./CategoryTree";
 
 export default function CategoryManagement() {
     const [categories, setCategories] = useState([]);
@@ -19,6 +20,7 @@ export default function CategoryManagement() {
     const [editModalOpen, setEditModalOpen] = useState(false);
     const [selectedCategory, setSelectedCategory] = useState(null);
     const [isDeleteModalOpen, setDeleteModalOpen] = useState(false);
+    const [treeModalOpen, setTreeModalOpen] = useState(false);
     const [allCategories, setAllCategories] = useState([]); // For parent category filter
     const [filters, setFilters] = useState({
         page: 1,
@@ -244,7 +246,9 @@ export default function CategoryManagement() {
                             </div>
                         </div>
                     </div>
-                    <button
+                    <div className="flex w-full flex-col gap-3 sm:flex-row sm:items-center sm:justify-end xl:gap-4">
+                        <button className="flex word-wrap w-full items-center justify-center gap-2 rounded-full border border-gray-300 bg-white px-4 py-3 text-sm font-medium text-gray-700 shadow-theme-xs hover:bg-gray-50 hover:text-gray-800 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-400 dark:hover:bg-white/[0.03] dark:hover:text-gray-200 lg:inline-flex lg:w-auto" onClick={() => setTreeModalOpen(true)}>View Category Tree</button>
+                          <button
                         onClick={openCreateModal}
                         className="flex w-full items-center justify-center gap-2 rounded-full border border-gray-300 bg-white px-4 py-3 text-sm font-medium text-gray-700 shadow-theme-xs hover:bg-gray-50 hover:text-gray-800 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-400 dark:hover:bg-white/[0.03] dark:hover:text-gray-200 lg:inline-flex lg:w-auto"
                     >
@@ -264,6 +268,8 @@ export default function CategoryManagement() {
                         </svg>
                         Add
                     </button>
+                    </div>
+                  
                 </div>
             </div>
             <div className="min-h-[70vh] overflow-x-auto rounded-2xl border border-gray-200 bg-white px-4 py-4 dark:border-gray-800 dark:bg-white/[0.03] xl:px-4 xl:py-4">
@@ -426,7 +432,8 @@ export default function CategoryManagement() {
                                         <tr key={category._id} className="hover:bg-gray-50 dark:hover:bg-gray-700">
                                             <td className="whitespace-nowrap px-2 py-4">
                                                 <div className="flex items-center">
-                                                    <div className="text-sm font-semibold capitalize text-gray-900 dark:text-white">
+                                                    <div className="flex gap-1 text-sm font-semibold capitalize text-gray-900 dark:text-white">
+                                                        <DynamicIcon name={category.icon} className="text-blue-500" />
                                                         {category.name}
                                                     </div>
                                                 </div>
@@ -618,13 +625,7 @@ export default function CategoryManagement() {
                                                 <div>
                                                     <p className="text-sm text-gray-500 dark:text-gray-400">Icon</p>
                                                     <p className="text-sm font-medium text-gray-800 dark:text-white/90">
-                                                        <span
-                                                            className="text-lg mr-2"
-                                                            style={{ color: selectedCategory.color }}
-                                                        >
-                                                            {selectedCategory.icon || "📂"}
-                                                        </span>
-                                                        {selectedCategory.icon || "Default icon"}
+                                                        <DynamicIcon name={selectedCategory.icon} className="text-blue-500" />
                                                     </p>
                                                 </div>
                                                 <div>
@@ -891,6 +892,13 @@ export default function CategoryManagement() {
                         </div>
                     </div>
                 )}
+            </Modal>
+            <Modal isOpen={treeModalOpen} onClose={() => setTreeModalOpen(false)} className="max-w-[800px] m-4">
+                <div className="no-scrollbar relative w-full max-w-[800px] overflow-y-auto rounded-3xl bg-white p-4 dark:bg-gray-900 lg:p-11">
+                    <div className="custom-scrollbar h-[550px] overflow-y-auto px-2 pb-3">
+                        <CategoryTree />
+                    </div>
+                </div>
             </Modal>
         </div >
     );

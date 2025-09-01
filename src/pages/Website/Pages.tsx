@@ -71,7 +71,7 @@ const PagesManagement = () => {
             setLoading(true);
             const { data } = await api.get("/page", { params: filters });
             setPages(data.data);
-            setTotal(data.totalCount || data.data.length);
+            setTotal(data.pagination?.totalItems || data.data.length);
         } catch (error) {
             toast.error(error.message || "Failed to fetch pages");
         } finally {

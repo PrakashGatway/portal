@@ -19,7 +19,10 @@
     "preview": "vite preview"
   },
   "dependencies": {
+    "@netless/window-manager": "^1.0.6",
     "@tinymce/tinymce-react": "^6.3.0",
+    "agora-rtc-sdk-ng": "^4.20.2",
+    "agora-rtm-sdk": "^1.4.5",
     "apexcharts": "^4.1.0",
     "axios": "^1.10.0",
     "clsx": "^2.1.1",
@@ -33,10 +36,13 @@
     "react-dropzone": "^14.3.5",
     "react-helmet-async": "^2.0.5",
     "react-hook-form": "^7.58.1",
+    "react-player": "^3.3.2",
     "react-router": "^7.1.5",
     "react-toastify": "^11.0.5",
+    "regenerator-runtime": "^0.14.1",
     "swiper": "^11.2.3",
-    "tailwind-merge": "^3.0.1"
+    "tailwind-merge": "^3.0.1",
+    "white-web-sdk": "^2.16.53"
   },
   "devDependencies": {
     "@eslint/js": "^9.19.0",
