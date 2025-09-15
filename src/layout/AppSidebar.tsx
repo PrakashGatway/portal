@@ -39,7 +39,7 @@ const navItems: NavItem[] = [
   },
   {
     icon: <LockIcon />,
-    name: "CourseCategories",
+    name: "Course Categories",
     path: "/categories",
   },
   {

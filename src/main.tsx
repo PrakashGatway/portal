@@ -9,12 +9,12 @@ import { ThemeProvider } from "./context/ThemeContext.tsx";
 import SaveTokenFromQuery from "./components/accessToken.tsx";
 
 createRoot(document.getElementById("root")!).render(
-  <StrictMode>
+  // <StrictMode>
     <ThemeProvider>
       <AppWrapper>
         <SaveTokenFromQuery />
         <App />
       </AppWrapper>
     </ThemeProvider>
-  </StrictMode>,
+  // </StrictMode>,
 );

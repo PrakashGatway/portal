@@ -1,5 +1,5 @@
 // components/admin/ModuleManagement.jsx
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import moment from "moment";
 import { useModal } from "../../hooks/useModal";
 import { Modal } from "../../components/ui/modal";
@@ -8,8 +8,10 @@ import Input from "../../components/form/input/InputField";
 import Label from "../../components/form/Label";
 import Select from "../../components/form/Select";
 import { toast } from "react-toastify";
-import api from "../../axiosInstance";
+import api, { ImageBaseUrl } from "../../axiosInstance";
 import { Eye, Pencil, Trash2, Plus } from "lucide-react";
+import { useDropzone } from "react-dropzone";
+import DynamicIcon from "../../components/DynamicIcon";
 
 export default function ModuleManagement() {
   const [modules, setModules] = useState([]);
@@ -284,343 +286,345 @@ export default function ModuleManagement() {
             </div>
           )}
         </div>
-      {/* Pagination */}
-      {total > 0 && (
-        <div className="mt-4 flex flex-col items-center justify-between space-y-4 sm:flex-row sm:space-y-0">
-          <div className="text-sm text-gray-500 dark:text-gray-300">
-            Showing{" "}
-            <span className="font-medium">
-              {(filters.page - 1) * filters.limit + 1}
-            </span>{" "}
-            to{" "}
-            <span className="font-medium">
-              {Math.min(filters.page * filters.limit, total)}
-            </span>{" "}
-            of <span className="font-medium">{total}</span> results
-          </div>
-          <div className="flex space-x-2">
-            <button
-              onClick={() => handlePageChange(filters.page - 1)}
-              disabled={filters.page === 1}
-              className={`rounded-md border border-gray-300 px-3 py-1 text-sm ${filters.page === 1
-                ? "cursor-not-allowed bg-gray-100 text-gray-400 dark:bg-gray-700 dark:text-gray-500"
-                : "bg-white text-gray-700 hover:bg-gray-50 dark:bg-gray-800 dark:text-white dark:hover:bg-gray-700"
-                }`}
-            >
-              Previous
-            </button>
-            {Array.from(
-              { length: Math.ceil(total / filters.limit) },
-              (_, i) => i + 1
-            )
-              .slice(
-                Math.max(0, filters.page - 3),
-                Math.min(Math.ceil(total / filters.limit), filters.page + 2)
+        {/* Pagination */}
+        {total > 0 && (
+          <div className="mt-4 flex flex-col items-center justify-between space-y-4 sm:flex-row sm:space-y-0">
+            <div className="text-sm text-gray-500 dark:text-gray-300">
+              Showing{" "}
+              <span className="font-medium">
+                {(filters.page - 1) * filters.limit + 1}
+              </span>{" "}
+              to{" "}
+              <span className="font-medium">
+                {Math.min(filters.page * filters.limit, total)}
+              </span>{" "}
+              of <span className="font-medium">{total}</span> results
+            </div>
+            <div className="flex space-x-2">
+              <button
+                onClick={() => handlePageChange(filters.page - 1)}
+                disabled={filters.page === 1}
+                className={`rounded-md border border-gray-300 px-3 py-1 text-sm ${filters.page === 1
+                  ? "cursor-not-allowed bg-gray-100 text-gray-400 dark:bg-gray-700 dark:text-gray-500"
+                  : "bg-white text-gray-700 hover:bg-gray-50 dark:bg-gray-800 dark:text-white dark:hover:bg-gray-700"
+                  }`}
+              >
+                Previous
+              </button>
+              {Array.from(
+                { length: Math.ceil(total / filters.limit) },
+                (_, i) => i + 1
               )
-              .map((pageNum) => (
-                <button
-                  key={pageNum}
-                  onClick={() => handlePageChange(pageNum)}
-                  className={`rounded-md border px-3 py-1 text-sm ${filters.page === pageNum
-                    ? "border-indigo-500 bg-indigo-500 text-white"
-                    : "border-gray-300 bg-white text-gray-700 hover:bg-gray-50 dark:border-gray-600 dark:bg-gray-800 dark:text-white dark:hover:bg-gray-700"
-                    }`}
-                >
-                  {pageNum}
-                </button>
-              ))}
-            <button
-              onClick={() => handlePageChange(filters.page + 1)}
-              disabled={filters.page * filters.limit >= total}
-              className={`rounded-md border border-gray-300 px-3 py-1 text-sm ${filters.page * filters.limit >= total
-                ? "cursor-not-allowed bg-gray-100 text-gray-400 dark:bg-gray-700 dark:text-gray-500"
-                : "bg-white text-gray-700 hover:bg-gray-50 dark:bg-gray-800 dark:text-white dark:hover:bg-gray-700"
-                }`}
-            >
-              Next
-            </button>
+                .slice(
+                  Math.max(0, filters.page - 3),
+                  Math.min(Math.ceil(total / filters.limit), filters.page + 2)
+                )
+                .map((pageNum) => (
+                  <button
+                    key={pageNum}
+                    onClick={() => handlePageChange(pageNum)}
+                    className={`rounded-md border px-3 py-1 text-sm ${filters.page === pageNum
+                      ? "border-indigo-500 bg-indigo-500 text-white"
+                      : "border-gray-300 bg-white text-gray-700 hover:bg-gray-50 dark:border-gray-600 dark:bg-gray-800 dark:text-white dark:hover:bg-gray-700"
+                      }`}
+                  >
+                    {pageNum}
+                  </button>
+                ))}
+              <button
+                onClick={() => handlePageChange(filters.page + 1)}
+                disabled={filters.page * filters.limit >= total}
+                className={`rounded-md border border-gray-300 px-3 py-1 text-sm ${filters.page * filters.limit >= total
+                  ? "cursor-not-allowed bg-gray-100 text-gray-400 dark:bg-gray-700 dark:text-gray-500"
+                  : "bg-white text-gray-700 hover:bg-gray-50 dark:bg-gray-800 dark:text-white dark:hover:bg-gray-700"
+                  }`}
+              >
+                Next
+              </button>
+            </div>
+          </div>
+        )}
+      </div>
+
+      {/* Module Details Modal */}
+      <Modal isOpen={isOpen} onClose={closeModal} className="max-w-[700px] m-4">
+        <div className="no-scrollbar relative w-full max-w-[700px] overflow-y-auto rounded-3xl bg-white p-4 dark:bg-gray-900 lg:p-11">
+          <div className="px-2 pr-14">
+            <h4 className="mb-2 text-2xl font-semibold text-gray-800 dark:text-white/90">
+              Module Details
+            </h4>
+            <p className="mb-6 text-sm text-gray-500 dark:text-gray-400 lg:mb-7">
+              Detailed information about this module
+            </p>
+          </div>
+          <div className="flex flex-col">
+            <div className="custom-scrollbar h-[420px] overflow-y-auto px-2 pb-3">
+              {selectedModule && (
+                <div className="space-y-8">
+                  {/* Basic Information */}
+                  <div>
+                    <h5 className="mb-4 text-lg font-medium text-gray-800 dark:text-white/90">
+                      Basic Information
+                    </h5>
+                    <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
+                      <div>
+                        <p className="text-sm text-gray-500 dark:text-gray-400">Title</p>
+                        <p className="text-sm font-medium text-gray-800 dark:text-white/90">
+                          {selectedModule.title}
+                        </p>
+                      </div>
+                      <div>
+                        <p className="text-sm text-gray-500 dark:text-gray-400">Course</p>
+                        <p className="text-sm font-medium text-gray-800 dark:text-white/90">
+                          {selectedModule.courseInfo?.title || "N/A"}
+                        </p>
+                      </div>
+                      <div>
+                        <p className="text-sm text-gray-500 dark:text-gray-400">Order</p>
+                        <p className="text-sm font-medium text-gray-800 dark:text-white/90">
+                          {selectedModule.order}
+                        </p>
+                      </div>
+                      <div>
+                        <p className="text-sm text-gray-500 dark:text-gray-400">Duration</p>
+                        <p className="text-sm font-medium text-gray-800 dark:text-white/90">
+                          {selectedModule.duration > 0 ? `${selectedModule.duration} minutes` : "N/A"}
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Description */}
+                  {selectedModule.description && (
+                    <div>
+                      <h5 className="mb-4 text-lg font-medium text-gray-800 dark:text-white/90">
+                        Description
+                      </h5>
+                      <p className="text-sm text-gray-800 dark:text-white/90">
+                        {selectedModule.description}
+                      </p>
+                    </div>
+                  )}
+
+                  {/* Status Information */}
+                  <div>
+                    <h5 className="mb-4 text-lg font-medium text-gray-800 dark:text-white/90">
+                      Status
+                    </h5>
+                    <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
+                      <div>
+                        <p className="text-sm text-gray-500 dark:text-gray-400">Publication Status</p>
+                        <p className="text-sm font-medium text-gray-800 dark:text-white/90">
+                          <span className={`inline-flex rounded-full px-2 text-xs font-semibold leading-5 ${selectedModule.isPublished
+                            ? "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200"
+                            : "bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200"
+                            }`}>
+                            {selectedModule.isPublished ? "Published" : "Draft"}
+                          </span>
+                        </p>
+                      </div>
+                      <div>
+                        <p className="text-sm text-gray-500 dark:text-gray-400">Published At</p>
+                        <p className="text-sm font-medium text-gray-800 dark:text-white/90">
+                          {selectedModule.publishedAt
+                            ? moment(selectedModule.publishedAt).format("MMM D, YYYY h:mm A")
+                            : "N/A"}
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Content Statistics */}
+                  <div>
+                    <h5 className="mb-4 text-lg font-medium text-gray-800 dark:text-white/90">
+                      Content Statistics
+                    </h5>
+                    <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
+                      <div className="bg-gray-50 dark:bg-gray-800 p-3 rounded-lg">
+                        <p className="text-sm text-gray-500 dark:text-gray-400">Live Classes</p>
+                        <p className="text-lg font-bold text-gray-800 dark:text-white">
+                          {selectedModule.liveClassesCount || 0}
+                        </p>
+                      </div>
+                      <div className="bg-gray-50 dark:bg-gray-800 p-3 rounded-lg">
+                        <p className="text-sm text-gray-500 dark:text-gray-400">Recorded Classes</p>
+                        <p className="text-lg font-bold text-gray-800 dark:text-white">
+                          {selectedModule.recordedClassesCount || 0}
+                        </p>
+                      </div>
+                      <div className="bg-gray-50 dark:bg-gray-800 p-3 rounded-lg">
+                        <p className="text-sm text-gray-500 dark:text-gray-400">Tests</p>
+                        <p className="text-lg font-bold text-gray-800 dark:text-white">
+                          {selectedModule.testsCount || 0}
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Objectives */}
+                  {selectedModule.objectives?.length > 0 && (
+                    <div>
+                      <h5 className="mb-4 text-lg font-medium text-gray-800 dark:text-white/90">
+                        Objectives
+                      </h5>
+                      <ul className="space-y-2">
+                        {selectedModule.objectives.map((objective, index) => (
+                          <li key={index} className="flex items-start">
+                            <span className="mr-2 text-gray-500 dark:text-gray-400">•</span>
+                            <span className="text-sm text-gray-800 dark:text-white/90">{objective}</span>
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+                  )}
+
+                  {/* Prerequisites */}
+                  {selectedModule.prerequisites?.length > 0 && (
+                    <div>
+                      <h5 className="mb-4 text-lg font-medium text-gray-800 dark:text-white/90">
+                        Prerequisites
+                      </h5>
+                      <ul className="space-y-2">
+                        {selectedModule.prerequisites.map((prerequisite, index) => (
+                          <li key={index} className="flex items-start">
+                            <span className="mr-2 text-gray-500 dark:text-gray-400">•</span>
+                            <span className="text-sm text-gray-800 dark:text-white/90">{prerequisite}</span>
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+                  )}
+
+                  {/* Dates */}
+                  <div>
+                    <h5 className="mb-4 text-lg font-medium text-gray-800 dark:text-white/90">
+                      Dates
+                    </h5>
+                    <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+                      <div>
+                        <p className="text-sm text-gray-500 dark:text-gray-400">Created At</p>
+                        <p className="text-sm font-medium text-gray-800 dark:text-white/90">
+                          {moment(selectedModule.createdAt).format("MMM D, YYYY h:mm A")}
+                        </p>
+                      </div>
+                      <div>
+                        <p className="text-sm text-gray-500 dark:text-gray-400">Last Updated</p>
+                        <p className="text-sm font-medium text-gray-800 dark:text-white/90">
+                          {moment(selectedModule.updatedAt).format("MMM D, YYYY h:mm A")}
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              )}
+            </div>
+            <div className="flex items-center gap-3 px-2 mt-6 lg:justify-end">
+              <Button
+                size="sm"
+                variant="outline"
+                onClick={closeModal}
+              >
+                Close
+              </Button>
+            </div>
           </div>
         </div>
-      )}
-    </div>
+      </Modal>
 
-      {/* Module Details Modal */ }
-  <Modal isOpen={isOpen} onClose={closeModal} className="max-w-[700px] m-4">
-    <div className="no-scrollbar relative w-full max-w-[700px] overflow-y-auto rounded-3xl bg-white p-4 dark:bg-gray-900 lg:p-11">
-      <div className="px-2 pr-14">
-        <h4 className="mb-2 text-2xl font-semibold text-gray-800 dark:text-white/90">
-          Module Details
-        </h4>
-        <p className="mb-6 text-sm text-gray-500 dark:text-gray-400 lg:mb-7">
-          Detailed information about this module
-        </p>
-      </div>
-      <div className="flex flex-col">
-        <div className="custom-scrollbar h-[420px] overflow-y-auto px-2 pb-3">
-          {selectedModule && (
-            <div className="space-y-8">
-              {/* Basic Information */}
-              <div>
-                <h5 className="mb-4 text-lg font-medium text-gray-800 dark:text-white/90">
-                  Basic Information
-                </h5>
-                <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
-                  <div>
-                    <p className="text-sm text-gray-500 dark:text-gray-400">Title</p>
-                    <p className="text-sm font-medium text-gray-800 dark:text-white/90">
-                      {selectedModule.title}
-                    </p>
-                  </div>
-                  <div>
-                    <p className="text-sm text-gray-500 dark:text-gray-400">Course</p>
-                    <p className="text-sm font-medium text-gray-800 dark:text-white/90">
-                      {selectedModule.courseInfo?.title || "N/A"}
-                    </p>
-                  </div>
-                  <div>
-                    <p className="text-sm text-gray-500 dark:text-gray-400">Order</p>
-                    <p className="text-sm font-medium text-gray-800 dark:text-white/90">
-                      {selectedModule.order}
-                    </p>
-                  </div>
-                  <div>
-                    <p className="text-sm text-gray-500 dark:text-gray-400">Duration</p>
-                    <p className="text-sm font-medium text-gray-800 dark:text-white/90">
-                      {selectedModule.duration > 0 ? `${selectedModule.duration} minutes` : "N/A"}
-                    </p>
-                  </div>
-                </div>
-              </div>
+      {/* Edit/Create Module Modal */}
+      <Modal
+        isOpen={editModalOpen}
+        onClose={() => setEditModalOpen(false)}
+        className="max-w-[900px] m-4"
+      >
+        <div className="no-scrollbar relative w-full max-w-[900px] overflow-y-auto rounded-3xl bg-white p-4 dark:bg-gray-900 lg:p-11">
+          <div className="px-2 pr-14">
+            <h4 className="mb-2 text-2xl font-semibold text-gray-800 dark:text-white/90">
+              {selectedModule ? 'Edit Module' : 'Add New Module'}
+            </h4>
+            <p className="mb-6 text-sm text-gray-500 dark:text-gray-400 lg:mb-7">
+              {selectedModule
+                ? 'Update module details below'
+                : 'Create a new module for your course'}
+            </p>
+          </div>
+          <div className="custom-scrollbar h-[480px] overflow-y-auto px-2 pb-3">
+            <ModuleForm
+              module={selectedModule}
+              onSave={handleSaveSuccess}
+              onCancel={handleCancelForm}
+              courses={courses}
+            />
+          </div>
+        </div>
+      </Modal>
 
-              {/* Description */}
-              {selectedModule.description && (
-                <div>
-                  <h5 className="mb-4 text-lg font-medium text-gray-800 dark:text-white/90">
-                    Description
-                  </h5>
-                  <p className="text-sm text-gray-800 dark:text-white/90">
-                    {selectedModule.description}
-                  </p>
-                </div>
-              )}
-
-              {/* Status Information */}
-              <div>
-                <h5 className="mb-4 text-lg font-medium text-gray-800 dark:text-white/90">
-                  Status
-                </h5>
-                <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
-                  <div>
-                    <p className="text-sm text-gray-500 dark:text-gray-400">Publication Status</p>
-                    <p className="text-sm font-medium text-gray-800 dark:text-white/90">
-                      <span className={`inline-flex rounded-full px-2 text-xs font-semibold leading-5 ${selectedModule.isPublished
-                        ? "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200"
-                        : "bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200"
-                        }`}>
-                        {selectedModule.isPublished ? "Published" : "Draft"}
-                      </span>
-                    </p>
-                  </div>
-                  <div>
-                    <p className="text-sm text-gray-500 dark:text-gray-400">Published At</p>
-                    <p className="text-sm font-medium text-gray-800 dark:text-white/90">
-                      {selectedModule.publishedAt
-                        ? moment(selectedModule.publishedAt).format("MMM D, YYYY h:mm A")
-                        : "N/A"}
-                    </p>
-                  </div>
-                </div>
-              </div>
-
-              {/* Content Statistics */}
-              <div>
-                <h5 className="mb-4 text-lg font-medium text-gray-800 dark:text-white/90">
-                  Content Statistics
-                </h5>
-                <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
-                  <div className="bg-gray-50 dark:bg-gray-800 p-3 rounded-lg">
-                    <p className="text-sm text-gray-500 dark:text-gray-400">Live Classes</p>
-                    <p className="text-lg font-bold text-gray-800 dark:text-white">
-                      {selectedModule.liveClassesCount || 0}
-                    </p>
-                  </div>
-                  <div className="bg-gray-50 dark:bg-gray-800 p-3 rounded-lg">
-                    <p className="text-sm text-gray-500 dark:text-gray-400">Recorded Classes</p>
-                    <p className="text-lg font-bold text-gray-800 dark:text-white">
-                      {selectedModule.recordedClassesCount || 0}
-                    </p>
-                  </div>
-                  <div className="bg-gray-50 dark:bg-gray-800 p-3 rounded-lg">
-                    <p className="text-sm text-gray-500 dark:text-gray-400">Tests</p>
-                    <p className="text-lg font-bold text-gray-800 dark:text-white">
-                      {selectedModule.testsCount || 0}
-                    </p>
-                  </div>
-                </div>
-              </div>
-
-              {/* Objectives */}
-              {selectedModule.objectives?.length > 0 && (
-                <div>
-                  <h5 className="mb-4 text-lg font-medium text-gray-800 dark:text-white/90">
-                    Objectives
-                  </h5>
-                  <ul className="space-y-2">
-                    {selectedModule.objectives.map((objective, index) => (
-                      <li key={index} className="flex items-start">
-                        <span className="mr-2 text-gray-500 dark:text-gray-400">•</span>
-                        <span className="text-sm text-gray-800 dark:text-white/90">{objective}</span>
-                      </li>
-                    ))}
-                  </ul>
-                </div>
-              )}
-
-              {/* Prerequisites */}
-              {selectedModule.prerequisites?.length > 0 && (
-                <div>
-                  <h5 className="mb-4 text-lg font-medium text-gray-800 dark:text-white/90">
-                    Prerequisites
-                  </h5>
-                  <ul className="space-y-2">
-                    {selectedModule.prerequisites.map((prerequisite, index) => (
-                      <li key={index} className="flex items-start">
-                        <span className="mr-2 text-gray-500 dark:text-gray-400">•</span>
-                        <span className="text-sm text-gray-800 dark:text-white/90">{prerequisite}</span>
-                      </li>
-                    ))}
-                  </ul>
-                </div>
-              )}
-
-              {/* Dates */}
-              <div>
-                <h5 className="mb-4 text-lg font-medium text-gray-800 dark:text-white/90">
-                  Dates
-                </h5>
-                <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-                  <div>
-                    <p className="text-sm text-gray-500 dark:text-gray-400">Created At</p>
-                    <p className="text-sm font-medium text-gray-800 dark:text-white/90">
-                      {moment(selectedModule.createdAt).format("MMM D, YYYY h:mm A")}
-                    </p>
-                  </div>
-                  <div>
-                    <p className="text-sm text-gray-500 dark:text-gray-400">Last Updated</p>
-                    <p className="text-sm font-medium text-gray-800 dark:text-white/90">
-                      {moment(selectedModule.updatedAt).format("MMM D, YYYY h:mm A")}
-                    </p>
+      {/* Delete Confirmation Modal */}
+      <Modal isOpen={isDeleteModalOpen} onClose={() => setDeleteModalOpen(false)} className="max-w-lg">
+        {selectedModule && (
+          <div className="no-scrollbar relative w-full overflow-y-auto rounded-3xl bg-white p-4 dark:bg-gray-900 lg:p-6">
+            <div className="px-2 pr-14">
+              <h4 className="mb-2 text-2xl font-semibold text-gray-800 dark:text-white/90">
+                Confirm Deletion
+              </h4>
+              <p className="mb-2 text-sm text-gray-500 dark:text-gray-400 lg:mb-2">
+                Are you sure you want to delete this module? This action cannot be undone.
+              </p>
+            </div>
+            <div className="px-2">
+              <div className="rounded-md bg-red-50 p-2 py-4 dark:bg-red-900/20">
+                <div className="flex">
+                  <div className="ml-3">
+                    <h3 className="text-sm font-medium text-red-800 dark:text-red-200">
+                      Warning
+                    </h3>
+                    <div className="mt-2 text-sm text-red-700 dark:text-red-300">
+                      <p>
+                        Deleting "{selectedModule.title}" will permanently remove it from the system.
+                      </p>
+                    </div>
                   </div>
                 </div>
               </div>
             </div>
-          )}
-        </div>
-        <div className="flex items-center gap-3 px-2 mt-6 lg:justify-end">
-          <Button
-            size="sm"
-            variant="outline"
-            onClick={closeModal}
-          >
-            Close
-          </Button>
-        </div>
-      </div>
-    </div>
-  </Modal>
-
-  {/* Edit/Create Module Modal */ }
-  <Modal
-    isOpen={editModalOpen}
-    onClose={() => setEditModalOpen(false)}
-    className="max-w-[900px] m-4"
-  >
-    <div className="no-scrollbar relative w-full max-w-[900px] overflow-y-auto rounded-3xl bg-white p-4 dark:bg-gray-900 lg:p-11">
-      <div className="px-2 pr-14">
-        <h4 className="mb-2 text-2xl font-semibold text-gray-800 dark:text-white/90">
-          {selectedModule ? 'Edit Module' : 'Add New Module'}
-        </h4>
-        <p className="mb-6 text-sm text-gray-500 dark:text-gray-400 lg:mb-7">
-          {selectedModule
-            ? 'Update module details below'
-            : 'Create a new module for your course'}
-        </p>
-      </div>
-      <div className="custom-scrollbar h-[480px] overflow-y-auto px-2 pb-3">
-        <ModuleForm
-          module={selectedModule}
-          onSave={handleSaveSuccess}
-          onCancel={handleCancelForm}
-          courses={courses}
-        />
-      </div>
-    </div>
-  </Modal>
-
-  {/* Delete Confirmation Modal */ }
-  <Modal isOpen={isDeleteModalOpen} onClose={() => setDeleteModalOpen(false)} className="max-w-lg">
-    {selectedModule && (
-      <div className="no-scrollbar relative w-full overflow-y-auto rounded-3xl bg-white p-4 dark:bg-gray-900 lg:p-6">
-        <div className="px-2 pr-14">
-          <h4 className="mb-2 text-2xl font-semibold text-gray-800 dark:text-white/90">
-            Confirm Deletion
-          </h4>
-          <p className="mb-2 text-sm text-gray-500 dark:text-gray-400 lg:mb-2">
-            Are you sure you want to delete this module? This action cannot be undone.
-          </p>
-        </div>
-        <div className="px-2">
-          <div className="rounded-md bg-red-50 p-2 py-4 dark:bg-red-900/20">
-            <div className="flex">
-              <div className="ml-3">
-                <h3 className="text-sm font-medium text-red-800 dark:text-red-200">
-                  Warning
-                </h3>
-                <div className="mt-2 text-sm text-red-700 dark:text-red-300">
-                  <p>
-                    Deleting "{selectedModule.title}" will permanently remove it from the system.
-                  </p>
-                </div>
-              </div>
+            <div className="flex items-center gap-3 px-2 mt-6 lg:justify-end">
+              <Button
+                size="sm"
+                variant="outline"
+                onClick={() => setDeleteModalOpen(false)}
+              >
+                Cancel
+              </Button>
+              <Button
+                size="sm"
+                variant="primary"
+                onClick={deleteModule}
+              >
+                Delete Module
+              </Button>
             </div>
           </div>
-        </div>
-        <div className="flex items-center gap-3 px-2 mt-6 lg:justify-end">
-          <Button
-            size="sm"
-            variant="outline"
-            onClick={() => setDeleteModalOpen(false)}
-          >
-            Cancel
-          </Button>
-          <Button
-            size="sm"
-            variant="primary"
-            onClick={deleteModule}
-          >
-            Delete Module
-          </Button>
-        </div>
-      </div>
-    )}
-  </Modal>
+        )}
+      </Modal>
     </div >
   );
 }
 
 // Module Form Component
-const ModuleForm = ({ module = null, onSave, onCancel, courses }) => {
+const ModuleForm = ({ module = null, onSave, onCancel, courses }: any) => {
   const [formData, setFormData] = useState({
     title: "",
     description: "",
     course: "",
     order: 0,
     duration: 0,
+    icon: "",
     objectives: [""],
     prerequisites: [""],
     isPublished: false
   });
   const [errors, setErrors] = useState({});
+  const [iconFile, setIconFile] = useState(null)
 
   // Initialize form data if editing
   useEffect(() => {
@@ -633,7 +637,8 @@ const ModuleForm = ({ module = null, onSave, onCancel, courses }) => {
         duration: module.duration || 0,
         objectives: module.objectives?.length ? [...module.objectives] : [""],
         prerequisites: module.prerequisites?.length ? [...module.prerequisites] : [""],
-        isPublished: module.isPublished || false
+        isPublished: module.isPublished || false,
+        icon: ImageBaseUrl + "/" + module.icon
       });
     } else {
       setFormData({
@@ -644,11 +649,27 @@ const ModuleForm = ({ module = null, onSave, onCancel, courses }) => {
         duration: 0,
         objectives: [""],
         prerequisites: [""],
-        isPublished: false
+        isPublished: false,
+        icon: ""
       });
     }
     setErrors({});
   }, [module]);
+
+  const handleIconChange = (file) => {
+    setIconFile(file);
+    if (errors.icon) {
+      setErrors(prev => ({ ...prev, icon: '' }));
+    }
+  };
+
+  const handleIconRemove = () => {
+    setIconFile(null); // Clear the selected file
+    setFormData(prev => ({ ...prev, icon: "" }));
+    if (errors.icon) {
+      setErrors(prev => ({ ...prev, icon: '' }));
+    }
+  };
 
   const handleChange = (e) => {
     const { name, value, type, checked } = e.target;
@@ -656,8 +677,6 @@ const ModuleForm = ({ module = null, onSave, onCancel, courses }) => {
       ...prev,
       [name]: type === 'checkbox' ? checked : value
     }));
-
-    // Clear error when user types
     if (errors[name]) {
       setErrors(prev => ({ ...prev, [name]: '' }));
     }
@@ -680,7 +699,6 @@ const ModuleForm = ({ module = null, onSave, onCancel, courses }) => {
   };
 
   const removeArrayField = (field, index) => {
-    // Prevent removing the last item if it's the only one
     if (formData[field].length <= 1) {
       setFormData(prev => ({
         ...prev,
@@ -701,6 +719,7 @@ const ModuleForm = ({ module = null, onSave, onCancel, courses }) => {
     if (!formData.title.trim()) newErrors.title = 'Module title is required';
     if (!formData.course) newErrors.course = 'Course is required';
     if (formData.order < 0) newErrors.order = 'Order must be a positive number';
+    if (!formData.icon && !iconFile) newErrors.icon = 'Icon is required';
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
@@ -708,10 +727,31 @@ const ModuleForm = ({ module = null, onSave, onCancel, courses }) => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (!validateForm()) return;
+    let finalIconData = formData.icon;
+    if (iconFile) {
+      const uploadFormData = new FormData();
+      uploadFormData.append('image', iconFile);
+      try {
+        const uploadResponse = await api.post('/upload/single', uploadFormData, {
+          headers: {
+            'Content-Type': 'multipart/form-data',
+          },
+        });
+        const uploadedIconUrl = uploadResponse.data?.file?.filename;
+        if (!uploadedIconUrl) {
+          throw new Error("Icon upload failed: No URL returned.");
+        }
+        finalIconData = uploadedIconUrl;
+      } catch (uploadError) {
+        toast.error(uploadError?.message || "Failed to upload icon");
+        return;
+      }
+    }
 
     try {
       const payload = {
         ...formData,
+        icon: finalIconData,
         order: parseInt(formData.order) || 0,
         duration: parseInt(formData.duration) || 0
       };
@@ -733,7 +773,7 @@ const ModuleForm = ({ module = null, onSave, onCancel, courses }) => {
   return (
     <form onSubmit={handleSubmit} className="space-y-6">
       <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
-        <div>
+        <div className="md:col-span-2">
           <Label>Module Title *</Label>
           <Input
             type="text"
@@ -744,16 +784,23 @@ const ModuleForm = ({ module = null, onSave, onCancel, courses }) => {
           />
           {errors.title && <p className="mt-1 text-sm text-red-600">{errors.title}</p>}
         </div>
-
+        <div className="md:col-span-2">
+          <Label>Module Icon (SVG)</Label>
+          <IconDropzone
+            value={{ url: formData.icon }} // Pass existing URL for preview if editing
+            onChange={handleIconChange}    // Handle new file selection
+            onRemove={handleIconRemove}    // Handle file removal
+            error={errors.icon}            // Display icon-specific errors
+          />
+        </div>
         <div>
           <Label>Course *</Label>
           <Select
-            name="course"
-            value={formData.course}
+            defaultValue={formData.course}
             options={[
               ...courses.map(course => ({ value: course._id, label: course.title }))
             ]}
-            onChange={(value) => setFormData(prev => ({ ...prev, course: value }))}
+            onChange={(value) => setFormData(prev => ({ ...prev, course: value, module: "" }))}
           />
           {errors.course && <p className="mt-1 text-sm text-red-600">{errors.course}</p>}
         </div>
@@ -824,7 +871,7 @@ const ModuleForm = ({ module = null, onSave, onCancel, courses }) => {
                   onClick={() => removeArrayField('objectives', index)}
                   className="text-red-500 hover:text-red-700"
                 >
-                  Remove
+                  <DynamicIcon name="Trash" />
                 </button>
               )}
             </div>
@@ -856,7 +903,7 @@ const ModuleForm = ({ module = null, onSave, onCancel, courses }) => {
                   onClick={() => removeArrayField('prerequisites', index)}
                   className="text-red-500 hover:text-red-700"
                 >
-                  Remove
+                  <DynamicIcon name="Trash" />
                 </button>
               )}
             </div>
@@ -890,25 +937,26 @@ const ModuleForm = ({ module = null, onSave, onCancel, courses }) => {
   );
 };
 
-const ModuleCard = ({ module, onView, onEdit, onDelete }) => {
+const ModuleCard = ({ module, onView, onEdit, onDelete }: any) => {
   return (
     <div className="border border-gray-200 dark:border-gray-700 rounded-lg shadow-sm overflow-hidden bg-white dark:bg-gray-800 hover:shadow-md transition-shadow duration-200">
-      <div className="p-4">
-        <div className="flex justify-between items-start">
+      <div className="p-4 relative">
+        <span className={`absolute top-2 right-2 inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${module.isPublished
+          ? "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200"
+          : "bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200"
+          }`}>
+          {module.isPublished ? "Published" : "Draft"}
+        </span>
+        <div className="flex justify-start gap-2 items-center">
+          <img src={`${ImageBaseUrl}/${module.icon}`} alt="" className="h-12 p-1 rounded-full bg-gray-100 text-gray-800 dark:bg-gray-900 dark:text-yellow-200" />
           <h3 className="text-lg font-semibold text-gray-800 dark:text-white truncate">
             {module.title}
+            <p className=" text-sm text-gray-500 dark:text-gray-400 truncate">
+              {module.courseInfo?.title || "N/A"}
+            </p>
           </h3>
-          <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${module.isPublished
-              ? "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200"
-              : "bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200"
-            }`}>
-            {module.isPublished ? "Published" : "Draft"}
-          </span>
         </div>
-        <p className="mt-1 text-sm text-gray-500 dark:text-gray-400 truncate">
-          {module.courseInfo?.title || "N/A"}
-        </p>
-        <p className="mt-2 text-sm text-gray-600 dark:text-gray-300 line-clamp-2">
+        <p className="mt-3 text-sm text-gray-600 dark:text-gray-300 line-clamp-2">
           {module.description || "No description provided."}
         </p>
         <div className="mt-4 flex flex-wrap gap-2">
@@ -932,7 +980,7 @@ const ModuleCard = ({ module, onView, onEdit, onDelete }) => {
           </span>
         </div>
       </div>
-      <div className="bg-gray-50 dark:bg-gray-700 px-4 py-3 flex justify-end space-x-2">
+      <div className="bg-gray-50 dark:bg-gray-700 px-4 py-2 flex justify-end space-x-2">
         <button
           onClick={() => onView(module)}
           className="p-2 text-gray-500 hover:text-indigo-600 dark:text-gray-400 dark:hover:text-indigo-400 rounded-full hover:bg-gray-100 dark:hover:bg-gray-600"
@@ -955,6 +1003,94 @@ const ModuleCard = ({ module, onView, onEdit, onDelete }) => {
           <Trash2 className="h-4 w-4" />
         </button>
       </div>
+    </div>
+  );
+};
+
+
+const IconDropzone = ({ value, onChange, onRemove, error }: any) => {
+  const [preview, setPreview] = useState(null);
+
+  const onDrop = useCallback((acceptedFiles) => {
+    const file = acceptedFiles[0];
+    if (file) {
+      if (preview) {
+        URL.revokeObjectURL(preview);
+      }
+      const previewUrl = URL.createObjectURL(file);
+      setPreview(previewUrl);
+      onChange(file);
+    }
+  }, [onChange, preview]); // Include preview in dependencies
+
+  const { getRootProps, getInputProps, isDragActive } = useDropzone({
+    onDrop,
+    accept: {
+      'image/svg+xml': ['.svg']
+    },
+    maxSize: 1 * 1024 * 1024,
+    multiple: false,
+    maxFiles: 1
+  });
+
+  const handleRemove = () => {
+    if (preview) {
+      URL.revokeObjectURL(preview);
+      setPreview(null);
+    }
+    onRemove();
+  };
+
+  const imageSrc = preview || value?.url || null;
+
+  return (
+    <div className="space-y-2">
+      <div
+        {...getRootProps()}
+        className={`border-2 border-dashed rounded-lg p-4 text-center cursor-pointer transition-colors ${isDragActive
+          ? 'border-blue-500 bg-blue-50 dark:bg-blue-900/20'
+          : 'border-gray-300 dark:border-gray-600 hover:border-gray-400 dark:hover:border-gray-500'
+          } ${error ? 'border-red-500' : ''}`}
+      >
+        <input {...getInputProps()} />
+        {imageSrc ? (
+          <div className="flex flex-col items-center">
+            <img
+              src={imageSrc}
+              alt="Icon preview"
+              className="h-16 w-16 object-contain mb-2" // Adjust size as needed
+            />
+            <p className="text-xs text-gray-600 dark:text-gray-400">
+              Click to replace or drag & drop new SVG
+            </p>
+          </div>
+        ) : (
+          <div className="space-y-1">
+            <svg className="mx-auto h-6 w-6 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"></path>
+            </svg>
+            <p className="text-xs text-gray-600 dark:text-gray-400">
+              {isDragActive
+                ? 'Drop the SVG here'
+                : 'Drag & drop an SVG icon here, or click to select'}
+            </p>
+            <p className="text-xs text-gray-500 dark:text-gray-500">
+              SVG up to 1MB
+            </p>
+          </div>
+        )}
+      </div>
+      {(imageSrc) && (
+        <button
+          type="button"
+          onClick={handleRemove}
+          className="flex items-center text-xs text-red-600 hover:text-red-800 dark:text-red-400 dark:hover:text-red-300"
+        >
+          <Trash2 className="h-3 w-3 mr-1" />
+          Remove Icon
+        </button>
+      )}
+      {error && <p className="text-xs text-red-600">{error}</p>}
     </div>
   );
 };

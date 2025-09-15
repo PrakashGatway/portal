@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, use } from "react";
 import moment from "moment";
 import { useModal } from "../../hooks/useModal";
 import { Modal } from "../../components/ui/modal";
@@ -7,8 +7,12 @@ import Input from "../../components/form/input/InputField";
 import Label from "../../components/form/Label";
 import Select from "../../components/form/Select";
 import { toast } from "react-toastify";
-import api from "../../axiosInstance";
-import { Eye, Pencil, Trash2, Plus, Video, Play, FileText, Clipboard } from "lucide-react";
+import api, { ImageBaseUrl } from "../../axiosInstance";
+import { Eye, Pencil, Trash2, Plus, Video, Play, FileText, Clipboard, PlaySquareIcon, Upload, Radio } from "lucide-react";
+import { useNavigate } from "react-router";
+import RecordedVideoUploadModal from "./UploadClass";
+import { ContentThumbnailDropzone } from "./CotentThumbnail";
+import DynamicIcon from "../../components/DynamicIcon";
 
 export default function ContentManagement({ type }: any) {
     const [contents, setContents] = useState([]);
@@ -32,7 +36,6 @@ export default function ContentManagement({ type }: any) {
     const [modules, setModules] = useState([]);
     const [instructors, setInstructors] = useState([]);
 
-    // Debounced search
     const [debouncedSearch, setDebouncedSearch] = useState(filters.search);
 
     useEffect(() => {
@@ -75,7 +78,7 @@ export default function ContentManagement({ type }: any) {
         } finally {
             setLoading(false);
         }
-    }, [filters, debouncedSearch,type,filters.contentType]);
+    }, [filters, debouncedSearch, type, filters.contentType]);
 
     const fetchCourses = useCallback(async () => {
         try {
@@ -110,7 +113,7 @@ export default function ContentManagement({ type }: any) {
 
     useEffect(() => {
         fetchContents(true);
-    }, [filters.contentType, filters.status, filters.course, filters.sortBy, debouncedSearch,type]);
+    }, [filters.contentType, filters.status, filters.course, filters.sortBy, debouncedSearch, type]);
 
     useEffect(() => {
         fetchCourses();
@@ -327,7 +330,7 @@ export default function ContentManagement({ type }: any) {
                         </div>
                     ) : contents.length > 0 ? (
                         <>
-                            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                            <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-4 gap-6">
                                 {contents.map((content) => (
                                     <ContentCard
                                         key={content._id}
@@ -566,8 +569,8 @@ export default function ContentManagement({ type }: any) {
                                                 <div>
                                                     <p className="text-sm text-gray-500 dark:text-gray-400">Video URL</p>
                                                     <p className="text-sm font-medium text-gray-800 dark:text-white/90">
-                                                        {selectedContent.video?.url ? (
-                                                            <a href={selectedContent.video.url} target="_blank" rel="noopener noreferrer" className="text-blue-500 hover:underline">
+                                                        {selectedContent.video?.publicId ? (
+                                                            <a href={selectedContent.video.publicId} target="_blank" rel="noopener noreferrer" className="text-blue-500 hover:underline">
                                                                 Watch Video
                                                             </a>
                                                         ) : "N/A"}
@@ -746,19 +749,22 @@ export default function ContentManagement({ type }: any) {
     );
 }
 
-const ContentCard = ({ content, onView, onEdit, onDelete }) => {
+const ContentCard = ({ content, onView, onEdit, onDelete }: any) => {
+    let navigate = useNavigate();
+    const [isUploadModalOpen, setIsUploadModalOpen] = useState(false);
+
     const getContentTypeIcon = (type) => {
         switch (type) {
             case 'LiveClasses':
-                return <Video className="h-8 w-8 text-red-500" />;
+                return <Video className="mt-1 h-5 w-5 text-red-500" />;
             case 'RecordedClasses':
-                return <Play className="h-8 w-8 text-blue-500" />;
+                return <Play className="mt-1 h-5 w-5 text-blue-500" />;
             case 'Tests':
-                return <Clipboard className="h-8 w-8 text-green-500" />;
+                return <Clipboard className="mt-1 h-5 w-5 text-green-500" />;
             case 'StudyMaterials':
-                return <FileText className="h-8 w-8 text-yellow-500" />;
+                return <FileText className="mt-1 h-5 w-5 text-yellow-500" />;
             default:
-                return <FileText className="h-8 w-8 text-gray-500" />;
+                return <FileText className="mt-1 h-5 w-5 text-gray-500" />;
         }
     };
 
@@ -779,11 +785,44 @@ const ContentCard = ({ content, onView, onEdit, onDelete }) => {
 
     return (
         <div className="relative border border-gray-200 dark:border-gray-700 rounded-lg shadow-sm overflow-hidden bg-white dark:bg-gray-800 hover:shadow-md transition-shadow duration-200">
-            <div className="p-4">
+            <div className="relative">
+                <img
+                    className="h-36 w-full object-cover  transition-all duration-300"
+                    src={content.thumbnailPic ? `${ImageBaseUrl}/${content?.thumbnailPic}` : "https://www.gatewayabroadeducations.com/img/counselling-session.svg"}
+                    alt={content.title || "Content thumbnail"}
+                />
+                {content.__t === "RecordedClasses" && content.video?.publicId && (
+                    <button
+                        onClick={() =>
+                            navigate(
+                                `/class/${content._id}/${content.courseInfo?._id}?module=${content.module}`
+                            )
+                        }
+                        className="absolute inset-0 flex items-center justify-center bg-black/20 bg-opacity-30 opacity-100 hover:opacity-100 transition-opacity"
+                        aria-label="Play Recorded Class"
+                    >
+                        <Play className="h-12 w-12 text-white" />
+                    </button>
+                )}
+                {content.__t === "LiveClasses" && content && (
+                    <button
+                        onClick={() =>
+                            navigate(
+                                `/class/live/${content._id}/${content.courseInfo?._id}?module=${content.module}`
+                            )
+                        }
+                        className="absolute inset-0 flex items-center justify-center bg-black/20 bg-opacity-30 opacity-100 hover:opacity-100 transition-opacity"
+                        aria-label="Play Recorded Class"
+                    >
+                        <Radio className="h-12 w-12 text-white" />
+                    </button>
+                )}
+            </div>
+            <div className="p-4 py-2">
                 <div className="flex justify-between items-start">
-                    <div className="flex mt-2 items-center gap-2">
+                    <div className="flex items-start gap-2">
                         {getContentTypeIcon(content.__t)}
-                        <h3 className=" text-lg font-semibold text-gray-800 dark:text-white truncate">
+                        <h3 className="text-base font-semibold text-gray-800 dark:text-white">
                             {content.title}
                         </h3>
                     </div>
@@ -801,7 +840,7 @@ const ContentCard = ({ content, onView, onEdit, onDelete }) => {
                 <p className="mt-2 text-sm text-gray-500 dark:text-gray-400">
                     {content.courseInfo?.title || "N/A"} - {getContentTypeLabel(content.__t)}
                 </p>
-                <p className="mt-2 text-sm text-gray-600 dark:text-gray-300 line-clamp-2">
+                <p className="mt-2 text-xs text-gray-600 dark:text-gray-300 line-clamp-2">
                     {content.description || "No description provided."}
                 </p>
                 <div className="mt-4 flex justify-between items-center text-xs text-gray-500 dark:text-gray-400">
@@ -813,7 +852,25 @@ const ContentCard = ({ content, onView, onEdit, onDelete }) => {
                     </span>
                 </div>
             </div>
-            <div className="bg-gray-50 dark:bg-gray-700 px-4 py-3 flex justify-end space-x-2">
+            <div className="bg-gray-50 dark:bg-gray-700 px-4 py-1 flex justify-end space-x-2">
+                {content.__t === 'RecordedClasses' && !content.video?.publicId && (
+                    <button
+                        onClick={() => setIsUploadModalOpen(true)}
+                        className="p-2 text-gray-500 hover:text-green-600 dark:text-gray-400 dark:hover:text-green-400 rounded-full hover:bg-gray-100 dark:hover:bg-gray-600"
+                        aria-label="Upload Video"
+                        title="Upload Video"
+                    >
+                        <Upload className="h-4 w-4" />
+                    </button>
+                )}
+
+                {content.__t === 'LiveClasses' && <button
+                    onClick={() => navigate(`/waiting/${content.slug}`)}
+                    className="p-2 text-gray-500 hover:text-indigo-600 dark:text-gray-400 dark:hover:text-indigo-400 rounded-full hover:bg-gray-100 dark:hover:bg-gray-600"
+                    aria-label="View"
+                >
+                    <PlaySquareIcon className="h-4 w-4" />
+                </button>}
                 <button
                     onClick={() => onView(content)}
                     className="p-2 text-gray-500 hover:text-indigo-600 dark:text-gray-400 dark:hover:text-indigo-400 rounded-full hover:bg-gray-100 dark:hover:bg-gray-600"
@@ -836,6 +893,22 @@ const ContentCard = ({ content, onView, onEdit, onDelete }) => {
                     <Trash2 className="h-4 w-4" />
                 </button>
             </div>
+            {content.__t === 'RecordedClasses' && (
+                <RecordedVideoUploadModal
+                    isOpen={isUploadModalOpen}
+                    onClose={() => setIsUploadModalOpen(false)}
+                    content={content}
+                    onUploadComplete={async (data) => {
+                        try {
+                            await api.put(`/content/${content._id}`, { ...content, video: { url: data.url, duration: data.duration, publicId: data.vimeoId } });
+                            setIsUploadModalOpen(false)
+                            toast.success("Content updated successfully");
+                        } catch (error) {
+                            toast.error(error.message || "Error to update information")
+                        }
+                    }}
+                />
+            )}
         </div>
     );
 };
@@ -843,6 +916,7 @@ const ContentCard = ({ content, onView, onEdit, onDelete }) => {
 const ContentForm = ({ content = null, onSave, onCancel, courses, type, instructors }: any) => {
 
     const [modules, setModules] = useState([]);
+    const [thumbnailFile, setThumbnailFile] = useState(null);
     const [formData, setFormData] = useState({
         title: "",
         description: "",
@@ -863,10 +937,20 @@ const ContentForm = ({ content = null, onSave, onCancel, courses, type, instruct
         testType: "quiz",
         materialType: "pdf",
         fileUrl: ""
-    });
-    const [errors, setErrors] = useState({});
-
-    console.log(formData)
+    }) as any;
+    type FormErrors = {
+        title?: string;
+        course?: string;
+        instructor?: string;
+        order?: string;
+        scheduledStart?: string;
+        scheduledEnd?: string;
+        videoUrl?: string;
+        videoDuration?: string;
+        fileUrl?: string;
+        [key: string]: string | undefined;
+    };
+    const [errors, setErrors] = useState<FormErrors>({});
 
     useEffect(() => {
         if (content && courses) {
@@ -882,18 +966,13 @@ const ContentForm = ({ content = null, onSave, onCancel, courses, type, instruct
                 isFree: content.isFree || false,
                 tags: content.tags?.length ? [...content.tags] : [""],
                 __t: content.__t || "LiveClasses",
-                // Live Class specific fields
                 scheduledStart: content.scheduledStart ? moment(content.scheduledStart).format("YYYY-MM-DDTHH:mm") : "",
                 scheduledEnd: content.scheduledEnd ? moment(content.scheduledEnd).format("YYYY-MM-DDTHH:mm") : "",
                 maxParticipants: content.maxParticipants || 100,
-                // Recorded Class specific fields
-                videoUrl: content.video?.url || "",
-                videoDuration: content.video?.duration || 0,
-                // Test specific fields
                 testType: content.testType || "quiz",
-                // Study Material specific fields
                 materialType: content.materialType || "pdf",
-                fileUrl: content.file?.url || ""
+                fileUrl: content.file?.url || "",
+                thumbnailPic: content.thumbnailPic || null
             });
         } else {
             setFormData({
@@ -915,7 +994,8 @@ const ContentForm = ({ content = null, onSave, onCancel, courses, type, instruct
                 videoDuration: 0,
                 testType: "quiz",
                 materialType: "pdf",
-                fileUrl: ""
+                fileUrl: "",
+                thumbnailPic: ""
             });
         }
         setErrors({});
@@ -931,6 +1011,21 @@ const ContentForm = ({ content = null, onSave, onCancel, courses, type, instruct
             setModules(response.data?.data || []);
         } catch (error) {
             console.error("Failed to fetch modules:", error);
+        }
+    };
+
+    const handleThumbnailChange = (file) => {
+        setThumbnailFile(file); // Store the File object
+        if (errors.thumbnailPic) {
+            setErrors(prev => ({ ...prev, thumbnailPic: '' }));
+        }
+    };
+
+    const handleThumbnailRemove = () => {
+        setThumbnailFile(null); // Clear the selected file
+        setFormData(prev => ({ ...prev, thumbnailPic: "" })); // Clear the thumbnail URL in formData
+        if (errors.thumbnailPic) {
+            setErrors(prev => ({ ...prev, thumbnailPic: '' }));
         }
     };
 
@@ -970,22 +1065,20 @@ const ContentForm = ({ content = null, onSave, onCancel, courses, type, instruct
     };
 
     const validateForm = () => {
-        const newErrors = {};
+        const newErrors = {} as any;
         if (!formData.title.trim()) newErrors.title = 'Title is required';
         if (!formData.course) newErrors.course = 'Course is required';
         if (!formData.instructor) newErrors.instructor = 'Instructor is required';
-        if (formData.order < 0) newErrors.order = 'Order must be a positive number';
-
-        // Validate content type specific fields
+        if (!formData.thumbnailPic && !thumbnailFile) newErrors.thumbnailPic = 'Thumbnail is required';
         if (formData.__t === 'LiveClasses') {
             if (!formData.scheduledStart) newErrors.scheduledStart = 'Scheduled start time is required';
             if (!formData.scheduledEnd) newErrors.scheduledEnd = 'Scheduled end time is required';
         } else if (formData.__t === 'RecordedClasses') {
-            if (!formData.videoUrl.trim()) newErrors.videoUrl = 'Video URL is required';
-            if (formData.videoDuration <= 0) newErrors.videoDuration = 'Video duration must be greater than 0';
+
         } else if (formData.__t === 'StudyMaterials') {
             if (!formData.fileUrl.trim()) newErrors.fileUrl = 'File URL is required';
         }
+
 
         setErrors(newErrors);
         return Object.keys(newErrors).length === 0;
@@ -1003,7 +1096,6 @@ const ContentForm = ({ content = null, onSave, onCancel, courses, type, instruct
                 module: formData.module,
                 instructor: formData.instructor,
                 // order: parseInt(formData.order, 10) || 0,
-                duration: parseInt(formData.duration, 10) || 0,
                 status: formData.status,
                 isFree: formData.isFree,
                 tags: formData.tags.filter(tag => tag.trim() !== ""),
@@ -1014,12 +1106,8 @@ const ContentForm = ({ content = null, onSave, onCancel, courses, type, instruct
             if (formData.__t === 'LiveClasses') {
                 payload.scheduledStart = new Date(formData.scheduledStart);
                 payload.scheduledEnd = new Date(formData.scheduledEnd);
-                payload.maxParticipants = parseInt(formData.maxParticipants, 10) || 100;
             } else if (formData.__t === 'RecordedClasses') {
-                payload.video = {
-                    url: formData.videoUrl,
-                    duration: parseInt(formData.videoDuration, 10) || 0
-                };
+                
             } else if (formData.__t === 'Tests') {
                 payload.testType = formData.testType;
             } else if (formData.__t === 'StudyMaterials') {
@@ -1028,17 +1116,37 @@ const ContentForm = ({ content = null, onSave, onCancel, courses, type, instruct
                     url: formData.fileUrl
                 };
             }
+            let finalThumbnailUrl = formData.thumbnailPic;
+
+            if (thumbnailFile) {
+                const uploadFormData = new FormData();
+                uploadFormData.append('image', thumbnailFile); // Append the File object
+                try {
+                    const uploadResponse = await api.post('/upload/single', uploadFormData, {
+                        headers: {
+                            'Content-Type': 'multipart/form-data',
+                        },
+                    });
+                    const uploadedThumbnailUrl = uploadResponse.data?.file?.filename;
+                    if (!uploadedThumbnailUrl) {
+                        throw new Error("Thumbnail upload failed: No URL returned.");
+                    }
+                    finalThumbnailUrl = uploadedThumbnailUrl;
+                } catch (uploadError) {
+                    toast.error(uploadError.message || "Failed to upload thumbnail");
+                    return;
+                }
+            }
 
             if (content) {
-                await api.put(`/content/${content._id}`, payload);
+                await api.put(`/content/${content._id}`, { ...payload, thumbnailPic: finalThumbnailUrl });
                 toast.success("Content updated successfully");
             } else {
-                await api.post(`/content/${type == "LiveClasses" ? "liveclass" : type == "RecordedClasses" ? "recordedclass" : type == "Tests" ? "test" : "study-material"}`, payload);
+                await api.post(`/content/${type == "LiveClasses" ? "liveclass" : type == "RecordedClasses" ? "recordedclass" : type == "Tests" ? "test" : "study-material"}`, { ...payload, thumbnailPic: finalThumbnailUrl });
                 toast.success("Content created successfully");
             }
             onSave();
         } catch (error) {
-            console.error("Error saving content:", error);
             toast.error(error?.message || "Failed to save content");
         }
     };
@@ -1046,7 +1154,7 @@ const ContentForm = ({ content = null, onSave, onCancel, courses, type, instruct
     return (
         <form onSubmit={handleSubmit} className="space-y-6">
             <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
-                <div>
+                <div className="md:col-span-2">
                     <Label>Content Title *</Label>
                     <Input
                         type="text"
@@ -1056,6 +1164,15 @@ const ContentForm = ({ content = null, onSave, onCancel, courses, type, instruct
                         placeholder="Enter content title"
                     />
                     {errors.title && <p className="mt-1 text-sm text-red-600">{errors.title}</p>}
+                </div>
+                <div className="md:col-span-2">
+                    <Label>Thumbnail Picture</Label>
+                    <ContentThumbnailDropzone
+                        value={{ url: formData.thumbnailPic ? ImageBaseUrl + "/" + formData.thumbnailPic : "" }}
+                        onChange={handleThumbnailChange}
+                        onRemove={handleThumbnailRemove}
+                        error={errors.thumbnailPic}
+                    />
                 </div>
                 {/* <div>
                     <Label>Content Type *</Label>
@@ -1071,6 +1188,7 @@ const ContentForm = ({ content = null, onSave, onCancel, courses, type, instruct
                         onChange={(value) => setFormData(prev => ({ ...prev, __t: value }))}
                     />
                 </div> */}
+
                 <div>
                     <Label>Course *</Label>
                     <Select
@@ -1106,27 +1224,6 @@ const ContentForm = ({ content = null, onSave, onCancel, courses, type, instruct
                         onChange={(value) => setFormData(prev => ({ ...prev, instructor: value }))}
                     />
                     {errors.instructor && <p className="mt-1 text-sm text-red-600">{errors.instructor}</p>}
-                </div>
-                {/* <div>
-                    <Label>Order *</Label>
-                    <Input
-                        type="number"
-                        name="order"
-                        value={formData.order}
-                        onChange={handleChange}
-                        min="0"
-                    />
-                    {errors.order && <p className="mt-1 text-sm text-red-600">{errors.order}</p>}
-                </div> */}
-                <div>
-                    <Label>Duration (seconds)</Label>
-                    <Input
-                        type="number"
-                        name="duration"
-                        value={formData.duration}
-                        onChange={handleChange}
-                        min="0"
-                    />
                 </div>
                 <div>
                     <Label>Status</Label>
@@ -1184,7 +1281,7 @@ const ContentForm = ({ content = null, onSave, onCancel, courses, type, instruct
                                     onClick={() => removeArrayField('tags', index)}
                                     className="text-red-500 hover:text-red-700 text-sm"
                                 >
-                                    Remove
+                                    <DynamicIcon name='Trash' />
                                 </button>
                             )}
                         </div>
@@ -1199,7 +1296,6 @@ const ContentForm = ({ content = null, onSave, onCancel, courses, type, instruct
                 </div>
             </div>
 
-            {/* Content Type Specific Fields */}
             {formData.__t === 'LiveClasses' && (
                 <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
                     <div>
@@ -1221,43 +1317,6 @@ const ContentForm = ({ content = null, onSave, onCancel, courses, type, instruct
                             onChange={handleChange}
                         />
                         {errors.scheduledEnd && <p className="mt-1 text-sm text-red-600">{errors.scheduledEnd}</p>}
-                    </div>
-                    <div>
-                        <Label>Max Participants</Label>
-                        <Input
-                            type="number"
-                            name="maxParticipants"
-                            value={formData.maxParticipants}
-                            onChange={handleChange}
-                            min="1"
-                        />
-                    </div>
-                </div>
-            )}
-
-            {formData.__t === 'RecordedClasses' && (
-                <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
-                    <div>
-                        <Label>Video URL *</Label>
-                        <Input
-                            type="url"
-                            name="videoUrl"
-                            value={formData.videoUrl}
-                            onChange={handleChange}
-                            placeholder="https://example.com/video.mp4"
-                        />
-                        {errors.videoUrl && <p className="mt-1 text-sm text-red-600">{errors.videoUrl}</p>}
-                    </div>
-                    <div>
-                        <Label>Video Duration (seconds) *</Label>
-                        <Input
-                            type="number"
-                            name="videoDuration"
-                            value={formData.videoDuration}
-                            onChange={handleChange}
-                            min="1"
-                        />
-                        {errors.videoDuration && <p className="mt-1 text-sm text-red-600">{errors.videoDuration}</p>}
                     </div>
                 </div>
             )}

@@ -298,7 +298,7 @@ export default function CourseManagement() {
                         </div>
                     </div>
                 </div>
-           <div className="mb-6">
+                <div className="mb-6">
                     {loading && courses.length === 0 ? (
                         <div className="flex h-64 items-center justify-center">
                             <div className="h-8 w-8 animate-spin rounded-full border-4 border-indigo-500 border-t-transparent"></div>
@@ -382,472 +382,465 @@ export default function CourseManagement() {
                     )}
                 </div>
             </div>
-            {/* Course Details Modal */ }
-    <Modal isOpen={isOpen} onClose={closeModal} className="max-w-[800px] m-4">
-        <div className="no-scrollbar relative w-full max-w-[800px] overflow-y-auto rounded-3xl bg-white p-4 dark:bg-gray-900 lg:p-11">
-            <div className="px-2 pr-14">
-                <h4 className="mb-2 text-2xl font-semibold text-gray-800 dark:text-white/90">
-                    Course Details
-                </h4>
-                <p className="mb-6 text-sm text-gray-500 dark:text-gray-400 lg:mb-7">
-                    Detailed information about this course
-                </p>
-            </div>
-            <div className="flex flex-col">
-                <div className="custom-scrollbar h-[450px] overflow-y-auto px-2 pb-3">
-                    {selectedCourse && (
-                        <div className="space-y-8">
-                            {/* Basic Information */}
-                            <div>
-                                <h5 className="mb-4 text-lg font-medium text-gray-800 dark:text-white/90">
-                                    Basic Information
-                                </h5>
-                                <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
-                                    <div className="space-y-4">
-                                        <div>
-                                            <p className="text-sm text-gray-500 dark:text-gray-400">Title</p>
-                                            <p className="text-sm font-medium text-gray-800 dark:text-white/90">
-                                                {selectedCourse.title}
-                                            </p>
+            {/* Course Details Modal */}
+            <Modal isOpen={isOpen} onClose={closeModal} className="max-w-[800px] m-4">
+                <div className="no-scrollbar relative w-full max-w-[800px] overflow-y-auto rounded-3xl bg-white p-4 dark:bg-gray-900 lg:p-11">
+                    <div className="px-2 pr-14">
+                        <h4 className="mb-2 text-2xl font-semibold text-gray-800 dark:text-white/90">
+                            Course Details
+                        </h4>
+                        <p className="mb-6 text-sm text-gray-500 dark:text-gray-400 lg:mb-7">
+                            Detailed information about this course
+                        </p>
+                    </div>
+                    <div className="flex flex-col">
+                        <div className="custom-scrollbar h-[450px] overflow-y-auto px-2 pb-3">
+                            {selectedCourse && (
+                                <div className="space-y-8">
+                                    {/* Basic Information */}
+                                    <div>
+                                        <h5 className="mb-4 text-lg font-medium text-gray-800 dark:text-white/90">
+                                            Basic Information
+                                        </h5>
+                                        <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
+                                            <div className="space-y-4">
+                                                <div>
+                                                    <p className="text-sm text-gray-500 dark:text-gray-400">Title</p>
+                                                    <p className="text-sm font-medium text-gray-800 dark:text-white/90">
+                                                        {selectedCourse.title}
+                                                    </p>
+                                                </div>
+                                                <div>
+                                                    <p className="text-sm text-gray-500 dark:text-gray-400">Code</p>
+                                                    <p className="text-sm font-medium text-gray-800 dark:text-white/90">
+                                                        {selectedCourse.code}
+                                                    </p>
+                                                </div>
+                                                <div>
+                                                    <p className="text-sm text-gray-500 dark:text-gray-400">Slug</p>
+                                                    <p className="text-sm font-medium text-gray-800 dark:text-white/90">
+                                                        {selectedCourse.slug}
+                                                    </p>
+                                                </div>
+                                            </div>
+                                            <div>
+                                                <div>
+                                                    <p className="text-sm text-gray-500 dark:text-gray-400">Description</p>
+                                                    <p className="text-sm font-medium text-gray-800 dark:text-white/90">
+                                                        {selectedCourse.description}
+                                                    </p>
+                                                </div>
+                                                <div className="mt-4">
+                                                    <p className="text-sm text-gray-500 dark:text-gray-400">Short Description</p>
+                                                    <p className="text-sm font-medium text-gray-800 dark:text-white/90">
+                                                        {selectedCourse.shortDescription || "N/A"}
+                                                    </p>
+                                                </div>
+                                            </div>
                                         </div>
-                                        <div>
-                                            <p className="text-sm text-gray-500 dark:text-gray-400">Code</p>
-                                            <p className="text-sm font-medium text-gray-800 dark:text-white/90">
-                                                {selectedCourse.code}
-                                            </p>
-                                        </div>
-                                        <div>
-                                            <p className="text-sm text-gray-500 dark:text-gray-400">Slug</p>
-                                            <p className="text-sm font-medium text-gray-800 dark:text-white/90">
-                                                {selectedCourse.slug}
-                                            </p>
-                                        </div>
                                     </div>
-                                    <div>
-                                        <div>
-                                            <p className="text-sm text-gray-500 dark:text-gray-400">Description</p>
-                                            <p className="text-sm font-medium text-gray-800 dark:text-white/90">
-                                                {selectedCourse.description}
-                                            </p>
-                                        </div>
-                                        <div className="mt-4">
-                                            <p className="text-sm text-gray-500 dark:text-gray-400">Short Description</p>
-                                            <p className="text-sm font-medium text-gray-800 dark:text-white/90">
-                                                {selectedCourse.shortDescription || "N/A"}
-                                            </p>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
 
-                            {/* Category & Metadata */}
-                            <div>
-                                <h5 className="mb-4 text-lg font-medium text-gray-800 dark:text-white/90">
-                                    Category & Metadata
-                                </h5>
-                                <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-4">
+                                    {/* Category & Metadata */}
                                     <div>
-                                        <p className="text-sm text-gray-500 dark:text-gray-400">Category</p>
-                                        <p className="text-sm font-medium text-gray-800 dark:text-white/90">
-                                            {selectedCourse.categoryInfo?.name ||
-                                                (typeof selectedCourse.category === 'string' ? selectedCourse.category : 'N/A')}
-                                        </p>
-                                    </div>
-                                    <div>
-                                        <p className="text-sm text-gray-500 dark:text-gray-400">Subcategory</p>
-                                        <p className="text-sm font-medium text-gray-800 dark:text-white/90">
-                                            {selectedCourse.subcategoryInfo?.name ||
-                                                (typeof selectedCourse.subcategory === 'string' ? selectedCourse.subcategory : 'N/A')}
-                                        </p>
-                                    </div>
-                                    <div>
-                                        <p className="text-sm text-gray-500 dark:text-gray-400">Level</p>
-                                        <p className="text-sm font-medium text-gray-800 dark:text-white/90 capitalize">
-                                            {selectedCourse.level}
-                                        </p>
-                                    </div>
-                                    <div>
-                                        <p className="text-sm text-gray-500 dark:text-gray-400">Language</p>
-                                        <p className="text-sm font-medium text-gray-800 dark:text-white/90">
-                                            {selectedCourse.language}
-                                        </p>
-                                    </div>
-                                </div>
-                            </div>
-
-                            {/* Instructors */}
-                            <div>
-                                <h5 className="mb-4 text-lg font-medium text-gray-800 dark:text-white/90">
-                                    Instructors
-                                </h5>
-                                <div className="flex flex-wrap gap-2">
-                                    {selectedCourse.instructorNames && selectedCourse.instructorNames.length > 0 ? (
-                                        selectedCourse.instructorNames.map((instructor, index) => (
-                                            <span
-                                                key={instructor._id || index}
-                                                className="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200"
-                                            >
-                                                {instructor.name || instructor.email || instructor._id}
-                                            </span>
-                                        ))
-                                    ) : (
-                                        <p className="text-sm text-gray-500 dark:text-gray-400">No instructors assigned</p>
-                                    )}
-                                </div>
-                            </div>
-
-                            {/* Schedule */}
-                            <div>
-                                <h5 className="mb-4 text-lg font-medium text-gray-800 dark:text-white/90">
-                                    Schedule
-                                </h5>
-                                <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-4">
-                                    <div>
-                                        <p className="text-sm text-gray-500 dark:text-gray-400">Start Date</p>
-                                        <p className="text-sm font-medium text-gray-800 dark:text-white/90">
-                                            {selectedCourse.schedule?.startDate
-                                                ? moment(selectedCourse.schedule.startDate).format("MMM D, YYYY h:mm A")
-                                                : "N/A"}
-                                        </p>
-                                    </div>
-                                    <div>
-                                        <p className="text-sm text-gray-500 dark:text-gray-400">End Date</p>
-                                        <p className="text-sm font-medium text-gray-800 dark:text-white/90">
-                                            {selectedCourse.schedule?.endDate
-                                                ? moment(selectedCourse.schedule.endDate).format("MMM D, YYYY h:mm A")
-                                                : "N/A"}
-                                        </p>
-                                    </div>
-                                    <div>
-                                        <p className="text-sm text-gray-500 dark:text-gray-400">Enrollment Deadline</p>
-                                        <p className="text-sm font-medium text-gray-800 dark:text-white/90">
-                                            {selectedCourse.schedule?.enrollmentDeadline
-                                                ? moment(selectedCourse.schedule.enrollmentDeadline).format("MMM D, YYYY h:mm A")
-                                                : "N/A"}
-                                        </p>
-                                    </div>
-                                    <div>
-                                        <p className="text-sm text-gray-500 dark:text-gray-400">Timezone</p>
-                                        <p className="text-sm font-medium text-gray-800 dark:text-white/90">
-                                            {selectedCourse.schedule?.timezone || "N/A"}
-                                        </p>
-                                    </div>
-                                </div>
-                            </div>
-
-                            {/* Schedule Pattern */}
-                            <div>
-                                <h5 className="mb-4 text-lg font-medium text-gray-800 dark:text-white/90">
-                                    Schedule Pattern
-                                </h5>
-                                <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-4">
-                                    <div>
-                                        <p className="text-sm text-gray-500 dark:text-gray-400">Frequency</p>
-                                        <p className="text-sm font-medium text-gray-800 dark:text-white/90 capitalize">
-                                            {selectedCourse.schedule_pattern?.frequency || "N/A"}
-                                        </p>
-                                    </div>
-                                    <div>
-                                        <p className="text-sm text-gray-500 dark:text-gray-400">Days</p>
-                                        <p className="text-sm font-medium text-gray-800 dark:text-white/90">
-                                            {selectedCourse.schedule_pattern?.days?.length > 0
-                                                ? selectedCourse.schedule_pattern.days.map(d => (
-                                                    <span key={d} className="capitalize">{d}</span>
-                                                )).reduce((prev, curr) => [prev, ', ', curr])
-                                                : "N/A"}
-                                        </p>
-                                    </div>
-                                    <div>
-                                        <p className="text-sm text-gray-500 dark:text-gray-400">Time</p>
-                                        <p className="text-sm font-medium text-gray-800 dark:text-white/90">
-                                            {selectedCourse.schedule_pattern?.time?.start && selectedCourse.schedule_pattern?.time?.end
-                                                ? `${selectedCourse.schedule_pattern.time.start} - ${selectedCourse.schedule_pattern.time.end}`
-                                                : "N/A"}
-                                        </p>
-                                    </div>
-                                    <div>
-                                        <p className="text-sm text-gray-500 dark:text-gray-400">Duration (mins)</p>
-                                        <p className="text-sm font-medium text-gray-800 dark:text-white/90">
-                                            {selectedCourse.schedule_pattern?.duration || "N/A"}
-                                        </p>
-                                    </div>
-                                </div>
-                            </div>
-
-                            {/* Pricing */}
-                            <div>
-                                <h5 className="mb-4 text-lg font-medium text-gray-800 dark:text-white/90">
-                                    Pricing
-                                </h5>
-                                <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-4">
-                                    <div>
-                                        <p className="text-sm text-gray-500 dark:text-gray-400">Price</p>
-                                        <p className="text-sm font-medium text-gray-800 dark:text-white/90">
-                                            {selectedCourse.pricing?.currency} {selectedCourse.pricing?.amount}
-                                        </p>
-                                    </div>
-                                    <div>
-                                        <p className="text-sm text-gray-500 dark:text-gray-400">Discount</p>
-                                        <p className="text-sm font-medium text-gray-800 dark:text-white/90">
-                                            {selectedCourse.pricing?.discount
-                                                ? `${selectedCourse.pricing.discount}%`
-                                                : "N/A"}
-                                        </p>
-                                    </div>
-                                    <div>
-                                        <p className="text-sm text-gray-500 dark:text-gray-400">Early Bird</p>
-                                        <p className="text-sm font-medium text-gray-800 dark:text-white/90">
-                                            {selectedCourse.pricing?.earlyBird?.discount
-                                                ? `${selectedCourse.pricing.earlyBird.discount}%`
-                                                : "N/A"}
-                                        </p>
-                                    </div>
-                                    <div>
-                                        <p className="text-sm text-gray-500 dark:text-gray-400">Early Bird Deadline</p>
-                                        <p className="text-sm font-medium text-gray-800 dark:text-white/90">
-                                            {selectedCourse.pricing?.earlyBird?.deadline
-                                                ? moment(selectedCourse.pricing.earlyBird.deadline).format("MMM D, YYYY")
-                                                : "N/A"}
-                                        </p>
-                                    </div>
-                                </div>
-                            </div>
-
-                            {/* Media */}
-                            <div>
-                                <h5 className="mb-4 text-lg font-medium text-gray-800 dark:text-white/90">
-                                    Media
-                                </h5>
-                                <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
-                                    <div>
-                                        <p className="text-sm text-gray-500 dark:text-gray-400">Thumbnail</p>
-                                        {selectedCourse.thumbnail?.url ? (
-                                            <a
-                                                href={selectedCourse.thumbnail.url.trim()}
-                                                target="_blank"
-                                                rel="noopener noreferrer"
-                                                className="text-sm font-medium text-blue-600 hover:underline dark:text-blue-400"
-                                            >
-                                                View Thumbnail
-                                            </a>
-                                        ) : (
-                                            <p className="text-sm font-medium text-gray-800 dark:text-white/90">N/A</p>
-                                        )}
-                                    </div>
-                                    <div>
-                                        <p className="text-sm text-gray-500 dark:text-gray-400">Preview</p>
-                                        {selectedCourse.preview?.url ? (
-                                            <a
-                                                href={selectedCourse.preview.url.trim()}
-                                                target="_blank"
-                                                rel="noopener noreferrer"
-                                                className="text-sm font-medium text-blue-600 hover:underline dark:text-blue-400"
-                                            >
-                                                View Preview
-                                            </a>
-                                        ) : (
-                                            <p className="text-sm font-medium text-gray-800 dark:text-white/90">N/A</p>
-                                        )}
-                                    </div>
-                                    {selectedCourse.preview?.duration && (
-                                        <div>
-                                            <p className="text-sm text-gray-500 dark:text-gray-400">Preview Duration</p>
-                                            <p className="text-sm font-medium text-gray-800 dark:text-white/90">
-                                                {selectedCourse.preview.duration} seconds
-                                            </p>
-                                        </div>
-                                    )}
-                                </div>
-                            </div>
-
-                            {/* Course Settings */}
-                            <div>
-                                <h5 className="mb-4 text-lg font-medium text-gray-800 dark:text-white/90">
-                                    Course Settings
-                                </h5>
-                                <div className="grid grid-cols-1 gap-6 md:grid-cols-3">
-                                    <div>
-                                        <p className="text-sm text-gray-500 dark:text-gray-400">Mode</p>
-                                        <p className="text-sm font-medium text-gray-800 dark:text-white/90 capitalize">
-                                            {selectedCourse.mode}
-                                        </p>
-                                    </div>
-                                    <div>
-                                        <p className="text-sm text-gray-500 dark:text-gray-400">Status</p>
-                                        <p className="text-sm font-medium text-gray-800 dark:text-white/90 capitalize">
-                                            {selectedCourse.status}
-                                        </p>
-                                    </div>
-                                    <div>
-                                        <p className="text-sm text-gray-500 dark:text-gray-400">Featured</p>
-                                        <p className="text-sm font-medium text-gray-800 dark:text-white/90">
-                                            {selectedCourse.featured ? "Yes" : "No"}
-                                        </p>
-                                    </div>
-                                </div>
-                            </div>
-
-                            {/* Lists (Features, Requirements, etc.) */}
-                            <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
-                                <div>
-                                    <h6 className="mb-3 text-base font-medium text-gray-800 dark:text-white/90">
-                                        Features
-                                    </h6>
-                                    {selectedCourse.features?.length > 0 && selectedCourse.features.some(f => f) ? (
-                                        <ul className="space-y-2">
-                                            {selectedCourse.features
-                                                .filter(feature => feature)
-                                                .map((feature, index) => (
-                                                    <li key={index} className="flex items-start">
-                                                        <span className="mr-2 text-gray-500 dark:text-gray-400">•</span>
-                                                        <span className="text-sm text-gray-800 dark:text-white/90">{feature}</span>
-                                                    </li>
-                                                ))}
-                                        </ul>
-                                    ) : (
-                                        <p className="text-sm text-gray-500 dark:text-gray-400">No features listed</p>
-                                    )}
-                                </div>
-
-                                <div>
-                                    <h6 className="mb-3 text-base font-medium text-gray-800 dark:text-white/90">
-                                        Requirements
-                                    </h6>
-                                    {selectedCourse.requirements?.length > 0 && selectedCourse.requirements.some(r => r) ? (
-                                        <ul className="space-y-2">
-                                            {selectedCourse.requirements
-                                                .filter(req => req)
-                                                .map((req, index) => (
-                                                    <li key={index} className="flex items-start">
-                                                        <span className="mr-2 text-gray-500 dark:text-gray-400">•</span>
-                                                        <span className="text-sm text-gray-800 dark:text-white/90">{req}</span>
-                                                    </li>
-                                                ))}
-                                        </ul>
-                                    ) : (
-                                        <p className="text-sm text-gray-500 dark:text-gray-400">No requirements listed</p>
-                                    )}
-                                </div>
-
-                                <div>
-                                    <h6 className="mb-3 text-base font-medium text-gray-800 dark:text-white/90">
-                                        Objectives
-                                    </h6>
-                                    {selectedCourse.objectives?.length > 0 && selectedCourse.objectives.some(o => o) ? (
-                                        <ul className="space-y-2">
-                                            {selectedCourse.objectives
-                                                .filter(obj => obj)
-                                                .map((obj, index) => (
-                                                    <li key={index} className="flex items-start">
-                                                        <span className="mr-2 text-gray-500 dark:text-gray-400">•</span>
-                                                        <span className="text-sm text-gray-800 dark:text-white/90">{obj}</span>
-                                                    </li>
-                                                ))}
-                                        </ul>
-                                    ) : (
-                                        <p className="text-sm text-gray-500 dark:text-gray-400">No objectives listed</p>
-                                    )}
-                                </div>
-
-                                <div>
-                                    <h6 className="mb-3 text-base font-medium text-gray-800 dark:text-white/90">
-                                        Target Audience
-                                    </h6>
-                                    {selectedCourse.targetAudience?.length > 0 && selectedCourse.targetAudience.some(a => a) ? (
-                                        <ul className="space-y-2">
-                                            {selectedCourse.targetAudience
-                                                .filter(aud => aud)
-                                                .map((aud, index) => (
-                                                    <li key={index} className="flex items-start">
-                                                        <span className="mr-2 text-gray-500 dark:text-gray-400">•</span>
-                                                        <span className="text-sm text-gray-800 dark:text-white/90">{aud}</span>
-                                                    </li>
-                                                ))}
-                                        </ul>
-                                    ) : (
-                                        <p className="text-sm text-gray-500 dark:text-gray-400">No target audience listed</p>
-                                    )}
-                                </div>
-                            </div>
-
-                            {/* Tags */}
-                            <div>
-                                <h6 className="mb-3 text-base font-medium text-gray-800 dark:text-white/90">
-                                    Tags
-                                </h6>
-                                <div className="flex flex-wrap gap-2">
-                                    {selectedCourse.tags?.length > 0 && selectedCourse.tags.some(tag => tag) ? (
-                                        selectedCourse.tags
-                                            .filter(tag => tag)
-                                            .map((tag, index) => (
-                                                <span
-                                                    key={index}
-                                                    className="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-gray-100 text-gray-800 dark:bg-gray-800 dark:text-gray-200"
-                                                >
-                                                    {tag}
-                                                </span>
-                                            ))
-                                    ) : (
-                                        <p className="text-sm text-gray-500 dark:text-gray-400">No tags</p>
-                                    )}
-                                </div>
-                            </div>
-
-                            {/* Extra Fields */}
-                            {selectedCourse.extraFields && Object.keys(selectedCourse.extraFields).length > 0 && (
-                                <div>
-                                    <h6 className="mb-3 text-base font-medium text-gray-800 dark:text-white/90">
-                                        Extra Fields
-                                    </h6>
-                                    <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-                                        {Object.entries(selectedCourse.extraFields).map(([key, value]) => (
-                                            <div key={key} className="border border-gray-200 dark:border-gray-700 rounded-lg p-3">
-                                                <p className="text-sm text-gray-500 dark:text-gray-400">{key}</p>
+                                        <h5 className="mb-4 text-lg font-medium text-gray-800 dark:text-white/90">
+                                            Category & Metadata
+                                        </h5>
+                                        <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-4">
+                                            <div>
+                                                <p className="text-sm text-gray-500 dark:text-gray-400">Category</p>
                                                 <p className="text-sm font-medium text-gray-800 dark:text-white/90">
-                                                    {typeof value === 'object' ? JSON.stringify(value) : String(value)}
+                                                    {selectedCourse.categoryInfo?.name ||
+                                                        (typeof selectedCourse.category === 'string' ? selectedCourse.category : 'N/A')}
                                                 </p>
                                             </div>
-                                        ))}
+                                            <div>
+                                                <p className="text-sm text-gray-500 dark:text-gray-400">Subcategory</p>
+                                                <p className="text-sm font-medium text-gray-800 dark:text-white/90">
+                                                    {selectedCourse.subcategoryInfo?.name ||
+                                                        (typeof selectedCourse.subcategory === 'string' ? selectedCourse.subcategory : 'N/A')}
+                                                </p>
+                                            </div>
+                                            <div>
+                                                <p className="text-sm text-gray-500 dark:text-gray-400">Level</p>
+                                                <p className="text-sm font-medium text-gray-800 dark:text-white/90 capitalize">
+                                                    {selectedCourse.level}
+                                                </p>
+                                            </div>
+                                            <div>
+                                                <p className="text-sm text-gray-500 dark:text-gray-400">Language</p>
+                                                <p className="text-sm font-medium text-gray-800 dark:text-white/90">
+                                                    {selectedCourse.language}
+                                                </p>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    {/* Instructors */}
+                                    <div>
+                                        <h5 className="mb-4 text-lg font-medium text-gray-800 dark:text-white/90">
+                                            Instructors
+                                        </h5>
+                                        <div className="flex flex-wrap gap-2">
+                                            {selectedCourse.instructorNames && selectedCourse.instructorNames.length > 0 ? (
+                                                selectedCourse.instructorNames.map((instructor, index) => (
+                                                    <span
+                                                        key={instructor._id || index}
+                                                        className="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200"
+                                                    >
+                                                        {instructor.name || instructor.email || instructor._id}
+                                                    </span>
+                                                ))
+                                            ) : (
+                                                <p className="text-sm text-gray-500 dark:text-gray-400">No instructors assigned</p>
+                                            )}
+                                        </div>
+                                    </div>
+
+                                    {/* Schedule */}
+                                    <div>
+                                        <h5 className="mb-4 text-lg font-medium text-gray-800 dark:text-white/90">
+                                            Schedule
+                                        </h5>
+                                        <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-4">
+                                            <div>
+                                                <p className="text-sm text-gray-500 dark:text-gray-400">Start Date</p>
+                                                <p className="text-sm font-medium text-gray-800 dark:text-white/90">
+                                                    {selectedCourse.schedule?.startDate
+                                                        ? moment(selectedCourse.schedule.startDate).format("MMM D, YYYY h:mm A")
+                                                        : "N/A"}
+                                                </p>
+                                            </div>
+                                            <div>
+                                                <p className="text-sm text-gray-500 dark:text-gray-400">End Date</p>
+                                                <p className="text-sm font-medium text-gray-800 dark:text-white/90">
+                                                    {selectedCourse.schedule?.endDate
+                                                        ? moment(selectedCourse.schedule.endDate).format("MMM D, YYYY h:mm A")
+                                                        : "N/A"}
+                                                </p>
+                                            </div>
+                                            <div>
+                                                <p className="text-sm text-gray-500 dark:text-gray-400">Enrollment Deadline</p>
+                                                <p className="text-sm font-medium text-gray-800 dark:text-white/90">
+                                                    {selectedCourse.schedule?.enrollmentDeadline
+                                                        ? moment(selectedCourse.schedule.enrollmentDeadline).format("MMM D, YYYY h:mm A")
+                                                        : "N/A"}
+                                                </p>
+                                            </div>
+                                            <div>
+                                                <p className="text-sm text-gray-500 dark:text-gray-400">Timezone</p>
+                                                <p className="text-sm font-medium text-gray-800 dark:text-white/90">
+                                                    {selectedCourse.schedule?.timezone || "N/A"}
+                                                </p>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    {/* Schedule Pattern */}
+                                    <div>
+                                        <h5 className="mb-4 text-lg font-medium text-gray-800 dark:text-white/90">
+                                            Schedule Pattern
+                                        </h5>
+                                        <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-4">
+                                            <div>
+                                                <p className="text-sm text-gray-500 dark:text-gray-400">Frequency</p>
+                                                <p className="text-sm font-medium text-gray-800 dark:text-white/90 capitalize">
+                                                    {selectedCourse.schedule_pattern?.frequency || "N/A"}
+                                                </p>
+                                            </div>
+                                            <div>
+                                                <p className="text-sm text-gray-500 dark:text-gray-400">Days</p>
+                                                <p className="text-sm font-medium text-gray-800 dark:text-white/90">
+                                                    {selectedCourse.schedule_pattern?.days?.length > 0
+                                                        ? selectedCourse.schedule_pattern.days.map(d => (
+                                                            <span key={d} className="capitalize">{d}</span>
+                                                        )).reduce((prev, curr) => [prev, ', ', curr])
+                                                        : "N/A"}
+                                                </p>
+                                            </div>
+                                            <div>
+                                                <p className="text-sm text-gray-500 dark:text-gray-400">Time</p>
+                                                <p className="text-sm font-medium text-gray-800 dark:text-white/90">
+                                                    {selectedCourse.schedule_pattern?.time?.start && selectedCourse.schedule_pattern?.time?.end
+                                                        ? `${selectedCourse.schedule_pattern.time.start} - ${selectedCourse.schedule_pattern.time.end}`
+                                                        : "N/A"}
+                                                </p>
+                                            </div>
+                                            <div>
+                                                <p className="text-sm text-gray-500 dark:text-gray-400">Duration (mins)</p>
+                                                <p className="text-sm font-medium text-gray-800 dark:text-white/90">
+                                                    {selectedCourse.schedule_pattern?.duration || "N/A"}
+                                                </p>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    {/* Pricing */}
+                                    <div>
+                                        <h5 className="mb-4 text-lg font-medium text-gray-800 dark:text-white/90">
+                                            Pricing
+                                        </h5>
+                                        <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-4">
+                                            <div>
+                                                <p className="text-sm text-gray-500 dark:text-gray-400">Price</p>
+                                                <p className="text-sm font-medium text-gray-800 dark:text-white/90">
+                                                    {selectedCourse.pricing?.currency} {selectedCourse.pricing?.amount}
+                                                </p>
+                                            </div>
+                                            <div>
+                                                <p className="text-sm text-gray-500 dark:text-gray-400">Discount</p>
+                                                <p className="text-sm font-medium text-gray-800 dark:text-white/90">
+                                                    {selectedCourse.pricing?.discount
+                                                        ? `${selectedCourse.pricing.discount}%`
+                                                        : "N/A"}
+                                                </p>
+                                            </div>
+                                            <div>
+                                                <p className="text-sm text-gray-500 dark:text-gray-400">Early Bird</p>
+                                                <p className="text-sm font-medium text-gray-800 dark:text-white/90">
+                                                    {selectedCourse.pricing?.earlyBird?.discount
+                                                        ? `${selectedCourse.pricing.earlyBird.discount}%`
+                                                        : "N/A"}
+                                                </p>
+                                            </div>
+                                            <div>
+                                                <p className="text-sm text-gray-500 dark:text-gray-400">Early Bird Deadline</p>
+                                                <p className="text-sm font-medium text-gray-800 dark:text-white/90">
+                                                    {selectedCourse.pricing?.earlyBird?.deadline
+                                                        ? moment(selectedCourse.pricing.earlyBird.deadline).format("MMM D, YYYY")
+                                                        : "N/A"}
+                                                </p>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    {/* Media */}
+                                    <div>
+                                        <h5 className="mb-4 text-lg font-medium text-gray-800 dark:text-white/90">
+                                            Media
+                                        </h5>
+                                        <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
+                                            <div>
+                                                <p className="text-sm text-gray-500 dark:text-gray-400">Thumbnail</p>
+                                                {selectedCourse.thumbnail?.url ? (
+                                                    <a
+                                                        href={selectedCourse.thumbnail.url.trim()}
+                                                        target="_blank"
+                                                        rel="noopener noreferrer"
+                                                        className="text-sm font-medium text-blue-600 hover:underline dark:text-blue-400"
+                                                    >
+                                                        View Thumbnail
+                                                    </a>
+                                                ) : (
+                                                    <p className="text-sm font-medium text-gray-800 dark:text-white/90">N/A</p>
+                                                )}
+                                            </div>
+                                            <div>
+                                                <p className="text-sm text-gray-500 dark:text-gray-400">Preview</p>
+                                                {selectedCourse.preview?.url ? (
+                                                    <a
+                                                        href={selectedCourse.preview.url.trim()}
+                                                        target="_blank"
+                                                        rel="noopener noreferrer"
+                                                        className="text-sm font-medium text-blue-600 hover:underline dark:text-blue-400"
+                                                    >
+                                                        View Preview
+                                                    </a>
+                                                ) : (
+                                                    <p className="text-sm font-medium text-gray-800 dark:text-white/90">N/A</p>
+                                                )}
+                                            </div>
+            
+                                        </div>
+                                    </div>
+
+                                    {/* Course Settings */}
+                                    <div>
+                                        <h5 className="mb-4 text-lg font-medium text-gray-800 dark:text-white/90">
+                                            Course Settings
+                                        </h5>
+                                        <div className="grid grid-cols-1 gap-6 md:grid-cols-3">
+                                            <div>
+                                                <p className="text-sm text-gray-500 dark:text-gray-400">Mode</p>
+                                                <p className="text-sm font-medium text-gray-800 dark:text-white/90 capitalize">
+                                                    {selectedCourse.mode}
+                                                </p>
+                                            </div>
+                                            <div>
+                                                <p className="text-sm text-gray-500 dark:text-gray-400">Status</p>
+                                                <p className="text-sm font-medium text-gray-800 dark:text-white/90 capitalize">
+                                                    {selectedCourse.status}
+                                                </p>
+                                            </div>
+                                            <div>
+                                                <p className="text-sm text-gray-500 dark:text-gray-400">Featured</p>
+                                                <p className="text-sm font-medium text-gray-800 dark:text-white/90">
+                                                    {selectedCourse.featured ? "Yes" : "No"}
+                                                </p>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    {/* Lists (Features, Requirements, etc.) */}
+                                    <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
+                                        <div>
+                                            <h6 className="mb-3 text-base font-medium text-gray-800 dark:text-white/90">
+                                                Features
+                                            </h6>
+                                            {selectedCourse.features?.length > 0 && selectedCourse.features.some(f => f) ? (
+                                                <ul className="space-y-2">
+                                                    {selectedCourse.features
+                                                        .filter(feature => feature)
+                                                        .map((feature, index) => (
+                                                            <li key={index} className="flex items-start">
+                                                                <span className="mr-2 text-gray-500 dark:text-gray-400">•</span>
+                                                                <span className="text-sm text-gray-800 dark:text-white/90">{feature}</span>
+                                                            </li>
+                                                        ))}
+                                                </ul>
+                                            ) : (
+                                                <p className="text-sm text-gray-500 dark:text-gray-400">No features listed</p>
+                                            )}
+                                        </div>
+
+                                        <div>
+                                            <h6 className="mb-3 text-base font-medium text-gray-800 dark:text-white/90">
+                                                Requirements
+                                            </h6>
+                                            {selectedCourse.requirements?.length > 0 && selectedCourse.requirements.some(r => r) ? (
+                                                <ul className="space-y-2">
+                                                    {selectedCourse.requirements
+                                                        .filter(req => req)
+                                                        .map((req, index) => (
+                                                            <li key={index} className="flex items-start">
+                                                                <span className="mr-2 text-gray-500 dark:text-gray-400">•</span>
+                                                                <span className="text-sm text-gray-800 dark:text-white/90">{req}</span>
+                                                            </li>
+                                                        ))}
+                                                </ul>
+                                            ) : (
+                                                <p className="text-sm text-gray-500 dark:text-gray-400">No requirements listed</p>
+                                            )}
+                                        </div>
+
+                                        <div>
+                                            <h6 className="mb-3 text-base font-medium text-gray-800 dark:text-white/90">
+                                                Objectives
+                                            </h6>
+                                            {selectedCourse.objectives?.length > 0 && selectedCourse.objectives.some(o => o) ? (
+                                                <ul className="space-y-2">
+                                                    {selectedCourse.objectives
+                                                        .filter(obj => obj)
+                                                        .map((obj, index) => (
+                                                            <li key={index} className="flex items-start">
+                                                                <span className="mr-2 text-gray-500 dark:text-gray-400">•</span>
+                                                                <span className="text-sm text-gray-800 dark:text-white/90">{obj}</span>
+                                                            </li>
+                                                        ))}
+                                                </ul>
+                                            ) : (
+                                                <p className="text-sm text-gray-500 dark:text-gray-400">No objectives listed</p>
+                                            )}
+                                        </div>
+
+                                        <div>
+                                            <h6 className="mb-3 text-base font-medium text-gray-800 dark:text-white/90">
+                                                Target Audience
+                                            </h6>
+                                            {selectedCourse.targetAudience?.length > 0 && selectedCourse.targetAudience.some(a => a) ? (
+                                                <ul className="space-y-2">
+                                                    {selectedCourse.targetAudience
+                                                        .filter(aud => aud)
+                                                        .map((aud, index) => (
+                                                            <li key={index} className="flex items-start">
+                                                                <span className="mr-2 text-gray-500 dark:text-gray-400">•</span>
+                                                                <span className="text-sm text-gray-800 dark:text-white/90">{aud}</span>
+                                                            </li>
+                                                        ))}
+                                                </ul>
+                                            ) : (
+                                                <p className="text-sm text-gray-500 dark:text-gray-400">No target audience listed</p>
+                                            )}
+                                        </div>
+                                    </div>
+
+                                    {/* Tags */}
+                                    <div>
+                                        <h6 className="mb-3 text-base font-medium text-gray-800 dark:text-white/90">
+                                            Tags
+                                        </h6>
+                                        <div className="flex flex-wrap gap-2">
+                                            {selectedCourse.tags?.length > 0 && selectedCourse.tags.some(tag => tag) ? (
+                                                selectedCourse.tags
+                                                    .filter(tag => tag)
+                                                    .map((tag, index) => (
+                                                        <span
+                                                            key={index}
+                                                            className="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-gray-100 text-gray-800 dark:bg-gray-800 dark:text-gray-200"
+                                                        >
+                                                            {tag}
+                                                        </span>
+                                                    ))
+                                            ) : (
+                                                <p className="text-sm text-gray-500 dark:text-gray-400">No tags</p>
+                                            )}
+                                        </div>
+                                    </div>
+
+                                    {/* Extra Fields */}
+                                    {selectedCourse.extraFields && Object.keys(selectedCourse.extraFields).length > 0 && (
+                                        <div>
+                                            <h6 className="mb-3 text-base font-medium text-gray-800 dark:text-white/90">
+                                                Extra Fields
+                                            </h6>
+                                            <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+                                                {Object.entries(selectedCourse.extraFields).map(([key, value]) => (
+                                                    <div key={key} className="border border-gray-200 dark:border-gray-700 rounded-lg p-3">
+                                                        <p className="text-sm text-gray-500 dark:text-gray-400">{key}</p>
+                                                        <p className="text-sm font-medium text-gray-800 dark:text-white/90">
+                                                            {typeof value === 'object' ? JSON.stringify(value) : String(value)}
+                                                        </p>
+                                                    </div>
+                                                ))}
+                                            </div>
+                                        </div>
+                                    )}
+
+                                    {/* Dates */}
+                                    <div>
+                                        <h6 className="mb-3 text-base font-medium text-gray-800 dark:text-white/90">
+                                            Dates
+                                        </h6>
+                                        <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+                                            <div>
+                                                <p className="text-sm text-gray-500 dark:text-gray-400">Created At</p>
+                                                <p className="text-sm font-medium text-gray-800 dark:text-white/90">
+                                                    {moment(selectedCourse.createdAt).format("MMM D, YYYY h:mm A")}
+                                                </p>
+                                            </div>
+                                            <div>
+                                                <p className="text-sm text-gray-500 dark:text-gray-400">Last Updated</p>
+                                                <p className="text-sm font-medium text-gray-800 dark:text-white/90">
+                                                    {moment(selectedCourse.updatedAt).format("MMM D, YYYY h:mm A")}
+                                                </p>
+                                            </div>
+                                        </div>
                                     </div>
                                 </div>
                             )}
-
-                            {/* Dates */}
-                            <div>
-                                <h6 className="mb-3 text-base font-medium text-gray-800 dark:text-white/90">
-                                    Dates
-                                </h6>
-                                <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-                                    <div>
-                                        <p className="text-sm text-gray-500 dark:text-gray-400">Created At</p>
-                                        <p className="text-sm font-medium text-gray-800 dark:text-white/90">
-                                            {moment(selectedCourse.createdAt).format("MMM D, YYYY h:mm A")}
-                                        </p>
-                                    </div>
-                                    <div>
-                                        <p className="text-sm text-gray-500 dark:text-gray-400">Last Updated</p>
-                                        <p className="text-sm font-medium text-gray-800 dark:text-white/90">
-                                            {moment(selectedCourse.updatedAt).format("MMM D, YYYY h:mm A")}
-                                        </p>
-                                    </div>
-                                </div>
-                            </div>
                         </div>
-                    )}
+                        <div className="flex items-center gap-3 px-2 mt-6 lg:justify-end">
+                            <Button
+                                size="sm"
+                                variant="outline"
+                                onClick={closeModal}
+                            >
+                                Close
+                            </Button>
+                        </div>
+                    </div>
                 </div>
-                <div className="flex items-center gap-3 px-2 mt-6 lg:justify-end">
-                    <Button
-                        size="sm"
-                        variant="outline"
-                        onClick={closeModal}
-                    >
-                        Close
-                    </Button>
-                </div>
-            </div>
-        </div>
-    </Modal>
-    {/* Edit/Create Course Modal with Stepped Form */ }
+            </Modal>
+            {/* Edit/Create Course Modal with Stepped Form */}
             <Modal
                 isFullscreen
                 isOpen={editModalOpen}
@@ -929,7 +922,7 @@ export default function CourseManagement() {
     );
 }
 
-const CourseCard = ({ course, onView, onEdit, onDelete }) => {
+const CourseCa = ({ course, onView, onEdit, onDelete }) => {
     return (
         <div className="border border-gray-200 dark:border-gray-700 rounded-lg shadow-sm overflow-hidden bg-white dark:bg-gray-800 hover:shadow-md transition-shadow duration-200">
             <div className="p-4">
@@ -937,15 +930,14 @@ const CourseCard = ({ course, onView, onEdit, onDelete }) => {
                     <h3 className="text-lg font-semibold text-gray-800 dark:text-white truncate">
                         {course.title}
                     </h3>
-                    <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
-                        course.status === "upcoming"
-                            ? "bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200"
-                            : course.status === "ongoing"
-                                ? "bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200"
-                                : course.status === "completed"
-                                    ? "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200"
-                                    : "bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200"
-                    }`}>
+                    <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${course.status === "upcoming"
+                        ? "bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200"
+                        : course.status === "ongoing"
+                            ? "bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200"
+                            : course.status === "completed"
+                                ? "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200"
+                                : "bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200"
+                        }`}>
                         {course.status}
                     </span>
                 </div>
@@ -993,6 +985,182 @@ const CourseCard = ({ course, onView, onEdit, onDelete }) => {
                 >
                     <Trash2 className="h-4 w-4" />
                 </button>
+            </div>
+        </div>
+    );
+};
+
+const CourseCard = ({ course, onView, onEdit, onDelete }) => {
+    return (
+        <div className="border border-gray-200 dark:border-gray-700 rounded-xl shadow-sm overflow-hidden bg-white dark:bg-gray-800 hover:shadow-md transition-shadow duration-200">
+            <div className="p-4">
+                <div className="flex flex-col md:flex-col">
+                    {/* Course Info Section */}
+                    <div className="flex-1 min-w-0">
+                        <div>
+                            <h3 className="mb-2 text-lg font-semibold text-gray-800 dark:text-white truncate">
+                                {course.title}  ({course.code} )
+                            </h3>
+
+                        </div>
+                        <div className="flex flex-col sm:flex-row sm:items-start sm:justify-start">
+
+                            <div className="mt-2 sm:mt-0 flex items-center space-x-2">
+                                <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${course.status === "upcoming"
+                                    ? "bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200"
+                                    : course.status === "ongoing"
+                                        ? "bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200"
+                                        : course.status === "completed"
+                                            ? "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200"
+                                            : "bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200"
+                                    }`}>
+                                    {course.status}
+                                </span>
+                                <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium capitalize ${course.level === "beginner"
+                                    ? "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200"
+                                    : course.level === "intermediate"
+                                        ? "bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200"
+                                        : "bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200"
+                                    }`}>
+                                    {course.level}
+                                </span>
+                                <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium capitalize ${course.mode === "online"
+                                    ? "bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200"
+                                    : course.mode === "offline"
+                                        ? "bg-purple-100 text-purple-800 dark:bg-purple-900 dark:text-purple-200"
+                                        : course.mode === "hybrid"
+                                            ? "bg-indigo-100 text-indigo-800 dark:bg-indigo-900 dark:text-indigo-200"
+                                            : "bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-200"
+                                    }`}>
+                                    {course.mode}
+                                </span>
+                            </div>
+
+
+                        </div>
+                        <p className="mt-3 text-sm text-gray-600 dark:text-gray-300 line-clamp-2">Category : {course.categoryInfo?.name || "N/A"}</p>
+
+                        {/* Description */}
+                        <p className="mt-2 text-sm text-gray-600 dark:text-gray-300 line-clamp-2">
+                            {course.shortDescription || course.description || "No description provided."}
+                        </p>
+
+                        {/* Schedule & Pricing */}
+                        <div className="mt-4 grid grid-cols-1 sm:grid-cols-2 gap-3 text-sm">
+                            <div>
+                                <p className="text-gray-500 dark:text-gray-400">Start Date</p>
+                                <p className="font-medium text-gray-800 dark:text-white">
+                                    {course.schedule?.startDate
+                                        ? moment(course.schedule.startDate).format("MMM D, YYYY")
+                                        : "N/A"}
+                                </p>
+                            </div>
+                            <div>
+                                <p className="text-gray-500 dark:text-gray-400">Price</p>
+                                <p className="font-medium text-gray-800 dark:text-white">
+                                    {course.pricing?.currency} {course.pricing?.amount || "N/A"}
+                                    {course.pricing?.discount && (
+                                        <span className="ml-2 text-xs bg-red-100 text-red-800 px-1.5 py-0.5 rounded dark:bg-red-900 dark:text-red-200">
+                                            {course.pricing.discount}% off
+                                        </span>
+                                    )}
+                                </p>
+                            </div>
+                            <div>
+                                <p className="text-gray-500 dark:text-gray-400">Enrollment Deadline</p>
+                                <p className="font-medium text-gray-800 dark:text-white">
+                                    {course.schedule?.enrollmentDeadline
+                                        ? moment(course.schedule.enrollmentDeadline).format("MMM D, YYYY")
+                                        : "N/A"}
+                                </p>
+                            </div>
+                            <div>
+                                <p className="text-gray-500 dark:text-gray-400">Language</p>
+                                <p className="font-medium text-gray-800 dark:text-white">
+                                    {course.language || "N/A"}
+                                </p>
+                            </div>
+                        </div>
+
+                        {/* Instructors */}
+                        <div className="mt-4">
+                            <p className="text-sm text-gray-500 dark:text-gray-400 mb-1">Instructors</p>
+                            <div className="flex flex-wrap gap-1">
+                                {course.instructorNames && course.instructorNames.length > 0 ? (
+                                    course.instructorNames.slice(0, 3).map((instructor, index) => (
+                                        <span
+                                            key={instructor._id || index}
+                                            className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200"
+                                        >
+                                            {instructor.name || instructor.email || "Unknown"}
+                                        </span>
+                                    ))
+                                ) : (
+                                    <span className="text-xs text-gray-500 dark:text-gray-400">No instructors assigned</span>
+                                )}
+                                {course.instructorNames && course.instructorNames.length > 3 && (
+                                    <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-200">
+                                        +{course.instructorNames.length - 3} more
+                                    </span>
+                                )}
+                            </div>
+                        </div>
+
+                        {/* Tags */}
+                        {/* <div className="mt-4">
+                            <p className="text-sm text-gray-500 dark:text-gray-400 mb-1">Tags</p>
+                            <div className="flex flex-wrap gap-1">
+                                {course.tags && course.tags.length > 0 ? (
+                                    course.tags.slice(0, 4).map((tag, index) => (
+                                        <span
+                                            key={index}
+                                            className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-200"
+                                        >
+                                            {tag}
+                                        </span>
+                                    ))
+                                ) : (
+                                    <span className="text-xs text-gray-500 dark:text-gray-400">No tags</span>
+                                )}
+                                {course.tags && course.tags.length > 4 && (
+                                    <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-200">
+                                        +{course.tags.length - 4} more
+                                    </span>
+                                )}
+                            </div>
+                        </div> */}
+                    </div>
+
+                    {/* Actions Section */}
+                    <div className="mt-4">
+                        <div className="flex space-x-2 gap-2">
+                            <button
+                                onClick={() => onView(course)}
+                                className="flex-1 flex items-center justify-center gap-1 px-3 py-1.5 text-sm font-medium rounded-md border border-gray-300 text-gray-700 bg-white hover:bg-gray-50 dark:border-gray-600 dark:text-gray-300 dark:bg-gray-700 dark:hover:bg-gray-600"
+                                aria-label="View"
+                            >
+                                <Eye className="h-4 w-4" />
+                                <span className="hidden md:inline">View</span>
+                            </button>
+                            <button
+                                onClick={onEdit}
+                                className="flex-1 flex items-center justify-center gap-1 px-3 py-1.5 text-sm font-medium rounded-md border border-gray-300 text-gray-700 bg-white hover:bg-gray-50 dark:border-gray-600 dark:text-gray-300 dark:bg-gray-700 dark:hover:bg-gray-600"
+                                aria-label="Edit"
+                            >
+                                <Pencil className="h-4 w-4" />
+                                <span className="hidden md:inline">Edit</span>
+                            </button>
+                            <button
+                                onClick={onDelete}
+                                className="flex-1 flex items-center justify-center gap-1 px-3 py-1.5 text-sm font-medium rounded-md border border-red-300 text-red-700 bg-white hover:bg-red-50 dark:border-red-600 dark:text-red-400 dark:bg-gray-700 dark:hover:bg-red-900/20"
+                                aria-label="Delete"
+                            >
+                                <Trash2 className="h-4 w-4" />
+                                <span className="hidden md:inline">Delete</span>
+                            </button>
+                        </div>
+                    </div>
+                </div>
             </div>
         </div>
     );

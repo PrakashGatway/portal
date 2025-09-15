@@ -1,15 +1,17 @@
 import { useEffect, useRef, useState } from "react";
 
-import { Link } from "react-router";
+import { Link, useNavigate } from "react-router";
 import { useSidebar } from "../context/SidebarContext";
 import { ThemeToggleButton } from "../components/common/ThemeToggleButton";
 import NotificationDropdown from "../components/header/NotificationDropdown";
 import UserDropdown from "../components/header/UserDropdown";
 import { useAuth } from "../context/UserContext";
+import { Lamp } from "lucide-react";
 
 const AppHeader: React.FC = () => {
   const [isApplicationMenuOpen, setApplicationMenuOpen] = useState(false);
-  const {user,logout} = useAuth() as any;
+  const { user, logout } = useAuth() as any;
+  let navigate = useNavigate()
 
   const { isMobileOpen, toggleSidebar, toggleMobileSidebar } = useSidebar();
 
@@ -117,6 +119,7 @@ const AppHeader: React.FC = () => {
               />
             </svg>
           </button>
+
         </div>
 
         <div
@@ -125,8 +128,26 @@ const AppHeader: React.FC = () => {
         >
           <div className="flex items-center gap-2 2xsm:gap-3">
             <ThemeToggleButton />
-
             <NotificationDropdown />
+            <button
+              onClick={() => navigate("/course/category")}
+              className={`
+    inline-flex items-center justify-center
+    px-4 py-2
+    bg-white dark:bg-gray-800
+    text-gray-700 dark:text-gray-300
+    font-medium
+    rounded-full
+    border border-gray-300 dark:border-gray-700
+    shadow-sm hover:shadow-md
+    transition-all duration-200
+    focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-opacity-50
+    hover:bg-gray-50 dark:hover:bg-gray-700
+  `}
+            >
+              <Lamp className="h-5 w-5 mr-2" />
+              PTE
+            </button>
 
           </div>
           <UserDropdown user={user} logout={logout} />

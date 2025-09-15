@@ -776,3 +776,14 @@ span.flatpickr-weekday,
 .simplebar-scrollbar.simplebar-visible:before {
   @apply opacity-100;
 }
+
+
+.ytp-chrome-top{
+  display: none!important;
+}
+.ytp-pause-overlay-container{
+  display:none!important;
+}
+.ytp-watermark{
+  display: none!important;
+}

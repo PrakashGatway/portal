@@ -1,150 +1,180 @@
-// src/components/teacher/TeacherLiveClass.jsx
-import React, { useState, useEffect, useRef, useCallback } from 'react';
-import { useNavigate, useParams } from 'react-router';
-import AgoraRTC, {
-  ICameraVideoTrack,
-  IMicrophoneAudioTrack,
-  ILocalVideoTrack,
-  IAgoraRTCClient,
-} from 'agora-rtc-sdk-ng';
-import AgoraRTM, { RtmClient, RtmChannel } from 'agora-rtm-sdk';
-import ReactPlayer from 'react-player';
-import { WindowManager } from '@netless/window-manager';
-import { WhiteWebSdk } from 'white-web-sdk';
+import { useState, useEffect, useRef, useCallback } from 'react';
+import { useNavigate, useParams, useSearchParams } from 'react-router';
+import AgoraRTC from 'agora-rtc-sdk-ng';
+import AgoraRTM from 'agora-rtm-sdk';
 import { toast } from 'react-toastify';
+import { motion, AnimatePresence } from 'framer-motion';
+import api from '../../axiosInstance';
+import { useAuth } from '../../context/UserContext';
 
-// Replace with your actual App ID and token generation logic
 const AGORA_APP_ID = "6147232a6d8e42aebaf649bdc11fc387";
-const AGORA_TOKEN = "007eJxTYLja/XB3ucju5X07Z8z7FSzVMnFK+QHj6KteWpPqyqNW1hgoMJgZmpgbGRslmqVYpJoYJaYmJaaZmVgmpSQbGqYlG1uYC93dlNEQyMhw8L4PCyMDBIL4zAwGBhYMDACq7iAm"; // Use null for testing, or fetch from backend
 
 const TeacherLiveClass = () => {
   const { classId } = useParams();
+  const [searchParams] = useSearchParams();
+  const id = searchParams.get("id");
   const navigate = useNavigate();
 
-  // Agora Refs
   const rtcRef = useRef({
     client: null,
     localAudioTrack: null,
     localVideoTrack: null,
     screenShareTrack: null,
-  });
+  }) as any;
 
   const rtmRef = useRef({
     client: null,
     channel: null,
-  });
+  }) as any;
 
-  // UI Refs
-  const localVideoRef = useRef(null);
-  const remoteContainerRef = useRef(null);
-  const whiteboardContainerRef = useRef(null);
+  const pipRtcRef = useRef({
+    client: null,
+    localVideoTrack: null,
+  }) as any;
 
-  // State
+  const localVideoRef = useRef(null) as any;
+  const remoteContainerRef = useRef(null) as any;
+  const screenSharePreviewRef = useRef(null) as any; // Ref for the preview during screen share
+
   const [isCameraOn, setIsCameraOn] = useState(true);
   const [isMicOn, setIsMicOn] = useState(true);
   const [isScreenSharing, setIsScreenSharing] = useState(false);
-  const [isWhiteboardActive, setIsWhiteboardActive] = useState(false);
   const [isJoined, setIsJoined] = useState(false);
-  const [messages, setMessages] = useState([]);
+  const [messages, setMessages] = useState([]) as any;
   const [newMessage, setNewMessage] = useState('');
-  const [participants, setParticipants] = useState([]);
-  const [notes, setNotes] = useState('');
-  const [whiteboardManager, setWhiteboardManager] = useState(null);
-  const [isFullscreen, setIsFullscreen] = useState(false);
+  const [joinRequests, setJoinRequests] = useState([]) as any;
+  const [participants, setParticipants] = useState([]) as any; // List of connected student UIDs
+  const [showSidebar, setShowSidebar] = useState(true);
+  const [agoraToken, setAgoraToken] = useState() as any;
+  const [loading, setLoading] = useState(true);
+  const { user } = useAuth();
 
-  // Fetch token (replace with your backend call)
-  const fetchToken = useCallback(async (channel, uid) => {
-    // In a real app, call your backend to get a valid token
-    // const response = await fetch(`/api/agora/token?channel=${channel}&uid=${uid}`);
-    // const data = await response.json();
-    // return data.rtcToken;
-    return AGORA_TOKEN; // For testing
-  }, []);
-
-  // Initialize Agora
-  useEffect(() => {
-    const initAgora = async () => {
-      if (!AGORA_APP_ID || !classId) {
-        toast.error('Missing App ID or Class ID');
+  const fetchToken = async () => {
+    setLoading(true);
+    try {
+      const confirmed = await window.confirm("Do you want to start the class?");
+      if (!confirmed) {
+        navigate("/");
         return;
       }
+      const response = await api.get(`/tokens/${id}/${user?._id}`);
+      setAgoraToken(response.data);
+      initAgora(response.data);
+    } catch (error) {
+      toast.error(error.message)
+    } finally {
+      setLoading(false);
+    }
+  }
 
-      try {
-        // --- Agora RTC Setup ---
-        rtcRef.current.client = AgoraRTC.createClient({ mode: 'rtc', codec: 'vp8' });
+  useEffect(() => {
+    fetchToken();
+  }, []);
 
-        rtcRef.current.client.on('user-published', async (user, mediaType) => {
-          await rtcRef.current.client.subscribe(user, mediaType);
-          if (mediaType === 'video') {
-            const remoteVideoTrack = user.videoTrack;
-            const playerId = `remote-player-${user.uid}`;
-            let playerContainer = document.getElementById(playerId);
-            if (!playerContainer) {
-              playerContainer = document.createElement('div');
-              playerContainer.id = playerId;
-              playerContainer.className = 'remote-player';
-              if (remoteContainerRef.current) {
-                remoteContainerRef.current.appendChild(playerContainer);
-              }
-            }
-            remoteVideoTrack.play(playerContainer);
-          }
-          if (mediaType === 'audio') {
-            const remoteAudioTrack = user.audioTrack;
-            remoteAudioTrack.play();
-          }
-        });
 
-        rtcRef.current.client.on('user-unpublished', (user) => {
-          const playerContainer = document.getElementById(`remote-player-${user.uid}`);
-          if (playerContainer && remoteContainerRef.current) {
-            remoteContainerRef.current.removeChild(playerContainer);
-          }
-        });
+  const initAgora = async (agoraToken: any) => {
 
-        // --- Agora RTM Setup ---
-        // rtmRef.current.client = AgoraRTM.createInstance(AGORA_APP_ID);
-        // await rtmRef.current.client.login({ uid: 'teacher', token: "007eJxTYOhceSgt9PxG4xA1Vv75X44cvGm5y8Ggqmy3olkjl9j+Y3MUGMwMTcyNjI0SzVIsUk2MElOTEtPMTCyTUpINDdOSjS3M2+9uymgIZGRgca9lYWRgZWBkYGIA8RkYAHBJHS8=" }); // Use RTM token if needed
-        // rtmRef.current.channel = rtmRef.current.client.createChannel(classId);
-        // await rtmRef.current.channel.join();
+    if (!AGORA_APP_ID || !classId || !agoraToken.rtcToken || !agoraToken.rtmToken) {
+      toast.error('Missing App ID, Class ID or Tokens');
+      return;
+    }
 
-        // rtmRef.current.channel.on('ChannelMessage', (message, senderId) => {
-        //   setMessages((prev) => [...prev, { text: message.text, senderId, timestamp: new Date() }]);
-        // });
+    try {
+      rtcRef.current.client = AgoraRTC.createClient({ mode: 'rtc', codec: 'vp8' });
 
-        // rtmRef.current.channel.on('MemberJoined', (memberId) => {
-        //   setParticipants((prev) => [...prev, memberId]);
-        //   toast.info(`Student ${memberId} joined`);
-        // });
+      if (rtmRef.current.client || rtmRef.current.channel) {
+        const oldClient = rtmRef.current.client;
+        const oldChannel = rtmRef.current.channel;
+        oldClient?.removeAllListeners('MessageFromPeer');
+        oldChannel?.removeAllListeners('ChannelMessage');
+        oldChannel?.removeAllListeners('MemberJoined');
+        oldChannel?.removeAllListeners('MemberLeft');
 
-        // rtmRef.current.channel.on('MemberLeft', (memberId) => {
-        //   setParticipants((prev) => prev.filter((id) => id !== memberId));
-        //   toast.info(`Student ${memberId} left`);
-        // });
-
-        // --- Create and Publish Local Tracks ---
-        [rtcRef.current.localAudioTrack, rtcRef.current.localVideoTrack] = await Promise.all([
-          AgoraRTC.createMicrophoneAudioTrack(),
-          AgoraRTC.createCameraVideoTrack(),
-        ]);
-
-        if (localVideoRef.current) {
-          rtcRef.current.localVideoTrack.play(localVideoRef.current);
+        try {
+          await oldChannel?.leave();
+        } catch (e) {
         }
-
-        const token = await fetchToken(classId, 'teacher');
-        await rtcRef.current.client.join(AGORA_APP_ID, classId, token, 'teacher');
-        await rtcRef.current.client.publish([rtcRef.current.localAudioTrack, rtcRef.current.localVideoTrack]);
-
-        setIsJoined(true);
-        toast.success('Live class started successfully!');
-      } catch (error) {
-        console.error('Agora initialization error:', error);
-        toast.error(`Failed to start class: ${error.message}`);
+        try {
+          await oldClient?.logout();
+        } catch (e) {
+        }
+        rtmRef.current.channel = null;
+        rtmRef.current.client = null;
       }
-    };
+      if (agoraToken?.rtmToken === null) {
+        toast.error('Missing Token');
+        return;
+      }
+      rtmRef.current.client = AgoraRTM.createInstance(AGORA_APP_ID);
+      await rtmRef.current.client.login({ uid: user._id, token: agoraToken?.rtmToken });
+      rtmRef.current.channel = rtmRef.current.client.createChannel(id);
+      await rtmRef.current.channel.join();
 
-    initAgora();
+      rtmRef.current.channel.on('ChannelMessage', (message, senderId) => {
+        try {
+          const data = JSON.parse(message.text);
+          if (data.type === 'join_request') {
+            setJoinRequests(prev => [...prev, { uid: senderId, name: data.name || `Student ${senderId}` }]);
+          } else if (data.type === 'chat') {
+            setMessages(prev => [...prev, { text: data.text, senderId: data.name || senderId, timestamp: new Date() }]);
+          }
+        } catch (e) {
+          setMessages(prev => [...prev, { text: message.text, senderId, timestamp: new Date() }]);
+        }
+      });
+
+      rtmRef.current.channel.on('MemberJoined', (memberId) => {
+        setParticipants(prev => {
+          if (!prev.includes(memberId)) return [...prev, memberId];
+          return prev;
+        });
+        toast.info(`Student ${memberId} connected`);
+      });
+
+      rtmRef.current.channel.on('MemberLeft', (memberId) => {
+        setParticipants(prev => prev.filter(id => id !== memberId));
+        toast.info(`Student ${memberId} disconnected`);
+      });
+
+      rtmRef.current.client.on('MessageFromPeer', (message, peerId) => {
+        const data = JSON.parse(message.text);
+        if (data.type === 'join_request') {
+          setJoinRequests(prev => [...prev, { uid: peerId, name: data.name || `Student ${peerId}` }]);
+        }
+      });
+
+      [rtcRef.current.localAudioTrack, rtcRef.current.localVideoTrack] = await Promise.all([
+        AgoraRTC.createMicrophoneAudioTrack(),
+        AgoraRTC.createCameraVideoTrack(),
+      ]);
+
+      if (localVideoRef.current && rtcRef.current.localVideoTrack) {
+        rtcRef.current.localVideoTrack.play(localVideoRef.current);
+      }
+
+      await rtcRef.current.client.join(AGORA_APP_ID, id, agoraToken?.rtcToken, user._id);
+      await rtcRef.current.client.publish([rtcRef.current.localAudioTrack, rtcRef.current.localVideoTrack]);
+
+      setIsJoined(true);
+      toast.success('Live class started successfully!');
+
+    } catch (error) {
+      toast.error(`Failed to start class: ${error.message}`);
+      try {
+        await rtcRef.current.client?.leave();
+        await rtmRef.current.channel?.leave();
+        await rtmRef.current.client?.logout();
+      } catch (cleanupError) {
+        console.error("Cleanup error after init failure:", cleanupError);
+      }
+    }
+  };
+
+  useEffect(() => {
+    if (!AGORA_APP_ID || !classId || !agoraToken?.rtcToken || !agoraToken?.rtmToken) {
+      return;
+    }
+    initAgora(agoraToken);
 
     return () => {
       const cleanup = async () => {
@@ -153,76 +183,28 @@ const TeacherLiveClass = () => {
           rtcRef.current.localVideoTrack?.close();
           rtcRef.current.screenShareTrack?.close();
           await rtcRef.current.client?.leave();
-          await rtmRef.current.channel?.leave();
-          await rtmRef.current.client?.logout();
+          const channel = rtmRef.current.channel;
+          const client = rtmRef.current.client;
+          client?.removeAllListeners('MessageFromPeer');
+          channel?.removeAllListeners('ChannelMessage');
+          channel?.removeAllListeners('MemberJoined');
+          channel?.removeAllListeners('MemberLeft');
+          await channel?.leave();
+          await client?.logout();
           setIsJoined(false);
           if (remoteContainerRef.current) {
             remoteContainerRef.current.innerHTML = '';
           }
         } catch (e) {
-          console.error('Cleanup error:', e);
+          console.error('Teacher Cleanup error:', e);
         }
       };
       cleanup();
     };
-  }, [classId, fetchToken]);
+  }, []);
 
-  // Initialize Whiteboard
-  useEffect(() => {
-    if (isWhiteboardActive && whiteboardContainerRef.current && !whiteboardManager) {
-      const initWhiteboard = async () => {
-        try {
-          // In a real app, get these from your backend
-          const sdkToken = 'NETLESSSDK_YWs9Sl9FTElWS1FieFpFRGk5bCZub25jZT01YWFhNDNjMC04NTkzLTExZjAtYWI1Ni02MTU0MDYzMjk5NmUmcm9sZT0wJnNpZz00MzU0ZjA3MjQ1ZTU5OGYxYTJhNjVlNDhmYjMxNThlOGNkZTdmNmM2ZTI0YTBmOGI4YWUwZjMwY2E5MDc1ZmU2'; // Replace with your White SDK Token
-          const roomId = classId; // Use classId as roomId
-          const roomUUID = 'ROOM_UUID'; // Replace with actual room UUID from your backend
-          const userUID = 'teacher';
-
-          const whiteWebSdk = new WhiteWebSdk({
-            appIdentifier: sdkToken,
-            useMobXState: true,
-          });
-
-          const room = await whiteWebSdk.joinRoom({
-            uuid: roomUUID,
-            roomToken: AGORA_TOKEN, // Replace with actual room token from your backend
-            userPayload: {
-              uid: userUID,
-              nickName: 'Teacher',
-            },
-            floatBar: true,
-            disableNewPencil: false,
-            hotKeys: true,
-          });
-
-          const manager = new WindowManager();
-          await manager.bindContainer(whiteboardContainerRef.current, room);
-          manager.setViewMode('broadcaster');
-          setWhiteboardManager(manager);
-        } catch (error) {
-          console.error('Whiteboard initialization error:', error);
-          toast.error('Failed to initialize whiteboard');
-          setIsWhiteboardActive(false);
-        }
-      };
-
-      initWhiteboard();
-    }
-
-    return () => {
-      if (whiteboardManager) {
-        whiteboardManager.destroy();
-        setWhiteboardManager(null);
-        if (whiteboardContainerRef.current) {
-          whiteboardContainerRef.current.innerHTML = '';
-        }
-      }
-    };
-  }, [isWhiteboardActive, classId, whiteboardManager]);
-
-  // Toggle Camera
   const toggleCamera = async () => {
-    if (rtcRef.current.localVideoTrack) {
+    if (rtcRef.current.localVideoTrack && !isScreenSharing) { // Only toggle if not screen sharing
       try {
         if (isCameraOn) {
           await rtcRef.current.localVideoTrack.setMuted(true);
@@ -230,13 +212,15 @@ const TeacherLiveClass = () => {
           await rtcRef.current.localVideoTrack.setMuted(false);
         }
         setIsCameraOn(!isCameraOn);
+        toast.info(`Camera ${isCameraOn ? 'muted' : 'unmuted'}`);
       } catch (error) {
         toast.error('Failed to toggle camera');
       }
+    } else if (isScreenSharing) {
+      toast.info("Cannot toggle camera while screen sharing.");
     }
   };
 
-  // Toggle Microphone
   const toggleMic = async () => {
     if (rtcRef.current.localAudioTrack) {
       try {
@@ -246,75 +230,286 @@ const TeacherLiveClass = () => {
           await rtcRef.current.localAudioTrack.setMuted(false);
         }
         setIsMicOn(!isMicOn);
+        toast.info(`Microphone ${isMicOn ? 'muted' : 'unmuted'}`);
       } catch (error) {
         toast.error('Failed to toggle microphone');
       }
     }
   };
 
-  // Share Screen
-  const shareScreen = async () => {
+  const toggleScreenShare = async () => {
     if (!rtcRef.current.client) return;
 
     try {
       if (!isScreenSharing) {
-        // Start screen sharing
         rtcRef.current.screenShareTrack = await AgoraRTC.createScreenVideoTrack(
           { optimizationMode: 'motion' },
           'auto'
         );
 
-        await rtcRef.current.client.unpublish([rtcRef.current.localVideoTrack]);
-        rtcRef.current.localVideoTrack.close();
+        if (pipRtcRef.current.localVideoTrack) {
+          await pipRtcRef.current.client.unpublish([pipRtcRef.current.localVideoTrack]);
+          pipRtcRef.current.localVideoTrack.close();
+          pipRtcRef.current.localVideoTrack = null;
+        }
+        if (rtcRef.current.localVideoTrack) {
+          await rtcRef.current.client.unpublish([rtcRef.current.localVideoTrack]);
+          rtcRef.current.localVideoTrack.close();
+          rtcRef.current.localVideoTrack = null;
+          if (localVideoRef.current) {
+            localVideoRef.current.innerHTML = '';
+          }
+        }
+
         await rtcRef.current.client.publish([rtcRef.current.screenShareTrack]);
+
+        const response = await api.get(`/tokens/${id}_pip/${user?._id}_pip`);
+        pipRtcRef.current.client = AgoraRTC.createClient({ mode: 'rtc', codec: 'vp8' });
+
+        await pipRtcRef.current.client.join(AGORA_APP_ID, `${id}_pip`, response.data.rtcToken, `${user._id}_pip`);
+
+        pipRtcRef.current.localVideoTrack = await AgoraRTC.createCameraVideoTrack();
+        await pipRtcRef.current.client.publish([pipRtcRef.current.localVideoTrack]);
 
         rtcRef.current.screenShareTrack.on('track-ended', async () => {
           if (rtcRef.current.client && rtcRef.current.screenShareTrack) {
-            await rtcRef.current.client.unpublish([rtcRef.current.screenShareTrack]);
+            try {
+              await rtcRef.current.client.unpublish([rtcRef.current.screenShareTrack]);
+            } catch (unpublishError) {
+              console.error("Error unpublishing screen share track:", unpublishError);
+            }
             rtcRef.current.screenShareTrack.close();
             rtcRef.current.screenShareTrack = null;
 
-            // Re-publish camera
-            rtcRef.current.localVideoTrack = await AgoraRTC.createCameraVideoTrack();
-            if (localVideoRef.current) {
-              rtcRef.current.localVideoTrack.play(localVideoRef.current);
+            if (pipRtcRef.current.client) {
+              if (pipRtcRef.current.localVideoTrack) {
+                await pipRtcRef.current.client.unpublish([pipRtcRef.current.localVideoTrack]);
+                pipRtcRef.current.localVideoTrack.close();
+                pipRtcRef.current.localVideoTrack = null;
+              }
+              await pipRtcRef.current.client.leave();
+              pipRtcRef.current.client = null;
             }
-            await rtcRef.current.client.publish([rtcRef.current.localVideoTrack]);
+
+            try {
+              rtcRef.current.localVideoTrack = await AgoraRTC.createCameraVideoTrack();
+              if (localVideoRef.current) {
+                rtcRef.current.localVideoTrack.play(localVideoRef.current);
+              }
+              await rtcRef.current.client.publish([rtcRef.current.localVideoTrack]);
+              setIsCameraOn(true); // Assume camera is on after re-publishing
+            } catch (cameraError) {
+              console.error("Error re-publishing camera after screen share:", cameraError);
+              toast.error("Failed to restart camera after screen share.");
+              setIsCameraOn(false);
+            }
           }
           setIsScreenSharing(false);
+          toast.info('Screen sharing stopped by user');
         });
 
         setIsScreenSharing(true);
         toast.info('Screen sharing started');
+
+        if (!rtcRef.current.localVideoTrack) { // Recreate if it was closed
+          rtcRef.current.localVideoTrack = await AgoraRTC.createCameraVideoTrack();
+        }
+        if (screenSharePreviewRef.current) {
+          screenSharePreviewRef.current.innerHTML = '';
+          rtcRef.current.localVideoTrack.play(screenSharePreviewRef.current, { fit: "cover" });
+          screenSharePreviewRef.current.style.display = 'block'; // Make sure it's visible
+        }
+
       } else {
-        // Stop screen sharing
         if (rtcRef.current.screenShareTrack) {
           await rtcRef.current.client.unpublish([rtcRef.current.screenShareTrack]);
           rtcRef.current.screenShareTrack.close();
           rtcRef.current.screenShareTrack = null;
-
-          // Re-publish camera
-          rtcRef.current.localVideoTrack = await AgoraRTC.createCameraVideoTrack();
-          if (localVideoRef.current) {
-            rtcRef.current.localVideoTrack.play(localVideoRef.current);
-          }
-          await rtcRef.current.client.publish([rtcRef.current.localVideoTrack]);
         }
+
+        if (pipRtcRef.current.client) {
+          if (pipRtcRef.current.localVideoTrack) {
+            await pipRtcRef.current.client.unpublish([pipRtcRef.current.localVideoTrack]);
+            pipRtcRef.current.localVideoTrack.close();
+            pipRtcRef.current.localVideoTrack = null;
+          }
+          await pipRtcRef.current.client.leave();
+          pipRtcRef.current.client = null;
+        }
+
+        if (screenSharePreviewRef.current) {
+          screenSharePreviewRef.current.style.display = 'none';
+          screenSharePreviewRef.current.innerHTML = ''; // Clear the preview
+        }
+        if (rtcRef.current.localVideoTrack) {
+          rtcRef.current.localVideoTrack.close();
+          rtcRef.current.localVideoTrack = null;
+        }
+
+        rtcRef.current.localVideoTrack = await AgoraRTC.createCameraVideoTrack();
+        if (localVideoRef.current) {
+          rtcRef.current.localVideoTrack.play(localVideoRef.current);
+        }
+        await rtcRef.current.client.publish([rtcRef.current.localVideoTrack]);
+        setIsCameraOn(true);
+
         setIsScreenSharing(false);
         toast.info('Screen sharing stopped');
       }
     } catch (error) {
       console.error('Screen sharing error:', error);
       toast.error('Failed to share screen');
+      setIsScreenSharing(false);
+      if (screenSharePreviewRef.current) {
+        screenSharePreviewRef.current.style.display = 'none';
+      }
     }
   };
 
-  // Send Chat Message
+  const toggleScreenSha = async () => {
+    if (!rtcRef.current.client) return;
+
+    try {
+      if (!isScreenSharing) {
+        const screenShareConfig = {
+          optimizationMode: 'motion',
+          audio: 'auto' // Or true, or { microphone: false } to exclude mic if system audio is captured
+        };
+        let screenTracksRaw = await AgoraRTC.createScreenVideoTrack(screenShareConfig, 'auto'); // 'auto' for audio parameter here as well
+        let screenTracksArray = Array.isArray(screenTracksRaw) ? screenTracksRaw : [screenTracksRaw];
+        rtcRef.current.screenShareTrack = null; // Main screen share video track
+        let screenShareAudioTrack = null;
+        for (const track of screenTracksArray) {
+          if (track.trackMediaType === 'video') {
+            rtcRef.current.screenShareTrack = track;
+          } else if (track.trackMediaType === 'audio') {
+            screenShareAudioTrack = track;
+          }
+        }
+        if (!rtcRef.current.screenShareTrack) {
+          throw new Error("Failed to create screen share video track.");
+        }
+
+        if (rtcRef.current.localVideoTrack) {
+          await rtcRef.current.client.unpublish([rtcRef.current.localVideoTrack]);
+          rtcRef.current.localVideoTrack.close();
+          rtcRef.current.localVideoTrack = null;
+          if (localVideoRef.current) {
+            localVideoRef.current.innerHTML = ''; // Clear the main video div
+          }
+        }
+        if (rtcRef.current.localAudioTrack) {
+          await rtcRef.current.client.unpublish([rtcRef.current.localAudioTrack]);
+        }
+        const tracksToPublish = [rtcRef.current.screenShareTrack];
+        if (screenShareAudioTrack) {
+          tracksToPublish.push(screenShareAudioTrack);
+        }
+        if (rtcRef.current.localAudioTrack) {
+          tracksToPublish.push(rtcRef.current.localAudioTrack);
+        }
+        await rtcRef.current.client.publish(tracksToPublish);
+        rtcRef.current.screenShareTrack.on('track-ended', async () => {
+          if (rtcRef.current.client && rtcRef.current.screenShareTrack) {
+            const tracksToUnpublish = [rtcRef.current.screenShareTrack];
+            if (screenShareAudioTrack) {
+              tracksToUnpublish.push(screenShareAudioTrack);
+            }
+            if (rtcRef.current.localAudioTrack) {
+              tracksToUnpublish.push(rtcRef.current.localAudioTrack);
+            }
+            try {
+              await rtcRef.current.client.unpublish(tracksToUnpublish);
+            } catch (unpublishError) {
+              console.error("Error unpublishing screen share tracks:", unpublishError);
+            }
+            rtcRef.current.screenShareTrack.close();
+            rtcRef.current.screenShareTrack = null;
+            if (screenShareAudioTrack) {
+              screenShareAudioTrack.close();
+              screenShareAudioTrack = null;
+            }
+            try {
+              if (!rtcRef.current.localAudioTrack) {
+                rtcRef.current.localAudioTrack = await AgoraRTC.createMicrophoneAudioTrack();
+                if (!isMicOn) {
+                  await rtcRef.current.localAudioTrack.setMuted(true);
+                }
+              }
+              rtcRef.current.localVideoTrack = await AgoraRTC.createCameraVideoTrack();
+              if (!isCameraOn) {
+                await rtcRef.current.localVideoTrack.setMuted(true);
+              }
+
+              if (localVideoRef.current) {
+                rtcRef.current.localVideoTrack.play(localVideoRef.current);
+              }
+              await rtcRef.current.client.publish([rtcRef.current.localVideoTrack, rtcRef.current.localAudioTrack]);
+            } catch (cameraOrMicError) {
+              toast.error("Failed to restart camera/mic after screen share.");
+              setIsCameraOn(false);
+            }
+          }
+          setIsScreenSharing(false);
+          if (screenSharePreviewRef.current) {
+            screenSharePreviewRef.current.style.display = 'none';
+            screenSharePreviewRef.current.innerHTML = ''; // Clear the preview
+          }
+          toast.info('Screen sharing stopped by user');
+        });
+
+        setIsScreenSharing(true);
+        toast.info('Screen sharing started (attempting system audio capture)');
+        if (!rtcRef.current.localAudioTrack) {
+          rtcRef.current.localAudioTrack = await AgoraRTC.createMicrophoneAudioTrack();
+          if (!isMicOn) {
+            await rtcRef.current.localAudioTrack.setMuted(true);
+          }
+        }
+        if (!rtcRef.current.localVideoTrack) { // Recreate if it was closed (shouldn't be if logic is sound)
+          rtcRef.current.localVideoTrack = await AgoraRTC.createCameraVideoTrack();
+          if (!isCameraOn) {
+            await rtcRef.current.localVideoTrack.setMuted(true);
+          }
+        }
+        if (screenSharePreviewRef.current) {
+          screenSharePreviewRef.current.innerHTML = '';
+          rtcRef.current.localVideoTrack.play(screenSharePreviewRef.current, { fit: "cover" });
+          screenSharePreviewRef.current.style.display = 'block';
+        }
+      } else {
+        if (rtcRef.current.screenShareTrack) {
+          rtcRef.current.screenShareTrack.close();
+        } else {
+          setIsScreenSharing(false);
+          if (screenSharePreviewRef.current) {
+            screenSharePreviewRef.current.style.display = 'none';
+          }
+          toast.info('Screen sharing stopped');
+        }
+
+      }
+    } catch (error) {
+      toast.error(`Failed to share screen: ${error.message || error.name}`);
+      setIsScreenSharing(false);
+      if (screenSharePreviewRef.current) {
+        screenSharePreviewRef.current.style.display = 'none';
+      }
+    }
+  };
+
+
   const sendMessage = async () => {
     if (newMessage.trim() && rtmRef.current.channel) {
       try {
-        await rtmRef.current.channel.sendMessage({ text: newMessage });
-        setMessages((prev) => [...prev, { text: newMessage, senderId: 'You (Teacher)', timestamp: new Date() }]);
+        await rtmRef.current.channel.sendMessage({
+          text: JSON.stringify({ type: 'chat', text: newMessage })
+        });
+        setMessages(prev => [...prev, {
+          text: newMessage,
+          senderId: 'You (Teacher)',
+          timestamp: new Date()
+        }]);
         setNewMessage('');
       } catch (error) {
         toast.error('Failed to send message');
@@ -322,225 +517,279 @@ const TeacherLiveClass = () => {
     }
   };
 
-  // Toggle Whiteboard
-  const toggleWhiteboard = () => {
-    setIsWhiteboardActive(!isWhiteboardActive);
+  const handleJoinRequest = async (uid, approved) => {
+    if (!rtmRef.current.client) {
+      toast.error('RTM client not initialized');
+      return;
+    }
+    try {
+      await rtmRef.current.client.sendMessageToPeer(
+        {
+          text: JSON.stringify({
+            type: approved ? 'join_approved' : 'join_rejected',
+            classId: classId
+          })
+        },
+        uid // Send directly to the student's UID
+      );
+      if (approved) {
+        toast.success(`Student ${uid} approved`);
+      } else {
+        toast.info(`Student ${uid} rejected`);
+      }
+      setJoinRequests(prev => prev.filter(req => req.uid !== uid));
+    } catch (error) {
+      console.error("Failed to process join request:", error);
+      toast.error('Failed to process join request');
+    }
   };
 
-  // Save Notes
-  const saveNotes = () => {
-    // Implement note saving logic (e.g., send to backend)
-    console.log('Saving notes:', notes);
-    toast.success('Notes saved locally');
-  };
-
-  // End Class
   const endClass = async () => {
     try {
       await rtcRef.current.client?.leave();
       await rtmRef.current.channel?.leave();
       await rtmRef.current.client?.logout();
       toast.info('Class ended');
-      navigate('/dashboard'); // Adjust navigation
+      navigate('/'); // Adjust navigation as needed
     } catch (error) {
       toast.error('Error ending class');
     }
   };
 
-  // Toggle Fullscreen for Local Video
-  const toggleFullscreen = () => {
-    if (!localVideoRef.current) return;
-
-    if (!isFullscreen) {
-      if (localVideoRef.current.requestFullscreen) {
-        localVideoRef.current.requestFullscreen();
-      } else if (localVideoRef.current.mozRequestFullScreen) {
-        localVideoRef.current.mozRequestFullScreen();
-      } else if (localVideoRef.current.webkitRequestFullscreen) {
-        localVideoRef.current.webkitRequestFullscreen();
-      } else if (localVideoRef.current.msRequestFullscreen) {
-        localVideoRef.current.msRequestFullscreen();
-      }
-    } else {
-      if (document.exitFullscreen) {
-        document.exitFullscreen();
-      } else if (document.mozCancelFullScreen) {
-        document.mozCancelFullScreen();
-      } else if (document.webkitExitFullscreen) {
-        document.webkitExitFullscreen();
-      } else if (document.msExitFullscreen) {
-        document.msExitFullscreen();
-      }
-    }
-    setIsFullscreen(!isFullscreen);
+  const saveNotes = () => {
+    toast.success('Notes saved locally');
   };
 
-  // Handle fullscreen change
-  useEffect(() => {
-    const handleFullscreenChange = () => {
-      const isCurrentlyFullscreen = !!(
-        document.fullscreenElement ||
-        document.mozFullScreenElement ||
-        document.webkitFullscreenElement ||
-        document.msFullscreenElement
-      );
-      setIsFullscreen(isCurrentlyFullscreen);
-    };
-
-    document.addEventListener('fullscreenchange', handleFullscreenChange);
-    document.addEventListener('mozfullscreenchange', handleFullscreenChange);
-    document.addEventListener('webkitfullscreenchange', handleFullscreenChange);
-    document.addEventListener('msfullscreenchange', handleFullscreenChange);
-
-    return () => {
-      document.removeEventListener('fullscreenchange', handleFullscreenChange);
-      document.removeEventListener('mozfullscreenchange', handleFullscreenChange);
-      document.removeEventListener('webkitfullscreenchange', handleFullscreenChange);
-      document.removeEventListener('msfullscreenchange', handleFullscreenChange);
-    };
-  }, []);
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 dark:from-gray-800 dark:to-gray-900 flex items-center justify-center p-4">
+        <div className="text-center">
+          <div className="h-12 w-12 animate-spin rounded-full border-4 border-indigo-500 border-t-transparent mx-auto mb-4"></div>
+          <p className="text-gray-600 dark:text-gray-400">Loading class...</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
-    <div className="flex flex-col h-screen bg-gray-900 text-white">
-      {/* Header */}
-      <div className="flex justify-between items-center p-4 bg-gray-800">
-        <h1 className="text-xl font-bold">Live Class: {classId}</h1>
+    <div className="flex flex-col min-h-[100vh] bg-gray-100 dark:bg-gray-900 text-gray-900 dark:text-white">
+      <div className="flex justify-between items-center p-4 bg-white dark:bg-gray-800 shadow-md">
+        <div className="flex items-center">
+          <h1 className="text-xl font-bold mr-4">Live Class: {classId}</h1>
+          {/* Live indicator if needed */}
+        </div>
         <div className="flex space-x-2">
           <button
             onClick={toggleCamera}
-            disabled={!isJoined}
-            className={`px-3 py-1 rounded text-sm ${isCameraOn ? 'bg-gray-700' : 'bg-red-600'}`}
+            disabled={!isJoined || isScreenSharing}
+            className={`px-3 py-1 rounded text-sm flex items-center ${isCameraOn && !isScreenSharing
+              ? 'bg-gray-200 hover:bg-gray-300 dark:bg-gray-700 dark:hover:bg-gray-600'
+              : 'bg-red-500 hover:bg-red-600 text-white'
+              } ${(!isJoined || isScreenSharing) ? 'opacity-50 cursor-not-allowed' : ''}`}
           >
-            {isCameraOn ? '📷 Stop Cam' : '📷 Start Cam'}
+            {isCameraOn && !isScreenSharing ? '📷 Stop Cam' : '📷 Start Cam'}
           </button>
           <button
             onClick={toggleMic}
             disabled={!isJoined}
-            className={`px-3 py-1 rounded text-sm ${isMicOn ? 'bg-gray-700' : 'bg-red-600'}`}
+            className={`px-3 py-1 rounded text-sm flex items-center ${isMicOn
+              ? 'bg-gray-200 hover:bg-gray-300 dark:bg-gray-700 dark:hover:bg-gray-600'
+              : 'bg-red-500 hover:bg-red-600 text-white'
+              } ${!isJoined ? 'opacity-50 cursor-not-allowed' : ''}`}
           >
             {isMicOn ? '🎤 Mute' : '🎤 Unmute'}
           </button>
           <button
-            onClick={shareScreen}
+            onClick={toggleScreenShare}
             disabled={!isJoined}
-            className={`px-3 py-1 rounded text-sm ${isScreenSharing ? 'bg-blue-600' : 'bg-gray-700'}`}
+            className={`px-3 py-1 rounded text-sm flex items-center ${isScreenSharing
+              ? 'bg-purple-500 hover:bg-purple-600 text-white'
+              : 'bg-gray-200 hover:bg-gray-300 dark:bg-gray-700 dark:hover:bg-gray-600'
+              } ${!isJoined ? 'opacity-50 cursor-not-allowed' : ''}`}
           >
             {isScreenSharing ? '🖥️ Stop Share' : '🖥️ Share Screen'}
           </button>
-          <button
+          {/* <button
             onClick={toggleWhiteboard}
             disabled={!isJoined}
-            className={`px-3 py-1 rounded text-sm ${isWhiteboardActive ? 'bg-purple-600' : 'bg-gray-700'}`}
+            className={`px-3 py-1 rounded text-sm flex items-center ${
+              isWhiteboardActive
+                ? 'bg-purple-500 hover:bg-purple-600 text-white'
+                : 'bg-gray-200 hover:bg-gray-300 dark:bg-gray-700 dark:hover:bg-gray-600'
+            } ${!isJoined ? 'opacity-50 cursor-not-allowed' : ''}`}
           >
-            {isWhiteboardActive ? '📝 Hide Board' : '📝 Whiteboard'}
-          </button>
+            {isWhiteboardActive ? '📋 Hide Board' : '📋 Whiteboard'}
+          </button> */}
           <button
             onClick={endClass}
             disabled={!isJoined}
-            className="px-3 py-1 bg-red-600 rounded text-sm"
+            className="px-3 py-1 bg-red-500 hover:bg-red-600 text-white rounded text-sm flex items-center disabled:opacity-50 disabled:cursor-not-allowed"
           >
             End Class
           </button>
         </div>
       </div>
 
-      {/* Main Content */}
       <div className="flex flex-1 overflow-hidden">
-        {/* Video Area */}
-        <div className={`${isWhiteboardActive ? 'w-1/2' : 'w-2/3'} flex flex-col pr-2`}>
+        <div className="flex-1 flex flex-col p-2">
           <div className="relative flex-1 bg-black rounded-lg overflow-hidden">
-            {/* Local Video with Fullscreen Toggle */}
-            <div className="relative h-1/3 bg-gray-800 rounded m-1">
-              <div ref={localVideoRef} className="w-full h-full" />
-              <button
-                onClick={toggleFullscreen}
-                className="absolute top-2 right-2 bg-black bg-opacity-50 text-white p-1 rounded"
-              >
-                {isFullscreen ? '⇲' : '⛶'}
-              </button>
-              <div className="absolute bottom-2 left-2 text-xs bg-black bg-opacity-50 px-1 rounded">
-                You (Teacher)
-              </div>
-            </div>
 
-            {/* Remote Videos */}
-            <div
-              ref={remoteContainerRef}
-              className="h-2/3 overflow-y-auto p-1 flex flex-wrap"
-            >
-              {participants.length === 0 && (
-                <div className="text-gray-400 w-full text-center py-10">
-                  Waiting for students...
-                </div>
-              )}
+            <div ref={remoteContainerRef} className="w-full h-full">
+              <div ref={localVideoRef} className="w-full h-full bg-gray-800" />
             </div>
-          </div>
-        </div>
-
-        {/* Whiteboard Area */}
-        {isWhiteboardActive && (
-          <div className="w-1/2 pl-2 flex flex-col">
-            <div className="flex-1 bg-white rounded-lg overflow-hidden">
+            {isScreenSharing && ( // Conditionally render the preview only when screen sharing
               <div
-                ref={whiteboardContainerRef}
-                className="w-full h-full"
-              />
-            </div>
-          </div>
-        )}
-
-        {/* Sidebar (Chat & Notes) */}
-        <div className="w-1/3 pl-2 flex flex-col">
-          {/* Chat */}
-          <div className="flex-1 flex flex-col bg-gray-800 rounded-lg mb-2">
-            <div className="p-2 font-semibold border-b border-gray-700">Chat</div>
-            <div className="flex-1 overflow-y-auto p-2 text-sm">
-              {messages.map((msg, index) => (
-                <div key={index} className="mb-1">
-                  <span className="text-gray-400 text-xs">
-                    {msg.senderId} - {msg.timestamp.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-                  </span>
-                  <p>{msg.text}</p>
-                </div>
-              ))}
-            </div>
-            <div className="p-2 border-t border-gray-700 flex">
-              <input
-                type="text"
-                value={newMessage}
-                onChange={(e) => setNewMessage(e.target.value)}
-                onKeyPress={(e) => e.key === 'Enter' && sendMessage()}
-                className="flex-1 bg-gray-700 text-white p-1 rounded-l text-sm"
-                placeholder="Type a message..."
-              />
-              <button
-                onClick={sendMessage}
-                className="bg-blue-600 px-3 rounded-r text-sm"
+                ref={screenSharePreviewRef} // Attach the ref
+                className="absolute bottom-4 right-4 w-32 h-32 rounded-full border-4 border-white overflow-hidden z-10 shadow-lg" // Styling for circle, border, shadow
+                style={{ display: 'none' }} // Initially hidden, controlled by JavaScript
               >
-                Send
-              </button>
-            </div>
-          </div>
-
-          {/* Notes */}
-          <div className="flex-1 flex flex-col bg-gray-800 rounded-lg">
-            <div className="p-2 font-semibold border-b border-gray-700">Class Notes</div>
-            <textarea
-              value={notes}
-              onChange={(e) => setNotes(e.target.value)}
-              className="flex-1 bg-gray-900 text-white p-2 text-sm resize-none"
-              placeholder="Take notes during class..."
-            />
-            <div className="p-2 border-t border-gray-700">
-              <button
-                onClick={saveNotes}
-                className="w-full bg-green-600 py-1 rounded text-sm"
-              >
-                Save Notes
-              </button>
-            </div>
+                {/* The rtcRef.current.localVideoTrack will be played here by the toggleScreenShare function */}
+              </div>
+            )}
           </div>
         </div>
+
+        <button
+          onClick={() => setShowSidebar(!showSidebar)}
+          className="absolute right-4 bottom-4  z-20 p-2 h-10 w-10 rounded-full shadow-lg bg-blue-500 hover:bg-blue-600 text-white"
+        >
+          {showSidebar ? '◀' : '▶'}
+        </button>
+
+        <AnimatePresence>
+          {showSidebar && (
+            <motion.div
+              initial={{ width: 0, opacity: 0 }}
+              animate={{ width: 420, opacity: 1 }}
+              exit={{ width: 0, opacity: 0 }}
+              transition={{ type: 'spring', damping: 20 }}
+              className="flex flex-col bg-white dark:bg-gray-800 shadow-xl z-10"
+            >
+              <div className="p-4 border-b border-gray-200 dark:border-gray-700 flex justify-between items-center">
+                <h2 className="text-lg font-bold">Classroom Tools</h2>
+                <button
+                  onClick={() => setShowSidebar(false)}
+                  className="p-1 rounded-full h-10 w-10 hover:bg-gray-200 dark:hover:bg-gray-700"
+                >
+                  ✕
+                </button>
+              </div>
+
+              <div className="flex-1 overflow-y-auto p-4">
+                <div className="mb-6">
+                  <h3 className="font-semibold mb-2 flex items-center">
+                    <span className="mr-2">✋</span> Join Requests
+                    {joinRequests.length > 0 && (
+                      <span className="ml-2 bg-blue-500 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center">
+                        {joinRequests.length}
+                      </span>
+                    )}
+                  </h3>
+                  {joinRequests.length > 0 ? (
+                    <div className="space-y-2 max-h-40 overflow-y-auto">
+                      {joinRequests.map((request) => (
+                        <div key={request.uid} className="flex items-center justify-between p-2 bg-gray-100 dark:bg-gray-700 rounded">
+                          <span className="text-sm truncate">{request.name} ({request.uid})</span>
+                          <div className="flex space-x-1">
+                            <button
+                              onClick={() => handleJoinRequest(request.uid, true)}
+                              className="px-2 py-1 bg-green-500 text-white text-xs rounded hover:bg-green-600"
+                            >
+                              Approve
+                            </button>
+                            <button
+                              onClick={() => handleJoinRequest(request.uid, false)}
+                              className="px-2 py-1 bg-red-500 text-white text-xs rounded hover:bg-red-600"
+                            >
+                              Reject
+                            </button>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  ) : (
+                    <div className="p-4 text-center rounded-lg bg-gray-100 dark:bg-gray-700">
+                      <p className="text-sm opacity-75">No pending requests</p>
+                    </div>
+                  )}
+                </div>
+
+                <div className="mb-6">
+                  <h3 className="font-semibold mb-2 flex items-center">
+                    <span className="mr-2">👥</span> Participants
+                    <span className="ml-2 bg-blue-500 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center">
+                      {participants.length}
+                    </span>
+                  </h3>
+                  <div className="max-h-40 overflow-y-auto space-y-2">
+                    <div className="p-2 rounded-lg flex items-center bg-blue-100 dark:bg-blue-900">
+                      <div className="w-6 h-6 rounded-full bg-blue-500 flex items-center justify-center text-white text-xs mr-2">
+                        T
+                      </div>
+                      <span className="font-medium text-sm">You (Teacher)</span>
+                    </div>
+                    {participants.map((participant) => (
+                      <div key={participant} className="p-2 rounded-lg flex items-center bg-gray-100 dark:bg-gray-700">
+                        <div className="w-6 h-6 rounded-full bg-purple-500 flex items-center justify-center text-white text-xs mr-2">
+                          S
+                        </div>
+                        <span className="text-sm truncate">{participant}</span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Chat */}
+                <div>
+                  <h3 className="font-semibold mb-2 flex items-center">
+                    <span className="mr-2">💬</span> Class Chat
+                  </h3>
+                  <div className="rounded-lg overflow-hidden bg-gray-100 dark:bg-gray-700 flex flex-col h-64">
+                    <div className="flex-1 overflow-y-auto p-2">
+                      {messages.length > 0 ? (
+                        messages.map((msg, index) => (
+                          <div key={index} className="mb-2">
+                            <div className="text-xs opacity-75">
+                              {msg.senderId} - {msg.timestamp.toLocaleTimeString()}
+                            </div>
+                            <div
+                              className={`p-2 rounded mt-1 text-sm ${msg.senderId === 'You (Teacher)'
+                                ? 'bg-blue-100 dark:bg-blue-900 ml-4'
+                                : 'bg-gray-200 dark:bg-gray-600 mr-4'
+                                }`}
+                            >
+                              {msg.text}
+                            </div>
+                          </div>
+                        ))
+                      ) : (
+                        <div className="text-center py-4 text-sm opacity-75">
+                          No messages yet. Start a conversation!
+                        </div>
+                      )}
+                    </div>
+                    <div className="p-2 border-t border-gray-200 dark:border-gray-600 flex">
+                      <input
+                        type="text"
+                        value={newMessage}
+                        onChange={(e) => setNewMessage(e.target.value)}
+                        onKeyPress={(e) => e.key === 'Enter' && sendMessage()}
+                        className="flex-1 p-1 text-sm rounded-l bg-gray-50 dark:bg-gray-600 text-gray-900 dark:text-white"
+                        placeholder="Type a message..."
+                      />
+                      <button
+                        onClick={sendMessage}
+                        className="px-3 bg-blue-500 hover:bg-blue-600 text-white text-sm rounded-r"
+                      >
+                        Send
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
       </div>
     </div>
   );

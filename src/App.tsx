@@ -9,7 +9,6 @@ import { ScrollToTop } from "./components/common/ScrollToTop";
 import Home from "./pages/Dashboard/Home";
 import { ToastContainer } from "react-toastify";
 import UserListPage from "./pages/userList";
-import CommissionPackages from "./pages/package";
 import CreateQuery from "./pages/OtherPage/Queries";
 import QueryDetail from "./pages/OtherPage/QueryDetail";
 import QueryList from "./pages/OtherPage/QueriesList";
@@ -17,13 +16,18 @@ import PagesManagement from "./pages/Website/Pages";
 import EntityManagement from "./pages/Website/Entities";
 import ComingSoon from "./pages/OtherPage/ComingSoon";
 import CategoryManagement from "./pages/Courses/Categories";
-import CategoryTree from "./pages/Courses/CategoryTree";
 import CourseManagement from "./pages/Courses/Courses";
-import CourseSteppedForm from "./pages/Courses/CourseSteps";
 import ModuleManagement from "./pages/Courses/Modules";
 import ContentManagement from "./pages/Content/Contents";
-import StudentLiveClass from "./pages/liveClass/Studentlive";
 import TeacherLiveClass from "./pages/liveClass/Teacherlive";
+import WaitingRoom from "./pages/liveClass/WaitingRoom";
+import CategorySelectionPage from "./pages/Category/CategorySelection";
+import CourseListingPage from "./pages/CourseList/CourseUsers";
+import VimeoTeacherLiveComponent from "./pages/VimeoLive/Teacher";
+import LiveClassPage from "./pages/VimeoLive/Class";
+import VideoPlayerPage from "./pages/Player/Player";
+import { VideoPlayer } from "./pages/Player/youtube";
+import { VideoWithChat } from "./pages/Player/YoutubeChat";
 
 // Define roles
 export const ROLES = {
@@ -50,13 +54,20 @@ export default function App() {
               <Route index path="/" element={<Home />} />
               <Route path="/profile" element={<UserProfiles />} />
               <Route path="/coming" element={<ComingSoon />} />
+              {/* <Route path="/y" element={<VideoWithChat/>} /> */}
+
+              <Route path="/course" element={<CourseListingPage />} />
+              <Route path="/teacher/:classId" element={<VimeoTeacherLiveComponent />} />
+              <Route path="/class/live/:classId/:courseId" element={<LiveClassPage />} />
+              <Route path="/class/:contentId/:courseId" element={<VideoPlayerPage />} />
 
               <Route path="/query" element={<CreateQuery />} />
               <Route path="/queries" element={<QueryList />} />
               <Route path="/queries/:id" element={<QueryDetail />} />
+              <Route path="/waiting/:classId" element={<WaitingRoom />} />
+              {/* <Route path="/class/:classId" element={<StudentLiveClass />} /> */}
 
               <Route element={<ProtectedRoute roles={[ROLES.ADMIN]} />}>
-                <Route path="/packages" element={<CommissionPackages />} />
                 <Route path="/users" element={<UserListPage />} />
                 <Route path="/categories" element={<CategoryManagement />} />
                 <Route path="/courses" element={<CourseManagement />} />
@@ -65,8 +76,6 @@ export default function App() {
                 <Route path="/recorded-classes" element={<ContentManagement type="RecordedClasses" />} />
                 <Route path="/tests" element={<ContentManagement type="Tests" />} />
                 <Route path="/study-materials" element={<ContentManagement type="StudyMaterials" />} />
-                <Route path="/liveclass/:classId" element={<StudentLiveClass />} />
-                <Route path="/teacherclass/:classId" element={<TeacherLiveClass />} />
               </Route>
 
               <Route path="*" element={<ComingSoon />} />
@@ -76,6 +85,9 @@ export default function App() {
                 <Route path="/entities" element={<EntityManagement />} />
               </Route>
             </Route>
+            <Route path="/instructor/class/:classId" element={<TeacherLiveClass />} />
+            <Route path="/course/category" element={<CategorySelectionPage />} />
+
           </Route>
 
           <Route path="/unauthorized" element={<NotFound />} />

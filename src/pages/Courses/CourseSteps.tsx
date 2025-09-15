@@ -1,12 +1,186 @@
-// components/admin/CourseSteppedForm.jsx
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { toast } from "react-toastify";
-import api from "../../axiosInstance";
+import api, { ImageBaseUrl } from "../../axiosInstance";
 import Input from "../../components/form/input/InputField";
 import Label from "../../components/form/Label";
 import Select from "../../components/form/Select";
 import MultiSelect from "../../components/form/MultiSelect"; // Import MultiSelect
 import DynamicIcon from "../../components/DynamicIcon";
+import { useDropzone } from 'react-dropzone';
+import { Upload, X, Youtube, FileVideo } from 'lucide-react';
+import Button from "../../components/ui/button/Button";
+import RecordedVideoUploadModal from "../Content/UploadClass";
+
+
+const ThumbnailDropzone = ({ value, onChange, error, onRemove }: any) => {
+    const [preview, setPreview] = useState(null);
+
+    const onDrop = useCallback((acceptedFiles) => {
+        const file = acceptedFiles[0];
+        if (file) {
+            const previewUrl = URL.createObjectURL(file);
+            setPreview(previewUrl);
+            onChange(file);
+        }
+    }, [onChange]);
+
+    const { getRootProps, getInputProps, isDragActive } = useDropzone({
+        onDrop,
+        accept: {
+            'image/*': ['.jpeg', '.jpg', '.png', '.gif', '.webp']
+        },
+        maxSize: 2 * 1024 * 1024, // 5MB
+        multiple: false
+    });
+
+    const handleRemove = () => {
+        if (preview) {
+            URL.revokeObjectURL(preview);
+        }
+        setPreview(null);
+        onRemove();
+    };
+
+    return (
+        <div className="space-y-2">
+            <div
+                {...getRootProps()}
+                className={`border-2 border-dashed rounded-lg p-6 text-center cursor-pointer transition-colors ${isDragActive
+                    ? 'border-blue-500 bg-blue-50 dark:bg-blue-900/20'
+                    : 'border-gray-300 dark:border-gray-600 hover:border-gray-400 dark:hover:border-gray-500'
+                    } ${error ? 'border-red-500' : ''}`}
+            >
+                <input {...getInputProps()} />
+                {preview || value?.url ? (
+                    <div className="flex flex-col items-center">
+                        <img
+                            src={preview || `${ImageBaseUrl}/${value?.url}`}
+                            alt="Thumbnail preview"
+                            className="h-32 w-full object-cover rounded-md mb-4"
+                        />
+                        <p className="text-sm text-gray-600 dark:text-gray-400">
+                            Click to replace or drag and drop a new image
+                        </p>
+                    </div>
+                ) : (
+                    <div className="space-y-2">
+                        <Upload className="mx-auto h-8 w-8 text-gray-400" />
+                        <p className="text-sm text-gray-600 dark:text-gray-400">
+                            {isDragActive
+                                ? 'Drop the image here'
+                                : 'Drag & drop an image here, or click to select'}
+                        </p>
+                        <p className="text-xs text-gray-500 dark:text-gray-500">
+                            PNG, JPG, GIF up to 5MB. Preferred size: 1280x720px
+                        </p>
+                    </div>
+                )}
+            </div>
+            {(preview || value?.url) && (
+                <button
+                    type="button"
+                    onClick={handleRemove}
+                    className="flex items-center text-sm text-red-600 hover:text-red-800 dark:text-red-400 dark:hover:text-red-300"
+                >
+                    <X className="h-4 w-4 mr-1" />
+                    Remove image
+                </button>
+            )}
+            {error && <p className="text-sm text-red-600">{error}</p>}
+        </div>
+    );
+};
+
+const PreviewUrlField = ({ value, onChange }) => {
+    const [inputType, setInputType] = useState(value?.type || 'youtube');
+    const [isUploadModalOpen, setIsUploadModalOpen] = useState(false)
+
+    const handleTypeChange = (type) => {
+        setInputType(type);
+        if (type === 'youtube') {
+            onChange({ url: '', publicId: 'youtube' }); // Clear upload data
+        } else {
+            onChange({ url: '', publicId: 'upload' });
+        }
+    };
+
+    const handleModalUploadComplete = (uploadResult) => {
+        onChange({
+            publicId: 'upload',
+            url: uploadResult?.vimeoId || '',
+            duration: uploadResult?.duration
+        })
+        setIsUploadModalOpen(false);
+        toast.success("Preview video uploaded successfully!"); // Optional
+    };
+
+    return (
+        <div className="space-y-4">
+            <div className="flex rounded-md overflow-hidden w-fit border border-gray-300 dark:border-gray-600">
+                <button
+                    type="button"
+                    onClick={() => handleTypeChange('youtube')}
+                    className={`px-4 py-2 text-sm font-medium flex items-center ${inputType === 'youtube'
+                        ? 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200'
+                        : 'bg-white text-gray-700 dark:bg-gray-800 dark:text-gray-300'
+                        }`}
+                >
+                    <Youtube className="h-4 w-4 mr-2" />
+                    YouTube URL
+                </button>
+                <button
+                    type="button"
+                    onClick={() => handleTypeChange('upload')}
+                    className={`px-4 py-2 text-sm font-medium flex items-center ${inputType === 'upload'
+                        ? 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200'
+                        : 'bg-white text-gray-700 dark:bg-gray-800 dark:text-gray-300'
+                        }`}
+                >
+                    <FileVideo className="h-4 w-4 mr-2" />
+                    Upload Video
+                </button>
+            </div>
+
+            {inputType === 'youtube' ? (
+                <div>
+                    <Label>YouTube URL</Label>
+                    <Input
+                        type="url"
+                        name="preview.url" // This name might cause issues with nested handleChange, but onChange overrides it
+                        value={value?.url || ''} // Use value?.url
+                        onChange={(e) => onChange({ url: e.target.value, publicId: 'youtube' })} // Include type and clear others
+                        placeholder="https://www.youtube.com/watch?v=..."
+                    />
+                </div>
+            ) : (
+                <div>
+                    <Label>Upload Video</Label>
+                    <div className="border-2 border-dashed border-gray-300 dark:border-gray-600 rounded-lg p-4">
+                        {value?.url && value?.publicId === 'upload' ? ( // Check if an upload URL exists
+                            <p className="text-sm text-green-600 dark:text-green-400 mb-2">
+                                Video uploaded: {value.url.split('/').pop() || 'Success'}
+                            </p>
+                        ) : (
+                            <p className="text-sm text-gray-600 dark:text-gray-400 mb-2">
+                                Select a video file to upload.
+                            </p>
+                        )}
+                        <Button onClick={(e) => { e.preventDefault(); setIsUploadModalOpen(true) }} variant="outline" size="sm">
+                            <Upload className="h-4 w-4 mr-2" />
+                            {value?.url && value?.publicId === 'upload' ? "Change Video" : "Select Video File"} {/* Button text based on state */}
+                        </Button>
+                    </div>
+                    <RecordedVideoUploadModal
+                        isOpen={isUploadModalOpen}
+                        onClose={() => setIsUploadModalOpen(false)}
+                        content={{ title: "Preview Video for Course" }}
+                        onUploadComplete={handleModalUploadComplete} // <-- Key Change: Pass the callback
+                    />
+                </div>
+            )}
+        </div>
+    );
+};
 
 const CourseSteppedForm = ({ course = null, onSave, onCancel, categories, users }: any) => {
     const [currentStep, setCurrentStep] = useState(1);
@@ -362,15 +536,33 @@ const CourseSteppedForm = ({ course = null, onSave, onCancel, categories, users 
 
     const handleSubmit = async (e) => {
         e.preventDefault();
-        // Validate current step before submitting
         if (!validateStep(currentStep)) {
             return;
+        }
+        let finalThumbnailData = formData.thumbnail; // Start with current thumbnail data
+
+        if (formData.thumbnail.file) {
+            const uploadFormData = new FormData();
+            uploadFormData.append('image', formData.thumbnail.file);
+            try {
+                const uploadResponse = await api.post('/upload/single', uploadFormData, {
+                    headers: {
+                        'Content-Type': 'multipart/form-data',
+                    },
+                });
+                const url = uploadResponse.data?.file?.filename; // Adjust based on your API response
+                finalThumbnailData = { url, publicId: '' };
+            } catch (uploadError) {
+                toast.error(uploadError.message || "Failed to upload thumbnail");
+                return;
+            }
         }
 
         try {
             // Prepare payload with proper date formatting
             const payload = {
                 ...formData,
+                thumbnail: finalThumbnailData,
                 schedule: {
                     ...formData.schedule,
                     startDate: formData.schedule.startDate ? new Date(formData.schedule.startDate).toISOString() : null,
@@ -387,7 +579,6 @@ const CourseSteppedForm = ({ course = null, onSave, onCancel, categories, users 
             };
 
             if (course && course._id) {
-                // Update existing course
                 await api.put(`/courses/${course._id}`, payload);
                 toast.success("Course updated successfully");
             } else {
@@ -401,7 +592,33 @@ const CourseSteppedForm = ({ course = null, onSave, onCancel, categories, users 
             toast.error(error.response?.data?.message || error.message || "Failed to save course");
         }
     };
+    const handleThumbnailChange = (file) => {
+        setFormData(prev => ({
+            ...prev,
+            thumbnail: {
+                ...prev.thumbnail,
+                file: file
+            }
+        }));
+    };
 
+    const handleThumbnailRemove = () => {
+        setFormData(prev => ({
+            ...prev,
+            thumbnail: {
+                url: "", // Clear existing URL
+                publicId: "", // Clear existing publicId
+                file: null // Clear the stored file object
+            }
+        }));
+    };
+
+    const handlePreviewChange = (previewData) => {
+        setFormData(prev => ({
+            ...prev,
+            preview: previewData
+        }));
+    };
     const renderStep1 = () => (
         <div className="space-y-6">
             <h3 className="text-lg font-medium text-gray-900 dark:text-white">Basic Information</h3>
@@ -556,7 +773,7 @@ const CourseSteppedForm = ({ course = null, onSave, onCancel, categories, users 
                         onChange={handleChange}
                     />
                 </div>
-                <div>
+                {/* <div>
                     <Label>Timezone</Label>
                     <Input
                         type="text"
@@ -565,7 +782,7 @@ const CourseSteppedForm = ({ course = null, onSave, onCancel, categories, users 
                         onChange={handleChange}
                         placeholder="Enter timezone"
                     />
-                </div>
+                </div> */}
                 <div>
                     <Label>Price Amount *</Label>
                     <Input
@@ -619,39 +836,25 @@ const CourseSteppedForm = ({ course = null, onSave, onCancel, categories, users 
                         onChange={handleChange}
                     />
                 </div>
-            </div>
-            <div>
-                <Label>Thumbnail URL</Label>
-                <Input
-                    type="text"
-                    name="thumbnail.url"
-                    value={formData.thumbnail.url}
-                    onChange={handleChange}
-                    placeholder="Enter thumbnail URL"
-                />
-            </div>
-            <div>
-                <Label>Preview URL</Label>
-                <Input
-                    type="text"
-                    name="preview.url"
-                    value={formData.preview.url}
-                    onChange={handleChange}
-                    placeholder="Enter preview URL"
-                />
-            </div>
-            <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
                 <div>
-                    <Label>Preview Duration (seconds)</Label>
-                    <Input
-                        type="number"
-                        name="preview.duration"
-                        value={formData.preview.duration}
-                        onChange={handleChange}
-                        min="0"
+                    <Label>Thumbnail</Label>
+                    <ThumbnailDropzone
+                        value={formData.thumbnail}
+                        onChange={handleThumbnailChange}
+                        onRemove={handleThumbnailRemove}
+                        error={errors['thumbnail']}
+                    />
+                </div>
+
+                <div>
+                    <Label>Preview</Label>
+                    <PreviewUrlField
+                        value={formData.preview}
+                        onChange={handlePreviewChange}
                     />
                 </div>
             </div>
+
         </div>
     );
 
@@ -845,7 +1048,7 @@ const CourseSteppedForm = ({ course = null, onSave, onCancel, categories, users 
                                     onClick={() => removeArrayField('objectives', index)}
                                     className="text-red-500 hover:text-red-700"
                                 >
-                                  <DynamicIcon name="Trash" />
+                                    <DynamicIcon name="Trash" />
                                 </button>
                             )}
                         </div>
