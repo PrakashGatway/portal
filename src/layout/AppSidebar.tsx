@@ -1,113 +1,97 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { Link, useLocation } from "react-router";
-
-import {
-  GridIcon,
-  UserIcon,
-  UserCircleIcon,
-  BoxIcon,
-  PlugInIcon,
-  DollarLineIcon,
-  TableIcon,
-  PageIcon,
-  PieChartIcon,
-  ChevronDownIcon,
-  HorizontaLDots,
-  LockIcon,
-  VideoIcon,
-} from "../icons";
 import { useSidebar } from "../context/SidebarContext";
 import { useAuth } from "../context/UserContext";
 
 type NavItem = {
   name: string;
-  icon: React.ReactNode;
+  emoji: string;
   path?: string;
-  subItems?: { name: string; path: string; pro?: boolean; new?: boolean; icon?: React.ReactNode }[];
+  subItems?: { name: string; path: string; pro?: boolean; new?: boolean; emoji?: string }[];
 };
 
 const navItems: NavItem[] = [
   {
-    icon: <GridIcon />,
+    emoji: "📊",
     name: "Dashboard",
     path: "/",
   },
   {
-    icon: <UserIcon />,
+    emoji: "👥",
     name: "User Management",
     path: "/users",
   },
   {
-    icon: <LockIcon />,
+    emoji: "📚",
     name: "Course Categories",
     path: "/categories",
   },
   {
-    icon: <TableIcon />,
+    emoji: "🎓",
     name: "Courses",
     subItems: [
-      { name: "Course list", path: "/courses", icon: <TableIcon /> },
-      { name: "Modules", path: "/modules", icon: <VideoIcon /> }
+      { name: "Course list", path: "/courses", emoji: "📋" },
+      { name: "Modules", path: "/modules", emoji: "📹" }
     ]
   },
   {
-    icon: <BoxIcon />,
+    emoji: "🎥",
     name: "Live Classes",
     path: "/live-classes",
   },
   {
-    icon: <TableIcon />,
+    emoji: "📼",
     name: "Recorded Classes",
     path: "/recorded-classes",
   },
   {
-    icon: <TableIcon />,
+    emoji: "📂",
     name: "Study Materials",
     path: "/study-materials",
   },
   {
-    icon: <TableIcon />,
+    emoji: "🌐",
     name: "Web Management",
     subItems: [
-      { name: "Pages", path: "/pages", icon: <PageIcon /> },
-      { name: "Entities", path: "/entities", icon: <BoxIcon /> }
+      { name: "Pages", path: "/pages", emoji: "📄" },
+      { name: "Entities", path: "/entities", emoji: "📦" }
     ]
   },
   {
-    icon: <PlugInIcon />,
-    name: "Transations Reports",
+    emoji: "💳",
+    name: "Transactions Reports",
     path: "/chargeback",
   }
 ];
 
 const navItemsUser: NavItem[] = [
   {
-    icon: <GridIcon />,
+    emoji: "📊",
     name: "Dashboard",
     path: "/",
   },
   {
-    name: "Refer & Earn",
-    path: "/refer-and-earn",
-    icon: <PieChartIcon />
+    emoji: "🎯",
+    name: "Batches",
+    path: "/course",
   },
   {
+    emoji: "📝",
     name: "Mock Tests",
     path: "/mock",
-    icon: <PieChartIcon />
   },
   {
+    emoji: "🧪",
     name: "Practice Tests",
     path: "/tests",
-    icon: <PieChartIcon />
   },
   {
+    emoji: "🎓",
     name: "My Courses",
     path: "/my-courses",
-    icon: <TableIcon />
   },
   {
-    icon: <LockIcon />,
+    emoji: "📖",
     name: "Study material",
     path: "/study-material"
   },
@@ -115,42 +99,42 @@ const navItemsUser: NavItem[] = [
 
 const navItemsTeacher: NavItem[] = [
   {
-    icon: <GridIcon />,
+    emoji: "📊",
     name: "Dashboard",
     path: "/teacher",
   },
   {
-    icon: <LockIcon />,
+    emoji: "🎓",
     name: "My Courses",
     subItems: [
-      { name: "Create Course", path: "/teacher/create-course", icon: <LockIcon /> },
-      { name: "My Courses", path: "/teacher/courses", icon: <TableIcon /> },
-      { name: "Course Analytics", path: "/teacher/analytics", icon: <PieChartIcon /> }
+      { name: "Create Course", path: "/teacher/create-course", emoji: "🆕" },
+      { name: "My Courses", path: "/teacher/courses", emoji: "📋" },
+      { name: "Course Analytics", path: "/teacher/analytics", emoji: "📈" }
     ]
   },
   {
-    icon: <VideoIcon />,
+    emoji: "📦",
     name: "Content Management",
     subItems: [
-      { name: "Upload Content", path: "/teacher/upload", icon: <VideoIcon /> },
-      { name: "Manage Content", path: "/teacher/content", icon: <BoxIcon /> }
+      { name: "Upload Content", path: "/teacher/upload", emoji: "⬆️" },
+      { name: "Manage Content", path: "/teacher/content", emoji: "🗃️" }
     ]
   },
   {
-    icon: <LockIcon />,
+    emoji: "📝",
     name: "Assessments",
     subItems: [
-      { name: "Create Test", path: "/teacher/create-test", icon: <LockIcon /> },
-      { name: "Test Results", path: "/teacher/results", icon: <LockIcon /> }
+      { name: "Create Test", path: "/teacher/create-test", emoji: "✏️" },
+      { name: "Test Results", path: "/teacher/results", emoji: "📊" }
     ]
   },
   {
-    icon: <LockIcon />,
+    emoji: "👨‍🎓",
     name: "Students",
     path: "/teacher/students",
   },
   {
-    icon: <DollarLineIcon />,
+    emoji: "💰",
     name: "Earnings",
     path: "/teacher/earnings",
   }
@@ -158,58 +142,58 @@ const navItemsTeacher: NavItem[] = [
 
 const othersItems: NavItem[] = [
   {
-    icon: <UserCircleIcon />,
-    name: "User Profile",
+    emoji: "👤",
+    name: "My Profile",
     path: "/profile",
   },
   {
-    icon: <LockIcon />,
-    name: "My Offers",
+    emoji: "🎁",
+    name: "Offers",
     path: "/offers"
   },
   {
-    icon: <DollarLineIcon />,
+    emoji: "🤝",
+    name: "Refer & Earn",
+    path: "/referrals"
+  },
+  {
+    emoji: "💸",
     name: "Transactions",
     path: "/transactions"
   },
   {
+    emoji: "🎫",
     name: "Support Ticket",
-    icon: <PageIcon />,
     subItems: [
-      { name: "Create Ticket", path: "/query", icon: <PageIcon /> },
-      { name: "View Tickets", path: "/queries", icon: <TableIcon /> }
+      { name: "Create Ticket", path: "/query", emoji: "🆕" },
+      { name: "View Tickets", path: "/queries", emoji: "👀" }
     ],
-  },
-  {
-    name: "Contact",
-    icon: <LockIcon />,
-    path: "/contact"
   }
 ];
 
 const teacherOthersItems: NavItem[] = [
   {
-    icon: <UserCircleIcon />,
+    emoji: "👤",
     name: "Profile",
-    path: "/teacher/profile",
+    path: "/profile",
   },
   {
-    icon: <DollarLineIcon />,
+    emoji: "📈",
     name: "Earnings Report",
-    path: "/teacher/earnings-report"
+    path: "/earnings-report"
   },
   {
+    emoji: "🎫",
     name: "Support",
-    icon: <PageIcon />,
     subItems: [
-      { name: "Create Ticket", path: "/teacher/query", icon: <PageIcon /> },
-      { name: "View Tickets", path: "/teacher/queries", icon: <TableIcon /> }
+      { name: "Create Ticket", path: "/teacher/query", emoji: "🆕" },
+      { name: "View Tickets", path: "/teacher/queries", emoji: "👀" }
     ],
   },
   {
+    emoji: "⚙️",
     name: "Settings",
-    icon: <LockIcon />,
-    path: "/teacher/settings"
+    path: "/settings"
   }
 ];
 
@@ -283,7 +267,7 @@ const AppSidebar: React.FC = () => {
   };
 
   const renderMenuItems = (items: NavItem[], menuType: "main" | "others") => (
-    <ul className="flex flex-col gap-2">
+    <ul className="flex flex-col gap-1">
       {items.map((nav, index) => {
         const isSubmenuOpen = openSubmenu?.type === menuType && openSubmenu?.index === index;
         const hasActiveSubItem = nav.subItems?.some(subItem => isActive(subItem.path));
@@ -293,33 +277,35 @@ const AppSidebar: React.FC = () => {
             {nav.subItems ? (
               <button
                 onClick={() => handleSubmenuToggle(index, menuType)}
-                className={`menu-item group w-full transition-all duration-300 ease-in-out
+                className={`menu-item group w-full transition-all duration-300 ease-in-out rounded-xl
                   ${isSubmenuOpen || hasActiveSubItem
-                    ? "menu-item-active bg-brand-50 text-brand-600 dark:bg-brand-900/20 dark:text-brand-400"
-                    : "menu-item-inactive hover:bg-gray-100 dark:hover:bg-gray-800"
+                    ? "menu-item-active bg-gradient-to-r from-blue-50 to-indigo-50 text-blue-700 dark:from-blue-900/30 dark:to-indigo-900/30 dark:text-blue-300 border-r-4 border-blue-500 shadow-sm"
+                    : "menu-item-inactive hover:bg-gray-50 dark:hover:bg-gray-800/50"
                   }
                   ${!isExpanded && !isHovered ? "lg:justify-center" : "lg:justify-start"}
                 `}
               >
                 <span
-                  className={`menu-item-icon-size transition-colors duration-200
+                  className={`menu-item-icon-size transition-all duration-300 flex-shrink-0 text-xl transform group-hover:scale-125
                     ${isSubmenuOpen || hasActiveSubItem
-                      ? "text-brand-500"
-                      : "text-gray-500 group-hover:text-brand-500"
+                      ? "text-blue-600 dark:text-blue-400 scale-110"
+                      : "text-gray-600 group-hover:text-blue-600 dark:text-gray-400 dark:group-hover:text-blue-400"
                     }
                   `}
                 >
-                  {nav.icon}
+                  {nav.emoji}
                 </span>
 
                 {(isExpanded || isHovered || isMobileOpen) && (
                   <>
-                    <span className="menu-item-text">{nav.name}</span>
-                    <ChevronDownIcon
-                      className={`ml-auto w-4 h-4 transition-transform duration-200
-                        ${isSubmenuOpen ? "rotate-180 text-brand-500" : "text-gray-400"}
+                    <span className="menu-item-text font-medium text-gray-900 dark:text-gray-100">{nav.name}</span>
+                    <span
+                      className={`ml-auto w-4 h-4 transition-transform duration-200 flex-shrink-0
+                        ${isSubmenuOpen ? "rotate-180 text-blue-500" : "text-gray-400"}
                       `}
-                    />
+                    >
+                      ▼
+                    </span>
                   </>
                 )}
               </button>
@@ -327,25 +313,25 @@ const AppSidebar: React.FC = () => {
               nav.path && (
                 <Link
                   to={nav.path}
-                  className={`menu-item group transition-all duration-300 ease-in-out
+                  className={`menu-item group transition-all duration-300 ease-in-out rounded-xl
                     ${isActive(nav.path)
-                      ? "menu-item-active bg-brand-50 text-brand-600 dark:bg-brand-900/20 dark:text-brand-400"
-                      : "menu-item-inactive hover:bg-gray-100 dark:hover:bg-gray-800"
+                      ? "menu-item-active bg-gradient-to-r from-blue-50 to-indigo-50 text-blue-700 dark:from-blue-900/30 dark:to-indigo-900/30 dark:text-blue-300 border-r-4 border-blue-500 shadow-sm"
+                      : "menu-item-inactive hover:bg-gray-50 dark:hover:bg-gray-800/50"
                     }
                   `}
                 >
                   <span
-                    className={`menu-item-icon-size transition-colors duration-200
+                    className={`menu-item-icon-size transition-all duration-300 flex-shrink-0 text-xl transform group-hover:scale-125
                       ${isActive(nav.path)
-                        ? "text-brand-500"
-                        : "text-gray-500 group-hover:text-brand-500"
+                        ? "text-blue-600 dark:text-blue-400 scale-110"
+                        : "text-gray-600 group-hover:text-blue-600 dark:text-gray-400 dark:group-hover:text-blue-400"
                       }
                     `}
                   >
-                    {nav.icon}
+                    {nav.emoji}
                   </span>
                   {(isExpanded || isHovered || isMobileOpen) && (
-                    <span className="menu-item-text">{nav.name}</span>
+                    <span className="menu-item-text font-medium text-gray-900 dark:text-gray-100">{nav.name}</span>
                   )}
                 </Link>
               )
@@ -367,27 +353,27 @@ const AppSidebar: React.FC = () => {
                     <li key={subItem.name}>
                       <Link
                         to={subItem.path}
-                        className={`menu-dropdown-item group transition-all duration-200 ease-in-out
+                        className={`menu-dropdown-item group transition-all duration-200 ease-in-out rounded-md px-3 py-2 flex items-center transform hover:scale-[1.02]
                           ${isActive(subItem.path)
-                            ? "menu-dropdown-item-active text-brand-600 bg-brand-50 dark:bg-brand-900/20"
-                            : "menu-dropdown-item-inactive hover:bg-gray-100 dark:hover:bg-gray-800"
+                            ? "menu-dropdown-item-active text-blue-700 bg-blue-50 dark:bg-blue-900/20 dark:text-blue-300 scale-[1.02]"
+                            : "menu-dropdown-item-inactive hover:bg-gray-100 dark:hover:bg-gray-800/50 text-gray-600 dark:text-gray-300"
                           }
                         `}
                       >
                         <span className="flex items-center gap-3">
-                          {subItem.icon && (
-                            <span className={`w-4 h-4 ${isActive(subItem.path) ? "text-brand-500" : "text-gray-400"}`}>
-                              {subItem.icon}
+                          {subItem.emoji && (
+                            <span className={`text-lg flex-shrink-0 ${isActive(subItem.path) ? "text-blue-500" : "text-gray-400"}`}>
+                              {subItem.emoji}
                             </span>
                           )}
-                          {subItem.name}
+                          <span className="text-sm text-gray-900 dark:text-gray-100">{subItem.name}</span>
                         </span>
                         <span className="flex items-center gap-1 ml-auto">
                           {subItem.new && (
                             <span
-                              className={`px-2 py-0.5 text-xs rounded-full
+                              className={`px-1.5 py-0.5 text-xs rounded-full
                                 ${isActive(subItem.path)
-                                  ? "bg-brand-500 text-white"
+                                  ? "bg-blue-500 text-white"
                                   : "bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400"
                                 }
                               `}
@@ -396,7 +382,7 @@ const AppSidebar: React.FC = () => {
                             </span>
                           )}
                           {subItem.pro && (
-                            <span className="px-2 py-0.5 text-xs bg-purple-100 text-purple-800 rounded-full dark:bg-purple-900/30 dark:text-purple-400">
+                            <span className="px-1.5 py-0.5 text-xs bg-purple-100 text-purple-800 rounded-full dark:bg-purple-900/30 dark:text-purple-400">
                               Pro
                             </span>
                           )}
@@ -426,7 +412,7 @@ const AppSidebar: React.FC = () => {
 
   return (
     <aside
-      className={`fixed mt-16 flex flex-col lg:mt-0 top-0 px-4 left-0 bg-white dark:bg-gray-900 dark:border-gray-800 text-gray-900 h-screen transition-all duration-300 ease-in-out z-50 border-r border-gray-200 dark:border-gray-800
+      className={`fixed mt-16 flex flex-col lg:mt-0 top-0 px-3 left-0 bg-white dark:bg-gray-900 text-gray-900 h-screen transition-all duration-300 ease-in-out z-50 border-r border-gray-200 dark:border-gray-800 shadow-lg
         ${isExpanded || isMobileOpen
           ? "w-[260px]"
           : isHovered
@@ -442,7 +428,7 @@ const AppSidebar: React.FC = () => {
         className={`py-6 flex transition-all duration-300 ${!isExpanded && !isHovered ? "lg:justify-center" : "justify-start"
           }`}
       >
-        <Link to={user.role === "teacher" ? "/teacher" : "/"}>
+        <Link to={user.role === "teacher" ? "/teacher" : "/"} className="flex items-center transform hover:scale-105 transition-transform duration-200">
           {isExpanded || isHovered || isMobileOpen ? (
             <>
               <img
@@ -477,7 +463,7 @@ const AppSidebar: React.FC = () => {
           <div className="flex flex-col gap-6">
             <div>
               <h2
-                className={`mb-3 text-xs uppercase flex leading-[20px] text-gray-400 font-medium tracking-wider ${!isExpanded && !isHovered
+                className={`mb-3 text-xs uppercase flex leading-[20px] text-gray-500 dark:text-gray-400 font-medium tracking-wider ${!isExpanded && !isHovered
                   ? "lg:justify-center"
                   : "justify-start pl-3"
                   }`}
@@ -485,7 +471,7 @@ const AppSidebar: React.FC = () => {
                 {isExpanded || isHovered || isMobileOpen ? (
                   "Menu"
                 ) : (
-                  <HorizontaLDots className="size-5" />
+                  <span className="text-lg">🔍</span>
                 )}
               </h2>
               {renderMenuItems(getMenuItems("main"), "main")}
@@ -493,7 +479,7 @@ const AppSidebar: React.FC = () => {
 
             <div>
               <h2
-                className={`mb-3 text-xs uppercase flex leading-[20px] text-gray-400 font-medium tracking-wider ${!isExpanded && !isHovered
+                className={`mb-3 text-xs uppercase flex leading-[20px] text-gray-500 dark:text-gray-400 font-medium tracking-wider ${!isExpanded && !isHovered
                   ? "lg:justify-center"
                   : "justify-start pl-3"
                   }`}
@@ -501,7 +487,7 @@ const AppSidebar: React.FC = () => {
                 {isExpanded || isHovered || isMobileOpen ? (
                   user.role === "teacher" ? "Account" : "Others"
                 ) : (
-                  <HorizontaLDots className="size-5" />
+                  <span className="text-lg">⚙️</span>
                 )}
               </h2>
               {renderMenuItems(getMenuItems("others"), "others")}
@@ -511,16 +497,16 @@ const AppSidebar: React.FC = () => {
 
         {/* User profile at the bottom */}
         {(isExpanded || isHovered || isMobileOpen) && user && (
-          <div className="px-3 py-2 rounded-3xl sticky bottom-1 border-l-8 border-1 shadow-lg left-0 right-0 bg-white dark:bg-gray-800 mt-auto border-gray-400 dark:border-gray-600">
+          <div className="p-3 rounded-xl sticky bottom-2 left-0 right-0 bg-gradient-to-r from-gray-50 to-blue-50 dark:from-gray-800 dark:to-blue-900/20 mt-auto border border-gray-200 dark:border-gray-700 shadow-md transform hover:scale-[1.02] transition-transform duration-200">
             <div className="flex items-center gap-3">
-              <div className="w-10 h-10 bg-brand-500 rounded-full flex items-center justify-center text-white font-medium">
-                {user.name ? user.name.charAt(0).toUpperCase() : 'U'}
+              <div className="w-10 h-10 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-full flex items-center justify-center text-white font-medium shadow-md transform hover:scale-110 transition-transform duration-200">
+                {user.name ? user.name.charAt(0).toUpperCase() : '👤'}
               </div>
               <div className="flex-1 min-w-0">
                 <p className="text-sm font-medium text-gray-900 dark:text-white truncate">
                   {user.name || 'User'}
                 </p>
-                <p className="text-xs text-gray-500 dark:text-gray-400 capitalize">
+                <p className="text-xs text-gray-600 dark:text-gray-400 capitalize">
                   {user.role}
                 </p>
               </div>

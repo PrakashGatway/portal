@@ -1,9 +1,10 @@
 import { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Send, Users, MessageCircle, MicOff, User } from 'lucide-react';
+import { Send, Users, MicOff } from 'lucide-react';
 import io from 'socket.io-client';
+import { useNavigate } from 'react-router';
 
-const StudentChatComponent = ({ classId, username }: any) => {
+const StudentChatComponent = ({ classTitle, classId, username }: any) => {
     const [messages, setMessages] = useState([]) as any;
     const [newMessage, setNewMessage] = useState('') as any;
     const [usersTyping, setUsersTyping] = useState([]);
@@ -14,20 +15,25 @@ const StudentChatComponent = ({ classId, username }: any) => {
     const socketRef = useRef(null) as any;
     const messagesEndRef = useRef(null);
     const typingTimeoutRef = useRef(null);
+    const messagesContainerRef = useRef(null);
+
+    let navigate = useNavigate();
 
     useEffect(() => {
-        if (!classId || !username) return;
+        if (!classId) return;
 
-        socketRef.current = io('http://localhost:4000', {
-            transports: ['websocket']
+        socketRef.current = io('http://localhost:5000', {
+            transports: ['websocket'],
+            auth: {
+                token: localStorage.getItem('accessToken')
+            },
+            withCredentials: true
         });
 
         socketRef.current.on('connect', () => {
             setIsConnected(true);
             socketRef.current.emit('joinClass', {
-                classId: classId,
-                username: username,
-                isAdmin: false
+                classId: classId
             });
         });
 
@@ -70,6 +76,12 @@ const StudentChatComponent = ({ classId, username }: any) => {
                 setOnlineUsers(stats.onlineUsers);
             }
         });
+
+        socketRef.current.on("classEnded", (data) => {
+            alert(data.message || "class Ended");
+            navigate("/");
+        });
+        
         socketRef.current.on('userMuted', (data) => {
             setIsMuted(true);
             setMessages(prev => [...prev, {
@@ -113,7 +125,9 @@ const StudentChatComponent = ({ classId, username }: any) => {
     }, [classId, username]);
 
     useEffect(() => {
-        messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+        if (messagesContainerRef.current) {
+            messagesContainerRef.current.scrollTop = messagesContainerRef.current.scrollHeight;
+        }
     }, [messages]);
 
     const handleTyping = () => {
@@ -151,13 +165,13 @@ const StudentChatComponent = ({ classId, username }: any) => {
         .join(', ');
 
     return (
-        <div className="flex flex-col max-h-[80vh] bg-white dark:bg-gray-900 rounded-xl overflow-hidden border border-gray-200 dark:border-gray-700 shadow-xl">
+        <div className="flex flex-col h-[80vh] bg-white dark:bg-gray-900 rounded-xl overflow-hidden border border-gray-200 dark:border-gray-700 shadow-xl">
             {/* Chat Header */}
             <div className="bg-gradient-to-r from-blue-500 to-indigo-600 dark:from-gray-800 dark:to-gray-900 border-b border-gray-200 dark:border-gray-700 p-2 pb-0">
                 <div className="flex items-center justify-between">
                     <div className="flex items-center">
                         <div className={`w-2 h-2 rounded-full mr-3 ${isConnected ? 'bg-green-400' : 'bg-red-400'}`}></div>
-                        <h2 className="text-lg font-bold text-white">{classId}</h2>
+                        <h2 className="text-lg font-bold text-white">{classTitle || classId}</h2>
                     </div>
 
                     <div className="flex items-center space-x-4">
@@ -180,7 +194,7 @@ const StudentChatComponent = ({ classId, username }: any) => {
 
             <div className="flex flex-1 overflow-hidden">
                 <div className={`${'w-full'} flex flex-col`}>
-                    <div style={{ scrollbarWidth: "none" }} className="flex-1 overflow-y-auto p-2 space-y-2 bg-gray-50 dark:bg-gray-800">
+                    <div style={{ scrollbarWidth: "none" }} ref={messagesContainerRef} className="flex-1 overflow-y-auto p-2 space-y-2 bg-gray-50 dark:bg-gray-800">
                         <AnimatePresence>
                             {messages.map((message, index) => (
                                 <motion.div
@@ -229,7 +243,7 @@ const StudentChatComponent = ({ classId, username }: any) => {
                             <motion.div
                                 initial={{ opacity: 0 }}
                                 animate={{ opacity: 1 }}
-                                className="text-sm text-gray-500 dark:text-gray-400 italic p-2 flex items-center"
+                                className="text-xs text-gray-500 dark:text-gray-400 italic p-2 flex items-center"
                             >
                                 <div className="flex space-x-1 mr-2">
                                     <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce"></div>

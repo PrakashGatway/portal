@@ -194,7 +194,7 @@ const CustomDropdownItem = ({
   </div>
 )
 
-export const VideoPlayer: React.FC<VideoPlayerProps> = ({ videoId = "hGgvvnyd388", title }) => {
+export const VideoPlayer: React.FC<VideoPlayerProps> = ({ videoId = "hGgvvnyd388" }) => {
   const [playing, setPlaying] = useState(false)
   const [volume, setVolume] = useState(1)
   const [muted, setMuted] = useState(false)

@@ -5,8 +5,11 @@ import {
     VolumeX, Volume2, LogOut, Megaphone, Info, CheckCircle, XCircle
 } from 'lucide-react';
 import io from 'socket.io-client';
+import api from '../../axiosInstance';
+import { toast } from 'react-toastify';
+import { useNavigate } from 'react-router';
 
-const TeacherChatComponent = ({ classId, username }: any) => {
+const TeacherChatComponent = ({ classTitle, classId, username }: any) => {
     const [messages, setMessages] = useState([]);
     const [newMessage, setNewMessage] = useState('');
     const [broadcastMessage, setBroadcastMessage] = useState('');
@@ -20,24 +23,27 @@ const TeacherChatComponent = ({ classId, username }: any) => {
     const [actionError, setActionError] = useState('');
 
     const socketRef = useRef(null);
+    const messagesContainerRef = useRef(null);
     const messagesEndRef = useRef(null);
     const typingTimeoutRef = useRef(null);
 
+    let navigate = useNavigate()
     // Initialize socket connection
     useEffect(() => {
-        if (!classId || !username) return;
+        if (!classId) return;
 
-        socketRef.current = io('http://localhost:4000', {
-            transports: ['websocket']
+        socketRef.current = io('http://localhost:5000', {
+            transports: ['websocket'],
+            auth: {
+                token: localStorage.getItem('accessToken')
+            },
+            withCredentials: true
         });
 
         socketRef.current.on('connect', () => {
             setIsConnected(true);
             socketRef.current.emit('joinClass', {
                 classId: classId,
-                username: username,
-                isAdmin: true,
-                password: 'admin123' // In production, use secure authentication
             });
         });
 
@@ -91,6 +97,10 @@ const TeacherChatComponent = ({ classId, username }: any) => {
             setTimeout(() => setActionMessage(''), 3000);
         });
 
+        socketRef.current.on("classEnded", (data) => {
+            navigate("/");
+        });
+
         socketRef.current.on('error', (data) => {
             setActionError(data.message);
             setTimeout(() => setActionError(''), 3000);
@@ -124,8 +134,10 @@ const TeacherChatComponent = ({ classId, username }: any) => {
     }, [classId, username]);
 
     useEffect(() => {
-        messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
-    }, [messages]);
+        if (messagesContainerRef.current) {
+            messagesContainerRef.current.scrollTop = messagesContainerRef.current.scrollHeight;
+        }
+    }, [messages, activeTab]);
 
     const handleTyping = () => {
         if (socketRef.current) {
@@ -157,6 +169,16 @@ const TeacherChatComponent = ({ classId, username }: any) => {
                 message: broadcastMessage
             });
             setBroadcastMessage('');
+        }
+    };
+
+    const endClass = (e) => {
+        e.preventDefault();
+        if (socketRef.current && isConnected) {
+            socketRef.current.emit('adminAction', {
+                action: 'endClass',
+                classId
+            });
         }
     };
 
@@ -195,7 +217,7 @@ const TeacherChatComponent = ({ classId, username }: any) => {
         .join(', ');
 
     return (
-        <div className="flex flex-col h-full bg-white dark:bg-gray-900 rounded-xl overflow-hidden border border-gray-200 dark:border-gray-700 shadow-xl">
+        <div className="flex flex-col h-[80vh] bg-white dark:bg-gray-900 rounded-xl overflow-hidden border border-gray-200 dark:border-gray-700 shadow-xl">
             {/* Header */}
             <div className="bg-gradient-to-r from-purple-600 to-indigo-700 dark:from-gray-800 dark:to-gray-900 border-b border-gray-200 dark:border-gray-700 p-2">
                 <div className="flex items-center justify-between">
@@ -203,7 +225,7 @@ const TeacherChatComponent = ({ classId, username }: any) => {
                         <div className={`w-3 h-3 rounded-full mr-3 ${isConnected ? 'bg-green-400' : 'bg-red-400'}`}></div>
                         <h2 className="text-lg font-bold text-white flex items-center">
                             <span className="bg-yellow-400 text-yellow-900 text-xs px-1 py-0.5 rounded mr-2">ADMIN</span>
-                            Class: {classId}
+                            Class: {classTitle || classId}
                         </h2>
                     </div>
 
@@ -219,39 +241,59 @@ const TeacherChatComponent = ({ classId, username }: any) => {
                     </div>
                 </div>
 
-                <div className="flex mt-2">
+                <div className="flex justify-between mt-2">
+                    <div>
+                        <motion.button
+                            whileHover={{ y: -2 }}
+                            whileTap={{ y: 0 }}
+                            onClick={() => setActiveTab('chat')}
+                            className={`px-3 py-1 rounded-l-lg font-medium transition-colors ${activeTab === 'chat'
+                                ? 'bg-white text-purple-700'
+                                : 'bg-white/20 text-white hover:bg-white/30'
+                                }`}
+                        >
+                            Chat
+                        </motion.button>
+                        <motion.button
+                            whileHover={{ y: -2 }}
+                            whileTap={{ y: 0 }}
+                            onClick={() => setActiveTab('users')}
+                            className={`px-3 py-1 font-medium transition-colors ${activeTab === 'users'
+                                ? 'bg-white text-purple-700'
+                                : 'bg-white/20 text-white hover:bg-white/30'
+                                }`}
+                        >
+                            Students ({usersList.filter(u => !u.isAdmin).length})
+                        </motion.button>
+                        <motion.button
+                            whileHover={{ y: -2 }}
+                            whileTap={{ y: 0 }}
+                            onClick={() => setActiveTab('broadcast')}
+                            className={`px-3 py-1 rounded-r-lg font-medium transition-colors ${activeTab === 'broadcast'
+                                ? 'bg-white text-purple-700'
+                                : 'bg-white/20 text-white hover:bg-white/30'
+                                }`}
+                        >
+                            Broadcast
+                        </motion.button>
+                    </div>
                     <motion.button
                         whileHover={{ y: -2 }}
                         whileTap={{ y: 0 }}
-                        onClick={() => setActiveTab('chat')}
-                        className={`px-3 py-1 rounded-l-lg font-medium transition-colors ${activeTab === 'chat'
-                                ? 'bg-white text-purple-700'
-                                : 'bg-white/20 text-white hover:bg-white/30'
-                            }`}
+                        onClick={async (e) => {
+                            try {
+                                const confirmEnd = window.confirm("Are you sure you want to end this class?");
+                                if (!confirmEnd) return; 
+                                await endClass(e); 
+                                await api.put(`/content/status/${classId}`, { status: "published" });
+                                toast.success("Class ended successfully");
+                            } catch (error) {
+                                toast.error(error.message);
+                            }
+                        }}
+                        className={`px-3 py-1 rounded-lg font-medium transition-colors bg-red-800 text-gray-300`}
                     >
-                        Chat
-                    </motion.button>
-                    <motion.button
-                        whileHover={{ y: -2 }}
-                        whileTap={{ y: 0 }}
-                        onClick={() => setActiveTab('users')}
-                        className={`px-3 py-1 font-medium transition-colors ${activeTab === 'users'
-                                ? 'bg-white text-purple-700'
-                                : 'bg-white/20 text-white hover:bg-white/30'
-                            }`}
-                    >
-                        Students ({usersList.filter(u => !u.isAdmin).length})
-                    </motion.button>
-                    <motion.button
-                        whileHover={{ y: -2 }}
-                        whileTap={{ y: 0 }}
-                        onClick={() => setActiveTab('broadcast')}
-                        className={`px-3 py-1 rounded-r-lg font-medium transition-colors ${activeTab === 'broadcast'
-                                ? 'bg-white text-purple-700'
-                                : 'bg-white/20 text-white hover:bg-white/30'
-                            }`}
-                    >
-                        Broadcast
+                        End Class
                     </motion.button>
                 </div>
             </div>
@@ -264,8 +306,8 @@ const TeacherChatComponent = ({ classId, username }: any) => {
                         animate={{ opacity: 1, height: 'auto' }}
                         exit={{ opacity: 0, height: 0 }}
                         className={`p-3 text-center flex items-center justify-center ${actionMessage
-                                ? 'bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-300'
-                                : 'bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-300'
+                            ? 'bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-300'
+                            : 'bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-300'
                             }`}
                     >
                         {actionMessage ? <CheckCircle className="h-5 w-5 mr-2" /> : <XCircle className="h-5 w-5 mr-2" />}
@@ -280,7 +322,7 @@ const TeacherChatComponent = ({ classId, username }: any) => {
                 {activeTab === 'chat' && (
                     <div className="flex-1 flex flex-col">
                         {/* Messages Container */}
-                        <div style={{scrollbarWidth:'none'}} className="flex-1 overflow-y-auto p-2 space-y-2 bg-gray-50 dark:bg-gray-800">
+                        <div style={{ scrollbarWidth: 'none' }} ref={messagesContainerRef} className="flex-1 overflow-y-auto p-2 space-y-2 bg-gray-50 dark:bg-gray-800">
                             <AnimatePresence>
                                 {messages.map((message, index) => (
                                     <motion.div
@@ -289,10 +331,10 @@ const TeacherChatComponent = ({ classId, username }: any) => {
                                         animate={{ opacity: 1, y: 0 }}
                                         exit={{ opacity: 0 }}
                                         className={`p-2 px-4 rounded-full max-w-[90%] ${message.isSystem
-                                                ? 'mx-auto text-center text-gray-500 dark:text-gray-400 italic bg-gray-200 dark:bg-gray-700/50'
-                                                : message.isAdmin
-                                                    ? 'ml-auto bg-gradient-to-r from-purple-900 to-indigo-600 text-white'
-                                                    : 'mr-auto bg-gradient-to-r from-purple-800 to-indigo-500 text-white dark:bg-gray-700 border border-gray-200 dark:border-gray-600'
+                                            ? 'mx-auto text-center text-gray-500 dark:text-gray-400 italic bg-gray-200 dark:bg-gray-700/50'
+                                            : message.isAdmin
+                                                ? 'ml-auto bg-gradient-to-r from-purple-900 to-indigo-600 text-white'
+                                                : 'mr-auto bg-gradient-to-r from-purple-800 to-indigo-500 text-white dark:bg-gray-700 border border-gray-200 dark:border-gray-600'
                                             }`}
                                     >
                                         {message.isSystem ? (
@@ -303,8 +345,8 @@ const TeacherChatComponent = ({ classId, username }: any) => {
                                             <div>
                                                 <div className="flex items-baseline">
                                                     <span className={`font-semibold text-xs mr-2 m-0 p-0 ${message.isAdmin
-                                                            ? 'text-yellow-200'
-                                                            : 'text-gray-600 dark:text-blue-300'
+                                                        ? 'text-yellow-200'
+                                                        : 'text-gray-600 dark:text-blue-300'
                                                         }`}>
                                                         {message.username} {message.isAdmin && <span className="text-xs bg-yellow-400 text-yellow-900 px-1 rounded ml-1">ADMIN</span>}
                                                     </span>
@@ -321,11 +363,17 @@ const TeacherChatComponent = ({ classId, username }: any) => {
                                 ))}
                             </AnimatePresence>
 
+                            <div ref={messagesEndRef} />
+                        </div>
+
+                        {/* Message Input */}
+                        <form onSubmit={sendMessage} className="p-4 border-t border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800">
+
                             {typingUsers && (
                                 <motion.div
                                     initial={{ opacity: 0 }}
                                     animate={{ opacity: 1 }}
-                                    className="text-sm text-gray-500 dark:text-gray-400 italic p-2 flex items-center"
+                                    className="text-xs text-gray-500 dark:text-gray-400 italic pb-2 flex items-center"
                                 >
                                     <div className="flex space-x-1 mr-2">
                                         <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce"></div>
@@ -335,11 +383,6 @@ const TeacherChatComponent = ({ classId, username }: any) => {
                                     {typingUsers} {typingUsers.includes(',') ? 'are' : 'is'} typing...
                                 </motion.div>
                             )}
-                            <div ref={messagesEndRef} />
-                        </div>
-
-                        {/* Message Input */}
-                        <form onSubmit={sendMessage} className="p-4 border-t border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800">
                             <div className="flex">
                                 <input
                                     type="text"
@@ -357,8 +400,8 @@ const TeacherChatComponent = ({ classId, username }: any) => {
                                     whileTap={{ scale: 0.95 }}
                                     type="submit"
                                     className={`px-5 rounded-r-xl font-medium flex items-center ${newMessage.trim() && isConnected
-                                            ? 'bg-purple-500 hover:bg-purple-600 text-white'
-                                            : 'bg-gray-200 dark:bg-gray-700 text-gray-500 dark:text-gray-400 cursor-not-allowed'
+                                        ? 'bg-purple-500 hover:bg-purple-600 text-white'
+                                        : 'bg-gray-200 dark:bg-gray-700 text-gray-500 dark:text-gray-400 cursor-not-allowed'
                                         }`}
                                     disabled={!newMessage.trim() || !isConnected}
                                 >
@@ -493,8 +536,8 @@ const TeacherChatComponent = ({ classId, username }: any) => {
                                         whileTap={{ scale: 0.98 }}
                                         type="submit"
                                         className={`px-2 py-1 rounded-lg font-medium flex items-center ${broadcastMessage.trim() && isConnected
-                                                ? 'bg-gradient-to-r from-purple-500 to-indigo-600 hover:from-purple-600 hover:to-indigo-700 text-white'
-                                                : 'bg-gray-200 dark:bg-gray-700 text-gray-500 dark:text-gray-400 cursor-not-allowed'
+                                            ? 'bg-gradient-to-r from-purple-500 to-indigo-600 hover:from-purple-600 hover:to-indigo-700 text-white'
+                                            : 'bg-gray-200 dark:bg-gray-700 text-gray-500 dark:text-gray-400 cursor-not-allowed'
                                             }`}
                                         disabled={!broadcastMessage.trim() || !isConnected}
                                     >

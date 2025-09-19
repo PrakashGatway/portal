@@ -15,7 +15,7 @@ export default function UserAddressCard({ user }:any) {
                 Street
               </p>
               <p className="text-sm font-medium text-gray-800 dark:text-white/90">
-                {address.street}
+                {address?.street}
               </p>
             </div>
 
@@ -24,7 +24,7 @@ export default function UserAddressCard({ user }:any) {
                 City/State
               </p>
               <p className="text-sm font-medium text-gray-800 dark:text-white/90">
-                {address.city}, {address.state}
+                {address?.city}, {address?.state}
               </p>
             </div>
 
@@ -33,7 +33,7 @@ export default function UserAddressCard({ user }:any) {
                 Country
               </p>
               <p className="text-sm font-medium text-gray-800 dark:text-white/90">
-                {address.country}
+                {address?.country}
               </p>
             </div>
 
@@ -42,7 +42,7 @@ export default function UserAddressCard({ user }:any) {
                 Postal Code
               </p>
               <p className="text-sm font-medium text-gray-800 dark:text-white/90">
-                {address.zipCode}
+                {address?.zipCode}
               </p>
             </div>
           </div>

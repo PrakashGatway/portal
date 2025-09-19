@@ -6,7 +6,7 @@ import { ThemeToggleButton } from "../components/common/ThemeToggleButton";
 import NotificationDropdown from "../components/header/NotificationDropdown";
 import UserDropdown from "../components/header/UserDropdown";
 import { useAuth } from "../context/UserContext";
-import { Lamp } from "lucide-react";
+import DynamicIcon from "../components/DynamicIcon";
 
 const AppHeader: React.FC = () => {
   const [isApplicationMenuOpen, setApplicationMenuOpen] = useState(false);
@@ -132,21 +132,19 @@ const AppHeader: React.FC = () => {
             <button
               onClick={() => navigate("/course/category")}
               className={`
-    inline-flex items-center justify-center
-    px-4 py-2
-    bg-white dark:bg-gray-800
-    text-gray-700 dark:text-gray-300
-    font-medium
-    rounded-full
-    border border-gray-300 dark:border-gray-700
-    shadow-sm hover:shadow-md
-    transition-all duration-200
-    focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-opacity-50
-    hover:bg-gray-50 dark:hover:bg-gray-700
-  `}
-            >
-              <Lamp className="h-5 w-5 mr-2" />
-              PTE
+                  inline-flex items-center justify-center
+                  px-4 py-2
+                  bg-white dark:bg-gray-800
+                  text-gray-700 dark:text-gray-300
+                  font-medium
+                  rounded-full
+                  border border-gray-300 dark:border-gray-700
+                  transition-all duration-200
+                  focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-opacity-50
+                  hover:bg-gray-50 dark:hover:bg-gray-700
+                `}>
+              <DynamicIcon name={user.subCategory?.icon || user.category?.icon} className="h-5 w-5 mr-2" />
+              {user.subCategory?.name || user.category?.name}
             </button>
 
           </div>

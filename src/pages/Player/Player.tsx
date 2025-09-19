@@ -18,6 +18,8 @@ import { Modal } from "../../components/ui/modal";
 import Checkbox from "../../components/form/input/Checkbox";
 import Radio from "../../components/form/input/Radio";
 import api from "../../axiosInstance"; // Import your axios instance
+import { VideoWithChat } from "./YoutubeChat";
+import WaitingRoom from "../liveClass/WaitingRoom";
 
 
 export default function VideoPlayerPage() {
@@ -43,6 +45,7 @@ export default function VideoPlayerPage() {
     const [contentDetails, setContentDetails] = useState(null);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
+    const [showWaitingRoom, setWaitingRoom] = useState(false);
     const [feedbackOptions, setFeedbackOptions] = useState([
         { id: "presentation", label: "Good Presentation", checked: true },
         {
@@ -54,36 +57,34 @@ export default function VideoPlayerPage() {
         { id: "engaging", label: "Engaging teaching style", checked: false },
         { id: "good_examples", label: "Good examples provided", checked: false },
     ]);
+    const fetchData = async () => {
+        if (!moduleId || !contentId) {
+            setError("Module ID or Content ID is missing.");
+            setLoading(false);
+            return;
+        }
+
+        setLoading(true);
+        setError(null);
+        try {
+            const moduleResponse = await api.get(
+                `/modules/overview/${moduleId}?course=${courseId}`
+            );
+            setModuleDetails(moduleResponse.data?.data); // Adjust based on your API response structure
+
+            const contentResponse = await api.get(
+                `/content/${contentId}`
+            );
+            setContentDetails(contentResponse.data.data); // Adjust based on your API response structure
+        } catch (err) {
+            console.error("Error fetching data:", err);
+            setError(err.message || "Failed to load data.");
+        } finally {
+            setLoading(false);
+        }
+    };
 
     useEffect(() => {
-        const fetchData = async () => {
-            if (!moduleId || !contentId) {
-                setError("Module ID or Content ID is missing.");
-                setLoading(false);
-                return;
-            }
-
-            setLoading(true);
-            setError(null);
-            try {
-                const moduleResponse = await api.get(
-                    `/modules/overview/${moduleId}?course=${courseId}`
-                );
-                setModuleDetails(moduleResponse.data?.data); // Adjust based on your API response structure
-
-                const contentResponse = await api.get(
-                    `/content/${contentId}`
-                );
-                console.log(contentResponse?.data?.data)
-                setContentDetails(contentResponse.data.data); // Adjust based on your API response structure
-            } catch (err) {
-                console.error("Error fetching data:", err);
-                setError(err.message || "Failed to load data.");
-            } finally {
-                setLoading(false);
-            }
-        };
-
         fetchData();
     }, [moduleId, contentId]);
 
@@ -100,6 +101,25 @@ export default function VideoPlayerPage() {
             screenshot: null,
         });
     };
+    useEffect(() => {
+        if (contentDetails?.contentType === "LiveClasses") {
+            const now = new Date();
+            setWaitingRoom(true)
+            let timeUntilStart = null;
+
+            if (contentDetails.scheduledStart) {
+                const scheduledStartTime = new Date(contentDetails.scheduledStart);
+                timeUntilStart = scheduledStartTime - now;
+                const bufferMinutes = 1;
+                const bufferMilliseconds = bufferMinutes * 60 * 1000;
+                if (timeUntilStart <= bufferMilliseconds) {
+                    setWaitingRoom(false)
+                }
+            } else {
+                setWaitingRoom(false)
+            }
+        }
+    }, [contentDetails])
 
     const handleRatingSubmit = (e) => {
         e.preventDefault();
@@ -199,20 +219,20 @@ export default function VideoPlayerPage() {
             duration: item.duration ? `${item.duration} mins` : "N/A", // Format duration
             status: item.status, // 'published' or 'scheduled'
         })) || []),
-        ...(moduleDetails.tests?.map(item => ({
-            id: item._id,
-            type: "Tests",
-            title: item.title,
-            duration: "N/A", // Tests usually don't have a duration like videos
-            status: item.status, // 'published'
-        })) || []),
-        ...(moduleDetails.studyMaterials?.map(item => ({
-            id: item._id,
-            type: "StudyMaterials",
-            title: item.title,
-            duration: "N/A",
-            status: item.status, // 'published'
-        })) || []),
+        // ...(moduleDetails.tests?.map(item => ({
+        //     id: item._id,
+        //     type: "Tests",
+        //     title: item.title,
+        //     duration: "N/A", // Tests usually don't have a duration like videos
+        //     status: item.status, // 'published'
+        // })) || []),
+        // ...(moduleDetails.studyMaterials?.map(item => ({
+        //     id: item._id,
+        //     type: "StudyMaterials",
+        //     title: item.title,
+        //     duration: "N/A",
+        //     status: item.status, // 'published'
+        // })) || []),
     ];
 
     return (
@@ -246,10 +266,7 @@ export default function VideoPlayerPage() {
                                         : "border-gray-200 bg-white dark:border-gray-700 dark:bg-gray-800"
                                     } transition-colors duration-200 cursor-pointer hover:shadow-sm`}
                                 onClick={() => {
-                                    // TODO: Implement navigation to play the selected content
-                                    // This might involve changing the URL or calling a function to load new content
-                                    console.log("Selected content ID:", item.id);
-                                    // Example: navigate(`/video-player/${moduleId}/${item.id}`);
+                                    navigate(`/class/${item.id}/${courseId}?module=${moduleId}`);
                                 }}
                             >
                                 <div className="flex items-center gap-3 mb-2">
@@ -283,7 +300,7 @@ export default function VideoPlayerPage() {
                     )}
                 </div>
             </div>
-            {/* Sidebar Toggle Button (when closed) */}
+
             {!isSidebarOpen && (
                 <Button
                     variant="ghost"
@@ -295,32 +312,39 @@ export default function VideoPlayerPage() {
                 </Button>
             )}
 
-            {/* Main Content Area */}
             <div className="flex-1 flex flex-col">
                 <div className="flex-1 p-4 py-1 overflow-y-auto">
                     <div className="max-w-6xl mx-auto">
-                        {/* Video Container */}
-                        {/* Ensure the video URL is correctly formatted (remove leading/trailing spaces) */}
-                        <div className="relative w-full" style={{ paddingBottom: "56.25%" }}>
-                            {contentDetails.video?.url ? ( // Check if video URL exists
-                                <iframe
-                                    src={contentDetails.video.url.trim()} // Trim whitespace
-                                    frameBorder="0"
-                                    allow="autoplay; fullscreen; picture-in-picture; clipboard-write; encrypted-media; web-share"
-                                    referrerPolicy="strict-origin-when-cross-origin"
-                                    title={contentDetails.title}
-                                    className="absolute top-0 left-0 w-full h-full rounded-lg"
-                                    onError={(e) => console.error("Error loading video:", e)}
-                                />
-                            ) : (
-                                <div className="absolute inset-0 flex items-center justify-center bg-gray-200 dark:bg-gray-700 rounded-lg">
-                                    <p className="text-gray-500 dark:text-gray-400">
-                                        {contentDetails.materialType === 'pdf' ? 'PDF Content' : 'Video not available'}
-                                        {/* You could render a PDF viewer or link here for StudyMaterials */}
-                                    </p>
-                                </div>
-                            )}
-                        </div>
+                        {contentDetails.contentType == "RecordedClasses" ?
+
+                            <div className="relative w-full" style={{ paddingBottom: "57.25%" }}>
+                                {contentDetails.video?.url ? ( // Check if video URL exists
+                                    <iframe
+                                        src={contentDetails.video.url.trim()} // Trim whitespace
+                                        frameBorder="0"
+                                        allow="autoplay; fullscreen; picture-in-picture; clipboard-write; encrypted-media; web-share"
+                                        referrerPolicy="strict-origin-when-cross-origin"
+                                        title={contentDetails.title}
+                                        className="absolute top-0 left-0 w-full h-full rounded-lg"
+                                        onError={(e) => console.error("Error loading video:", e)}
+                                    />
+                                ) : (
+                                    <div className="absolute inset-0 flex items-center justify-center bg-gray-200 dark:bg-gray-700 rounded-lg">
+                                        <p className="text-gray-500 dark:text-gray-400">
+                                            {contentDetails.materialType === 'pdf' ? 'PDF Content' : 'Video not available'}
+                                        </p>
+                                    </div>
+                                )}
+                            </div>
+                            :
+                            <div className="pb-4"> {/* 16:9 Aspect Ratio */}
+                                {showWaitingRoom ? (
+                                    <WaitingRoom setWaitingRoom={setWaitingRoom} contentDetails={contentDetails} classId={contentId} />
+                                ) : (
+                                    <VideoWithChat status={contentDetails.status} classTitle={contentDetails?.title || ""} classId={contentId} videoId={contentDetails?.meetingId} />
+                                )}
+                            </div>
+                        }
 
                         {/* Video Info Section */}
                         <div className="bg-white dark:bg-gray-800 p-5 py-2 rounded-xl border border-gray-200 dark:border-gray-700 shadow-sm">
@@ -334,9 +358,6 @@ export default function VideoPlayerPage() {
                                             {contentDetails.description}
                                         </p>
                                     </div>
-
-                                    {/* Instructor Info */}
-                                    {/* Check if instructorInfo exists and has a name */}
                                     {contentDetails.instructorInfo && (contentDetails.instructorInfo.name || contentDetails.instructorInfo.email) && (
                                         <div className="flex items-start gap-4 p-4 bg-blue-50 dark:bg-blue-900/20 rounded-lg border border-blue-100 dark:border-blue-800/50">
                                             <div className="w-12 h-12 rounded-full bg-blue-100 dark:bg-blue-900 flex items-center justify-center flex-shrink-0">
@@ -351,7 +372,6 @@ export default function VideoPlayerPage() {
                                         </div>
                                     )}
 
-                                    {/* Action Buttons */}
                                     <div className="flex gap-3 pt-2">
                                         <Button
                                             variant="outline"

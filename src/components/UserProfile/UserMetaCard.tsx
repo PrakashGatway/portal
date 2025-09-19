@@ -23,9 +23,21 @@ export default function UserMetaCard({ user }: any) {
       zipCode: user?.address?.zipCode || "",
     },
     profile: {
-      dateOfBirth: new Date(user?.profile?.dateOfBirth).toISOString().split('T')[0] || "",
+      dateOfBirth: user?.profile?.dateOfBirth 
+        ? new Date(user.profile.dateOfBirth).toISOString().split('T')[0] 
+        : "",
       bio: user?.profile?.bio || "",
       gender: user?.profile?.gender || ""
+    },
+    // Teacher-specific fields
+    education: user?.education?.map((edu: any) => ({ ...edu })) || [{ degree: "", institution: "", year: "", grade: "" }],
+    experience: user?.experience?.map((exp: any) => ({ ...exp })) || [{ title: "", company: "", duration: "", description: "" }],
+    skills: user?.skills?.join(", ") || "",
+    socialLinks: {
+      linkedin: user?.socialLinks?.linkedin || "",
+      twitter: user?.socialLinks?.twitter || "",
+      facebook: user?.socialLinks?.facebook || "",
+      instagram: user?.socialLinks?.instagram || ""
     }
   });
   const [isLoading, setIsLoading] = useState(false);
@@ -38,11 +50,9 @@ export default function UserMetaCard({ user }: any) {
     let name, value;
 
     if ((e as React.ChangeEvent<HTMLInputElement>).target) {
-      // It's a standard input event
       const event = e as React.ChangeEvent<HTMLInputElement>;
       ({ name, value } = event.target);
     } else {
-      // It's a direct value from Select (e.g., { target: { name, value } })
       name = e.target.name;
       value = e.target.value;
     }
@@ -65,6 +75,25 @@ export default function UserMetaCard({ user }: any) {
           [profileField]: value,
         },
       }));
+    } else if (name.startsWith("education.")) {
+      const [_, index, field] = name.split(".");
+      const education = [...formData.education];
+      education[parseInt(index)][field] = value;
+      setFormData(prev => ({ ...prev, education }));
+    } else if (name.startsWith("experience.")) {
+      const [_, index, field] = name.split(".");
+      const experience = [...formData.experience];
+      experience[parseInt(index)][field] = value;
+      setFormData(prev => ({ ...prev, experience }));
+    } else if (name.startsWith("socialLinks.")) {
+      const socialField = name.split(".")[1];
+      setFormData((prev) => ({
+        ...prev,
+        socialLinks: {
+          ...prev.socialLinks,
+          [socialField]: value,
+        },
+      }));
     } else {
       setFormData((prev) => ({
         ...prev,
@@ -76,22 +105,52 @@ export default function UserMetaCard({ user }: any) {
   const handleSave = async () => {
     try {
       setIsLoading(true);
+      
+      // Process skills array
+      const skillsArray = formData.skills
+        .split(",")
+        .map(skill => skill.trim())
+        .filter(skill => skill);
+
       const updateData = {
         name: formData.fullName,
         phoneNumber: formData.mobileNumber,
         address: formData.address,
-        profile: formData.profile
+        profile: formData.profile,
+        ...(user.role === "teacher" && {
+          education: formData.education,
+          experience: formData.experience,
+          skills: skillsArray,
+          socialLinks: formData.socialLinks
+        })
       };
+
       await api.post("/auth/profile", updateData);
-      fetchUserProfile()
+      fetchUserProfile();
       toast.success("Profile updated successfully");
       closeModal();
-    } catch (error) {
+    } catch (error: any) {
       console.error("Failed to update profile:", error);
       toast.error(error.message || "Failed to update profile");
     } finally {
       setIsLoading(false);
     }
+  };
+
+  // Add new education entry
+  const addEducation = () => {
+    setFormData(prev => ({
+      ...prev,
+      education: [...prev.education, { degree: "", institution: "", year: "", grade: "" }]
+    }));
+  };
+
+  // Add new experience entry
+  const addExperience = () => {
+    setFormData(prev => ({
+      ...prev,
+      experience: [...prev.experience, { title: "", company: "", duration: "", description: "" }]
+    }));
   };
 
   return (
@@ -101,7 +160,7 @@ export default function UserMetaCard({ user }: any) {
           <div className="flex flex-col items-center w-full gap-6 xl:flex-row">
             <div className="w-16 h-16 overflow-hidden border border-gray-200 rounded-full dark:border-gray-800">
               <img
-                src="https://img.freepik.com/free-vector/blue-circle-with-white-user_78370-4707.jpg?semt=ais_hybrid&w=740"
+                src={user?.profile?.profilePicture || "https://img.freepik.com/free-vector/blue-circle-with-white-user_78370-4707.jpg?semt=ais_hybrid&w=740"}
                 alt={user?.name || "User"}
                 className="object-cover w-full h-full"
               />
@@ -119,17 +178,11 @@ export default function UserMetaCard({ user }: any) {
                   {user?.address?.city}, {user?.address?.country}
                 </p>
               </div>
-              {/* <div className="flex flex-wrap items-center justify-center gap-3 mt-3 xl:justify-start">
-                <div className="px-2 py-1 text-xs font-medium rounded-md bg-blue-50 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400">
-                  Ewallet Balance: ₹{user?.eWalletBalance?.toLocaleString() || "0"}
+              {user.role === "teacher" && user.education && (
+                <div className="mt-2 text-sm text-gray-600 dark:text-gray-300">
+                  {user.education[0]?.degree} from {user.education[0]?.institution}
                 </div>
-                <div className="px-2 py-1 text-xs font-medium rounded-md bg-green-50 text-green-700 dark:bg-green-900/30 dark:text-green-400">
-                  Main Wallet Balance: ₹{user?.upiWalletBalance?.toLocaleString() || "0"}
-                </div>
-                <div className="px-2 py-1 text-xs font-medium rounded-md bg-purple-50 text-purple-700 dark:bg-purple-900/30 dark:text-purple-400">
-                  Min Wallet Balance: ₹{user?.minWalletBalance?.toLocaleString() || "0"}
-                </div>
-              </div> */}
+              )}
             </div>
             <div className="flex items-center order-2 gap-2 grow xl:order-3 xl:justify-end">
               <a
@@ -156,26 +209,28 @@ export default function UserMetaCard({ user }: any) {
                   />
                 </svg>
               </a>
-              <a
-                href={`tel:${user?.phoneNumber}`}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="flex h-11 w-11 items-center justify-center gap-2 rounded-full border border-gray-300 bg-white text-sm font-medium text-gray-700 shadow-theme-xs hover:bg-gray-50 hover:text-gray-800 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-400 dark:hover:bg-white/[0.03] dark:hover:text-gray-200"
-              >
-                <svg
-                  className="fill-current"
-                  width="20"
-                  height="20"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  xmlns="http://www.w3.org/2000/svg"
+              {user?.phoneNumber && (
+                <a
+                  href={`tel:${user?.phoneNumber}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="flex h-11 w-11 items-center justify-center gap-2 rounded-full border border-gray-300 bg-white text-sm font-medium text-gray-700 shadow-theme-xs hover:bg-gray-50 hover:text-gray-800 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-400 dark:hover:bg-white/[0.03] dark:hover:text-gray-200"
                 >
-                  <path
-                    d="M20.487 17.14L16.422 13.917C15.675 13.351 14.475 13.373 13.668 13.98L11.289 15.831C8.682 13.845 10.054 12.023 10.307 11.759C10.844 11.208 10.929 10.471 10.523 9.92L7.633 6.252C7.193 5.654 6.421 5.49 5.803 5.857L3.498 7.15C2.95 7.471 2.648 8.081 2.689 8.695C2.795 10.306 3.53 14.111 7.584 18.165C11.638 22.219 15.444 22.953 17.054 23.06C17.669 23.101 18.279 22.8 18.6 22.252L19.893 19.947C20.262 19.327 20.096 18.553 19.497 18.113L20.487 17.14Z"
-                    fill="currentColor"
-                  />
-                </svg>
-              </a>
+                  <svg
+                    className="fill-current"
+                    width="20"
+                    height="20"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    xmlns="http://www.w3.org/2000/svg"
+                  >
+                    <path
+                      d="M20.487 17.14L16.422 13.917C15.675 13.351 14.475 13.373 13.668 13.98L11.289 15.831C8.682 13.845 10.054 12.023 10.307 11.759C10.844 11.208 10.929 10.471 10.523 9.92L7.633 6.252C7.193 5.654 6.421 5.49 5.803 5.857L3.498 7.15C2.95 7.471 2.648 8.081 2.689 8.695C2.795 10.306 3.53 14.111 7.584 18.165C11.638 22.219 15.444 22.953 17.054 23.06C17.669 23.101 18.279 22.8 18.6 22.252L19.893 19.947C20.262 19.327 20.096 18.553 19.497 18.113L20.487 17.14Z"
+                      fill="currentColor"
+                    />
+                  </svg>
+                </a>
+              )}
             </div>
           </div>
           <button
@@ -214,7 +269,7 @@ export default function UserMetaCard({ user }: any) {
             </p>
           </div>
           <form className="flex flex-col">
-            <div className="custom-scrollbar h-[450px] overflow-y-auto px-2 pb-3">
+            <div className="custom-scrollbar h-[500px] overflow-y-auto px-2 pb-3">
               <div className="mt-7">
                 <h5 className="mb-5 text-lg font-medium text-gray-800 dark:text-white/90 lg:mb-6">
                   Personal Information
@@ -254,18 +309,20 @@ export default function UserMetaCard({ user }: any) {
                     <Input
                       type="date"
                       name="profile.dateOfBirth"
-                      value={formData?.profile?.dateOfBirth}
+                      value={formData.profile.dateOfBirth}
                       onChange={handleChange}
                     />
                   </div>
                   <div className="col-span-2 lg:col-span-1">
-                    <Label className="">
-                      Gender
-                    </Label>
+                    <Label>Gender</Label>
                     <Select
                       name="profile.gender"
                       defaultValue={formData.profile.gender}
-                      options={[{ value: "male", label: "Male" }, { value: "female", label: "Female" }, { value: "other", label: "Other" }]}
+                      options={[
+                        { value: "male", label: "Male" }, 
+                        { value: "female", label: "Female" }, 
+                        { value: "other", label: "Other" }
+                      ]}
                       onChange={(value: string) =>
                         handleChange({
                           target: { name: "profile.gender", value },
@@ -278,11 +335,10 @@ export default function UserMetaCard({ user }: any) {
                     <Input
                       type="text"
                       name="profile.bio"
-                      value={formData?.profile?.bio}
+                      value={formData.profile.bio}
                       onChange={handleChange}
                     />
                   </div>
-
 
                   <div className="col-span-2">
                     <h6 className="mb-3 text-base font-medium text-gray-800 dark:text-white/90">
@@ -336,6 +392,176 @@ export default function UserMetaCard({ user }: any) {
                       </div>
                     </div>
                   </div>
+
+                  {user.role === "teacher" && (
+                    <>
+                      <div className="col-span-2 mt-6">
+                        <h5 className="mb-5 text-lg font-medium text-gray-800 dark:text-white/90">
+                          Professional Information
+                        </h5>
+                        
+                        <div className="mb-6">
+                          <Label>Skills (comma separated)</Label>
+                          <Input
+                            type="text"
+                            name="skills"
+                            value={formData.skills}
+                            onChange={handleChange}
+                          />
+                        </div>
+
+                        <div className="mb-6">
+                          <h6 className="mb-3 text-base font-medium text-gray-800 dark:text-white/90">
+                            Education
+                          </h6>
+                          {formData.education.map((edu, index) => (
+                            <div key={index} className="grid grid-cols-1 gap-4 mb-4 sm:grid-cols-2">
+                              <div>
+                                <Label>Degree</Label>
+                                <Input
+                                  type="text"
+                                  name={`education.${index}.degree`}
+                                  value={edu.degree}
+                                  onChange={handleChange}
+                                />
+                              </div>
+                              <div>
+                                <Label>Institution</Label>
+                                <Input
+                                  type="text"
+                                  name={`education.${index}.institution`}
+                                  value={edu.institution}
+                                  onChange={handleChange}
+                                />
+                              </div>
+                              <div>
+                                <Label>Year</Label>
+                                <Input
+                                  type="text"
+                                  name={`education.${index}.year`}
+                                  value={edu.year}
+                                  onChange={handleChange}
+                                />
+                              </div>
+                              <div>
+                                <Label>Grade</Label>
+                                <Input
+                                  type="text"
+                                  name={`education.${index}.grade`}
+                                  value={edu.grade}
+                                  onChange={handleChange}
+                                />
+                              </div>
+                            </div>
+                          ))}
+                          <button
+                            type="button"
+                            onClick={addEducation}
+                            className="text-sm text-blue-600 hover:underline"
+                          >
+                            + Add Education
+                          </button>
+                        </div>
+
+                        <div className="mb-6">
+                          <h6 className="mb-3 text-base font-medium text-gray-800 dark:text-white/90">
+                            Experience
+                          </h6>
+                          {formData.experience.map((exp, index) => (
+                            <div key={index} className="grid grid-cols-1 gap-4 mb-4">
+                              <div>
+                                <Label>Title</Label>
+                                <Input
+                                  type="text"
+                                  name={`experience.${index}.title`}
+                                  value={exp.title}
+                                  onChange={handleChange}
+                                />
+                              </div>
+                              <div>
+                                <Label>Company</Label>
+                                <Input
+                                  type="text"
+                                  name={`experience.${index}.company`}
+                                  value={exp.company}
+                                  onChange={handleChange}
+                                />
+                              </div>
+                              <div>
+                                <Label>Duration</Label>
+                                <Input
+                                  type="text"
+                                  name={`experience.${index}.duration`}
+                                  value={exp.duration}
+                                  onChange={handleChange}
+                                />
+                              </div>
+                              <div>
+                                <Label>Description</Label>
+                                <Input
+                                  type="text"
+                                  name={`experience.${index}.description`}
+                                  value={exp.description}
+                                  onChange={handleChange}
+                                />
+                              </div>
+                            </div>
+                          ))}
+                          <button
+                            type="button"
+                            onClick={addExperience}
+                            className="text-sm text-blue-600 hover:underline"
+                          >
+                            + Add Experience
+                          </button>
+                        </div>
+
+                        <div>
+                          <h6 className="mb-3 text-base font-medium text-gray-800 dark:text-white/90">
+                            Social Links
+                          </h6>
+                          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                            <div>
+                              <Label>LinkedIn</Label>
+                              <Input
+                                type="text"
+                                name="socialLinks.linkedin"
+                                value={formData.socialLinks.linkedin}
+                                onChange={handleChange}
+                              />
+                            </div>
+                            <div>
+                              <Label>Twitter</Label>
+                              <Input
+                                type="text"
+                                name="socialLinks.twitter"
+                                value={formData.socialLinks.twitter}
+                                onChange={handleChange}
+                              />
+                            </div>
+                            <div>
+                              <Label>Facebook</Label>
+                              <Input
+                                type="text"
+                                name="socialLinks.facebook"
+                                value={formData.socialLinks.facebook}
+                                onChange={handleChange}
+                              />
+                            </div>
+                            <div>
+                              <Label>Instagram</Label>
+                              <Input
+                                type="text"
+                                name="socialLinks.instagram"
+                                value={formData.socialLinks.instagram}
+                                onChange={handleChange}
+                              />
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    </>
+                  )}
                 </div>
               </div>
             </div>
@@ -358,8 +584,8 @@ export default function UserMetaCard({ user }: any) {
               </Button>
             </div>
           </form>
-        </div >
-      </Modal >
+        </div>
+      </Modal>
     </>
   );
 }

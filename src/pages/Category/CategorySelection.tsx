@@ -1,21 +1,21 @@
 import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { ArrowLeft, X, Plus, BookOpen, GraduationCap, Trophy, Building, Calculator, Target } from 'lucide-react';
+import { ArrowLeft, X } from 'lucide-react';
 import { useNavigate } from 'react-router';
 import api from '../../axiosInstance';
 import { toast } from 'react-toastify';
 import DynamicIcon from '../../components/DynamicIcon';
 import { Loader } from '../../components/fullScreeLoader';
+import { useAuth } from '../../context/UserContext';
 
 const CategorySelectionPage = () => {
     const [selectedCategory, setSelectedCategory] = useState(null);
-    const [selectedSubcategory, setSelectedSubcategory] = useState(null);
     const [showPopup, setShowPopup] = useState(false);
     const [categories, setCategories] = useState([]);
     const [loading, setLoading] = useState(true);
     const navigate = useNavigate();
+    const { fetchUserProfile } = useAuth() as any;
 
-    // Fetch categories on component mount
     useEffect(() => {
         fetchCategories();
     }, []);
@@ -33,27 +33,31 @@ const CategorySelectionPage = () => {
         }
     };
 
-    // Get subcategories for a category
+    const updateUserCategory = async ({ category, subCategory }: any) => {
+        try {
+            await api.put("/auth/categories", {
+                ...(category !== undefined && { category }),
+                ...(subCategory !== undefined && { subCategory }),
+            });
+            fetchUserProfile()
+        } catch (error: any) {
+            toast.error('Failed to update categories');
+        }
+    };
+
     const getSubcategories = (categoryId) => {
         return categories.filter(category =>
             category.parent && category.parent.toString() === categoryId.toString()
         );
     };
 
-    const handleCategoryClick = (category) => {
+    const handleCategoryClick = async (category) => {
         const subcategories = getSubcategories(category._id);
-        
-        // If no subcategories, select directly
         if (subcategories.length === 0) {
-            localStorage.setItem('selectedCategory', JSON.stringify({
-                category: category,
-                subcategory: null
-            }));
+            await updateUserCategory({ category: category._id, subCategory: null })
             navigate('/');
             return;
         }
-        
-        // Otherwise show popup with subcategories
         setSelectedCategory({
             ...category,
             subcategories
@@ -62,17 +66,12 @@ const CategorySelectionPage = () => {
     };
 
     const handleSubcategoryClick = async (subcategory) => {
-        setSelectedSubcategory(subcategory);
-        localStorage.setItem('selectedCategory', JSON.stringify({
-            category: selectedCategory,
-            subcategory: subcategory
-        }));
+        await updateUserCategory({ category: subcategory.parent, subCategory: subcategory._id })
         navigate('/');
     };
 
     const handleClosePopup = () => {
         setShowPopup(false);
-        setSelectedSubcategory(null);
         setSelectedCategory(null);
     };
 
@@ -154,7 +153,7 @@ const CategorySelectionPage = () => {
                             {popularCategories.map((category) => {
                                 const colorClasses = getCategoryColorClasses(category);
                                 const hasSubcategories = getSubcategories(category._id).length > 0;
-                                
+
                                 return (
                                     <motion.button
                                         key={category._id}
@@ -292,10 +291,10 @@ const CategorySelectionPage = () => {
                                 <div className="mb-4">
                                     <h3 className="text-sm font-medium text-gray-600 dark:text-gray-400 mb-4 flex items-center">
                                         <span className="mr-2">
-                                            <DynamicIcon 
-                                                name={selectedCategory.icon} 
-                                                className="h-5 w-5" 
-                                                color={selectedCategory.color} 
+                                            <DynamicIcon
+                                                name={selectedCategory.icon}
+                                                className="h-5 w-5"
+                                                color={selectedCategory.color}
                                             />
                                         </span>
                                         {selectedCategory.name}

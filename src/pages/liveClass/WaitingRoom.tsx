@@ -1,20 +1,24 @@
 import { useState, useEffect } from 'react';
-import { useNavigate, useParams } from 'react-router';
+import { useNavigate } from 'react-router';
 import { toast } from 'react-toastify';
 import moment from 'moment';
-import api from '../../axiosInstance';
+import NotFound from '../OtherPage/NotFound';
 
-const WaitingRoom = () => {
-    const { classId } = useParams(); // Assumes route like /waiting/:classId
+const WaitingRoom = ({setWaitingRoom, classId, contentDetails }: any) => {
     const navigate = useNavigate();
     const [classInfo, setClassInfo] = useState(null);
-    const [courseInfo, setCourseInfo] = useState(null); // State for course details
-    const [timeLeft, setTimeLeft] = useState({ hours: 0, minutes: 0, seconds: 0 });
+    const [courseInfo, setCourseInfo] = useState(null);
+    const [timeLeft, setTimeLeft] = useState({ days: 0, hours: 0, minutes: 0, seconds: 0 });
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
+    const [isClassForToday, setIsClassForToday] = useState(false); // New state
+
+    if(!contentDetails){
+        return <NotFound/>
+    }
 
     useEffect(() => {
-        let timerInterval;
+        let timerInterval: any;
 
         const fetchDataAndSetupTimer = async () => {
             if (!classId) {
@@ -26,44 +30,47 @@ const WaitingRoom = () => {
             try {
                 setLoading(true);
                 setError(null);
-
-                const classResponse = await api.get(`/content/${classId}`); // Adjust endpoint
-                const liveClassData = classResponse.data?.data;
+                const liveClassData = contentDetails;
                 setClassInfo(liveClassData);
                 setCourseInfo(liveClassData.courseInfo);
 
                 const calculateTimeLeft = () => {
                     if (!liveClassData.scheduledStart) {
                         setError("Class start time is not set.");
-                        return { hours: 0, minutes: 0, seconds: 0 };
+                        return { days: 0, hours: 0, minutes: 0, seconds: 0 };
                     }
 
-                    const difference = new Date(liveClassData.scheduledStart) - new Date();
+                    const now = new Date();
+                    const startTime = new Date(liveClassData.scheduledStart);
+                    const difference = startTime - now;
+
+                    const isToday = moment(startTime).isSame(moment(), 'day');
+                    setIsClassForToday(isToday);
 
                     if (difference <= 0) {
-                        navigate(`/instructor/class/${classId}?id=${liveClassData._id || classInfo._id}`); // Adjust route as needed
-                        return { hours: 0, minutes: 0, seconds: 0 };
+                        setWaitingRoom(false)
+                        return { days: 0, hours: 0, minutes: 0, seconds: 0 };
                     }
 
+                    const days = Math.floor(difference / (1000 * 60 * 60 * 24));
                     const hours = Math.floor((difference % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
                     const minutes = Math.floor((difference % (1000 * 60 * 60)) / (1000 * 60));
                     const seconds = Math.floor((difference % (1000 * 60)) / 1000);
 
-                    return { hours, minutes, seconds };
+                    return { days, hours, minutes, seconds };
                 };
 
                 const initialTimeLeft = calculateTimeLeft();
                 setTimeLeft(initialTimeLeft);
 
-                // 4. Set up interval to update countdown every second
                 timerInterval = setInterval(() => {
                     const newTimeLeft = calculateTimeLeft();
                     setTimeLeft(newTimeLeft);
 
-                    if (newTimeLeft.hours === 0 && newTimeLeft.minutes === 0 && newTimeLeft.seconds === 0) {
+                    if (newTimeLeft.days === 0 && newTimeLeft.hours === 0 && newTimeLeft.minutes === 0 && newTimeLeft.seconds === 0) {
                         clearInterval(timerInterval);
                         toast.success("Class is starting now!");
-                        navigate(`/instructor/class/${classId}?id=${liveClassData._id || classInfo._id}`); // Adjust route as needed
+                        setWaitingRoom(false)
                     }
                 }, 1000);
 
@@ -81,11 +88,17 @@ const WaitingRoom = () => {
         return () => {
             if (timerInterval) clearInterval(timerInterval);
         };
-    }, [classId, navigate]);
+    }, [classId, navigate, classInfo?._id]); // Added classInfo?._id to deps
 
-    // --- Format time for display ---
     const formatTimeUnit = (unit) => {
         return unit.toString().padStart(2, '0');
+    };
+
+    // Function to get a descriptive date string
+    const getClassDateString = () => {
+        if (!classInfo?.scheduledStart) return "N/A";
+        const startTime = new Date(classInfo.scheduledStart);
+        return moment(startTime).format("MMM D, YYYY [at] h:mm A");
     };
 
     if (loading) {
@@ -101,13 +114,13 @@ const WaitingRoom = () => {
 
     if (error) {
         return (
-            <div className="min-h-[84vh]  dark:from-gray-800 dark:to-gray-900 flex items-center justify-center p-4">
+            <div className="min-h-[84vh] dark:from-gray-800 dark:to-gray-900 flex items-center justify-center p-4">
                 <div className="text-center p-6 bg-white dark:bg-gray-800 rounded-xl shadow-lg max-w-md w-full">
                     <div className="text-red-500 dark:text-red-400 text-5xl mb-4">⚠️</div>
                     <h2 className="text-xl font-bold text-gray-800 dark:text-white mb-2">Error</h2>
                     <p className="text-gray-600 dark:text-gray-400 mb-4">{error}</p>
                     <button
-                        onClick={() => navigate('/')}
+                        onClick={() => window.location.reload()} // Reload the component/page
                         className="mt-2 px-4 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500"
                     >
                         Retry
@@ -137,19 +150,24 @@ const WaitingRoom = () => {
                         <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
                             <div>
                                 <h2 className="text-xl sm:text-2xl md:text-2xl font-bold capitalize">{classInfo.title || "Live Class"}</h2>
-                                {courseInfo && (
-                                    <div className="flex flex-wrap items-center gap-2 mt-2 text-sm sm:text-sm">
-                                        <span className="bg-white/20 px-3 py-1 rounded-full">
-                                            {courseInfo.title}
-                                        </span>
-                                        <span className="bg-white/20 px-3 py-1 rounded-full">
-                                            {courseInfo.code}
-                                        </span>
-                                        <span className="bg-white/20 px-3 py-1 rounded-full">
-                                            {courseInfo.categoryInfo?.name || "N/A"}
-                                        </span>
-                                    </div>
-                                )}
+                                <div className="flex flex-wrap items-center gap-2 mt-2 text-sm sm:text-sm">
+                                    <span className="bg-white/20 px-3 py-1 rounded-full">
+                                        Scheduled: {getClassDateString()}
+                                    </span>
+                                    {courseInfo && (
+                                        <>
+                                            <span className="bg-white/20 px-3 py-1 rounded-full">
+                                                {courseInfo.title}
+                                            </span>
+                                            {/* <span className="bg-white/20 px-3 py-1 rounded-full">
+                                                {courseInfo.code}
+                                            </span> */}
+                                            <span className="bg-white/20 px-3 py-1 rounded-full">
+                                                {courseInfo.categoryInfo?.name || "N/A"}
+                                            </span>
+                                        </>
+                                    )}
+                                </div>
                             </div>
                             <div className="flex-shrink-0">
                                 <div className="w-16 h-16 rounded-full bg-white/20 flex items-center justify-center mx-auto">
@@ -163,7 +181,8 @@ const WaitingRoom = () => {
 
                     <div className="flex-1 overflow-hidden flex flex-col md:flex-row">
 
-                        <div className="w-full md:w-2/3 p-5 sm:p-6 overflow-y-auto border-r border-gray-200 dark:border-gray-700">
+                        {/* Left Panel - Class Details */}
+                        <div className="w-full md:w-1/2 p-5 sm:p-6 overflow-y-auto border-r border-gray-200 dark:border-gray-700">
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
 
                                 <div className="md:col-span-2">
@@ -172,31 +191,24 @@ const WaitingRoom = () => {
                                         <div>
                                             <p className="text-xs text-gray-500 dark:text-gray-500">Scheduled Start</p>
                                             <p className="font-medium text-gray-800 dark:text-white">
-                                                {classInfo.scheduledStart
-                                                    ? moment(classInfo.scheduledStart).format("MMM D, YYYY [at] h:mm A")
-                                                    : "N/A"}
+                                                {getClassDateString()}
                                             </p>
+                                            {/* Show "Today" indicator if applicable */}
+                                            {isClassForToday && (
+                                                <span className="inline-block mt-1 px-2 py-1 text-xs font-semibold rounded bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200">
+                                                    Today
+                                                </span>
+                                            )}
                                         </div>
-                                        <div>
-                                            <p className="text-xs text-gray-500 dark:text-gray-500">Scheduled End</p>
-                                            <p className="font-medium text-gray-800 dark:text-white">
-                                                {classInfo.scheduledEnd
-                                                    ? moment(classInfo.scheduledEnd).format("MMM D, YYYY [at] h:mm A")
-                                                    : "N/A"}
-                                            </p>
-                                        </div>
-                                        <div>
-                                            <p className="text-xs text-gray-500 dark:text-gray-500">Meeting ID</p>
-                                            <p className="font-medium text-gray-800 dark:text-white font-mono">
-                                                {classInfo.meetingId || "N/A"}
-                                            </p>
-                                        </div>
-                                        <div>
-                                            <p className="text-xs text-gray-500 dark:text-gray-500">Max Participants</p>
-                                            <p className="font-medium text-gray-800 dark:text-white">
-                                                {classInfo.maxParticipants || "N/A"}
-                                            </p>
-                                        </div>
+                                        {/* Add End Time if available */}
+                                        {classInfo.scheduledEnd && (
+                                            <div>
+                                                <p className="text-xs text-gray-500 dark:text-gray-500">Scheduled End</p>
+                                                <p className="font-medium text-gray-800 dark:text-white">
+                                                    {moment(classInfo.scheduledEnd).format("MMM D, YYYY [at] h:mm A")}
+                                                </p>
+                                            </div>
+                                        )}
                                     </div>
                                 </div>
 
@@ -233,22 +245,18 @@ const WaitingRoom = () => {
                                     </div>
                                 )}
 
-                                {courseInfo?.instructorNames && (
+                                {courseInfo?.instructorNames && courseInfo?.instructorNames.length > 0 && (
                                     <div>
                                         <h3 className="text-lg font-semibold text-gray-800 dark:text-gray-200 mb-3">Instructors</h3>
                                         <div className="flex flex-wrap gap-2">
-                                            {courseInfo.instructorNames.length > 0 ? (
-                                                courseInfo.instructorNames.map((instructor, index) => (
-                                                    <span
-                                                        key={instructor._id || index}
-                                                        className="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200"
-                                                    >
-                                                        {instructor.name || instructor.email || "Unknown Instructor"}
-                                                    </span>
-                                                ))
-                                            ) : (
-                                                <span className="text-sm text-gray-500 dark:text-gray-400">No instructors assigned</span>
-                                            )}
+                                            {courseInfo.instructorNames.map((instructor, index) => (
+                                                <span
+                                                    key={instructor._id || index}
+                                                    className="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200"
+                                                >
+                                                    {instructor.name || instructor.email || "Unknown Instructor"}
+                                                </span>
+                                            ))}
                                         </div>
                                     </div>
                                 )}
@@ -292,66 +300,87 @@ const WaitingRoom = () => {
                                     </div>
                                 )}
 
-                                {courseInfo?.tags && (
+                                {courseInfo?.tags && courseInfo.tags.length > 0 && (
                                     <div className="md:col-span-2">
                                         <h3 className="text-lg font-semibold text-gray-800 dark:text-gray-200 mb-3">Course Tags</h3>
                                         <div className="flex flex-wrap gap-2">
-                                            {courseInfo.tags.length > 0 ? (
-                                                courseInfo.tags.map((tag, index) => (
-                                                    <span
-                                                        key={index}
-                                                        className="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-200"
-                                                    >
-                                                        {tag}
-                                                    </span>
-                                                ))
-                                            ) : (
-                                                <span className="text-sm text-gray-500 dark:text-gray-400">No tags</span>
-                                            )}
+                                            {courseInfo.tags.map((tag, index) => (
+                                                <span
+                                                    key={index}
+                                                    className="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-200"
+                                                >
+                                                    {tag}
+                                                </span>
+                                            ))}
                                         </div>
                                     </div>
                                 )}
                             </div>
                         </div>
 
-                        <div className="w-full md:w-1/3 p-5 sm:p-6 flex flex-col">
+                        {/* Right Panel - Countdown and Tips */}
+                        <div className="w-full md:w-1/2 p-5 sm:p-6 flex flex-col bg-gray-50 dark:bg-gray-700/30">
 
-                            <div className="mb-8">
-                                <h3 className="text-lg font-semibold text-gray-800 dark:text-gray-200 mb-4 text-center">Class Starts In</h3>
-                                <div className="flex justify-center space-x-3 sm:space-x-4">
+                            <div className="mb-6 sm:mb-8">
+                                <h3 className="text-lg font-semibold text-gray-800 dark:text-gray-200 mb-4 text-center">
+                                    {isClassForToday ? "Class Starts In" : "Class Starts On"}
+                                </h3>
+                                <div className="text-center mb-4">
+                                    <p className="text-gray-600 dark:text-gray-400">
+                                        {isClassForToday
+                                            ? "Get ready, the class is scheduled for later today."
+                                            : `The class is scheduled for ${moment(classInfo.scheduledStart).format("MMM D, YYYY")}.`}
+                                    </p>
+                                </div>
+                                <div className="flex justify-center space-x-2 sm:space-x-3">
+                                    {/* Conditionally render Days */}
+                                    {timeLeft.days > 0 && (
+                                        <>
+                                            <div className="flex flex-col items-center">
+                                                <div className="w-14 h-14 sm:w-16 sm:h-16 bg-gray-100 dark:bg-gray-700 rounded-xl flex flex-col items-center justify-center shadow">
+                                                    <span className="text-xl sm:text-2xl font-bold text-gray-800 dark:text-white">{formatTimeUnit(timeLeft.days)}</span>
+                                                </div>
+                                                <span className="mt-1.5 text-xs sm:text-sm text-gray-500 dark:text-gray-400">Days</span>
+                                            </div>
+                                            <div className="flex flex-col h-12 items-center justify-center pt-4">
+                                                <span className="text-xl sm:text-2xl font-bold text-gray-400 dark:text-gray-500">:</span>
+                                            </div>
+                                        </>
+                                    )}
+
                                     <div className="flex flex-col items-center">
-                                        <div className="w-16 h-16 sm:w-20 sm:h-20 bg-gray-100 dark:bg-gray-700 rounded-xl flex flex-col items-center justify-center shadow">
-                                            <span className="text-2xl sm:text-3xl font-bold text-gray-800 dark:text-white">{formatTimeUnit(timeLeft.hours)}</span>
+                                        <div className="w-14 h-14 sm:w-16 sm:h-16 bg-gray-100 dark:bg-gray-700 rounded-xl flex flex-col items-center justify-center shadow">
+                                            <span className="text-xl sm:text-2xl font-bold text-gray-800 dark:text-white">{formatTimeUnit(timeLeft.hours)}</span>
                                         </div>
-                                        <span className="mt-2 text-xs sm:text-sm text-gray-500 dark:text-gray-400">Hours</span>
+                                        <span className="mt-1.5 text-xs sm:text-sm text-gray-500 dark:text-gray-400">Hours</span>
                                     </div>
 
-                                    <div className="flex flex-col h-14 items-center justify-center pt-5">
-                                        <span className="text-2xl sm:text-3xl font-bold text-gray-400 dark:text-gray-500">:</span>
+                                    <div className="flex flex-col h-12 items-center justify-center pt-4">
+                                        <span className="text-xl sm:text-2xl font-bold text-gray-400 dark:text-gray-500">:</span>
                                     </div>
 
                                     <div className="flex flex-col items-center">
-                                        <div className="w-16 h-16 sm:w-20 sm:h-20 bg-gray-100 dark:bg-gray-700 rounded-xl flex flex-col items-center justify-center shadow">
-                                            <span className="text-2xl sm:text-3xl font-bold text-gray-800 dark:text-white">{formatTimeUnit(timeLeft.minutes)}</span>
+                                        <div className="w-14 h-14 sm:w-16 sm:h-16 bg-gray-100 dark:bg-gray-700 rounded-xl flex flex-col items-center justify-center shadow">
+                                            <span className="text-xl sm:text-2xl font-bold text-gray-800 dark:text-white">{formatTimeUnit(timeLeft.minutes)}</span>
                                         </div>
-                                        <span className="mt-2 text-xs sm:text-sm text-gray-500 dark:text-gray-400">Minutes</span>
+                                        <span className="mt-1.5 text-xs sm:text-sm text-gray-500 dark:text-gray-400">Minutes</span>
                                     </div>
 
-                                    <div className="flex flex-col h-14 items-center justify-center pt-5">
-                                        <span className="text-2xl sm:text-3xl font-bold text-gray-400 dark:text-gray-500">:</span>
+                                    <div className="flex flex-col h-12 items-center justify-center pt-4">
+                                        <span className="text-xl sm:text-2xl font-bold text-gray-400 dark:text-gray-500">:</span>
                                     </div>
 
                                     <div className="flex flex-col items-center">
-                                        <div className="w-16 h-16 sm:w-20 sm:h-20 bg-gray-100 dark:bg-gray-700 rounded-xl flex flex-col items-center justify-center shadow">
-                                            <span className="text-2xl sm:text-3xl font-bold text-gray-800 dark:text-white">{formatTimeUnit(timeLeft.seconds)}</span>
+                                        <div className="w-14 h-14 sm:w-16 sm:h-16 bg-gray-100 dark:bg-gray-700 rounded-xl flex flex-col items-center justify-center shadow">
+                                            <span className="text-xl sm:text-2xl font-bold text-gray-800 dark:text-white">{formatTimeUnit(timeLeft.seconds)}</span>
                                         </div>
-                                        <span className="mt-2 text-xs sm:text-sm text-gray-500 dark:text-gray-400">Seconds</span>
+                                        <span className="mt-1.5 text-xs sm:text-sm text-gray-500 dark:text-gray-400">Seconds</span>
                                     </div>
                                 </div>
                             </div>
 
                             {/* Tips Section */}
-                            <div className="flex-1 bg-gray-50 dark:bg-gray-700/50 rounded-xl p-4 sm:p-5 border border-gray-200 dark:border-gray-600">
+                            <div className="flex-1 bg-white dark:bg-gray-700/50 rounded-xl p-4 sm:p-5 border border-gray-200 dark:border-gray-600">
                                 <h4 className="text-base font-semibold mb-3 flex items-center text-gray-800 dark:text-gray-200">
                                     <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2 text-cyan-500" viewBox="0 0 20 20" fill="currentColor">
                                         <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clipRule="evenodd" />

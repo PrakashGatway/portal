@@ -808,7 +808,7 @@ const ContentCard = ({ content, onView, onEdit, onDelete }: any) => {
                     <button
                         onClick={() =>
                             navigate(
-                                `/class/live/${content._id}/${content.courseInfo?._id}?module=${content.module}`
+                                `/class/${content._id}/${content.courseInfo?._id}?module=${content.module}`
                             )
                         }
                         className="absolute inset-0 flex items-center justify-center bg-black/20 bg-opacity-30 opacity-100 hover:opacity-100 transition-opacity"
@@ -845,11 +845,6 @@ const ContentCard = ({ content, onView, onEdit, onDelete }: any) => {
                 </p>
                 <div className="mt-4 flex justify-between items-center text-xs text-gray-500 dark:text-gray-400">
                     <span>Order: {content.order}</span>
-                    <span>
-                        {content.publishedAt
-                            ? moment(content.publishedAt).format("MMM D")
-                            : "Not Published"}
-                    </span>
                 </div>
             </div>
             <div className="bg-gray-50 dark:bg-gray-700 px-4 py-1 flex justify-end space-x-2">
@@ -864,13 +859,7 @@ const ContentCard = ({ content, onView, onEdit, onDelete }: any) => {
                     </button>
                 )}
 
-                {content.__t === 'LiveClasses' && <button
-                    onClick={() => navigate(`/waiting/${content.slug}`)}
-                    className="p-2 text-gray-500 hover:text-indigo-600 dark:text-gray-400 dark:hover:text-indigo-400 rounded-full hover:bg-gray-100 dark:hover:bg-gray-600"
-                    aria-label="View"
-                >
-                    <PlaySquareIcon className="h-4 w-4" />
-                </button>}
+
                 <button
                     onClick={() => onView(content)}
                     className="p-2 text-gray-500 hover:text-indigo-600 dark:text-gray-400 dark:hover:text-indigo-400 rounded-full hover:bg-gray-100 dark:hover:bg-gray-600"
@@ -936,7 +925,8 @@ const ContentForm = ({ content = null, onSave, onCancel, courses, type, instruct
         videoDuration: 0,
         testType: "quiz",
         materialType: "pdf",
-        fileUrl: ""
+        fileUrl: "",
+        meetingId: ''
     }) as any;
     type FormErrors = {
         title?: string;
@@ -972,7 +962,8 @@ const ContentForm = ({ content = null, onSave, onCancel, courses, type, instruct
                 testType: content.testType || "quiz",
                 materialType: content.materialType || "pdf",
                 fileUrl: content.file?.url || "",
-                thumbnailPic: content.thumbnailPic || null
+                thumbnailPic: content.thumbnailPic || null,
+                meetingId: content.meetingId || ""
             });
         } else {
             setFormData({
@@ -995,7 +986,8 @@ const ContentForm = ({ content = null, onSave, onCancel, courses, type, instruct
                 testType: "quiz",
                 materialType: "pdf",
                 fileUrl: "",
-                thumbnailPic: ""
+                thumbnailPic: "",
+                meetingId: ""
             });
         }
         setErrors({});
@@ -1087,7 +1079,6 @@ const ContentForm = ({ content = null, onSave, onCancel, courses, type, instruct
     const handleSubmit = async (e) => {
         e.preventDefault();
         if (!validateForm()) return;
-
         try {
             const payload = {
                 title: formData.title,
@@ -1102,12 +1093,12 @@ const ContentForm = ({ content = null, onSave, onCancel, courses, type, instruct
                 __t: formData.__t
             };
 
-            // Add content type specific fields
             if (formData.__t === 'LiveClasses') {
                 payload.scheduledStart = new Date(formData.scheduledStart);
                 payload.scheduledEnd = new Date(formData.scheduledEnd);
+                payload.meetingId = formData?.meetingId || ""
             } else if (formData.__t === 'RecordedClasses') {
-                
+
             } else if (formData.__t === 'Tests') {
                 payload.testType = formData.testType;
             } else if (formData.__t === 'StudyMaterials') {
@@ -1233,7 +1224,10 @@ const ContentForm = ({ content = null, onSave, onCancel, courses, type, instruct
                             { value: "draft", label: "Draft" },
                             { value: "published", label: "Published" },
                             { value: "archived", label: "Archived" },
-                            { value: "scheduled", label: "Scheduled" }
+                            ...(formData.__t === "LiveClasses"
+                                ? [{ value: "live", label: "Live" },
+                                { value: "scheduled", label: "Scheduled" }]
+                                : [])
                         ]}
                         onChange={(value) => setFormData(prev => ({ ...prev, status: value }))}
                     />
@@ -1317,6 +1311,17 @@ const ContentForm = ({ content = null, onSave, onCancel, courses, type, instruct
                             onChange={handleChange}
                         />
                         {errors.scheduledEnd && <p className="mt-1 text-sm text-red-600">{errors.scheduledEnd}</p>}
+                    </div>
+                    <div>
+                        <Label>Meeting Id</Label>
+                        <Input
+                            type="text"
+                            name="meetingId"
+                            value={formData.meetingId}
+                            onChange={handleChange}
+                            placeholder="Enter live Video Id"
+                        />
+                        {errors.meetingId && <p className="mt-1 text-sm text-red-600">{errors.meetingId}</p>}
                     </div>
                 </div>
             )}

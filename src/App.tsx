@@ -19,15 +19,10 @@ import CategoryManagement from "./pages/Courses/Categories";
 import CourseManagement from "./pages/Courses/Courses";
 import ModuleManagement from "./pages/Courses/Modules";
 import ContentManagement from "./pages/Content/Contents";
-import TeacherLiveClass from "./pages/liveClass/Teacherlive";
-import WaitingRoom from "./pages/liveClass/WaitingRoom";
 import CategorySelectionPage from "./pages/Category/CategorySelection";
 import CourseListingPage from "./pages/CourseList/CourseUsers";
-import VimeoTeacherLiveComponent from "./pages/VimeoLive/Teacher";
-import LiveClassPage from "./pages/VimeoLive/Class";
 import VideoPlayerPage from "./pages/Player/Player";
-import { VideoPlayer } from "./pages/Player/youtube";
-import { VideoWithChat } from "./pages/Player/YoutubeChat";
+import MockTestsPage from "./userView/MocktestPage";
 
 // Define roles
 export const ROLES = {
@@ -54,18 +49,15 @@ export default function App() {
               <Route index path="/" element={<Home />} />
               <Route path="/profile" element={<UserProfiles />} />
               <Route path="/coming" element={<ComingSoon />} />
-              {/* <Route path="/y" element={<VideoWithChat/>} /> */}
-
               <Route path="/course" element={<CourseListingPage />} />
-              <Route path="/teacher/:classId" element={<VimeoTeacherLiveComponent />} />
-              <Route path="/class/live/:classId/:courseId" element={<LiveClassPage />} />
               <Route path="/class/:contentId/:courseId" element={<VideoPlayerPage />} />
-
               <Route path="/query" element={<CreateQuery />} />
               <Route path="/queries" element={<QueryList />} />
               <Route path="/queries/:id" element={<QueryDetail />} />
-              <Route path="/waiting/:classId" element={<WaitingRoom />} />
-              {/* <Route path="/class/:classId" element={<StudentLiveClass />} /> */}
+              <Route path="/mocks" element={<MockTestsPage />} />
+
+
+
 
               <Route element={<ProtectedRoute roles={[ROLES.ADMIN]} />}>
                 <Route path="/users" element={<UserListPage />} />
@@ -85,7 +77,7 @@ export default function App() {
                 <Route path="/entities" element={<EntityManagement />} />
               </Route>
             </Route>
-            <Route path="/instructor/class/:classId" element={<TeacherLiveClass />} />
+            {/* <Route path="/instructor/class/:classId" element={<TeacherLiveClass />} /> */}
             <Route path="/course/category" element={<CategorySelectionPage />} />
 
           </Route>
