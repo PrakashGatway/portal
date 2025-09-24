@@ -1,5 +1,3 @@
-"use client"
-
 import { useState } from "react"
 import { motion, AnimatePresence } from "framer-motion"
 import { X, Filter, RotateCcw, Check, ChevronDown } from "lucide-react"
@@ -13,34 +11,55 @@ interface FilterDrawerProps {
 }
 
 export interface FilterState {
-  selectedCategory: string
-  selectedType: string
-  selectedLanguage: string
-  priceRange: [number, number]
-  discountRange: [number, number]
-  showEarlyBirdOnly: boolean
-  showInfinityPlanOnly: boolean
+  category: string
+  subcategory: string
+  status: string
+  level: string
+  mode: string
+  featured: boolean
+  language: string
+  startDate: string
+  endDate: string
+  minPrice: number
+  maxPrice: number
+  sort: string
+  page: number
+  limit: number
 }
 
 const categories = [
-  { value: "all", label: "All Courses", icon: "📚" },
+  { value: "", label: "All Categories", icon: "📚" },
+  { value: "jee", label: "JEE", icon: "📐" },
+  { value: "neet", label: "NEET", icon: "🔬" },
+  { value: "foundation", label: "Foundation", icon: "🏗️" },
+  { value: "competitive-exams", label: "Competitive Exams", icon: "🏆" },
+]
+
+const statuses = [
+  { value: "", label: "All Status", icon: "🔄" },
+  { value: "upcoming", label: "Upcoming", icon: "📅" },
+  { value: "ongoing", label: "Ongoing", icon: "⚡" },
+  { value: "completed", label: "Completed", icon: "✅" },
+]
+
+const levels = [
+  { value: "", label: "All Levels", icon: "🎯" },
+  { value: "beginner", label: "Beginner", icon: "🌱" },
+  { value: "intermediate", label: "Intermediate", icon: "📈" },
+  { value: "advanced", label: "Advanced", icon: "🚀" },
+]
+
+const modes = [
+  { value: "", label: "All Modes", icon: "🌐" },
   { value: "online", label: "Online", icon: "💻" },
   { value: "offline", label: "Offline", icon: "🏫" },
   { value: "hybrid", label: "Hybrid", icon: "🔄" },
-  { value: "test-series", label: "Test Series", icon: "📝" },
-  { value: "free", label: "Free", icon: "🆓" },
-]
-
-const types = [
-  { value: "all", label: "All Types", icon: "🎯" },
-  { value: "full-batch", label: "Full Batch", icon: "👥" },
-  { value: "test-series", label: "Test Series", icon: "📊" },
-  { value: "live-workshop", label: "Live Workshop", icon: "🎪" },
+  { value: "recorded", label: "Recorded", icon: "📹" },
 ]
 
 const languages = [
-  { value: "all", label: "All Languages", icon: "🌐" },
-  { value: "english", label: "English", icon: "🇺🇸" },
+  { value: "", label: "All Languages", icon: "🌐" },
+  { value: "English", label: "English", icon: "🇺🇸" },
   { value: "hindi", label: "Hindi", icon: "🇮🇳" },
   { value: "bilingual", label: "Bilingual", icon: "🗣️" },
 ]
@@ -48,34 +67,50 @@ const languages = [
 export default function FilterDrawer({ isOpen, onClose, onApplyFilters, initialFilters }: FilterDrawerProps) {
   const [filters, setFilters] = useState<FilterState>(
     initialFilters || {
-      selectedCategory: "all",
-      selectedType: "all",
-      selectedLanguage: "all",
-      priceRange: [0, 20000],
-      discountRange: [0, 100],
-      showEarlyBirdOnly: false,
-      showInfinityPlanOnly: false,
+      category: "",
+      subcategory: "",
+      status: "",
+      level: "",
+      mode: "",
+      featured: false,
+      language: "",
+      startDate: "",
+      endDate: "",
+      minPrice: 0,
+      maxPrice: 50000,
+      sort: "-createdAt",
+      page: 1,
+      limit: 9,
     },
   )
 
   const [expandedSections, setExpandedSections] = useState({
     category: true,
-    type: true,
+    status: true,
+    level: true,
+    mode: true,
     language: true,
     price: true,
-    discount: true,
+    date: true,
     special: true,
   })
 
   const resetFilters = () => {
     const defaultFilters: FilterState = {
-      selectedCategory: "all",
-      selectedType: "all",
-      selectedLanguage: "all",
-      priceRange: [0, 20000],
-      discountRange: [0, 100],
-      showEarlyBirdOnly: false,
-      showInfinityPlanOnly: false,
+      category: "",
+      subcategory: "",
+      status: "",
+      level: "",
+      mode: "",
+      featured: '',
+      language: "",
+      startDate: "",
+      endDate: "",
+      minPrice: 0,
+      maxPrice: 99000,
+      sort: "-createdAt",
+      page: 1,
+      limit: 12,
     }
     setFilters(defaultFilters)
   }
@@ -96,13 +131,16 @@ export default function FilterDrawer({ isOpen, onClose, onApplyFilters, initialF
 
   const getActiveFiltersCount = () => {
     let count = 0
-    if (filters.selectedCategory !== "all") count++
-    if (filters.selectedType !== "all") count++
-    if (filters.selectedLanguage !== "all") count++
-    if (filters.priceRange[0] !== 0 || filters.priceRange[1] !== 20000) count++
-    if (filters.discountRange[0] !== 0 || filters.discountRange[1] !== 100) count++
-    if (filters.showEarlyBirdOnly) count++
-    if (filters.showInfinityPlanOnly) count++
+    if (filters.category) count++
+    if (filters.status) count++
+    if (filters.level) count++
+    if (filters.mode) count++
+    if (filters.language) count++
+    if (filters.minPrice !== 0) count++
+    if (filters.maxPrice !== 99000) count++
+    if (filters.featured) count++
+    if (filters.startDate) count++
+    if (filters.endDate) count++
     return count
   }
 
@@ -131,7 +169,7 @@ export default function FilterDrawer({ isOpen, onClose, onApplyFilters, initialF
               damping: 30,
               mass: 0.8,
             }}
-            style={{zIndex:999999}}
+            style={{ zIndex: 999999 }}
             className="fixed inset-y-0 right-0 w-full max-w-md bg-white/95 backdrop-blur-xl shadow-2xl overflow-hidden border-l border-border"
           >
             <div className="flex flex-col h-full">
@@ -154,7 +192,7 @@ export default function FilterDrawer({ isOpen, onClose, onApplyFilters, initialF
               {/* Content */}
               <div className="flex-1 overflow-y-auto p-6 space-y-6">
                 {/* Category Filter */}
-                <div className="space-y-3">
+                {/* <div className="space-y-3">
                   <button
                     onClick={() => toggleSection("category")}
                     className="flex items-center justify-between w-full text-left"
@@ -182,16 +220,61 @@ export default function FilterDrawer({ isOpen, onClose, onApplyFilters, initialF
                               key={category.value}
                               whileHover={{ scale: 1.02 }}
                               whileTap={{ scale: 0.98 }}
-                              onClick={() => setFilters((prev) => ({ ...prev, selectedCategory: category.value }))}
+                              onClick={() => setFilters((prev) => ({ ...prev, category: category.value }))}
                               className={`flex items-center space-x-2 p-3 rounded-xl border-2 transition-all duration-200 ${
-                                filters.selectedCategory === category.value
+                                filters.category === category.value
                                   ? "border-primary bg-primary/10 text-primary"
                                   : "border-border hover:border-primary/50 hover:bg-muted/50"
                               }`}
                             >
                               <span className="text-lg">{category.icon}</span>
                               <span className="text-sm font-medium truncate">{category.label}</span>
-                              {filters.selectedCategory === category.value && <Check className="h-4 w-4 ml-auto" />}
+                              {filters.category === category.value && <Check className="h-4 w-4 ml-auto" />}
+                            </motion.button>
+                          ))}
+                        </div>
+                      </motion.div>
+                    )}
+                  </AnimatePresence>
+                </div> */}
+
+                {/* Status Filter */}
+                <div className="space-y-3">
+                  <button
+                    onClick={() => toggleSection("status")}
+                    className="flex items-center justify-between w-full text-left"
+                  >
+                    <h3 className="text-lg font-semibold text-foreground">Status</h3>
+                    <ChevronDown
+                      className={`h-4 w-4 text-muted-foreground transition-transform duration-200 ${expandedSections.status ? "rotate-180" : ""
+                        }`}
+                    />
+                  </button>
+
+                  <AnimatePresence>
+                    {expandedSections.status && (
+                      <motion.div
+                        initial={{ height: 0, opacity: 0 }}
+                        animate={{ height: "auto", opacity: 1 }}
+                        exit={{ height: 0, opacity: 0 }}
+                        transition={{ duration: 0.3 }}
+                        className="overflow-hidden"
+                      >
+                        <div className="grid grid-cols-2 gap-2 m-1">
+                          {statuses.map((status) => (
+                            <motion.button
+                              key={status.value}
+                              whileHover={{ scale: 1.02 }}
+                              whileTap={{ scale: 0.98 }}
+                              onClick={() => setFilters((prev) => ({ ...prev, status: status.value }))}
+                              className={`flex items-center space-x-2 p-3 rounded-xl border-2 transition-all duration-200 ${filters.status === status.value
+                                  ? "border-primary bg-primary/10 text-primary"
+                                  : "border-border hover:border-primary/50 hover:bg-muted/50"
+                                }`}
+                            >
+                              <span className="text-lg">{status.icon}</span>
+                              <span className="text-sm font-medium truncate">{status.label}</span>
+                              {filters.status === status.value && <Check className="h-4 w-4 ml-auto" />}
                             </motion.button>
                           ))}
                         </div>
@@ -200,22 +283,66 @@ export default function FilterDrawer({ isOpen, onClose, onApplyFilters, initialF
                   </AnimatePresence>
                 </div>
 
-                {/* Type Filter */}
+                {/* Level Filter */}
                 <div className="space-y-3">
                   <button
-                    onClick={() => toggleSection("type")}
+                    onClick={() => toggleSection("level")}
                     className="flex items-center justify-between w-full text-left"
                   >
-                    <h3 className="text-lg font-semibold text-foreground">Type</h3>
+                    <h3 className="text-lg font-semibold text-foreground">Level</h3>
                     <ChevronDown
-                      className={`h-4 w-4 text-muted-foreground transition-transform duration-200 ${
-                        expandedSections.type ? "rotate-180" : ""
-                      }`}
+                      className={`h-4 w-4 text-muted-foreground transition-transform duration-200 ${expandedSections.level ? "rotate-180" : ""
+                        }`}
                     />
                   </button>
 
                   <AnimatePresence>
-                    {expandedSections.type && (
+                    {expandedSections.level && (
+                      <motion.div
+                        initial={{ height: 0, opacity: 0 }}
+                        animate={{ height: "auto", opacity: 1 }}
+                        exit={{ height: 0, opacity: 0 }}
+                        transition={{ duration: 0.3 }}
+                        className="overflow-hidden"
+                      >
+                        <div className="grid grid-cols-2 gap-2 m-1">
+                          {levels.map((level) => (
+                            <motion.button
+                              key={level.value}
+                              whileHover={{ scale: 1.02 }}
+                              whileTap={{ scale: 0.98 }}
+                              onClick={() => setFilters((prev) => ({ ...prev, level: level.value }))}
+                              className={`flex items-center space-x-2 p-3 rounded-xl border-2 transition-all duration-200 ${filters.level === level.value
+                                  ? "border-primary bg-primary/10 text-primary"
+                                  : "border-border hover:border-primary/50 hover:bg-muted/50"
+                                }`}
+                            >
+                              <span className="text-lg">{level.icon}</span>
+                              <span className="text-sm font-medium truncate">{level.label}</span>
+                              {filters.level === level.value && <Check className="h-4 w-4 ml-auto" />}
+                            </motion.button>
+                          ))}
+                        </div>
+                      </motion.div>
+                    )}
+                  </AnimatePresence>
+                </div>
+
+                {/* Mode Filter */}
+                <div className="space-y-3">
+                  <button
+                    onClick={() => toggleSection("mode")}
+                    className="flex items-center justify-between w-full text-left"
+                  >
+                    <h3 className="text-lg font-semibold text-foreground">Mode</h3>
+                    <ChevronDown
+                      className={`h-4 w-4 text-muted-foreground transition-transform duration-200 ${expandedSections.mode ? "rotate-180" : ""
+                        }`}
+                    />
+                  </button>
+
+                  <AnimatePresence>
+                    {expandedSections.mode && (
                       <motion.div
                         initial={{ height: 0, opacity: 0 }}
                         animate={{ height: "auto", opacity: 1 }}
@@ -224,21 +351,20 @@ export default function FilterDrawer({ isOpen, onClose, onApplyFilters, initialF
                         className="overflow-hidden"
                       >
                         <div className="space-y-2 m-1">
-                          {types.map((type) => (
+                          {modes.map((mode) => (
                             <motion.button
-                              key={type.value}
+                              key={mode.value}
                               whileHover={{ scale: 1.01 }}
                               whileTap={{ scale: 0.99 }}
-                              onClick={() => setFilters((prev) => ({ ...prev, selectedType: type.value }))}
-                              className={`flex items-center space-x-3 w-full p-3 rounded-xl border-2 transition-all duration-200 ${
-                                filters.selectedType === type.value
+                              onClick={() => setFilters((prev) => ({ ...prev, mode: mode.value }))}
+                              className={`flex items-center space-x-3 w-full p-3 rounded-xl border-2 transition-all duration-200 ${filters.mode === mode.value
                                   ? "border-primary bg-primary/10 text-primary"
                                   : "border-border hover:border-primary/50 hover:bg-muted/50"
-                              }`}
+                                }`}
                             >
-                              <span className="text-lg">{type.icon}</span>
-                              <span className="text-sm font-medium flex-1 text-left">{type.label}</span>
-                              {filters.selectedType === type.value && <Check className="h-4 w-4" />}
+                              <span className="text-lg">{mode.icon}</span>
+                              <span className="text-sm font-medium flex-1 text-left">{mode.label}</span>
+                              {filters.mode === mode.value && <Check className="h-4 w-4" />}
                             </motion.button>
                           ))}
                         </div>
@@ -255,9 +381,8 @@ export default function FilterDrawer({ isOpen, onClose, onApplyFilters, initialF
                   >
                     <h3 className="text-lg font-semibold text-foreground">Language</h3>
                     <ChevronDown
-                      className={`h-4 w-4 text-muted-foreground transition-transform duration-200 ${
-                        expandedSections.language ? "rotate-180" : ""
-                      }`}
+                      className={`h-4 w-4 text-muted-foreground transition-transform duration-200 ${expandedSections.language ? "rotate-180" : ""
+                        }`}
                     />
                   </button>
 
@@ -276,16 +401,15 @@ export default function FilterDrawer({ isOpen, onClose, onApplyFilters, initialF
                               key={language.value}
                               whileHover={{ scale: 1.01 }}
                               whileTap={{ scale: 0.99 }}
-                              onClick={() => setFilters((prev) => ({ ...prev, selectedLanguage: language.value }))}
-                              className={`flex items-center space-x-3 w-full p-3 rounded-xl border-2 transition-all duration-200 ${
-                                filters.selectedLanguage === language.value
+                              onClick={() => setFilters((prev) => ({ ...prev, language: language.value }))}
+                              className={`flex items-center space-x-3 w-full p-3 rounded-xl border-2 transition-all duration-200 ${filters.language === language.value
                                   ? "border-primary bg-primary/10 text-primary"
                                   : "border-border hover:border-primary/50 hover:bg-muted/50"
-                              }`}
+                                }`}
                             >
                               <span className="text-lg">{language.icon}</span>
                               <span className="text-sm font-medium flex-1 text-left">{language.label}</span>
-                              {filters.selectedLanguage === language.value && <Check className="h-4 w-4" />}
+                              {filters.language === language.value && <Check className="h-4 w-4" />}
                             </motion.button>
                           ))}
                         </div>
@@ -302,9 +426,8 @@ export default function FilterDrawer({ isOpen, onClose, onApplyFilters, initialF
                   >
                     <h3 className="text-lg font-semibold text-foreground">Price Range</h3>
                     <ChevronDown
-                      className={`h-4 w-4 text-muted-foreground transition-transform duration-200 ${
-                        expandedSections.price ? "rotate-180" : ""
-                      }`}
+                      className={`h-4 w-4 text-muted-foreground transition-transform duration-200 ${expandedSections.price ? "rotate-180" : ""
+                        }`}
                     />
                   </button>
 
@@ -318,66 +441,84 @@ export default function FilterDrawer({ isOpen, onClose, onApplyFilters, initialF
                         className="overflow-hidden"
                       >
                         <div className="space-y-4 p-4 bg-muted/30 rounded-xl">
+                          {/* Display Values */}
                           <div className="flex justify-between text-sm font-medium">
-                            <span className="text-primary">{formatPrice(filters.priceRange[0])}</span>
-                            <span className="text-primary">{formatPrice(filters.priceRange[1])}</span>
+                            <span className="text-primary">Min: ₹</span>
+                            <span className="text-primary">Max: ₹</span>
                           </div>
-                          <div className="relative">
-                            <input
-                              type="range"
-                              min="0"
-                              max="20000"
-                              step="500"
-                              value={filters.priceRange[0]}
-                              onChange={(e) =>
-                                setFilters((prev) => ({
-                                  ...prev,
-                                  priceRange: [Number.parseInt(e.target.value), prev.priceRange[1]],
-                                }))
-                              }
-                              className="w-full h-2 bg-muted rounded-lg appearance-none cursor-pointer accent-primary"
-                            />
-                            <input
-                              type="range"
-                              min="0"
-                              max="20000"
-                              step="500"
-                              value={filters.priceRange[1]}
-                              onChange={(e) =>
-                                setFilters((prev) => ({
-                                  ...prev,
-                                  priceRange: [prev.priceRange[0], Number.parseInt(e.target.value)],
-                                }))
-                              }
-                              className="absolute top-0 w-full h-2 bg-transparent rounded-lg appearance-none cursor-pointer accent-primary"
-                            />
+
+                          {/* Number Inputs */}
+                          <div className="flex gap-4">
+                            {/* Min Price */}
+                            <div className="flex-1">
+                              <label className="block text-xs text-gray-500 dark:text-gray-400 mb-1">
+                                Min Price
+                              </label>
+                              <input
+                                type="number"
+                                min={0}
+                                max={filters.maxPrice}
+                                step={500}
+                                value={filters.minPrice}
+                                onChange={(e) =>
+                                  setFilters((prev) => ({
+                                    ...prev,
+                                    minPrice: Math.min(Number(e.target.value), prev.maxPrice),
+                                  }))
+                                }
+                                className="w-full px-3 py-2 border rounded-lg bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-600 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-blue-500 focus:outline-none"
+                              />
+                            </div>
+
+                            {/* Max Price */}
+                            <div className="flex-1">
+                              <label className="block text-xs text-gray-500 dark:text-gray-400 mb-1">
+                                Max Price
+                              </label>
+                              <input
+                                type="number"
+                                min={filters.minPrice}
+                                max={99000}
+                                step={500}
+                                value={filters.maxPrice}
+                                onChange={(e) =>
+                                  setFilters((prev) => ({
+                                    ...prev,
+                                    maxPrice: Math.max(Number(e.target.value), prev.minPrice),
+                                  }))
+                                }
+                                className="w-full px-3 py-2 border rounded-lg bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-600 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-blue-500 focus:outline-none"
+                              />
+                            </div>
                           </div>
+
+                          {/* Optional: Range display */}
                           <div className="flex justify-between text-xs text-muted-foreground">
                             <span>Min: ₹0</span>
-                            <span>Max: ₹20,000</span>
+                            <span>Max: ₹99,000</span>
                           </div>
                         </div>
                       </motion.div>
                     )}
                   </AnimatePresence>
+
                 </div>
 
-                {/* Discount Range */}
+                {/* Date Range */}
                 <div className="space-y-3">
                   <button
-                    onClick={() => toggleSection("discount")}
+                    onClick={() => toggleSection("date")}
                     className="flex items-center justify-between w-full text-left"
                   >
-                    <h3 className="text-lg font-semibold text-foreground">Discount Range</h3>
+                    <h3 className="text-lg font-semibold text-foreground">Date Range</h3>
                     <ChevronDown
-                      className={`h-4 w-4 text-muted-foreground transition-transform duration-200 ${
-                        expandedSections.discount ? "rotate-180" : ""
-                      }`}
+                      className={`h-4 w-4 text-muted-foreground transition-transform duration-200 ${expandedSections.date ? "rotate-180" : ""
+                        }`}
                     />
                   </button>
 
                   <AnimatePresence>
-                    {expandedSections.discount && (
+                    {expandedSections.date && (
                       <motion.div
                         initial={{ height: 0, opacity: 0 }}
                         animate={{ height: "auto", opacity: 1 }}
@@ -385,44 +526,24 @@ export default function FilterDrawer({ isOpen, onClose, onApplyFilters, initialF
                         transition={{ duration: 0.3 }}
                         className="overflow-hidden"
                       >
-                        <div className="space-y-4 p-4 bg-muted/30 rounded-xl">
-                          <div className="flex justify-between text-sm font-medium">
-                            <span className="text-primary">{filters.discountRange[0]}%</span>
-                            <span className="text-primary">{filters.discountRange[1]}%</span>
-                          </div>
-                          <div className="relative">
+                        <div className="grid grid-cols-2 gap-4 p-4 bg-muted/30 rounded-xl">
+                          <div>
+                            <label className="block text-sm font-medium text-foreground mb-2">Start Date</label>
                             <input
-                              type="range"
-                              min="0"
-                              max="100"
-                              step="5"
-                              value={filters.discountRange[0]}
-                              onChange={(e) =>
-                                setFilters((prev) => ({
-                                  ...prev,
-                                  discountRange: [Number.parseInt(e.target.value), prev.discountRange[1]],
-                                }))
-                              }
-                              className="w-full h-2 bg-muted rounded-lg appearance-none cursor-pointer accent-primary"
-                            />
-                            <input
-                              type="range"
-                              min="0"
-                              max="100"
-                              step="5"
-                              value={filters.discountRange[1]}
-                              onChange={(e) =>
-                                setFilters((prev) => ({
-                                  ...prev,
-                                  discountRange: [prev.discountRange[0], Number.parseInt(e.target.value)],
-                                }))
-                              }
-                              className="absolute top-0 w-full h-2 bg-transparent rounded-lg appearance-none cursor-pointer accent-primary"
+                              type="date"
+                              value={filters.startDate}
+                              onChange={(e) => setFilters((prev) => ({ ...prev, startDate: e.target.value }))}
+                              className="w-full rounded-lg border border-border bg-background p-2 text-sm"
                             />
                           </div>
-                          <div className="flex justify-between text-xs text-muted-foreground">
-                            <span>0%</span>
-                            <span>100%</span>
+                          <div>
+                            <label className="block text-sm font-medium text-foreground mb-2">End Date</label>
+                            <input
+                              type="date"
+                              value={filters.endDate}
+                              onChange={(e) => setFilters((prev) => ({ ...prev, endDate: e.target.value }))}
+                              className="w-full rounded-lg border border-border bg-background p-2 text-sm"
+                            />
                           </div>
                         </div>
                       </motion.div>
@@ -438,9 +559,8 @@ export default function FilterDrawer({ isOpen, onClose, onApplyFilters, initialF
                   >
                     <h3 className="text-lg font-semibold text-foreground">Special Offers</h3>
                     <ChevronDown
-                      className={`h-4 w-4 text-muted-foreground transition-transform duration-200 ${
-                        expandedSections.special ? "rotate-180" : ""
-                      }`}
+                      className={`h-4 w-4 text-muted-foreground transition-transform duration-200 ${expandedSections.special ? "rotate-180" : ""
+                        }`}
                     />
                   </button>
 
@@ -460,31 +580,13 @@ export default function FilterDrawer({ isOpen, onClose, onApplyFilters, initialF
                           >
                             <input
                               type="checkbox"
-                              checked={filters.showEarlyBirdOnly}
-                              onChange={(e) => setFilters((prev) => ({ ...prev, showEarlyBirdOnly: e.target.checked }))}
+                              checked={filters.featured}
+                              onChange={(e) => setFilters((prev) => ({ ...prev, featured: e.target.checked }))}
                               className="h-4 w-4 text-primary focus:ring-primary border-border rounded"
                             />
                             <div className="flex items-center space-x-2 flex-1">
-                              <span className="text-lg">🐦</span>
-                              <span className="text-sm font-medium">Early Bird Offers Only</span>
-                            </div>
-                          </motion.label>
-
-                          <motion.label
-                            whileHover={{ scale: 1.01 }}
-                            className="flex items-center space-x-3 p-3 rounded-xl border-2 border-border hover:border-primary/50 hover:bg-muted/50 cursor-pointer transition-all duration-200"
-                          >
-                            <input
-                              type="checkbox"
-                              checked={filters.showInfinityPlanOnly}
-                              onChange={(e) =>
-                                setFilters((prev) => ({ ...prev, showInfinityPlanOnly: e.target.checked }))
-                              }
-                              className="h-4 w-4 text-primary focus:ring-primary border-border rounded"
-                            />
-                            <div className="flex items-center space-x-2 flex-1">
-                              <span className="text-lg">♾️</span>
-                              <span className="text-sm font-medium">Infinity Plan Only</span>
+                              <span className="text-lg">⭐</span>
+                              <span className="text-sm font-medium">Featured Courses Only</span>
                             </div>
                           </motion.label>
                         </div>

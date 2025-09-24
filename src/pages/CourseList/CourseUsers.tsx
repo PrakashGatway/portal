@@ -1,87 +1,70 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import FullWidthSearch from "./FullwidthSearch"
 import ImageSlider from "./ImageSlider"
 import CourseList from "./CourseList"
 import FeaturedCourseSlider from "./FeaturedCourse"
-// import ImageSlider from "@/components/image-slider"
-// import FeaturedCourseSlider from "@/components/featured-course-slider"
-// import CourseList from "@/components/course-list"
+import api from "../../axiosInstance"
 
-const mockCourses = [
-  {
-    _id: "1",
-    title: "Lakshya JEE 3.0 2026",
-    subtitle: "For JEE Aspirants",
-    code: "JEE3-2026",
-    slug: "lakshya-jee-3-0-2026",
-    description: "Complete JEE preparation with live classes, doubt solving, and test series",
-    shortDescription: "Master JEE with comprehensive preparation program",
-    thumbnail: { url: "https://d2bps9p1kiy4ka.cloudfront.net/5eb393ee95fab7468a79d189/1bfd3747-f0db-4344-b073-d6f417ce7993.jpg" },
-    rating: 4.8,
-    reviews: 2847,
-    studentsEnrolled: 15420,
-    duration: "10 months",
-    pricing: { amount: 12999, discount: 25, originalAmount: 17332 },
-    instructorNames: ["Alakh Pandey", "Prateek Jain", "Nishant Vora"],
-    tags: ["JEE", "Physics", "Chemistry", "Mathematics"],
-    status: "active",
-    mode: "live",
-    categoryInfo: { name: "JEE" },
-    language: "hindi",
-    featured: true,
-    hasInfinityPlan: true,
-  },
-  {
-    _id: "2",
-    title: "NEET Yakeen 2.0",
-    subtitle: "For NEET Aspirants",
-    code: "NEET-Y2-2026",
-    slug: "neet-yakeen-2-0-2026",
-    description: "Complete NEET preparation with expert faculty and comprehensive study material",
-    shortDescription: "Comprehensive NEET preparation program",
-    thumbnail: { url: "https://d2bps9p1kiy4ka.cloudfront.net/5eb393ee95fab7468a79d189/1bfd3747-f0db-4344-b073-d6f417ce7993.jpg" },
-    rating: 4.7,
-    reviews: 1923,
-    studentsEnrolled: 12340,
-    duration: "12 months",
-    pricing: { amount: 14999, discount: 20, originalAmount: 18749 },
-    instructorNames: ["Sachin Rana", "Vipin Sharma", "Tarun Kumar"],
-    tags: ["NEET", "Biology", "Chemistry", "Physics"],
-    status: "active",
-    mode: "live",
-    categoryInfo: { name: "NEET" },
-    language: "hindi",
-    featured: true,
-    hasInfinityPlan: false,
-  },
-  {
-    _id: "3",
-    title: "Arjuna JEE 2026",
-    subtitle: "Advanced JEE Preparation",
-    code: "ARJ-JEE-2026",
-    slug: "arjuna-jee-2026",
-    description: "Advanced level JEE preparation for serious aspirants",
-    shortDescription: "Advanced JEE preparation course",
-    thumbnail: { url: "https://d2bps9p1kiy4ka.cloudfront.net/5eb393ee95fab7468a79d189/1bfd3747-f0db-4344-b073-d6f417ce7993.jpg" },
-    rating: 4.9,
-    reviews: 1456,
-    studentsEnrolled: 8750,
-    duration: "8 months",
-    pricing: { amount: 9999, discount: 30, originalAmount: 14284 },
-    instructorNames: ["Alakh Pandey", "Nishant Vora"],
-    tags: ["JEE", "Advanced", "Mathematics"],
-    status: "active",
-    mode: "recorded",
-    categoryInfo: { name: "JEE" },
-    language: "english",
-    featured: false,
-    hasInfinityPlan: true,
-  },
-]
+// Define types for better type safety
+type Course = {
+  _id: string
+  title: string
+  subtitle: string
+  code: string
+  slug: string
+  description: string
+  shortDescription: string
+  thumbnail: { url: string }
+  rating: number
+  reviews: number
+  studentsEnrolled: number
+  duration: string
+  pricing: { amount: number; discount: number; originalAmount: number }
+  instructorNames: string[]
+  tags: string[]
+  status: string
+  mode: string
+  categoryInfo: { name: string }
+  language: string
+  featured: boolean
+  hasInfinityPlan: boolean
+  level?: string
+  schedule?: {
+    startDate: string
+    endDate: string
+  }
+}
 
-const heroImages = [
+type HeroImage = {
+  id: string
+  url: string
+  title: string
+  subtitle: string
+  description: string
+  ctaText: string
+  ctaLink: string
+}
+
+type FilterState = {
+  category: string
+  subcategory: string
+  status: string
+  level: string
+  mode: string
+  featured: boolean | string
+  language: string
+  startDate: string
+  endDate: string
+  minPrice: number
+  maxPrice: number
+  sort: string
+  page: number
+  limit: number
+}
+
+const heroImages: HeroImage[] = [
   {
     id: "1",
     url: "https://static.pw.live/5eb393ee95fab7468a79d189/ADMIN/5e065e49-c332-48f2-9bf3-b4d5e1b74f2a.jpg",
@@ -115,44 +98,96 @@ const heroImages = [
 ]
 
 const recentSearches = [
-  "JEE 2026",
-  "Physics Wallah",
-  "Organic Chemistry",
-  "Mathematics",
-  "NEET Biology",
-  "Test Series",
-  "Lakshya Batch",
-  "Chemistry",
+  "GMAT",
+  "SAT",
+  "TOEFL",
+  "IELTS",
+  "GRE",
+  "PTE Academic",
+  "Duolingo",
 ]
 
 export default function CourseListingPage() {
   const [searchQuery, setSearchQuery] = useState("")
-  const [searchResults, setSearchResults] = useState(mockCourses)
+  const [allCourses, setAllCourses] = useState<Course[]>([])
+  const [filteredCourses, setFilteredCourses] = useState<Course[]>([])
+  const [isLoading, setIsLoading] = useState(true)
   const [isSearchLoading, setIsSearchLoading] = useState(false)
+  const [featuredCourses, setFeaturedCourses] = useState<Course[]>([])
+  const [filters, setFilters] = useState<FilterState>({
+    category: "",
+    subcategory: "",
+    status: "",
+    level: "",
+    mode: "",
+    featured: '',
+    language: "",
+    startDate: "",
+    endDate: "",
+    minPrice: 0,
+    maxPrice: 99000,
+    sort: "-createdAt",
+    page: 1,
+    limit: 12,
+  })
+  const [totalCourses, setTotalCourses] = useState(0)
+
+  const fetchCourses = async (searchQuery: string = "", filterParams: Partial<FilterState> = {}) => {
+    try {
+      setIsLoading(true)
+      const params: any = { ...filters, ...filterParams, limit: 12 }
+      if (searchQuery) {
+        params.search = searchQuery
+      }
+      Object.keys(params).forEach(key => {
+        if (params[key] === "" || params[key] === null || params[key] === undefined) {
+          delete params[key]
+        }
+      })
+      const response = await api.get("/courses", { params })
+      const courses: Course[] = response.data?.data || []
+      const total = response.data?.total || 0
+
+      setAllCourses(courses)
+      setTotalCourses(total)
+      const featured = courses.filter(course => course.featured)
+      setFeaturedCourses(featured)
+      setFilteredCourses(courses)
+    } catch (error) {
+      console.error("Failed to fetch courses:", error)
+      setAllCourses([])
+      setFilteredCourses([])
+      setFeaturedCourses([])
+    } finally {
+      setIsLoading(false)
+    }
+  }
+
+  // Initial fetch
+  useEffect(() => {
+    fetchCourses()
+  }, [])
 
   const handleSearch = (query: string) => {
     setSearchQuery(query)
     setIsSearchLoading(true)
-
-    // Simulate API call delay
     setTimeout(() => {
-      if (query.trim()) {
-        const filtered = mockCourses.filter(
-          (course) =>
-            course.title.toLowerCase().includes(query.toLowerCase()) ||
-            course.subtitle.toLowerCase().includes(query.toLowerCase()) ||
-            course.code.toLowerCase().includes(query.toLowerCase()) ||
-            course.tags.some((tag) => tag.toLowerCase().includes(query.toLowerCase())),
-        )
-        setSearchResults(filtered)
-      } else {
-        setSearchResults(mockCourses)
-      }
+      fetchCourses(query)
       setIsSearchLoading(false)
     }, 300)
   }
 
-  const featuredCourses = mockCourses.filter((course) => course.featured)
+  // Handle filter changes
+  const handleFilterChange = (newFilters: Partial<FilterState>) => {
+    const updatedFilters = { ...filters, ...newFilters }
+    setFilters(updatedFilters)
+    fetchCourses(searchQuery, updatedFilters)
+  }
+
+  // Handle sort change
+  const handleSortChange = (sortValue: string) => {
+    handleFilterChange({ sort: sortValue })
+  }
 
   return (
     <div className="min-h-[84vh] max-w-7xl mx-auto text-foreground">
@@ -160,7 +195,7 @@ export default function CourseListingPage() {
         <div className="max-w-7xl mx-auto">
           <FullWidthSearch
             onSearch={handleSearch}
-            searchResults={searchResults}
+            searchResults={filteredCourses}
             recentSearches={recentSearches}
             isLoading={isSearchLoading}
           />
@@ -171,13 +206,24 @@ export default function CourseListingPage() {
         <ImageSlider images={heroImages} autoPlay={true} interval={6000} height="h-60 md:h-[250px]" />
       </section>
 
-      <FeaturedCourseSlider courses={featuredCourses} title="Featured Courses" autoPlay={true} interval={5000} />
+      {featuredCourses.length > 0 && (
+        <FeaturedCourseSlider
+          courses={featuredCourses}
+          title="Featured Courses"
+          autoPlay={true}
+          interval={5000}
+        />
+      )}
 
       <CourseList
-        courses={searchQuery ? searchResults : mockCourses}
+        courses={filteredCourses}
         title={searchQuery ? `Search Results for "${searchQuery}"` : "All Courses"}
         showFilters={true}
         itemsPerPage={9}
+        totalCourses={totalCourses}
+        onFilterChange={handleFilterChange}
+        onSortChange={handleSortChange}
+        currentFilters={filters}
       />
     </div>
   )

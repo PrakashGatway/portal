@@ -23,6 +23,13 @@ import CategorySelectionPage from "./pages/Category/CategorySelection";
 import CourseListingPage from "./pages/CourseList/CourseUsers";
 import VideoPlayerPage from "./pages/Player/Player";
 import MockTestsPage from "./userView/MocktestPage";
+import EventCalendar from "./userView/Events";
+import CourseDetailPage from "./userView/CourseDetails";
+import CheckoutPage from "./userView/CheckoutPage";
+import OffersPage from "./userView/MyOffer";
+import ReferAndEarnPage from "./userView/Referal";
+import TransactionsPage from "./userView/TransationPage";
+import PromoCodeManagement from "./pages/Offers/offers";
 
 // Define roles
 export const ROLES = {
@@ -50,14 +57,19 @@ export default function App() {
               <Route path="/profile" element={<UserProfiles />} />
               <Route path="/coming" element={<ComingSoon />} />
               <Route path="/course" element={<CourseListingPage />} />
+              <Route path="/course/:slug" element={<CourseDetailPage />} />
+              <Route path="/checkout/:slug" element={<CheckoutPage />} />
+
+              <Route path="/offers" element={<OffersPage />} />
+              <Route path="/transactions" element={<TransactionsPage />} />
+              <Route path="/referrals" element={<ReferAndEarnPage />} />
+
               <Route path="/class/:contentId/:courseId" element={<VideoPlayerPage />} />
               <Route path="/query" element={<CreateQuery />} />
               <Route path="/queries" element={<QueryList />} />
               <Route path="/queries/:id" element={<QueryDetail />} />
               <Route path="/mocks" element={<MockTestsPage />} />
-
-
-
+              <Route path="/events" element={<EventCalendar />} />
 
               <Route element={<ProtectedRoute roles={[ROLES.ADMIN]} />}>
                 <Route path="/users" element={<UserListPage />} />
@@ -66,12 +78,12 @@ export default function App() {
                 <Route path="/modules" element={<ModuleManagement />} />
                 <Route path="/live-classes" element={<ContentManagement type="LiveClasses" />} />
                 <Route path="/recorded-classes" element={<ContentManagement type="RecordedClasses" />} />
+                <Route path="/promocodes" element={<PromoCodeManagement/>} />
+
                 <Route path="/tests" element={<ContentManagement type="Tests" />} />
                 <Route path="/study-materials" element={<ContentManagement type="StudyMaterials" />} />
               </Route>
-
               <Route path="*" element={<ComingSoon />} />
-
               <Route element={<ProtectedRoute roles={[ROLES.EDITOR, ROLES.ADMIN]} />}>
                 <Route path="/pages" element={<PagesManagement />} />
                 <Route path="/entities" element={<EntityManagement />} />

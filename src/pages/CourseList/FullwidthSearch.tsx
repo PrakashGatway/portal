@@ -1,17 +1,27 @@
 import type React from "react"
-
 import { useState, useRef, useEffect } from "react"
 import { motion, AnimatePresence } from "framer-motion"
-import { Search, X, Clock, TrendingUp } from "lucide-react"
+import { Search, X, Clock, TrendingUp, Star, Tag } from "lucide-react"
+import { ImageBaseUrl } from "../../axiosInstance"
 
 interface SearchResult {
   _id: string
   title: string
   subtitle: string
+  code: string
   thumbnail?: { url: string }
   rating: number
   reviews: number
-  pricing: { amount: number; discount: number }
+  studentsEnrolled: number
+  pricing: { 
+    amount: number; 
+    discount: number;
+    originalAmount?: number;
+    currency?: string;
+  }
+  tags: string[]
+  categoryInfo?: { name: string }
+  level?: string
 }
 
 interface FullWidthSearchProps {
@@ -72,6 +82,7 @@ export default function FullWidthSearch({
         const recentIndex = selectedIndex - searchResults.length
         setQuery(recentSearches[recentIndex])
         setIsOpen(false)
+        onSearch(recentSearches[recentIndex])
       }
     } else if (e.key === "Escape") {
       setIsOpen(false)
@@ -79,7 +90,13 @@ export default function FullWidthSearch({
     }
   }
 
-  const formatPrice = (amount: number) => `₹${amount.toLocaleString()}`
+  const formatPrice = (amount: number, currency = "INR") => {
+    return new Intl.NumberFormat("en-IN", {
+      style: "currency",
+      currency,
+      maximumFractionDigits: 0,
+    }).format(amount)
+  }
 
   const lightClasses = {
     container: "bg-white border-gray-200",
@@ -94,7 +111,9 @@ export default function FullWidthSearch({
     recentSearchButtonSelected: "bg-blue-500 text-white",
     noResults: "text-gray-500",
     loadingSpinner: "border-blue-500",
-    loadingText: "text-gray-500"
+    loadingText: "text-gray-500",
+    tag: "bg-blue-100 text-blue-800",
+    level: "bg-purple-100 text-purple-800"
   }
 
   // Dark mode classes
@@ -111,7 +130,9 @@ export default function FullWidthSearch({
     recentSearchButtonSelected: "dark:bg-blue-600 dark:text-white",
     noResults: "dark:text-gray-400",
     loadingSpinner: "dark:border-blue-500",
-    loadingText: "dark:text-gray-400"
+    loadingText: "dark:text-gray-400",
+    tag: "dark:bg-blue-900 dark:text-blue-200",
+    level: "dark:bg-purple-900 dark:text-purple-200"
   }
 
   return (
@@ -123,7 +144,7 @@ export default function FullWidthSearch({
         <input
           ref={inputRef}
           type="text"
-          placeholder="Search for courses, instructors, or topics..."
+          placeholder="Search for courses..."
           value={query}
           onChange={(e) => handleInputChange(e.target.value)}
           onKeyDown={handleKeyDown}
@@ -153,7 +174,7 @@ export default function FullWidthSearch({
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -10 }}
             transition={{ duration: 0.2 }}
-            className={`absolute top-full left-0 right-0 mt-2 border rounded-2xl shadow-2xl z-50 max-h-96 overflow-y-auto ${
+            className={`absolute top-full left-0 right-0 mt-2 border rounded-2xl shadow-2xl z-50 max-h-[70vh] overflow-y-auto ${
               lightClasses.dropdown
             } ${darkClasses.dropdown}`}
           >
@@ -174,7 +195,7 @@ export default function FullWidthSearch({
                       <TrendingUp className="h-4 w-4 mr-2" />
                       Search Results
                     </h3>
-                    {searchResults.slice(0, 6).map((course, index) => (
+                    {searchResults.map((course, index) => (
                       <motion.div
                         key={course._id}
                         initial={{ opacity: 0, x: -20 }}
@@ -192,22 +213,49 @@ export default function FullWidthSearch({
                       >
                         <img
                           src={
-                            course.thumbnail?.url ||
-                            `/placeholder.svg?height=48&width=48&query=${encodeURIComponent(course.title)}`
+                            course.thumbnail?.url 
+                              ? `${ImageBaseUrl}/${course.thumbnail?.url}`
+                              : `https://www.gatewayabroadeducations.com/images/logo.svg`
                           }
                           alt={course.title}
-                          className="w-12 h-12 object-cover rounded-lg mr-3"
+                          className="w-44 h-24 object-cover rounded-lg mr-3"
                         />
                         <div className="flex-1 min-w-0">
-                          <h4 className="font-medium truncate">Course Title</h4>
-                          <p className="text-sm truncate opacity-75">Course Subtitle</p>
+                          <h3 className="text-lg font-medium truncate">{course.title}</h3>
+                          <p className="text-sm truncate opacity-75">{course.subtitle}</p>
+                          
                           <div className="flex items-center mt-1">
-                            <span className="text-xs opacity-60">⭐ 4.5 (120)</span>
+                            <span className="text-xs opacity-60 flex items-center">
+                              <Star className="h-3 w-3 text-yellow-400 fill-current mr-1" />
+                              {course?.rating || "4.8"} ({course.reviews || "1000+"})
+                            </span>
+                            <span className="mx-2 text-gray-300 dark:text-gray-600">•</span>
+                            <span className="text-xs opacity-60">
+                              {course.studentsEnrolled?.toLocaleString() || '1000+'} students
+                            </span>
+                          </div>
+                          
+                          <div className="flex flex-wrap gap-1 mt-1">
+                            {course.level && (
+                              <span className={`text-xs px-1.5 py-0.5 rounded ${lightClasses.level} ${darkClasses.level}`}>
+                                {course.level}
+                              </span>
+                            )}
                           </div>
                         </div>
-                        <div className="text-right">
-                          <div className="text-sm font-bold">₹4999</div>
-                          <div className="text-xs text-red-500">50% off</div>
+                        
+                        <div className="text-right ml-2">
+                          <div className="font-bold text-lg">
+                            {formatPrice(course.pricing.amount, course.pricing.currency)}
+                          </div>
+                          {course.pricing.discount > 0 && (
+                            <div className="text-sm text-red-500">
+                              {course.pricing.discount}% off
+                            </div>
+                          )}
+                          <div className="text-sm text-gray-500 dark:text-gray-400 mt-1">
+                            {course.categoryInfo?.name}
+                          </div>
                         </div>
                       </motion.div>
                     ))}

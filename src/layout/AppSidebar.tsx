@@ -36,13 +36,16 @@ const navItems: NavItem[] = [
   },
   {
     emoji: "🎥",
-    name: "Live Classes",
-    path: "/live-classes",
+    name: "Classes",
+    subItems: [
+      { name: "Live Classes", path: "/live-classes", emoji: "🎥" },
+      { name: "Recorded", path: "/recorded-classes", emoji: "📼" }
+    ]
   },
   {
-    emoji: "📼",
-    name: "Recorded Classes",
-    path: "/recorded-classes",
+    emoji: "💝",
+    name: "Promo Codes",
+    path: "/promocodes",
   },
   {
     emoji: "📂",
@@ -84,6 +87,11 @@ const navItemsUser: NavItem[] = [
     emoji: "🧪",
     name: "Practice Tests",
     path: "/tests",
+  },
+  {
+    emoji: "🗓️",
+    name: "Calendar",
+    path: "/events",
   },
   {
     emoji: "🎓",
