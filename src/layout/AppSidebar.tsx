@@ -63,7 +63,7 @@ const navItems: NavItem[] = [
   {
     emoji: "💳",
     name: "Transactions Reports",
-    path: "/chargeback",
+    path: "/all_transactions",
   }
 ];
 

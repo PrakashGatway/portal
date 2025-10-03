@@ -26,6 +26,7 @@
     "agora-rtm-sdk": "^1.4.5",
     "apexcharts": "^4.1.0",
     "axios": "^1.10.0",
+    "canvas-confetti": "^1.9.3",
     "clsx": "^2.1.1",
     "flatpickr": "^4.6.13",
     "framer-motion": "^12.23.12",

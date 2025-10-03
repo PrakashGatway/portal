@@ -1,5 +1,5 @@
 import { createContext, useContext, useEffect, useState } from 'react';
-import { useNavigate } from 'react-router';
+import { useLocation, useNavigate } from 'react-router';
 import api from '../axiosInstance';
 
 type AuthContextType = {
@@ -16,15 +16,16 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const [user, setUser] = useState<any | null>(null);
+  const [wallet, setWallet] = useState() as any;
   const [token, setToken] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const navigate = useNavigate();
+  const location = useLocation();
 
   useEffect(() => {
     const initializeAuth = async () => {
       try {
         const accessToken = localStorage.getItem('accessToken') || sessionStorage.getItem('accessToken');
-
         setToken(accessToken);
         api.defaults.headers.common['Authorization'] = `Bearer ${accessToken}`;
         await fetchUserProfile();
@@ -34,22 +35,27 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         setLoading(false);
       }
     };
-
     initializeAuth();
   }, []);
 
   const fetchUserProfile = async () => {
     try {
-      setLoading(true);
       const response = await api.get('/auth/me');
       setUser(response.data?.data);
+      setWallet(response.data?.wallet);
     } catch (err) {
       logout();
       throw err;
-    } finally {
-      setLoading(false);
     }
   };
+
+  useEffect(() => {
+    if (user && !user?.category?._id) {
+      navigate('/course/category');
+    }
+    console.log('clicked')
+  }, [user, location.pathname]);
+
 
   const logout = async () => {
     // localStorage.removeItem('accessToken');
@@ -65,6 +71,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 
   const value = {
     user,
+    wallet,
     token,
     logout,
     loading,

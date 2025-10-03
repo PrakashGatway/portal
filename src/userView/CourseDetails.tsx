@@ -5,29 +5,20 @@ import {
     Clock,
     Calendar,
     BookOpen,
-    TrendingUp,
     MapPin,
     Award,
     Download,
     Play,
     CheckCircle,
     ChevronRight,
-    Heart,
-    Share2,
     BarChart3,
     FileText,
     Video,
-    Headphones,
     MessageCircle,
     Shield,
-    Lightbulb,
     Book,
     Target,
     Users2,
-    School,
-    AlertCircle,
-    Phone,
-    Laptop,
     Sparkles,
     Globe,
     PlayCircle,
@@ -35,7 +26,7 @@ import {
 } from "lucide-react"
 import Button from "../components/ui/button/Button"
 import api, { ImageBaseUrl } from "../axiosInstance"
-import { useParams } from "react-router"
+import { useNavigate, useParams } from "react-router"
 import { motion, LayoutGroup } from "framer-motion"
 
 
@@ -152,16 +143,50 @@ const CardContent = ({ children, className = "" }: { children: React.ReactNode; 
     <div className={`${className}`}>{children}</div>
 )
 
+const CurriculumSkeleton = () => {
+    return (
+        <div className="space-y-6">
+            <div className="h-8 w-64 bg-gray-200 dark:bg-gray-700 rounded animate-pulse"></div>
+            <div className="h-5 w-48 bg-gray-200 dark:bg-gray-700 rounded animate-pulse"></div>
+            <div className="space-y-4">
+                {[1, 2, 3].map((i) => (
+                    <div key={i} className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 overflow-hidden">
+                        <div className="p-5 bg-gray-50 dark:bg-gray-700/50">
+                            <div className="h-5 w-3/4 bg-gray-200 dark:bg-gray-600 rounded animate-pulse"></div>
+                        </div>
+                        <div className="divide-y divide-gray-200 dark:divide-gray-700">
+                            {[1, 2].map((j) => (
+                                <div key={j} className="flex items-center p-5">
+                                    <div className="h-5 w-5 bg-gray-200 dark:bg-gray-600 rounded-full mr-4 animate-pulse"></div>
+                                    <div className="flex-1 space-y-2">
+                                        <div className="h-4 bg-gray-200 dark:bg-gray-600 rounded animate-pulse w-5/6"></div>
+                                        <div className="h-3 bg-gray-200 dark:bg-gray-600 rounded animate-pulse w-1/3"></div>
+                                    </div>
+                                </div>
+                            ))}
+                        </div>
+                    </div>
+                ))}
+            </div>
+        </div>
+    );
+};
+
 export default function CourseDetailPage() {
     const { slug } = useParams<{ slug: string }>()
     const [course, setCourse] = useState<Course | null>(null)
     const [loading, setLoading] = useState(true)
     const [activeTab, setActiveTab] = useState("overview")
     const [expandedFaq, setExpandedFaq] = useState<number | null>(null)
-    const [isWishlisted, setIsWishlisted] = useState(false)
     const [isVideoCardFixed, setIsVideoCardFixed] = useState(false)
     const courseHeaderRef = useRef<HTMLDivElement>(null)
     const videoCardRef = useRef<HTMLDivElement>(null)
+    const [curriculum, setCurriculum] = useState<{ _id: string; title: string; items: any[] }[]>([]);
+    const [curriculumLoading, setCurriculumLoading] = useState(false);
+    const curriculumRef = useRef(false); // to ensure fetch only once
+    
+
+    const navigate = useNavigate()
 
     useEffect(() => {
         const fetchCourse = async () => {
@@ -176,6 +201,25 @@ export default function CourseDetailPage() {
         }
         fetchCourse()
     }, [slug])
+
+    useEffect(() => {
+        if (activeTab === "curriculum" && course && !curriculumRef.current) {
+            const fetchCurriculum = async () => {
+                setCurriculumLoading(true);
+                try {
+                    const res = await api.get(`/courses/curriculum/${course._id}`);
+                    setCurriculum(res.data.curriculum || []);
+                    curriculumRef.current = true;
+                } catch (err) {
+                    console.error("Failed to load curriculum:", err);
+                    setCurriculum([]);
+                } finally {
+                    setCurriculumLoading(false);
+                }
+            };
+            fetchCurriculum();
+        }
+    }, [activeTab, course]);
 
     useEffect(() => {
         const handleScroll = () => {
@@ -267,12 +311,12 @@ export default function CourseDetailPage() {
                         {/* Left: Course Info */}
                         <div className="lg:col-span-4 space-y-4">
                             <div className="flex flex-wrap items-center gap-3 mb-6">
-                                <Badge variant="outline" className="bg-primary/10 text-primary border-primary/20 px-4 py-1.5">
+                                <Badge variant="outline" className="bg-primary/10 text-blue-700 border-primary/20 px-4 py-1.5">
                                     <Sparkles className="mr-1.5 h-3.5 w-3.5" />
                                     {course.categoryInfo?.name}
                                 </Badge>
                                 {course.level && (
-                                    <Badge variant="outline" className="border-accent/30 text-accent-foreground px-4 py-1.5">
+                                    <Badge variant="outline" className="border-accent/30 text-blue-700 px-4 py-1.5">
                                         <Target className="mr-1.5 h-3.5 w-3.5" />
                                         {course.level.charAt(0).toUpperCase() + course.level.slice(1)}
                                     </Badge>
@@ -286,13 +330,13 @@ export default function CourseDetailPage() {
                             </div>
 
                             <div className="space-y-3">
-                                <h1 className="text-3xl lg:text-4xl font-bold text-foreground leading-tight text-balance">
+                                <h1 className="text-3xl lg:text-4xl font-bold text-gray-900 dark:text-white leading-tight text-balance">
                                     {course.title}
                                 </h1>
-                                <p className="text-lg text-muted-foreground leading-relaxed text-pretty max-w-3xl">
+                                <p className="text-lg text-gray-600 dark:text-gray-400 leading-relaxed text-pretty max-w-3xl">
                                     {course.shortDescription}
                                 </p>
-                                <p className="text-lg text-muted-foreground leading-relaxed text-pretty max-w-3xl">
+                                <p className="text-lg text-gray-600 dark:text-gray-400 leading-relaxed text-pretty max-w-3xl">
                                     {course.description}
                                 </p>
                             </div>
@@ -304,19 +348,23 @@ export default function CourseDetailPage() {
                                         {[...Array(5)].map((_, i) => (
                                             <Star
                                                 key={i}
-                                                className={`h-5 w-5 ${i < Math.floor(course.rating || 5) ? "text-yellow-400 fill-current" : "text-muted-foreground/30"
+                                                className={`h-5 w-5 ${i < Math.floor(course.rating || 5)
+                                                    ? "text-yellow-400 fill-current"
+                                                    : "text-gray-300 dark:text-gray-600"
                                                     }`}
                                             />
                                         ))}
                                     </div>
-                                    <span className="font-semibold text-foreground">{course.rating || 4.8}</span>
-                                    <span className="text-muted-foreground">({course.reviews || '1000+'} reviews)</span>
+                                    <span className="font-semibold text-gray-900 dark:text-white">{course.rating || 4.8}</span>
+                                    <span className="text-gray-600 dark:text-gray-400">
+                                        ({course.reviews || '1000+'} reviews)
+                                    </span>
                                 </div>
-                                <div className="flex items-center gap-2 text-muted-foreground">
+                                <div className="flex items-center gap-2 text-gray-600 dark:text-gray-400">
                                     <Users className="h-5 w-5" />
                                     <span className="font-medium">{course.studentsEnrolled?.toLocaleString() || "1000+"} students</span>
                                 </div>
-                                <div className="flex items-center gap-2 text-muted-foreground">
+                                <div className="flex items-center gap-2 text-gray-600 dark:text-gray-400">
                                     <Clock className="h-5 w-5" />
                                     <span className="font-medium">{course.duration || "1 year"}</span>
                                 </div>
@@ -324,32 +372,40 @@ export default function CourseDetailPage() {
 
                             {/* Course Details Grid */}
                             <div className="grid grid-cols-2 md:grid-cols-4 gap-4 pt-4">
-                                <Card className="border-border/50 bg-card/50 backdrop-blur-sm">
+                                <Card className="border border-gray-200 dark:border-gray-700 bg-white/50 dark:bg-gray-800/50 backdrop-blur-sm">
                                     <CardContent className="text-center p-4">
-                                        <Calendar className="h-6 w-6 text-primary mx-auto mb-2" />
-                                        <p className="text-sm font-medium text-foreground">Start Date</p>
-                                        <p className="text-xs text-muted-foreground mt-1">{formatDate(course.schedule?.startDate || "")}</p>
+                                        <Calendar className="h-6 w-6 text-blue-700 mx-auto mb-2" />
+                                        <p className="text-sm font-medium text-gray-900 dark:text-white">Start Date</p>
+                                        <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                                            {formatDate(course.schedule?.startDate || "")}
+                                        </p>
                                     </CardContent>
                                 </Card>
-                                <Card className="border-border/50 bg-card/50 backdrop-blur-sm">
+                                <Card className="border border-gray-200 dark:border-gray-700 bg-white/50 dark:bg-gray-800/50 backdrop-blur-sm">
                                     <CardContent className="p-4 text-center">
-                                        <MapPin className="h-6 w-6 text-primary mx-auto mb-2" />
-                                        <p className="text-sm font-medium text-foreground">Mode</p>
-                                        <p className="text-xs text-muted-foreground mt-1 capitalize">{course.mode}</p>
+                                        <MapPin className="h-6 w-6 text-blue-700 mx-auto mb-2" />
+                                        <p className="text-sm font-medium text-gray-900 dark:text-white">Mode</p>
+                                        <p className="text-xs text-gray-500 dark:text-gray-400 mt-1 capitalize">
+                                            {course.mode}
+                                        </p>
                                     </CardContent>
                                 </Card>
-                                <Card className="border-border/50 bg-card/50 backdrop-blur-sm">
+                                <Card className="border border-gray-200 dark:border-gray-700 bg-white/50 dark:bg-gray-800/50 backdrop-blur-sm">
                                     <CardContent className="p-4 text-center">
-                                        <Globe className="h-6 w-6 text-primary mx-auto mb-2" />
-                                        <p className="text-sm font-medium text-foreground">Language</p>
-                                        <p className="text-xs text-muted-foreground mt-1 capitalize">{course.language}</p>
+                                        <Globe className="h-6 w-6 text-blue-700 mx-auto mb-2" />
+                                        <p className="text-sm font-medium text-gray-900 dark:text-white">Language</p>
+                                        <p className="text-xs text-gray-500 dark:text-gray-400 mt-1 capitalize">
+                                            {course.language}
+                                        </p>
                                     </CardContent>
                                 </Card>
-                                <Card className="border-border/50 bg-card/50 backdrop-blur-sm">
+                                <Card className="border border-gray-200 dark:border-gray-700 bg-white/50 dark:bg-gray-800/50 backdrop-blur-sm">
                                     <CardContent className="p-4 text-center">
-                                        <BookOpen className="h-6 w-6 text-primary mx-auto mb-2" />
-                                        <p className="text-sm font-medium text-foreground">Sections</p>
-                                        <p className="text-xs text-muted-foreground mt-1">{course.curriculum?.length || 0} modules</p>
+                                        <BookOpen className="h-6 w-6 text-blue-700 mx-auto mb-2" />
+                                        <p className="text-sm font-medium text-gray-900 dark:text-white">Validity</p>
+                                        <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                                            2 year
+                                        </p>
                                     </CardContent>
                                 </Card>
                             </div>
@@ -362,34 +418,78 @@ export default function CourseDetailPage() {
                             transition={{ delay: 0.2 }}
                             className="lg:col-span-2"
                         >
-                            <Card className="backdrop-blur-xl shadow-lg mb-2">
+                            <Card className="backdrop-blur-xl shadow-lg mb-2 border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800">
                                 <CardContent className="p-0">
-                                    {/* Video Preview */}
-                                    <div className="relative aspect-video bg-gradient-to-br from-primary/20 to-accent/20 rounded-t-lg overflow-hidden group">
-                                        <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-slate-100 to-slate-200 dark:from-slate-800 dark:to-slate-900">
-                                            <div className="text-center">
-                                                <PlayCircle className="h-16 w-16 text-primary/60 mx-auto mb-3" />
-                                                <p className="text-sm text-muted-foreground">Course Preview</p>
+                                    <div className="relative aspect-video bg-gray-900 rounded-t-lg overflow-hidden">
+                                        {course?.preview?.url ? (() => {
+                                            const url = course.preview.url;
+                                            let embedUrl = '';
+
+                                            // YouTube
+                                            if (url.includes('youtube.com') || url.includes('youtu.be')) {
+                                                const regExp = /^.*(youtu\.be\/|v\/|u\/\w\/|embed\/|watch\?v=|&v=)([^#&?]*).*/;
+                                                const match = url.match(regExp);
+                                                const videoId = match?.[2]?.length === 11 ? match[2] : null;
+                                                if (videoId) {
+                                                    embedUrl = `https://www.youtube.com/embed/${videoId}?autoplay=0&mute=0&rel=0&controls=1`;
+                                                }
+                                            }
+                                            // Vimeo
+                                            else if (url.includes('vimeo.com')) {
+                                                const regExp = /vimeo\.com\/(?:.*\/)?(\d+)/;
+                                                const match = url.match(regExp);
+                                                const videoId = match?.[1];
+                                                if (videoId) {
+                                                    embedUrl = `https://player.vimeo.com/video/${videoId}?autoplay=0&muted=0&controls=1`;
+                                                }
+                                            }
+
+                                            if (embedUrl) {
+                                                return (
+                                                    <iframe
+                                                        src={embedUrl}
+                                                        title="Course Preview"
+                                                        className="w-full h-full absolute inset-0"
+                                                        frameBorder="0"
+                                                        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                                                        allowFullScreen
+                                                    />
+                                                );
+                                            }
+
+                                            return (
+                                                <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-slate-100 to-slate-200 dark:from-slate-800 dark:to-slate-900">
+                                                    <div className="text-center">
+                                                        <PlayCircle className="h-16 w-16 text-primary/60 mx-auto mb-3" />
+                                                        <p className="text-sm text-gray-600 dark:text-gray-400">Invalid video URL</p>
+                                                    </div>
+                                                </div>
+                                            );
+                                        })() : (
+                                            <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-slate-100 to-slate-200 dark:from-slate-800 dark:to-slate-900">
+                                                <div className="text-center">
+                                                    <PlayCircle className="h-16 w-16 text-primary/60 mx-auto mb-3" />
+                                                    <p className="text-sm text-gray-600 dark:text-gray-400">No preview available</p>
+                                                </div>
                                             </div>
-                                        </div>
-                                        <div className="absolute inset-0 bg-black/20 opacity-0 group-hover:opacity-100 transition-all duration-300 flex items-center justify-center">
-                                            <Play className="h-12 w-12 text-white drop-shadow-lg" />
-                                        </div>
+                                        )}
                                     </div>
 
                                     <div className="p-6 space-y-6">
                                         {/* Pricing */}
                                         <div className="text-center space-y-3">
                                             <div className="space-y-2">
-                                                <div className="text-3xl font-bold text-foreground">
+                                                <div className="text-3xl font-bold text-gray-900 dark:text-white">
                                                     {formatPrice(finalPrice, course.pricing.currency)}
                                                 </div>
                                                 {discountPercent > 0 && (
                                                     <div className="flex items-center justify-center gap-3">
-                                                        <span className="text-lg text-muted-foreground line-through">
+                                                        <span className="text-lg text-gray-500 dark:text-gray-400 line-through">
                                                             {formatPrice(originalPrice, course.pricing.currency)}
                                                         </span>
-                                                        <Badge className="bg-destructive text-destructive-foreground">{discountPercent}% OFF</Badge>
+                                                        <Badge className="bg-destructive text-destructive-foreground">
+                                                            {discountPercent}% OFF
+                                                        </Badge>
                                                     </div>
                                                 )}
                                                 {isEarlyBirdActive && (
@@ -405,46 +505,12 @@ export default function CourseDetailPage() {
                                         <div className="space-y-3">
                                             <Button
                                                 size="lg"
+                                                onClick={()=>navigate(`/checkout/${slug}`)}
                                                 className="w-full bg-primary hover:bg-primary/90 text-primary-foreground font-semibold py-3"
                                             >
                                                 <PlayCircle className="mr-2 h-5 w-5" />
                                                 Enroll Now
                                             </Button>
-                                            {/* <div className="grid grid-cols-2 gap-2">
-                                                <Button
-                                                    variant="outline"
-                                                    size="sm"
-                                                    onClick={() => setIsWishlisted(!isWishlisted)}
-                                                    className={`${isWishlisted ? "text-red-500 border-red-200" : ""}`}
-                                                >
-                                                    <Heart className={`mr-1 h-4 w-4 ${isWishlisted ? "fill-current" : ""}`} />
-                                                    Save
-                                                </Button>
-                                                <Button variant="outline" size="sm">
-                                                    <Share2 className="mr-1 h-4 w-4" />
-                                                    Share
-                                                </Button>
-                                            </div> */}
-                                        </div>
-
-                                        {/* Course Snapshot */}
-                                        <div className="space-y-3 pt-2 border-t border-border/50">
-                                            <div className="space-y-2 text-sm">
-                                                <div className="flex items-center justify-between">
-                                                    <span className="text-muted-foreground flex items-center gap-2">
-                                                        <Award className="h-4 w-4" />
-                                                        Certificate
-                                                    </span>
-                                                    <span className="font-medium">Included</span>
-                                                </div>
-                                                <div className="flex items-center justify-between">
-                                                    <span className="text-muted-foreground flex items-center gap-2">
-                                                        <Shield className="h-4 w-4" />
-                                                        Access
-                                                    </span>
-                                                    <span className="font-medium">Lifetime</span>
-                                                </div>
-                                            </div>
                                         </div>
                                     </div>
                                 </CardContent>
@@ -523,7 +589,7 @@ export default function CourseDetailPage() {
                                     <div>
                                         <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-4">Course Highlights</h3>
                                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                            {course.highlights?.map((highlight, index) => (
+                                            {course.features?.map((highlight, index) => (
                                                 <div key={index} className="flex items-start p-4 bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700">
                                                     <Award className="h-5 w-5 text-blue-500 mt-0.5 mr-3 flex-shrink-0" />
                                                     <span className="text-gray-700 dark:text-gray-300">{highlight}</span>
@@ -555,72 +621,93 @@ export default function CourseDetailPage() {
                                 </div>
                             )}
                             {activeTab === "curriculum" && (
-                                <div className="space-y-6">
-                                    <h2 className="text-2xl font-bold text-gray-900 dark:text-white">Course Curriculum</h2>
-                                    <p className="text-gray-600 dark:text-gray-400">
-                                        {course.curriculum?.length || 0} sections • {course.curriculum?.reduce((acc, section) => acc + section.items.length, 0) || 0} lectures
-                                    </p>
-                                    <div className="space-y-4">
-                                        {course.curriculum?.map((section, sectionIndex) => (
-                                            <div key={section._id} className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 overflow-hidden">
-                                                <div className="flex items-center justify-between p-5 bg-gray-50 dark:bg-gray-700/50">
-                                                    <h3 className="font-bold text-gray-900 dark:text-white">
-                                                        Section {sectionIndex + 1}: {section.title}
-                                                    </h3>
-                                                    <span className="text-sm text-gray-500 dark:text-gray-400">
-                                                        {section.items.length} lectures
-                                                    </span>
-                                                </div>
-                                                <div className="divide-y divide-gray-200 dark:divide-gray-700">
-                                                    {section.items.map((item, itemIndex) => (
-                                                        <div key={item._id} className="flex items-center p-5 hover:bg-gray-50 dark:hover:bg-gray-700/30 transition-colors">
-                                                            <div className="flex items-center mr-4">
-                                                                {item.type === "video" && <Video className="h-5 w-5 text-blue-500" />}
-                                                                {item.type === "document" && <FileText className="h-5 w-5 text-green-500" />}
-                                                                {item.type === "quiz" && <BarChart3 className="h-5 w-5 text-purple-500" />}
-                                                                {item.type === "assignment" && <Download className="h-5 w-5 text-orange-500" />}
-                                                            </div>
-                                                            <div className="flex-1">
-                                                                <div className="font-medium text-gray-900 dark:text-white">{item.title}</div>
-                                                                <div className="text-sm text-gray-500 dark:text-gray-400">{item.duration}</div>
-                                                            </div>
-                                                            {item.isPreview && (
-                                                                <Button variant="outline" size="sm" className="text-blue-600 dark:text-blue-400">
-                                                                    Preview
-                                                                </Button>
-                                                            )}
-                                                            <ChevronRight className="h-5 w-5 text-gray-400 ml-2" />
+                                <div className="space-y-4">
+                                    {/* <h2 className="text-2xl font-bold text-gray-900 dark:text-white">Course Curriculum</h2> */}
+
+                                    {curriculumLoading ? (
+                                        <CurriculumSkeleton />
+                                    ) : (
+                                        <>
+                                            <p className="text-gray-600 dark:text-gray-400">
+                                                {curriculum.length || 0} sections •{' '}
+                                                {curriculum.reduce((acc, section) => acc + section.items.length, 0) || 0} lectures
+                                            </p>
+
+                                            <div className="space-y-2">
+                                                {curriculum.map((section, sectionIndex) => (
+                                                    <div
+                                                        key={section._id}
+                                                        className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 overflow-hidden"
+                                                    >
+                                                        <div className="flex items-center justify-between p-5 bg-gray-50 dark:bg-gray-700/50">
+                                                            <h3 className="font-bold text-gray-900 dark:text-white">
+                                                                Section {sectionIndex + 1}: {section.title}
+                                                            </h3>
+                                                            <span className="text-sm text-gray-500 dark:text-gray-400">
+                                                                {section.items.length} lectures
+                                                            </span>
                                                         </div>
-                                                    ))}
-                                                </div>
+                                                        <div className="divide-y divide-gray-200 dark:divide-gray-700">
+                                                            {section.items.map((item) => (
+                                                                <div
+                                                                    key={item._id}
+                                                                    className="flex items-center p-3 hover:bg-gray-50 dark:hover:bg-gray-700/30 transition-colors"
+                                                                >
+                                                                    <div className="flex items-center mr-4">
+                                                                        {item.type === "video" && <Video className="h-5 w-5 text-blue-500" />}
+                                                                        {item.type === "document" && <FileText className="h-5 w-5 text-green-500" />}
+                                                                        {item.type === "quiz" && <BarChart3 className="h-5 w-5 text-purple-500" />}
+                                                                        {item.type === "assignment" && <Download className="h-5 w-5 text-orange-500" />}
+                                                                    </div>
+                                                                    <div className="flex-1">
+                                                                        <div className="font-medium text-gray-900 dark:text-white">{item.title}</div>
+                                                                        <div className="text-sm text-gray-500 dark:text-gray-400">{item.duration}</div>
+                                                                    </div>
+                                                                    {item.isPreview && !item.isLocked && (
+                                                                        <Button variant="outline" size="sm" className="text-blue-600 dark:text-blue-400">
+                                                                            Preview
+                                                                        </Button>
+                                                                    )}
+                                                                    {item.isLocked ? (
+                                                                        <Button disabled size="sm" variant="outline" className="text-gray-400 cursor-not-allowed">
+                                                                            Locked
+                                                                        </Button>
+                                                                    ) : (
+                                                                        <ChevronRight className="h-5 w-5 text-gray-400 ml-2" />
+                                                                    )}
+                                                                </div>
+                                                            ))}
+                                                        </div>
+                                                    </div>
+                                                ))}
                                             </div>
-                                        ))}
-                                    </div>
+                                        </>
+                                    )}
                                 </div>
                             )}
                             {activeTab === "instructors" && (
                                 <div className="space-y-8">
                                     <h2 className="text-2xl font-bold text-gray-900 dark:text-white">Meet Your Instructors</h2>
                                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                                        {course.instructors?.map((instructor) => (
+                                        {course.instructorNames?.map((instructor) => (
                                             <div key={instructor._id} className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-6 hover:shadow-md transition-shadow">
                                                 <div className="flex items-start">
                                                     <img
-                                                        src={instructor.avatar || "/placeholder-avatar.jpg"}
-                                                        alt={instructor.name}
+                                                        src={`https://res.cloudinary.com/dd5s7qpsc/image/upload/${instructor.profilePic}` || "https://img.freepik.com/free-vector/blue-circle-with-white-user_78370-4707.jpg?semt=ais_hybrid&w=740"}
+                                                        alt={instructor.name || instructor.email}
                                                         className="h-16 w-16 rounded-full object-cover mr-4 border-2 border-gray-100 dark:border-gray-700"
                                                     />
                                                     <div className="flex-1">
-                                                        <h3 className="text-lg font-bold text-gray-900 dark:text-white">{instructor.name}</h3>
+                                                        <h3 className="text-lg font-bold text-gray-900 dark:text-white">{instructor.name || 'Teacher'}</h3>
                                                         <div className="flex items-center mt-1">
                                                             <Star className="h-4 w-4 text-yellow-400 fill-current" />
                                                             <span className="ml-1 text-sm text-gray-600 dark:text-gray-400">
-                                                                {instructor.rating} ({instructor.totalCourses} courses)
+                                                                {4.9} ({'5+'} courses)
                                                             </span>
                                                         </div>
-                                                        {instructor.bio && (
+                                                        {instructor.profile && (
                                                             <p className="mt-2 text-gray-600 dark:text-gray-400 text-sm">
-                                                                {instructor.bio}
+                                                                {instructor?.profile?.bio}
                                                             </p>
                                                         )}
                                                     </div>
@@ -708,12 +795,53 @@ export default function CourseDetailPage() {
                             {activeTab === "faq" && (
                                 <div className="space-y-6">
                                     <h2 className="text-2xl font-bold text-gray-900 dark:text-white">Frequently Asked Questions</h2>
-                                    <div className="space-y-4">
-                                        {course.faqs?.map((faq, index) => (
+                                    <div className="space-y-1">
+                                        {[
+                                            {
+                                                question: "What do your study abroad courses include?",
+                                                answer: "Our courses cover everything from English language prep, IELTS/TOEFL training, and subject-specific coaching to application guidance, interview prep, and cultural orientation."
+                                            },
+                                            {
+                                                question: "Are these courses suitable for beginners?",
+                                                answer: "Yes! Whether you’re just starting or already advanced, we have beginner, intermediate, and advanced-level courses tailored to your needs."
+                                            },
+                                            {
+                                                question: "How do these courses help with my study abroad application?",
+                                                answer: "We focus on strengthening your academic profile, language skills, and test performance so that you can meet admission requirements at top universities abroad."
+                                            },
+                                            {
+                                                question: "Do you provide guidance for visa and admissions along with courses?",
+                                                answer: "Absolutely. Along with coaching, we guide you through application essays, SOPs, LORs, and visa interview preparation."
+                                            },
+                                            {
+                                                question: "Are the courses conducted online or offline?",
+                                                answer: "We offer both flexible online classes and offline sessions (depending on your location). You can choose what fits you best."
+                                            },
+                                            {
+                                                question: "What makes your study abroad courses different from others?",
+                                                answer: "Our trainers have years of experience helping students secure admissions abroad. We provide personalized feedback, mock tests, and one-on-one mentoring."
+                                            },
+                                            {
+                                                question: "How long does it take to complete a course?",
+                                                answer: "Course duration ranges from 4 weeks to 6 months, depending on the program and your target university requirements."
+                                            },
+                                            {
+                                                question: "Will these courses improve my chances of getting scholarships?",
+                                                answer: "Yes, stronger academic and language skills increase your chances of securing merit-based scholarships abroad."
+                                            },
+                                            {
+                                                question: "Do you provide practice tests and study materials?",
+                                                answer: "Yes, we provide updated study guides, sample papers, mock exams, and practice sessions for standardized tests like IELTS, TOEFL, GRE, and GMAT."
+                                            },
+                                            {
+                                                question: "How do I enroll in a course?",
+                                                answer: "Simply click on the “Enroll Now” button, fill in your details, and our team will contact you with the next steps."
+                                            }
+                                        ]?.map((faq, index) => (
                                             <div key={index} className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 overflow-hidden">
                                                 <button
                                                     onClick={() => setExpandedFaq(expandedFaq === index ? null : index)}
-                                                    className="flex justify-between items-center w-full p-6 text-left hover:bg-gray-50 dark:hover:bg-gray-700/30 transition-colors"
+                                                    className="flex justify-between items-center w-full p-4 text-left hover:bg-gray-50 dark:hover:bg-gray-700/30 transition-colors"
                                                 >
                                                     <h3 className="font-medium text-gray-900 dark:text-white">{faq.question}</h3>
                                                     <ChevronRight
@@ -722,7 +850,7 @@ export default function CourseDetailPage() {
                                                     />
                                                 </button>
                                                 {expandedFaq === index && (
-                                                    <div className="px-6 pb-6 pt-0 border-t border-gray-200 dark:border-gray-700">
+                                                    <div className="px-6 pb-6 pt-4 border-t border-gray-200 dark:border-gray-700">
                                                         <p className="text-gray-600 dark:text-gray-400 leading-relaxed">{faq.answer}</p>
                                                     </div>
                                                 )}
@@ -757,24 +885,16 @@ export default function CourseDetailPage() {
                             <div className="space-y-3">
                                 <Button
                                     size="sm"
+                                    onClick={()=>navigate(`/checkout/${slug}`)}
                                     className="w-full bg-blue-600 hover:bg-blue-700 text-white font-medium"
                                 >
                                     Enroll Now
                                 </Button>
                             </div>
-                            <div className="mt-6 pt-6 border-t border-gray-200 dark:border-gray-700">
+                            <div className="mt-4 pb-3 pt-3 border-gray-200 dark:border-gray-700">
                                 <div className="space-y-2 text-sm">
                                     <div className="flex justify-between">
-                                        <span className="text-gray-500 dark:text-gray-400">Duration</span>
-                                        <span>{course.duration || "1 Year"}</span>
-                                    </div>
-                                    <div className="flex justify-between">
-                                        <span className="text-gray-500 dark:text-gray-400">Mode</span>
-                                        <span className="capitalize">{course.mode}</span>
-                                    </div>
-                                    <div className="flex justify-between">
-                                        <span className="text-gray-500 dark:text-gray-400">Language</span>
-                                        <span className="capitalize">{course.language}</span>
+                                        <span className="text-gray-500 dark:text-gray-400">{course.shortDescription}</span>
                                     </div>
                                 </div>
                             </div>

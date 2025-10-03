@@ -30,6 +30,10 @@ import OffersPage from "./userView/MyOffer";
 import ReferAndEarnPage from "./userView/Referal";
 import TransactionsPage from "./userView/TransationPage";
 import PromoCodeManagement from "./pages/Offers/offers";
+import MyCoursesPage from "./userView/MyCourse";
+import StudyMaterialPage from "./userView/StudyMaterial";
+import PaymentStatusPage from "./userView/PaymentStatus";
+import AdminTransactionsPage from "./pages/Transaction";
 
 // Define roles
 export const ROLES = {
@@ -52,17 +56,21 @@ export default function App() {
           </Route> */}
 
           <Route element={<ProtectedRoute />}>
+
             <Route element={<AppLayout />}>
               <Route index path="/" element={<Home />} />
               <Route path="/profile" element={<UserProfiles />} />
               <Route path="/coming" element={<ComingSoon />} />
               <Route path="/course" element={<CourseListingPage />} />
               <Route path="/course/:slug" element={<CourseDetailPage />} />
-              <Route path="/checkout/:slug" element={<CheckoutPage />} />
 
               <Route path="/offers" element={<OffersPage />} />
               <Route path="/transactions" element={<TransactionsPage />} />
               <Route path="/referrals" element={<ReferAndEarnPage />} />
+              <Route path="/my-courses" element={<MyCoursesPage />} />
+              <Route path="/study-material" element={<StudyMaterialPage />} />
+
+
 
               <Route path="/class/:contentId/:courseId" element={<VideoPlayerPage />} />
               <Route path="/query" element={<CreateQuery />} />
@@ -78,7 +86,9 @@ export default function App() {
                 <Route path="/modules" element={<ModuleManagement />} />
                 <Route path="/live-classes" element={<ContentManagement type="LiveClasses" />} />
                 <Route path="/recorded-classes" element={<ContentManagement type="RecordedClasses" />} />
-                <Route path="/promocodes" element={<PromoCodeManagement/>} />
+                <Route path="/promocodes" element={<PromoCodeManagement />} />
+                <Route path="/all_transactions" element={<AdminTransactionsPage />} />
+
 
                 <Route path="/tests" element={<ContentManagement type="Tests" />} />
                 <Route path="/study-materials" element={<ContentManagement type="StudyMaterials" />} />
@@ -89,8 +99,9 @@ export default function App() {
                 <Route path="/entities" element={<EntityManagement />} />
               </Route>
             </Route>
-            {/* <Route path="/instructor/class/:classId" element={<TeacherLiveClass />} /> */}
             <Route path="/course/category" element={<CategorySelectionPage />} />
+             <Route path="/checkout/:slug" element={<CheckoutPage />} />
+             <Route path="/payment-status" element={<PaymentStatusPage />} />
 
           </Route>
 

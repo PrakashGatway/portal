@@ -513,9 +513,7 @@ export default function PromoCodeManagement() {
                                                 <div className="text-sm text-gray-900 dark:text-white">
                                                     {promo.title}
                                                 </div>
-                                                <div className="text-sm text-gray-500 dark:text-gray-300">
-                                                    {promo.description}
-                                                </div>
+                                               
                                             </td>
                                             <td className="whitespace-nowrap px-2 py-4 text-sm text-gray-500 dark:text-gray-300">
                                                 {formatDiscount(promo)}

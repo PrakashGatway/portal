@@ -39,7 +39,7 @@ const CategorySelectionPage = () => {
                 ...(category !== undefined && { category }),
                 ...(subCategory !== undefined && { subCategory }),
             });
-            fetchUserProfile()
+            await fetchUserProfile()
         } catch (error: any) {
             toast.error('Failed to update categories');
         }

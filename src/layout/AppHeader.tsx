@@ -7,11 +7,10 @@ import UserDropdown from "../components/header/UserDropdown";
 import { useAuth } from "../context/UserContext";
 import DynamicIcon from "../components/DynamicIcon";
 import { motion, AnimatePresence } from "framer-motion";
-import { 
-    Wallet, 
-    ChevronDown, 
+import {
+    ChevronDown,
     Gift,
-    Sparkles, 
+    Sparkles,
     Zap,
     Crown,
     Coins,
@@ -23,16 +22,15 @@ import {
 const AppHeader: React.FC = () => {
     const [isApplicationMenuOpen, setApplicationMenuOpen] = useState(false);
     const [isWalletDropdownOpen, setIsWalletDropdownOpen] = useState(false);
-    const { user, logout } = useAuth() as any;
+    const { user, logout, wallet } = useAuth() as any;
     let navigate = useNavigate();
 
     const { isMobileOpen, toggleSidebar, toggleMobileSidebar } = useSidebar();
 
-    // Referral reward wallet data
-    const referralWalletBalance = user?.referralWalletBalance || 1250.75;
-    const totalEarned = user?.totalReferralEarnings || 5600.00;
-    const availableForUse = Math.min(referralWalletBalance, referralWalletBalance); // Can use up to wallet balance
-    const maxUsagePercent = 10; // Maximum 10% of course price
+    const referralWalletBalance = wallet?.balance || 0;
+    const totalEarned = wallet?.totalEarned || 0;
+    const availableForUse = Math.min(referralWalletBalance, referralWalletBalance);
+    const maxUsagePercent = 10; 
 
     const handleToggle = () => {
         if (window.innerWidth >= 1024) {
@@ -59,9 +57,7 @@ const AppHeader: React.FC = () => {
                 inputRef.current?.focus();
             }
         };
-
         document.addEventListener("keydown", handleKeyDown);
-
         return () => {
             document.removeEventListener("keydown", handleKeyDown);
         };
@@ -76,7 +72,6 @@ const AppHeader: React.FC = () => {
         }).format(amount);
     };
 
-    // Calculate maximum usable amount for a given course price
     const getMaxUsableAmount = (coursePrice: number) => {
         const maxFromPercent = coursePrice * (maxUsagePercent / 100);
         return Math.min(maxFromPercent, availableForUse);
@@ -137,7 +132,7 @@ const AppHeader: React.FC = () => {
 
                 {/* Desktop Navigation Section */}
                 <div className={`${isApplicationMenuOpen ? "flex" : "hidden"} items-center justify-between w-full gap-4 px-4 py-3 lg:flex lg:justify-end lg:px-0 lg:py-2`}>
-                    <div className="flex items-center gap-3 2xsm:gap-4">
+                    <div className="flex items-center gap-2 2xsm:gap-2">
                         {/* Theme Toggle */}
                         <ThemeToggleButton />
 
@@ -162,7 +157,7 @@ const AppHeader: React.FC = () => {
                                         />
                                     </div>
                                     <span className="text-sm font-semibold text-purple-700 dark:text-purple-300">
-                                        {formatCurrency(referralWalletBalance)}
+                                        {formatCurrency(wallet?.balance)}
                                     </span>
                                 </div>
                                 <ChevronDown className={`h-3 w-3 text-purple-600 dark:text-purple-400 transition-transform duration-200 ${isWalletDropdownOpen ? 'rotate-180' : ''}`} />
@@ -212,9 +207,9 @@ const AppHeader: React.FC = () => {
                                                     <span className="text-sm font-medium">Available Rewards</span>
                                                     <div className="text-xs opacity-90">Max 10% per course</div>
                                                 </div>
-                                                <span className="text-lg font-bold">{formatCurrency(referralWalletBalance)}</span>
+                                                <span className="text-lg font-bold">{formatCurrency(wallet?.balance)}</span>
                                             </div>
-                                            
+
                                             <div className="grid grid-cols-2 gap-2">
                                                 <div className="bg-green-50 dark:bg-green-900/20 rounded-lg p-3">
                                                     <div className="flex items-center gap-2 mb-1">
@@ -225,7 +220,7 @@ const AppHeader: React.FC = () => {
                                                         {formatCurrency(availableForUse)}
                                                     </div>
                                                 </div>
-                                                
+
                                                 <div className="bg-blue-50 dark:bg-blue-900/20 rounded-lg p-3">
                                                     <div className="flex items-center gap-2 mb-1">
                                                         <Crown className="h-3 w-3 text-blue-500" />
@@ -243,15 +238,9 @@ const AppHeader: React.FC = () => {
                                             <h4 className="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase mb-2">Usage Examples</h4>
                                             <div className="space-y-2">
                                                 <div className="flex justify-between items-center text-xs">
-                                                    <span className="text-gray-600 dark:text-gray-400">₹10,000 course:</span>
+                                                    <span className="text-gray-600 dark:text-gray-400">₹10,000 :</span>
                                                     <span className="font-semibold text-purple-600 dark:text-purple-400">
                                                         Save up to {formatCurrency(getMaxUsableAmount(10000))}
-                                                    </span>
-                                                </div>
-                                                <div className="flex justify-between items-center text-xs">
-                                                    <span className="text-gray-600 dark:text-gray-400">₹5,000 course:</span>
-                                                    <span className="font-semibold text-purple-600 dark:text-purple-400">
-                                                        Save up to {formatCurrency(getMaxUsableAmount(5000))}
                                                     </span>
                                                 </div>
                                             </div>
@@ -263,7 +252,7 @@ const AppHeader: React.FC = () => {
                                                 <motion.button
                                                     whileHover={{ scale: 1.02 }}
                                                     whileTap={{ scale: 0.98 }}
-                                                    onClick={() => navigate('/courses')}
+                                                    onClick={() => navigate('/course')}
                                                     className="flex items-center justify-center gap-2 p-2 text-xs bg-purple-500 text-white rounded-lg hover:bg-purple-600 transition-colors font-medium"
                                                 >
                                                     <ShoppingCart className="h-3 w-3" />
@@ -272,7 +261,7 @@ const AppHeader: React.FC = () => {
                                                 <motion.button
                                                     whileHover={{ scale: 1.02 }}
                                                     whileTap={{ scale: 0.98 }}
-                                                    onClick={() => navigate('/referral')}
+                                                    onClick={() => navigate('/referrals')}
                                                     className="flex items-center justify-center gap-2 p-2 text-xs text-purple-600 dark:text-purple-400 border border-purple-200 dark:border-purple-800 rounded-lg hover:bg-purple-50 dark:hover:bg-purple-900/20 transition-colors"
                                                 >
                                                     <Coins className="h-3 w-3" />
@@ -286,7 +275,7 @@ const AppHeader: React.FC = () => {
                                             <motion.button
                                                 whileHover={{ scale: 1.02 }}
                                                 className="w-full text-center text-xs text-purple-600 dark:text-purple-400 font-medium hover:text-purple-700 dark:hover:text-purple-300 transition-colors"
-                                                onClick={() => navigate('/wallet/referral')}
+                                                onClick={() => navigate('/referrals?tab=history')}
                                             >
                                                 View Reward History →
                                             </motion.button>
@@ -314,9 +303,9 @@ const AppHeader: React.FC = () => {
                                 hover:shadow-md hover:from-blue-100 hover:to-purple-100 dark:hover:from-blue-800/30 dark:hover:to-purple-800/30
                             `}
                         >
-                            <DynamicIcon 
-                                name={user.subCategory?.icon || user.category?.icon} 
-                                className="h-4 w-4 mr-2" 
+                            <DynamicIcon
+                                name={user.subCategory?.icon || user.category?.icon}
+                                className="h-4 w-4 mr-2"
                             />
                             {user.subCategory?.name || user.category?.name}
                             <Sparkles className="h-3 w-3 ml-1 text-yellow-500" />
