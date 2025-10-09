@@ -34,12 +34,14 @@ import MyCoursesPage from "./userView/MyCourse";
 import StudyMaterialPage from "./userView/StudyMaterial";
 import PaymentStatusPage from "./userView/PaymentStatus";
 import AdminTransactionsPage from "./pages/Transaction";
+import LeadManagement from "./pages/Leads/LeadManagement";
 
 // Define roles
 export const ROLES = {
   ADMIN: 'admin',
   USER: 'user',
-  EDITOR: 'editor'
+  EDITOR: 'editor',
+  COUNSEL: 'counselor'
 };
 
 export default function App() {
@@ -70,8 +72,6 @@ export default function App() {
               <Route path="/my-courses" element={<MyCoursesPage />} />
               <Route path="/study-material" element={<StudyMaterialPage />} />
 
-
-
               <Route path="/class/:contentId/:courseId" element={<VideoPlayerPage />} />
               <Route path="/query" element={<CreateQuery />} />
               <Route path="/queries" element={<QueryList />} />
@@ -88,20 +88,24 @@ export default function App() {
                 <Route path="/recorded-classes" element={<ContentManagement type="RecordedClasses" />} />
                 <Route path="/promocodes" element={<PromoCodeManagement />} />
                 <Route path="/all_transactions" element={<AdminTransactionsPage />} />
-
-
                 <Route path="/tests" element={<ContentManagement type="Tests" />} />
                 <Route path="/study-materials" element={<ContentManagement type="StudyMaterials" />} />
               </Route>
+
+              <Route element={<ProtectedRoute roles={[ROLES.COUNSEL, ROLES.ADMIN]} />}>
+                <Route path="/leads" element={<LeadManagement />} />
+              </Route>
+
               <Route path="*" element={<ComingSoon />} />
+
               <Route element={<ProtectedRoute roles={[ROLES.EDITOR, ROLES.ADMIN]} />}>
                 <Route path="/pages" element={<PagesManagement />} />
                 <Route path="/entities" element={<EntityManagement />} />
               </Route>
             </Route>
             <Route path="/course/category" element={<CategorySelectionPage />} />
-             <Route path="/checkout/:slug" element={<CheckoutPage />} />
-             <Route path="/payment-status" element={<PaymentStatusPage />} />
+            <Route path="/checkout/:slug" element={<CheckoutPage />} />
+            <Route path="/payment-status" element={<PaymentStatusPage />} />
 
           </Route>
 

@@ -25,7 +25,7 @@ const UserListPage = () => {
     search: ""
   });
 
-  const userRoles = ["admin", "manager", "user", "teacher", "super_admin", "editor"];
+  const userRoles = ["admin", "manager", "user", "teacher", "super_admin", "editor","counselor"];
 
   const {
     register,
