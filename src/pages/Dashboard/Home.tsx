@@ -3,6 +3,7 @@ import Chart from 'react-apexcharts';
 import { useAuth } from '../../context/UserContext';
 import PageMeta from "../../components/common/PageMeta";
 import api from '../../axiosInstance';
+import LeadManagement from '../Leads/LeadManagement';
 
 const EducationAnalytics = () => {
   const { user } = useAuth();
@@ -13,9 +14,9 @@ const EducationAnalytics = () => {
   const fetchAnalytics = async () => {
     try {
       setLoading(true);
-      const endpoint = user.role === 'Admin' ? '/admin/analytics' : 
-                      user.role === 'Teacher' ? '/teacher/analytics' : 
-                      '/student/analytics';
+      const endpoint = user.role === 'Admin' ? '/admin/analytics' :
+        user.role === 'Teacher' ? '/teacher/analytics' :
+          '/student/analytics';
       const response = await api.get(`${endpoint}?range=${timeRange}`);
       setAnalytics(response.data.data);
     } catch (error) {
@@ -163,6 +164,10 @@ const EducationAnalytics = () => {
     );
   };
 
+  if (user.role == "counselor") {
+    return (<LeadManagement />)
+  }
+
   return (
     <div className="max-w-full px-4 sm:px-3 lg:px-3">
       <PageMeta
@@ -173,20 +178,20 @@ const EducationAnalytics = () => {
       {/* Header */}
       <div className="mb-8">
         <h1 className="text-2xl font-bold text-gray-900 dark:text-white">
-          {user.role === 'Admin' ? 'Platform Analytics' : 
-           user.role === 'Teacher' ? 'Teaching Dashboard' : 'Learning Progress'}
+          {user.role === 'Admin' ? 'Platform Analytics' :
+            user.role === 'Teacher' ? 'Teaching Dashboard' : 'Learning Progress'}
         </h1>
         <p className="mt-2 text-sm text-gray-600 dark:text-gray-400">
-          {user.role === 'Admin' ? 'Overview of platform-wide metrics and performance' : 
-           user.role === 'Teacher' ? 'Track your courses and student engagement' : 'Monitor your learning activities and progress'}
+          {user.role === 'Admin' ? 'Overview of platform-wide metrics and performance' :
+            user.role === 'Teacher' ? 'Track your courses and student engagement' : 'Monitor your learning activities and progress'}
         </p>
       </div>
 
       {/* Time Range Selector */}
       <div className="flex justify-between items-center mb-6">
         <h2 className="text-lg font-semibold text-gray-900 dark:text-white">
-          {timeRange === '7d' ? 'Weekly' : 
-           timeRange === '30d' ? 'Monthly' : 'Quarterly'} Overview
+          {timeRange === '7d' ? 'Weekly' :
+            timeRange === '30d' ? 'Monthly' : 'Quarterly'} Overview
         </h2>
         <div className="inline-flex rounded-lg shadow-sm bg-white dark:bg-gray-800 p-1 border border-gray-200 dark:border-gray-700">
           {rangeOptions.map((option) => (
@@ -343,13 +348,13 @@ const EducationAnalytics = () => {
             {/* Progress/Engagement Chart */}
             <div className="bg-white dark:bg-gray-800 p-6 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700">
               <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
-                {user.role === 'Admin' ? 'Platform Engagement' : 
-                 user.role === 'Teacher' ? 'Course Completion Rates' : 'Your Learning Progress'}
+                {user.role === 'Admin' ? 'Platform Engagement' :
+                  user.role === 'Teacher' ? 'Course Completion Rates' : 'Your Learning Progress'}
               </h3>
               <Chart
                 options={progressChartOptions}
-                series={[user.role === 'Student' ? analytics?.courseCompletionRate || 0 : 
-                         analytics?.avgEngagementRate || 0]}
+                series={[user.role === 'Student' ? analytics?.courseCompletionRate || 0 :
+                  analytics?.avgEngagementRate || 0]}
                 type="radialBar"
                 height={350}
               />
@@ -358,8 +363,8 @@ const EducationAnalytics = () => {
             {/* Activity Distribution */}
             <div className="bg-white dark:bg-gray-800 p-6 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700">
               <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
-                {user.role === 'Admin' ? 'Activity Distribution' : 
-                 user.role === 'Teacher' ? 'Teaching Activities' : 'Your Activities'}
+                {user.role === 'Admin' ? 'Activity Distribution' :
+                  user.role === 'Teacher' ? 'Teaching Activities' : 'Your Activities'}
               </h3>
               <Chart
                 options={activityTypeOptions}
@@ -378,8 +383,8 @@ const EducationAnalytics = () => {
           {/* Daily Activity */}
           <div className="bg-white dark:bg-gray-800 p-6 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 mb-8">
             <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
-              {user.role === 'Admin' ? 'Daily Platform Activity' : 
-               user.role === 'Teacher' ? 'Daily Teaching Activity' : 'Your Daily Activity'}
+              {user.role === 'Admin' ? 'Daily Platform Activity' :
+                user.role === 'Teacher' ? 'Daily Teaching Activity' : 'Your Daily Activity'}
             </h3>
             <Chart
               options={{
@@ -412,9 +417,9 @@ const EducationAnalytics = () => {
               {analytics?.recentActivities?.length > 0 ? (
                 analytics.recentActivities.map((activity, index) => (
                   <div key={index} className="flex items-start pb-4 border-b border-gray-100 dark:border-gray-700 last:border-0 last:pb-0">
-                    <div className={`p-2 rounded-lg ${activity.type === 'lesson' ? 'bg-indigo-100 dark:bg-indigo-900/30 text-indigo-600 dark:text-indigo-300' : 
-                                      activity.type === 'assignment' ? 'bg-green-100 dark:bg-green-900/30 text-green-600 dark:text-green-300' : 
-                                      'bg-blue-100 dark:bg-blue-900/30 text-blue-600 dark:text-blue-300'}`}>
+                    <div className={`p-2 rounded-lg ${activity.type === 'lesson' ? 'bg-indigo-100 dark:bg-indigo-900/30 text-indigo-600 dark:text-indigo-300' :
+                      activity.type === 'assignment' ? 'bg-green-100 dark:bg-green-900/30 text-green-600 dark:text-green-300' :
+                        'bg-blue-100 dark:bg-blue-900/30 text-blue-600 dark:text-blue-300'}`}>
                       {activity.type === 'lesson' ? (
                         <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />

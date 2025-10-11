@@ -116,11 +116,11 @@ const navItemsCoun: NavItem[] = [
     name: "Dashboard",
     path: "/",
   },
-  {
-    emoji: "🚀",
-    name: "lead Management",
-    path: "/leads",
-  }
+  // {
+  //   emoji: "🚀",
+  //   name: "lead Management",
+  //   path: "/leads",
+  // }
 ];
 
 const navItemsTeacher: NavItem[] = [
@@ -203,24 +203,24 @@ const teacherOthersItems: NavItem[] = [
     name: "Profile",
     path: "/profile",
   },
-  {
-    emoji: "📈",
-    name: "Earnings Report",
-    path: "/earnings-report"
-  },
-  {
-    emoji: "🎫",
-    name: "Support",
-    subItems: [
-      { name: "Create Ticket", path: "/teacher/query", emoji: "🆕" },
-      { name: "View Tickets", path: "/teacher/queries", emoji: "👀" }
-    ],
-  },
-  {
-    emoji: "⚙️",
-    name: "Settings",
-    path: "/settings"
-  }
+  // {
+  //   emoji: "📈",
+  //   name: "Earnings Report",
+  //   path: "/earnings-report"
+  // },
+  // {
+  //   emoji: "🎫",
+  //   name: "Support",
+  //   subItems: [
+  //     { name: "Create Ticket", path: "/teacher/query", emoji: "🆕" },
+  //     { name: "View Tickets", path: "/teacher/queries", emoji: "👀" }
+  //   ],
+  // },
+  // {
+  //   emoji: "⚙️",
+  //   name: "Settings",
+  //   path: "/settings"
+  // }
 ];
 
 const AppSidebar: React.FC = () => {
@@ -245,7 +245,7 @@ const AppSidebar: React.FC = () => {
     ["main", "others"].forEach((menuType) => {
       const items = menuType === "main"
         ? (user.role === "admin" ? navItems : user.role === "teacher" ? navItemsTeacher : navItemsUser)
-        : (user.role === "teacher" ? teacherOthersItems : othersItems);
+        : (user.role === "teacher" || user.role == "counselor" ? teacherOthersItems : othersItems);
 
       items.forEach((nav, index) => {
         if (nav.subItems) {
@@ -432,7 +432,7 @@ const AppSidebar: React.FC = () => {
       if (user.role === "teacher") return navItemsTeacher;
       return navItemsUser;
     } else {
-      if (user.role === "teacher") return teacherOthersItems;
+      if (user.role === "teacher" || user.role == "counselor") return teacherOthersItems;
       return othersItems;
     }
   };

@@ -30,7 +30,7 @@ const AppHeader: React.FC = () => {
     const referralWalletBalance = wallet?.balance || 0;
     const totalEarned = wallet?.totalEarned || 0;
     const availableForUse = Math.min(referralWalletBalance, referralWalletBalance);
-    const maxUsagePercent = 10; 
+    const maxUsagePercent = 10;
 
     const handleToggle = () => {
         if (window.innerWidth >= 1024) {
@@ -140,7 +140,7 @@ const AppHeader: React.FC = () => {
                         <NotificationDropdown />
 
                         {/* Referral Reward Wallet Dropdown */}
-                        <div className="relative">
+                        {user.role != "counselor" && user.role != "teacher" && <div className="relative">
                             <motion.button
                                 whileHover={{ scale: 1.02 }}
                                 whileTap={{ scale: 0.98 }}
@@ -162,8 +162,6 @@ const AppHeader: React.FC = () => {
                                 </div>
                                 <ChevronDown className={`h-3 w-3 text-purple-600 dark:text-purple-400 transition-transform duration-200 ${isWalletDropdownOpen ? 'rotate-180' : ''}`} />
                             </motion.button>
-
-                            {/* Referral Wallet Dropdown */}
                             <AnimatePresence>
                                 {isWalletDropdownOpen && (
                                     <motion.div
@@ -283,14 +281,16 @@ const AppHeader: React.FC = () => {
                                     </motion.div>
                                 )}
                             </AnimatePresence>
-                        </div>
+                        </div>}
+
 
                         {/* Category Button */}
-                        <motion.button
-                            whileHover={{ scale: 1.02 }}
-                            whileTap={{ scale: 0.98 }}
-                            onClick={() => navigate("/course/category")}
-                            className={`
+                        {user.role != 'counselor' && <>
+                            <motion.button
+                                whileHover={{ scale: 1.02 }}
+                                whileTap={{ scale: 0.98 }}
+                                onClick={() => navigate("/course/category")}
+                                className={`
                                 inline-flex items-center justify-center
                                 px-4 py-2
                                 bg-gradient-to-r from-blue-50 to-purple-50 dark:from-blue-900/20 dark:to-purple-900/20
@@ -302,18 +302,20 @@ const AppHeader: React.FC = () => {
                                 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-opacity-50
                                 hover:shadow-md hover:from-blue-100 hover:to-purple-100 dark:hover:from-blue-800/30 dark:hover:to-purple-800/30
                             `}
-                        >
-                            <DynamicIcon
-                                name={user.subCategory?.icon || user.category?.icon}
-                                className="h-4 w-4 mr-2"
-                            />
-                            {user.subCategory?.name || user.category?.name}
-                            <Sparkles className="h-3 w-3 ml-1 text-yellow-500" />
-                        </motion.button>
+                            >
+                                <DynamicIcon
+                                    name={user.subCategory?.icon || user.category?.icon}
+                                    className="h-4 w-4 mr-2"
+                                />
+                                {user.subCategory?.name || user.category?.name}
+                                <Sparkles className="h-3 w-3 ml-1 text-yellow-500" />
+                            </motion.button>
+                        </>}
                     </div>
 
                     {/* User Dropdown */}
-                    <UserDropdown user={user} logout={logout} />
+                    {user.role != 'counselor' && <UserDropdown user={user} logout={logout} />}
+
                 </div>
             </div>
         </header>

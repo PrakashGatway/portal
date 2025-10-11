@@ -46,6 +46,7 @@ export const ROLES = {
 };
 
 export default function App() {
+  
   return (
     <Router>
       <AuthProvider>
