@@ -1,5 +1,3 @@
-"use client"
-
 import { useState, useEffect } from "react"
 import FullWidthSearch from "./FullwidthSearch"
 import ImageSlider from "./ImageSlider"

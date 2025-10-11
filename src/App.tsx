@@ -35,6 +35,7 @@ import StudyMaterialPage from "./userView/StudyMaterial";
 import PaymentStatusPage from "./userView/PaymentStatus";
 import AdminTransactionsPage from "./pages/Transaction";
 import LeadManagement from "./pages/Leads/LeadManagement";
+import CourseDetailPageee from "./userView/MyCourseDetail";
 
 // Define roles
 export const ROLES = {
@@ -70,6 +71,8 @@ export default function App() {
               <Route path="/transactions" element={<TransactionsPage />} />
               <Route path="/referrals" element={<ReferAndEarnPage />} />
               <Route path="/my-courses" element={<MyCoursesPage />} />
+              <Route path="/courses/:slug" element={<CourseDetailPageee />} />
+
               <Route path="/study-material" element={<StudyMaterialPage />} />
 
               <Route path="/class/:contentId/:courseId" element={<VideoPlayerPage />} />
@@ -106,9 +109,7 @@ export default function App() {
             <Route path="/course/category" element={<CategorySelectionPage />} />
             <Route path="/checkout/:slug" element={<CheckoutPage />} />
             <Route path="/payment-status" element={<PaymentStatusPage />} />
-
           </Route>
-
           <Route path="/unauthorized" element={<NotFound />} />
         </Routes>
       </AuthProvider>

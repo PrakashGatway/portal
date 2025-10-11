@@ -5,7 +5,6 @@ import {
     Clock,
     BookOpen,
     CheckCircle,
-    Star,
     Search,
     Grid,
     List,
@@ -17,18 +16,14 @@ import {
     Crown,
     Target,
     Timer,
-    User,
     ChevronRight,
-    BookmarkCheck,
     Share2,
-    Heart,
-    CalendarDays,
-    Users,
     Rocket,
     Lightbulb
 } from "lucide-react"
 import Button from "../components/ui/button/Button"
 import api, { ImageBaseUrl } from "../axiosInstance"
+import { useNavigate } from "react-router"
 
 interface CourseProgress {
     completedLessons: number
@@ -76,45 +71,52 @@ const CourseCard = ({ course, viewMode }: { course: PurchasedCourse; viewMode: "
     const isNew = new Date(course.purchaseDate).getTime() > Date.now() - 3 * 24 * 60 * 60 * 1000
     const timeRemaining = course.expiresAt ? Math.ceil((new Date(course.expiresAt).getTime() - Date.now()) / (1000 * 60 * 60 * 24)) : null
 
-    const getProgressColor = (progress: number) => {
-        if (progress < 25) return "from-red-500 to-orange-500"
-        if (progress < 50) return "from-orange-500 to-yellow-500"
-        if (progress < 75) return "from-yellow-500 to-green-500"
-        return "from-green-500 to-emerald-500"
-    }
-
     const getLevelColor = (level: string) => {
         switch (level?.toLowerCase()) {
-            case 'beginner': return 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300'
-            case 'intermediate': return 'bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-300'
-            case 'advanced': return 'bg-purple-100 text-purple-800 dark:bg-purple-900/30 dark:text-purple-300'
-            default: return 'bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-300'
+            case 'beginner': return 'bg-emerald-100 text-emerald-800 dark:bg-emerald-900/40 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800'
+            case 'intermediate': return 'bg-blue-100 text-blue-800 dark:bg-blue-900/40 dark:text-blue-300 border border-blue-200 dark:border-blue-800'
+            case 'advanced': return 'bg-purple-100 text-purple-800 dark:bg-purple-900/40 dark:text-purple-300 border border-purple-200 dark:border-purple-800'
+            default: return 'bg-gray-100 text-gray-800 dark:bg-gray-800 dark:text-gray-300 border border-gray-200 dark:border-gray-700'
         }
+    }
+    let navigate = useNavigate()
+
+    const getProgressColor = (progress: number) => {
+        if (progress >= 80) return 'from-emerald-400 to-green-500'
+        if (progress >= 50) return 'from-blue-400 to-cyan-500'
+        if (progress >= 25) return 'from-amber-400 to-orange-500'
+        return 'from-gray-300 to-gray-400'
     }
 
     if (viewMode === "list") {
         return (
             <motion.div
-                initial={{ opacity: 0, y: 20, scale: 0.95 }}
-                animate={{ opacity: 1, y: 0, scale: 1 }}
-                transition={{ duration: 0.3, ease: "easeOut" }}
-                className="group relative bg-white dark:bg-gray-800 rounded-xl shadow-lg border border-gray-200/80 dark:border-gray-700/80 hover:shadow-2xl transition-all duration-300 backdrop-blur-sm overflow-hidden"
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.4, ease: "easeOut" }}
+                className="group relative bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700/80 hover:shadow-xl transition-all duration-500 hover:border-blue-200 dark:hover:border-blue-800/50 overflow-hidden"
             >
-                <div className="absolute inset-0 bg-gradient-to-br from-blue-50/50 to-purple-50/50 dark:from-blue-900/10 dark:to-purple-900/10 opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
+                {/* Gradient overlay */}
+                <div className="absolute inset-0 bg-gradient-to-br from-blue-50/50 via-white to-purple-50/50 dark:from-blue-900/5 dark:via-gray-800 dark:to-purple-900/5 opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
 
-                <div className="relative flex items-center p-4 z-10">
+                <div className="relative flex items-center p-6 z-10">
+                    {/* Course Image */}
                     <div className="relative flex-shrink-0">
-                        <div className="relative w-48 h-28 rounded-xl overflow-hidden shadow-lg group-hover:shadow-xl transition-all duration-500">
+                        <div className="relative w-58 h-36 rounded-xl overflow-hidden shadow-md group-hover:shadow-lg transition-all duration-500">
                             <img
-                                src={'https://gratisography.com/wp-content/uploads/2024/11/gratisography-augmented-reality-800x525.jpg' || "/api/placeholder/200/120"}
-                                alt={course?.title}
-                                className="w-full h-full object-cover transform group-hover:scale-110 transition-transform duration-700"
+                                src={!course.thumbnail?.url
+                                    ? 'https://www.gatewayabroadeducations.com/images/logo.svg'
+                                    : `${ImageBaseUrl}/${course.thumbnail.url}`
+                                }
+                                alt={course.title}
+                                className="w-full h-full object-cover transform transition-transform duration-700 ease-out"
                             />
-                            <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-transparent" />
+                            <div className="absolute inset-0 bg-gradient-to-t from-black/20 via-transparent to-transparent" />
 
+                            {/* Progress bar on image */}
                             {/* <div className="absolute bottom-0 left-0 right-0 p-3">
                                 <div className="flex items-center justify-between mb-1">
-                                    <span className="text-white text-xs font-semibold">Progress</span>
+                                    <span className="text-white text-xs font-medium">Progress</span>
                                     <span className="text-white text-xs font-bold">{progress}%</span>
                                 </div>
                                 <div className="w-full bg-white/30 rounded-full h-1.5">
@@ -127,15 +129,15 @@ const CourseCard = ({ course, viewMode }: { course: PurchasedCourse; viewMode: "
                         </div>
 
                         {/* Status Badges */}
-                        <div className="absolute -top-2 -left-2 flex flex-col gap-1">
+                        <div className="absolute -top-2 -left-2 flex flex-col gap-2">
                             {isNew && (
-                                <div className="bg-gradient-to-r from-amber-400 to-orange-500 text-white text-xs px-3 py-1.5 rounded-full flex items-center shadow-lg">
+                                <div className="bg-gradient-to-r from-amber-400 to-orange-500 text-white text-xs px-3 py-1.5 rounded-full flex items-center shadow-lg border border-amber-300/50">
                                     <Rocket className="h-3 w-3 mr-1" />
                                     New
                                 </div>
                             )}
                             {isRecentlyAccessed && !isCompleted && (
-                                <div className="bg-gradient-to-r from-green-400 to-emerald-500 text-white text-xs px-3 py-1.5 rounded-full flex items-center shadow-lg">
+                                <div className="bg-gradient-to-r from-green-400 to-emerald-500 text-white text-xs px-3 py-1.5 rounded-full flex items-center shadow-lg border border-green-300/50">
                                     <Zap className="h-3 w-3 mr-1" />
                                     Recent
                                 </div>
@@ -144,62 +146,62 @@ const CourseCard = ({ course, viewMode }: { course: PurchasedCourse; viewMode: "
                     </div>
 
                     {/* Course Info */}
-                    <div className="flex-1 ml-8">
+                    <div className="flex-1 ml-3">
                         <div className="flex items-start justify-between mb-2">
                             <div className="flex-1">
-                                <div className="flex items-center gap-3 mb-2">
+                                <div className="flex items-center gap-3 mb-1">
+                                    <span className={`px-3 py-1.5 rounded-full text-xs font-semibold ${getLevelColor(course.level)}`}>
+                                        {course.level}
+                                    </span>
                                     {course.certificateEligible && isCompleted && (
-                                        <div className="flex items-center bg-gradient-to-r from-amber-400 to-orange-500 text-white px-3 py-1 rounded-full text-xs">
+                                        <div className="flex items-center bg-gradient-to-r from-amber-400 to-orange-500 text-white px-3 py-1.5 rounded-full text-xs border border-amber-300/50">
                                             <Award className="h-3 w-3 mr-1" />
-                                            Certificate
+                                            Certificate Ready
                                         </div>
                                     )}
                                 </div>
 
-                                <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-1 group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors duration-300">
-                                    {course?.title}
+                                <h3 onClick={() => navigate(`/courses/${course.slug}`)} className="text-lg font-semibold text-gray-900 dark:text-white group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors duration-300">
+                                    {course.title}
                                 </h3>
-                                <p className="text-gray-600 dark:text-gray-300 text-sm leading-relaxed mb-1 line-clamp-2">
-                                    {course?.shortDescription}
+                                <p className="text-gray-600 dark:text-gray-300 text-xs leading-relaxed mb-1 line-clamp-2">
+                                    {course.shortDescription}
                                 </p>
-                                <span className={`px-3 py-1 rounded-full text-xs font-semibold ${getLevelColor(course?.level)}`}>
-                                    {course?.level}
-                                </span>
                             </div>
                         </div>
 
-                        {/* Action Buttons */}
+                        {/* Stats and Actions */}
                         <div className="flex items-center justify-between">
                             <div className="flex items-center space-x-4">
                                 {course.progress?.streak && course.progress.streak > 0 && (
-                                    <div className="flex items-center bg-orange-100 dark:bg-orange-900/30 text-orange-700 dark:text-orange-300 px-3 py-1.5 rounded-full text-sm">
+                                    <div className="flex items-center bg-orange-50 dark:bg-orange-900/20 text-orange-700 dark:text-orange-300 px-3 py-2 rounded-xl text-sm border border-orange-200 dark:border-orange-800">
                                         <FlameIcon className="h-4 w-4 mr-1.5" />
                                         {course.progress.streak} day streak
                                     </div>
                                 )}
 
                                 {timeRemaining && timeRemaining > 0 && (
-                                    <div className="flex items-center bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-300 px-3 py-1.5 rounded-full text-sm">
+                                    <div className="flex items-center bg-red-50 dark:bg-red-900/20 text-red-700 dark:text-red-300 px-3 py-2 rounded-xl text-sm border border-red-200 dark:border-red-800">
                                         <Clock className="h-4 w-4 mr-1.5" />
                                         {timeRemaining} days left
                                     </div>
                                 )}
                             </div>
 
-                            <div className="flex items-center space-x-2">
-                                <Button variant="ghost" size="sm" className="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-xl">
-                                    <Share2 className="h-4 w-4 text-gray-400" />
-                                </Button>
+                            <div className="flex items-center space-x-3">
+                                {/* <Button variant="ghost" size="sm" className="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-xl transition-colors duration-200">
+                                    <Share2 className="h-4 w-4 text-gray-500 dark:text-gray-400" />
+                                </Button> */}
 
                                 {isCompleted ? (
-                                    <Button size="sm" className="bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700 text-white px-6 rounded-xl">
+                                    <Button size="sm" className="bg-gradient-to-r from-amber-500 to-orange-600 hover:from-amber-600 hover:to-orange-700 text-white px-6 py-2 rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 transform hover:-translate-y-0.5">
                                         <Trophy className="h-4 w-4 mr-2" />
                                         Get Certificate
                                     </Button>
                                 ) : (
-                                    <Button size="sm" className="bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700 text-white px-6 rounded-lg">
-                                        <Play className="h-4 w-4 mr-2" />
+                                    <Button onClick={() => navigate(`/courses/${course.slug}`)} size="sm" className="bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700 text-white px-6 py-2 rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 transform hover:-translate-y-0.5">
                                         {progress === 0 ? "Start Learning" : "Continue"}
+                                        <ChevronRight className="h-4 w-4 ml-2 transform group-hover:translate-x-1 transition-transform duration-300" />
                                     </Button>
                                 )}
                             </div>
@@ -213,81 +215,106 @@ const CourseCard = ({ course, viewMode }: { course: PurchasedCourse; viewMode: "
     // Grid View
     return (
         <motion.div
-            initial={{ opacity: 0, scale: 0.9, y: 20 }}
-            animate={{ opacity: 1, scale: 1, y: 0 }}
+            initial={{ opacity: 0, scale: 0.95 }}
+            animate={{ opacity: 1, scale: 1 }}
             transition={{ duration: 0.4, ease: "easeOut" }}
-            className="group relative bg-white dark:bg-gray-800 rounded-xl shadow-lg border border-gray-200/80 dark:border-gray-700/80 hover:shadow-xl transition-all duration-300 overflow-hidden backdrop-blur-sm"
+            className="group relative bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700/80 hover:shadow-xl transition-all duration-500 hover:border-blue-200 dark:hover:border-blue-800/50 overflow-hidden"
         >
-            <div className="absolute inset-0 bg-gradient-to-br from-blue-50/50 to-purple-50/50 dark:from-blue-900/10 dark:to-purple-900/10 opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
+            {/* Background gradient */}
+            <div className="absolute inset-0 bg-gradient-to-br from-blue-50/50 via-white to-purple-50/50 dark:from-blue-900/5 dark:via-gray-800 dark:to-purple-900/5 opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
 
-            <div className="relative h-40 overflow-hidden">
+            {/* Course Image */}
+            <div className="relative h-38 overflow-hidden">
                 <img
-                    src={'https://gratisography.com/wp-content/uploads/2024/11/gratisography-augmented-reality-800x525.jpg' || ""}
-                    alt={course?.title}
-                    className="w-full h-full object-cover transform group-hover:scale-105 transition-transform duration-700"
+                    src={!course.thumbnail?.url
+                        ? 'https://www.gatewayabroadeducations.com/images/logo.svg'
+                        : `${ImageBaseUrl}/${course.thumbnail.url}`
+                    }
+                    alt={course.title}
+                    className="w-full h-full object-cover transform group-hover:scale-105 transition-transform duration-700 ease-out"
                 />
-                <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/20 to-transparent" />
+                <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-black/10 to-transparent" />
 
-                <div className="absolute top-4 left-4 flex flex-col gap-2">
+                {/* Top badges */}
+                <div className="absolute top-3 left-3 flex flex-col gap-2">
                     {isNew && (
-                        <div className="bg-gradient-to-r from-amber-400 to-orange-500 text-white text-xs px-3 py-1.5 rounded-full flex items-center shadow-lg">
+                        <div className="bg-gradient-to-r from-amber-400 to-orange-500 text-white text-xs px-3 py-1.5 rounded-full flex items-center shadow-lg border border-amber-300/50">
                             <Rocket className="h-3 w-3 mr-1" />
                             New
                         </div>
                     )}
                     {course.accessType === "lifetime" && (
-                        <div className="bg-gradient-to-r from-purple-500 to-pink-600 text-white text-xs px-3 py-1.5 rounded-full flex items-center shadow-lg">
+                        <div className="bg-gradient-to-r from-purple-500 to-pink-600 text-white text-xs px-3 py-1.5 rounded-full flex items-center shadow-lg border border-purple-300/50">
                             <Crown className="h-3 w-3 mr-1" />
                             Lifetime
                         </div>
                     )}
                 </div>
-
-                {/* <div className="absolute bottom-4 left-4 right-4">
+                <div className="flex items-center justify-between absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/60 to-transparent p-4">
+                    <span className={`px-3 py-1.5 rounded-full text-xs font-semibold ${getLevelColor(course.level)}`}>
+                        {course.level}
+                    </span>
+                    {isCompleted && (
+                        <div className="w-2 h-2 bg-emerald-400 rounded-full animate-pulse" />
+                    )}
+                </div>
+                {/* Progress overlay */}
+                {/* <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/60 to-transparent p-4">
                     <div className="flex items-center justify-between mb-2">
-                        <span className="text-white text-xs font-semibold">Your Progress</span>
-                        <span className="text-white text-xs font-bold">{progress}%</span>
+                        <span className="text-white text-sm font-semibold">Your Progress</span>
+                        <span className="text-white text-sm font-bold">{progress}%</span>
                     </div>
-                    <div className="w-full bg-white/30 rounded-full h-1.5 mb-2">
+                    <div className="w-full bg-white/30 rounded-full h-2 mb-2">
                         <div
-                            className={`h-1.5 rounded-full bg-gradient-to-r ${getProgressColor(progress)} transition-all duration-1000 ease-out`}
+                            className={`h-2 rounded-full bg-gradient-to-r ${getProgressColor(progress)} transition-all duration-1000 ease-out`}
                             style={{ width: `${progress}%` }}
                         />
                     </div>
-                    <div className="flex justify-between text-xs text-white/80">
-                        <span>{course.progress?.completedLessons} of {course.progress?.totalLessons} lessons</span>
+                    <div className="flex justify-between text-xs text-white/90">
+                        <span>{course.progress?.completedLessons || 0} completed</span>
+                        <span>{course.progress?.totalLessons || 0} total</span>
                     </div>
                 </div> */}
             </div>
 
-            <div className="relative p-3 z-10">
-                <div className="flex items-start justify-between mb-1">
-                    <div>
-                        {/* <span className={`inline-block px-3 py-1 rounded-full text-xs font-semibold mb-3 ${getLevelColor(course.courseId?.level)}`}>
-                            {course?.level}
-                        </span> */}
-                        <h3 className="font-bold text-gray-900 dark:text-white text-base mb-1 line-clamp-2 group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors duration-300">
-                            {course?.title}
-                        </h3>
-                    </div>
+            {/* Content */}
+            <div className="relative p-4 pt-2 z-10">
+                <div className="mb-4">
+                    <h3 onClick={() => navigate(`/courses/${course.slug}`)} className="font-semibold text-gray-900 dark:text-white text-lg mb-1 line-clamp-2 group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors duration-300">
+                        {course.title}
+                    </h3>
+                    <p className="text-gray-600 dark:text-gray-300 text-xs leading-relaxed line-clamp-2">
+                        {course.shortDescription}
+                    </p>
                 </div>
 
-                <p className="text-gray-600 dark:text-gray-300 text-sm leading-relaxed mb-4 line-clamp-2">
-                    {course?.shortDescription}
-                </p>
-                <Button
-                    className="w-full rounded-lg py-2 bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700 text-white font-semibold shadow-lg transform transition-all duration-300"
+                {/* Additional info */}
+                <div className="flex items-center justify-between text-xs text-gray-500 dark:text-gray-400 ">
+                    {/* <div className="flex items-center">
+                        <Clock className="h-3 w-3 mr-1" />
+                        {course.duration || 'Self-paced'}
+                    </div> */}
+                    {course.rating && (
+                        <div className="flex items-center">
+                            <Star className="h-3 w-3 mr-1 text-amber-400" />
+                            {course.rating}
+                        </div>
+                    )}
+                </div>
+
+                {/* Action Button */}
+                <Button onClick={() => navigate(`/courses/${course.slug}`)}
+                    className="w-full rounded-full py-2 bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700 text-white font-semibold shadow-lg hover:shadow-xl transform transition-all duration-300 hover:-translate-y-0.5 group"
                     size="lg"
                 >
                     {isCompleted ? (
                         <>
-                            <Trophy className="h-5 w-5 mr-2" />
+                            <Trophy className="h-4 w-4 mr-1" />
                             View Certificate
                         </>
                     ) : (
                         <>
-                            <Play className="h-5 w-5 mr-2" />
-                            {progress === 0 ? "Start Learning" : "Continue Learning"}
+                            {progress === 0 ? "Start Learning" : "Continue"}
                         </>
                     )}
                     <ChevronRight className="h-4 w-4 ml-1 transform group-hover:translate-x-1 transition-transform duration-300" />

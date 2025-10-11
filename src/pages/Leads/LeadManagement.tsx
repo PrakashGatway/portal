@@ -1,4 +1,3 @@
-// src/pages/LeadManagement.jsx
 import { useState, useEffect } from "react";
 import moment from "moment";
 import { useModal } from "../../hooks/useModal";
@@ -11,6 +10,7 @@ import { toast } from "react-toastify";
 import api from "../../axiosInstance";
 import { Eye, Pencil, Trash2, User } from "lucide-react";
 import TextArea from "../../components/form/input/TextArea";
+import { useAuth } from "../../context/UserContext";
 
 const LeadStatuses = [
     'new',
@@ -41,6 +41,8 @@ export default function LeadManagement() {
     const [selectedLead, setSelectedLead] = useState(null);
     const [isDeleteModalOpen, setDeleteModalOpen] = useState(false);
     const [allCounselors, setAllCounselors] = useState([]);
+    const { user } = useAuth();
+
     const [filters, setFilters] = useState({
         page: 1,
         limit: 10,
@@ -50,7 +52,7 @@ export default function LeadManagement() {
         assignedCounselor: "",
         coursePreference: "",
         countryOfResidence: "",
-        intakeDateRange: "" // "YYYY-MM-DD_YYYY-MM-DD"
+        intakeDateRange: ""
     });
     const [formData, setFormData] = useState({
         fullName: "",
@@ -106,7 +108,7 @@ export default function LeadManagement() {
     const fetchCounselors = async () => {
         try {
             const res = await api.get("/users?role=counselor"); // adjust endpoint as needed
-            setAllCounselors(res.data?.data || []);
+            setAllCounselors(res.data?.users || []);
         } catch (error) {
             console.error("Failed to fetch counselors:", error);
         }
@@ -325,7 +327,7 @@ export default function LeadManagement() {
                             ))}
                         </select>
                     </div>
-                    <div>
+                    {user.role && user.role === "admin" && <div>
                         <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Source</label>
                         <select
                             name="source"
@@ -340,7 +342,7 @@ export default function LeadManagement() {
                                 </option>
                             ))}
                         </select>
-                    </div>
+                    </div>}
                     <div>
                         <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                             Counselor
@@ -436,7 +438,7 @@ export default function LeadManagement() {
                                     <th className="px-2 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500 dark:text-gray-300">Intake</th>
                                     <th className="px-2 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500 dark:text-gray-300">Counselor</th>
                                     <th className="px-2 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500 dark:text-gray-300">Status</th>
-                                    <th className="px-2 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500 dark:text-gray-300">Source</th>
+                                    {user.role && user.role === "admin" && <th className="px-2 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500 dark:text-gray-300">Source</th>}
                                     <th className="px-2 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500 dark:text-gray-300">Actions</th>
                                 </tr>
                             </thead>
@@ -445,10 +447,10 @@ export default function LeadManagement() {
                                     leads.map((lead) => (
                                         <tr key={lead._id} className="hover:bg-gray-50 dark:hover:bg-gray-700">
                                             <td className="whitespace-nowrap px-2 py-4 text-sm font-medium capitalize text-gray-900 dark:text-white">
-                                                {lead.fullName}
+                                                {lead?.fullName || "—"}
                                             </td>
                                             <td className="whitespace-nowrap px-2 py-2 text-sm text-gray-500 dark:text-gray-300">
-                                                Email:{lead.email} <br />
+                                                Email:{lead.email || "—"} <br />
                                                 Mob:{lead.phone || "—"}
                                             </td>
                                             <td className="whitespace-nowrap px-2 py-4 text-sm text-gray-500 dark:text-gray-300">
@@ -467,9 +469,10 @@ export default function LeadManagement() {
                                                     {lead.status.charAt(0).toUpperCase() + lead.status.slice(1)}
                                                 </span>
                                             </td>
-                                            <td className="whitespace-nowrap px-2 py-4 text-sm text-gray-500 dark:text-gray-300 capitalize">
-                                                {lead.source.replace(/_/g, " ")}
-                                            </td>
+                                            {user.role && user.role === "admin" && <td className="whitespace-nowrap px-2 py-2 text-sm text-gray-500 dark:text-gray-300 capitalize">
+                                                {lead.source.replace(/_/g, " ")} <br />
+                                                {lead.createdAt && moment(lead.createdAt).format("MMM D, YYYY h:mm A")}
+                                            </td>}
                                             <td className="whitespace-nowrap px-2 py-4 text-sm font-medium">
                                                 <div className="flex space-x-2">
                                                     <button
@@ -484,7 +487,7 @@ export default function LeadManagement() {
                                                     >
                                                         <Pencil className="h-5 w-5" />
                                                     </button>
-                                                    <button
+                                                    {/* <button
                                                         onClick={() => {
                                                             setSelectedLead(lead);
                                                             setDeleteModalOpen(true);
@@ -492,7 +495,7 @@ export default function LeadManagement() {
                                                         className="p-1 rounded-lg text-red-600 hover:text-red-900 dark:text-red-400 dark:hover:text-red-300"
                                                     >
                                                         <Trash2 className="h-5 w-5" />
-                                                    </button>
+                                                    </button> */}
                                                 </div>
                                             </td>
                                         </tr>
@@ -603,18 +606,18 @@ export default function LeadManagement() {
                                         {selectedLead.status.charAt(0).toUpperCase() + selectedLead.status.slice(1)}
                                     </span>
                                 </div>
-                                <div>
+                                {user.role && user.role === "admin" && <div>
                                     <p className="text-sm text-gray-500">Source</p>
                                     <p className="text-sm font-medium text-gray-800 dark:text-white capitalize">
                                         {selectedLead.source.replace(/_/g, " ")}
                                     </p>
-                                </div>
-                                <div className="md:col-span-1">
+                                </div>}
+                                {user.role && user.role === "admin" && <div className="md:col-span-1">
                                     <p className="text-sm text-gray-500">Assigned Counselor</p>
                                     <p className="text-sm font-medium text-gray-800 dark:text-white">
                                         {selectedLead.assignedCounselor?.name || selectedLead.assignedCounselor?.email || "Unassigned"}
                                     </p>
-                                </div>
+                                </div>}
                             </div>
 
                             <div className="mt-4">
@@ -759,7 +762,7 @@ export default function LeadManagement() {
                                         onChange={(value) => setFormData((prev) => ({ ...prev, status: value }))}
                                     />
                                 </div>
-                                <div>
+                                {user.role && user.role === "admin" && <div>
                                     <Label>Source *</Label>
                                     <Select
                                         name="source"
@@ -771,8 +774,8 @@ export default function LeadManagement() {
                                         onChange={(value) => setFormData((prev) => ({ ...prev, source: value }))}
                                     />
                                     {errors.source && <p className="mt-1 text-sm text-red-600">{errors.source}</p>}
-                                </div>
-                                <div className="md:col-span-2">
+                                </div>}
+                                {user.role && user.role === "admin" && <div className="md:col-span-2">
                                     <Label>Assigned Counselor</Label>
                                     <Select
                                         name="assignedCounselor"
@@ -783,7 +786,7 @@ export default function LeadManagement() {
                                         }))}
                                         onChange={(value) => setFormData((prev) => ({ ...prev, assignedCounselor: value }))}
                                     />
-                                </div>
+                                </div>}
                             </div>
                         </div>
                         <div className="flex items-center gap-3 px-2 mt-6 lg:justify-end">
