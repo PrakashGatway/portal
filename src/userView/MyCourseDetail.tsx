@@ -162,7 +162,7 @@ export default function CourseDetailPage() {
     const [curriculum, setCurriculum] = useState<{ _id: string; title: string; items: any[] }[]>([]);
     const [curriculumLoading, setCurriculumLoading] = useState(false);
     const curriculumRef = useRef(false); // to ensure fetch only once
-    
+
 
     const navigate = useNavigate()
 
@@ -359,11 +359,19 @@ export default function CourseDetailPage() {
                                                                         {item.type === "assignment" && <Download className="h-5 w-5 text-orange-500" />}
                                                                     </div>
                                                                     <div className="flex-1">
-                                                                        <div className="font-medium text-gray-900 dark:text-white">{item.title}</div>
+                                                                        <div onClick={() =>
+                                                                            !item.isLocked && navigate(
+                                                                                `/class/${item._id}/${course?._id}?module=${section._id}`
+                                                                            )
+                                                                        } className="font-medium text-gray-900 dark:text-white cursor-pointer">{item.title}</div>
                                                                         <div className="text-sm text-gray-500 dark:text-gray-400">{item.duration}</div>
                                                                     </div>
                                                                     {item.isPreview && !item.isLocked && (
-                                                                        <Button variant="outline" size="sm" className="text-blue-600 dark:text-blue-400">
+                                                                        <Button onClick={() =>
+                                                                            navigate(
+                                                                                `/class/${item._id}/${course?._id}?module=${section._id}`
+                                                                            )
+                                                                        } variant="outline" size="sm" className="text-blue-600 dark:text-blue-400">
                                                                             Preview
                                                                         </Button>
                                                                     )}
@@ -372,7 +380,14 @@ export default function CourseDetailPage() {
                                                                             Locked
                                                                         </Button>
                                                                     ) : (
-                                                                        <ChevronRight className="h-5 w-5 text-gray-400 ml-2" />
+                                                                        <>
+                                                                            <ChevronRight onClick={() =>
+                                                                                navigate(
+                                                                                    `/class/${item._id}/${course?._id}?module=${section._id}`
+                                                                                )
+                                                                            } className="h-5 w-5 text-gray-400 ml-2" />
+                                                                        </>
+
                                                                     )}
                                                                 </div>
                                                             ))}

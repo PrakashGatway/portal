@@ -1,7 +1,9 @@
 import { useCallback, useEffect, useRef, useState } from "react";
-import { Link, useLocation } from "react-router";
+import { Link, useLocation, useNavigate } from "react-router";
 import { useSidebar } from "../context/SidebarContext";
 import { useAuth } from "../context/UserContext";
+import { Sparkles } from "lucide-react";
+import DynamicIcon from "../components/DynamicIcon";
 
 type NavItem = {
   name: string;
@@ -105,7 +107,7 @@ const navItemsUser: NavItem[] = [
   },
   {
     emoji: "📖",
-    name: "Study material",
+    name: "Resources",
     path: "/study-material"
   },
 ];
@@ -227,6 +229,7 @@ const AppSidebar: React.FC = () => {
   const { isExpanded, isMobileOpen, isHovered, setIsHovered } = useSidebar();
   const location = useLocation();
   const { user } = useAuth() as any;
+  const navigate = useNavigate();
 
   const [openSubmenu, setOpenSubmenu] = useState<{
     type: "main" | "others";
@@ -452,10 +455,10 @@ const AppSidebar: React.FC = () => {
       onMouseLeave={() => setIsHovered(false)}
     >
       <div
-        className={`py-6 flex transition-all duration-300 ${!isExpanded && !isHovered ? "lg:justify-center" : "justify-start"
+        className={`py-6 sm:block hidden flex transition-all duration-300 ${!isExpanded && !isHovered ? "lg:justify-center" : "justify-start"
           }`}
       >
-        <Link to={user.role === "teacher" ? "/teacher" : "/"} className="flex items-center transform hover:scale-105 transition-transform duration-200">
+        <Link to={user.role === "teacher" ? "/" : "/"} className="flex items-center transform hover:scale-105 transition-transform duration-200">
           {isExpanded || isHovered || isMobileOpen ? (
             <>
               <img
@@ -485,7 +488,7 @@ const AppSidebar: React.FC = () => {
         </Link>
       </div>
 
-      <div className="flex flex-col flex-1 overflow-y-auto duration-300 ease-linear no-scrollbar">
+      <div className="flex flex-col flex-1 overflow-y-auto duration-300 sm:mt-0 mt-2 ease-linear no-scrollbar">
         <nav className="mb-6 flex-1">
           <div className="flex flex-col gap-6">
             <div>
@@ -524,9 +527,29 @@ const AppSidebar: React.FC = () => {
 
         {/* User profile at the bottom */}
         {(isExpanded || isHovered || isMobileOpen) && user && (
-          <div className="p-3 rounded-xl sticky bottom-2 left-0 right-0 bg-gradient-to-r from-gray-50 to-blue-50 dark:from-gray-800 dark:to-blue-900/20 mt-auto border border-gray-200 dark:border-gray-700 shadow-md transform hover:scale-[1.02] transition-transform duration-200">
-            <div className="flex items-center gap-3">
-              <div className="w-10 h-10 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-full flex items-center justify-center text-white font-medium shadow-md transform hover:scale-110 transition-transform duration-200">
+          <div className="p-3 rounded-xl sticky bottom-2 left-0 right-0 bg-gradient-to-r from-gray-50 to-blue-50 dark:from-gray-800 dark:to-blue-900/20 mt-auto border border-gray-200 dark:border-gray-700 shadow-md transform transition-transform duration-200">
+            <button
+              onClick={() => navigate("/course/category")}
+              className={`inline-flex items-center justify-center mb-2
+                                px-4 py-2 w-full
+                                bg-gradient-to-r from-blue-50 to-purple-50 dark:from-blue-900/20 dark:to-purple-900/20
+                                text-blue-700 dark:text-blue-300
+                                font-medium text-base capitalize
+                                rounded-xl
+                                border border-blue-200 dark:border-blue-800
+                                transition-all duration-200
+                                focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-opacity-50
+                                hover:shadow-md hover:from-blue-100 hover:to-purple-100 dark:hover:from-blue-800/30 dark:hover:to-purple-800/30`}
+            >
+              <DynamicIcon
+                name={user.subCategory?.icon || user.category?.icon}
+                className="h-4 w-4 mr-2"
+              />
+              {user.subCategory?.name || user.category?.name}
+              <Sparkles className="h-3 w-3 ml-1 text-yellow-500" />
+            </button>
+            <div className="flex items-center gap-3 border border-blue-200 dark:border-blue-800 p-2 rounded-xl">
+              <div className="w-10 h-10 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-full flex items-center justify-center text-white font-medium shadow-md transform transition-transform duration-200">
                 {user.name ? user.name.charAt(0).toUpperCase() : '👤'}
               </div>
               <div className="flex-1 min-w-0">

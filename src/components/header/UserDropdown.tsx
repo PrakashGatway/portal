@@ -1,12 +1,12 @@
 import { useState, useRef, useEffect } from "react";
 import { DropdownItem } from "../ui/dropdown/DropdownItem";
 import { motion, AnimatePresence } from "framer-motion";
-import { 
-    User, 
-    Settings, 
-    HelpCircle, 
-    LogOut, 
-    CreditCard, 
+import {
+    User,
+    Settings,
+    HelpCircle,
+    LogOut,
+    CreditCard,
     ChevronDown
 } from "lucide-react";
 
@@ -57,9 +57,8 @@ export default function UserDropdown({ user, logout }: any) {
                 whileTap={{ scale: 0.98 }}
                 onClick={toggleDropdown}
                 className={`
-                    flex items-center gap-2 px-1 py-1 
-                    bg-white dark:bg-gray-800 
-                    border border-gray-200 dark:border-gray-700 
+                    flex items-center gap-1
+                    bg-white dark:bg-gray-800  
                     rounded-full 
                     transition-all duration-200 
                     hover:shadow-md hover:border-gray-300 dark:hover:border-gray-600
@@ -68,11 +67,11 @@ export default function UserDropdown({ user, logout }: any) {
             >
                 {/* User Avatar */}
                 <div className="relative">
-                    <div className="w-8 h-8 rounded-full bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center text-white font-semibold text-sm">
+                    <div className="w-9 h-9 rounded-full bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center text-white font-semibold text-sm">
                         {user?.avatar ? (
-                            <img 
-                                src={user.avatar} 
-                                alt={user?.name || "User"} 
+                            <img
+                                src={user.avatar}
+                                alt={user?.name || "User"}
                                 className="w-full h-full rounded-full object-cover"
                             />
                         ) : (
@@ -80,8 +79,6 @@ export default function UserDropdown({ user, logout }: any) {
                         )}
                     </div>
                 </div>
-
-                {/* Chevron Icon */}
                 <motion.div
                     animate={{ rotate: isOpen ? 180 : 0 }}
                     transition={{ duration: 0.2 }}
@@ -106,9 +103,9 @@ export default function UserDropdown({ user, logout }: any) {
                                 <div className="flex items-center gap-3">
                                     <div className="w-12 h-12 rounded-full bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center text-white font-semibold text-lg">
                                         {user?.avatar ? (
-                                            <img 
-                                                src={user.avatar} 
-                                                alt={user?.name || "User"} 
+                                            <img
+                                                src={user.avatar}
+                                                alt={user?.name || "User"}
                                                 className="w-full h-full rounded-full object-cover"
                                             />
                                         ) : (

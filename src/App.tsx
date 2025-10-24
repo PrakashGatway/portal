@@ -36,6 +36,7 @@ import PaymentStatusPage from "./userView/PaymentStatus";
 import AdminTransactionsPage from "./pages/Transaction";
 import LeadManagement from "./pages/Leads/LeadManagement";
 import CourseDetailPageee from "./userView/MyCourseDetail";
+import ExamManagement from "./pages/Tests/Exam";
 
 // Define roles
 export const ROLES = {
@@ -46,7 +47,7 @@ export const ROLES = {
 };
 
 export default function App() {
-  
+
   return (
     <Router>
       <AuthProvider>
@@ -92,8 +93,10 @@ export default function App() {
                 <Route path="/recorded-classes" element={<ContentManagement type="RecordedClasses" />} />
                 <Route path="/promocodes" element={<PromoCodeManagement />} />
                 <Route path="/all_transactions" element={<AdminTransactionsPage />} />
-                <Route path="/tests" element={<ContentManagement type="Tests" />} />
+                {/* <Route path="/tests" element={<ContentManagement type="Tests" />} /> */}
                 <Route path="/study-materials" element={<ContentManagement type="StudyMaterials" />} />
+
+                <Route path="/test/exams" element={<ExamManagement />} />
               </Route>
 
               <Route element={<ProtectedRoute roles={[ROLES.COUNSEL, ROLES.ADMIN]} />}>

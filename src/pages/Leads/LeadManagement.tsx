@@ -80,10 +80,11 @@ export default function LeadManagement() {
         }
     };
 
-    // Fetch leads & counselors
     useEffect(() => {
         fetchLeads();
-        fetchCounselors();
+        if (user.role === 'admin') {
+            fetchCounselors();
+        }
     }, [filters]);
 
     const fetchLeads = async () => {
@@ -99,7 +100,7 @@ export default function LeadManagement() {
             setLeads(response.data?.data || []);
             setTotal(response.data?.pagination?.totalLeads || 0);
         } catch (error) {
-            toast.error("Failed to load leads");
+            toast.error(error.error);
         } finally {
             setLoading(false);
         }
@@ -267,7 +268,7 @@ export default function LeadManagement() {
                             <User className="text-indigo-600 h-8 w-8" />
                         </div>
                         <div className="order-3 xl:order-2">
-                            <h4 className="mb-2 text-lg font-semibold text-center text-gray-800 dark:text-white/90 xl:text-left">
+                            <h4 className="mb-1 text-lg font-semibold text-center text-gray-800 dark:text-white/90 xl:text-left">
                                 Lead Management
                             </h4>
                             <div className="flex flex-col items-center gap-1 text-center xl:flex-row xl:gap-3 xl:text-left">
@@ -276,7 +277,7 @@ export default function LeadManagement() {
                                 </p>
                                 <div className="hidden h-3.5 w-px bg-gray-300 dark:bg-gray-700 xl:block"></div>
                                 <p className="text-sm text-gray-500 dark:text-gray-400">
-                                    {leads.length} leads
+                                    {total} leads
                                 </p>
                             </div>
                         </div>
@@ -327,7 +328,7 @@ export default function LeadManagement() {
                             ))}
                         </select>
                     </div>
-                    {user.role && user.role === "admin" && <div>
+                    {user.role && user.role === "admin" && <> <div>
                         <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Source</label>
                         <select
                             name="source"
@@ -342,25 +343,26 @@ export default function LeadManagement() {
                                 </option>
                             ))}
                         </select>
-                    </div>}
-                    <div>
-                        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                            Counselor
-                        </label>
-                        <select
-                            name="assignedCounselor"
-                            value={filters.assignedCounselor}
-                            onChange={handleFilterChange}
-                            className="w-full rounded-md border border-gray-300 bg-white py-2 px-3 text-sm focus:border-indigo-500 focus:outline-none focus:ring-indigo-500 dark:border-gray-600 dark:bg-gray-800 dark:text-white"
-                        >
-                            <option value="">All Counselors</option>
-                            {allCounselors.map((c) => (
-                                <option key={c._id} value={c._id}>
-                                    {c.name || c.email}
-                                </option>
-                            ))}
-                        </select>
                     </div>
+                        <div>
+                            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                                Counselor
+                            </label>
+                            <select
+                                name="assignedCounselor"
+                                value={filters.assignedCounselor}
+                                onChange={handleFilterChange}
+                                className="w-full rounded-md border border-gray-300 bg-white py-2 px-3 text-sm focus:border-indigo-500 focus:outline-none focus:ring-indigo-500 dark:border-gray-600 dark:bg-gray-800 dark:text-white"
+                            >
+                                <option value="">All Counselors</option>
+                                {allCounselors.map((c) => (
+                                    <option key={c._id} value={c._id}>
+                                        {c.name || c.email}
+                                    </option>
+                                ))}
+                            </select>
+                        </div>
+                    </>}
                     {/* <div>
             <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
               Course Preference
@@ -487,7 +489,7 @@ export default function LeadManagement() {
                                                     >
                                                         <Pencil className="h-5 w-5" />
                                                     </button>
-                                                    {/* <button
+                                                    {user.role == 'admin' && <button
                                                         onClick={() => {
                                                             setSelectedLead(lead);
                                                             setDeleteModalOpen(true);
@@ -495,7 +497,7 @@ export default function LeadManagement() {
                                                         className="p-1 rounded-lg text-red-600 hover:text-red-900 dark:text-red-400 dark:hover:text-red-300"
                                                     >
                                                         <Trash2 className="h-5 w-5" />
-                                                    </button> */}
+                                                    </button>}
                                                 </div>
                                             </td>
                                         </tr>
@@ -645,7 +647,7 @@ export default function LeadManagement() {
                                             <div key={i} className="border-l-4 border-indigo-500 pl-3 py-1">
                                                 <p className="text-sm text-gray-800 dark:text-white">{note.text}</p>
                                                 <p className="text-xs text-gray-500">
-                                                    by {note.createdBy?.name || note.createdBy?.email || "Admin"} •{" "}
+                                                    by {note.createdBy === user._id ? "You" : note.createdBy == selectedLead.assignedCounselor?._id ? "Counselor" : "Admin"} •{" "}
                                                     {moment(note.createdAt).format("MMM D, YYYY h:mm A")}
                                                 </p>
                                             </div>
