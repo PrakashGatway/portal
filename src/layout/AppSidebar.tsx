@@ -20,13 +20,21 @@ const navItems: NavItem[] = [
   },
   {
     emoji: "👥",
-    name: "User Management",
+    name: "Users",
     path: "/users",
   },
   {
     emoji: "🚀",
-    name: "lead Management",
+    name: "Leads",
     path: "/leads",
+  },
+  {
+    emoji: "📋",
+    name: "Test Series",
+    subItems: [
+      { name: "Exams", path: "/test/exams", emoji: "📋" },
+      { name: "Sections", path: "/test/sections", emoji: "📹" }
+    ]
   },
   {
     emoji: "📚",

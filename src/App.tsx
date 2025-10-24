@@ -37,6 +37,7 @@ import AdminTransactionsPage from "./pages/Transaction";
 import LeadManagement from "./pages/Leads/LeadManagement";
 import CourseDetailPageee from "./userView/MyCourseDetail";
 import ExamManagement from "./pages/Tests/Exam";
+import SectionManagement from "./pages/Tests/Sections";
 
 // Define roles
 export const ROLES = {
@@ -97,6 +98,7 @@ export default function App() {
                 <Route path="/study-materials" element={<ContentManagement type="StudyMaterials" />} />
 
                 <Route path="/test/exams" element={<ExamManagement />} />
+                <Route path="/test/sections" element={<SectionManagement />} />
               </Route>
 
               <Route element={<ProtectedRoute roles={[ROLES.COUNSEL, ROLES.ADMIN]} />}>

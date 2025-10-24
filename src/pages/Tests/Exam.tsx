@@ -1,3 +1,4 @@
+// ExamManagement.jsx
 import { useState, useEffect } from "react";
 import { useModal } from "../../hooks/useModal";
 import { Modal } from "../../components/ui/modal";
@@ -10,6 +11,7 @@ import api from "../../axiosInstance";
 import { Eye, Pencil, Trash2, BookOpen } from "lucide-react";
 import TextArea from "../../components/form/input/TextArea";
 import { useAuth } from "../../context/UserContext";
+import moment from "moment";
 
 const ExamTypes = [
     "Language Proficiency",
@@ -27,12 +29,13 @@ export default function ExamManagement() {
     const [isDeleteModalOpen, setDeleteModalOpen] = useState(false);
     const [allCategories, setAllCategories] = useState([]);
     const [allSections, setAllSections] = useState([]);
-    const { user } = useAuth() as any;
+    const { user } = useAuth();
 
     const [filters, setFilters] = useState({
         page: 1,
         limit: 10,
-        examType: ""
+        examType: "",
+        search: ""
     });
 
     const [formData, setFormData] = useState({
@@ -45,7 +48,6 @@ export default function ExamManagement() {
 
     const [errors, setErrors] = useState({});
 
-    // Fetch exams
     useEffect(() => {
         fetchExams();
         fetchCategories();
@@ -58,13 +60,14 @@ export default function ExamManagement() {
             const params = {
                 page: filters.page,
                 limit: filters.limit,
-                ...(filters.examType && { examType: filters.examType })
+                ...(filters.examType && { examType: filters.examType }),
+                ...(filters.search && { search: filters.search })
             };
             const response = await api.get("/test/exams", { params });
             setExams(response.data?.data || []);
-            setTotal(response.data?.pagination?.total || 0);
+            setTotal(response.data?.total || 0);
         } catch (error) {
-            toast.error(error.message || "Failed to load exams");
+            toast.error("Failed to load exams");
         } finally {
             setLoading(false);
         }
@@ -76,6 +79,15 @@ export default function ExamManagement() {
             setAllCategories(res.data?.data || []);
         } catch (error) {
             console.error("Failed to fetch categories:", error);
+        }
+    };
+
+    const fetchSections = async () => {
+        try {
+            const res = await api.get("/test/sections");
+            setAllSections(res.data?.data || []);
+        } catch (error) {
+            console.error("Failed to fetch sections:", error);
         }
     };
 
@@ -99,15 +111,6 @@ export default function ExamManagement() {
             openModal();
         } catch (error) {
             toast.error("Failed to load exam details");
-        }
-    };
-
-    const fetchSections = async () => {
-        try {
-            const res = await api.get("/test/sections"); // adjust endpoint if needed
-            setAllSections(res.data?.data || []);
-        } catch (error) {
-            console.error("Failed to fetch sections:", error);
         }
     };
 
@@ -159,8 +162,8 @@ export default function ExamManagement() {
     const deleteExam = async () => {
         if (!selectedExam) return;
         try {
-            await api.delete(`/exams/${selectedExam._id}`);
-            toast.success("Exam deactivated successfully");
+            await api.delete(`/test/exams/${selectedExam._id}`);
+            toast.success("Exam deleted successfully");
             fetchExams();
             setDeleteModalOpen(false);
             setSelectedExam(null);
@@ -207,13 +210,13 @@ export default function ExamManagement() {
                             <BookOpen className="text-indigo-600 h-8 w-8" />
                         </div>
                         <div className="order-3 xl:order-2">
-                            <h4 className="mb-1 text-lg font-semibold text-center text-gray-800 dark:text-white/90 xl:text-left">
-                                Exams
+                            <h4 className="mb-2 text-lg font-semibold text-center text-gray-800 dark:text-white/90 xl:text-left">
+                                Exam Management
                             </h4>
                             <div className="flex flex-col items-center gap-1 text-center xl:flex-row xl:gap-3 xl:text-left">
                                 <p className="text-sm text-gray-500 dark:text-gray-400">Manage test series exams</p>
                                 <div className="hidden h-3.5 w-px bg-gray-300 dark:bg-gray-700 xl:block"></div>
-                                <p className="text-sm text-gray-500 dark:text-gray-400">{total} exams</p>
+                                <p className="text-sm text-gray-500 dark:text-gray-400">{exams.length} exams</p>
                             </div>
                         </div>
                     </div>
@@ -235,7 +238,9 @@ export default function ExamManagement() {
             <div className="min-h-[70vh] overflow-x-auto rounded-2xl border border-gray-200 bg-white px-4 py-4 dark:border-gray-800 dark:bg-white/[0.03]">
                 <div className="mb-6 grid grid-cols-1 gap-4 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4">
                     <div>
-                        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Search (Name)</label>
+                        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                            Search (Name)
+                        </label>
                         <input
                             type="text"
                             name="search"
@@ -246,7 +251,9 @@ export default function ExamManagement() {
                         />
                     </div>
                     <div>
-                        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Exam Type</label>
+                        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                            Exam Type
+                        </label>
                         <select
                             name="examType"
                             value={filters.examType}
@@ -267,13 +274,32 @@ export default function ExamManagement() {
                                 setFilters({
                                     page: 1,
                                     limit: 10,
-                                    examType: ""
+                                    examType: "",
+                                    search: ""
                                 })
                             }
                             className="w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm font-medium text-gray-700 shadow-sm hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 dark:border-gray-600 dark:bg-gray-800 dark:text-white dark:hover:bg-gray-700"
                         >
                             Reset Filters
                         </button>
+                    </div>
+                </div>
+
+                {/* Table Actions */}
+                <div className="mb-4 flex flex-col justify-between space-y-4 sm:flex-row sm:items-center sm:space-y-0">
+                    <div className="flex items-center space-x-2">
+                        <label className="text-sm font-medium text-gray-700 dark:text-gray-300">Rows per page:</label>
+                        <select
+                            name="limit"
+                            value={filters.limit}
+                            onChange={handleFilterChange}
+                            className="rounded-md border border-gray-300 bg-white py-1 px-2 text-sm focus:border-indigo-500 focus:outline-none focus:ring-indigo-500 dark:border-gray-600 dark:bg-gray-800 dark:text-white"
+                        >
+                            <option value="5">5</option>
+                            <option value="10">10</option>
+                            <option value="20">20</option>
+                            <option value="50">50</option>
+                        </select>
                     </div>
                 </div>
 
@@ -290,6 +316,8 @@ export default function ExamManagement() {
                                     <th className="px-2 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500 dark:text-gray-300">Name</th>
                                     <th className="px-2 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500 dark:text-gray-300">Type</th>
                                     <th className="px-2 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500 dark:text-gray-300">Category</th>
+                                    <th className="px-2 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500 dark:text-gray-300">Sections</th>
+                                    <th className="px-2 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500 dark:text-gray-300">Created</th>
                                     <th className="px-2 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500 dark:text-gray-300">Actions</th>
                                 </tr>
                             </thead>
@@ -297,14 +325,25 @@ export default function ExamManagement() {
                                 {exams.length > 0 ? (
                                     exams.map((exam) => (
                                         <tr key={exam._id} className="hover:bg-gray-50 dark:hover:bg-gray-700">
-                                            <td className="whitespace-nowrap px-2 py-4 text-sm font-medium text-gray-900 dark:text-white">
-                                                {exam.name}
+                                            <td className="whitespace-nowrap px-2 py-4">
+                                                <div className="text-sm font-semibold text-gray-900 dark:text-white">{exam.name}</div>
+                                                {exam.description && (
+                                                    <div className="text-xs text-gray-500 dark:text-gray-400 mt-1 line-clamp-1">
+                                                        {exam.description}
+                                                    </div>
+                                                )}
                                             </td>
                                             <td className="whitespace-nowrap px-2 py-4 text-sm text-gray-500 dark:text-gray-300">
                                                 {exam.examType}
                                             </td>
                                             <td className="whitespace-nowrap px-2 py-4 text-sm text-gray-500 dark:text-gray-300">
                                                 {exam.category?.name || "—"}
+                                            </td>
+                                            <td className="whitespace-nowrap px-2 py-4 text-sm text-gray-500 dark:text-gray-300">
+                                                {exam.sections?.length || 0}
+                                            </td>
+                                            <td className="whitespace-nowrap px-2 py-4 text-sm text-gray-500 dark:text-gray-300">
+                                                {moment(exam.createdAt).format("MMM D, YYYY")}
                                             </td>
                                             <td className="whitespace-nowrap px-2 py-4 text-sm font-medium">
                                                 <div className="flex space-x-2">
@@ -335,7 +374,7 @@ export default function ExamManagement() {
                                     ))
                                 ) : (
                                     <tr>
-                                        <td colSpan={4} className="px-2 py-4 text-center text-sm text-gray-500 dark:text-gray-300">
+                                        <td colSpan={6} className="px-2 py-4 text-center text-sm text-gray-500 dark:text-gray-300">
                                             No exams found
                                         </td>
                                     </tr>
@@ -395,121 +434,161 @@ export default function ExamManagement() {
 
             {/* View Modal */}
             <Modal isOpen={isOpen} onClose={closeModal} className="max-w-[700px] m-4">
-                <div className="relative w-full max-w-[700px] rounded-3xl bg-white p-4 dark:bg-gray-900 lg:p-11">
-                    <h4 className="mb-2 text-2xl font-semibold text-gray-800 dark:text-white/90">Exam Details</h4>
+                <div className="no-scrollbar relative w-full max-w-[700px] overflow-y-auto rounded-3xl bg-white p-4 dark:bg-gray-900 lg:p-11">
+                    <div className="px-2 pr-14">
+                        <h4 className="mb-2 text-2xl font-semibold text-gray-800 dark:text-white/90">Exam Details</h4>
+                        <p className="mb-6 text-sm text-gray-500 dark:text-gray-400 lg:mb-7">Detailed information</p>
+                    </div>
                     {selectedExam && (
-                        <div className="space-y-4 max-h-[60vh] overflow-y-auto">
-                            <div><strong>Name:</strong> {selectedExam.name}</div>
-                            <div><strong>Type:</strong> {selectedExam.examType}</div>
-                            <div><strong>Category:</strong> {selectedExam.category?.name || "—"} </div>
-                            <div><strong>Description:</strong> {selectedExam.description || "—"} </div>
+                        <div className="space-y-4 px-2">
                             <div>
-                                <strong>Sections:</strong>
+                                <p className="text-sm text-gray-500">Name</p>
+                                <p className="text-sm font-medium text-gray-800 dark:text-white">{selectedExam.name}</p>
+                            </div>
+                            <div>
+                                <p className="text-sm text-gray-500">Exam Type</p>
+                                <p className="text-sm font-medium text-gray-800 dark:text-white">{selectedExam.examType}</p>
+                            </div>
+                            <div>
+                                <p className="text-sm text-gray-500">Category</p>
+                                <p className="text-sm font-medium text-gray-800 dark:text-white">
+                                    {selectedExam.category?.name || "—"}
+                                </p>
+                            </div>
+                            <div>
+                                <p className="text-sm text-gray-500">Description</p>
+                                <p className="text-sm font-medium text-gray-800 dark:text-white">
+                                    {selectedExam.description || "—"}
+                                </p>
+                            </div>
+                            <div>
+                                <p className="text-sm text-gray-500">Sections</p>
                                 {selectedExam.sections && selectedExam.sections.length > 0 ? (
-                                    <ul className="list-disc pl-5 mt-1">
+                                    <ul className="mt-1 space-y-1">
                                         {selectedExam.sections.map((sec) => (
-                                            <li key={sec._id} className="text-sm">{sec.name || sec._id}</li>
+                                            <li key={sec._id} className="text-sm font-medium text-gray-800 dark:text-white">
+                                                • {sec.name || `Section ${sec._id}`}
+                                            </li>
                                         ))}
                                     </ul>
                                 ) : (
-                                    <span> None</span>
+                                    <p className="text-sm font-medium text-gray-500 dark:text-gray-400">No sections assigned</p>
                                 )}
+                            </div>
+                            <div>
+                                <p className="text-sm text-gray-500">Created At</p>
+                                <p className="text-sm font-medium text-gray-800 dark:text-white">
+                                    {moment(selectedExam.createdAt).format("MMM D, YYYY h:mm A")}
+                                </p>
                             </div>
                         </div>
                     )}
-                    <div className="mt-6 flex justify-end">
-                        <Button size="sm" variant="outline" onClick={closeModal}>Close</Button>
+                    <div className="flex items-center gap-3 px-2 mt-6 lg:justify-end">
+                        <Button size="sm" variant="outline" onClick={closeModal}>
+                            Close
+                        </Button>
                     </div>
                 </div>
             </Modal>
 
             {/* Create/Edit Modal */}
             <Modal isOpen={editModalOpen} onClose={() => setEditModalOpen(false)} className="max-w-[700px] m-4">
-                <div className="relative w-full max-w-[700px] rounded-3xl bg-white p-4 dark:bg-gray-900 lg:p-11">
-                    <h4 className="mb-2 text-2xl font-semibold text-gray-800 dark:text-white/90">
-                        {selectedExam ? "Edit Exam" : "Add New Exam"}
-                    </h4>
+                <div className="no-scrollbar relative w-full max-w-[700px] overflow-y-auto rounded-3xl bg-white p-4 dark:bg-gray-900 lg:p-11">
+                    <div className="px-2 pr-14">
+                        <h4 className="mb-2 text-2xl font-semibold text-gray-800 dark:text-white/90">
+                            {selectedExam ? "Edit Exam" : "Add New Exam"}
+                        </h4>
+                        <p className="mb-6 text-sm text-gray-500 dark:text-gray-400 lg:mb-7">
+                            {selectedExam ? "Update exam details" : "Create a new exam for your test series"}
+                        </p>
+                    </div>
                     <form
                         onSubmit={(e) => {
                             e.preventDefault();
                             selectedExam ? handleSaveExam() : handleCreateExam();
                         }}
-                        className="space-y-4"
+                        className="flex flex-col"
                     >
-                        <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-                            <div>
-                                <Label>Name *</Label>
-                                <Input
-                                    name="name"
-                                    value={formData.name}
-                                    onChange={handleChange}
-                                    placeholder="e.g. IELTS Mock Test"
-                                />
-                                {errors.name && <p className="mt-1 text-sm text-red-600">{errors.name}</p>}
-                            </div>
-                            <div>
-                                <Label>Exam Type *</Label>
-                                <Select
-                                    options={ExamTypes.map(t => ({ value: t, label: t }))}
-                                    defaultValue={formData.examType}
-                                    onChange={(val) => handleSelectChange("examType", val)}
-                                />
-                                {errors.examType && <p className="mt-1 text-sm text-red-600">{errors.examType}</p>}
-                            </div>
-                            <div className="md:col-span-2">
-                                <Label>Category *</Label>
-                                <Select
-                                    options={allCategories.map(c => ({ value: c._id, label: c.name }))}
-                                    defaultValue={formData.category}
-                                    onChange={(val) => handleSelectChange("category", val)}
-                                />
-                                {errors.category && <p className="mt-1 text-sm text-red-600">{errors.category}</p>}
-                            </div>
-                            <div className="md:col-span-2">
-                                <Label>Sections</Label>
-                                <div className="mt-1 space-y-2 max-h-40 overflow-y-auto border border-gray-300 rounded p-2 dark:border-gray-600">
-                                    {allSections.length > 0 ? (
-                                        allSections.map((section) => (
-                                            <label key={section._id} className="flex items-center space-x-2 text-sm">
-                                                <input
-                                                    type="checkbox"
-                                                    checked={formData.sections.includes(section._id)}
-                                                    onChange={(e) => {
-                                                        const isChecked = e.target.checked;
-                                                        setFormData((prev) => ({
-                                                            ...prev,
-                                                            sections: isChecked
-                                                                ? [...prev.sections, section._id]
-                                                                : prev.sections.filter(id => id !== section._id)
-                                                        }));
-                                                    }}
-                                                    className="rounded text-indigo-600 focus:ring-indigo-500"
-                                                />
-                                                <span className="text-gray-700 dark:text-gray-300">
-                                                    {section.name || `Section ${section._id}`}
-                                                </span>
-                                            </label>
-                                        ))
-                                    ) : (
-                                        <p className="text-sm text-gray-500">No sections available</p>
-                                    )}
+                        <div className="custom-scrollbar h-[450px] overflow-y-auto px-2 pb-3">
+                            <div className="space-y-6">
+                                <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
+                                    <div>
+                                        <Label>Name *</Label>
+                                        <Input
+                                            type="text"
+                                            name="name"
+                                            value={formData.name}
+                                            onChange={handleChange}
+                                            placeholder="e.g. IELTS Academic"
+                                        />
+                                        {errors.name && <p className="mt-1 text-sm text-red-600">{errors.name}</p>}
+                                    </div>
+                                    <div>
+                                        <Label>Exam Type *</Label>
+                                        <Select
+                                            options={ExamTypes.map(t => ({ value: t, label: t }))}
+                                            defaultValue={formData.examType}
+                                            onChange={(val) => handleSelectChange("examType", val)}
+                                        />
+                                        {errors.examType && <p className="mt-1 text-sm text-red-600">{errors.examType}</p>}
+                                    </div>
+                                    <div className="md:col-span-2">
+                                        <Label>Category *</Label>
+                                        <Select
+                                            options={allCategories.map(c => ({ value: c._id, label: c.name }))}
+                                            defaultValue={formData.category}
+                                            onChange={(val) => handleSelectChange("category", val)}
+                                        />
+                                        {errors.category && <p className="mt-1 text-sm text-red-600">{errors.category}</p>}
+                                    </div>
+                                    <div className="md:col-span-2">
+                                        <Label>Description</Label>
+                                        <TextArea
+                                            value={formData.description}
+                                            onChange={(val) => setFormData(prev => ({ ...prev, description: val }))}
+                                            placeholder="Brief description of the exam..."
+                                            rows={3}
+                                        />
+                                    </div>
+                                    <div className="md:col-span-2">
+                                        <Label>Sections</Label>
+                                        <div className="mt-1 space-y-2 max-h-40 overflow-y-auto border border-gray-300 rounded p-2 dark:border-gray-600">
+                                            {allSections.length > 0 ? (
+                                                allSections.map((section) => (
+                                                    <label key={section._id} className="flex items-start space-x-2 text-sm">
+                                                        <input
+                                                            type="checkbox"
+                                                            checked={formData.sections.includes(section._id)}
+                                                            onChange={(e) => {
+                                                                const isChecked = e.target.checked;
+                                                                setFormData((prev) => ({
+                                                                    ...prev,
+                                                                    sections: isChecked
+                                                                        ? [...prev.sections, section._id]
+                                                                        : prev.sections.filter(id => id !== section._id)
+                                                                }));
+                                                            }}
+                                                            className="mt-1 rounded text-indigo-600 focus:ring-indigo-500"
+                                                        />
+                                                        <span className="text-gray-700 dark:text-gray-300">
+                                                            <strong>{section.name}</strong> — {section.description || "No description"}
+                                                        </span>
+                                                    </label>
+                                                ))
+                                            ) : (
+                                                <p className="text-sm text-gray-500">No sections available</p>
+                                            )}
+                                        </div>
+                                        <p className="mt-1 text-xs text-gray-500">Select sections to include in this exam.</p>
+                                    </div>
                                 </div>
-                                <p className="mt-1 text-xs text-gray-500">Select sections to include in this exam.</p>
-                            </div>
-                            <div className="md:col-span-2">
-                                <Label>Description</Label>
-                                <TextArea
-                                    value={formData.description}
-                                    onChange={(val) => setFormData(prev => ({ ...prev, description: val }))}
-                                    placeholder="Brief description of the exam..."
-                                />
                             </div>
                         </div>
-                        <div className="flex justify-end gap-3 mt-6">
+                        <div className="flex items-center gap-3 px-2 mt-6 lg:justify-end">
                             <button
                                 type="button"
                                 onClick={() => setEditModalOpen(false)}
-                                className="rounded-md border border-gray-300 px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-100 dark:border-gray-600 dark:text-gray-300 dark:hover:bg-gray-700"
+                                className="rounded-md border border-gray-300 bg-transparent px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-100 dark:border-gray-600 dark:text-gray-300 dark:hover:bg-gray-700"
                             >
                                 Cancel
                             </button>
@@ -524,20 +603,30 @@ export default function ExamManagement() {
                 </div>
             </Modal>
 
-            {/* Delete Modal */}
             <Modal isOpen={isDeleteModalOpen} onClose={() => setDeleteModalOpen(false)} className="max-w-lg">
                 {selectedExam && (
-                    <div className="relative w-full rounded-3xl bg-white p-6 dark:bg-gray-900">
-                        <h4 className="text-xl font-semibold text-gray-800 dark:text-white">Confirm Deletion</h4>
-                        <p className="mt-2 text-gray-600 dark:text-gray-300">
-                            Are you sure you want to deactivate <strong>{selectedExam.name}</strong>? This will also deactivate all its sections.
-                        </p>
-                        <div className="mt-4 p-3 bg-red-50 dark:bg-red-900/20 rounded">
-                            <p className="text-sm text-red-700 dark:text-red-300">This action cannot be undone.</p>
+                    <div className="no-scrollbar relative w-full overflow-y-auto rounded-3xl bg-white p-4 dark:bg-gray-900 lg:p-6">
+                        <div className="px-2 pr-14">
+                            <h4 className="mb-2 text-2xl font-semibold text-gray-800 dark:text-white/90">Confirm Deletion</h4>
+                            <p className="mb-2 text-sm text-gray-500 dark:text-gray-400">
+                                Are you sure you want to delete this exam? This action cannot be undone.
+                            </p>
                         </div>
-                        <div className="mt-6 flex justify-end gap-3">
-                            <Button variant="outline" size="sm" onClick={() => setDeleteModalOpen(false)}>Cancel</Button>
-                            <Button variant="primary" size="sm" onClick={deleteExam}>Deactivate Exam</Button>
+                        <div className="px-2">
+                            <div className="rounded-md bg-red-50 p-2 py-4 dark:bg-red-900/20">
+                                <h3 className="text-sm font-medium text-red-800 dark:text-red-200">Warning</h3>
+                                <p className="mt-2 text-sm text-red-700 dark:text-red-300">
+                                    Deleting <strong>"{selectedExam.name}"</strong> will permanently remove it and its association with sections.
+                                </p>
+                            </div>
+                        </div>
+                        <div className="flex items-center gap-3 px-2 mt-6 lg:justify-end">
+                            <Button size="sm" variant="outline" onClick={() => setDeleteModalOpen(false)}>
+                                Cancel
+                            </Button>
+                            <Button size="sm" variant="primary" onClick={deleteExam}>
+                                Delete Exam
+                            </Button>
                         </div>
                     </div>
                 )}
