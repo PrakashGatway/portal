@@ -38,6 +38,7 @@ import LeadManagement from "./pages/Leads/LeadManagement";
 import CourseDetailPageee from "./userView/MyCourseDetail";
 import ExamManagement from "./pages/Tests/Exam";
 import SectionManagement from "./pages/Tests/Sections";
+import TestSeriesManagement from "./pages/Tests/Tests";
 
 // Define roles
 export const ROLES = {
@@ -99,6 +100,7 @@ export default function App() {
 
                 <Route path="/test/exams" element={<ExamManagement />} />
                 <Route path="/test/sections" element={<SectionManagement />} />
+                <Route path="/tests" element={<TestSeriesManagement />} />
               </Route>
 
               <Route element={<ProtectedRoute roles={[ROLES.COUNSEL, ROLES.ADMIN]} />}>

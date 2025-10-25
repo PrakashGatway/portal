@@ -19,14 +19,18 @@ const navItems: NavItem[] = [
     path: "/",
   },
   {
-    emoji: "👥",
-    name: "Users",
-    path: "/users",
-  },
-  {
-    emoji: "🚀",
-    name: "Leads",
-    path: "/leads",
+    emoji: "🎓",
+    name: "Courses",
+    subItems: [
+      { name: "All Courses", path: "/courses", emoji: "📋" },
+      {
+        emoji: "📚",
+        name: "Categories",
+        path: "/categories",
+      },
+      { name: "Modules", path: "/modules", emoji: "📹" },
+      { name: "Combos", path: "/combos", emoji: "📚" }
+    ]
   },
   {
     emoji: "📋",
@@ -37,39 +41,51 @@ const navItems: NavItem[] = [
     ]
   },
   {
-    emoji: "📚",
-    name: "Course Categories",
-    path: "/categories",
-  },
-  {
-    emoji: "🎓",
-    name: "Courses",
-    subItems: [
-      { name: "Course list", path: "/courses", emoji: "📋" },
-      { name: "Modules", path: "/modules", emoji: "📹" }
-    ]
-  },
-  {
     emoji: "🎥",
     name: "Classes",
     subItems: [
-      { name: "Live Classes", path: "/live-classes", emoji: "🎥" },
+      { name: "Live", path: "/live-classes", emoji: "🎥" },
       { name: "Recorded", path: "/recorded-classes", emoji: "📼" }
     ]
   },
   {
-    emoji: "💝",
-    name: "Promo Codes",
-    path: "/promocodes",
-  },
-  {
     emoji: "📂",
-    name: "Study Materials",
+    name: "Resources",
     path: "/study-materials",
   },
   {
+    emoji: "👥",
+    name: "Users",
+    path: "/users",
+  },
+  {
+    emoji: "🚀",
+    name: "Leads",
+    path: "/leads",
+  },
+  {
+    emoji: "💝",
+    name: "Coupons",
+    path: "/promocodes",
+  },
+  {
+    emoji: "🔔",
+    name: "Notifications",
+    path: "/notifications",
+  },
+  {
+    emoji: "📞",
+    name: "Contact",
+    path: "/contacts",
+  },
+  {
+    emoji: "📝",
+    name: "Reviews",
+    path: "/reviews",
+  },
+  {
     emoji: "🌐",
-    name: "Web Management",
+    name: "Website",
     subItems: [
       { name: "Pages", path: "/pages", emoji: "📄" },
       { name: "Entities", path: "/entities", emoji: "📦" }
@@ -77,7 +93,7 @@ const navItems: NavItem[] = [
   },
   {
     emoji: "💳",
-    name: "Transactions Reports",
+    name: "Orders",
     path: "/all_transactions",
   }
 ];
@@ -137,7 +153,7 @@ const navItemsTeacher: NavItem[] = [
   {
     emoji: "📊",
     name: "Dashboard",
-    path: "/teacher",
+    path: "/",
   },
   {
     emoji: "🎓",
@@ -163,16 +179,6 @@ const navItemsTeacher: NavItem[] = [
       { name: "Create Test", path: "/teacher/create-test", emoji: "✏️" },
       { name: "Test Results", path: "/teacher/results", emoji: "📊" }
     ]
-  },
-  {
-    emoji: "👨‍🎓",
-    name: "Students",
-    path: "/teacher/students",
-  },
-  {
-    emoji: "💰",
-    name: "Earnings",
-    path: "/teacher/earnings",
   }
 ];
 
@@ -194,17 +200,14 @@ const othersItems: NavItem[] = [
   },
   {
     emoji: "💸",
-    name: "Transactions",
+    name: "My orders",
     path: "/transactions"
   },
-  // {
-  //   emoji: "🎫",
-  //   name: "Support Ticket",
-  //   subItems: [
-  //     { name: "Create Ticket", path: "/query", emoji: "🆕" },
-  //     { name: "View Tickets", path: "/queries", emoji: "👀" }
-  //   ],
-  // }
+  {
+    emoji: "🎫",
+    name: "Support",
+    path: "/queries"
+  }
 ];
 
 const teacherOthersItems: NavItem[] = [
@@ -535,8 +538,8 @@ const AppSidebar: React.FC = () => {
 
         {/* User profile at the bottom */}
         {(isExpanded || isHovered || isMobileOpen) && user && (
-          <div className="p-3 rounded-xl sticky bottom-2 left-0 right-0 bg-gradient-to-r from-gray-50 to-blue-50 dark:from-gray-800 dark:to-blue-900/20 mt-auto border border-gray-200 dark:border-gray-700 shadow-md transform transition-transform duration-200">
-            <button
+          <div className="p-0.5 rounded-xl sticky bottom-2 left-0 right-0 bg-gradient-to-r from-gray-50 to-blue-50 dark:from-gray-800 dark:to-blue-900/20 mt-auto border border-gray-200 dark:border-gray-700 shadow-md transform transition-transform duration-200">
+            {/* <button
               onClick={() => navigate("/course/category")}
               className={`inline-flex items-center justify-center mb-2
                                 px-4 py-2 w-full
@@ -555,7 +558,7 @@ const AppSidebar: React.FC = () => {
               />
               {user.subCategory?.name || user.category?.name}
               <Sparkles className="h-3 w-3 ml-1 text-yellow-500" />
-            </button>
+            </button> */}
             <div className="flex items-center gap-3 border border-blue-200 dark:border-blue-800 p-2 rounded-xl">
               <div className="w-10 h-10 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-full flex items-center justify-center text-white font-medium shadow-md transform transition-transform duration-200">
                 {user.name ? user.name.charAt(0).toUpperCase() : '👤'}
