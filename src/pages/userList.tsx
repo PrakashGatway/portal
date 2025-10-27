@@ -16,6 +16,8 @@ const UserListPage = () => {
   const { isOpen, openModal, closeModal } = useModal();
   const [editModalOpen, setEditModalOpen] = useState(false);
   const [selectedUser, setSelectedUser] = useState(null);
+  const [walletData, setWalletData] = useState(null);
+  const [walletLoading, setWalletLoading] = useState(false);
   const [filters, setFilters] = useState({
     page: 1,
     limit: 10,
@@ -25,7 +27,7 @@ const UserListPage = () => {
     search: ""
   });
 
-  const userRoles = ["admin", "manager", "user", "teacher", "super_admin", "editor","counselor"];
+  const userRoles = ["admin", "manager", "user", "teacher", "super_admin", "editor", "counselor"];
 
   const {
     register,
@@ -76,6 +78,22 @@ const UserListPage = () => {
     }
   };
 
+  // Fetch wallet data when user is selected
+  const fetchWalletData = async (userId) => {
+    setWalletLoading(true);
+    try {
+      const response = await api.get(`/users/${userId}`);
+      setWalletData(response.data);
+      console.log("Wallet Data:", response.data);
+    } catch (error) {
+      console.error("Error fetching wallet data:", error);
+      toast.error("Failed to load wallet information");
+      setWalletData(null);
+    } finally {
+      setWalletLoading(false);
+    }
+  };
+
   const handleFilterChange = (e) => {
     const { name, value } = e.target;
     setFilters(prev => ({
@@ -103,8 +121,9 @@ const UserListPage = () => {
     }
   };
 
-  const viewUserDetails = (user) => {
+  const viewUserDetails = async (user) => {
     setSelectedUser(user);
+    await fetchWalletData(user._id);
     openModal();
   };
 
@@ -139,6 +158,8 @@ const UserListPage = () => {
     }
   };
 
+
+
   return (
     <div className="w-full overflow-x-auto">
       <PageMeta
@@ -146,7 +167,6 @@ const UserListPage = () => {
         description="Manage system users"
       />
       <PageBreadcrumb pageTitle="User Management" />
-
 
       <div className="min-h-screen overflow-x-auto rounded-2xl border border-gray-200 bg-white px-4 py-4 dark:border-gray-800 dark:bg-white/[0.03] xl:px-4 xl:py-4">
         {/* Filters Section */}
@@ -445,9 +465,60 @@ const UserListPage = () => {
             </p>
           </div>
           <div className="flex flex-col">
-            <div className="custom-scrollbar h-[450px] overflow-y-auto px-2 pb-3">
+            <div className="custom-scrollbar h-[550px] overflow-y-auto px-2 pb-3">
               {selectedUser && (
                 <div className="space-y-6">
+                  {/* Wallet Information Section */}
+                  <div>
+                    <h6 className="mb-3 text-base font-medium text-gray-800 dark:text-white/90">
+                      Wallet Information
+                    </h6>
+                    {walletLoading ? (
+                      <div className="flex justify-center py-4">
+                        <div className="h-6 w-6 animate-spin rounded-full border-2 border-indigo-500 border-t-transparent"></div>
+                      </div>
+                    ) : walletData ? (
+                      <div className=" flex justify-between text-center grid-cols-2 gap-4 rounded-lg border border-gray-200 bg-gray-50 p-4 dark:border-gray-600 dark:bg-gray-800 sm:grid-cols-4">
+                        <div className="text-center">
+                          <p className="text-sm text-gray-500 dark:text-gray-400">Balance</p>
+                          <p className="text-lg font-semibold text-gray-800 dark:text-white/90">
+                            ₹{walletData.balance || walletData.data?.balance || walletData.wallet?.balance || 0}
+                          </p>
+                        </div>
+                        <div className="text-center">
+                          <p className="text-sm text-gray-500 dark:text-gray-400">Total Earned</p>
+                          <p className="text-lg font-semibold text-green-600 dark:text-green-400">
+                            ₹{walletData.totalEarned || walletData.data?.totalEarned || walletData.wallet?.totalEarned || 0}
+                          </p>
+                        </div>
+                        <div className="text-center">
+                          <p className="text-sm text-gray-500 dark:text-gray-400">Total Spent</p>
+                          <p className="text-lg font-semibold text-red-600 dark:text-red-400">
+                            ₹{walletData.totalSpent || walletData.data?.totalSpent || walletData.wallet?.totalSpent || 0}
+                          </p>
+                        </div>
+                        <div className="text-center">
+                          <p className="text-sm text-gray-500 dark:text-gray-400">Total Referrals</p>
+                          <p className="text-lg font-semibold text-blue-600 dark:text-blue-400">
+                            {walletData.totalReferrals || walletData.data?.totalReferrals || walletData.wallet?.totalReferrals || 0}
+                          </p>
+                        </div>
+                         <div className="text-center">
+                          <p className="text-sm text-gray-500 dark:text-gray-400">Total Referrals Earning</p>
+                          <p className="text-lg font-semibold text-blue-600 dark:text-blue-400">
+                            {walletData.referralEarnings || walletData.data?.referralEarnings || walletData.wallet?.referralEarnings || 0}
+                          </p>
+                        </div>
+                      </div>
+                    ) : (
+                      <div className="rounded-lg border border-gray-200 bg-gray-50 p-4 text-center dark:border-gray-600 dark:bg-gray-800">
+                        <p className="text-sm text-gray-500 dark:text-gray-400">
+                          No wallet information available
+                        </p>
+                      </div>
+                    )}
+                  </div>
+
                   <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
                     <div>
                       <h6 className="mb-3 text-base font-medium text-gray-800 dark:text-white/90">
