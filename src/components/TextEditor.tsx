@@ -1,4 +1,4 @@
-import { useRef, useState, useMemo } from 'react';
+import { useRef, useState, useMemo, useEffect } from 'react';
 import { Editor } from '@tinymce/tinymce-react';
 
 interface RichTextEditorProps {
@@ -6,6 +6,7 @@ interface RichTextEditorProps {
     onChange: (content: string) => void;
     disabled?: boolean;
 }
+
 
 const RichTextEditor = ({ initialValue = '', onChange, disabled = false }: RichTextEditorProps) => {
     const editorRef = useRef<any>(null);
@@ -42,8 +43,6 @@ const RichTextEditor = ({ initialValue = '', onChange, disabled = false }: RichT
                 'emoticons', 'hr', 'pagebreak', 'nonbreaking', 'quickbars',
                 'save', 'directionality', 'visualchars', 'paste'
             ],
-
-            // ✅ Toolbar
             toolbar: `
         undo redo | cut copy paste | selectall | save | print | code | fullscreen | help |
         bold italic underline strikethrough | superscript subscript |
@@ -147,11 +146,10 @@ const RichTextEditor = ({ initialValue = '', onChange, disabled = false }: RichT
         }
       `}
             </style>
-            {/* TinyMCE Editor */}
             <Editor
                 apiKey="cvv7pvo9jpr74j9bcg5j7mt8d0esguhdhw4dc5uoxky2pxdn" // Replace with env var
-                initialValue={initialValue}
-                onEditorChange={onChange}
+                value={initialValue && initialValue}
+                onEditorChange={(e) => { onChange(e) }}
                 init={initConfig}
                 disabled={disabled}
             />

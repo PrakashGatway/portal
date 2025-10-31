@@ -37,7 +37,10 @@ const navItems: NavItem[] = [
     name: "Test Series",
     subItems: [
       { name: "Exams", path: "/test/exams", emoji: "📋" },
-      { name: "Sections", path: "/test/sections", emoji: "📹" }
+      { name: "Sections", path: "/test/sections", emoji: "📹" },
+      { name: "Questions", path: "/test/questions", emoji: "📚" },
+      { name: "Tests", path: "/tests", emoji: "📜" },
+      { name: "Packages", path: "/test/packages", emoji: "🛍️" }
     ]
   },
   {
@@ -88,7 +91,9 @@ const navItems: NavItem[] = [
     name: "Website",
     subItems: [
       { name: "Pages", path: "/pages", emoji: "📄" },
-      { name: "Entities", path: "/entities", emoji: "📦" }
+      { name: "Entities", path: "/entities", emoji: "📦" },
+      { name: "Blogs", path: "/blogs", emoji: "📝" },
+      { name: "Categories", path: "/blog-categories", emoji: "📚" },
     ]
   },
   {

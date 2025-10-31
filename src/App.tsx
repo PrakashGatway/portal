@@ -39,6 +39,10 @@ import CourseDetailPageee from "./userView/MyCourseDetail";
 import ExamManagement from "./pages/Tests/Exam";
 import SectionManagement from "./pages/Tests/Sections";
 import TestSeriesManagement from "./pages/Tests/Tests";
+import QuestionManagement from "./pages/Tests/Questions";
+import SupportPage from "./pages/Support/Supports";
+import BlogCategoryManagement from "./pages/Website/BlogCategories";
+import ArticleManagement from "./pages/Website/Blogs";
 
 // Define roles
 export const ROLES = {
@@ -83,6 +87,10 @@ export default function App() {
               <Route path="/query" element={<CreateQuery />} />
               <Route path="/queries" element={<QueryList />} />
               <Route path="/queries/:id" element={<QueryDetail />} />
+
+              <Route path="/support" element={<SupportPage />} />
+
+
               <Route path="/mocks" element={<MockTestsPage />} />
               <Route path="/events" element={<EventCalendar />} />
 
@@ -101,6 +109,7 @@ export default function App() {
                 <Route path="/test/exams" element={<ExamManagement />} />
                 <Route path="/test/sections" element={<SectionManagement />} />
                 <Route path="/tests" element={<TestSeriesManagement />} />
+                <Route path="/test/questions" element={<QuestionManagement />} />
               </Route>
 
               <Route element={<ProtectedRoute roles={[ROLES.COUNSEL, ROLES.ADMIN]} />}>
@@ -112,6 +121,8 @@ export default function App() {
               <Route element={<ProtectedRoute roles={[ROLES.EDITOR, ROLES.ADMIN]} />}>
                 <Route path="/pages" element={<PagesManagement />} />
                 <Route path="/entities" element={<EntityManagement />} />
+                <Route path="/blog-categories" element={<BlogCategoryManagement />} />
+                <Route path="/blogs" element={<ArticleManagement />} />
               </Route>
             </Route>
             <Route path="/course/category" element={<CategorySelectionPage />} />
