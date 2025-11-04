@@ -620,6 +620,23 @@ export default function LeadManagement() {
                                         {selectedLead.assignedCounselor?.name || selectedLead.assignedCounselor?.email || "Unassigned"}
                                     </p>
                                 </div>}
+                                <div className="col-span-3">
+                                    <p className="text-sm text-gray-500">Extra Details</p>
+                                    <div className="mt-1 text-sm text-gray-800 dark:text-white font-medium">
+                                        {selectedLead.extraDetails && typeof selectedLead.extraDetails === "object" ? (
+                                            Object.entries(selectedLead.extraDetails).map(([key, value]) => (
+                                                <div key={key} className="flex items-start mb-1">
+                                                    <span className="font-medium text-gray-600 mr-1 dark:text-gray-400">
+                                                        {key.replace(/_/g, ' ').replace(/\?/g, '').replace(/\b\w/g, c => c.toUpperCase())}:
+                                                    </span>
+                                                    <span className="text-sm text-gray-800 dark:text-white font-medium">{String(value)}</span>
+                                                </div>
+                                            ))
+                                        ) : (
+                                            <span>{selectedLead.extraDetails || "N/A"}</span>
+                                        )}
+                                    </div>
+                                </div>
                             </div>
 
                             <div className="mt-4">
