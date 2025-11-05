@@ -591,6 +591,10 @@ export default function LeadManagement() {
                                     <p className="text-sm font-medium text-gray-800 dark:text-white">{selectedLead.countryOfResidence || "—"}</p>
                                 </div>
                                 <div>
+                                    <p className="text-sm text-gray-500">City</p>
+                                    <p className="text-sm font-medium text-gray-800 dark:text-white">{selectedLead.city || "—"}</p>
+                                </div>
+                                <div>
                                     <p className="text-sm text-gray-500">Course Preference</p>
                                     <p className="text-sm font-medium text-gray-800 dark:text-white">{selectedLead.coursePreference}</p>
                                 </div>
