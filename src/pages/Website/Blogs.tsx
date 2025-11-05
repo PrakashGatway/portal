@@ -56,7 +56,7 @@ export default function ArticleManagement() {
         setLoading(true);
         try {
             const params = { ...filters };
-            const response = await api.get("/web/blog", { params });
+            const response = await api.get("/web/blog?from=admin", { params });
             setArticles(response.data?.data || []);
             setTotal(response.data?.total || 0);
         } catch (error) {
