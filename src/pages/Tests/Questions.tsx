@@ -205,7 +205,7 @@ export default function QuestionManagement() {
     const deleteQuestion = async () => {
         if (!selectedQuestion) return;
         try {
-            await api.delete(`/api/v1/questions/${selectedQuestion._id}`);
+            await api.delete(`/test/questions/${selectedQuestion._id}`);
             toast.success("Question deleted successfully");
             fetchQuestions();
             setDeleteModalOpen(false);
@@ -342,8 +342,6 @@ export default function QuestionManagement() {
 
     const getQuestionTypeLabel = (type) => {
         return type
-            .replace(/_/g, " ")
-            .replace(/\b\w/g, (l) => l.toUpperCase());
     };
 
     return (
