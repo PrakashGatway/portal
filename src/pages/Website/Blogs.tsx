@@ -43,7 +43,6 @@ export default function ArticleManagement() {
     });
 
     const [errors, setErrors] = useState({});
-    const [newKeyword, setNewKeyword] = useState(""); // For adding new keywords
     const [coverImageFile, setCoverImageFile] = useState(null); // For the file upload
     const [coverImagePreview, setCoverImagePreview] = useState(''); // For image preview
 
@@ -137,30 +136,6 @@ export default function ArticleManagement() {
             slug: generateSlug(value) // Auto-generate slug when title changes
         }));
         if (errors.title) setErrors(prev => ({ ...prev, title: "" }));
-    };
-
-    // Keyword management
-    const addKeyword = () => {
-        if (newKeyword.trim() && !formData.meta.keywords.includes(newKeyword.trim())) {
-            setFormData(prev => ({
-                ...prev,
-                meta: {
-                    ...prev.meta,
-                    keywords: [...prev.meta.keywords, newKeyword.trim()]
-                }
-            }));
-            setNewKeyword("");
-        }
-    };
-
-    const removeKeyword = (index) => {
-        setFormData(prev => ({
-            ...prev,
-            meta: {
-                ...prev.meta,
-                keywords: prev.meta.keywords.filter((_, i) => i !== index)
-            }
-        }));
     };
 
     // Cover image handling
@@ -588,7 +563,11 @@ export default function ArticleManagement() {
                             {selectedArticle ? "Edit Article" : "Create New Article"}
                         </h4>
                     </div>
-                    <form onSubmit={(e) => { e.preventDefault(); handleSave(); }} className="px-2 max-h-[83vh] overflow-y-auto no-scrollbar">
+                    <form onSubmit={(e) => { e.preventDefault(); handleSave(); }} onKeyDown={(e) => {
+                        if (e.key === 'Enter' && e.target.tagName !== 'TEXTAREA') {
+                            e.preventDefault();
+                        }
+                    }} className="px-2 max-h-[83vh] overflow-y-auto no-scrollbar">
                         <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
                             <div className="md:col-span-2">
                                 <Label>Title *</Label>
@@ -693,39 +672,25 @@ export default function ArticleManagement() {
                             </div>
                             <div className="md:col-span-2">
                                 <Label>Meta Keywords (SEO)</Label>
-                                <div className="flex gap-2">
-                                    <input
-                                        type="text"
-                                        value={newKeyword}
-                                        onChange={(e) => setNewKeyword(e.target.value)}
-                                        placeholder="Add a keyword"
-                                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-200 focus:border-blue-500 dark:bg-gray-800 dark:border-gray-600 dark:text-white"
-                                    />
-                                    <button
-                                        type="button"
-                                        onClick={addKeyword}
-                                        className="px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700"
-                                    >
-                                        Add
-                                    </button>
-                                </div>
-                                <div className="mt-2 flex flex-wrap gap-2">
-                                    {formData.meta.keywords.map((keyword, index) => (
-                                        <span
-                                            key={index}
-                                            className="inline-flex items-center gap-1 px-2 py-1 bg-indigo-100 text-indigo-800 rounded-full text-sm"
-                                        >
-                                            {keyword}
-                                            <button
-                                                type="button"
-                                                onClick={() => removeKeyword(index)}
-                                                className="text-indigo-600 hover:text-indigo-900"
-                                            >
-                                                ×
-                                            </button>
-                                        </span>
-                                    ))}
-                                </div>
+                                <input
+                                    type="text"
+                                    name="keywords"
+                                    value={formData.meta.keywords.join(', ')}
+                                    onChange={(e) => {
+                                        const keywordsArray = e.target.value
+                                            .split(',')
+                                            .map((keyword) => keyword.trim());
+                                        setFormData(prev => ({
+                                            ...prev,
+                                            meta: { ...prev.meta, keywords: keywordsArray }
+                                        }));
+                                    }}
+                                    placeholder="e.g. IELTS, Study Abroad, Canada"
+                                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-200 focus:border-blue-500 dark:bg-gray-800 dark:border-gray-600 dark:text-white"
+                                />
+                                <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">
+                                    Separate keywords with commas (e.g. IELTS, Study Abroad, Canada)
+                                </p>
                             </div>
                         </div>
 

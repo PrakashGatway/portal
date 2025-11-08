@@ -12,16 +12,9 @@ import {
     Pencil,
     Trash2,
     BookOpen,
-    Search,
-    CheckCircle,
-    FolderOpen,
-    Info,
-    Clock,
-    DollarSign,
-    Settings,
+    Search
 } from "lucide-react";
 import TextArea from "../../components/form/input/TextArea";
-import moment from "moment";
 
 const TestSeriesTypes = ["Full-Length", "Mini-Series", "Sectional"];
 const DifficultyLevels = ["Beginner", "Intermediate", "Advanced", "Expert"];
@@ -92,7 +85,7 @@ export default function TestSeriesManagement() {
                 ...(filters.isPaid !== "" && { isPaid: filters.isPaid === "true" }),
                 ...(filters.search && { search: filters.search }),
             };
-            const res = await api.get("/test", { params });
+            const res = await api.get("/test/series", { params });
             setTestSeriesList(res.data?.data || []);
             setTotal(res.data?.pagination?.total || 0);
         } catch (error) {
@@ -130,7 +123,7 @@ export default function TestSeriesManagement() {
     // --- VIEW ---
     const viewTestSeries = async (ts) => {
         try {
-            const res = await api.get(`/test/${ts._id}`);
+            const res = await api.get(`/test/series/${ts._id}`);
             setSelectedTestSeries(res.data?.data || ts);
             openModal();
         } catch (error) {
@@ -212,7 +205,6 @@ export default function TestSeriesManagement() {
         return Object.keys(err).length === 0;
     };
 
-    // --- SECTION & QUESTION HANDLING ---
     const addSectionToTest = (sectionId) => {
         const section = allSections.find(s => s._id === sectionId);
         if (!section) return;
@@ -263,10 +255,11 @@ export default function TestSeriesManagement() {
         }));
     };
 
+
     const fetchQuestionsForSection = async (sectionId) => {
         try {
-            const res = await api.get(`/test/sections/${sectionId}/questions`);
-            setAllQuestions(res.data?.data || []);
+            const res = await api.get(`/test/questions/?sectionId=${sectionId}`);
+            setAllQuestions(res.data?.questions || []);
         } catch (error) {
             toast.error("Failed to load questions");
             setAllQuestions([]);
@@ -289,7 +282,7 @@ export default function TestSeriesManagement() {
     // --- SUBMIT ---
     const handleCreate = async () => {
         try {
-            await api.post("/test", formData);
+            await api.post("/test/series", formData);
             toast.success("Test series created!");
             fetchTestSeries();
             setEditModalOpen(false);
@@ -300,7 +293,7 @@ export default function TestSeriesManagement() {
 
     const handleUpdate = async () => {
         try {
-            await api.put(`/test/${selectedTestSeries._id}`, formData);
+            await api.put(`/test/series/${selectedTestSeries._id}`, formData);
             toast.success("Test series updated!");
             fetchTestSeries();
             setEditModalOpen(false);
@@ -326,7 +319,7 @@ export default function TestSeriesManagement() {
     const deleteTestSeries = async () => {
         if (!selectedTestSeries) return;
         try {
-            await api.delete(`/test/${selectedTestSeries._id}`);
+            await api.delete(`/test/series/${selectedTestSeries._id}`);
             toast.success("Deleted successfully");
             fetchTestSeries();
             setDeleteModalOpen(false);
@@ -770,7 +763,7 @@ export default function TestSeriesManagement() {
                                                                                     onChange={() => toggleQuestionInSection(idx, q._id)}
                                                                                     className="rounded"
                                                                                 />
-                                                                                {q.questionText?.substring(0, 50)}...
+                                                                                {q?.content?.instruction?.substring(0, 50)}...
                                                                             </label>
                                                                         ))}
                                                                     </div>

@@ -3,8 +3,6 @@ import moment from "moment";
 import { useModal } from "../../hooks/useModal";
 import { Modal } from "../../components/ui/modal";
 import Button from "../../components/ui/button/Button";
-import Input from "../../components/form/input/InputField";
-import Label from "../../components/form/Label";
 import { toast } from "react-toastify";
 import api from "../../axiosInstance";
 import { Eye, Pencil, Trash2 } from "lucide-react";
@@ -166,42 +164,6 @@ export default function QuestionManagement() {
         setEditModalOpen(true);
     };
 
-    const validateForm = () => {
-        const newErrors = {};
-        if (!formData.examId) newErrors.examId = "Exam is required";
-        if (!formData.sectionId) newErrors.sectionId = "Section is required";
-        if (!formData.content.instruction?.trim()) newErrors.instruction = "Instruction is required";
-        if (!formData.questionType) newErrors.questionType = "Question type is required";
-        setErrors(newErrors);
-        return Object.keys(newErrors).length === 0;
-    };
-
-    const handleSaveQuestion = async () => {
-        if (!validateForm()) return;
-        try {
-            const payload = { ...formData };
-            await api.put(`/test/questions/${selectedQuestion._id}`, payload);
-            toast.success("Question updated successfully");
-            fetchQuestions();
-            setEditModalOpen(false);
-        } catch (error) {
-            toast.error(error.response?.data?.message || "Failed to save question");
-        }
-    };
-
-    const handleCreateQuestion = async () => {
-        if (!validateForm()) return;
-        try {
-            const payload = { ...formData, createdBy: undefined }; // backend sets this
-            await api.post("/test/questions", payload);
-            toast.success("Question created successfully");
-            fetchQuestions();
-            setEditModalOpen(false);
-        } catch (error) {
-            toast.error(error.response?.data?.message || "Failed to create question");
-        }
-    };
-
     const deleteQuestion = async () => {
         if (!selectedQuestion) return;
         try {
@@ -242,102 +204,6 @@ export default function QuestionManagement() {
         });
         setErrors({});
         setEditModalOpen(true);
-    };
-
-    const handleChange = (e) => {
-        const { name, value, type, checked } = e.target;
-        if (name.startsWith("content.")) {
-            const field = name.split(".")[1];
-            setFormData((prev) => ({
-                ...prev,
-                content: { ...prev.content, [field]: value },
-            }));
-        } else if (name.startsWith("sampleAnswer.")) {
-            const field = name.split(".")[1];
-            setFormData((prev) => ({
-                ...prev,
-                sampleAnswer: { ...prev.sampleAnswer, [field]: value },
-            }));
-        } else if (name === "isActive") {
-            setFormData((prev) => ({ ...prev, [name]: checked }));
-        } else {
-            setFormData((prev) => ({ ...prev, [name]: value }));
-        }
-        if (errors[name]) {
-            setErrors((prev) => ({ ...prev, [name]: "" }));
-        }
-    };
-
-    const handleArrayChange = (value, name) => {
-        setFormData((prev) => ({ ...prev, [name]: value }));
-    };
-
-    const updateOption = (index, field, value) => {
-        setFormData((prev) => ({
-            ...prev,
-            options: prev.options.map((opt, i) =>
-                i === index ? { ...opt, [field]: value } : opt
-            ),
-        }));
-    };
-
-    const addOption = () => {
-        setFormData((prev) => ({
-            ...prev,
-            options: [...prev.options, { label: "", text: "", isCorrect: false, explanation: "" }],
-        }));
-    };
-
-    const removeOption = (index) => {
-        setFormData((prev) => ({
-            ...prev,
-            options: prev.options.filter((_, i) => i !== index),
-        }));
-    };
-
-    const updatePrompt = (index, value) => {
-        setFormData((prev) => ({
-            ...prev,
-            cueCard: {
-                ...prev.cueCard,
-                prompts: prev.cueCard.prompts.map((p, i) => (i === index ? value : p)),
-            },
-        }));
-    };
-
-    const addPrompt = () => {
-        setFormData((prev) => ({
-            ...prev,
-            cueCard: { ...prev.cueCard, prompts: [...prev.cueCard.prompts, ""] },
-        }));
-    };
-
-    const removePrompt = (index) => {
-        setFormData((prev) => ({
-            ...prev,
-            cueCard: {
-                ...prev.cueCard,
-                prompts: prev.cueCard.prompts.filter((_, i) => i !== index),
-            },
-        }));
-    };
-
-    const updateTag = (index, value) => {
-        setFormData((prev) => ({
-            ...prev,
-            tags: prev.tags.map((tag, i) => (i === index ? value : tag)),
-        }));
-    };
-
-    const addTag = () => {
-        setFormData((prev) => ({ ...prev, tags: [...prev.tags, ""] }));
-    };
-
-    const removeTag = (index) => {
-        setFormData((prev) => ({
-            ...prev,
-            tags: prev.tags.filter((_, i) => i !== index),
-        }));
     };
 
     const getQuestionTypeLabel = (type) => {
@@ -748,17 +614,18 @@ export default function QuestionManagement() {
             </Modal>
 
             {/* Edit/Create Modal */}
-            <Modal isOpen={editModalOpen} onClose={() => setEditModalOpen(false)} className="max-w-[800px] ">
-                <div className=" relative w-full max-w-[800px] rounded-3xl bg-white p-4 dark:bg-gray-900 lg:p-6">
+            <Modal isOpen={editModalOpen} isFullscreen onClose={() => setEditModalOpen(false)} className="bg-white dark:bg-gray-900">
+                <div className="max-w-6xl mx-auto relative w-full rounded-3xl bg-white p-4 dark:bg-gray-900 lg:p-6">
                     <div className="px-2 pr-14">
                         <h4 className="mb-2 text-2xl font-semibold text-gray-800 dark:text-white/90">
                             {selectedQuestion ? "Edit Question" : "Add New Question"}
                         </h4>
                     </div>
-                    <div className="max-h-[80vh] overflow-y-auto no-scrollbar p-2">
+                    <div className="overflow-y-auto no-scrollbar p-2">
                         <CreateQuestionForm
                             onClose={() => setEditModalOpen(false)}
                             onSuccess={fetchQuestions}
+                            initialData={selectedQuestion}
                         />
                     </div>
                 </div>

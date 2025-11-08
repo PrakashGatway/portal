@@ -3,6 +3,7 @@ import Input from '../../components/form/input/InputField';
 import Label from '../../components/form/Label';
 import { toast } from 'react-toastify';
 import api from '../../axiosInstance';
+import RichTextEditor from '../../components/TextEditor';
 
 // ======================
 // CONFIGURATION (YOUR EXACT DATA)
@@ -165,7 +166,6 @@ export default function QuestionForm({
     tags: [''],
     timeLimit: 0,
     isActive: true,
-    // Group mode
     questionGroup: [
       {
         title: '',
@@ -184,7 +184,6 @@ export default function QuestionForm({
   const [allExams, setAllExams] = useState([]);
   const [allSections, setAllSections] = useState([]);
 
-  // Initialize for edit mode
   useEffect(() => {
     if (initialData) {
       setFormData(prev => ({ ...prev, ...initialData }));
@@ -326,7 +325,7 @@ export default function QuestionForm({
       if (!formData.isQuestionGroup) {
         if (!formData.questionType) newErrors.questionType = 'Question type is required';
         if (!formData.content.instruction?.trim()) newErrors.instruction = 'Instruction is required';
-        
+
         if (isReading(formData.mainType) && !formData.content.passageText?.trim()) {
           newErrors.passageText = 'Reading passage is required';
         }
@@ -338,7 +337,7 @@ export default function QuestionForm({
           if (!group.title?.trim()) newErrors[`group_${gIndex}_title`] = 'Group title is required';
           if (!group.instruction?.trim()) newErrors[`group_${gIndex}_instruction`] = 'Group instruction is required';
           if (!group.type) newErrors[`group_${gIndex}_type`] = 'Group question type is required';
-          
+
           if (isReading(formData.mainType) && !formData.content.passageText?.trim()) {
             newErrors.passageText = 'Reading passage is required';
           }
@@ -531,7 +530,7 @@ export default function QuestionForm({
             {/* Main Fields */}
             <div className="bg-white p-5 rounded-xl border">
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
-                <div>
+                {!formData.isQuestionGroup && <div>
                   <Label className="text-sm text-gray-600">Question Type *</Label>
                   <select
                     name="questionType"
@@ -544,7 +543,7 @@ export default function QuestionForm({
                     {availableQuestionTypes.map(t => <option key={t} value={t}>{formatLabel(t)}</option>)}
                   </select>
                   {errors.questionType && <p className="text-red-600 text-xs mt-1">{errors.questionType}</p>}
-                </div>
+                </div>}
                 <div>
                   <Label className="text-sm text-gray-600">Marks</Label>
                   <Input type="number" name="marks" value={formData.marks} onChange={handleChange} min="0" />
@@ -585,13 +584,18 @@ export default function QuestionForm({
                   onChange={(e) => handleChange({ target: { name: 'content.passageTitle', value: e.target.value } })}
                   className="mb-2"
                 />
-                <textarea
+                {/* <textarea
                   name="content.passageText"
                   value={formData.content.passageText}
                   onChange={handleChange}
                   rows={6}
                   className="w-full px-3 py-2 border border-gray-300 rounded-lg"
                   placeholder="Paste full passage..."
+                /> */}
+                <Label>Passage content *</Label>
+                <RichTextEditor
+                  initialValue={formData.content.passageText}
+                  onChange={(e) => handleChange({ target: { name: 'content.passageText', value: e } })}
                 />
                 {errors.passageText && <p className="text-red-600 text-sm mt-1">{errors.passageText}</p>}
               </div>
@@ -756,7 +760,7 @@ export default function QuestionForm({
                         <div key={qIndex} className="mt-3 p-3 bg-gray-50 rounded">
                           <Input placeholder="Question stem" value={q.question} onChange={(e) => updateGroupQuestion(gIndex, qIndex, 'question', e.target.value)} className="mb-2" />
                           {errors[`group_${gIndex}_q_${qIndex}`] && <p className="text-red-600 text-xs mb-1">{errors[`group_${gIndex}_q_${qIndex}`]}</p>}
-                          
+
                           {needsOptions(group.type) && q.options.map((opt, oIndex) => (
                             <div key={oIndex} className="flex gap-2 mt-1">
                               <Input placeholder="Label" value={opt.label} onChange={(e) => updateGroupQuestionOption(gIndex, qIndex, oIndex, 'label', e.target.value)} className="w-16" />
@@ -854,9 +858,9 @@ export default function QuestionForm({
   // ======================
 
   return (
-    <div className="max-w-4xl mx-auto">
+    <div className="max-w-6xl mx-auto">
       {/* Progress Bar */}
-      <div className="mb-8 w-3/4 mx-auto">
+      {/* <div className="mb-8 w-3/4 mx-auto">
         <div className="flex justify-between mb-2">
           {[1, 2, 3].map(num => (
             <div key={num} className="flex flex-col items-center">
@@ -872,11 +876,11 @@ export default function QuestionForm({
         <div className="w-full bg-gray-200 rounded-full h-2">
           <div className="bg-blue-600 h-2 rounded-full transition-all duration-300" style={{ width: `${(step / 3) * 100}%` }}></div>
         </div>
-      </div>
+      </div> */}
 
       {/* Form */}
       <div className="bg-white rounded-2xl shadow-lg overflow-hidden">
-        <div className="p-6 md:p-8 max-h-[70vh] overflow-y-auto">
+        <div className="p-6 md:p-8 max-h-[75vh] overflow-y-auto">
           {renderStepContent()}
         </div>
 
