@@ -12,7 +12,8 @@ import {
     Pencil,
     Trash2,
     BookOpen,
-    Search
+    Search,
+    GripVertical // Icon for drag handle
 } from "lucide-react";
 import TextArea from "../../components/form/input/TextArea";
 
@@ -31,7 +32,7 @@ export default function TestSeriesManagement() {
     // Related data
     const [allExams, setAllExams] = useState([]);
     const [allSections, setAllSections] = useState([]);
-    const [allQuestions, setAllQuestions] = useState([]);
+    const [allQuestions, setAllQuestions] = useState([]); // Fetched questions for the currently selected section
     const [allCourses, setAllCourses] = useState([]);
 
     // Filters
@@ -62,7 +63,7 @@ export default function TestSeriesManagement() {
         isTimed: true,
         allowPause: false,
         courseAccess: [],
-        sections: [], // will be built step-by-step
+        sections: [], // will be built step-by-step [{ sectionId, order, questionIds: [ObjectId], duration, totalQuestions }]
     });
     const [errors, setErrors] = useState({});
     const [sectionSearch, setSectionSearch] = useState("");
@@ -141,6 +142,13 @@ export default function TestSeriesManagement() {
 
     const openEditModal = (ts) => {
         setSelectedTestSeries(ts);
+        // Ensure questionIds are mapped correctly from the backend response
+        const mappedSections = ts.sections?.map(section => ({
+            ...section,
+            // Ensure questionIds is always an array, even if backend sends null/undefined
+            questionIds: Array.isArray(section.questionIds) ? section.questionIds : [],
+        })) || [];
+
         setFormData({
             title: ts.title || "",
             type: ts.type || TestSeriesTypes[0],
@@ -161,7 +169,7 @@ export default function TestSeriesManagement() {
             isTimed: ts.isTimed !== false,
             allowPause: !!ts.allowPause,
             courseAccess: ts.courseAccess?.map(c => c._id) || [],
-            sections: ts.sections || [],
+            sections: mappedSections, // Use mapped sections
         });
         setCurrentStep(1);
         setEditModalOpen(true);
@@ -205,10 +213,10 @@ export default function TestSeriesManagement() {
         return Object.keys(err).length === 0;
     };
 
+    // --- SECTION MANAGEMENT ---
     const addSectionToTest = (sectionId) => {
         const section = allSections.find(s => s._id === sectionId);
         if (!section) return;
-
         const newSection = {
             sectionId: section._id,
             order: formData.sections.length + 1,
@@ -216,7 +224,6 @@ export default function TestSeriesManagement() {
             duration: section.duration || 30,
             totalQuestions: section.questionCount || 0,
         };
-
         setFormData(prev => ({
             ...prev,
             sections: [...prev.sections, newSection],
@@ -239,22 +246,49 @@ export default function TestSeriesManagement() {
         }));
     };
 
+    // --- QUESTION MANAGEMENT WITHIN SECTION ---
     const toggleQuestionInSection = (sectionIndex, questionId) => {
-        setFormData(prev => ({
-            ...prev,
-            sections: prev.sections.map((sec, i) =>
-                i === sectionIndex
-                    ? {
-                        ...sec,
-                        questionIds: sec.questionIds.includes(questionId)
-                            ? sec.questionIds.filter(id => id !== questionId)
-                            : [...sec.questionIds, questionId],
-                    }
-                    : sec
-            ),
-        }));
+        setFormData(prev => {
+            const newSections = [...prev.sections];
+            const section = newSections[sectionIndex];
+            const existingQuestionIndex = section.questionIds.findIndex(qId => qId.equals(questionId)); // Use .equals for ObjectId comparison
+
+            if (existingQuestionIndex > -1) {
+                // Remove question
+                section.questionIds.splice(existingQuestionIndex, 1);
+            } else {
+                // Add question to the end of the array
+                section.questionIds.push(questionId);
+            }
+
+            // Update totalQuestions count for the section
+            section.totalQuestions = section.questionIds.length;
+
+            return { ...prev, sections: newSections };
+        });
     };
 
+    // --- DRAG & DROP LOGIC FOR QUESTIONS ---
+    // This function handles the reordering of questions within a specific section
+    const moveQuestionInSection = (sectionIndex, fromIndex, toIndex) => {
+        setFormData(prev => {
+            const newSections = [...prev.sections];
+            const section = newSections[sectionIndex];
+            const updatedQuestionIds = [...section.questionIds]; // Create a copy of the array
+
+            // Remove question from old position
+            const [movedQuestionId] = updatedQuestionIds.splice(fromIndex, 1);
+            // Insert question at new position
+            updatedQuestionIds.splice(toIndex, 0, movedQuestionId);
+
+            // Update the section's questionIds array with the new order
+            section.questionIds = updatedQuestionIds;
+            // TotalQuestions remains the same after reordering
+            section.totalQuestions = updatedQuestionIds.length;
+
+            return { ...prev, sections: newSections };
+        });
+    };
 
     const fetchQuestionsForSection = async (sectionId) => {
         try {
@@ -281,8 +315,14 @@ export default function TestSeriesManagement() {
 
     // --- SUBMIT ---
     const handleCreate = async () => {
+        // The payload structure matches the original schema
+        const payload = {
+            ...formData,
+            // No need to transform questionIds, they are already ObjectId arrays
+        };
+
         try {
-            await api.post("/test/series", formData);
+            await api.post("/test/series", payload);
             toast.success("Test series created!");
             fetchTestSeries();
             setEditModalOpen(false);
@@ -292,8 +332,12 @@ export default function TestSeriesManagement() {
     };
 
     const handleUpdate = async () => {
+        const payload = {
+            ...formData,
+            // No need to transform questionIds, they are already ObjectId arrays
+        };
         try {
-            await api.put(`/test/series/${selectedTestSeries._id}`, formData);
+            await api.put(`/test/series/${selectedTestSeries._id}`, payload);
             toast.success("Test series updated!");
             fetchTestSeries();
             setEditModalOpen(false);
@@ -370,7 +414,6 @@ export default function TestSeriesManagement() {
                     </div>
                 </div>
             </div>
-
             {/* Filters */}
             <div className="min-h-[70vh] overflow-x-auto rounded-2xl border border-gray-200 bg-white px-4 py-4 dark:border-gray-800 dark:bg-white/[0.03]">
                 <div className="mb-6 grid grid-cols-1 gap-4 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4">
@@ -428,7 +471,6 @@ export default function TestSeriesManagement() {
                         </button>
                     </div>
                 </div>
-
                 {/* Table */}
                 <div className="overflow-x-auto rounded-lg border border-gray-200 dark:border-gray-700">
                     {loading ? (
@@ -498,7 +540,6 @@ export default function TestSeriesManagement() {
                         </table>
                     )}
                 </div>
-
                 {/* Pagination */}
                 {total > 0 && (
                     <div className="mt-4 flex flex-col items-center justify-between space-y-4 sm:flex-row sm:space-y-0">
@@ -537,7 +578,6 @@ export default function TestSeriesManagement() {
                     </div>
                 )}
             </div>
-
             {/* View Modal */}
             <Modal isOpen={isOpen} onClose={closeModal} className="max-w-[700px] m-4">
                 <div className="no-scrollbar relative w-full max-w-[700px] overflow-y-auto rounded-3xl bg-white p-4 dark:bg-gray-900 lg:p-11">
@@ -566,7 +606,6 @@ export default function TestSeriesManagement() {
                     </div>
                 </div>
             </Modal>
-
             {/* Stepper Create/Edit Modal */}
             <Modal isOpen={editModalOpen} onClose={() => setEditModalOpen(false)} className="max-w-[700px] m-4">
                 <div className="no-scrollbar relative w-full max-w-[700px] overflow-y-auto rounded-3xl bg-white p-4 dark:bg-gray-900 lg:p-11">
@@ -601,7 +640,6 @@ export default function TestSeriesManagement() {
                                     : "Pricing, timing & settings"}
                         </p>
                     </div>
-
                     <form onSubmit={handleSubmit} className="flex flex-col">
                         <div className="custom-scrollbar max-h-[450px] min-h-[350px] overflow-y-auto px-2 pb-3">
                             {/* Step 1: Basic Info */}
@@ -653,7 +691,6 @@ export default function TestSeriesManagement() {
                                     </div>
                                 </div>
                             )}
-
                             {/* Step 2: Sections & Questions */}
                             {currentStep === 2 && (
                                 <div className="space-y-4">
@@ -701,7 +738,6 @@ export default function TestSeriesManagement() {
                                             </div>
                                         )}
                                     </div>
-
                                     {/* Added Sections */}
                                     <div>
                                         <Label>Selected Sections ({formData.sections.length})</Label>
@@ -728,6 +764,7 @@ export default function TestSeriesManagement() {
                                                                         value={sec.totalQuestions}
                                                                         onChange={(e) => updateSectionField(idx, "totalQuestions", Number(e.target.value))}
                                                                         className="text-xs"
+                                                                        disabled // Disable direct input, it's calculated
                                                                     />
                                                                 </div>
                                                             </div>
@@ -739,7 +776,6 @@ export default function TestSeriesManagement() {
                                                                 <Trash2 className="h-4 w-4" />
                                                             </button>
                                                         </div>
-
                                                         {/* Questions */}
                                                         <div className="mt-3">
                                                             <button
@@ -754,21 +790,48 @@ export default function TestSeriesManagement() {
                                                             </button>
                                                             {selectedSectionId === sec.sectionId && (
                                                                 <div className="mt-2 border-t pt-2">
-                                                                    <div className="max-h-32 overflow-y-auto">
-                                                                        {allQuestions.map(q => (
-                                                                            <label key={q._id} className="flex items-center gap-2 text-sm">
-                                                                                <input
-                                                                                    type="checkbox"
-                                                                                    checked={sec.questionIds.includes(q._id)}
-                                                                                    onChange={() => toggleQuestionInSection(idx, q._id)}
-                                                                                    className="rounded"
-                                                                                />
-                                                                                {q?.content?.instruction?.substring(0, 50)}...
-                                                                            </label>
-                                                                        ))}
+                                                                    <div className="max-h-64 overflow-y-auto"> {/* Increased height for potentially longer lists */}
+                                                                        {sec.questionIds.map((questionId, questionIdx) => { // Render based on current order in state
+                                                                             const question = allQuestions.find(q => q._id === questionId); // Use '===' for string comparison
+                                                                            if (!question) return null; // Skip if question not found in fetched list
+
+                                                                            return (
+                                                                                <div
+                                                                                    key={questionId} // Use questionId as key
+                                                                                    className="flex items-center gap-2 text-sm p-1 border-b border-gray-200 dark:border-gray-700" // Added border for clarity
+                                                                                    draggable // Enable dragging
+                                                                                    onDragStart={(e) => {
+                                                                                        e.dataTransfer.setData("text/plain", JSON.stringify({ sectionIndex: idx, questionIndex: questionIdx, questionId: questionId }));
+                                                                                    }}
+                                                                                    onDragOver={(e) => e.preventDefault()} // Necessary for drop
+                                                                                    onDrop={(e) => {
+                                                                                        e.preventDefault();
+                                                                                        const dragData = JSON.parse(e.dataTransfer.getData("text/plain"));
+                                                                                        // Only handle drop if it's within the same section
+                                                                                        if (dragData.sectionIndex === idx) {
+                                                                                            moveQuestionInSection(idx, dragData.questionIndex, questionIdx);
+                                                                                        }
+                                                                                    }}
+                                                                                >
+                                                                                    {/* Drag Handle */}
+                                                                                    <GripVertical className="h-4 w-4 text-gray-400 cursor-grab" />
+                                                                                    {/* Show visual indicator of position (optional) */}
+                                                                                    <span className="text-xs bg-gray-100 dark:bg-gray-700 px-1 rounded">{questionIdx + 1}</span>
+                                                                                    <span className="flex-1 truncate">{question?.content?.instruction?.substring(0, 50)}...</span>
+                                                                                    <input
+                                                                                        type="checkbox"
+                                                                                        checked={true} // Always checked if displayed here
+                                                                                        onChange={() => toggleQuestionInSection(idx, questionId)} // Deselect by clicking
+                                                                                        className="rounded"
+                                                                                    />
+                                                                                </div>
+                                                                            );
+                                                                        })}
                                                                     </div>
+                                                                    {/* Fallback UI if Drag & Drop is not implemented yet */}
+                                                                    {/* You could add buttons to move items up/down */}
                                                                     <p className="text-xs text-gray-500 mt-1">
-                                                                        Selected: {sec.questionIds.length} / {allQuestions.length}
+                                                                        Selected: {sec.questionIds.length} / {allQuestions.length} | Drag to reorder
                                                                     </p>
                                                                 </div>
                                                             )}
@@ -781,7 +844,6 @@ export default function TestSeriesManagement() {
                                     </div>
                                 </div>
                             )}
-
                             {/* Step 3: Pricing & Settings */}
                             {currentStep === 3 && (
                                 <div className="space-y-4">
@@ -798,7 +860,6 @@ export default function TestSeriesManagement() {
                                             </Label>
                                         </div>
                                     </div>
-
                                     {formData.isPaid && (
                                         <div className="grid grid-cols-1 gap-4 md:grid-cols-3 p-3 bg-gray-50 rounded-lg dark:bg-gray-800">
                                             <div>
@@ -829,7 +890,6 @@ export default function TestSeriesManagement() {
                                             </div>
                                         </div>
                                     )}
-
                                     <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
                                         <div>
                                             <Label>Total Duration (minutes) *</Label>
@@ -865,7 +925,6 @@ export default function TestSeriesManagement() {
                                             />
                                         </div>
                                     </div>
-
                                     <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
                                         <div>
                                             <Label className="flex items-center gap-2">
@@ -890,7 +949,6 @@ export default function TestSeriesManagement() {
                                             </Label>
                                         </div>
                                     </div>
-
                                     <div>
                                         <Label>Course Access (Optional)</Label>
                                         <Select
@@ -903,7 +961,6 @@ export default function TestSeriesManagement() {
                                 </div>
                             )}
                         </div>
-
                         {/* Footer */}
                         <div className="flex items-center justify-between px-2 mt-6">
                             <div>
@@ -943,7 +1000,6 @@ export default function TestSeriesManagement() {
                     </form>
                 </div>
             </Modal>
-
             {/* Delete Modal */}
             <Modal isOpen={isDeleteModalOpen} onClose={() => setDeleteModalOpen(false)} className="max-w-lg">
                 {selectedTestSeries && (

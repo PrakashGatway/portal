@@ -424,33 +424,30 @@ export default function LeadManagement() {
                     </div>
                 </div>
 
-              {/* Pagination */}
-{total > 0 && (
-    <div className="mt-4 flex flex-col items-center justify-between space-y-4 sm:flex-row sm:space-y-0">
-        <div className="flex items-center space-x-4">
-            {/* Add the rows per page dropdown here */}
-            <div className="flex items-center space-x-2 mb-[20px]">
-                <label className="text-sm font-medium text-gray-700 dark:text-gray-300">
-                    Rows per page:
-                </label>
-                <select
-                    name="limit"
-                    value={filters.limit}
-                    onChange={handleFilterChange}
-                    className="rounded-md border border-gray-300 bg-white py-1 px-2 text-sm focus:border-indigo-500 focus:outline-none focus:ring-indigo-500 dark:border-gray-600 dark:bg-gray-800 dark:text-white"
-                >
-                    <option value="5">5</option>
-                    <option value="10">10</option>
-                    <option value="20">20</option>
-                    <option value="50">50</option>
-                </select>
-            </div>
-            
-            
-        </div>
-     
-    </div>
-)}
+                {/* Pagination */}
+                {total > 0 && (
+                    <div className="mt-4 flex flex-col items-center justify-between space-y-4 sm:flex-row sm:space-y-0">
+                        <div className="flex items-center space-x-4">
+                            {/* Add the rows per page dropdown here */}
+                            <div className="flex items-center space-x-2 mb-[20px]">
+                                <label className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                                    Rows per page:
+                                </label>
+                                <select
+                                    name="limit"
+                                    value={filters.limit}
+                                    onChange={handleFilterChange}
+                                    className="rounded-md border border-gray-300 bg-white py-1 px-2 text-sm focus:border-indigo-500 focus:outline-none focus:ring-indigo-500 dark:border-gray-600 dark:bg-gray-800 dark:text-white"
+                                >
+                                    <option value="5">5</option>
+                                    <option value="10">10</option>
+                                    <option value="20">20</option>
+                                    <option value="50">50</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+                )}
 
                 {/* Table */}
                 <div className="overflow-x-auto rounded-lg border border-gray-200 dark:border-gray-700">

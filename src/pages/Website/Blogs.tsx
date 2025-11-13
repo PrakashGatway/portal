@@ -67,7 +67,7 @@ export default function ArticleManagement() {
 
     const fetchCategories = async () => {
         try {
-            const res = await api.get("/web/cat?isActive=true");
+            const res = await api.get("/web/cat?isActive=true&from=admin");
             setAllCategories(res.data?.data || []);
         } catch (error) {
             console.error("Failed to load categories");
