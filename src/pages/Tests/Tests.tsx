@@ -19,6 +19,7 @@ import TextArea from "../../components/form/input/TextArea";
 
 const TestSeriesTypes = ["Full-Length", "Mini-Series", "Sectional"];
 const DifficultyLevels = ["Beginner", "Intermediate", "Advanced", "Expert"];
+const SubTypes = ["reading", "listening", "speaking", "writing"]; // Added SubTypes
 
 export default function TestSeriesManagement() {
     const [testSeriesList, setTestSeriesList] = useState([]);
@@ -32,7 +33,7 @@ export default function TestSeriesManagement() {
     // Related data
     const [allExams, setAllExams] = useState([]);
     const [allSections, setAllSections] = useState([]);
-    const [allQuestions, setAllQuestions] = useState([]); // Fetched questions for the currently selected section
+    const [allQuestions, setAllQuestions] = useState({}); // Changed to store questions per sectionId { sectionId: [questions] }
     const [allCourses, setAllCourses] = useState([]);
 
     // Filters
@@ -50,9 +51,11 @@ export default function TestSeriesManagement() {
     const [formData, setFormData] = useState({
         title: "",
         type: TestSeriesTypes[0],
+        subType: "", // Added subType
         description: "",
         examId: "",
         thumbnailPic: "",
+        slug: "", // Added slug
         difficultyLevel: "Intermediate",
         isPaid: false,
         price: { amount: 0, discount: 0, currency: "INR" },
@@ -63,11 +66,13 @@ export default function TestSeriesManagement() {
         isTimed: true,
         allowPause: false,
         courseAccess: [],
+        isActive: true, // Added isActive
         sections: [], // will be built step-by-step [{ sectionId, order, questionIds: [ObjectId], duration, totalQuestions }]
     });
+
     const [errors, setErrors] = useState({});
     const [sectionSearch, setSectionSearch] = useState("");
-    const [selectedSectionId, setSelectedSectionId] = useState(null);
+    const [selectedSectionId, setSelectedSectionId] = useState(null); // Now tracks the sectionId for which questions are being managed
 
     // Fetch data
     useEffect(() => {
@@ -148,13 +153,14 @@ export default function TestSeriesManagement() {
             // Ensure questionIds is always an array, even if backend sends null/undefined
             questionIds: Array.isArray(section.questionIds) ? section.questionIds : [],
         })) || [];
-
         setFormData({
             title: ts.title || "",
             type: ts.type || TestSeriesTypes[0],
+            subType: ts.subType || "", // Added subType
             description: ts.description || "",
             examId: ts.examId?._id || "",
             thumbnailPic: ts.thumbnailPic || "",
+            slug: ts.slug || "", // Added slug
             difficultyLevel: ts.difficultyLevel || "Intermediate",
             isPaid: !!ts.isPaid,
             price: {
@@ -169,6 +175,7 @@ export default function TestSeriesManagement() {
             isTimed: ts.isTimed !== false,
             allowPause: !!ts.allowPause,
             courseAccess: ts.courseAccess?.map(c => c._id) || [],
+            isActive: ts.isActive !== false, // Added isActive
             sections: mappedSections, // Use mapped sections
         });
         setCurrentStep(1);
@@ -179,9 +186,11 @@ export default function TestSeriesManagement() {
         setFormData({
             title: "",
             type: TestSeriesTypes[0],
+            subType: "", // Added subType
             description: "",
             examId: "",
             thumbnailPic: "",
+            slug: "", // Added slug
             difficultyLevel: "Intermediate",
             isPaid: false,
             price: { amount: 0, discount: 0, currency: "INR" },
@@ -192,8 +201,11 @@ export default function TestSeriesManagement() {
             isTimed: true,
             allowPause: false,
             courseAccess: [],
+            isActive: true, // Added isActive
             sections: [],
         });
+        setAllQuestions({}); // Reset questions state
+        setSelectedSectionId(null); // Reset selected section ID
         setErrors({});
     };
 
@@ -202,16 +214,20 @@ export default function TestSeriesManagement() {
         const err = {};
         if (!formData.title?.trim()) err.title = "Title is required";
         if (!formData.examId) err.examId = "Exam is required";
+        if (!formData.slug?.trim()) err.slug = "Slug is required"; // Added slug validation
         setErrors(err);
         return Object.keys(err).length === 0;
     };
 
-    const validateStep2 = () => {
-        const err = {};
-        if (formData.sections.length === 0) err.sections = "At least one section is required";
-        setErrors(err);
-        return Object.keys(err).length === 0;
-    };
+    // Removed validateStep2 as sections are not strictly required by the schema itself,
+    // only its internal fields if a section exists. The UI logic for adding sections remains.
+    // If you want to enforce at least one section via UI, you can uncomment this:
+    // const validateStep2 = () => {
+    //     const err = {};
+    //     if (formData.sections.length === 0) err.sections = "At least one section is required";
+    //     setErrors(err);
+    //     return Object.keys(err).length === 0;
+    // };
 
     // --- SECTION MANAGEMENT ---
     const addSectionToTest = (sectionId) => {
@@ -251,8 +267,7 @@ export default function TestSeriesManagement() {
         setFormData(prev => {
             const newSections = [...prev.sections];
             const section = newSections[sectionIndex];
-            const existingQuestionIndex = section.questionIds.findIndex(qId => qId.equals(questionId)); // Use .equals for ObjectId comparison
-
+            const existingQuestionIndex = section.questionIds.findIndex(qId => qId === questionId); // Use '==' for string comparison
             if (existingQuestionIndex > -1) {
                 // Remove question
                 section.questionIds.splice(existingQuestionIndex, 1);
@@ -260,10 +275,8 @@ export default function TestSeriesManagement() {
                 // Add question to the end of the array
                 section.questionIds.push(questionId);
             }
-
             // Update totalQuestions count for the section
             section.totalQuestions = section.questionIds.length;
-
             return { ...prev, sections: newSections };
         });
     };
@@ -275,17 +288,14 @@ export default function TestSeriesManagement() {
             const newSections = [...prev.sections];
             const section = newSections[sectionIndex];
             const updatedQuestionIds = [...section.questionIds]; // Create a copy of the array
-
             // Remove question from old position
             const [movedQuestionId] = updatedQuestionIds.splice(fromIndex, 1);
             // Insert question at new position
             updatedQuestionIds.splice(toIndex, 0, movedQuestionId);
-
             // Update the section's questionIds array with the new order
             section.questionIds = updatedQuestionIds;
             // TotalQuestions remains the same after reordering
             section.totalQuestions = updatedQuestionIds.length;
-
             return { ...prev, sections: newSections };
         });
     };
@@ -293,10 +303,18 @@ export default function TestSeriesManagement() {
     const fetchQuestionsForSection = async (sectionId) => {
         try {
             const res = await api.get(`/test/questions/?sectionId=${sectionId}`);
-            setAllQuestions(res.data?.questions || []);
+            setAllQuestions(prev => ({
+                ...prev,
+                [sectionId]: res.data?.questions || [] // Store questions under the section ID
+            }));
+            setSelectedSectionId(sectionId); // Set the section ID after fetching
         } catch (error) {
             toast.error("Failed to load questions");
-            setAllQuestions([]);
+            setAllQuestions(prev => ({
+                ...prev,
+                [sectionId]: [] // Store empty array on error
+            }));
+            setSelectedSectionId(sectionId); // Still set the ID so the UI shows the error state
         }
     };
 
@@ -304,7 +322,7 @@ export default function TestSeriesManagement() {
     const goToNext = () => {
         if (currentStep === 1 && validateStep1()) {
             setCurrentStep(2);
-        } else if (currentStep === 2 && validateStep2()) {
+        } else if (currentStep === 2 /*&& validateStep2()*/ ) { // Removed validation call if not enforcing sections
             setCurrentStep(3);
         }
     };
@@ -315,12 +333,11 @@ export default function TestSeriesManagement() {
 
     // --- SUBMIT ---
     const handleCreate = async () => {
-        // The payload structure matches the original schema
+        // The payload structure matches the updated schema
         const payload = {
             ...formData,
             // No need to transform questionIds, they are already ObjectId arrays
         };
-
         try {
             await api.post("/test/series", payload);
             toast.success("Test series created!");
@@ -334,7 +351,6 @@ export default function TestSeriesManagement() {
     const handleUpdate = async () => {
         const payload = {
             ...formData,
-            // No need to transform questionIds, they are already ObjectId arrays
         };
         try {
             await api.put(`/test/series/${selectedTestSeries._id}`, payload);
@@ -484,8 +500,10 @@ export default function TestSeriesManagement() {
                                     <th className="px-2 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500 dark:text-gray-300">Title</th>
                                     <th className="px-2 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500 dark:text-gray-300">Exam</th>
                                     <th className="px-2 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500 dark:text-gray-300">Type</th>
+                                    <th className="px-2 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500 dark:text-gray-300">Sub-Type</th> {/* Added Sub-Type column */}
                                     <th className="px-2 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500 dark:text-gray-300">Paid</th>
                                     <th className="px-2 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500 dark:text-gray-300">Duration</th>
+                                    <th className="px-2 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500 dark:text-gray-300">Active</th> {/* Added Active column */}
                                     <th className="px-2 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500 dark:text-gray-300">Actions</th>
                                 </tr>
                             </thead>
@@ -505,11 +523,17 @@ export default function TestSeriesManagement() {
                                             <td className="whitespace-nowrap px-2 py-2 text-sm text-gray-500 dark:text-gray-300">
                                                 {ts.type}
                                             </td>
+                                            <td className="whitespace-nowrap px-2 py-2 text-sm text-gray-500 dark:text-gray-300"> {/* Added Sub-Type cell */}
+                                                {ts.subType || "—"}
+                                            </td>
                                             <td className="whitespace-nowrap px-2 py-2 text-sm text-gray-500 dark:text-gray-300">
                                                 {ts.isPaid ? "Yes" : "No"}
                                             </td>
                                             <td className="whitespace-nowrap px-2 py-2 text-sm text-gray-500 dark:text-gray-300">
                                                 {ts.duration} min
+                                            </td>
+                                            <td className="whitespace-nowrap px-2 py-2 text-sm text-gray-500 dark:text-gray-300"> {/* Added Active cell */}
+                                                {ts.isActive ? "Yes" : "No"}
                                             </td>
                                             <td className="whitespace-nowrap px-2 py-2 text-sm font-medium">
                                                 <div className="flex space-x-2">
@@ -531,7 +555,7 @@ export default function TestSeriesManagement() {
                                     ))
                                 ) : (
                                     <tr>
-                                        <td colSpan={6} className="px-2 py-4 text-center text-sm text-gray-500 dark:text-gray-300">
+                                        <td colSpan="7" className="px-2 py-4 text-center text-sm text-gray-500 dark:text-gray-300"> {/* Updated colspan */}
                                             No test series found
                                         </td>
                                     </tr>
@@ -590,8 +614,10 @@ export default function TestSeriesManagement() {
                             <div><p className="text-sm text-gray-500">Title</p><p className="text-sm font-medium">{selectedTestSeries.title}</p></div>
                             <div><p className="text-sm text-gray-500">Exam</p><p className="text-sm font-medium">{selectedTestSeries.examId?.name}</p></div>
                             <div><p className="text-sm text-gray-500">Type</p><p className="text-sm font-medium">{selectedTestSeries.type}</p></div>
+                            <div><p className="text-sm text-gray-500">Sub-Type</p><p className="text-sm font-medium">{selectedTestSeries.subType || "—"}</p></div> {/* Added Sub-Type detail */}
                             <div><p className="text-sm text-gray-500">Duration</p><p className="text-sm font-medium">{selectedTestSeries.duration} minutes</p></div>
                             <div><p className="text-sm text-gray-500">Total Questions</p><p className="text-sm font-medium">{selectedTestSeries.totalQuestions}</p></div>
+                            <div><p className="text-sm text-gray-500">Is Active</p><p className="text-sm font-medium">{selectedTestSeries.isActive ? "Yes" : "No"}</p></div> {/* Added Active detail */}
                             <div><p className="text-sm text-gray-500">Sections</p>
                                 <ul className="mt-1 space-y-1">
                                     {selectedTestSeries.sections?.map((s, i) => (
@@ -656,6 +682,15 @@ export default function TestSeriesManagement() {
                                             {errors.title && <p className="text-red-600 text-sm mt-1">{errors.title}</p>}
                                         </div>
                                         <div>
+                                            <Label>Slug *</Label> {/* Added Slug field */}
+                                            <Input
+                                                value={formData.slug}
+                                                onChange={(e) => setFormData({ ...formData, slug: e.target.value })}
+                                                placeholder="e.g. ielts-full-mock-test"
+                                            />
+                                            {errors.slug && <p className="text-red-600 text-sm mt-1">{errors.slug}</p>}
+                                        </div>
+                                        <div>
                                             <Label>Exam *</Label>
                                             <Select
                                                 options={allExams.map(e => ({ value: e._id, label: e.name }))}
@@ -672,6 +707,16 @@ export default function TestSeriesManagement() {
                                                 onChange={(val) => setFormData({ ...formData, type: val })}
                                             />
                                         </div>
+                                        {formData.type === "Sectional" && // Show Sub-Type only if type is Sectional
+                                            <div>
+                                                <Label>Sub-Type</Label> {/* Added Sub-Type field */}
+                                                <Select
+                                                    options={SubTypes.map(st => ({ value: st, label: st }))}
+                                                    defaultValue={formData.subType}
+                                                    onChange={(val) => setFormData({ ...formData, subType: val })}
+                                                />
+                                            </div>
+                                        }
                                         <div>
                                             <Label>Difficulty</Label>
                                             <Select
@@ -742,105 +787,112 @@ export default function TestSeriesManagement() {
                                     <div>
                                         <Label>Selected Sections ({formData.sections.length})</Label>
                                         {formData.sections.length === 0 ? (
-                                            <p className="text-sm text-gray-500 mt-2">No sections added yet</p>
+                                            <p className="text-sm text-gray-500 mt-2 italic">No sections added yet. Add sections to configure questions.</p>
                                         ) : (
                                             <div className="mt-2 space-y-3">
-                                                {formData.sections.map((sec, idx) => (
-                                                    <div key={idx} className="border border-gray-200 rounded-lg p-3 dark:border-gray-700">
-                                                        <div className="flex justify-between items-start">
-                                                            <div>
-                                                                <h6 className="font-medium">{allSections.find(s => s._id === sec.sectionId)?.name || "Unknown Section"}</h6>
-                                                                <div className="grid grid-cols-2 gap-2 mt-2">
-                                                                    <Input
-                                                                        type="number"
-                                                                        label="Duration (min)"
-                                                                        value={sec.duration}
-                                                                        onChange={(e) => updateSectionField(idx, "duration", Number(e.target.value))}
-                                                                        className="text-xs"
-                                                                    />
-                                                                    <Input
-                                                                        type="number"
-                                                                        label="Total Questions"
-                                                                        value={sec.totalQuestions}
-                                                                        onChange={(e) => updateSectionField(idx, "totalQuestions", Number(e.target.value))}
-                                                                        className="text-xs"
-                                                                        disabled // Disable direct input, it's calculated
-                                                                    />
-                                                                </div>
-                                                            </div>
-                                                            <button
-                                                                type="button"
-                                                                onClick={() => removeSectionFromTest(idx)}
-                                                                className="text-red-600 hover:text-red-800"
-                                                            >
-                                                                <Trash2 className="h-4 w-4" />
-                                                            </button>
-                                                        </div>
-                                                        {/* Questions */}
-                                                        <div className="mt-3">
-                                                            <button
-                                                                type="button"
-                                                                onClick={() => {
-                                                                    setSelectedSectionId(sec.sectionId);
-                                                                    fetchQuestionsForSection(sec.sectionId);
-                                                                }}
-                                                                className="text-sm text-indigo-600 hover:text-indigo-800"
-                                                            >
-                                                                Manage Questions
-                                                            </button>
-                                                            {selectedSectionId === sec.sectionId && (
-                                                                <div className="mt-2 border-t pt-2">
-                                                                    <div className="max-h-64 overflow-y-auto"> {/* Increased height for potentially longer lists */}
-                                                                        {sec.questionIds.map((questionId, questionIdx) => { // Render based on current order in state
-                                                                             const question = allQuestions.find(q => q._id === questionId); // Use '===' for string comparison
-                                                                            if (!question) return null; // Skip if question not found in fetched list
+                                                {formData.sections.map((sec, idx) => {
+                                                    const sectionDetails = allSections.find(s => s._id === sec.sectionId);
+                                                    const sectionQuestions = allQuestions[sec.sectionId] || []; // Get questions for this specific section
+                                                    const isManagingThisSection = selectedSectionId === sec.sectionId;
 
-                                                                            return (
-                                                                                <div
-                                                                                    key={questionId} // Use questionId as key
-                                                                                    className="flex items-center gap-2 text-sm p-1 border-b border-gray-200 dark:border-gray-700" // Added border for clarity
-                                                                                    draggable // Enable dragging
-                                                                                    onDragStart={(e) => {
-                                                                                        e.dataTransfer.setData("text/plain", JSON.stringify({ sectionIndex: idx, questionIndex: questionIdx, questionId: questionId }));
-                                                                                    }}
-                                                                                    onDragOver={(e) => e.preventDefault()} // Necessary for drop
-                                                                                    onDrop={(e) => {
-                                                                                        e.preventDefault();
-                                                                                        const dragData = JSON.parse(e.dataTransfer.getData("text/plain"));
-                                                                                        // Only handle drop if it's within the same section
-                                                                                        if (dragData.sectionIndex === idx) {
-                                                                                            moveQuestionInSection(idx, dragData.questionIndex, questionIdx);
-                                                                                        }
-                                                                                    }}
-                                                                                >
-                                                                                    {/* Drag Handle */}
-                                                                                    <GripVertical className="h-4 w-4 text-gray-400 cursor-grab" />
-                                                                                    {/* Show visual indicator of position (optional) */}
-                                                                                    <span className="text-xs bg-gray-100 dark:bg-gray-700 px-1 rounded">{questionIdx + 1}</span>
-                                                                                    <span className="flex-1 truncate">{question?.content?.instruction?.substring(0, 50)}...</span>
-                                                                                    <input
-                                                                                        type="checkbox"
-                                                                                        checked={true} // Always checked if displayed here
-                                                                                        onChange={() => toggleQuestionInSection(idx, questionId)} // Deselect by clicking
-                                                                                        className="rounded"
-                                                                                    />
-                                                                                </div>
-                                                                            );
-                                                                        })}
+                                                    return (
+                                                        <div key={idx} className="border border-gray-200 rounded-lg p-3 dark:border-gray-700">
+                                                            <div className="flex justify-between items-start">
+                                                                <div>
+                                                                    <h6 className="font-medium">{sectionDetails?.name || "Unknown Section"}</h6>
+                                                                    <div className="grid grid-cols-2 gap-2 mt-2">
+                                                                        <Input
+                                                                            type="number"
+                                                                            label="Duration (min)"
+                                                                            value={sec.duration}
+                                                                            onChange={(e) => updateSectionField(idx, "duration", Number(e.target.value))}
+                                                                            className="text-xs"
+                                                                        />
+                                                                        <Input
+                                                                            type="number"
+                                                                            label="Total Questions"
+                                                                            value={sec.totalQuestions}
+                                                                            onChange={(e) => updateSectionField(idx, "totalQuestions", Number(e.target.value))}
+                                                                            className="text-xs"
+                                                                            disabled // Disable direct input, it's calculated
+                                                                        />
                                                                     </div>
-                                                                    {/* Fallback UI if Drag & Drop is not implemented yet */}
-                                                                    {/* You could add buttons to move items up/down */}
-                                                                    <p className="text-xs text-gray-500 mt-1">
-                                                                        Selected: {sec.questionIds.length} / {allQuestions.length} | Drag to reorder
-                                                                    </p>
                                                                 </div>
-                                                            )}
+                                                                <button
+                                                                    type="button"
+                                                                    onClick={() => removeSectionFromTest(idx)}
+                                                                    className="text-red-600 hover:text-red-800"
+                                                                >
+                                                                    <Trash2 className="h-4 w-4" />
+                                                                </button>
+                                                            </div>
+                                                            {/* Questions */}
+                                                            <div className="mt-3">
+                                                                <button
+                                                                    type="button"
+                                                                    onClick={() => fetchQuestionsForSection(sec.sectionId)} // Fetch questions for this specific section
+                                                                    className="text-sm text-indigo-600 hover:text-indigo-800 underline"
+                                                                >
+                                                                    {isManagingThisSection ? "Hide Questions" : "Manage Questions"}
+                                                                </button>
+                                                                {isManagingThisSection && (
+                                                                    <div className="mt-2 border border-gray-200 rounded-lg p-2 dark:border-gray-700">
+                                                                        <div className="max-h-64 overflow-y-auto">
+                                                                            {sectionQuestions.length === 0 ? (
+                                                                                <p className="text-sm text-gray-500 py-2 text-center">No questions found for this section.</p>
+                                                                            ) : (
+                                                                                sectionQuestions.map((question, questionIdx) => {
+                                                                                    const isQuestionSelected = sec.questionIds.includes(question._id);
+                                                                                    return (
+                                                                                        <div
+                                                                                            key={question._id}
+                                                                                            className={`flex items-center gap-2 text-sm p-2 border-b border-gray-100 dark:border-gray-700 ${isQuestionSelected ? 'bg-indigo-50 dark:bg-gray-800' : ''}`} // Highlight selected
+                                                                                            draggable // Enable dragging
+                                                                                            onDragStart={(e) => {
+                                                                                                e.dataTransfer.setData("text/plain", JSON.stringify({ sectionIndex: idx, questionIndex: sec.questionIds.indexOf(question._id), questionId: question._id })); // Use index in current selection for drag
+                                                                                            }}
+                                                                                            onDragOver={(e) => e.preventDefault()} // Necessary for drop
+                                                                                            onDrop={(e) => {
+                                                                                                e.preventDefault();
+                                                                                                const dragData = JSON.parse(e.dataTransfer.getData("text/plain"));
+                                                                                                if (dragData.sectionIndex === idx) {
+                                                                                                    const newQuestionIndex = sec.questionIds.indexOf(question._id);
+                                                                                                    if (newQuestionIndex !== -1) { // Only reorder if the question is already selected
+                                                                                                        moveQuestionInSection(idx, dragData.questionIndex, newQuestionIndex);
+                                                                                                    }
+                                                                                                }
+                                                                                            }}
+                                                                                        >
+                                                                                            {/* Drag Handle */}
+                                                                                            {isQuestionSelected && <GripVertical className="h-4 w-4 text-gray-400 cursor-grab" />}
+                                                                                            {/* Show visual indicator of position if selected */}
+                                                                                            {isQuestionSelected && <span className="text-xs bg-gray-100 dark:bg-gray-700 px-1 rounded">{sec.questionIds.indexOf(question._id) + 1}</span>}
+                                                                                            <span className="flex-1 truncate">{question?.title}</span>
+                                                                                            <input
+                                                                                                type="checkbox"
+                                                                                                checked={isQuestionSelected}
+                                                                                                onChange={() => toggleQuestionInSection(idx, question._id)}
+                                                                                                className="rounded"
+                                                                                            />
+                                                                                        </div>
+                                                                                    );
+                                                                                })
+                                                                            )}
+                                                                        </div>
+                                                                        {/* Counter for selected questions */}
+                                                                        <p className="text-xs text-gray-500 mt-1 text-right">
+                                                                            Selected: {sec.questionIds.length} / {sectionQuestions.length}
+                                                                        </p>
+                                                                    </div>
+                                                                )}
+                                                            </div>
                                                         </div>
-                                                    </div>
-                                                ))}
+                                                    );
+                                                })}
                                             </div>
                                         )}
-                                        {errors.sections && <p className="text-red-600 text-sm mt-1">{errors.sections}</p>}
+                                        {/* Removed error display for sections if validation is removed */}
+                                        {/* {errors.sections && <p className="text-red-600 text-sm mt-1">{errors.sections}</p>} */}
                                     </div>
                                 </div>
                             )}
@@ -857,6 +909,17 @@ export default function TestSeriesManagement() {
                                                     className="h-4 w-4 text-indigo-600 rounded"
                                                 />
                                                 Paid Test Series
+                                            </Label>
+                                        </div>
+                                         <div> {/* Added Active toggle */}
+                                            <Label className="flex items-center gap-2">
+                                                <input
+                                                    type="checkbox"
+                                                    checked={formData.isActive}
+                                                    onChange={(e) => setFormData({ ...formData, isActive: e.target.checked })}
+                                                    className="h-4 w-4 text-indigo-600 rounded"
+                                                />
+                                                Is Active
                                             </Label>
                                         </div>
                                     </div>

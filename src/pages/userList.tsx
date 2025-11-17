@@ -285,13 +285,13 @@ const UserListPage = () => {
                     scope="col"
                     className="px-2 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500 dark:text-gray-300"
                   >
-                    Contact
+                    Email
                   </th>
                   <th
                     scope="col"
                     className="px-2 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500 dark:text-gray-300"
                   >
-                    Course
+                    Phone
                   </th>
                   <th
                     scope="col"
@@ -323,7 +323,7 @@ const UserListPage = () => {
                 {users?.length > 0 ? (
                   users.map((user) => (
                     <tr key={user._id} className="hover:bg-gray-50 dark:hover:bg-gray-700">
-                      <td className="whitespace-nowrap px-2 py-4">
+                      <td className="whitespace-nowrap px-2 py-2">
                         <div className="flex items-center">
                           <div className="ml-4">
                             <div className="text-sm text-gray-500 capitalize dark:text-gray-300">
@@ -332,17 +332,17 @@ const UserListPage = () => {
                           </div>
                         </div>
                       </td>
-                      <td className="whitespace-nowrap px-2 py-4 text-sm text-gray-500 dark:text-gray-300">
+                      <td className="whitespace-nowrap px-2 py-2 text-sm text-gray-500 dark:text-gray-300">
                         {user.role}
                       </td>
-                      <td className="whitespace-nowrap px-2 py-4 text-sm text-gray-500 dark:text-gray-300">
+                      <td className="whitespace-nowrap px-2 py-2 text-sm text-gray-500 dark:text-gray-300">
                         <div>{user.email}</div>
+                      </td>
+                      <td className="whitespace-nowrap px-2 py-2 text-sm text-gray-500 dark:text-gray-300">
                         <div>{user.phoneNumber}</div>
+
                       </td>
-                      <td className="whitespace-nowrap px-2 py-4 text-sm text-gray-500 dark:text-gray-300">
-                        {user.packageInfo?.packageName || "N/A"}
-                      </td>
-                      <td className="whitespace-nowrap px-2 py-4 text-sm text-gray-500 dark:text-gray-300">
+                      <td className="whitespace-nowrap px-2 py-2 text-sm text-gray-500 dark:text-gray-300">
                         <span
                           onClick={() => toggleUserStatus(user._id, user.isActive)}
                           className={`inline-flex cursor-pointer rounded-full px-2 text-xs font-semibold leading-5 ${user.isActive
@@ -353,14 +353,14 @@ const UserListPage = () => {
                           {user.isActive ? "Active" : "Inactive"}
                         </span>
                       </td>
-                      <td className="whitespace-nowrap px-2 py-4 text-sm text-gray-500 dark:text-gray-300">
+                      <td className="whitespace-nowrap px-2 py-2 text-sm text-gray-500 dark:text-gray-300">
                         {moment(user.createdAt).format("MMM D, YYYY")}
                       </td>
 
-                      <td className="whitespace-nowrap px-2 py-4 text-sm text-gray-500 dark:text-gray-300">
+                      <td className="whitespace-nowrap px-2 py-2 text-sm text-gray-500 dark:text-gray-300">
                         {moment(user.lastActive).format("MMM D, YYYY")}
                       </td>
-                      <td className="whitespace-nowrap px-2 py-4 text-sm font-medium text-gray-900 dark:text-white">
+                      <td className="whitespace-nowrap px-2 py-2 text-sm font-medium text-gray-900 dark:text-white">
                         <div className="flex space-x-2">
                           <button
                             onClick={() => viewUserDetails(user)}
@@ -501,7 +501,7 @@ const UserListPage = () => {
                             {walletData.totalReferrals || walletData.data?.totalReferrals || walletData.wallet?.totalReferrals || 0}
                           </p>
                         </div>
-                         <div className="text-center">
+                        <div className="text-center">
                           <p className="text-sm text-gray-500 dark:text-gray-400">Total Referrals Earning</p>
                           <p className="text-lg font-semibold text-blue-600 dark:text-blue-400">
                             {walletData.referralEarnings || walletData.data?.referralEarnings || walletData.wallet?.referralEarnings || 0}

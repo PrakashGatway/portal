@@ -211,7 +211,7 @@ const othersItems: NavItem[] = [
   {
     emoji: "🎫",
     name: "Support",
-    path: "/queries"
+    path: "/support"
   }
 ];
 

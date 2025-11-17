@@ -372,9 +372,6 @@ export default function QuestionForm({
         if (isReading(formData.mainType) && !formData.content.passageText?.trim()) {
           newErrors.passageText = 'Reading passage is required';
         }
-        if (isListening(formData.mainType) && !formData.content.audioUrl?.trim()) {
-          newErrors.audioUrl = 'Audio URL is required for Listening';
-        }
       } else {
         formData.questionGroup.forEach((group, gIndex) => {
           if (!group.title?.trim()) newErrors[`group_${gIndex}_title`] = 'Group title is required';
@@ -453,7 +450,7 @@ export default function QuestionForm({
       onSuccess?.();
       onClose();
     } catch (err) {
-      toast.error(err.response?.data?.message || 'Operation failed');
+      toast.error(err?.message || 'Operation failed');
     }
   };
 
@@ -738,7 +735,7 @@ export default function QuestionForm({
             <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-lg border border-gray-100 dark:border-gray-700 p-6">
               <h3 className="text-xl font-semibold text-gray-800 dark:text-white mb-6 pb-4 border-b border-gray-100 dark:border-gray-700">Media</h3>
 
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div className="grid grid-cols-1 md:grid-cols-1 gap-6">
                 <div>
                   <Label className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Image URL</Label>
                   <div className="relative">
@@ -753,40 +750,6 @@ export default function QuestionForm({
                     {errors.imageUrl && <p className="text-red-500 text-xs mt-1 flex items-center gap-1"><svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20"><path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd"></path></svg>{errors.imageUrl}</p>}
                   </div>
                 </div>
-
-                {/* Conditional: Audio + Transcript */}
-                {showAudio && (
-                  <div className="space-y-6">
-                    <div>
-                      <Label className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Audio URL *</Label>
-                      <div className="relative">
-                        <Input
-                          type="text"
-                          name="content.audioUrl"
-                          value={formData.content.audioUrl}
-                          onChange={handleChange}
-                          placeholder="https://example.com/audio.mp3"
-                          className="w-full px-4 py-2 rounded-xl border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-800 dark:text-gray-200 shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200"
-                        />
-                        {errors.audioUrl && <p className="text-red-500 text-xs mt-1 flex items-center gap-1"><svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20"><path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd"></path></svg>{errors.audioUrl}</p>}
-                      </div>
-                    </div>
-
-                    <div>
-                      <Label className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Transcript</Label>
-                      <div className="relative">
-                        <textarea
-                          name="content.transcript"
-                          value={formData.content.transcript}
-                          onChange={handleChange}
-                          rows={4}
-                          className="w-full px-4 py-2 rounded-xl border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-800 dark:text-gray-200 shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 resize-none"
-                          placeholder="Enter the audio transcript here..."
-                        />
-                      </div>
-                    </div>
-                  </div>
-                )}
               </div>
             </div>
 
@@ -1267,6 +1230,80 @@ export default function QuestionForm({
                 </div>
               </div>
 
+              {/* Conditional: Audio + Transcript */}
+              {showAudio && (
+                <div className="space-y-6">
+                  <div>
+                    <Label className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Audio URL *</Label>
+                    <div className="relative">
+                      <input
+                        type="file"
+                        accept="audio/*"
+                        name="formData.content.audioUrl"
+                        onChange={async (e) => {
+                          const file = e.target.files[0];
+                          if (!file) return;
+                          const url = URL.createObjectURL(file);
+                          setFormData((prev) => ({
+                            ...prev,
+                            content: {
+                              ...prev.content,
+                              audioUrl: url,
+                            },
+                          }));
+                          const fd = new FormData();
+                          fd.append("file", file);
+                          try {
+                            const res = await api.post("/upload/audio", fd, {
+                              headers: {
+                                "Content-Type": "multipart/form-data",
+                              }
+                            });
+                            const uploadedPath = res.data?.file?.path
+                            if (uploadedPath) {
+                              setFormData(prev => ({
+                                ...prev,
+                                content: {
+                                  ...prev.content, audioUrl: `http://localhost:5000/${uploadedPath}`
+                                }
+                              }));
+                            }
+                            toast.success("Audio uploaded successfully");
+
+                          } catch (error) {
+                            console.log(error);
+                            toast.error("Failed to upload audio");
+                          }
+
+                        }}
+                        className="w-full px-4 py-2 rounded-xl border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-800 dark:text-gray-200 shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200"
+                      />
+
+                      {errors.audioUrl && <p className="text-red-500 text-xs mt-1 flex items-center gap-1"><svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20"><path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd"></path></svg>{errors.audioUrl}</p>}
+                    </div>
+                  </div>
+                  {formData.content.audioUrl && (
+                    <audio controls className="mt-2 w-full">
+                      <source src={`http://localhost:5000/${formData.content.audioUrl}`} />
+                    </audio>
+                  )}
+
+                  <div>
+                    <Label className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Transcript</Label>
+                    <div className="relative">
+                      <textarea
+                        name="content.transcript"
+                        value={formData.content.transcript}
+                        onChange={handleChange}
+                        rows={4}
+                        className="w-full px-4 py-2 rounded-xl border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-800 dark:text-gray-200 shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 resize-none"
+                        placeholder="Enter the audio transcript here..."
+                      />
+                    </div>
+                  </div>
+                </div>
+              )}
+
               <div className="mb-8">
                 <Label className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Tags</Label>
                 <p className="text-gray-600 dark:text-gray-300 mb-4">Add relevant tags to categorize your question.</p>
@@ -1365,8 +1402,8 @@ export default function QuestionForm({
               onClick={prevStep}
               disabled={step === 1}
               className={`flex items-center gap-2 px-6 py-2 rounded-xl font-medium transition-all duration-200 ${step === 1
-                  ? 'text-gray-400 cursor-not-allowed bg-gray-100 dark:bg-gray-800/50'
-                  : 'text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700/50 shadow-sm'
+                ? 'text-gray-400 cursor-not-allowed bg-gray-100 dark:bg-gray-800/50'
+                : 'text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700/50 shadow-sm'
                 }`}
             >
               <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
