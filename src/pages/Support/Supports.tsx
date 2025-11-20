@@ -8,6 +8,7 @@ import { MessageSquare, Plus, Search, Clock, AlertCircle, CheckCircle, XCircle, 
 import api from "../../axiosInstance";
 import { motion, AnimatePresence } from "framer-motion";
 import * as Select from "@radix-ui/react-select";
+import TextToSpeechSimple from "./Speaking";
 
 interface SelectFieldProps {
     value: string;
@@ -640,6 +641,7 @@ export default function SupportPage() {
                             )}
                         </motion.div>
                     </AnimatePresence>
+                    <TextToSpeechSimple/>
                 </div>
             </div>
         </div>

@@ -43,6 +43,7 @@ import QuestionManagement from "./pages/Tests/Questions";
 import SupportPage from "./pages/Support/Supports";
 import BlogCategoryManagement from "./pages/Website/BlogCategories";
 import ArticleManagement from "./pages/Website/Blogs";
+import CommentsManagement from "./pages/Website/BlogComent";
 
 // Define roles
 export const ROLES = {
@@ -123,6 +124,7 @@ export default function App() {
                 <Route path="/entities" element={<EntityManagement />} />
                 <Route path="/blog-categories" element={<BlogCategoryManagement />} />
                 <Route path="/blogs" element={<ArticleManagement />} />
+                <Route path="/comments" element={<CommentsManagement />} />
               </Route>
             </Route>
             <Route path="/course/category" element={<CategorySelectionPage />} />

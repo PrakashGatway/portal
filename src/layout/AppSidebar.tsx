@@ -93,6 +93,7 @@ const navItems: NavItem[] = [
       { name: "Pages", path: "/pages", emoji: "📄" },
       { name: "Entities", path: "/entities", emoji: "📦" },
       { name: "Blogs", path: "/blogs", emoji: "📝" },
+      { name: "Comments", path: "/comments", emoji: "💬" },
       { name: "Categories", path: "/blog-categories", emoji: "📚" },
     ]
   },

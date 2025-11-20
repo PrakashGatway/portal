@@ -100,7 +100,7 @@ const PagesManagement = () => {
         const { name, value } = e.target;
         setFormData((prev) => ({
             ...prev,
-            [name]: value ? value.split(",").map((tag) => tag.trim()) : [],
+            [name]: value ? value.split(",").map((tag) => tag) : [],
         }));
     };
 
