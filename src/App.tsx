@@ -44,6 +44,8 @@ import SupportPage from "./pages/Support/Supports";
 import BlogCategoryManagement from "./pages/Website/BlogCategories";
 import ArticleManagement from "./pages/Website/Blogs";
 import CommentsManagement from "./pages/Website/BlogComent";
+import MockTest from "./userView/Mocktest";
+import TestQuestionPage from "./userView/Testquestionpage";
 
 // Define roles
 export const ROLES = {
@@ -93,6 +95,8 @@ export default function App() {
 
 
               <Route path="/mocks" element={<MockTestsPage />} />
+              <Route path="/mock-tests" element={<MockTest/>} />
+              <Route path="/test/:testId" element={<TestQuestionPage/>} />
               <Route path="/events" element={<EventCalendar />} />
 
               <Route element={<ProtectedRoute roles={[ROLES.ADMIN]} />}>

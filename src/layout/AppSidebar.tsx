@@ -19,6 +19,11 @@ const navItems: NavItem[] = [
     path: "/",
   },
   {
+    emoji: "📝",
+    name: "Mock Tests",
+    path: "/mock-tests"
+  },
+  {
     emoji: "🎓",
     name: "Courses",
     subItems: [
@@ -115,11 +120,7 @@ const navItemsUser: NavItem[] = [
     name: "Batches",
     path: "/course",
   },
-  {
-    emoji: "📝",
-    name: "Mock Tests",
-    path: "/mock",
-  },
+  
   {
     emoji: "🧪",
     name: "Practice Tests",
@@ -148,11 +149,6 @@ const navItemsCoun: NavItem[] = [
     name: "Dashboard",
     path: "/",
   },
-  // {
-  //   emoji: "🚀",
-  //   name: "lead Management",
-  //   path: "/leads",
-  // }
 ];
 
 const navItemsTeacher: NavItem[] = [
@@ -222,24 +218,6 @@ const teacherOthersItems: NavItem[] = [
     name: "Profile",
     path: "/profile",
   },
-  // {
-  //   emoji: "📈",
-  //   name: "Earnings Report",
-  //   path: "/earnings-report"
-  // },
-  // {
-  //   emoji: "🎫",
-  //   name: "Support",
-  //   subItems: [
-  //     { name: "Create Ticket", path: "/teacher/query", emoji: "🆕" },
-  //     { name: "View Tickets", path: "/teacher/queries", emoji: "👀" }
-  //   ],
-  // },
-  // {
-  //   emoji: "⚙️",
-  //   name: "Settings",
-  //   path: "/settings"
-  // }
 ];
 
 const AppSidebar: React.FC = () => {
@@ -545,26 +523,6 @@ const AppSidebar: React.FC = () => {
         {/* User profile at the bottom */}
         {(isExpanded || isHovered || isMobileOpen) && user && (
           <div className="p-0.5 rounded-xl sticky bottom-2 left-0 right-0 bg-gradient-to-r from-gray-50 to-blue-50 dark:from-gray-800 dark:to-blue-900/20 mt-auto border border-gray-200 dark:border-gray-700 shadow-md transform transition-transform duration-200">
-            {/* <button
-              onClick={() => navigate("/course/category")}
-              className={`inline-flex items-center justify-center mb-2
-                                px-4 py-2 w-full
-                                bg-gradient-to-r from-blue-50 to-purple-50 dark:from-blue-900/20 dark:to-purple-900/20
-                                text-blue-700 dark:text-blue-300
-                                font-medium text-base capitalize
-                                rounded-xl
-                                border border-blue-200 dark:border-blue-800
-                                transition-all duration-200
-                                focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-opacity-50
-                                hover:shadow-md hover:from-blue-100 hover:to-purple-100 dark:hover:from-blue-800/30 dark:hover:to-purple-800/30`}
-            >
-              <DynamicIcon
-                name={user.subCategory?.icon || user.category?.icon}
-                className="h-4 w-4 mr-2"
-              />
-              {user.subCategory?.name || user.category?.name}
-              <Sparkles className="h-3 w-3 ml-1 text-yellow-500" />
-            </button> */}
             <div className="flex items-center gap-3 border border-blue-200 dark:border-blue-800 p-2 rounded-xl">
               <div className="w-10 h-10 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-full flex items-center justify-center text-white font-medium shadow-md transform transition-transform duration-200">
                 {user.name ? user.name.charAt(0).toUpperCase() : '👤'}
