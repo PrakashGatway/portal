@@ -1,9 +1,11 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import { useParams, useLocation } from "react-router";
 import { get, useForm } from "react-hook-form";
 import api from "../axiosInstance";
 import ResultsSummary from "./resultSummary";
 import { Timer } from "./Timer"
+import WritingSection from "./WritingSection";
+import WritingSummary from "./WritingSummary";
 
 const TestQuestionPage = () => {
   const { testId } = useParams();
@@ -37,6 +39,83 @@ const TestQuestionPage = () => {
     danger: darkMode ? 'bg-red-600' : 'bg-red-500',
     input: darkMode ? 'bg-gray-700 border-gray-600 text-white' : 'bg-white border-gray-300 text-gray-900',
     inputFocus: darkMode ? 'focus:border-blue-500 focus:ring-blue-500' : 'focus:border-blue-500 focus:ring-blue-500',
+  };
+
+  // Audio Player Component for Listening
+  const AudioPlayer = ({ audioUrl, darkMode }) => {
+    const [isPlaying, setIsPlaying] = useState(false);
+    const [progress, setProgress] = useState(0);
+    const audioRef = useRef(null);
+
+    const togglePlayPause = () => {
+      if (audioRef.current) {
+        if (isPlaying) {
+          audioRef.current.pause();
+          console.log(audioUrl)
+        } else {
+          audioRef.current.play();
+        }
+        setIsPlaying(!isPlaying);
+      }
+    };
+
+    const handleTimeUpdate = () => {
+      if (audioRef.current) {
+        const progress = (audioRef.current.currentTime / audioRef.current.duration) * 100;
+        setProgress(progress);
+      }
+    };
+
+    const handleEnded = () => {
+      setIsPlaying(false);
+      setProgress(0);
+    };
+
+    return (
+      <div className={`${darkMode ? 'bg-gray-800' : 'bg-gray-200'} rounded-lg p-4 mb-6`}>
+        <div className="flex items-center justify-between mb-3">
+          <h3 className="text-lg font-semibold text-white">Listening Audio</h3>
+          <span className={`px-2 py-1 rounded text-xs ${darkMode ? 'bg-purple-600' : 'bg-purple-500'} text-white`}>
+            Click to play
+          </span>
+        </div>
+        
+        <audio
+          ref={audioRef}
+          onTimeUpdate={handleTimeUpdate}
+          onEnded={handleEnded}
+          onPlay={() => setIsPlaying(true)}
+          onPause={() => setIsPlaying(false)}
+        >
+          <source src={audioUrl} type="audio/mp3" />
+          Your browser does not support the audio element.
+        </audio>
+
+        <div className="flex items-center space-x-4">
+          <button
+            onClick={togglePlayPause}
+            className={`w-12 h-12 rounded-full flex items-center justify-center ${
+              darkMode ? 'bg-purple-600 hover:bg-purple-700' : 'bg-purple-500 hover:bg-purple-600'
+            } text-white transition-colors`}
+          >
+            {isPlaying ? '⏸️' : '▶️'}
+          </button>
+          
+          <div className="flex-1">
+            <div className={`w-full ${darkMode ? 'bg-gray-700' : 'bg-gray-300'} rounded-full h-2`}>
+              <div
+                className={`h-2 rounded-full ${darkMode ? 'bg-purple-500' : 'bg-purple-600'} transition-all duration-300`}
+                style={{ width: `${progress}%` }}
+              />
+            </div>
+          </div>
+
+          <span className={`text-sm ${darkMode ? 'text-gray-300' : 'text-gray-600'}`}>
+            {isPlaying ? 'Playing...' : 'Click to play'}
+          </span>
+        </div>
+      </div>
+    );
   };
 
   // Helper functions
@@ -154,6 +233,10 @@ const TestQuestionPage = () => {
     for (const group of questionGroups) {
       const groupQuestionCount = group?.questions?.length || 0;
       if (questionIndex >= currentIndex && questionIndex < currentIndex + groupQuestionCount) {
+        // Handle listening question types
+        if (group?.type) {
+          return group.type; // 'note_completion', 'form_completion', etc.
+        }
         return group?.type || 'default';
       }
       currentIndex += groupQuestionCount;
@@ -192,12 +275,57 @@ const TestQuestionPage = () => {
     return content;
   };
 
+  // Listening Question Renderers
+  const renderNoteCompletion = (question, questionId, questionIndex) => {
+    const questionText = getSafeQuestionText(question);
+    const startingNumber = calculateQuestionStartingNumber(questionIndex);
+    
+    return (
+      <div className="flex-1">
+        <div className="bg-gray-700 rounded-lg p-4">
+          <div className="text-gray-200 text-lg leading-relaxed">
+            {renderPlaceholderQuestion(questionText, questionId, startingNumber)}
+          </div>
+        </div>
+        <p className="text-sm text-gray-400 mt-2">
+          Write ONE WORD AND/OR A NUMBER for each answer.
+        </p>
+      </div>
+    );
+  };
+
+  const renderFormCompletion = (question, questionId, questionIndex) => {
+    const questionText = getSafeQuestionText(question);
+    const startingNumber = calculateQuestionStartingNumber(questionIndex);
+    
+    return (
+      <div className="flex-1">
+        <div className="bg-gray-700 rounded-lg p-4">
+          <div className="text-gray-200 text-lg leading-relaxed">
+            {renderPlaceholderQuestion(questionText, questionId, startingNumber)}
+          </div>
+        </div>
+        <p className="text-sm text-gray-400 mt-2">
+          Complete the form below.
+        </p>
+      </div>
+    );
+  };
+
   // Main function to render questions based on group type using switch-case
   const renderQuestionByType = (question, questionId, questionIndex, groupType) => {
     const questionText = getSafeQuestionText(question);
+    
+    // Handle listening question types
+    if (groupType === 'note_completion' || groupType === 'form_completion' || 
+        groupType === 'sentence_completion' || groupType === 'table_completion') {
+      return renderNoteCompletion(question, questionId, questionIndex);
+    }
+    
     if (hasPlaceholders(questionText)) {
       return renderSummaryCompletion(question, questionId, questionIndex);
     }
+    
     switch (groupType) {
       case 'matching_information':
         return renderMatchingInformation(question, questionId, questionIndex);
@@ -428,18 +556,21 @@ const TestQuestionPage = () => {
       const groupType = findQuestionGroupType(index);
       if (!questionId) return;
 
-      if (groupType === 'summary_completion' && hasPlaceholders(questionText)) {
+      // Handle listening completion types (same as summary completion)
+      if ((groupType === 'note_completion' || groupType === 'form_completion' || 
+           groupType === 'sentence_completion' || groupType === 'table_completion' ||
+           groupType === 'summary_completion') && hasPlaceholders(questionText)) {
         const placeholderCount = (questionText.match(/\{\{\d+\}\}/g) || []).length;
-        const summaryAnswers = [];
+        const completionAnswers = [];
         for (let i = 1; i <= placeholderCount; i++) {
           const subQuestionId = `${questionId}_${i}`;
-          summaryAnswers.push(formData[subQuestionId] || '');
+          completionAnswers.push(formData[subQuestionId] || '');
         }
-        if (summaryAnswers.some(answer => answer !== '')) {
+        if (completionAnswers.some(answer => answer !== '')) {
           answers.push({
             questionGroupId: findQuestionGroupId(index),
             questionId: questionId,
-            answer: summaryAnswers
+            answer: completionAnswers
           });
         }
       }
@@ -706,7 +837,8 @@ const TestQuestionPage = () => {
           setValue(questionId, JSON.stringify([]));
         }
       }
-      else if (groupType === 'summary_completion' && hasPlaceholders(questionText)) {
+      else if ((groupType === 'summary_completion' || groupType === 'note_completion' || 
+                groupType === 'form_completion') && hasPlaceholders(questionText)) {
         const placeholderCount = (questionText.match(/\{\{\d+\}\}/g) || []).length;
         if (answer && Array.isArray(answer.answer)) {
           for (let i = 0; i < placeholderCount; i++) {
@@ -827,15 +959,6 @@ const TestQuestionPage = () => {
     }
   };
 
-  useEffect(() => {
-    console.log("🔍 STATE DEBUG:", {
-      isTestCompleted,
-      testResults: testResults ? "HAS RESULTS" : "NO RESULTS",
-      isSubmitting,
-      loading
-    });
-  }, [isTestCompleted, testResults, isSubmitting, loading]);
-
   const goToPreviousQuestion = async () => {
     try {
       if (currentQuestionIndex > 0) {
@@ -868,6 +991,15 @@ const TestQuestionPage = () => {
       setIsSubmitting(false);
     }
   };
+
+  useEffect(() => {
+    console.log("🔍 STATE DEBUG:", {
+      isTestCompleted,
+      testResults: testResults ? "HAS RESULTS" : "NO RESULTS",
+      isSubmitting,
+      loading
+    });
+  }, [isTestCompleted, testResults, isSubmitting, loading]);
 
   useEffect(() => {
     if (!testId) return;
@@ -938,8 +1070,8 @@ const TestQuestionPage = () => {
                   // Multiple Choice Single - FIXED: Direct set value
                   setValue(item.questionId, item.answer);
                 }
-                else if (groupType === 'summary_completion') {
-                  // Summary Completion - handle array format
+                else if (groupType === 'summary_completion' || groupType === 'note_completion') {
+                  // Summary Completion or Note Completion - handle array format
                   if (Array.isArray(item.answer)) {
                     const questionText = getSafeQuestionText(question);
                     const placeholderCount = (questionText.match(/\{\{\d+\}\}/g) || []).length;
@@ -1021,18 +1153,383 @@ const TestQuestionPage = () => {
     }
   };
 
-  if (isTestCompleted && testResults) {
-    console.log("🎯 RENDERING RESULTS SUMMARY - Conditions met!");
+  // Section detection functions
+  const isWritingSection = () => {
+    const currentQuestion = getCurrentQuestionData();
+    if (!currentQuestion) return false;
+    const questionType = currentQuestion.questionType;
+    const questionCategory = currentQuestion.questionCategory;
+    const sectionType = currentQuestion.sectionType;
+    
+    return questionType?.includes('writing') || 
+           questionCategory?.includes('writing') || 
+           sectionType?.includes('writing');
+  };
+
+  const isListeningSection = () => {
+    const currentQuestion = getCurrentQuestionData();
+    if (!currentQuestion) return false;
+    const questionType = currentQuestion.questionType;
+    const questionCategory = currentQuestion.questionCategory;
+    const sectionType = currentQuestion.sectionType;
+    
+    return questionType?.includes('listening') || 
+           questionCategory?.includes('listening') || 
+           sectionType?.includes('listening');
+  };
+
+  // Render Listening Section
+  const renderListeningSection = () => {
+    const currentQuestion = getCurrentQuestionData();
+    const audioUrl = currentQuestion?.content?.audioUrl;
+    const instruction = extractInstruction();
+    const totalQuestionsCount = calculateTotalQuestions();
+    
     return (
-      <div className={`min-h-screen ${darkMode ? 'bg-gray-900' : 'bg-gray-100'}`}>
+      <div className="fixed inset-0 bg-gray-900 text-white z-50 overflow-hidden">
+        {/* Header - Responsive */}
+        <div className="bg-gray-800 border-b border-gray-700 px-4 sm:px-6 py-4 w-full">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between w-full space-y-4 sm:space-y-0">
+            <div className="flex items-center space-x-4">
+              <span className="text-lg sm:text-xl font-semibold">Listening Test</span>
+              <span className="px-2 sm:px-3 py-1 bg-purple-600 rounded-full text-xs sm:text-sm">
+                Section {extractTitle()}
+              </span>
+            </div>
+            <div className="flex items-center space-x-4 sm:space-x-6">
+              <button
+                onClick={toggleDarkMode}
+                className="p-2 rounded-lg bg-gray-700 text-white hover:opacity-80 transition-all"
+              >
+                {darkMode ? '☀️' : '🌙'}
+              </button>
+              <Timer
+                initialTime={timeLeft}
+                onTimeUp={handleTimeUp}
+              />
+              {isLastQuestion ? (
+                <button
+                  onClick={handleSubmit(handleFinalSubmission)}
+                  disabled={isSubmitting}
+                  className="bg-green-600 hover:bg-green-700 px-4 sm:px-6 py-2 rounded-lg font-medium transition-all duration-200 text-white disabled:opacity-50 text-sm sm:text-base"
+                >
+                  {isSubmitting ? "Submitting..." : "Submit Test"}
+                </button>
+              ) : (
+                <button
+                  onClick={handleNextQuestion}
+                  disabled={isSubmitting}
+                  className="bg-blue-600 hover:bg-blue-700 px-4 sm:px-6 py-2 rounded-lg font-medium transition-all duration-200 text-white disabled:opacity-50 text-sm sm:text-base"
+                >
+                  {isSubmitting ? "Loading..." : "Next Question"}
+                </button>
+              )}
+            </div>
+          </div>
+        </div>
+        
+        {/* Main Content - Responsive */}
+        <div className="flex flex-col lg:flex-row w-full" style={{ height: 'calc(100vh - 80px)' }}>
+          {/* Left Panel - Audio Player and Instructions */}
+          <div className="w-full lg:w-1/2 bg-gray-800 p-4 sm:p-6 overflow-y-auto">
+            <div className="space-y-6">
+              {/* Audio Player */}
+              {audioUrl && (
+                <AudioPlayer audioUrl={audioUrl} darkMode={darkMode} />
+              )}
+              
+              {/* Instructions */}
+              <div className="bg-gray-700 rounded-lg p-4 sm:p-6">
+                <h2 className="text-lg sm:text-xl font-semibold text-white mb-4">Instructions</h2>
+                <div className="prose prose-invert max-w-none text-gray-200 leading-relaxed text-base sm:text-lg">
+                  <p className="whitespace-pre-line">{instruction}</p>
+                </div>
+              </div>
+
+              {/* Transcript (if available) */}
+              {currentQuestion?.content?.transcript && (
+                <div className="bg-gray-700 rounded-lg p-4 sm:p-6">
+                  <h2 className="text-lg sm:text-xl font-semibold text-white mb-4">Transcript</h2>
+                  <div className="prose prose-invert max-w-none text-gray-200 leading-relaxed text-sm sm:text-base">
+                    <p className="whitespace-pre-line">{currentQuestion.content.transcript}</p>
+                  </div>
+                </div>
+              )}
+            </div>
+          </div>
+
+          {/* Right Panel - Questions */}
+          <div className="w-full lg:w-1/2 bg-gray-900 p-4 sm:p-6 overflow-y-auto">
+            <div className="mb-6">
+              <h1 className="text-xl sm:text-2xl font-bold text-white mb-2">{extractTitle()}</h1>
+              <p className="text-gray-400 text-base sm:text-lg">Complete the questions below as you listen.</p>
+            </div>
+            
+            <form onSubmit={handleSubmit(handleFinalSubmission)} className="space-y-4 sm:space-y-6">
+              {getAllQuestions()?.map((question, index) => {
+                if (typeof question !== 'object' || !question) return null;
+                const questionId = question?._id || question?.id || `q-${index}`;
+                const questionText = getSafeQuestionText(question);
+                const startingNumber = calculateQuestionStartingNumber(index);
+                const hasPlaceholdersFlag = hasPlaceholders(questionText);
+                const groupType = findQuestionGroupType(index);
+                
+                let displayNumber;
+                let showQuestionNumber = true;
+                
+                if (hasPlaceholdersFlag) {
+                  showQuestionNumber = false;
+                  displayNumber = startingNumber;
+                } else {
+                  displayNumber = startingNumber.toString();
+                }
+                
+                return (
+                  <div key={questionId} className="bg-gray-800 rounded-lg p-4 sm:p-6 border border-gray-700">
+                    <div className="flex items-start space-x-3 sm:space-x-4">
+                      {showQuestionNumber && (
+                        <span className="flex-shrink-0 w-8 h-8 sm:w-10 sm:h-10 bg-purple-600 text-white rounded-full flex items-center justify-center text-base sm:text-lg font-medium">
+                          {displayNumber}
+                        </span>
+                      )}
+                      {!showQuestionNumber && (
+                        <span className="flex-shrink-0 w-8 h-8 sm:w-10 sm:h-10 bg-gray-800 rounded-full flex items-center justify-center text-base sm:text-lg font-medium opacity-0">
+                          {index + 1}
+                        </span>
+                      )}
+                      <SafeQuestionRenderer
+                        question={question}
+                        questionId={questionId}
+                        index={index}
+                        groupType={groupType}
+                      />
+                    </div>
+                  </div>
+                );
+              })}
+              
+              <div className="flex justify-between mt-6 pt-6 border-t border-gray-700">
+                {currentQuestionIndex > 0 ? (
+                  <button
+                    type="button"
+                    onClick={goToPreviousQuestion}
+                    disabled={isSubmitting}
+                    className="px-4 sm:px-6 py-2 bg-gray-600 text-white rounded-lg font-medium hover:bg-gray-700 transition-all duration-200 disabled:opacity-50 text-sm sm:text-base"
+                  >
+                    {isSubmitting ? "Loading..." : "Previous Question"}
+                  </button>
+                ) : (
+                  <div></div>
+                )}
+                {isLastQuestion ? (
+                  <button
+                    type="submit"
+                    disabled={isSubmitting}
+                    className="px-4 sm:px-6 py-2 bg-green-600 text-white rounded-lg font-medium hover:bg-green-700 transition-all duration-200 disabled:opacity-50 text-sm sm:text-base"
+                  >
+                    {isSubmitting ? "Submitting..." : "Submit Test"}
+                  </button>
+                ) : (
+                  <button
+                    type="button"
+                    onClick={handleNextQuestion}
+                    disabled={isSubmitting}
+                    className="px-4 sm:px-6 py-2 bg-blue-600 text-white rounded-lg font-medium hover:bg-blue-700 transition-all duration-200 disabled:opacity-50 text-sm sm:text-base"
+                  >
+                    {isSubmitting ? "Loading..." : "Next Question"}
+                  </button>
+                )}
+              </div>
+            </form>
+          </div>
+        </div>
+      </div>
+    );
+  };
+
+  // Render Reading Section (default)
+  const renderReadingSection = () => {
+    const totalQuestionsCount = calculateTotalQuestions();
+    
+    return (
+      <div className="fixed inset-0 bg-gray-900 text-white z-50 overflow-hidden">
+        <div className="bg-gray-800 border-b border-gray-700 px-4 sm:px-6 py-4 w-full">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between w-full space-y-4 sm:space-y-0">
+            <div className="flex items-center space-x-4">
+              <span className="text-lg sm:text-xl font-semibold">Question {extractTitle()}</span>
+            </div>
+            <div className="flex items-center space-x-4 sm:space-x-6">
+              <button
+                onClick={toggleDarkMode}
+                className="p-2 rounded-lg bg-gray-700 text-white hover:opacity-80 transition-all"
+              >
+                {darkMode ? '☀️' : '🌙'}
+              </button>
+              <Timer
+                initialTime={timeLeft}
+                onTimeUp={handleTimeUp}
+              />
+              {isLastQuestion ? (
+                <button
+                  onClick={handleSubmit(handleFinalSubmission)}
+                  disabled={isSubmitting}
+                  className="bg-green-600 hover:bg-green-700 px-4 sm:px-6 py-2 rounded-lg font-medium transition-all duration-200 text-white disabled:opacity-50 text-sm sm:text-base"
+                >
+                  {isSubmitting ? "Submitting..." : "Submit Test"}
+                </button>
+              ) : (
+                <button
+                  onClick={handleNextQuestion}
+                  disabled={isSubmitting}
+                  className="bg-blue-600 hover:bg-blue-700 px-4 sm:px-6 py-2 rounded-lg font-medium transition-all duration-200 text-white disabled:opacity-50 text-sm sm:text-base"
+                >
+                  {isSubmitting ? "Loading..." : "Next Question"}
+                </button>
+              )}
+            </div>
+          </div>
+        </div>
+        <div className="flex flex-col lg:flex-row w-full" style={{ height: 'calc(100vh - 80px)' }}>
+          <div className="w-full lg:w-1/2 bg-gray-800 p-4 sm:p-6 overflow-y-auto">
+            <div className="bg-gray-700 rounded-lg p-4 sm:p-6 h-full">
+              <h2 className="text-lg sm:text-xl font-semibold text-white mb-4">Reading Passage</h2>
+              <div
+                className="prose prose-invert max-w-none text-gray-200 leading-relaxed text-base sm:text-lg"
+                dangerouslySetInnerHTML={{ __html: extractContent() }}
+              />
+            </div>
+          </div>
+          <div className="w-full lg:w-1/2 bg-gray-900 p-4 sm:p-6 overflow-y-auto">
+            <div className="mb-6">
+              <h1 className="text-lg sm:text-xl font-semibold">Question {extractTitle()}</h1>
+              <p className="text-gray-400 mb-6 text-base sm:text-lg whitespace-pre-line">{extractInstruction()}</p>
+            </div>
+            <form onSubmit={handleSubmit(handleFinalSubmission)} className="space-y-4 sm:space-y-6">
+              {getAllQuestions()?.map((question, index) => {
+                if (typeof question !== 'object' || !question) return null;
+                const questionId = question?._id || question?.id || `q-${index}`;
+                const questionText = getSafeQuestionText(question);
+                const startingNumber = calculateQuestionStartingNumber(index);
+                const hasPlaceholdersFlag = hasPlaceholders(questionText);
+                const groupType = findQuestionGroupType(index);
+                let displayNumber;
+                let showQuestionNumber = true;
+                if (hasPlaceholdersFlag) {
+                  showQuestionNumber = false;
+                  displayNumber = startingNumber;
+                } else if (groupType === 'multiple_choice_multiple' &&
+                  (questionText?.includes('TWO') || questionText?.includes('10-11') || questionText?.includes('12-13'))) {
+                  displayNumber = `${startingNumber}-${startingNumber + 1}`;
+                } else {
+                  displayNumber = startingNumber.toString();
+                }
+                return (
+                  <div key={questionId} className="bg-gray-800 rounded-lg p-4 sm:p-6 border border-gray-700">
+                    <div className="flex items-start space-x-3 sm:space-x-4">
+                      {showQuestionNumber && (
+                        <span className="flex-shrink-0 w-8 h-8 sm:w-10 sm:h-10 bg-blue-600 text-white rounded-full flex items-center justify-center text-base sm:text-lg font-medium">
+                          {displayNumber}
+                        </span>
+                      )}
+                      {!showQuestionNumber && (
+                        <span className="flex-shrink-0 w-8 h-8 sm:w-10 sm:h-10 bg-gray-800 rounded-full flex items-center justify-center text-base sm:text-lg font-medium opacity-0">
+                          {index + 1}
+                        </span>
+                      )}
+                      <SafeQuestionRenderer
+                        question={question}
+                        questionId={questionId}
+                        index={index}
+                        groupType={groupType}
+                      />
+                    </div>
+                  </div>
+                );
+              })}
+              <div className="flex justify-between mt-6 pt-6 border-t border-gray-700">
+                {currentQuestionIndex > 0 ? (
+                  <button
+                    type="button"
+                    onClick={goToPreviousQuestion}
+                    disabled={isSubmitting}
+                    className="px-4 sm:px-6 py-2 bg-gray-600 text-white rounded-lg font-medium hover:bg-gray-700 transition-all duration-200 disabled:opacity-50 text-sm sm:text-base"
+                  >
+                    {isSubmitting ? "Loading..." : "Previous Question"}
+                  </button>
+                ) : (
+                  <div></div>
+                )}
+                {isLastQuestion ? (
+                  <button
+                    type="submit"
+                    disabled={isSubmitting}
+                    className="px-4 sm:px-6 py-2 bg-green-600 text-white rounded-lg font-medium hover:bg-green-700 transition-all duration-200 disabled:opacity-50 text-sm sm:text-base"
+                  >
+                    {isSubmitting ? "Submitting..." : "Submit Test"}
+                  </button>
+                ) : (
+                  <button
+                    type="button"
+                    onClick={handleNextQuestion}
+                    disabled={isSubmitting}
+                    className="px-4 sm:px-6 py-2 bg-blue-600 text-white rounded-lg font-medium hover:bg-blue-700 transition-all duration-200 disabled:opacity-50 text-sm sm:text-base"
+                  >
+                    {isSubmitting ? "Loading..." : "Next Question"}
+                  </button>
+                )}
+              </div>
+            </form>
+          </div>
+        </div>
+      </div>
+    );
+  };
+
+if (isTestCompleted && testResults) {
+  console.log("🎯 RENDERING RESULTS SUMMARY - Conditions met!");
+  
+  // Check if it's a writing test or reading test
+  const isWritingTest = () => {
+    // Check based on test results structure or current section
+    if (testResults.sectionWiseAnalysis) {
+      const writingSection = testResults.sectionWiseAnalysis.find(
+        (section: any) => section.sectionType === 'writing' || section.sectionType === 'Writing'
+      );
+      return !!writingSection;
+    }
+    
+    // Alternative check based on question analysis
+    if (testResults.questionAnalysis) {
+      const writingQuestions = testResults.questionAnalysis.filter(
+        (q: any) => q.sectionType === 'writing' || q.sectionType === 'Writing'
+      );
+      return writingQuestions.length > 0;
+    }
+    
+    // Fallback: check if we're currently in writing section
+    return currentSection === 'writing';
+  };
+
+  const isWriting = isWritingTest();
+
+  return (
+    <div className={`min-h-screen ${darkMode ? 'bg-gray-900' : 'bg-gray-100'}`}>
+      {isWriting ? (
+        <WritingSummary
+          results={testResults} 
+          onClose={() => setIsTestCompleted(false)}
+          darkMode={darkMode}
+        />
+      ) : (
         <ResultsSummary 
           results={testResults} 
           onClose={() => setIsTestCompleted(false)}
           darkMode={darkMode}
         />
-      </div>
-    );
-  }
+      )}
+    </div>
+  );
+}
 
   if (isTestCompleted && !testResults) {
     console.log("⚠️ isTestCompleted is true but no testResults");
@@ -1077,139 +1574,27 @@ const TestQuestionPage = () => {
   }
 
   const totalQuestionsCount = calculateTotalQuestions();
+  
+  // Section routing
+  if (isWritingSection()) {
+    return (
+      <WritingSection
+        testId={testId}
+        onTestComplete={(results) => {
+          setTestResults(results);
+          setIsTestCompleted(true);
+        }}
+        darkMode={darkMode}
+      />
+    );
+  }
 
-  return (
-    <div className="fixed inset-0 bg-gray-900 text-white z-50 overflow-hidden">
-      <div className="bg-gray-800 border-b border-gray-700 px-6 py-4 w-full">
-        <div className="flex items-center justify-between w-full">
-          <div className="flex items-center space-x-4">
-            Question {extractTitle()}
-          </div>
-          <div className="flex items-center space-x-6">
-            <button
-              onClick={toggleDarkMode}
-              className="p-2 rounded-lg bg-gray-700 text-white hover:opacity-80 transition-all"
-            >
-              {darkMode ? '☀️' : '🌙'}
-            </button>
-            <Timer
-              initialTime={timeLeft}
-              onTimeUp={handleTimeUp}
-            />
-            {isLastQuestion ? (
-              <button
-                onClick={handleSubmit(handleFinalSubmission)}
-                disabled={isSubmitting}
-                className="bg-green-600 hover:bg-green-700 px-6 py-2 rounded-lg font-medium transition-all duration-200 text-white disabled:opacity-50"
-              >
-                {isSubmitting ? "Submitting..." : "Submit Test"}
-              </button>
-            ) : (
-              <button
-                onClick={handleNextQuestion}
-                disabled={isSubmitting}
-                className="bg-blue-600 hover:bg-blue-700 px-6 py-2 rounded-lg font-medium transition-all duration-200 text-white disabled:opacity-50"
-              >
-                {isSubmitting ? "Loading..." : "Next Question"}
-              </button>
-            )}
-          </div>
-        </div>
-      </div>
-      <div className="flex w-full" style={{ height: 'calc(100vh - 80px)' }}>
-        <div className="w-1/2 bg-gray-800 p-6 overflow-y-auto">
-          <div className="bg-gray-700 rounded-lg p-6 h-full">
-            <h2 className="text-xl font-semibold text-white mb-4">Reading Passage</h2>
-            <div
-              className="prose prose-invert max-w-none text-gray-200 leading-relaxed text-lg"
-              dangerouslySetInnerHTML={{ __html: extractContent() }}
-            />
-          </div>
-        </div>
-        <div className="w-1/2 bg-gray-900 p-6 overflow-y-auto">
-          <div className="mb-6">
-            Question {extractTitle()}
-            <p className="text-gray-400 mb-6 text-lg whitespace-pre-line">{extractInstruction()}</p>
-          </div>
-          <form onSubmit={handleSubmit(handleFinalSubmission)} className="space-y-6">
-            {getAllQuestions()?.map((question, index) => {
-              if (typeof question !== 'object' || !question) return null;
-              const questionId = question?._id || question?.id || `q-${index}`;
-              const questionText = getSafeQuestionText(question);
-              const startingNumber = calculateQuestionStartingNumber(index);
-              const hasPlaceholdersFlag = hasPlaceholders(questionText);
-              const groupType = findQuestionGroupType(index);
-              let displayNumber;
-              let showQuestionNumber = true;
-              if (hasPlaceholdersFlag) {
-                showQuestionNumber = false;
-                displayNumber = startingNumber;
-              } else if (groupType === 'multiple_choice_multiple' &&
-                (questionText?.includes('TWO') || questionText?.includes('10-11') || questionText?.includes('12-13'))) {
-                displayNumber = `${startingNumber}-${startingNumber + 1}`;
-              } else {
-                displayNumber = startingNumber.toString();
-              }
-              return (
-                <div key={questionId} className="bg-gray-800 rounded-lg p-6 border border-gray-700">
-                  <div className="flex items-start space-x-4">
-                    {showQuestionNumber && (
-                      <span className="flex-shrink-0 w-10 h-10 bg-blue-600 text-white rounded-full flex items-center justify-center text-lg font-medium">
-                        {displayNumber}
-                      </span>
-                    )}
-                    {!showQuestionNumber && (
-                      <span className="flex-shrink-0 w-10 h-10 bg-gray-800 rounded-full flex items-center justify-center text-lg font-medium opacity-0">
-                        {index + 1}
-                      </span>
-                    )}
-                    <SafeQuestionRenderer
-                      question={question}
-                      questionId={questionId}
-                      index={index}
-                      groupType={groupType}
-                    />
-                  </div>
-                </div>
-              );
-            })}
-            <div className="flex justify-between mt-6 pt-6 border-t border-gray-700">
-              {currentQuestionIndex > 0 ? (
-                <button
-                  type="button"
-                  onClick={goToPreviousQuestion}
-                  disabled={isSubmitting}
-                  className="px-6 py-2 bg-gray-600 text-white rounded-lg font-medium hover:bg-gray-700 transition-all duration-200 disabled:opacity-50"
-                >
-                  {isSubmitting ? "Loading..." : "Previous Question"}
-                </button>
-              ) : (
-                <div></div>
-              )}
-              {isLastQuestion ? (
-                <button
-                  type="submit"
-                  disabled={isSubmitting}
-                  className="px-6 py-2 bg-green-600 text-white rounded-lg font-medium hover:bg-green-700 transition-all duration-200 disabled:opacity-50"
-                >
-                  {isSubmitting ? "Submitting..." : "Submit Test"}
-                </button>
-              ) : (
-                <button
-                  type="button"
-                  onClick={handleNextQuestion}
-                  disabled={isSubmitting}
-                  className="px-6 py-2 bg-blue-600 text-white rounded-lg font-medium hover:bg-blue-700 transition-all duration-200 disabled:opacity-50"
-                >
-                  {isSubmitting ? "Loading..." : "Next Question"}
-                </button>
-              )}
-            </div>
-          </form>
-        </div>
-      </div>
-    </div>
-  );
+  if (isListeningSection()) {
+    return renderListeningSection();
+  }
+
+  // Default to reading section
+  return renderReadingSection();
 };
 
 export default TestQuestionPage;

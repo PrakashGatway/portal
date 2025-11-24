@@ -159,11 +159,11 @@ const ResultsSummary: React.FC<ResultsSummaryProps> = ({ results, onClose, darkM
                   Practice More Tests
                 </button>
                 <button
-                  onClick={() => window.location.href = '/'}
+                  onClick={() => window.location.href = '/mock-tests'}
                   className="w-full bg-green-600 hover:bg-green-700 text-white py-3 lg:py-4 px-4 rounded-xl font-semibold transition-all duration-200 flex items-center justify-center text-base lg:text-lg"
                 >
                   <span className="mr-3">🏠</span>
-                  Back to Dashboard
+                  Back to Mocktest
                 </button>
               </div>
             </div>
