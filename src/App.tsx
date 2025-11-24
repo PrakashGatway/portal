@@ -9,9 +9,6 @@ import { ScrollToTop } from "./components/common/ScrollToTop";
 import Home from "./pages/Dashboard/Home";
 import { ToastContainer } from "react-toastify";
 import UserListPage from "./pages/userList";
-import CreateQuery from "./pages/OtherPage/Queries";
-import QueryDetail from "./pages/OtherPage/QueryDetail";
-import QueryList from "./pages/OtherPage/QueriesList";
 import PagesManagement from "./pages/Website/Pages";
 import EntityManagement from "./pages/Website/Entities";
 import ComingSoon from "./pages/OtherPage/ComingSoon";
@@ -46,6 +43,8 @@ import ArticleManagement from "./pages/Website/Blogs";
 import CommentsManagement from "./pages/Website/BlogComent";
 import MockTest from "./userView/Mocktest";
 import TestQuestionPage from "./userView/Testquestionpage";
+import PackageManagement from "./pages/Tests/Packages";
+import FullLengthTestPage from "./pages/TestScreen/FullTest";
 
 // Define roles
 export const ROLES = {
@@ -83,16 +82,9 @@ export default function App() {
               <Route path="/referrals" element={<ReferAndEarnPage />} />
               <Route path="/my-courses" element={<MyCoursesPage />} />
               <Route path="/courses/:slug" element={<CourseDetailPageee />} />
-
               <Route path="/study-material" element={<StudyMaterialPage />} />
-
               <Route path="/class/:contentId/:courseId" element={<VideoPlayerPage />} />
-              <Route path="/query" element={<CreateQuery />} />
-              <Route path="/queries" element={<QueryList />} />
-              <Route path="/queries/:id" element={<QueryDetail />} />
-
               <Route path="/support" element={<SupportPage />} />
-
 
               <Route path="/mocks" element={<MockTestsPage />} />
               <Route path="/mock-tests" element={<MockTest/>} />
@@ -115,6 +107,7 @@ export default function App() {
                 <Route path="/test/sections" element={<SectionManagement />} />
                 <Route path="/tests" element={<TestSeriesManagement />} />
                 <Route path="/test/questions" element={<QuestionManagement />} />
+                <Route path="/test/packages" element={<PackageManagement />} />
               </Route>
 
               <Route element={<ProtectedRoute roles={[ROLES.COUNSEL, ROLES.ADMIN]} />}>
@@ -134,6 +127,7 @@ export default function App() {
             <Route path="/course/category" element={<CategorySelectionPage />} />
             <Route path="/checkout/:slug" element={<CheckoutPage />} />
             <Route path="/payment-status" element={<PaymentStatusPage />} />
+            <Route path="/full/:testSeriesId" element={<FullLengthTestPage />} />
           </Route>
           <Route path="/unauthorized" element={<NotFound />} />
         </Routes>

@@ -143,7 +143,7 @@ const MultiSelect: React.FC<MultiSelectProps> = ({
                     <div
                       className={`relative flex w-full items-center p-2 pl-2 ${
                         selectedOptions.includes(option.value)
-                          ? "bg-primary/10"
+                          ? "bg-gray-100 dark:bg-gray-800"
                           : ""
                       }`}
                     >

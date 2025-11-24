@@ -143,7 +143,7 @@ export default function CourseList({
                                 className={`
                                 px-4 py-2 text-sm font-medium rounded-lg transition-all duration-200 transform
                                 ${filters.mode === tab.id || (tab.id === 'all' && !filters.mode)
-                                        ? 'bg-gradient-to-r from-blue-600 to-indigo-700 text-white shadow-lg shadow-blue-500/30 scale-[1.02]'
+                                        ? 'bg-gradient-to-r from-[#fe572a] to-[#fe572a] text-white shadow-lg shadow-blue-500/30 scale-[1.02]'
                                         : 'bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 hover:border-gray-300 dark:hover:border-gray-600'
                                     }
                                 hover:shadow-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-opacity-50

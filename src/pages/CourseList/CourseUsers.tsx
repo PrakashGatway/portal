@@ -65,7 +65,7 @@ type FilterState = {
 const heroImages: HeroImage[] = [
   {
     id: "1",
-    url: "https://static.pw.live/5eb393ee95fab7468a79d189/ADMIN/5e065e49-c332-48f2-9bf3-b4d5e1b74f2a.jpg",
+    url: "/images/1.jpg",
     title: "LAKSHYA POWER BATCH",
     subtitle: "JEE 2026 | FOR CLASS 12",
     description:
@@ -75,7 +75,7 @@ const heroImages: HeroImage[] = [
   },
   {
     id: "2",
-    url: "https://static.pw.live/5eb393ee95fab7468a79d189/ADMIN/6b6f3cf1-090a-4705-9bd8-bbc0311260af.jpg",
+    url: "/images/2.jpg",
     title: "NEET YAKEEN 2.0",
     subtitle: "Complete Medical Entrance Preparation",
     description:
@@ -85,7 +85,7 @@ const heroImages: HeroImage[] = [
   },
   {
     id: "3",
-    url: "https://static.pw.live/5eb393ee95fab7468a79d189/ADMIN/6b6f3cf1-090a-4705-9bd8-bbc0311260af.jpg",
+    url: "/images/3.jpg",
     title: "ARJUNA BATCH",
     subtitle: "Advanced JEE Preparation",
     description:
@@ -188,9 +188,9 @@ export default function CourseListingPage() {
   }
 
   return (
-    <div className="min-h-[84vh] max-w-7xl mx-auto text-foreground">
+    <div className="min-h-[84vh] max-w-6xl mx-auto text-foreground ">
       <section className="pb-6 pt-3">
-        <div className="max-w-7xl mx-auto">
+        <div className="max-w-4xl mx-auto">
           <FullWidthSearch
             onSearch={handleSearch}
             searchResults={filteredCourses}
@@ -201,17 +201,15 @@ export default function CourseListingPage() {
       </section>
 
       <section className="max-w-7xl mx-auto pb-4 px-3">
-        <ImageSlider images={heroImages} autoPlay={true} interval={6000} height="h-60 md:h-[250px]" />
-      </section>
-
-      {featuredCourses.length > 0 && (
-        <FeaturedCourseSlider
-          courses={featuredCourses}
-          title="Featured Courses"
-          autoPlay={true}
-          interval={5000}
+        <ImageSlider 
+          images={heroImages} 
+          autoPlay={true} 
+          interval={8000} 
+          height="h-40 md:h-[250px]" 
+          primaryColor="#daff02"
+          secondaryColor="#fe572a"
         />
-      )}
+      </section>
 
       <CourseList
         courses={filteredCourses}
@@ -222,7 +220,21 @@ export default function CourseListingPage() {
         onFilterChange={handleFilterChange}
         onSortChange={handleSortChange}
         currentFilters={filters}
+        primaryColor="#daff02"
+        secondaryColor="#fe572a"
       />
+
+      
+     {featuredCourses.length > 0 && (
+        <FeaturedCourseSlider
+          courses={featuredCourses}
+          title="Featured Courses"
+          autoPlay={true}
+          interval={5000}
+          primaryColor="#daff02"
+          secondaryColor="#fe572a"
+        />
+      )} 
     </div>
   )
 }

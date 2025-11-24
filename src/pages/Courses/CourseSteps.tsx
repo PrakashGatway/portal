@@ -191,7 +191,7 @@ const CourseSteppedForm = ({ course = null, onSave, onCancel, categories, users 
         shortDescription: "",
         slug: "",
         category: "", // Will hold category ID
-        subcategory: "", // Will hold subcategory ID
+        subcategory: null, // Will hold subcategory ID
         instructors: [], // Will hold array of instructor IDs
         level: "beginner",
         language: "English",
@@ -249,7 +249,7 @@ const CourseSteppedForm = ({ course = null, onSave, onCancel, categories, users 
     useEffect(() => {
         if (course) {
             const categoryId = course.category || course.category || "";
-            const subcategoryId = course.subcategory || course.subcategory || "";
+            const subcategoryId = course.subcategory || course.subcategory || null;
             const instructorIds = Array.isArray(course.instructors)
                 ? course.instructors.map(inst => (typeof inst === 'object' ? inst._id : inst))
                 : [];
@@ -316,7 +316,7 @@ const CourseSteppedForm = ({ course = null, onSave, onCancel, categories, users 
                 shortDescription: "",
                 slug: "",
                 category: "",
-                subcategory: "",
+                subcategory: null,
                 instructors: [],
                 level: "beginner",
                 language: "English",
@@ -562,6 +562,7 @@ const CourseSteppedForm = ({ course = null, onSave, onCancel, categories, users 
             // Prepare payload with proper date formatting
             const payload = {
                 ...formData,
+                subcategory: formData.subcategory || null,
                 thumbnail: finalThumbnailData,
                 schedule: {
                     ...formData.schedule,

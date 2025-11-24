@@ -263,23 +263,47 @@ export default function TestSeriesManagement() {
     };
 
     // --- QUESTION MANAGEMENT WITHIN SECTION ---
-    const toggleQuestionInSection = (sectionIndex, questionId) => {
-        setFormData(prev => {
-            const newSections = [...prev.sections];
-            const section = newSections[sectionIndex];
-            const existingQuestionIndex = section.questionIds.findIndex(qId => qId === questionId); // Use '==' for string comparison
-            if (existingQuestionIndex > -1) {
+const toggleQuestionInSection = (sectionIndex, questionId) => {
+    console.log("Toggle question:", sectionIndex, questionId);
+    console.log("Current section questions:", formData.sections[sectionIndex]?.questionIds);
+    
+    setFormData(prev => {
+        const newSections = prev.sections.map((section, idx) => {
+            if (idx !== sectionIndex) return section;
+            
+            // Create a new array for questionIds to maintain immutability
+            const currentQuestionIds = [...section.questionIds];
+            const questionIdStr = String(questionId);
+            
+            // Find index using strict comparison with string conversion
+            const existingIndex = currentQuestionIds.findIndex(
+                qId => String(qId) === questionIdStr
+            );
+            
+            let newQuestionIds;
+            if (existingIndex > -1) {
                 // Remove question
-                section.questionIds.splice(existingQuestionIndex, 1);
+                newQuestionIds = [
+                    ...currentQuestionIds.slice(0, existingIndex),
+                    ...currentQuestionIds.slice(existingIndex + 1)
+                ];
             } else {
-                // Add question to the end of the array
-                section.questionIds.push(questionId);
+                // Add question
+                newQuestionIds = [...currentQuestionIds, questionId];
             }
-            // Update totalQuestions count for the section
-            section.totalQuestions = section.questionIds.length;
-            return { ...prev, sections: newSections };
+            
+            // Return updated section
+            return {
+                ...section,
+                questionIds: newQuestionIds,
+                totalQuestions: newQuestionIds.length
+            };
         });
-    };
+        
+        console.log("Updated sections:", newSections);
+        return { ...prev, sections: newSections };
+    });
+};
 
     // --- DRAG & DROP LOGIC FOR QUESTIONS ---
     // This function handles the reordering of questions within a specific section
@@ -842,7 +866,10 @@ export default function TestSeriesManagement() {
                                                                                 <p className="text-sm text-gray-500 py-2 text-center">No questions found for this section.</p>
                                                                             ) : (
                                                                                 sectionQuestions.map((question, questionIdx) => {
+                                                                                    console.log("Rendering question:", question._id);
+                                                                                    console.log("Is selected:", sec.questionIds);
                                                                                     const isQuestionSelected = sec.questionIds.includes(question._id);
+                                                                                    console.log("isQuestionSelected:", isQuestionSelected);
                                                                                     return (
                                                                                         <div
                                                                                             key={question._id}

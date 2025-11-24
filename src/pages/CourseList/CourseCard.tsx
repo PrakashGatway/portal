@@ -3,8 +3,9 @@ import { Star, Clock, Users, TrendingUp, Calendar, MapPin, BookOpen } from 'luci
 import { ImageBaseUrl } from '../../axiosInstance';
 import { useNavigate } from 'react-router';
 
-const CourseCard = ({ course }) => {
+const CourseCard = ({ course, primaryColor = "#daff02", secondaryColor = "#fe572a" }) => {
     const [imageError, setImageError] = useState(false);
+    const navigate = useNavigate();
 
     const formatPrice = (amount, currency = 'INR') => {
         return new Intl.NumberFormat('en-IN', {
@@ -13,7 +14,6 @@ const CourseCard = ({ course }) => {
             minimumFractionDigits: 0
         }).format(amount);
     };
-    let navigate = useNavigate()
 
     const formatDate = (date) => {
         return new Date(date).toLocaleDateString('en-US', {
@@ -38,18 +38,23 @@ const CourseCard = ({ course }) => {
                 ? course.pricing.discount
                 : 0;
 
-
     const isEarlyBirdActive = course.pricing.earlyBird?.discount > 0 &&
         new Date() < new Date(course.pricing.earlyBird.deadline);
 
-    // Calculate final price
     const originalPrice = course.pricing.originalAmount || course.pricing.amount;
     const finalPrice = discountPercent > 0
         ? originalPrice * (1 - discountPercent / 100)
         : originalPrice;
 
     return (
-        <div className="bg-white dark:bg-gray-800 rounded-xl shadow-md overflow-hidden hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1 border border-gray-200 dark:border-gray-700 group h-full flex flex-col">
+        <div
+            className="bg-white dark:bg-gray-800 rounded-2xl overflow-hidden shadow-sm transition-all duration-300 transform hover:-translate-y-1 flex flex-col h-full"
+            style={{
+                border: `2px solid ${primaryColor}`,
+                boxShadow: `0 4px 12px rgba(0,0,0,0.08), 0 0 0 4px ${primaryColor}10`,
+                transition: 'all 0.3s ease'
+            }}
+        >
             {/* Thumbnail */}
             <div className="relative overflow-hidden">
                 <img
@@ -58,116 +63,153 @@ const CourseCard = ({ course }) => {
                         : `${ImageBaseUrl}/${course.thumbnail.url}`
                     }
                     alt={course.title}
-                    className="w-full h-50 object-cover transition-transform duration-500"
+                    className="w-full h-48 object-cover transition-transform duration-500 group-hover:scale-105"
                     onError={() => setImageError(true)}
                 />
 
-                {/* Overlay gradient */}
-                <div className="absolute inset-0 bg-gradient-to-t from-black/40 to-transparent opacity-100 transition-opacity duration-300"></div>
+                {/* Overlay */}
+                {/* <div className="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent pointer-events-none"></div> */}
 
                 {/* Badges */}
-                <div className="absolute bottom-3 left-3 flex flex-wrap gap-2">
+                <div className="absolute bottom-3 left-3 flex flex-wrap gap-2 z-10">
                     {course.featured && (
-                        <span className="bg-blue-500 text-white px-2.5 py-1 rounded-full text-xs font-bold shadow-md">
+                        <span
+                            className="text-white px-2.5 py-1 rounded-full text-xs font-bold shadow-md whitespace-nowrap"
+                            style={{ backgroundColor: secondaryColor }}
+                        >
                             FEATURED
                         </span>
                     )}
                     {discountPercent > 0 && (
-                        <span className="bg-red-500 text-white px-2.5 py-1 rounded-full text-xs font-bold shadow-md">
+                        <span
+                            className="text-white px-2.5 py-1 rounded-full text-xs font-bold shadow-md whitespace-nowrap"
+                            style={{ backgroundColor: secondaryColor }}
+                        >
                             {discountPercent}% OFF {isEarlyBirdActive && '(Early Bird)'}
                         </span>
                     )}
                 </div>
 
                 {/* Level indicator */}
-                <div className="absolute top-3 right-3">
-                    <span className={`px-2.5 py-1 rounded-full text-xs font-bold text-white ${course.level === 'beginner' ? 'bg-green-500' :
+                <div className="absolute top-3 right-3 z-10">
+                    <span className={`px-2.5 py-1 rounded-full text-xs font-bold text-white ${
+                        course.level === 'beginner' ? 'bg-green-500' :
                         course.level === 'intermediate' ? 'bg-blue-500' :
-                            'bg-purple-500'
-                        }`}>
+                        'bg-purple-500'
+                    }`}>
                         {course.level.toUpperCase()}
                     </span>
                 </div>
             </div>
 
             {/* Content */}
-            <div className="p-2 px-3 flex flex-col flex-grow">
+            <div className="p-4 flex flex-col flex-grow">
                 <div className="flex justify-between items-start">
-                    <div className="flex-1">
-                        <h3 className="text-lg font-bold text-gray-900 dark:text-white line-clamp-2">
+                    <div className="flex-1 min-w-0">
+                        <h3 className="text-lg font-bold capitalize text-gray-800 dark:text-white line-clamp-2 leading-tight">
                             {course.title} ({course.code})
                         </h3>
-                        <p className="text-sm text-gray-600 dark:text-gray-300 line-clamp-1">{course.shortDescription || course.subtitle}</p>
-
+                        <p className="text-sm text-gray-600 dark:text-gray-300 line-clamp-2 mt-1">
+                            {course.shortDescription || course.subtitle}
+                        </p>
                     </div>
-                    <div className="text-right ml-3 flex-shrink-0">
+                    <div className="text-right ml-3 flex-shrink-0 whitespace-nowrap">
                         <div className="flex items-center">
                             <Star className="h-4 w-4 text-yellow-400 fill-current" />
-                            <span className="ml-1 text-sm font-medium text-gray-900 dark:text-white">{course.rating || '4.8'}</span>
-                            <span className="ml-1 text-xs text-gray-500 dark:text-gray-400">({course.reviews || '1000+'})</span>
+                            <span className="ml-1 text-sm font-medium text-gray-900 dark:text-white">
+                                {course.rating || '4.8'}
+                            </span>
+                            <span className="ml-1 text-xs text-gray-500 dark:text-gray-400">
+                                ({course.reviews || '1000+'})
+                            </span>
                         </div>
                     </div>
                 </div>
 
-                {/* Schedule Information */}
-                <div className="mt-3 flex items-center text-xs text-gray-600 dark:text-gray-400">
-                    <Calendar className="h-4 w-4 mr-1 flex-shrink-0" />
+                {/* Schedule Info */}
+                {/* <div className="mt-3 flex items-center text-xs text-gray-600 dark:text-gray-400">
+                    <Calendar
+                        className="h-4 w-4 mr-1 flex-shrink-0"
+                        style={{ color: primaryColor }}
+                    />
                     <span>Starts: {formatDate(course.schedule.startDate)}</span>
                     {course.status === 'upcoming' && (
-                        <span className="ml-2 bg-orange-100 text-orange-800 px-2 py-0.5 rounded-full">
+                        <span
+                            className="ml-2 px-2 py-0.5 rounded-full text-xs font-medium"
+                            style={{ backgroundColor: `${primaryColor}20`, color: primaryColor }}
+                        >
                             {getDaysRemaining(course.schedule.startDate)} days left
                         </span>
                     )}
-                </div>
+                </div> */}
 
                 {/* Metadata Grid */}
-                <div className="grid grid-cols-3 gap-3 mt-4 text-xs text-gray-600 dark:text-gray-300">
+                {/* <div className="grid grid-cols-3 gap-3 mt-4 text-xs text-gray-600 dark:text-gray-300">
                     <div className="flex items-center space-x-1.5">
-                        <Users className="h-4 w-4 flex-shrink-0" />
+                        <Users className="h-4 w-4 flex-shrink-0" style={{ color: primaryColor }} />
                         <span>{course.studentsEnrolled?.toLocaleString() || '300+'} enrolled</span>
                     </div>
                     <div className="flex items-center space-x-1.5">
-                        <TrendingUp className="h-4 w-4 flex-shrink-0" />
+                        <TrendingUp className="h-4 w-4 flex-shrink-0" style={{ color: secondaryColor }} />
                         <span className="capitalize">{course.language || 'English'}</span>
                     </div>
                     <div className="flex items-center space-x-1.5">
-                        <BookOpen className="h-4 w-4 flex-shrink-0" />
+                        <BookOpen className="h-4 w-4 flex-shrink-0" style={{ color: primaryColor }} />
                         <span>{course.instructors?.length || 1} instructors</span>
                     </div>
-                </div>
+                </div> */}
 
                 {/* Pricing & CTA */}
-                <div className="mt-3 flex flex-col space-y-3">
+                <div className="mt-2 flex flex-col space-y-3 pt-2 border-t border-gray-100 dark:border-gray-700">
                     <div className="flex items-baseline justify-between">
-                        <div className="flex items-baseline space-x-1.5">
-                            <span className="text-xl font-bold text-gray-900 dark:text-white">
+                        <div className="flex items-baseline space-x-2">
+                            <span className="text-lg font-bold text-gray-900 dark:text-white">
                                 {formatPrice(finalPrice, course.pricing.currency)}
                             </span>
                             {discountPercent > 0 && (
-                                <span className="text-sm text-gray-500 dark:text-gray-400 line-through">
+                                <span className="text-sm text-gray-500 dark:text-gray-400 line-through self-center">
                                     {formatPrice(originalPrice, course.pricing.currency)}
                                 </span>
                             )}
-                            <span className="px-2 py-0.5 text-sm font-medium text-white bg-red-500 rounded-full">
+                            <span
+                                className="px-1.5 py-0.5 text-xs font-bold text-white rounded-full flex items-center justify-center"
+                                style={{ backgroundColor: secondaryColor }}
+                            >
                                 {discountPercent}%
                             </span>
                         </div>
                         {isEarlyBirdActive && (
-                            <div className="text-xs bg-amber-100 text-amber-800 dark:bg-amber-900 dark:text-amber-200 px-2 py-1 rounded-full">
-                                Early bird ends {formatDate(course.pricing.earlyBird.deadline)}
+                            <div
+                                className="text-[10px] px-2 py-1 rounded-full font-medium whitespace-nowrap"
+                                style={{ backgroundColor: `${primaryColor}40`, color: '#000' }}
+                            >
+                                Ends {formatDate(course.pricing.earlyBird.deadline)}
                             </div>
                         )}
                     </div>
 
                     <div className="flex space-x-2">
-                        <button onClick={()=>navigate(`/course/${course.slug}`)} className="flex-1 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-200 py-1 px-4 rounded-lg font-medium hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors">
+                        <button
+                            onClick={() => navigate(`/course/${course.slug}`)}
+                            className="flex-1 py-2 px-3 rounded-lg font-medium text-sm transition-all"
+                            style={{
+                                backgroundColor: primaryColor,
+                                color: '#000',
+                                fontWeight: 600
+                            }}
+                        >
                             Explore
                         </button>
-                        <button className="flex-1 bg-blue-600 hover:bg-blue-700 text-white py-1 px-4 rounded-lg font-medium transition-colors">
+                        <button
+                            className="flex-1 py-2 px-3 rounded-lg font-medium text-sm text-white transition-all"
+                            style={{
+                                backgroundColor: secondaryColor,
+                                fontWeight: 600
+                            }}
+                        >
                             Enroll Now
                         </button>
                     </div>
-
                 </div>
             </div>
         </div>

@@ -8,6 +8,8 @@ interface FilterDrawerProps {
   onClose: () => void
   onApplyFilters: (filters: FilterState) => void
   initialFilters?: FilterState
+  primaryColor?: string;
+  secondaryColor?: string;
 }
 
 export interface FilterState {
@@ -64,7 +66,14 @@ const languages = [
   { value: "bilingual", label: "Bilingual", icon: "🗣️" },
 ]
 
-export default function FilterDrawer({ isOpen, onClose, onApplyFilters, initialFilters }: FilterDrawerProps) {
+export default function FilterDrawer({ 
+  isOpen, 
+  onClose, 
+  onApplyFilters, 
+  initialFilters,
+  primaryColor = "#daff02",
+  secondaryColor = "#fe572a"
+}: FilterDrawerProps) {
   const [filters, setFilters] = useState<FilterState>(
     initialFilters || {
       category: "",
@@ -174,17 +183,31 @@ export default function FilterDrawer({ isOpen, onClose, onApplyFilters, initialF
           >
             <div className="flex flex-col h-full">
               {/* Header */}
-              <div className="flex items-center justify-between p-6 border-b border-border bg-gradient-to-r from-primary/5 to-secondary/5">
+              <div 
+                className="flex items-center justify-between p-6 border-b border-border"
+                style={{ backgroundColor: `${primaryColor}20` }}
+              >
                 <div className="flex items-center space-x-3">
-                  <div className="p-2 bg-primary/10 rounded-xl">
-                    <Filter className="h-5 w-5 text-primary" />
+                  <div 
+                    className="p-2 rounded-xl"
+                    style={{ backgroundColor: `${primaryColor}20` }}
+                  >
+                    <Filter 
+                      className="h-5 w-5" 
+                      style={{ color: primaryColor }}
+                    />
                   </div>
                   <div>
                     <h2 className="text-xl font-bold text-foreground">Filters</h2>
                     <p className="text-sm text-muted-foreground">{getActiveFiltersCount()} active filters</p>
                   </div>
                 </div>
-                <Button variant="ghost" size="icon" onClick={onClose} className="rounded-full hover:bg-muted">
+                <Button 
+                  variant="ghost" 
+                  size="icon" 
+                  onClick={onClose} 
+                  className="rounded-full hover:bg-muted"
+                >
                   <X className="h-5 w-5" />
                 </Button>
               </div>
@@ -268,9 +291,13 @@ export default function FilterDrawer({ isOpen, onClose, onApplyFilters, initialF
                               whileTap={{ scale: 0.98 }}
                               onClick={() => setFilters((prev) => ({ ...prev, status: status.value }))}
                               className={`flex items-center space-x-2 p-3 rounded-xl border-2 transition-all duration-200 ${filters.status === status.value
-                                  ? "border-primary bg-primary/10 text-primary"
+                                  ? "text-white"
                                   : "border-border hover:border-primary/50 hover:bg-muted/50"
                                 }`}
+                              style={{
+                                borderColor: filters.status === status.value ? secondaryColor : undefined,
+                                backgroundColor: filters.status === status.value ? secondaryColor : undefined
+                              }}
                             >
                               <span className="text-lg">{status.icon}</span>
                               <span className="text-sm font-medium truncate">{status.label}</span>
@@ -313,9 +340,13 @@ export default function FilterDrawer({ isOpen, onClose, onApplyFilters, initialF
                               whileTap={{ scale: 0.98 }}
                               onClick={() => setFilters((prev) => ({ ...prev, level: level.value }))}
                               className={`flex items-center space-x-2 p-3 rounded-xl border-2 transition-all duration-200 ${filters.level === level.value
-                                  ? "border-primary bg-primary/10 text-primary"
+                                  ? "text-white"
                                   : "border-border hover:border-primary/50 hover:bg-muted/50"
                                 }`}
+                              style={{
+                                borderColor: filters.level === level.value ? secondaryColor : undefined,
+                                backgroundColor: filters.level === level.value ? secondaryColor : undefined
+                              }}
                             >
                               <span className="text-lg">{level.icon}</span>
                               <span className="text-sm font-medium truncate">{level.label}</span>
@@ -358,9 +389,13 @@ export default function FilterDrawer({ isOpen, onClose, onApplyFilters, initialF
                               whileTap={{ scale: 0.99 }}
                               onClick={() => setFilters((prev) => ({ ...prev, mode: mode.value }))}
                               className={`flex items-center space-x-3 w-full p-3 rounded-xl border-2 transition-all duration-200 ${filters.mode === mode.value
-                                  ? "border-primary bg-primary/10 text-primary"
+                                  ? "text-white"
                                   : "border-border hover:border-primary/50 hover:bg-muted/50"
                                 }`}
+                              style={{
+                                borderColor: filters.mode === mode.value ? secondaryColor : undefined,
+                                backgroundColor: filters.mode === mode.value ? secondaryColor : undefined
+                              }}
                             >
                               <span className="text-lg">{mode.icon}</span>
                               <span className="text-sm font-medium flex-1 text-left">{mode.label}</span>
@@ -403,9 +438,13 @@ export default function FilterDrawer({ isOpen, onClose, onApplyFilters, initialF
                               whileTap={{ scale: 0.99 }}
                               onClick={() => setFilters((prev) => ({ ...prev, language: language.value }))}
                               className={`flex items-center space-x-3 w-full p-3 rounded-xl border-2 transition-all duration-200 ${filters.language === language.value
-                                  ? "border-primary bg-primary/10 text-primary"
+                                  ? "text-white"
                                   : "border-border hover:border-primary/50 hover:bg-muted/50"
                                 }`}
+                              style={{
+                                borderColor: filters.language === language.value ? secondaryColor : undefined,
+                                backgroundColor: filters.language === language.value ? secondaryColor : undefined
+                              }}
                             >
                               <span className="text-lg">{language.icon}</span>
                               <span className="text-sm font-medium flex-1 text-left">{language.label}</span>
@@ -440,11 +479,14 @@ export default function FilterDrawer({ isOpen, onClose, onApplyFilters, initialF
                         transition={{ duration: 0.3 }}
                         className="overflow-hidden"
                       >
-                        <div className="space-y-4 p-4 bg-muted/30 rounded-xl">
+                        <div 
+                          className="space-y-4 p-4 rounded-xl"
+                          style={{ backgroundColor: `${primaryColor}20` }}
+                        >
                           {/* Display Values */}
                           <div className="flex justify-between text-sm font-medium">
-                            <span className="text-primary">Min: ₹</span>
-                            <span className="text-primary">Max: ₹</span>
+                            <span style={{ color: primaryColor }}>Min: ₹</span>
+                            <span style={{ color: primaryColor }}>Max: ₹</span>
                           </div>
 
                           {/* Number Inputs */}
@@ -466,7 +508,11 @@ export default function FilterDrawer({ isOpen, onClose, onApplyFilters, initialF
                                     minPrice: Math.min(Number(e.target.value), prev.maxPrice),
                                   }))
                                 }
-                                className="w-full px-3 py-2 border rounded-lg bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-600 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-blue-500 focus:outline-none"
+                                className="w-full px-3 py-2 border rounded-lg bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-600 text-gray-900 dark:text-gray-100 focus:ring-2 focus:outline-none"
+                                style={{ 
+                                  borderColor: primaryColor,
+                                  color: '#000'
+                                }}
                               />
                             </div>
 
@@ -487,7 +533,11 @@ export default function FilterDrawer({ isOpen, onClose, onApplyFilters, initialF
                                     maxPrice: Math.max(Number(e.target.value), prev.minPrice),
                                   }))
                                 }
-                                className="w-full px-3 py-2 border rounded-lg bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-600 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-blue-500 focus:outline-none"
+                                className="w-full px-3 py-2 border rounded-lg bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-600 text-gray-900 dark:text-gray-100 focus:ring-2 focus:outline-none"
+                                style={{ 
+                                  borderColor: primaryColor,
+                                  color: '#000'
+                                }}
                               />
                             </div>
                           </div>
@@ -526,7 +576,10 @@ export default function FilterDrawer({ isOpen, onClose, onApplyFilters, initialF
                         transition={{ duration: 0.3 }}
                         className="overflow-hidden"
                       >
-                        <div className="grid grid-cols-2 gap-4 p-4 bg-muted/30 rounded-xl">
+                        <div 
+                          className="grid grid-cols-2 gap-4 p-4 rounded-xl"
+                          style={{ backgroundColor: `${primaryColor}20` }}
+                        >
                           <div>
                             <label className="block text-sm font-medium text-foreground mb-2">Start Date</label>
                             <input
@@ -534,6 +587,10 @@ export default function FilterDrawer({ isOpen, onClose, onApplyFilters, initialF
                               value={filters.startDate}
                               onChange={(e) => setFilters((prev) => ({ ...prev, startDate: e.target.value }))}
                               className="w-full rounded-lg border border-border bg-background p-2 text-sm"
+                              style={{ 
+                                borderColor: primaryColor,
+                                color: '#000'
+                              }}
                             />
                           </div>
                           <div>
@@ -543,6 +600,10 @@ export default function FilterDrawer({ isOpen, onClose, onApplyFilters, initialF
                               value={filters.endDate}
                               onChange={(e) => setFilters((prev) => ({ ...prev, endDate: e.target.value }))}
                               className="w-full rounded-lg border border-border bg-background p-2 text-sm"
+                              style={{ 
+                                borderColor: primaryColor,
+                                color: '#000'
+                              }}
                             />
                           </div>
                         </div>
@@ -577,12 +638,20 @@ export default function FilterDrawer({ isOpen, onClose, onApplyFilters, initialF
                           <motion.label
                             whileHover={{ scale: 1.01 }}
                             className="flex items-center space-x-3 p-3 rounded-xl border-2 border-border hover:border-primary/50 hover:bg-muted/50 cursor-pointer transition-all duration-200"
+                            style={{ 
+                              borderColor: filters.featured ? secondaryColor : undefined,
+                              backgroundColor: filters.featured ? `${secondaryColor}20` : undefined
+                            }}
                           >
                             <input
                               type="checkbox"
                               checked={filters.featured}
                               onChange={(e) => setFilters((prev) => ({ ...prev, featured: e.target.checked }))}
-                              className="h-4 w-4 text-primary focus:ring-primary border-border rounded"
+                              className="h-4 w-4 focus:ring-primary border-border rounded"
+                              style={{ 
+                                accentColor: secondaryColor,
+                                color: '#000'
+                              }}
                             />
                             <div className="flex items-center space-x-2 flex-1">
                               <span className="text-lg">⭐</span>
@@ -597,19 +666,33 @@ export default function FilterDrawer({ isOpen, onClose, onApplyFilters, initialF
               </div>
 
               {/* Footer */}
-              <div className="p-6 border-t border-border bg-gradient-to-r from-muted/30 to-muted/10">
+              <div 
+                className="p-6 border-t border-border"
+                style={{ backgroundColor: `${primaryColor}10` }}
+              >
                 <div className="flex space-x-3">
                   <Button
                     variant="outline"
                     onClick={resetFilters}
                     className="flex-1 flex items-center justify-center space-x-2 rounded-xl bg-transparent"
+                    style={{
+                      borderColor: primaryColor,
+                      color: primaryColor
+                    }}
                   >
-                    <RotateCcw className="h-4 w-4" />
+                    <RotateCcw 
+                      className="h-4 w-4" 
+                      style={{ color: primaryColor }}
+                    />
                     <span>Reset</span>
                   </Button>
                   <Button
                     onClick={handleApply}
-                    className="flex-2 bg-gradient-to-r from-primary to-primary/80 hover:from-primary/90 hover:to-primary/70 text-primary-foreground rounded-xl shadow-lg hover:shadow-xl transition-all duration-200"
+                    className="flex-2 rounded-xl shadow-lg hover:shadow-xl transition-all duration-200"
+                    style={{
+                      backgroundColor: secondaryColor,
+                      color: '#fff'
+                    }}
                   >
                     Apply Filters ({getActiveFiltersCount()})
                   </Button>
