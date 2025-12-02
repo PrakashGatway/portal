@@ -2,8 +2,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { Link, useLocation, useNavigate } from "react-router";
 import { useSidebar } from "../context/SidebarContext";
 import { useAuth } from "../context/UserContext";
-import { Sparkles } from "lucide-react";
-import DynamicIcon from "../components/DynamicIcon";
+import { ChevronDown } from "lucide-react";
 
 type NavItem = {
   name: string;
@@ -242,17 +241,14 @@ const AppSidebar: React.FC = () => {
     let submenuMatched = false;
     ["main", "others"].forEach((menuType) => {
       const items = menuType === "main"
-        ? (user.role === "admin" ? navItems : user.role === "teacher" ? navItemsTeacher : navItemsUser)
-        : (user.role === "teacher" || user.role == "counselor" ? teacherOthersItems : othersItems);
+        ? (user?.role === "admin" ? navItems : user?.role === "teacher" ? navItemsTeacher : navItemsUser)
+        : (user?.role === "teacher" || user?.role === "counselor" ? teacherOthersItems : othersItems);
 
       items.forEach((nav, index) => {
         if (nav.subItems) {
           nav.subItems.forEach((subItem) => {
             if (isActive(subItem.path)) {
-              setOpenSubmenu({
-                type: menuType as "main" | "others",
-                index,
-              });
+              setOpenSubmenu({ type: menuType as "main" | "others", index });
               submenuMatched = true;
             }
           });
@@ -260,34 +256,23 @@ const AppSidebar: React.FC = () => {
       });
     });
 
-    if (!submenuMatched) {
-      setOpenSubmenu(null);
-    }
-  }, [location, isActive, user.role]);
+    if (!submenuMatched) setOpenSubmenu(null);
+  }, [location, isActive, user?.role]);
 
   useEffect(() => {
     if (openSubmenu !== null) {
       const key = `${openSubmenu.type}-${openSubmenu.index}`;
-      if (subMenuRefs.current[key]) {
-        setSubMenuHeight((prevHeights) => ({
-          ...prevHeights,
-          [key]: subMenuRefs.current[key]?.scrollHeight || 0,
-        }));
+      const el = subMenuRefs.current[key];
+      if (el) {
+        setSubMenuHeight(prev => ({ ...prev, [key]: el.scrollHeight }));
       }
     }
   }, [openSubmenu]);
 
   const handleSubmenuToggle = (index: number, menuType: "main" | "others") => {
-    setOpenSubmenu((prevOpenSubmenu) => {
-      if (
-        prevOpenSubmenu &&
-        prevOpenSubmenu.type === menuType &&
-        prevOpenSubmenu.index === index
-      ) {
-        return null;
-      }
-      return { type: menuType, index };
-    });
+    setOpenSubmenu(prev =>
+      prev?.type === menuType && prev.index === index ? null : { type: menuType, index }
+    );
   };
 
   const renderMenuItems = (items: NavItem[], menuType: "main" | "others") => (
@@ -301,116 +286,96 @@ const AppSidebar: React.FC = () => {
             {nav.subItems ? (
               <button
                 onClick={() => handleSubmenuToggle(index, menuType)}
-                className={`menu-item group w-full transition-all duration-300 ease-in-out rounded-xl
+                className={`w-full flex items-center gap-3 px-3 py-3 rounded-xl transition-all duration-300 ease-in-out
                   ${isSubmenuOpen || hasActiveSubItem
-                    ? "menu-item-active bg-gradient-to-r from-blue-50 to-indigo-50 text-blue-700 dark:from-blue-900/30 dark:to-indigo-900/30 dark:text-blue-300 border-r-4 border-blue-500 shadow-sm"
-                    : "menu-item-inactive hover:bg-gray-50 dark:hover:bg-gray-800/50"
-                  }
-                  ${!isExpanded && !isHovered ? "lg:justify-center" : "lg:justify-start"}
-                `}
+                    ? "bg-yellow-50 dark:bg-yellow-900/10 text-black dark:text-yellow-300 shadow-sm"
+                    : "text-gray-700 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-800"
+                  }`}
+                style={{
+                  ...(isSubmenuOpen || hasActiveSubItem
+                    ? { borderLeft: `3px solid #daff02` }
+                    : {})
+                }}
               >
-                <span
-                  className={`menu-item-icon-size transition-all duration-300 flex-shrink-0 text-xl transform group-hover:scale-125
-                    ${isSubmenuOpen || hasActiveSubItem
-                      ? "text-blue-600 dark:text-blue-400 scale-110"
-                      : "text-gray-600 group-hover:text-blue-600 dark:text-gray-400 dark:group-hover:text-blue-400"
-                    }
-                  `}
-                >
+                <span className="text-xl flex-shrink-0">
                   {nav.emoji}
                 </span>
-
                 {(isExpanded || isHovered || isMobileOpen) && (
                   <>
-                    <span className="menu-item-text font-medium text-gray-900 dark:text-gray-100">{nav.name}</span>
-                    <span
-                      className={`ml-auto w-4 h-4 transition-transform duration-200 flex-shrink-0
-                        ${isSubmenuOpen ? "rotate-180 text-blue-500" : "text-gray-400"}
-                      `}
-                    >
-                      ▼
-                    </span>
+                    <span className="font-medium flex-1 text-left"> {nav.name} </span>
+                    <ChevronDown
+                      className={`w-4 h-4 flex-shrink-0 transition-transform ${isSubmenuOpen ? "rotate-180 text-yellow-600" : "text-gray-400"}`}
+                    />
                   </>
                 )}
               </button>
-            ) : (
-              nav.path && (
-                <Link
-                  to={nav.path}
-                  className={`menu-item group transition-all duration-300 ease-in-out rounded-xl
-                    ${isActive(nav.path)
-                      ? "menu-item-active bg-gradient-to-r from-blue-50 to-indigo-50 text-blue-700 dark:from-blue-900/30 dark:to-indigo-900/30 dark:text-blue-300 border-r-4 border-blue-500 shadow-sm"
-                      : "menu-item-inactive hover:bg-gray-50 dark:hover:bg-gray-800/50"
-                    }
-                  `}
-                >
-                  <span
-                    className={`menu-item-icon-size transition-all duration-300 flex-shrink-0 text-xl transform group-hover:scale-125
-                      ${isActive(nav.path)
-                        ? "text-blue-600 dark:text-blue-400 scale-110"
-                        : "text-gray-600 group-hover:text-blue-600 dark:text-gray-400 dark:group-hover:text-blue-400"
-                      }
-                    `}
-                  >
-                    {nav.emoji}
-                  </span>
-                  {(isExpanded || isHovered || isMobileOpen) && (
-                    <span className="menu-item-text font-medium text-gray-900 dark:text-gray-100">{nav.name}</span>
-                  )}
-                </Link>
-              )
-            )}
+            ) : nav.path ? (
+              <Link
+                to={nav.path}
+                className={`w-full flex items-center gap-3 px-3 py-3 rounded-xl transition-all duration-300
+                  ${isActive(nav.path)
+                    ? "bg-yellow-50 dark:bg-yellow-900/10 text-black dark:text-yellow-300 shadow-sm"
+                    : "text-gray-700 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-800"
+                  }`}
+                style={{
+                  ...(isActive(nav.path)
+                    ? { borderLeft: `3px solid #daff02` }
+                    : {})
+                }}
+              >
+                <span className="text-xl flex-shrink-0">
+                  {nav.emoji}
+                </span>
+                {(isExpanded || isHovered || isMobileOpen) && (
+                  <span className="font-medium"> {nav.name} </span>
+                )}
+              </Link>
+            ) : null}
 
             {nav.subItems && (isExpanded || isHovered || isMobileOpen) && (
               <div
-                ref={(el) => {
-                  subMenuRefs.current[`${menuType}-${index}`] = el;
-                }}
+                ref={(el) => { subMenuRefs.current[`${menuType}-${index}`] = el; }}
                 className="overflow-hidden transition-all duration-500 ease-in-out"
                 style={{
                   height: isSubmenuOpen ? `${subMenuHeight[`${menuType}-${index}`] || 0}px` : "0px",
                   opacity: isSubmenuOpen ? 1 : 0,
                 }}
               >
-                <ul className="py-2 space-y-1 ml-9">
+                <ul className="py-2 space-y-1 ml-12">
                   {nav.subItems.map((subItem) => (
                     <li key={subItem.name}>
                       <Link
                         to={subItem.path}
-                        className={`menu-dropdown-item group transition-all duration-200 ease-in-out rounded-md px-3 py-2 flex items-center transform hover:scale-[1.02]
+                        className={`flex items-center justify-between gap-3 px-3 py-2 rounded-lg text-sm transition-colors
                           ${isActive(subItem.path)
-                            ? "menu-dropdown-item-active text-blue-700 bg-blue-50 dark:bg-blue-900/20 dark:text-blue-300 scale-[1.02]"
-                            : "menu-dropdown-item-inactive hover:bg-gray-100 dark:hover:bg-gray-800/50 text-gray-600 dark:text-gray-300"
-                          }
-                        `}
+                            ? "bg-orange-50 text-orange-700 dark:bg-orange-900/20 dark:text-orange-300 font-medium"
+                            : "text-gray-600 hover:bg-gray-100 dark:text-gray-400 dark:hover:bg-gray-800"
+                          }`}
                       >
-                        <span className="flex items-center gap-3">
+                        <div className="flex items-center gap-2.5">
                           {subItem.emoji && (
-                            <span className={`text-lg flex-shrink-0 ${isActive(subItem.path) ? "text-blue-500" : "text-gray-400"}`}>
-                              {subItem.emoji}
-                            </span>
+                            <span className="text-lg">{subItem.emoji}</span>
                           )}
-                          <span className="text-sm text-gray-900 dark:text-gray-100">{subItem.name}</span>
-                        </span>
-                        <span className="flex items-center gap-1 ml-auto">
+                          <span>{subItem.name}</span>
+                        </div>
+                        <div className="flex gap-1">
                           {subItem.new && (
                             <span
-                              className={`px-1.5 py-0.5 text-xs rounded-full
-                                ${isActive(subItem.path)
-                                  ? "bg-blue-500 text-white"
+                              className={`px-2 py-0.5 text-xs rounded-full font-medium ${
+                                isActive(subItem.path)
+                                  ? "bg-yellow-500 text-black"
                                   : "bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400"
-                                }
-                              `}
+                              }`}
                             >
                               New
                             </span>
                           )}
                           {subItem.pro && (
-                            <span className="px-1.5 py-0.5 text-xs bg-purple-100 text-purple-800 rounded-full dark:bg-purple-900/30 dark:text-purple-400">
+                            <span className="px-2 py-0.5 text-xs bg-purple-100 text-purple-800 rounded-full font-medium dark:bg-purple-900/30 dark:text-purple-400">
                               Pro
                             </span>
                           )}
-                        </span>
+                        </div>
                       </Link>
                     </li>
                   ))}
@@ -425,19 +390,22 @@ const AppSidebar: React.FC = () => {
 
   const getMenuItems = (menuType: "main" | "others") => {
     if (menuType === "main") {
-      if (user.role === "admin") return navItems;
-      if (user.role === "counselor") return navItemsCoun;
-      if (user.role === "teacher") return navItemsTeacher;
+      if (user?.role === "admin") return navItems;
+      if (user?.role === "counselor" || user?.role === "manager") return navItemsCoun;
+      if (user?.role === "teacher") return navItemsTeacher;
       return navItemsUser;
     } else {
-      if (user.role === "teacher" || user.role == "counselor") return teacherOthersItems;
+      if (user?.role === "teacher" || user?.role === "counselor") return teacherOthersItems;
       return othersItems;
     }
   };
 
+  const primaryColor = "#daff02";   // Yellow
+  const secondaryColor = "#fe572a"; // Orange
+
   return (
     <aside
-      className={` bg-[hsl(0deg 0% 96.08%)] fixed mt-16 flex flex-col lg:mt-0 top-0 px-3 left-0 bg-white dark:bg-gray-900 text-gray-900 h-screen transition-all duration-300 ease-in-out z-50 border-r border-gray-200 dark:border-gray-800 shadow-lg
+      className={`fixed mt-16 flex flex-col lg:mt-0 top-0 px-3 left-0 bg-white dark:bg-gray-900 text-gray-900 h-screen transition-all duration-300 ease-in-out z-50 border-r border-gray-200 dark:border-gray-800 shadow-lg
         ${isExpanded || isMobileOpen
           ? "w-[260px]"
           : isHovered
@@ -449,87 +417,63 @@ const AppSidebar: React.FC = () => {
       onMouseEnter={() => !isExpanded && setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
     >
-      <div
-        className={`py-6 sm:block hidden flex transition-all duration-300 ${!isExpanded && !isHovered ? "lg:justify-center" : "justify-start"
-          }`}
-      >
-        <Link to={user.role === "teacher" ? "/" : "/"} className="flex items-center transform hover:scale-105 transition-transform duration-200">
+      {/* Logo */}
+      <div className={`py-5 flex transition-all ${!isExpanded && !isHovered ? "justify-center" : "justify-start"}`}>
+        <Link to="/" className="flex items-center transform hover:scale-105 transition-transform duration-200">
           {isExpanded || isHovered || isMobileOpen ? (
-            <>
-              <img
-                className="dark:hidden"
-                src="https://www.gatewayabroadeducations.com/images/logo.svg"
-                alt="Logo"
-                width={180}
-                height={36}
-              />
-              <img
-                className="hidden dark:block"
-                src="https://www.gatewayabroadeducations.com/images/logo.svg"
-                alt="Logo"
-                width={180}
-                height={36}
-              />
-            </>
-          ) : (
             <img
-              src="https://www.gatewayabroadeducations.com/img/favicon.png"
+              src="https://www.gatewayabroadeducations.com/images/logo.svg"
               alt="Logo"
-              width={32}
+              width={160}
               height={32}
-              className="rounded-lg"
             />
+          ) : (
+            <div
+              className="w-9 h-9 rounded-lg flex items-center justify-center text-black font-bold shadow-md"
+              style={{ backgroundColor: primaryColor }}
+            >
+              G
+            </div>
           )}
         </Link>
       </div>
 
-      <div className="flex flex-col flex-1 overflow-y-auto duration-300 sm:mt-0 mt-2 ease-linear no-scrollbar">
+      {/* Navigation */}
+      <div className="flex flex-col flex-1 overflow-y-auto no-scrollbar">
         <nav className="mb-6 flex-1">
           <div className="flex flex-col gap-6">
             <div>
-              <h2
-                className={`mb-3 text-xs uppercase flex leading-[20px] text-gray-500 dark:text-gray-400 font-medium tracking-wider ${!isExpanded && !isHovered
-                  ? "lg:justify-center"
-                  : "justify-start pl-3"
-                  }`}
-              >
-                {isExpanded || isHovered || isMobileOpen ? (
-                  "Menu"
-                ) : (
-                  <span className="text-lg">🔍</span>
-                )}
+              <h2 className={`mb-3 text-xs uppercase text-gray-500 dark:text-gray-400 font-medium tracking-wider ${!isExpanded && !isHovered ? "text-center" : "pl-3"}`}>
+                {isExpanded || isHovered || isMobileOpen ? "Menu" : "🔍"}
               </h2>
               {renderMenuItems(getMenuItems("main"), "main")}
             </div>
 
             <div>
-              <h2
-                className={`mb-3 text-xs uppercase flex leading-[20px] text-gray-500 dark:text-gray-400 font-medium tracking-wider ${!isExpanded && !isHovered
-                  ? "lg:justify-center"
-                  : "justify-start pl-3"
-                  }`}
-              >
-                {isExpanded || isHovered || isMobileOpen ? (
-                  user.role === "teacher" ? "Account" : "Others"
-                ) : (
-                  <span className="text-lg">⚙️</span>
-                )}
+              <h2 className={`mb-3 text-xs uppercase text-gray-500 dark:text-gray-400 font-medium tracking-wider ${!isExpanded && !isHovered ? "text-center" : "pl-3"}`}>
+                {isExpanded || isHovered || isMobileOpen
+                  ? user?.role === "teacher" ? "Account" : "Others"
+                  : "⚙️"
+                }
               </h2>
               {renderMenuItems(getMenuItems("others"), "others")}
             </div>
           </div>
         </nav>
 
-        {/* User profile at the bottom */}
+        {/* User Profile */}
         {(isExpanded || isHovered || isMobileOpen) && user && (
-          <div className="p-0.5 rounded-xl sticky bottom-2 left-0 right-0 bg-gradient-to-r from-gray-50 to-blue-50 dark:from-gray-800 dark:to-blue-900/20 mt-auto border border-gray-200 dark:border-gray-700 shadow-md transform transition-transform duration-200">
-            <div className="flex items-center gap-3 border border-blue-200 dark:border-blue-800 p-2 rounded-xl">
-              <div className="w-10 h-10 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-full flex items-center justify-center text-white font-medium shadow-md transform transition-transform duration-200">
-                {user.name ? user.name.charAt(0).toUpperCase() : '👤'}
+          <div className="p-0.5 rounded-xl bg-gradient-to-r from-yellow-100 to-orange-100 dark:from-yellow-900/20 dark:to-orange-900/20 mt-auto border border-yellow-200 dark:border-yellow-800/30 shadow-sm">
+            <div className="flex items-center gap-3 p-2 rounded-xl bg-white dark:bg-gray-800">
+              <div
+                className="w-10 h-10 rounded-full flex items-center justify-center text-black font-bold shadow-md"
+                style={{ backgroundColor: primaryColor }}
+              >
+                {user.name ? user.name.charAt(0).toUpperCase() : "U"}
               </div>
               <div className="flex-1 min-w-0">
-                <p className="text-sm font-medium text-gray-900 dark:text-white truncate">
-                  {user.name || 'User'}
+                <p className="text-sm font-semibold text-gray-900 dark:text-white truncate">
+                  {user.name || "User"}
                 </p>
                 <p className="text-xs text-gray-600 dark:text-gray-400 capitalize">
                   {user.role}

@@ -14,10 +14,6 @@ import {
     Volume2,
     Mic,
     Square,
-    Home,
-    BarChart3,
-    Play,
-    Pause
 } from "lucide-react";
 
 import api from "../../axiosInstance";
@@ -31,8 +27,8 @@ interface SectionDTO {
         name: string;
         description?: string;
     }
-    | string;
-    duration: number;
+    | string; // depending on populate
+    duration: number; // minutes (from backend); we’ll convert to seconds
     totalQuestions: number;
     status: "not_started" | "in_progress" | "completed";
     timeSpent: number;
@@ -61,7 +57,7 @@ interface QuestionGroup {
     _id: string;
     title: string;
     instruction?: string;
-    type: string;
+    type: string; // questionType for this group
     marks: number;
     questions: SubQuestion[];
 }
@@ -91,6 +87,18 @@ interface ProgressDTO {
     completionPercentage: number;
 }
 
+/**
+ * MUST match backend getQuestionNumbering:
+ * {
+ *   sectionIndex,
+ *   questionIndex,
+ *   questionCount,
+ *   firstGlobalQuestionNumber,
+ *   totalGlobalQuestions,
+ *   firstSectionQuestionNumber,
+ *   totalSectionQuestions
+ * }
+ */
 interface NumberingDTO {
     sectionIndex: number;
     questionIndex: number;
@@ -133,11 +141,12 @@ interface AnalysisDTO {
     sectionWiseAnalysis: SectionWiseAnalysis[];
 }
 
+// RHF form type
 type QuestionFormValues = {
     answers: Record<string, any>;
 };
 
-// ---------- Helper utilities ----------
+// ---------- Helper UI utilities ----------
 
 const formatSeconds = (totalSeconds: number | null | undefined) => {
     if (totalSeconds == null || totalSeconds < 0) return "00:00";
@@ -151,16 +160,18 @@ const formatSeconds = (totalSeconds: number | null | undefined) => {
 const getSectionStatusBadge = (status: SectionDTO["status"]) => {
     switch (status) {
         case "completed":
-            return "bg-emerald-100 text-emerald-800 border-emerald-200 dark:bg-emerald-900/20 dark:text-emerald-300 dark:border-emerald-800";
+            return "bg-emerald-100 text-emerald-700 border-emerald-200";
         case "in_progress":
-            return "bg-amber-100 text-amber-800 border-amber-200 dark:bg-amber-900/20 dark:text-amber-300 dark:border-amber-800";
+            return "bg-amber-100 text-amber-700 border-amber-200";
         default:
-            return "bg-gray-100 text-gray-700 border-gray-200 dark:bg-gray-800 dark:text-gray-400 dark:border-gray-700";
+            return "bg-slate-100 text-slate-700 border-slate-200";
     }
 };
 
 const isWritingType = (t: string) =>
-    ["writing_task_1_academic", "writing_task_1_general", "writing_task_2"].includes(t);
+    ["writing_task_1_academic", "writing_task_1_general", "writing_task_2"].includes(
+        t
+    );
 
 const isSpeakingType = (t: string) =>
     ["speaking_part_1", "speaking_part_2", "speaking_part_3", "speaking"].includes(t);
@@ -179,7 +190,9 @@ const FullLengthTestPage: React.FC = () => {
     const [sections, setSections] = useState<SectionDTO[]>([]);
     const [sessionId, setSessionId] = useState<string | null>(null);
 
-    const [viewMode, setViewMode] = useState<"sections" | "question" | "result">("sections");
+    const [viewMode, setViewMode] = useState<"sections" | "question" | "result">(
+        "sections"
+    );
     const [activeSectionIndex, setActiveSectionIndex] = useState<number | null>(null);
 
     const [currentQuestion, setCurrentQuestion] = useState<QuestionDTO | null>(null);
@@ -191,10 +204,11 @@ const FullLengthTestPage: React.FC = () => {
     const [globalError, setGlobalError] = useState<string | null>(null);
 
     const questionStartRef = useRef<number | null>(null);
+
+    // speaking record state
     const [recording, setRecording] = useState(false);
     const mediaRecorderRef = useRef<MediaRecorder | null>(null);
     const [recordedUrl, setRecordedUrl] = useState<string | null>(null);
-    const [audioPlaying, setAudioPlaying] = useState(false);
 
     const {
         register,
@@ -207,6 +221,7 @@ const FullLengthTestPage: React.FC = () => {
     });
 
     // ---------- TTS ----------
+
     const handleSpeak = (text: string | undefined) => {
         if (!text) return;
         if (typeof window === "undefined") return;
@@ -219,7 +234,8 @@ const FullLengthTestPage: React.FC = () => {
         window.speechSynthesis.speak(utter);
     };
 
-    // ---------- Speaking recording ----------
+    // ---------- Speaking: record + upload placeholder ----------
+
     const startRecording = async () => {
         try {
             const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
@@ -235,6 +251,13 @@ const FullLengthTestPage: React.FC = () => {
                 const blob = new Blob(chunks, { type: "audio/webm" });
                 const url = URL.createObjectURL(blob);
                 setRecordedUrl(url);
+
+                // TODO: you must implement this:
+                // upload blob to backend, get file URL/path
+                // example:
+                // const fileUrl = await uploadSpeakingAudio(blob);
+                // then store into form as the answer
+                // setValue(`answers.${currentQuestion?._id}`, fileUrl);
             };
 
             mediaRecorder.start();
@@ -251,6 +274,7 @@ const FullLengthTestPage: React.FC = () => {
     };
 
     // ---------- Load / resume test ----------
+
     const fetchOrStartTest = async () => {
         if (!testSeriesId) return;
         setLoading(true);
@@ -266,6 +290,7 @@ const FullLengthTestPage: React.FC = () => {
             setTestSeries(data.testSeries);
             setSections(data.sections || []);
 
+            // Full-Length → show section list, resume if section in_progress
             if (data.testSeries.type === "Full-Length") {
                 const inProgressIndex = (data.sections || []).findIndex(
                     (s: SectionDTO) => s.status === "in_progress"
@@ -273,11 +298,12 @@ const FullLengthTestPage: React.FC = () => {
 
                 if (inProgressIndex !== -1) {
                     setActiveSectionIndex(inProgressIndex);
-                    setViewMode("sections");
+                    setViewMode("sections"); // stay on sections until user taps section
                 } else {
                     setViewMode("sections");
                 }
             } else {
+                // Non Full-Length (Mini / Sectional) → directly show question
                 const question: QuestionDTO | null = data.currentQuestion || null;
                 const progressData: ProgressDTO | null = data.progress || null;
                 const userAnswer: UserAnswerItem[] | null = data.userAnswer || null;
@@ -290,6 +316,7 @@ const FullLengthTestPage: React.FC = () => {
                         userAnswer || [],
                         numberingData || undefined
                     );
+                    // timeRemaining in seconds from backend
                     if (data.timeRemaining != null) {
                         setSectionTimeLeft(data.timeRemaining);
                     }
@@ -310,9 +337,11 @@ const FullLengthTestPage: React.FC = () => {
     }, [testSeriesId]);
 
     // ---------- Timer ----------
+
     useEffect(() => {
         if (sectionTimeLeft == null) return;
         if (sectionTimeLeft <= 0) {
+            // Here you can auto-submit the section/test if you want
             return;
         }
 
@@ -323,7 +352,8 @@ const FullLengthTestPage: React.FC = () => {
         return () => clearTimeout(id);
     }, [sectionTimeLeft]);
 
-    // ---------- Helpers ----------
+    // ---------- Helpers to map API -> form ----------
+
     const buildDefaultValuesFromQuestion = (
         question: QuestionDTO,
         userAnswers: UserAnswerItem[] | null | undefined
@@ -367,6 +397,7 @@ const FullLengthTestPage: React.FC = () => {
         questionStartRef.current = Date.now();
     };
 
+
     const handleStartSection = async (sectionIndex: number) => {
         if (!sessionId) return;
         setGlobalError(null);
@@ -386,6 +417,7 @@ const FullLengthTestPage: React.FC = () => {
             const progressData: ProgressDTO = data.progress;
             const sectionTimeRemaining: number = data.sectionTimeRemaining;
 
+            // backend duration is in minutes; here sectionTimeRemaining should be seconds
             setSectionTimeLeft(sectionTimeRemaining ?? null);
             hydrateQuestionState(question, progressData, null, null);
         } catch (err: any) {
@@ -394,7 +426,8 @@ const FullLengthTestPage: React.FC = () => {
         }
     };
 
-    // ---------- Submit answer ----------
+    // ---------- Submit answer (Next) ----------
+
     const sendAnswerAndGoNext = async (values: QuestionFormValues) => {
         if (!sessionId || !currentQuestion || !progress) return;
 
@@ -421,12 +454,14 @@ const FullLengthTestPage: React.FC = () => {
             const data = res.data;
             if (!data.success) throw new Error(data.message || "Failed to submit answer");
 
+            // 1) Finished whole test
             if (data.isTestCompleted && data.analysis) {
                 setAnalysis(data.analysis);
                 setViewMode("result");
                 return;
             }
 
+            // 2) Finished this section (Full-Length) but test not done
             if (data.sectionCompleted && data.sections) {
                 setSections(data.sections);
                 setActiveSectionIndex(null);
@@ -438,6 +473,7 @@ const FullLengthTestPage: React.FC = () => {
                 return;
             }
 
+            // 3) Still inside section -> next question
             const nextQuestion: QuestionDTO = data.currentQuestion;
             const progressData: ProgressDTO = data.progress;
             const userAnswer: UserAnswerItem[] | null = data.userAnswer || null;
@@ -451,6 +487,7 @@ const FullLengthTestPage: React.FC = () => {
     };
 
     // ---------- Previous question ----------
+
     const goToPreviousQuestion = async () => {
         if (!sessionId) return;
         setGlobalError(null);
@@ -474,6 +511,7 @@ const FullLengthTestPage: React.FC = () => {
     };
 
     // ---------- Submit whole test ----------
+
     const handleSubmitTest = async () => {
         if (!sessionId) return;
         setGlobalError(null);
@@ -493,11 +531,14 @@ const FullLengthTestPage: React.FC = () => {
     };
 
     // ---------- Derived UI values ----------
+
     const questionLabel = useMemo(() => {
         if (numbering) {
-            const { questionCount, firstGlobalQuestionNumber, totalGlobalQuestions } = numbering;
+            const { questionCount, firstGlobalQuestionNumber, totalGlobalQuestions } =
+                numbering;
             if (questionCount > 1) {
-                return `Questions ${firstGlobalQuestionNumber}–${firstGlobalQuestionNumber + questionCount - 1} of ${totalGlobalQuestions}`;
+                return `Questions ${firstGlobalQuestionNumber}–${firstGlobalQuestionNumber + questionCount - 1
+                    } of ${totalGlobalQuestions}`;
             }
             return `Question ${firstGlobalQuestionNumber} of ${totalGlobalQuestions}`;
         }
@@ -507,7 +548,8 @@ const FullLengthTestPage: React.FC = () => {
         return "Question";
     }, [numbering, progress]);
 
-    // ---------- Answer field renderers ----------
+    // ---------- Question answer widgets ----------
+
     const renderAnswerField = (
         fieldName: string,
         questionType: string,
@@ -516,20 +558,20 @@ const FullLengthTestPage: React.FC = () => {
         // MCQ single choice
         if (questionType === "multiple_choice_single" && options?.length) {
             return (
-                <div className="space-y-3">
+                <div className="space-y-2">
                     {options.map((opt, idx) => (
                         <label
                             key={idx}
-                            className="flex cursor-pointer items-center gap-3 rounded-xl border-2 border-gray-200 bg-white p-4 transition-all hover:border-blue-500 hover:bg-blue-50 dark:border-gray-600 dark:bg-gray-700 dark:hover:border-blue-400 dark:hover:bg-blue-900/20"
+                            className="flex cursor-pointer items-center gap-2 rounded-lg border border-slate-700 bg-slate-900 px-3 py-2 text-xs hover:border-sky-500"
                         >
                             <input
                                 type="radio"
                                 value={opt.label || opt.text}
-                                className="h-4 w-4 text-blue-600 focus:ring-blue-500"
+                                className="h-3 w-3"
                                 {...register(`answers.${fieldName}` as const)}
                             />
-                            <span className="text-sm font-medium text-gray-900 dark:text-white">
-                                {opt.label && <span className="mr-2 font-bold">{opt.label}.</span>}
+                            <span className="font-semibold text-slate-100">
+                                {opt.label && <span className="mr-1">{opt.label}.</span>}
                                 {opt.text}
                             </span>
                         </label>
@@ -538,7 +580,7 @@ const FullLengthTestPage: React.FC = () => {
             );
         }
 
-        // MCQ multiple choice
+        // MCQ multiple choice -> array of values
         if (questionType === "multiple_choice_multiple" && options?.length) {
             return (
                 <Controller
@@ -555,26 +597,26 @@ const FullLengthTestPage: React.FC = () => {
                             }
                         };
                         return (
-                            <div className="space-y-3">
+                            <div className="space-y-2">
                                 {options.map((opt, idx) => {
                                     const val = opt.label || opt.text;
                                     const checked = value.includes(val);
                                     return (
                                         <label
                                             key={idx}
-                                            className={`flex cursor-pointer items-center gap-3 rounded-xl border-2 p-4 transition-all ${checked
-                                                    ? "border-blue-500 bg-blue-50 dark:border-blue-400 dark:bg-blue-900/30"
-                                                    : "border-gray-200 bg-white hover:border-blue-500 hover:bg-blue-50 dark:border-gray-600 dark:bg-gray-700 dark:hover:border-blue-400 dark:hover:bg-blue-900/20"
+                                            className={`flex cursor-pointer items-center gap-2 rounded-lg border px-3 py-2 text-xs ${checked
+                                                ? "border-sky-500 bg-sky-900/30"
+                                                : "border-slate-700 bg-slate-900"
                                                 }`}
                                         >
                                             <input
                                                 type="checkbox"
-                                                className="h-4 w-4 rounded text-blue-600 focus:ring-blue-500"
+                                                className="h-3 w-3"
                                                 checked={checked}
                                                 onChange={() => toggle(val)}
                                             />
-                                            <span className="text-sm font-medium text-gray-900 dark:text-white">
-                                                {opt.label && <span className="mr-2 font-bold">{opt.label}.</span>}
+                                            <span className="font-semibold text-slate-100">
+                                                {opt.label && <span className="mr-1">{opt.label}.</span>}
                                                 {opt.text}
                                             </span>
                                         </label>
@@ -594,31 +636,31 @@ const FullLengthTestPage: React.FC = () => {
                     ? ["True", "False", "Not Given"]
                     : ["Yes", "No", "Not Given"];
             return (
-                <div className="flex flex-wrap gap-3">
+                <div className="flex flex-wrap gap-2">
                     {choices.map((c) => (
                         <label
                             key={c}
-                            className="inline-flex cursor-pointer items-center gap-2 rounded-xl border-2 border-gray-200 bg-white px-4 py-3 transition-all hover:border-blue-500 hover:bg-blue-50 dark:border-gray-600 dark:bg-gray-700 dark:hover:border-blue-400 dark:hover:bg-blue-900/20"
+                            className="inline-flex cursor-pointer items-center gap-2 rounded-full border border-slate-700 bg-slate-900 px-3 py-1 text-xs hover:border-sky-500"
                         >
                             <input
                                 type="radio"
                                 value={c}
-                                className="h-4 w-4 text-blue-600 focus:ring-blue-500"
+                                className="h-3 w-3"
                                 {...register(`answers.${fieldName}` as const)}
                             />
-                            <span className="text-sm font-medium text-gray-900 dark:text-white">{c}</span>
+                            <span className="text-slate-100">{c}</span>
                         </label>
                     ))}
                 </div>
             );
         }
 
-        // Short answer / sentence completion
+        // Short answer / sentence completion / generic text
         if (["short_answer", "sentence_completion"].includes(questionType)) {
             return (
                 <input
-                    className="w-full rounded-xl border-2 border-gray-200 bg-white px-4 py-3 text-sm text-gray-900 outline-none transition-colors focus:border-blue-500 focus:ring-2 focus:ring-blue-200 dark:border-gray-600 dark:bg-gray-700 dark:text-white dark:focus:border-blue-400 dark:focus:ring-blue-900/30"
-                    placeholder="Type your answer here..."
+                    className="mt-1 w-full rounded-md border border-slate-700 bg-slate-900 px-2 py-1 text-xs text-slate-50 outline-none focus:border-sky-500"
+                    placeholder="Type your answer"
                     {...register(`answers.${fieldName}` as const)}
                 />
             );
@@ -627,134 +669,118 @@ const FullLengthTestPage: React.FC = () => {
         // Generic textarea (writing or other)
         return (
             <textarea
-                rows={6}
-                className="w-full rounded-xl border-2 border-gray-200 bg-white px-4 py-3 text-sm text-gray-900 outline-none transition-colors focus:border-blue-500 focus:ring-2 focus:ring-blue-200 dark:border-gray-600 dark:bg-gray-700 dark:text-white dark:focus:border-blue-400 dark:focus:ring-blue-900/30"
-                placeholder="Type your detailed answer here..."
+                rows={3}
+                className="mt-1 w-full rounded-md border border-slate-700 bg-slate-900 px-2 py-1 text-sm text-slate-50 outline-none focus:border-sky-500"
+                placeholder="Type your answer"
                 {...register(`answers.${fieldName}` as const)}
             />
         );
     };
 
     // ---------- Views ----------
+
     const renderSectionsView = () => {
         if (!testSeries) return null;
         return (
-            <div className="min-h-screen bg-gradient-to-br from-gray-50 to-blue-50 dark:from-gray-900 dark:to-gray-800 px-4 py-8">
+            <div className="min-h-screen bg-slate-950 text-slate-50 px-4 py-6">
                 <div className="mx-auto max-w-6xl">
-                    {/* Header */}
-                    <div className="mb-8 text-center">
-                        <button
-                            className="mb-4 inline-flex items-center gap-2 rounded-xl bg-white px-4 py-2 text-sm font-medium text-gray-700 shadow-sm transition-all hover:bg-gray-50 dark:bg-gray-800 dark:text-gray-300 dark:hover:bg-gray-700"
-                            onClick={() => window.history.back()}
-                        >
-                            <ChevronLeft className="h-4 w-4" />
-                            Back to Dashboard
-                        </button>
-                        <h1 className="text-3xl font-bold text-gray-900 dark:text-white sm:text-4xl">
-                            {testSeries.title}
-                        </h1>
-                        <p className="mt-3 text-lg text-gray-600 dark:text-gray-400">
-                            Full-Length Test • {testSeries.totalQuestions} questions • {testSeries.duration} minutes
-                        </p>
-                    </div>
-
-                    {/* Progress Summary */}
-                    <div className="mb-8 grid grid-cols-1 gap-4 sm:grid-cols-3">
-                        <div className="rounded-2xl bg-white p-6 shadow-sm dark:bg-gray-800">
-                            <div className="flex items-center gap-3">
-                                <div className="rounded-xl bg-blue-100 p-2 dark:bg-blue-900/30">
-                                    <BookOpen className="h-6 w-6 text-blue-600 dark:text-blue-400" />
-                                </div>
-                                <div>
-                                    <p className="text-sm font-medium text-gray-600 dark:text-gray-400">Sections</p>
-                                    <p className="text-2xl font-bold text-gray-900 dark:text-white">{testSeries.totalSections}</p>
-                                </div>
-                            </div>
+                    <div className="mb-6 flex items-center justify-between">
+                        <div>
+                            <button
+                                className="mb-2 inline-flex items-center text-xs text-slate-400 hover:text-slate-200"
+                                onClick={() => window.history.back()}
+                            >
+                                <ChevronLeft className="mr-1 h-4 w-4" /> Back
+                            </button>
+                            <h1 className="text-2xl font-bold tracking-tight text-white">
+                                {testSeries.title}
+                            </h1>
+                            <p className="mt-1 text-sm text-slate-400">
+                                Full-Length IELTS Style Test • {testSeries.totalQuestions} questions •{" "}
+                                {testSeries.duration} minutes
+                            </p>
                         </div>
-                        <div className="rounded-2xl bg-white p-6 shadow-sm dark:bg-gray-800">
-                            <div className="flex items-center gap-3">
-                                <div className="rounded-xl bg-green-100 p-2 dark:bg-green-900/30">
-                                    <CheckCircle className="h-6 w-6 text-green-600 dark:text-green-400" />
-                                </div>
-                                <div>
-                                    <p className="text-sm font-medium text-gray-600 dark:text-gray-400">Completed</p>
-                                    <p className="text-2xl font-bold text-gray-900 dark:text-white">
-                                        {sections.filter(s => s.status === "completed").length}
-                                    </p>
-                                </div>
-                            </div>
-                        </div>
-                        <div className="rounded-2xl bg-white p-6 shadow-sm dark:bg-gray-800">
-                            <div className="flex items-center gap-3">
-                                <div className="rounded-xl bg-amber-100 p-2 dark:bg-amber-900/30">
-                                    <Clock className="h-6 w-6 text-amber-600 dark:text-amber-400" />
-                                </div>
-                                <div>
-                                    <p className="text-sm font-medium text-gray-600 dark:text-gray-400">Total Duration</p>
-                                    <p className="text-2xl font-bold text-gray-900 dark:text-white">{testSeries.duration}m</p>
+                        <div className="flex gap-3">
+                            <div className="rounded-xl border border-slate-800 bg-slate-900/60 px-4 py-2 text-right">
+                                <div className="text-xs uppercase text-slate-400">Attempt Status</div>
+                                <div className="text-sm font-semibold text-emerald-400">
+                                    {sections.some((s) => s.status === "completed")
+                                        ? "In Progress"
+                                        : "Not Started"}
                                 </div>
                             </div>
                         </div>
                     </div>
 
-                    {/* Sections Grid */}
-                    <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+                    {/* Sections grid */}
+                    <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
                         {sections.map((sec) => {
                             const isObj = typeof sec.sectionId === "object";
-                            const secName = isObj ? (sec.sectionId as any).name : String(sec.sectionId);
-                            const secDesc = isObj ? (sec.sectionId as any).description : "Test section";
+                            const secName = isObj
+                                ? (sec.sectionId as any).name
+                                : String(sec.sectionId);
+                            const secDesc = isObj
+                                ? (sec.sectionId as any).description
+                                : "Test section";
+
                             const canStart = sec.status !== "completed";
                             const statusBadge = getSectionStatusBadge(sec.status);
 
                             return (
                                 <div
                                     key={sec.index}
-                                    className="group rounded-2xl border-2 border-gray-200 bg-white p-6 shadow-sm transition-all hover:border-blue-500 hover:shadow-md dark:border-gray-600 dark:bg-gray-800 dark:hover:border-blue-400"
+                                    className="flex flex-col justify-between rounded-2xl border border-slate-800 bg-slate-900/60 p-4 shadow-sm"
                                 >
-                                    <div className="mb-4 flex items-start justify-between">
-                                        <div className="rounded-xl bg-blue-100 px-3 py-1 text-xs font-semibold uppercase tracking-wide text-blue-800 dark:bg-blue-900/30 dark:text-blue-300">
-                                            Section {sec.index + 1}
+                                    <div>
+                                        <div className="flex items-center justify-between gap-2">
+                                            <div className="inline-flex items-center rounded-full border border-slate-700 bg-slate-800/80 px-2 py-0.5 text-[11px] font-semibold uppercase tracking-wide text-slate-300">
+                                                <BookOpen className="mr-1 h-3 w-3" />
+                                                Section {sec.index + 1}
+                                            </div>
+                                            <span
+                                                className={`inline-flex items-center rounded-full border px-2 py-0.5 text-[10px] font-semibold ${statusBadge}`}
+                                            >
+                                                {sec.status === "completed"
+                                                    ? "Completed"
+                                                    : sec.status === "in_progress"
+                                                        ? "In Progress"
+                                                        : "Not Started"}
+                                            </span>
                                         </div>
-                                        <span className={`rounded-full border px-3 py-1 text-xs font-medium ${statusBadge}`}>
-                                            {sec.status === "completed" ? "Completed" : sec.status === "in_progress" ? "In Progress" : "Not Started"}
-                                        </span>
+                                        <h2 className="mt-3 text-lg font-semibold text-white">{secName}</h2>
+                                        <p className="mt-1 line-clamp-2 text-xs text-slate-400">{secDesc}</p>
                                     </div>
-
-                                    <h3 className="mb-2 text-xl font-bold text-gray-900 dark:text-white">{secName}</h3>
-                                    <p className="mb-4 text-sm text-gray-600 dark:text-gray-400 line-clamp-2">{secDesc}</p>
-
-                                    <div className="mb-4 flex items-center gap-4 text-sm text-gray-500 dark:text-gray-400">
-                                        <span className="flex items-center gap-1">
-                                            <Clock className="h-4 w-4" />
-                                            {sec.duration} min
-                                        </span>
-                                        <span className="flex items-center gap-1">
-                                            <HelpCircle className="h-4 w-4" />
-                                            {sec.totalQuestions} questions
-                                        </span>
+                                    <div className="mt-4 flex items-center justify-between text-xs text-slate-400">
+                                        <div className="flex items-center gap-2">
+                                            <span className="inline-flex items-center rounded-full bg-slate-800 px-2 py-0.5">
+                                                <Clock className="mr-1 h-3 w-3" />
+                                                {sec.duration} min
+                                            </span>
+                                            <span className="inline-flex items-center rounded-full bg-slate-800 px-2 py-0.5">
+                                                {sec.totalQuestions} questions
+                                            </span>
+                                        </div>
                                     </div>
-
-                                    <Button
-                                        size="lg"
-                                        className={`w-full ${sec.status === "completed"
-                                            ? "bg-gray-100 text-gray-400 dark:bg-gray-700 dark:text-gray-500"
-                                            : "bg-blue-600 text-white hover:bg-blue-700"
-                                            }`}
-                                        disabled={!canStart}
-                                        onClick={() => handleStartSection(sec.index)}
-                                    >
-                                        {sec.status === "not_started" ? "Start Section" : "Continue Section"}
-                                        <ArrowRight className="h-4 w-4" />
-                                    </Button>
+                                    <div className="mt-4">
+                                        <Button
+                                            size="sm"
+                                            className="flex w-full items-center justify-center gap-2 rounded-xl bg-emerald-500 text-xs font-semibold text-emerald-950 hover:bg-emerald-400 disabled:bg-slate-700 disabled:text-slate-400"
+                                            disabled={!canStart}
+                                            onClick={() => handleStartSection(sec.index)}
+                                        >
+                                            {sec.status === "not_started" ? "Start Section" : "Continue Section"}
+                                            <ArrowRight className="h-3.5 w-3.5" />
+                                        </Button>
+                                    </div>
                                 </div>
                             );
                         })}
                     </div>
 
                     {globalError && (
-                        <div className="mt-6 flex items-center gap-3 rounded-2xl bg-red-50 p-4 text-red-800 dark:bg-red-900/20 dark:text-red-200">
-                            <AlertCircle className="h-5 w-5 flex-shrink-0" />
-                            <p className="text-sm">{globalError}</p>
+                        <div className="mt-6 flex items-center rounded-xl bg-red-900/40 px-3 py-2 text-sm text-red-100">
+                            <AlertCircle className="mr-2 h-4 w-4" />
+                            {globalError}
                         </div>
                     )}
                 </div>
@@ -766,289 +792,297 @@ const FullLengthTestPage: React.FC = () => {
         if (!testSeries || !currentQuestion || !progress) return null;
 
         const canGoPrevious = !(progress.currentSection === 1 && progress.currentQuestion === 1);
+
         const mainQuestionType = currentQuestion.questionType;
         const showWritingLayout = isWritingType(mainQuestionType);
         const showSpeakingLayout = isSpeakingType(mainQuestionType);
-        const showListeningLayout = isListeningType(mainQuestionType) || !!currentQuestion.content.audioUrl;
+        const showListeningLayout =
+            isListeningType(mainQuestionType) || !!currentQuestion.content.audioUrl;
 
         return (
-            <div className="flex min-h-screen flex-col bg-gray-50 dark:bg-gray-900">
-                {/* Top Navigation Bar */}
-                <header className="border-b border-gray-200 bg-white/80 backdrop-blur-sm dark:border-gray-700 dark:bg-gray-800/80">
-                    <div className="mx-auto max-w-7xl px-4 py-3">
-                        <div className="flex items-center justify-between">
-                            <div className="flex items-center gap-4">
-                                <button
-                                    className="flex items-center gap-2 rounded-xl bg-white px-3 py-2 text-sm font-medium text-gray-700 shadow-sm transition-all hover:bg-gray-50 dark:bg-gray-700 dark:text-gray-300 dark:hover:bg-gray-600"
-                                    onClick={() => {
-                                        setViewMode("sections");
-                                        setCurrentQuestion(null);
-                                        setNumbering(null);
-                                        setProgress(null);
-                                    }}
-                                >
-                                    <ChevronLeft className="h-4 w-4" />
-                                    All Sections
-                                </button>
-                                <div className="hidden sm:block">
-                                    <h2 className="text-sm font-semibold text-gray-900 dark:text-white">{testSeries.title}</h2>
-                                    <p className="text-xs text-gray-500 dark:text-gray-400">
-                                        Section {progress.currentSection} of {progress.totalSections}
-                                    </p>
+            <div className="flex min-h-screen flex-col bg-slate-950 text-slate-50">
+                {/* Top bar */}
+                <header className="border-b border-slate-800 bg-slate-950/90 backdrop-blur">
+                    <div className="mx-auto flex max-w-6xl items-center justify-between px-4 py-3">
+                        <div className="flex items-center gap-3">
+                            <button
+                                className="inline-flex items-center text-xs text-slate-400 hover:text-slate-200"
+                                onClick={() => {
+                                    setViewMode("sections");
+                                    setCurrentQuestion(null);
+                                    setNumbering(null);
+                                    setProgress(null);
+                                }}
+                            >
+                                <ChevronLeft className="mr-1 h-4 w-4" /> All Sections
+                            </button>
+                            <div>
+                                <div className="text-[11px] uppercase tracking-wide text-slate-400">
+                                    {testSeries.title}
+                                </div>
+                                <div className="text-xs text-slate-400">
+                                    Section {progress.currentSection} of {progress.totalSections}
                                 </div>
                             </div>
+                        </div>
 
-                            <div className="flex items-center gap-4">
-                                {/* Timer */}
-                                <div className="flex items-center gap-3 rounded-xl bg-red-50 px-4 py-2 dark:bg-red-900/20">
-                                    <Clock className="h-5 w-5 text-red-600 dark:text-red-400" />
-                                    <div className="text-center">
-                                        <div className="text-xs font-medium text-red-600 dark:text-red-400">Time Left</div>
-                                        <div className="text-lg font-bold text-red-700 dark:text-red-300">
-                                            {formatSeconds(sectionTimeLeft ?? null)}
-                                        </div>
-                                    </div>
+                        <div className="flex items-center gap-4">
+                            <div className="rounded-xl border border-slate-800 bg-slate-900/70 px-3 py-1.5 text-right">
+                                <div className="text-[10px] uppercase text-slate-400">Time Left</div>
+                                <div className="flex items-center justify-end gap-1 text-sm font-semibold text-emerald-400">
+                                    <Clock className="h-3.5 w-3.5" />
+                                    {formatSeconds(sectionTimeLeft ?? null)}
                                 </div>
-
-                                {/* Progress */}
-                                <div className="hidden sm:flex items-center gap-3 rounded-xl bg-blue-50 px-4 py-2 dark:bg-blue-900/20">
-                                    <BarChart3 className="h-5 w-5 text-blue-600 dark:text-blue-400" />
-                                    <div className="text-center">
-                                        <div className="text-xs font-medium text-blue-600 dark:text-blue-400">Progress</div>
-                                        <div className="text-lg font-bold text-blue-700 dark:text-blue-300">
-                                            {Math.round(progress.completionPercentage)}%
-                                        </div>
-                                    </div>
-                                </div>
-
-                                <Button
-                                    size="sm"
-                                    variant="outline"
-                                    className="border-red-500 text-red-600 hover:bg-red-50 dark:border-red-400 dark:text-red-400 dark:hover:bg-red-900/20"
-                                    onClick={handleSubmitTest}
-                                >
-                                    End Test
-                                </Button>
                             </div>
+                            <div className="rounded-xl border border-slate-800 bg-slate-900/70 px-3 py-1.5 text-right">
+                                <div className="text-[10px] uppercase text-slate-400">Progress</div>
+                                <div className="text-sm font-semibold text-sky-400">
+                                    {Math.round(progress.completionPercentage)}%
+                                </div>
+                            </div>
+                            <Button
+                                size="sm"
+                                variant="outline"
+                                className="border-red-500 text-xs text-red-400 hover:bg-red-500/10"
+                                onClick={handleSubmitTest}
+                            >
+                                End Test
+                            </Button>
                         </div>
                     </div>
                 </header>
 
-                {/* Main Content */}
-                <main className="flex-1 px-4 py-6">
-                    <div className="mx-auto max-w-7xl">
-                        <div className="grid gap-6 lg:grid-cols-3">
-                            {/* Left Panel - Passage/Instructions */}
-                            <div className="lg:col-span-1">
-                                <div className="rounded-2xl border border-gray-200 bg-white p-6 shadow-sm dark:border-gray-700 dark:bg-gray-800">
-                                    <div className="mb-4 flex items-center justify-between">
-                                        <h3 className="text-lg font-semibold text-gray-900 dark:text-white">Reading Passage</h3>
-                                        <button
-                                            onClick={() => handleSpeak(currentQuestion.content.passageText || currentQuestion.content.instruction)}
-                                            className="rounded-lg bg-gray-100 p-2 transition-colors hover:bg-gray-200 dark:bg-gray-700 dark:hover:bg-gray-600"
-                                        >
-                                            <Volume2 className="h-4 w-4 text-gray-600 dark:text-gray-400" />
-                                        </button>
-                                    </div>
+                {/* Main content */}
+                <main className="mx-auto flex w-full max-w-6xl flex-1 gap-4 px-4 py-4">
+                    {/* Left: passage / instructions / audio (for writing + listening) */}
+                    <section className="hidden w-2/5 flex-col rounded-2xl border border-slate-800 bg-slate-900/60 p-4 text-sm text-slate-100 md:flex">
+                        <div className="mb-2 flex items-center justify-between">
+                            <span className="inline-flex items-center rounded-full bg-slate-800 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-slate-300">
+                                <BookOpen className="mr-1 h-3 w-3" />
+                                Passage / Prompt
+                            </span>
+                            <span className="flex items-center gap-1 text-[11px] text-slate-400">
+                                <span>{questionLabel}</span>
+                                <button
+                                    type="button"
+                                    className="ml-1 inline-flex items-center rounded-full border border-slate-700 bg-slate-900 px-2 py-0.5 text-[10px] text-slate-300 hover:border-sky-500"
+                                    onClick={() =>
+                                        handleSpeak(
+                                            currentQuestion.content.passageText ||
+                                            currentQuestion.content.instruction
+                                        )
+                                    }
+                                >
+                                    <Volume2 className="mr-1 h-3 w-3" />
+                                    Read Aloud
+                                </button>
+                            </span>
+                        </div>
 
-                                    {showListeningLayout && currentQuestion.content.audioUrl && (
-                                        <div className="mb-4 rounded-xl bg-gray-50 p-4 dark:bg-gray-700/50">
-                                            <div className="mb-2 flex items-center justify-between">
-                                                <span className="text-sm font-medium text-gray-900 dark:text-white">Audio</span>
-                                                <button
-                                                    onClick={() => setAudioPlaying(!audioPlaying)}
-                                                    className="rounded-full bg-blue-600 p-2 text-white transition-colors hover:bg-blue-700"
-                                                >
-                                                    {audioPlaying ? <Pause className="h-4 w-4" /> : <Play className="h-4 w-4" />}
-                                                </button>
-                                            </div>
-                                            <audio
-                                                src={currentQuestion.content.audioUrl}
-                                                controls
-                                                className="w-full"
-                                                onPlay={() => setAudioPlaying(true)}
-                                                onPause={() => setAudioPlaying(false)}
-                                            />
-                                        </div>
-                                    )}
+                        {currentQuestion.content.passageTitle && (
+                            <h2 className="mt-2 text-base font-semibold text-white">
+                                {currentQuestion.content.passageTitle}
+                            </h2>
+                        )}
 
-                                    {currentQuestion.content.passageTitle && (
-                                        <h4 className="mb-3 text-base font-semibold text-gray-900 dark:text-white">
-                                            {currentQuestion.content.passageTitle}
-                                        </h4>
-                                    )}
-
-                                    <div className="prose prose-sm max-w-none text-gray-700 dark:text-gray-300">
-                                        <p className="whitespace-pre-line leading-relaxed">
-                                            {currentQuestion.content.passageText || currentQuestion.content.instruction}
-                                        </p>
-                                    </div>
+                        {showListeningLayout && currentQuestion.content.audioUrl && (
+                            <div className="mt-3 rounded-lg bg-slate-950/40 p-2">
+                                <div className="mb-1 text-[11px] uppercase text-slate-400">
+                                    Listening Audio
                                 </div>
+                                <audio controls className="w-full">
+                                    <source src={currentQuestion.content.audioUrl} />
+                                </audio>
                             </div>
+                        )}
 
-                            {/* Right Panel - Question & Answers */}
-                            <div className="lg:col-span-2">
-                                <div className="rounded-2xl border border-gray-200 bg-white p-6 shadow-sm dark:border-gray-700 dark:bg-gray-800">
-                                    {/* Question Header */}
-                                    <div className="mb-6">
-                                        <div className="flex items-center justify-between">
-                                            <div>
-                                                <div className="text-sm font-medium text-blue-600 dark:text-blue-400">
-                                                    {questionLabel}
+                        <p className="mt-3 whitespace-pre-line text-xs leading-relaxed text-slate-200">
+                            {currentQuestion.content.passageText || currentQuestion.content.instruction}
+                        </p>
+                    </section>
+
+                    {/* Right: question & answers */}
+                    <section className="flex w-full flex-1 flex-col rounded-2xl border border-slate-800 bg-slate-900/70 p-4">
+                        <div className="mb-3 flex items-center justify-between">
+                            <div>
+                                <div className="text-[11px] uppercase tracking-wide text-slate-400">
+                                    {questionLabel}
+                                </div>
+                                {currentQuestion.title && (
+                                    <h2 className="mt-1 text-base font-semibold text-white">
+                                        {currentQuestion.title}
+                                    </h2>
+                                )}
+                            </div>
+                            <div className="text-[11px] text-slate-400">
+                                Section {progress.currentSection} • Question {progress.currentQuestion}
+                            </div>
+                        </div>
+
+                        {!showWritingLayout && (
+                            <div className="mb-3 rounded-xl bg-slate-900/80 p-3 text-xs text-slate-200">
+                                {currentQuestion.content.instruction}
+                            </div>
+                        )}
+
+                        {/* Writing layout (content left, big input right) is already done by split; here we just give big textarea */}
+                        <form
+                            className="flex flex-1 flex-col gap-4"
+                            onSubmit={handleSubmit(sendAnswerAndGoNext)}
+                        >
+                            <div className="flex-1 overflow-y-auto pr-1 text-sm">
+                                {/* Grouped question */}
+                                {currentQuestion.isQuestionGroup && currentQuestion.questionGroup?.length ? (
+                                    <div className="space-y-4">
+                                        {currentQuestion.questionGroup.map((group) => (
+                                            <div
+                                                key={group._id}
+                                                className="rounded-xl border border-slate-800 bg-slate-900/80 p-3"
+                                            >
+                                                <div className="mb-2 text-[13px] font-semibold text-slate-100">
+                                                    {group.title}
                                                 </div>
-                                                {currentQuestion.title && (
-                                                    <h2 className="mt-1 text-xl font-bold text-gray-900 dark:text-white">
-                                                        {currentQuestion.title}
-                                                    </h2>
+                                                {group.instruction && (
+                                                    <p className="mb-2 text-[11px] text-slate-400">
+                                                        {group.instruction}
+                                                    </p>
                                                 )}
+                                                <div className="space-y-3">
+                                                    {group.questions.map((sub) => (
+                                                        <div
+                                                            key={sub._id}
+                                                            className="rounded-lg bg-slate-950/40 p-2 text-xs"
+                                                        >
+                                                            <p className="mb-1 text-slate-100">{sub.question}</p>
+                                                            {renderAnswerField(sub._id, group.type, sub.options)}
+                                                        </div>
+                                                    ))}
+                                                </div>
                                             </div>
-                                            <div className="text-sm text-gray-500 dark:text-gray-400">
-                                                Section {progress.currentSection} • Q{progress.currentQuestion}
-                                            </div>
-                                        </div>
-
-                                        {!showWritingLayout && (
-                                            <div className="mt-4 rounded-xl bg-blue-50 p-4 dark:bg-blue-900/20">
-                                                <p className="text-sm text-blue-800 dark:text-blue-200">
-                                                    {currentQuestion.content.instruction}
-                                                </p>
+                                        ))}
+                                    </div>
+                                ) : (
+                                    // Single question
+                                    <div className="space-y-3">
+                                        {showWritingLayout && (
+                                            <div className="text-xs text-slate-200">
+                                                {/* instruction already visible in left column; no need to repeat */}
                                             </div>
                                         )}
-                                    </div>
 
-                                    {/* Question Form */}
-                                    <form onSubmit={handleSubmit(sendAnswerAndGoNext)} className="space-y-6">
-                                        {/* Speaking Controls */}
+                                        {/* speaking controls */}
                                         {showSpeakingLayout && (
-                                            <div className="rounded-xl border-2 border-dashed border-gray-300 bg-gray-50 p-6 dark:border-gray-600 dark:bg-gray-700/50">
-                                                <div className="mb-4 flex items-center justify-between">
-                                                    <h4 className="text-lg font-semibold text-gray-900 dark:text-white">Speaking Response</h4>
-                                                    {recording && (
-                                                        <div className="flex items-center gap-2 text-red-600 dark:text-red-400">
-                                                            <div className="h-2 w-2 animate-pulse rounded-full bg-red-500" />
-                                                            Recording...
-                                                        </div>
+                                            <div className="mb-3 rounded-xl border border-slate-800 bg-slate-950/60 p-3 text-xs">
+                                                <div className="mb-2 flex items-center justify-between">
+                                                    <span className="font-semibold text-slate-100">
+                                                        Speaking Response
+                                                    </span>
+                                                    {recording ? (
+                                                        <span className="inline-flex items-center gap-1 text-[11px] text-red-400">
+                                                            <span className="h-2 w-2 rounded-full bg-red-500 animate-pulse" />
+                                                            Recording…
+                                                        </span>
+                                                    ) : (
+                                                        <span className="text-[11px] text-slate-400">
+                                                            Press record and answer aloud.
+                                                        </span>
                                                     )}
                                                 </div>
-                                                <div className="flex items-center gap-4">
+                                                <div className="flex items-center gap-2">
                                                     {!recording ? (
                                                         <Button
                                                             type="button"
-                                                            size="lg"
-                                                            className="bg-green-600 text-white hover:bg-green-700"
+                                                            size="sm"
+                                                            className="flex items-center gap-1 rounded-full bg-emerald-500 text-xs font-semibold text-emerald-950 hover:bg-emerald-400"
                                                             onClick={startRecording}
                                                         >
-                                                            <Mic className="h-4 w-4" />
-                                                            Start Recording
+                                                            <Mic className="h-3.5 w-3.5" />
+                                                            Record
                                                         </Button>
                                                     ) : (
                                                         <Button
                                                             type="button"
-                                                            size="lg"
-                                                            className="bg-red-600 text-white hover:bg-red-700"
+                                                            size="sm"
+                                                            className="flex items-center gap-1 rounded-full bg-red-500 text-xs font-semibold text-white hover:bg-red-400"
                                                             onClick={stopRecording}
                                                         >
-                                                            <Square className="h-4 w-4" />
-                                                            Stop Recording
+                                                            <Square className="h-3.5 w-3.5" />
+                                                            Stop
                                                         </Button>
                                                     )}
                                                     {recordedUrl && (
-                                                        <audio controls className="flex-1">
+                                                        <audio controls className="ml-2 h-8">
                                                             <source src={recordedUrl} />
                                                         </audio>
                                                     )}
                                                 </div>
-                                                <p className="mt-3 text-xs text-gray-500 dark:text-gray-400">
-                                                    Record your answer. The audio will be saved as your response.
+                                                <p className="mt-2 text-[10px] text-slate-400">
+                                                    After you implement the upload API, your recorded audio URL will be
+                                                    saved as the answer for this speaking question.
                                                 </p>
                                             </div>
                                         )}
 
-                                        {/* Question Content */}
-                                        {currentQuestion.isQuestionGroup && currentQuestion.questionGroup?.length ? (
-                                            <div className="space-y-6">
-                                                {currentQuestion.questionGroup.map((group) => (
-                                                    <div
-                                                        key={group._id}
-                                                        className="rounded-xl border border-gray-200 bg-white p-6 dark:border-gray-600 dark:bg-gray-700"
-                                                    >
-                                                        <h4 className="mb-3 text-lg font-semibold text-gray-900 dark:text-white">
-                                                            {group.title}
-                                                        </h4>
-                                                        {group.instruction && (
-                                                            <p className="mb-4 text-sm text-gray-600 dark:text-gray-400">
-                                                                {group.instruction}
-                                                            </p>
-                                                        )}
-                                                        <div className="space-y-4">
-                                                            {group.questions.map((sub) => (
-                                                                <div
-                                                                    key={sub._id}
-                                                                    className="rounded-xl bg-gray-50 p-4 dark:bg-gray-600/30"
-                                                                >
-                                                                    <p className="mb-3 font-medium text-gray-900 dark:text-white">
-                                                                        {sub.question}
-                                                                    </p>
-                                                                    {renderAnswerField(sub._id, group.type, sub.options)}
-                                                                </div>
-                                                            ))}
-                                                        </div>
-                                                    </div>
-                                                ))}
-                                            </div>
-                                        ) : (
-                                            <div className="space-y-4">
-                                                {!showWritingLayout && !showSpeakingLayout && (
-                                                    <p className="text-lg text-gray-700 dark:text-gray-300">
-                                                        {currentQuestion.content.passageText || currentQuestion.content.instruction}
-                                                    </p>
-                                                )}
-                                                {renderAnswerField(
-                                                    currentQuestion._id,
-                                                    currentQuestion.questionType,
-                                                    currentQuestion.options
-                                                )}
-                                            </div>
+                                        {/* Fallback instruction text for non-writing */}
+                                        {!showWritingLayout && !showSpeakingLayout && (
+                                            <p className="text-sm text-slate-100">
+                                                {currentQuestion.content.passageText ||
+                                                    currentQuestion.content.instruction}
+                                            </p>
                                         )}
 
-                                        {/* Navigation */}
-                                        <div className="flex items-center justify-between border-t border-gray-200 pt-6 dark:border-gray-700">
-                                            <div className="text-sm text-gray-500 dark:text-gray-400">
-                                                Answered: {progress.questionsAnswered} of {progress.totalQuestions}
-                                            </div>
-                                            <div className="flex items-center gap-3">
-                                                <Button
-                                                    type="button"
-                                                    variant="outline"
-                                                    className="border-gray-300 text-gray-700 hover:bg-gray-50 dark:border-gray-600 dark:text-gray-300 dark:hover:bg-gray-700"
-                                                    disabled={!canGoPrevious || isSubmitting}
-                                                    onClick={goToPreviousQuestion}
-                                                >
-                                                    <ArrowLeft className="h-4 w-4" />
-                                                    Previous
-                                                </Button>
-                                                <Button
-                                                    type="submit"
-                                                    className="bg-blue-600 text-white hover:bg-blue-700"
-                                                    disabled={isSubmitting}
-                                                >
-                                                    Next Question
-                                                    <ArrowRight className="h-4 w-4" />
-                                                </Button>
-                                            </div>
-                                        </div>
-                                    </form>
+                                        {/* For single question: use field name = question._id */}
+                                        {renderAnswerField(
+                                            currentQuestion._id,
+                                            currentQuestion.questionType,
+                                            currentQuestion.options
+                                        )}
+                                    </div>
+                                )}
+                            </div>
 
-                                    {globalError && (
-                                        <div className="mt-4 flex items-center gap-3 rounded-xl bg-red-50 p-4 text-red-800 dark:bg-red-900/20 dark:text-red-200">
-                                            <AlertCircle className="h-5 w-5 flex-shrink-0" />
-                                            <p className="text-sm">{globalError}</p>
-                                        </div>
-                                    )}
+                            {/* Bottom bar: navigation */}
+                            <div className="mt-3 flex items-center justify-between border-t border-slate-800 pt-3">
+                                <div className="flex items-center gap-2 text-[11px] text-slate-400">
+                                    <span>
+                                        Answered: {progress.questionsAnswered} / {progress.totalQuestions}
+                                    </span>
+                                </div>
+                                <div className="flex items-center gap-2">
+                                    <Button
+                                        type="button"
+                                        size="sm"
+                                        variant="outline"
+                                        className="flex items-center gap-1 border-slate-600 text-xs text-slate-200 disabled:text-slate-500"
+                                        disabled={!canGoPrevious}
+                                        onClick={(e) => { e.preventDefault(); goToPreviousQuestion() }}
+                                    >
+                                        <ArrowLeft className="h-3.5 w-3.5" />
+                                        Previous
+                                    </Button>
+
+                                    {/* You can add a Skip button wired to /test/:sessionId/skip if you want */}
+
+                                    <Button
+                                        type="submit"
+                                        size="sm"
+                                        className="flex items-center gap-1 rounded-xl bg-sky-500 text-xs font-semibold text-sky-950 hover:bg-sky-400 disabled:bg-slate-700 disabled:text-slate-400"
+                                        disabled={isSubmitting}
+                                    >
+                                        Next
+                                        <ArrowRight className="h-3.5 w-3.5" />
+                                    </Button>
                                 </div>
                             </div>
-                        </div>
-                    </div>
+                        </form>
+
+                        {globalError && (
+                            <div className="mt-3 flex items-center rounded-xl bg-red-900/40 px-3 py-2 text-xs text-red-100">
+                                <AlertCircle className="mr-2 h-4 w-4" />
+                                {globalError}
+                            </div>
+                        )}
+                    </section>
                 </main>
             </div>
         );
@@ -1059,74 +1093,77 @@ const FullLengthTestPage: React.FC = () => {
         const s = analysis.summary;
 
         return (
-            <div className="min-h-screen bg-gradient-to-br from-gray-50 to-green-50 dark:from-gray-900 dark:to-gray-800 px-4 py-8">
-                <div className="mx-auto max-w-4xl">
-                    {/* Header */}
-                    <div className="mb-8 text-center">
-                        <div className="mb-4 inline-flex items-center gap-2 rounded-full bg-green-100 px-4 py-2 text-sm font-medium text-green-800 dark:bg-green-900/30 dark:text-green-300">
-                            <CheckCircle className="h-4 w-4" />
-                            Test Completed Successfully
+            <div className="min-h-screen bg-slate-950 text-slate-50 px-4 py-6">
+                <div className="mx-auto max-w-5xl">
+                    <div className="mb-6 flex items-center justify-between">
+                        <div>
+                            <button
+                                className="mb-2 inline-flex items-center text-xs text-slate-400 hover:text-slate-200"
+                                onClick={() => window.history.back()}
+                            >
+                                <ChevronLeft className="mr-1 h-4 w-4" /> Back
+                            </button>
+                            <h1 className="text-2xl font-bold text-white">Test Analysis</h1>
+                            <p className="mt-1 text-sm text-slate-400">{testSeries.title}</p>
                         </div>
-                        <h1 className="text-3xl font-bold text-gray-900 dark:text-white sm:text-4xl">Test Results</h1>
-                        <p className="mt-2 text-lg text-gray-600 dark:text-gray-400">{testSeries.title}</p>
+                        <CheckCircle className="h-8 w-8 text-emerald-400" />
                     </div>
 
-                    {/* Summary Cards */}
-                    <div className="mb-8 grid grid-cols-2 gap-4 sm:grid-cols-4">
-                        <div className="rounded-2xl bg-white p-4 shadow-sm dark:bg-gray-800">
-                            <div className="text-sm font-medium text-gray-600 dark:text-gray-400">Total Questions</div>
-                            <div className="mt-1 text-2xl font-bold text-gray-900 dark:text-white">{s.totalQuestions}</div>
+                    {/* Summary cards */}
+                    <div className="mb-6 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
+                        <div className="rounded-xl border border-slate-800 bg-slate-900/70 p-3">
+                            <div className="text-[11px] uppercase text-slate-400">Total Questions</div>
+                            <div className="mt-1 text-2xl font-bold text-white">{s.totalQuestions}</div>
                         </div>
-                        <div className="rounded-2xl bg-white p-4 shadow-sm dark:bg-gray-800">
-                            <div className="text-sm font-medium text-green-600 dark:text-green-400">Correct</div>
-                            <div className="mt-1 text-2xl font-bold text-green-600 dark:text-green-400">{s.correctAnswers}</div>
+                        <div className="rounded-xl border border-slate-800 bg-slate-900/70 p-3">
+                            <div className="text-[11px] uppercase text-emerald-400">Correct</div>
+                            <div className="mt-1 text-2xl font-bold text-emerald-400">
+                                {s.correctAnswers}
+                            </div>
                         </div>
-                        <div className="rounded-2xl bg-white p-4 shadow-sm dark:bg-gray-800">
-                            <div className="text-sm font-medium text-red-600 dark:text-red-400">Incorrect</div>
-                            <div className="mt-1 text-2xl font-bold text-red-600 dark:text-red-400">{s.incorrectAnswers}</div>
+                        <div className="rounded-xl border border-slate-800 bg-slate-900/70 p-3">
+                            <div className="text-[11px] uppercase text-red-400">Incorrect</div>
+                            <div className="mt-1 text-2xl font-bold text-red-400">
+                                {s.incorrectAnswers}
+                            </div>
                         </div>
-                        <div className="rounded-2xl bg-white p-4 shadow-sm dark:bg-gray-800">
-                            <div className="text-sm font-medium text-blue-600 dark:text-blue-400">Accuracy</div>
-                            <div className="mt-1 text-2xl font-bold text-blue-600 dark:text-blue-400">
+                        <div className="rounded-xl border border-slate-800 bg-slate-900/70 p-3">
+                            <div className="text-[11px] uppercase text-sky-400">Accuracy</div>
+                            <div className="mt-1 text-2xl font-bold text-sky-400">
                                 {s.accuracy.toFixed(1)}%
                             </div>
                         </div>
                     </div>
 
-                    {/* Section-wise Performance */}
-                    <div className="rounded-2xl bg-white shadow-sm dark:bg-gray-800">
-                        <div className="border-b border-gray-200 px-6 py-4 dark:border-gray-700">
-                            <h3 className="text-lg font-semibold text-gray-900 dark:text-white">Section-wise Performance</h3>
+                    {/* Section-wise table */}
+                    <div className="rounded-2xl border border-slate-800 bg-slate-900/80">
+                        <div className="border-b border-slate-800 px-4 py-3 text-sm font-semibold text-slate-100">
+                            Section-wise Performance
                         </div>
-                        <div className="overflow-hidden">
-                            <table className="w-full">
-                                <thead className="bg-gray-50 dark:bg-gray-700/50">
+                        <div className="overflow-x-auto">
+                            <table className="min-w-full text-sm">
+                                <thead className="bg-slate-950/60 text-xs uppercase text-slate-400">
                                     <tr>
-                                        <th className="px-6 py-3 text-left text-sm font-medium text-gray-900 dark:text-white">Section</th>
-                                        <th className="px-6 py-3 text-center text-sm font-medium text-gray-900 dark:text-white">Questions</th>
-                                        <th className="px-6 py-3 text-center text-sm font-medium text-gray-900 dark:text-white">Correct</th>
-                                        <th className="px-6 py-3 text-center text-sm font-medium text-gray-900 dark:text-white">Accuracy</th>
-                                        <th className="px-6 py-3 text-center text-sm font-medium text-gray-900 dark:text-white">Score</th>
+                                        <th className="px-4 py-2 text-left">Section</th>
+                                        <th className="px-4 py-2 text-center">Questions</th>
+                                        <th className="px-4 py-2 text-center">Correct</th>
+                                        <th className="px-4 py-2 text-center">Accuracy</th>
+                                        <th className="px-4 py-2 text-center">Score</th>
                                     </tr>
                                 </thead>
-                                <tbody className="divide-y divide-gray-200 dark:divide-gray-700">
-                                    {analysis.sectionWiseAnalysis.map((sec, index) => (
-                                        <tr key={sec.sectionId} className="hover:bg-gray-50 dark:hover:bg-gray-700/50">
-                                            <td className="px-6 py-4 text-sm font-medium text-gray-900 dark:text-white">
-                                                {sec.sectionType}
-                                            </td>
-                                            <td className="px-6 py-4 text-center text-sm text-gray-600 dark:text-gray-400">
-                                                {sec.totalQuestions}
-                                            </td>
-                                            <td className="px-6 py-4 text-center text-sm text-green-600 dark:text-green-400">
-                                                {sec.correctAnswers}
-                                            </td>
-                                            <td className="px-6 py-4 text-center text-sm text-blue-600 dark:text-blue-400">
+                                <tbody>
+                                    {analysis.sectionWiseAnalysis.map((sec) => (
+                                        <tr
+                                            key={sec.sectionId}
+                                            className="border-t border-slate-800/70 hover:bg-slate-900"
+                                        >
+                                            <td className="px-4 py-2 text-slate-100">{sec.sectionType}</td>
+                                            <td className="px-4 py-2 text-center">{sec.totalQuestions}</td>
+                                            <td className="px-4 py-2 text-center">{sec.correctAnswers}</td>
+                                            <td className="px-4 py-2 text-center">
                                                 {sec.accuracy.toFixed(1)}%
                                             </td>
-                                            <td className="px-6 py-4 text-center text-sm font-semibold text-gray-900 dark:text-white">
-                                                {sec.score}
-                                            </td>
+                                            <td className="px-4 py-2 text-center">{sec.score}</td>
                                         </tr>
                                     ))}
                                 </tbody>
@@ -1134,18 +1171,11 @@ const FullLengthTestPage: React.FC = () => {
                         </div>
                     </div>
 
-                    {/* Action Buttons */}
-                    <div className="mt-8 flex justify-center gap-4">
+                    <div className="mt-6 flex justify-end">
                         <Button
+                            size="sm"
                             variant="outline"
-                            className="border-gray-300 text-gray-700 hover:bg-gray-50 dark:border-gray-600 dark:text-gray-300 dark:hover:bg-gray-700"
-                            onClick={() => window.history.back()}
-                        >
-                            <Home className="h-4 w-4" />
-                            Back to Home
-                        </Button>
-                        <Button
-                            className="bg-blue-600 text-white hover:bg-blue-700"
+                            className="border-slate-600 text-xs text-slate-200"
                             onClick={() => {
                                 setAnalysis(null);
                                 fetchOrStartTest();
@@ -1160,28 +1190,23 @@ const FullLengthTestPage: React.FC = () => {
     };
 
     // ---------- Main render ----------
+
     if (loading && !testSeries) {
         return (
-            <div className="flex min-h-screen items-center justify-center bg-gray-50 dark:bg-gray-900">
-                <div className="text-center">
-                    <div className="mb-4 h-12 w-12 animate-spin rounded-full border-4 border-blue-600 border-t-transparent"></div>
-                    <p className="text-lg text-gray-600 dark:text-gray-400">Loading test...</p>
-                </div>
+            <div className="flex min-h-screen items-center justify-center bg-slate-950 text-slate-200">
+                <div className="h-8 w-8 animate-spin rounded-full border-4 border-sky-500 border-t-transparent" />
             </div>
         );
     }
 
     if (globalError && !testSeries) {
         return (
-            <div className="flex min-h-screen flex-col items-center justify-center bg-gray-50 px-4 dark:bg-gray-900">
-                <div className="rounded-2xl bg-white p-8 text-center shadow-sm dark:bg-gray-800">
-                    <AlertCircle className="mx-auto h-12 w-12 text-red-500" />
-                    <h3 className="mt-4 text-lg font-semibold text-gray-900 dark:text-white">Error Loading Test</h3>
-                    <p className="mt-2 text-gray-600 dark:text-gray-400">{globalError}</p>
-                    <Button className="mt-6" onClick={fetchOrStartTest}>
-                        Try Again
-                    </Button>
-                </div>
+            <div className="flex min-h-screen flex-col items-center justify-center bg-slate-950 text-slate-200">
+                <AlertCircle className="mb-2 h-6 w-6 text-red-400" />
+                <p className="mb-4 text-sm text-red-100">{globalError}</p>
+                <Button size="sm" onClick={fetchOrStartTest}>
+                    Retry
+                </Button>
             </div>
         );
     }

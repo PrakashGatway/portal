@@ -45,13 +45,21 @@ import MockTest from "./userView/Mocktest";
 import TestQuestionPage from "./userView/Testquestionpage";
 import PackageManagement from "./pages/Tests/Packages";
 import FullLengthTestPage from "./pages/TestScreen/FullTest";
+import FullTestsPage from "./userView/SatTest";
+import QuestionManagementPage from "./pages/mcu/Questions";
+import TestTemplateManagementPage from "./pages/mcu/TestTemplates";
+import SatTestAttemptPage from "./pages/mcu/Attempts";
+import GmatTestAttemptPage from "./pages/mcu/GmatTest";
+import GreTestAttemptPage from "./pages/mcu/GreAttempts";
+import GmatTestAnalysisPage from "./pages/mcu/GmatAnaysis";
 
 // Define roles
 export const ROLES = {
   ADMIN: 'admin',
   USER: 'user',
   EDITOR: 'editor',
-  COUNSEL: 'counselor'
+  COUNSEL: 'counselor',
+  MANAGER: "manager"
 };
 
 export default function App() {
@@ -87,8 +95,8 @@ export default function App() {
               <Route path="/support" element={<SupportPage />} />
 
               <Route path="/mocks" element={<MockTestsPage />} />
-              <Route path="/mock-tests" element={<MockTest/>} />
-              <Route path="/test/:testId" element={<TestQuestionPage/>} />
+              <Route path="/mock-tests" element={<MockTest />} />
+              <Route path="/test/:testId" element={<TestQuestionPage />} />
               <Route path="/events" element={<EventCalendar />} />
 
               <Route element={<ProtectedRoute roles={[ROLES.ADMIN]} />}>
@@ -108,9 +116,12 @@ export default function App() {
                 <Route path="/tests" element={<TestSeriesManagement />} />
                 <Route path="/test/questions" element={<QuestionManagement />} />
                 <Route path="/test/packages" element={<PackageManagement />} />
+
+                <Route path="/mcu/questions" element={<QuestionManagementPage />} />
+                <Route path="/mcu/tests" element={<TestTemplateManagementPage />} />
               </Route>
 
-              <Route element={<ProtectedRoute roles={[ROLES.COUNSEL, ROLES.ADMIN]} />}>
+              <Route element={<ProtectedRoute roles={[ROLES.COUNSEL, ROLES.ADMIN, ROLES.MANAGER]} />}>
                 <Route path="/leads" element={<LeadManagement />} />
               </Route>
 
@@ -128,6 +139,11 @@ export default function App() {
             <Route path="/checkout/:slug" element={<CheckoutPage />} />
             <Route path="/payment-status" element={<PaymentStatusPage />} />
             <Route path="/full/:testSeriesId" element={<FullLengthTestPage />} />
+            <Route path="/sat" element={<FullTestsPage />} />
+            <Route path="/mcu/tests/:testTemplateId" element={<SatTestAttemptPage />} />
+            <Route path="/gmat/tests/:testTemplateId" element={<GmatTestAttemptPage />} />
+            <Route path="/gre/tests/:testTemplateId" element={<GreTestAttemptPage />} />
+            <Route path="/gmat/analysis/:attemptId" element={<GmatTestAnalysisPage />} />
           </Route>
           <Route path="/unauthorized" element={<NotFound />} />
         </Routes>

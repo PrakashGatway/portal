@@ -131,9 +131,13 @@ export default function LeadManagement() {
         }));
     };
 
-    const viewLeadDetails = (lead) => {
-        setSelectedLead(lead);
+    const viewLeadDetails = async (lead) => {
+        setSelectedLead(lead)
         openModal();
+        if (lead.status === 'new') {
+            await api.put(`/leads/${lead._id}`, { ...lead, status: 'viewed' });
+            fetchLeads();
+        }
     };
 
     const openEditModal = (lead) => {
@@ -328,7 +332,7 @@ export default function LeadManagement() {
                             ))}
                         </select>
                     </div>
-                    {user.role && user.role === "admin" && <> <div>
+                    {user.role && user.role !== "counselor" && <> <div>
                         <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Source</label>
                         <select
                             name="source"
@@ -465,7 +469,7 @@ export default function LeadManagement() {
                                     <th className="px-2 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500 dark:text-gray-300">Intake</th>
                                     <th className="px-2 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500 dark:text-gray-300">Counselor</th>
                                     <th className="px-2 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500 dark:text-gray-300">Status</th>
-                                    {user.role && user.role === "admin" && <th className="px-2 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500 dark:text-gray-300">Source</th>}
+                                    <th className="px-2 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500 dark:text-gray-300">{user?.role == "counselor" ? "Date" : "Source"}</th>
                                     <th className="px-2 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500 dark:text-gray-300">Actions</th>
                                 </tr>
                             </thead>
@@ -478,7 +482,7 @@ export default function LeadManagement() {
                                             </td>
                                             <td className="whitespace-nowrap px-2 py-2 text-sm text-gray-500 dark:text-gray-300">
                                                 Email:{lead.email || "—"} <br />
-                                                Mob:{lead.phone || "—"}
+                                                {/* Mob:{lead.phone || "—"} */}
                                             </td>
                                             <td className="whitespace-nowrap px-2 py-4 text-sm text-gray-500 dark:text-gray-300">
                                                 {lead.coursePreference}
@@ -496,10 +500,11 @@ export default function LeadManagement() {
                                                     {lead.status.charAt(0).toUpperCase() + lead.status.slice(1)}
                                                 </span>
                                             </td>
-                                            {user.role && user.role === "admin" && <td className="whitespace-nowrap px-2 py-2 text-sm text-gray-500 dark:text-gray-300 capitalize">
-                                                {lead.source.replace(/_/g, " ")} <br />
-                                                {lead.createdAt && moment(lead.createdAt).format("MMM D, YYYY h:mm A")}
-                                            </td>}
+                                            <td className="whitespace-nowrap px-2 py-2 text-sm text-gray-500 dark:text-gray-300 capitalize">
+                                                {lead?.createdAt && moment(lead.createdAt).format("MMM D, YYYY h:mm A")}
+                                                <br />
+                                                {user?.role !== "counselor" && lead.source.replace(/_/g, " ")}
+                                            </td>
                                             <td className="whitespace-nowrap px-2 py-4 text-sm font-medium">
                                                 <div className="flex space-x-2">
                                                     <button
@@ -608,12 +613,12 @@ export default function LeadManagement() {
                                     <p className="text-sm font-medium text-gray-800 dark:text-white">{selectedLead.email}</p>
                                 </div>
                                 <div>
-                                    <p className="text-sm text-gray-500">Phone</p>
-                                    <p className="text-sm font-medium text-gray-800 dark:text-white">{selectedLead.phone || "—"} </p>
-                                </div>
-                                <div>
                                     <p className="text-sm text-gray-500">Country</p>
                                     <p className="text-sm font-medium text-gray-800 dark:text-white">{selectedLead.countryOfResidence || "—"}</p>
+                                </div>
+                                <div>
+                                    <p className="text-sm text-gray-500">Phone</p>
+                                    <p className="text-sm font-medium text-gray-800 dark:text-white">{selectedLead.phone || "—"} </p>
                                 </div>
                                 <div>
                                     <p className="text-sm text-gray-500">City</p>
