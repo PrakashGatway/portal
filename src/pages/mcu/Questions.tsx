@@ -89,7 +89,10 @@ const QUESTION_TYPE_OPTIONS = [
   { value: "gre_verbal_text_completion", label: "GRE – Text Completion" },
   { value: "gre_verbal_sentence_equivalence", label: "GRE – Sentence Equivalence" },
   { value: "gre_verbal_reading_comp", label: "GRE – Reading Comprehension" },
+  { value: "gre_verbal_reading_multi", label: "GRE – Reading Comprehension (Multiple Choice)" },
   { value: "gre_quantitative", label: "GRE – Quantitative" },
+  { value: "gre_quantitative_multi", label: "GRE – Quantitative (Multiple Choice)" },
+  { value: "gre_quantitative_value", label: "GRE – Quantitative (Value)" },
   { value: "sat_reading_writing", label: "SAT – Reading & Writing" },
   { value: "sat_math_calculator", label: "SAT – Math (Calculator)" },
   { value: "sat_math_no_calculator", label: "SAT – Math (No Calculator)" },
@@ -111,7 +114,7 @@ const LIMIT_OPTIONS = [
 ];
 
 const isMCQType = (questionType: string) => {
-  return questionType && !["essay", "other", "gre_analytical_writing"].includes(questionType);
+  return questionType && !["essay", "other", "gre_analytical_writing","gre_quantitative_value", "gre_verbal_text_completion"].includes(questionType);
 };
 
 export default function QuestionManagementPage() {
@@ -323,7 +326,7 @@ export default function QuestionManagementPage() {
     setSideOpen(true);
   };
 
-  const openEditDrawer = (question: Question) => {
+  const openEditDrawer = (question: any) => {
     const baseValues = {
       exam: question.exam?._id || "",
       section: question.section?._id || "",
@@ -332,6 +335,7 @@ export default function QuestionManagementPage() {
       tags: (question.tags || []).join(", "),
       stimulus: question.stimulus || "",
       questionText: question.questionText || "",
+      typeSpecific: question.typeSpecific || undefined,
       options: question.options && question.options.length > 0
         ? question.options.map((opt, idx) => ({
           label: opt.label || String.fromCharCode(65 + idx),
@@ -435,13 +439,12 @@ export default function QuestionManagementPage() {
 
   const closeDrawer = () => {
     setSideOpen(false);
-    // Optional: Delay clearing editing state slightly for smoother animation
     setTimeout(() => {
       setEditingQuestion(null);
     }, 150); // Match the exit animation duration
   };
 
-  const onSubmit = async (values: QuestionFormValues) => {
+  const onSubmit = async (values: any) => {
     console.log("Form values:", values);
     try {
       // Validation: exam/section/type/text required
@@ -475,6 +478,18 @@ export default function QuestionManagementPage() {
         }
       }
 
+      if (watchQuestionType === "gre_verbal_text_completion") {
+        const blanks = values.typeSpecific?.blanks || 1;
+        const options = values.typeSpecific?.options || [];
+        for (let i = 0; i < blanks; i++) {
+          const correctInBlank = options.filter(opt => opt.blankIndex === i && opt.isCorrect);
+          if (correctInBlank.length !== 1) {
+            toast.error(`Blank ${i + 1} must have exactly one correct option`);
+            return;
+          }
+        }
+      }
+
       setSaving(true);
       const tagsArray = values.tags
         ? values.tags
@@ -490,6 +505,7 @@ export default function QuestionManagementPage() {
         difficulty: values.difficulty,
         tags: tagsArray,
         stimulus: values.stimulus || undefined,
+        typeSpecific: values.typeSpecific || undefined,
         questionText: values.questionText,
         marks: Number(values.marks) || 1,
         negativeMarks: Number(values.negativeMarks) || 0,
@@ -757,7 +773,7 @@ export default function QuestionManagementPage() {
                     {/* <p className="text-sm font-medium text-gray-900 line-clamp-1 dark:text-gray-100">
                       {q.questionText}
                     </p> */}
-                   <div className="text-sm font-medium text-gray-900 line-clamp-1 dark:text-gray-100" dangerouslySetInnerHTML={{ __html: q.questionText }} />
+                    <div className="text-sm font-medium text-gray-900 line-clamp-1 dark:text-gray-100" dangerouslySetInnerHTML={{ __html: q.questionText }} />
                     {/* <div className="mt-2 text-xs text-gray-500 dark:text-gray-400">
                       {q.createdAt && (
                         <span>Created: {formatDate(q.createdAt)} • </span>
@@ -1095,6 +1111,118 @@ export default function QuestionManagementPage() {
                       </div>
                     )}
 
+                  {/* Text Completion */}
+                  {watchQuestionType === "gre_verbal_text_completion" && (
+                    <div className="mt-2">
+                      <Label>Number of Blanks</Label>
+                      <Select
+                        options={[
+                          { value: "1", label: "1 Blank" },
+                          { value: "2", label: "2 Blanks" },
+                          { value: "3", label: "3 Blanks" },
+                        ]}
+                        defaultValue={(watch("typeSpecific.blanks")?.toString() || "1")}
+                        onChange={(v) => {
+                          const num = Number(v);
+                          setValue("typeSpecific.blanks", num);
+
+                          // Initialize options array if empty
+                          const currentOpts = watch("typeSpecific.options") || [];
+                          if (currentOpts.length === 0) {
+                            const newOpts = [];
+                            for (let i = 0; i < num; i++) {
+                              newOpts.push({ blankIndex: i, label: "A", text: "", isCorrect: true });
+                              newOpts.push({ blankIndex: i, label: "B", text: "", isCorrect: false });
+                            }
+                            setValue("typeSpecific.options", newOpts);
+                          }
+                        }}
+                      />
+
+                      {[...Array(watch("typeSpecific.blanks") || 1)].map((_, blankIndex) => {
+                        const blankOptions = (watch("typeSpecific.options") || [])
+                          .filter(opt => opt.blankIndex === blankIndex);
+
+                        return (
+                          <div key={blankIndex} className="mt-4 p-3 border rounded-lg bg-gray-50 dark:bg-gray-800">
+                            <div className="flex items-center justify-between">
+                              <Label>Blank {blankIndex + 1}</Label>
+                              <button
+                                type="button"
+                                onClick={() => {
+                                  const opts = watch("typeSpecific.options") || [];
+                                  const nextLabel = String.fromCharCode(65 + blankOptions.length);
+                                  setValue("typeSpecific.options", [
+                                    ...opts,
+                                    { blankIndex, label: nextLabel, text: "", isCorrect: false }
+                                  ]);
+                                }}
+                                className="text-xs text-blue-600"
+                              >
+                                + Add Option
+                              </button>
+                            </div>
+
+                            {blankOptions.map((opt, idx) => {
+                              const globalIndex = (watch("typeSpecific.options") || []).findIndex(
+                                o => o.blankIndex === blankIndex && o.label === opt.label
+                              );
+                              return (
+                                <div key={`${blankIndex}-${opt.label}`} className="mt-2 flex items-start gap-2">
+                                  <div className="mt-2 w-6 text-sm font-mono">{opt.label}</div>
+                                  <Input
+                                    value={opt.text}
+                                    onChange={(e) => {
+                                      const opts = [...(watch("typeSpecific.options") || [])];
+                                      opts[globalIndex] = { ...opts[globalIndex], text: e.target.value };
+                                      setValue("typeSpecific.options", opts);
+                                    }}
+                                    placeholder={`Option text for Blank ${blankIndex + 1}`}
+                                  />
+                                  <div className="mt-2">
+                                    <label className="flex items-center gap-1 text-sm">
+                                      <input
+                                        type="checkbox"
+                                        checked={opt.isCorrect}
+                                        onChange={(e) => {
+                                          const opts = [...(watch("typeSpecific.options") || [])];
+                                          // Ensure only one correct per blank
+                                          opts.forEach(o => {
+                                            if (o.blankIndex === blankIndex) {
+                                              o.isCorrect = false;
+                                            }
+                                          });
+                                          opts[globalIndex] = { ...opts[globalIndex], isCorrect: e.target.checked };
+                                          setValue("typeSpecific.options", opts);
+                                        }}
+                                      />
+                                      Correct
+                                    </label>
+                                  </div>
+                                  {blankOptions.length > 2 && (
+                                    <button
+                                      type="button"
+                                      onClick={() => {
+                                        const opts = (watch("typeSpecific.options") || []).filter(
+                                          (_, i) => i !== globalIndex
+                                        );
+                                        setValue("typeSpecific.options", opts);
+                                      }}
+                                      className="mt-2 text-red-500 hover:text-red-700"
+                                    >
+                                      <X className="h-4 w-4" />
+                                    </button>
+                                  )}
+                                </div>
+                              );
+                            })}
+                          </div>
+                        );
+                      })}
+                    </div>
+                  )}
+
+
                   {/* Marks - Using Custom Components */}
                   <div className="grid gap-3 sm:grid-cols-2">
                     <div>
@@ -1140,7 +1268,6 @@ export default function QuestionManagementPage() {
                   <div className="sticky bottom-0 mt-3 flex justify-end gap-2 border-t border-gray-200 bg-white py-3 dark:border-gray-800 dark:bg-gray-900">
                     <Button
                       variant="outline"
-                      type="button"
                       onClick={closeDrawer}
                       disabled={saving}
                     >

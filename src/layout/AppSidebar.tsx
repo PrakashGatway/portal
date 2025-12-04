@@ -48,6 +48,15 @@ const navItems: NavItem[] = [
     ]
   },
   {
+    emoji: "📝",
+    name: "Mcq Bank",
+    subItems: [
+      { name: "Questions", path: "/mcq/questions", emoji: "📋" },
+      { name: "Tests", path: "/mcq/tests", emoji: "📚" },
+      { name: "Test Series", path: "/mcq/test-series", emoji: "📜" }
+    ]
+  },
+  {
     emoji: "🎥",
     name: "Classes",
     subItems: [

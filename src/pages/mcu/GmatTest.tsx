@@ -22,7 +22,8 @@ import Button from "../../components/ui/button/Button";
 import { toast } from "react-toastify";
 import api from "../../axiosInstance";
 import FullScreenLoader from "../../components/fullScreeLoader";
-import { usePersistentTimer } from "./SectionTimer";
+import { useGmatTimers } from "./SectionTimer";
+import { MultiSourceComponent, TableAnalysisSection } from "./QuestionComponent";
 
 // ===================
 // Types
@@ -176,6 +177,7 @@ export default function GmatTestAttemptPage() {
 
     const [timerSecondsLeft, setTimerSecondsLeft] = useState(0);
     const [timerRunning, setTimerRunning] = useState(false);
+    const [sectionTimedOut, setSectionTimedOut] = useState(false);
 
     // GMAT-only: module sequence step
     const [hasChosenSequence, setHasChosenSequence] = useState(false);
@@ -210,13 +212,16 @@ export default function GmatTestAttemptPage() {
 
     const isCompleted = attempt?.status === "completed";
 
-        const { 
-        setPersistentTimeout, 
-        setPersistentInterval, 
-        clearPersistentInterval,
-        clearAll,
-        hasActiveTimer 
-    } = usePersistentTimer() as any;
+
+    useEffect(() => {
+        if (!attempt || !hasChosenSequence || isCompleted) return;
+        if (timerSecondsLeft == 0) {
+            setTimerRunning(false);
+            setSectionTimedOut(true); // 🔒 NEW: lock the section
+            toast.info("Time is up for this module. Moving to review.");
+            setCurrentScreen("review");
+        }
+    }, [timerSecondsLeft]);
 
     const testTitle =
         attempt?.testTemplate.title ||
@@ -448,44 +453,52 @@ export default function GmatTestAttemptPage() {
     // ===================
     // 5️⃣ Section timer tick (question timer)
     // ===================
-    useEffect(() => {
-        if (!attempt || !timerRunning || isCompleted) return;
-        if (currentScreen !== "question") return;
-        if (timerSecondsLeft <= 0) return;
 
-        const interval = setInterval(() => {
-            setTimerSecondsLeft((prev) => {
-                const next = prev - 1;
-                return next < 0 ? 0 : next;
-            });
+    // Remove these useEffect intervals from your main component:
+    // - Section timer tick (useEffect with timerRunning)
+    // - Order selection timer (useEffect with isOrderSelectionTimerRunning)
+    // - Break timer (useEffect with breakStarted)
 
-            setAttempt((prev) => {
-                if (!prev) return prev;
-                const clone = { ...prev };
-                clone.totalTimeUsedSeconds =
-                    (clone.totalTimeUsedSeconds || 0) + 1;
-                const sIdx = activeSectionIndex;
-                const qIdx = activeQuestionIndex;
-                if (
-                    clone.sections[sIdx] &&
-                    clone.sections[sIdx].questions[qIdx]
-                ) {
-                    clone.sections[sIdx].questions[qIdx].timeSpentSeconds += 1;
-                }
-                return clone;
-            });
-        }, 1000);
+    // Add this custom hook call instead:
 
-        return () => clearInterval(interval);
-    }, [
-        attempt,
-        timerRunning,
-        timerSecondsLeft,
-        activeSectionIndex,
-        activeQuestionIndex,
-        isCompleted,
-        currentScreen,
-    ]);
+    // useEffect(() => {
+    //     if (!attempt || !timerRunning || isCompleted) return;
+    //     if (currentScreen !== "question") return;
+    //     if (timerSecondsLeft <= 0) return;
+
+    //     const interval = setInterval(() => {
+    //         setTimerSecondsLeft((prev) => {
+    //             const next = prev - 1;
+    //             return next < 0 ? 0 : next;
+    //         });
+
+    //         setAttempt((prev) => {
+    //             if (!prev) return prev;
+    //             const clone = { ...prev };
+    //             clone.totalTimeUsedSeconds =
+    //                 (clone.totalTimeUsedSeconds || 0) + 1;
+    //             const sIdx = activeSectionIndex;
+    //             const qIdx = activeQuestionIndex;
+    //             if (
+    //                 clone.sections[sIdx] &&
+    //                 clone.sections[sIdx].questions[qIdx]
+    //             ) {
+    //                 clone.sections[sIdx].questions[qIdx].timeSpentSeconds += 1;
+    //             }
+    //             return clone;
+    //         });
+    //     }, 1000);
+
+    //     return () => clearInterval(interval);
+    // }, [
+    //     attempt,
+    //     timerRunning,
+    //     timerSecondsLeft,
+    //     activeSectionIndex,
+    //     activeQuestionIndex,
+    //     isCompleted,
+    //     currentScreen,
+    // ]);
 
     // ===================
     // 6️⃣ When section time is up – move to next section or submit
@@ -666,10 +679,10 @@ export default function GmatTestAttemptPage() {
             activeQuestionIndex >= currentSection.questions.length - 1;
 
         // If you want "answer required" enforcement, uncomment:
-        // if (!currentQuestion.isAnswered) {
-        //   setShowAnswerRequiredModal(true);
-        //   return;
-        // }
+        if (!currentQuestion.isAnswered) {
+            setShowAnswerRequiredModal(true);
+            return;
+        }
 
         // 1) Not last question → go to next
         if (!isLastQuestionInSection && !isInReviewMode) {
@@ -742,7 +755,7 @@ export default function GmatTestAttemptPage() {
                 throw new Error(res.data?.message || "Failed to submit GMAT test");
             }
             navigate(`/gmat/analysis/${res.data.data._id}`);
-            
+
             toast.success("GMAT test submitted successfully");
         } catch (err: any) {
             console.error("submitTestAttempt error:", err);
@@ -824,6 +837,57 @@ export default function GmatTestAttemptPage() {
         graphics?: Record<string, number>; // dropdownId -> selectedIndex
     };
 
+    const computeDiIsAnswered = (answers: DiAnswers, subtype: string, question: any): boolean => {
+        if (!answers) return false;
+
+        console.log("Computing DI answered for subtype:", subtype, "answers:", answers);
+
+        switch (subtype) {
+
+            case "multi_source_reasoning": {
+                const statements = question?.questionDoc?.dataInsights?.multiSource?.statements || []
+                console.log("statements:", statements);
+                if (!answers.multiSource) return false;
+                return statements.every(st => {
+                    const v = answers.multiSource?.[st.id];
+                    return v == "yes" || v == "no";
+                });
+            }
+
+            case "table_analysis": {
+                const statements = question?.questionDoc?.dataInsights?.tableAnalysis?.statements || [];
+                if (!answers.tableAnalysis) return false;
+                return statements.every(st => {
+                    const v = answers.tableAnalysis?.[st.id];
+                    return v == "true" || v == "false";
+                });
+            }
+
+            case "two_part_analysis": {
+                const columns = question?.questionDoc?.dataInsights?.twoPart?.columns || [];
+                if (!answers.twoPart) return false;
+                return columns.every(col => {
+                    const v = answers.twoPart?.[col.id];
+                    return typeof v === "string" && v.length > 0;
+                });
+            }
+
+            case "graphics_interpretation": {
+                const dropdowns = question?.questionDoc?.dataInsights?.graphics?.dropdowns || [];
+                if (!answers.graphics) return false;
+                return dropdowns.every(dd => {
+                    const v = answers.graphics?.[dd.id];
+                    return typeof v === "number" && !Number.isNaN(v);
+                });
+            }
+
+            default:
+                return false;
+        }
+    };
+
+
+
     const getDiAnswers = (): DiAnswers => {
         if (!currentQuestion?.answerText) return {};
         try {
@@ -839,9 +903,12 @@ export default function GmatTestAttemptPage() {
         if (!attempt || !currentSection || !currentQuestion) return;
         if (isCompleted) return;
 
+        console.log(currentQuestion)
+
+        const subtype = currentQuestion?.questionDoc?.dataInsights?.subtype;
         const prevAnswers = getDiAnswers();
         const nextAnswers = updater(prevAnswers);
-
+        const answered = computeDiIsAnswered(nextAnswers, subtype, currentQuestion);
         setAttempt((prev) => {
             if (!prev) return prev;
             const clone = structuredClone(prev) as TestAttempt;
@@ -849,7 +916,7 @@ export default function GmatTestAttemptPage() {
             const q = s.questions[activeQuestionIndex];
             q.answerText = JSON.stringify(nextAnswers);
             // crude: mark answered if any key exists
-            q.isAnswered = Object.keys(nextAnswers || {}).length > 0;
+            q.isAnswered = answered;
             return clone;
         });
     };
@@ -877,46 +944,46 @@ export default function GmatTestAttemptPage() {
     // ===================
     // Order selection countdown (2 minutes)
     // ===================
-    useEffect(() => {
-        if (!isOrderSelectionTimerRunning || orderSelectionTimer <= 0) return;
-        const interval = setInterval(() => {
-            setOrderSelectionTimer((prev) => {
-                const next = prev - 1;
-                if (next <= 0) {
-                    setIsOrderSelectionTimerRunning(false);
-                    (async () => {
-                        await handleConfirmSequence();
-                    })();
-                }
-                return next;
-            });
-        }, 1000);
-        return () => clearInterval(interval);
-        // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [isOrderSelectionTimerRunning, orderSelectionTimer]);
+    // useEffect(() => {
+    //     if (!isOrderSelectionTimerRunning || orderSelectionTimer <= 0) return;
+    //     const interval = setInterval(() => {
+    //         setOrderSelectionTimer((prev) => {
+    //             const next = prev - 1;
+    //             if (next <= 0) {
+    //                 setIsOrderSelectionTimerRunning(false);
+    //                 (async () => {
+    //                     await handleConfirmSequence();
+    //                 })();
+    //             }
+    //             return next;
+    //         });
+    //     }, 1000);
+    //     return () => clearInterval(interval);
+    //     // eslint-disable-next-line react-hooks/exhaustive-deps
+    // }, [isOrderSelectionTimerRunning, orderSelectionTimer]);
 
     // ===================
     // Break timer – only when breakStarted
     // ===================
-    useEffect(() => {
-        if (currentScreen !== "break") return;
-        if (!breakStarted) return;
-        if (breakSecondsLeft <= 0) return;
+    // useEffect(() => {
+    //     if (currentScreen !== "break") return;
+    //     if (!breakStarted) return;
+    //     if (breakSecondsLeft <= 0) return;
 
-        const interval = setInterval(() => {
-            setBreakSecondsLeft((prev) => {
-                const next = prev - 1;
-                if (next <= 0) {
-                    setCurrentScreen("section_instructions");
-                    setBreakStarted(false);
-                    return 0;
-                }
-                return next;
-            });
-        }, 1000);
+    //     const interval = setInterval(() => {
+    //         setBreakSecondsLeft((prev) => {
+    //             const next = prev - 1;
+    //             if (next <= 0) {
+    //                 setCurrentScreen("section_instructions");
+    //                 setBreakStarted(false);
+    //                 return 0;
+    //             }
+    //             return next;
+    //         });
+    //     }, 1000);
 
-        return () => clearInterval(interval);
-    }, [currentScreen, breakStarted, breakSecondsLeft]);
+    //     return () => clearInterval(interval);
+    // }, [currentScreen, breakStarted, breakSecondsLeft]);
 
     // ===================
     // 11️⃣ Confirm GMAT module sequence
@@ -944,6 +1011,28 @@ export default function GmatTestAttemptPage() {
             if (!res.data?.success) {
                 throw new Error(res.data?.message || "Failed to set GMAT order");
             }
+            setAttempt((prev) => {
+                if (!prev) return prev;
+                const clone = structuredClone(prev) as TestAttempt;
+
+                // Only reorder the first 3 sections (moduleSections maps to first 3)
+                // but preserve any additional sections after index 3 if present.
+                const firstThree = chosen?.order.map((i) => prev.sections[i]);
+                const rest = prev.sections.slice(3);
+                clone.sections = [...firstThree, ...rest];
+
+                // also store meta locally so resume / timers pick it up
+                clone.gmatMeta = {
+                    ...(clone.gmatMeta || {}),
+                    orderChosen: true,
+                    moduleOrder: chosen.order,
+                    phase: "section_instructions",
+                    currentSectionIndex: 0,
+                    currentQuestionIndex: 0,
+                };
+                return clone;
+            });
+            console.log("handleConfirmSequence response:", res.data);
             setHasChosenSequence(true);
             setActiveSectionIndex(0);
             setActiveQuestionIndex(0);
@@ -956,6 +1045,64 @@ export default function GmatTestAttemptPage() {
             );
         }
     };
+
+    useGmatTimers({
+        // Section timer config
+        sectionTimerSeconds: timerSecondsLeft,
+        setSectionTimerSeconds: setTimerSecondsLeft,
+        isSectionTimerActive: timerRunning,
+        onSectionTimerTick: useCallback(() => {
+            // This replaces the interval logic that was updating attempt state
+            setAttempt(prev => {
+                if (!prev) return prev;
+                const clone = { ...prev };
+                clone.totalTimeUsedSeconds = (clone.totalTimeUsedSeconds || 0) + 1;
+                const sIdx = activeSectionIndex;
+                const qIdx = activeQuestionIndex;
+                if (clone.sections[sIdx] && clone.sections[sIdx].questions[qIdx]) {
+                    clone.sections[sIdx].questions[qIdx].timeSpentSeconds += 1;
+                }
+                return clone;
+            });
+        }, [activeSectionIndex, activeQuestionIndex]),
+        onSectionTimerComplete: useCallback(() => {
+            // Handle section time up logic
+            const isLastSectionLocal = activeSectionIndex >= (attempt?.sections.length || 1) - 1;
+            if (isLastSectionLocal) {
+                setTimerRunning(false);
+                toast.info("Time is up for the last module. Submitting your GMAT test...");
+                submitTestAttempt(true);
+            } else {
+                setTimerRunning(false);
+                toast.info("Time is up for this module. Moving to the next module review.");
+                setCurrentScreen("review");
+            }
+        }, [activeSectionIndex, attempt, submitTestAttempt]),
+
+        // Order selection timer config
+        orderSelectionTimer: orderSelectionTimer,
+        setOrderSelectionTimer: setOrderSelectionTimer,
+        isOrderSelectionTimerActive: isOrderSelectionTimerRunning,
+        onOrderSelectionTimerComplete: useCallback(() => {
+            setIsOrderSelectionTimerRunning(false);
+            (async () => {
+                await handleConfirmSequence();
+            })();
+        }, [handleConfirmSequence]),
+
+        // Break timer config
+        breakTimerSeconds: breakSecondsLeft,
+        setBreakTimerSeconds: setBreakSecondsLeft,
+        isBreakTimerActive: breakStarted,
+        onBreakTimerComplete: useCallback(() => {
+            setCurrentScreen("section_instructions");
+            setBreakStarted(false);
+        }, []),
+
+        // Global config
+        currentScreen,
+        isCompleted
+    });
 
     // ===================
     // Loading / error states
@@ -1566,13 +1713,17 @@ export default function GmatTestAttemptPage() {
                                 .map((q) => {
                                     const isAnsweredLocal = q.isAnswered;
                                     const isBookmarked = q.markedForReview;
+                                    
 
                                     return (
                                         <div
                                             key={q.order}
-                                            onClick={() =>
-                                                handleReviewQuestionClick(q.order - 1)
-                                            }
+                                            onClick={() => {
+                                                if (!sectionTimedOut) {
+
+                                                    handleReviewQuestionClick(q.order - 1)
+                                                }
+                                            }}
                                             className={`group flex items-center justify-between p-3 rounded-xl border-2 cursor-pointer transition-all duration-200 ${isBookmarked
                                                 ? "border-purple-300 dark:border-purple-500 bg-purple-50 dark:bg-purple-500/20"
                                                 : isAnsweredLocal
@@ -1746,143 +1897,6 @@ export default function GmatTestAttemptPage() {
             const di = qDoc.dataInsights;
             const answers = getDiAnswers();
 
-            // Create a proper React component
-            const MultiSourceComponent = ({ di, answers, isCompleted, updateDiAnswers }: any) => {
-                const tabs = di.multiSource?.tabs || [];
-                const statements = di.multiSource?.statements || [];
-
-                const [activeTabId, setActiveTabId] = useState<string | null>(tabs.length > 0 ? tabs[0].id : null);
-
-                if (!tabs.length && !statements.length) {
-                    return null;
-                }
-
-                return (
-                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                        <div className="space-y-2">
-                            {tabs.length > 0 && (
-                                <div className="rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 overflow-hidden">
-                                    {/* Tab Navigation */}
-                                    <div className="flex border-b border-slate-200 dark:border-slate-700">
-                                        {tabs.map((tab: any) => (
-                                            <button
-                                                key={tab.id}
-                                                onClick={() => setActiveTabId(tab.id)}
-                                                className={`px-4 py-2 text-sm font-medium transition-colors ${activeTabId === tab.id
-                                                    ? "bg-yellow-500 text-white border-b-2 border-yellow-600"
-                                                    : "text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700"
-                                                    }`}
-                                            >
-                                                {tab.title}
-                                            </button>
-                                        ))}
-                                    </div>
-
-                                    {/* Tab Content */}
-                                    <div className="p-4 overflow-auto">
-                                        {tabs.map((tab: any) => (
-                                            <div
-                                                key={tab.id}
-                                                className={`${activeTabId === tab.id ? 'block' : 'hidden'
-                                                    }`}
-                                            >
-                                                <div className="text-base max-h-[420px] leading-relaxed text-slate-700 dark:text-slate-300"
-                                                    dangerouslySetInnerHTML={{ __html: tab.contentHtml }} />
-                                            </div>
-                                        ))}
-                                    </div>
-                                </div>
-                            )}
-                        </div>
-
-                        {/* Right Panel - Statements */}
-                        <div className="space-y-2">
-
-                            {qDoc?.questionText && (
-                                <div className="text-base text-slate-600 dark:text-slate-400" dangerouslySetInnerHTML={{ __html: qDoc?.questionText }} />
-                            )}
-
-                            {statements.length > 0 && (
-                                    <table className="">
-                                        <thead>
-                                            <tr className="bg-slate-100 dark:bg-slate-800/80">
-                                                <th className="py-3 px-4 text-center font-medium text-slate-700 dark:text-slate-300">
-                                                    Yes
-                                                </th>
-                                                <th className="py-3 px-4 text-center font-medium text-slate-700 dark:text-slate-300">
-                                                    No
-                                                </th>
-                                                <th className="py-3 px-4 border-r border-slate-200 dark:border-slate-700 text-left font-medium text-slate-700 dark:text-slate-300">
-                                                    
-                                                </th>
-                                            </tr>
-                                        </thead>
-                                        <tbody>
-                                            {statements.map((st: any, index: number) => {
-                                                const current = answers.multiSource?.[st.id] || null;
-
-                                                return (
-                                                    <tr
-                                                        key={st.id}
-                                                        className="border-t border-slate-100 dark:border-slate-800 hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors"
-                                                    >
-                                                        <td className="py-3 px-4">
-                                                            <div className="flex justify-center">
-                                                                <input
-                                                                    type="radio"
-                                                                    id={`yes-${st.id}`}
-                                                                    name={`statement-${st.id}`}
-                                                                    checked={current === "yes"}
-                                                                    disabled={isCompleted}
-                                                                    onChange={() =>
-                                                                        updateDiAnswers((prev) => ({
-                                                                            ...prev,
-                                                                            multiSource: {
-                                                                                ...(prev.multiSource || {}),
-                                                                                [st.id]: "yes",
-                                                                            },
-                                                                        }))
-                                                                    }
-                                                                    className="h-4 w-4 text-emerald-600 border-slate-300 dark:border-slate-600 focus:ring-emerald-500 dark:focus:ring-emerald-400 dark:bg-slate-700"
-                                                                />
-                                                            </div>
-                                                        </td>
-                                                        <td className="py-3 px-4">
-                                                            <div className="flex justify-center">
-                                                                <input
-                                                                    type="radio"
-                                                                    id={`no-${st.id}`}
-                                                                    name={`statement-${st.id}`}
-                                                                    checked={current === "no"}
-                                                                    disabled={isCompleted}
-                                                                    onChange={() =>
-                                                                        updateDiAnswers((prev) => ({
-                                                                            ...prev,
-                                                                            multiSource: {
-                                                                                ...(prev.multiSource || {}),
-                                                                                [st.id]: "no",
-                                                                            },
-                                                                        }))
-                                                                    }
-                                                                    className="h-4 w-4 text-rose-600 border-slate-300 dark:border-slate-600 focus:ring-rose-500 dark:focus:ring-rose-400 dark:bg-slate-700"
-                                                                />
-                                                            </div>
-                                                        </td>
-                                                        <td className="py-3 px-4 border-r border-slate-100 dark:border-slate-800 align-top">
-                                                            <div className="text-sm text-slate-800 dark:text-slate-200">
-                                                                {st.text}
-                                                            </div>
-                                                        </td>
-                                                    </tr>
-                                                );
-                                            })}
-                                        </tbody>
-                                    </table>
-                            )}
-                        </div>
-                    </div>
-                );
-            };
 
             // Then in your main component, use it like:
             const renderMultiSource = () => {
@@ -1896,219 +1910,6 @@ export default function GmatTestAttemptPage() {
                 );
             };
 
-            const TableAnalysisSection = ({
-                qDoc,
-                di,
-                answers,
-                isCompleted,
-                updateDiAnswers
-            }: any) => {
-                const table = di.tableAnalysis?.table;
-                const statements = di.tableAnalysis?.statements || [];
-
-                const [sortBy, setSortBy] = useState<string | null>(null);
-                const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('asc');
-
-                const handleSortChange = (columnName: string) => {
-                    if (sortBy === columnName) {
-                        setSortDirection(sortDirection === 'asc' ? 'desc' : 'asc');
-                    } else {
-                        setSortBy(columnName);
-                        setSortDirection('asc');
-                    }
-                };
-
-                // Sort the rows based on current sort settings
-                const sortedRows = useMemo(() => {
-                    if (!table || !sortBy) return table.rows || [];
-
-                    const columnIndex = table.columns.findIndex(col => col === sortBy);
-                    if (columnIndex === -1) return table.rows || [];
-
-                    return [...(table.rows || [])].sort((a, b) => {
-                        const aValue = a.cells[columnIndex];
-                        const bValue = b.cells[columnIndex];
-
-                        // Try to convert to number for numeric comparison
-                        const aNum = parseFloat(aValue);
-                        const bNum = parseFloat(bValue);
-
-                        if (!isNaN(aNum) && !isNaN(bNum)) {
-                            return sortDirection === 'asc' ? aNum - bNum : bNum - aNum;
-                        }
-
-                        // Fallback to string comparison
-                        const aStr = String(aValue).toLowerCase();
-                        const bStr = String(bValue).toLowerCase();
-
-                        if (aStr < bStr) return sortDirection === 'asc' ? -1 : 1;
-                        if (aStr > bStr) return sortDirection === 'asc' ? 1 : -1;
-                        return 0;
-                    });
-                }, [table, sortBy, sortDirection]);
-
-                return (
-                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                        {/* Left Panel - Stimulus and Table */}
-                        <div className="space-y-4">
-                            {qDoc.stimulus && (
-                                <div className="rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-900/60 p-4 text-base leading-relaxed text-slate-700 dark:text-slate-300">
-                                    <div className="prose prose-sm dark:prose-invert max-w-none">
-                                        {qDoc.stimulus}
-                                    </div>
-                                </div>
-                            )}
-
-                            {table && (
-                                <div className="space-y-1">
-                                 
-                                    <select
-                                        className="text-sm border border-slate-300 dark:border-slate-600 rounded-md px-3 py-1.5 bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-300 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                                        value={sortBy || ""}
-                                        onChange={(e) => handleSortChange(e.target.value)}
-                                    >
-                                        <option value="">Select column...</option>
-                                        {table.columns.map((col: string, idx: number) => (
-                                            <option key={idx} value={col}>
-                                                {col}
-                                            </option>
-                                        ))}
-                                    </select>
-
-                                    {/* Table */}
-                                    <div className="overflow-x-auto">
-                                        <table className=" text-sm border">
-                                            <thead>
-                                                <tr className="bg-slate-100 dark:bg-slate-800/80">
-                                                    {table.columns.map((col: string, idx: number) => (
-                                                        <th
-                                                            key={idx}
-                                                            className={`py-1 px-1 border-r border-slate-200 dark:border-slate-700 last:border-r-0 font-medium text-slate-700 dark:text-slate-300 ${idx === 0 ? 'text-left' : 'text-center'}`}
-                                                        >
-                                                            <div className="flex items-center justify-center gap-1">
-                                                                <span>{col}</span>
-                                                                {sortBy === col && (
-                                                                    <span className="text-xs opacity-70">
-                                                                        {sortDirection === 'asc' ? '↑' : '↓'}
-                                                                    </span>
-                                                                )}
-                                                            </div>
-                                                        </th>
-                                                    ))}
-                                                </tr>
-                                            </thead>
-                                            <tbody>
-                                                {sortedRows.map((row: any, rowIndex: number) => (
-                                                    <tr
-                                                        key={row.id || rowIndex}
-                                                        className="border-t border-slate-100 dark:border-slate-800 hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors"
-                                                    >
-                                                        {row.cells.map((cell: string, cellIndex: number) => (
-                                                            <td
-                                                                key={cellIndex}
-                                                                className={`py-1 px-1 border-r border-slate-100 dark:border-slate-800 last:border-r-0 ${cellIndex === 0 ? 'text-left font-medium text-slate-800 dark:text-slate-200' : 'text-center text-slate-600 dark:text-slate-300'}`}
-                                                            >
-                                                                {cell}
-                                                            </td>
-                                                        ))}
-                                                    </tr>
-                                                ))}
-                                            </tbody>
-                                        </table>
-                                    </div>
-                                </div>
-                            )}
-                        </div>
-
-                        {/* Right Panel - Question Text and Statements Table */}
-                        <div className="space-y-2">
-                            {qDoc?.questionText && (
-                                <div className="text-base text-slate-600 dark:text-slate-400" dangerouslySetInnerHTML={{ __html: qDoc?.questionText }} />
-                            )}
-
-                            {statements.length > 0 && (
-                                <div className="rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 overflow-hidden shadow-sm">
-                                    <table className="">
-                                        <thead>
-                                            <tr className="bg-slate-100 dark:bg-slate-800/80">
-                                                <th className="py-3 px-4 text-center font-medium text-slate-700 dark:text-slate-300">
-                                                    True
-                                                </th>
-                                                <th className="py-3 px-4 text-center font-medium text-slate-700 dark:text-slate-300">
-                                                    False
-                                                </th>
-                                                <th className="py-3 px-4 border-r border-slate-200 dark:border-slate-700 text-left font-medium text-slate-700 dark:text-slate-300">
-
-                                                </th>
-                                            </tr>
-                                        </thead>
-                                        <tbody>
-                                            {statements.map((st: any, index: number) => {
-                                                const current = answers.tableAnalysis?.[st.id] || null;
-
-                                                return (
-                                                    <tr
-                                                        key={st.id}
-                                                        className="border-t border-slate-100 dark:border-slate-800 hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors"
-                                                    >
-                                                        <td className="py-3 px-4">
-                                                            <div className="flex justify-center">
-                                                                <input
-                                                                    type="radio"
-                                                                    id={`true-${st.id}`}
-                                                                    name={`statement-${st.id}`}
-                                                                    checked={current === "true"}
-                                                                    disabled={isCompleted}
-                                                                    onChange={() =>
-                                                                        updateDiAnswers((prev) => ({
-                                                                            ...prev,
-                                                                            tableAnalysis: {
-                                                                                ...(prev.tableAnalysis || {}),
-                                                                                [st.id]: "true",
-                                                                            },
-                                                                        }))
-                                                                    }
-                                                                    className="h-4 w-4 text-emerald-600 border-slate-300 dark:border-slate-600 focus:ring-emerald-500 dark:focus:ring-emerald-400 dark:bg-slate-700"
-                                                                />
-                                                            </div>
-                                                        </td>
-                                                        <td className="py-3 px-4">
-                                                            <div className="flex justify-center">
-                                                                <input
-                                                                    type="radio"
-                                                                    id={`false-${st.id}`}
-                                                                    name={`statement-${st.id}`}
-                                                                    checked={current === "false"}
-                                                                    disabled={isCompleted}
-                                                                    onChange={() =>
-                                                                        updateDiAnswers((prev) => ({
-                                                                            ...prev,
-                                                                            tableAnalysis: {
-                                                                                ...(prev.tableAnalysis || {}),
-                                                                                [st.id]: "false",
-                                                                            },
-                                                                        }))
-                                                                    }
-                                                                    className="h-4 w-4 text-rose-600 border-slate-300 dark:border-slate-600 focus:ring-rose-500 dark:focus:ring-rose-400 dark:bg-slate-700"
-                                                                />
-                                                            </div>
-                                                        </td>
-                                                        <td className="py-3 px-4 border-r border-slate-100 dark:border-slate-800 align-top">
-                                                            <div className="text-sm text-slate-800 dark:text-slate-200">
-                                                                {st.text}
-                                                            </div>
-                                                        </td>
-                                                    </tr>
-                                                );
-                                            })}
-                                        </tbody>
-                                    </table>
-                                </div>
-                            )}
-                        </div>
-                    </div>
-                );
-            };
             const renderTableAnalysis = () => {
                 return (
                     <TableAnalysisSection

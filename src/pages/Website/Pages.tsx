@@ -197,8 +197,6 @@ const PagesManagement = () => {
         <div>
             <PageMeta title="Pages | Admin Dashboard" description="Manage website pages" />
             <PageBreadcrumb pageTitle="Manage Pages" />
-
-
             <div className="min-h-screen rounded-2xl border border-gray-200 bg-white px-4 py-4 dark:border-gray-800 dark:bg-white/[0.03] sm:px-4 lg:px-4">
                 {/* Filters */}
                 <div className="mb-6 grid grid-cols-1 gap-4 md:grid-cols-3">
@@ -438,7 +436,27 @@ const PagesManagement = () => {
                                             <select
                                                 name="pageType"
                                                 value={formData.pageType}
-                                                onChange={handleInputChange}
+                                                onChange={async (e) => {
+                                                    handleInputChange(e); if (e.target.value == "country_page" && !selectedPage) {
+                                                        const resData = await api.get(`/page/uk?type=country_page`);
+                                                        const page = resData?.data?.data;
+                                                        setFormData({
+                                                            title: page.title || "",
+                                                            subTitle: page.subTitle || "",
+                                                            slug: page.slug || "",
+                                                            pageType: page.pageType || "",
+                                                            metaTitle: page.metaTitle || "",
+                                                            metaDescription: page.metaDescription || "",
+                                                            keywords: Array.isArray(page.keywords) ? page.keywords.join(", ") : "",
+                                                            canonicalUrl: page.canonicalUrl || "",
+                                                            status: page.status || "draft",
+                                                            isFeatured: page.isFeatured || false,
+                                                            tags: Array.isArray(page.tags) ? page.tags.join(", ") : "",
+                                                            sections: Array.isArray(page.sections) ? [...page.sections] : [],
+                                                            pageContent: { ...(page.pageContent || {}) },
+                                                        });
+                                                    }
+                                                }}
                                                 className="w-full rounded-md border border-gray-300 bg-white py-2 px-3 text-sm focus:border-indigo-500 focus:ring-indigo-500 dark:border-gray-600 dark:bg-gray-800 dark:text-white"
                                             >
                                                 <option value="">Select Type</option>

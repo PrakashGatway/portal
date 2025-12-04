@@ -117,8 +117,8 @@ export default function App() {
                 <Route path="/test/questions" element={<QuestionManagement />} />
                 <Route path="/test/packages" element={<PackageManagement />} />
 
-                <Route path="/mcu/questions" element={<QuestionManagementPage />} />
-                <Route path="/mcu/tests" element={<TestTemplateManagementPage />} />
+                <Route path="/mcq/questions" element={<QuestionManagementPage />} />
+                <Route path="/mcq/tests" element={<TestTemplateManagementPage />} />
               </Route>
 
               <Route element={<ProtectedRoute roles={[ROLES.COUNSEL, ROLES.ADMIN, ROLES.MANAGER]} />}>
@@ -140,7 +140,7 @@ export default function App() {
             <Route path="/payment-status" element={<PaymentStatusPage />} />
             <Route path="/full/:testSeriesId" element={<FullLengthTestPage />} />
             <Route path="/sat" element={<FullTestsPage />} />
-            <Route path="/mcu/tests/:testTemplateId" element={<SatTestAttemptPage />} />
+            <Route path="/mcq/tests/:testTemplateId" element={<SatTestAttemptPage />} />
             <Route path="/gmat/tests/:testTemplateId" element={<GmatTestAttemptPage />} />
             <Route path="/gre/tests/:testTemplateId" element={<GreTestAttemptPage />} />
             <Route path="/gmat/analysis/:attemptId" element={<GmatTestAnalysisPage />} />

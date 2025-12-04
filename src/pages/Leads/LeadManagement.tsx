@@ -13,24 +13,23 @@ import TextArea from "../../components/form/input/TextArea";
 import { useAuth } from "../../context/UserContext";
 
 const LeadStatuses = [
-    'new',
-    'contacted',
-    'interested',
-    'notInterested',
-    'enrolled',
-    'rejected',
-    'inactive'
+    "new",
+    "contacted",
+    "interested",
+    "notInterested",
+    "enrolled",
+    "rejected",
+    "inactive",
 ];
 
 const LeadSources = [
-    'googleAds',
-    'website',
-    'education_fair',
-    'referral',
-    'social_media',
-    'partner'
+    "googleAds",
+    "website",
+    "education_fair",
+    "referral",
+    "social_media",
+    "partner",
 ];
-
 
 export default function LeadManagement() {
     const [leads, setLeads] = useState([]);
@@ -52,8 +51,17 @@ export default function LeadManagement() {
         assignedCounselor: "",
         coursePreference: "",
         countryOfResidence: "",
-        intakeDateRange: ""
+        // server-facing date param (format YYYY-MM-DD_YYYY-MM-DD)
+        dateRange: "",
+        // UI search input
+        search: "",
     });
+
+    const today = moment().format("YYYY-MM-DD");
+    // local date inputs for the picker UI
+    const [dateRangeStart, setDateRangeStart] = useState("");
+    const [dateRangeEnd, setDateRangeEnd] = useState(today);
+
     const [formData, setFormData] = useState({
         fullName: "",
         email: "",
@@ -63,17 +71,17 @@ export default function LeadManagement() {
         coursePreference: "",
         status: "new",
         source: "website",
-        assignedCounselor: ""
+        assignedCounselor: "",
     });
     const [errors, setErrors] = useState({});
-    const [newNote, setNewNote] = useState('');
+    const [newNote, setNewNote] = useState("");
 
     const handleAddNote = async () => {
         if (!newNote.trim()) return;
         try {
             await api.post(`/leads/${selectedLead._id}/notes`, { text: newNote });
             toast.success("Note added");
-            fetchLeads(); // or just refetch the single lead
+            fetchLeads();
             setNewNote("");
         } catch (error) {
             toast.error("Failed to add note");
@@ -82,10 +90,40 @@ export default function LeadManagement() {
 
     useEffect(() => {
         fetchLeads();
-        if (user.role === 'admin') {
+    }, [
+        filters.page,
+        filters.limit,
+        filters.sortBy,
+        filters.status,
+        filters.source,
+        filters.assignedCounselor,
+        filters.coursePreference,
+        filters.countryOfResidence,
+        filters.dateRange,
+        filters.search,
+    ]);
+
+    useEffect(() => {
+        if (user?.role === "admin") {
             fetchCounselors();
         }
-    }, [filters]);
+    }, [user?.role]);
+
+    useEffect(() => {
+        if (filters.dateRange) {
+            const parts = filters.dateRange.split("_");
+            if (parts.length === 2) {
+                setDateRangeStart(parts[0]);
+                setDateRangeEnd(parts[1]);
+            } else {
+                setDateRangeStart("");
+                setDateRangeEnd(today);
+            }
+        } else {
+            setDateRangeStart("");
+            setDateRangeEnd(today);
+        }
+    }, [filters.dateRange]);
 
     const fetchLeads = async () => {
         setLoading(true);
@@ -94,13 +132,21 @@ export default function LeadManagement() {
                 ...filters,
                 page: filters.page,
                 limit: filters.limit,
-                sort: filters.sortBy
+                sort: filters.sortBy,
             };
+
+            // clean empty params
+            Object.keys(params).forEach((k) => {
+                if (params[k] === "" || params[k] === null || params[k] === undefined) {
+                    delete params[k];
+                }
+            });
+
             const response = await api.get("/leads", { params });
             setLeads(response.data?.data || []);
             setTotal(response.data?.pagination?.totalLeads || 0);
         } catch (error) {
-            toast.error(error.error);
+            toast.error(error?.response?.data?.message || "Failed to fetch leads");
         } finally {
             setLoading(false);
         }
@@ -108,7 +154,7 @@ export default function LeadManagement() {
 
     const fetchCounselors = async () => {
         try {
-            const res = await api.get("/users?role=counselor"); // adjust endpoint as needed
+            const res = await api.get("/users?role=counselor");
             setAllCounselors(res.data?.users || []);
         } catch (error) {
             console.error("Failed to fetch counselors:", error);
@@ -120,23 +166,66 @@ export default function LeadManagement() {
         setFilters((prev) => ({
             ...prev,
             [name]: value,
-            page: 1
+            page: 1,
         }));
+    };
+
+    // Robust date-range handler using functional updates so values are always current
+    const handleDateRangeChange = (which, value) => {
+        if (which === "start") {
+            setDateRangeStart(value);
+            setFilters((prev) => {
+                const end = dateRangeEnd;
+                const computedEnd = end || prev.dateRange?.split("_")?.[1] || "";
+                if (!value) {
+                    return { ...prev, dateRange: "", page: 1 };
+                }
+                if (!computedEnd) {
+                    return { ...prev, dateRange: `${value}_${today}`, page: 1 };
+                }
+                if (new Date(value) > new Date(computedEnd)) {
+                    toast.warn("Start date cannot be after End date. Please correct.");
+                    return { ...prev, dateRange: "", page: 1 };
+                }
+                return { ...prev, dateRange: `${value}_${computedEnd}`, page: 1 };
+            });
+        } else {
+            setDateRangeEnd(value);
+            setFilters((prev) => {
+                const start = dateRangeStart;
+                const computedStart = start || prev.dateRange?.split("_")?.[0] || "";
+                if (!value) {
+                    return { ...prev, dateRange: "", page: 1 };
+                }
+                if (!computedStart) {
+                    return { ...prev, dateRange: "", page: 1 };
+                }
+                if (new Date(computedStart) > new Date(value)) {
+                    toast.warn("End date cannot be before Start date. Please correct.");
+                    return { ...prev, dateRange: "", page: 1 };
+                }
+                return { ...prev, dateRange: `${computedStart}_${value}`, page: 1 };
+            });
+        }
     };
 
     const handlePageChange = (newPage) => {
         setFilters((prev) => ({
             ...prev,
-            page: newPage
+            page: newPage,
         }));
     };
 
     const viewLeadDetails = async (lead) => {
-        setSelectedLead(lead)
+        setSelectedLead(lead);
         openModal();
-        if (lead.status === 'new') {
-            await api.put(`/leads/${lead._id}`, { ...lead, status: 'viewed' });
-            fetchLeads();
+        if (lead.status === "new") {
+            try {
+                await api.put(`/leads/${lead._id}`, { ...lead, status: "viewed" });
+                fetchLeads();
+            } catch (err) {
+                // ignore silently
+            }
         }
     };
 
@@ -153,7 +242,7 @@ export default function LeadManagement() {
             coursePreference: lead.coursePreference || "",
             status: lead.status || "new",
             source: lead.source || "website",
-            assignedCounselor: lead.assignedCounselor?._id || ""
+            assignedCounselor: lead.assignedCounselor?._id || "",
         });
         setEditModalOpen(true);
     };
@@ -203,7 +292,10 @@ export default function LeadManagement() {
             fetchLeads();
             setEditModalOpen(false);
         } catch (error) {
-            if (error.response?.status === 400 && error.response?.data?.error?.includes("email")) {
+            if (
+                error.response?.status === 400 &&
+                error.response?.data?.error?.includes("email")
+            ) {
                 setErrors({ email: "A lead with this email already exists." });
             } else {
                 toast.error(error.message || "Failed to create lead");
@@ -235,7 +327,7 @@ export default function LeadManagement() {
             coursePreference: "",
             status: "new",
             source: "website",
-            assignedCounselor: ""
+            assignedCounselor: "",
         });
         setErrors({});
         setEditModalOpen(true);
@@ -252,12 +344,18 @@ export default function LeadManagement() {
     const getStatusColor = (status) => {
         const colors = {
             new: "bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200",
-            contacted: "bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200",
-            interested: "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200",
-            notInterested: "bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-200",
-            enrolled: "bg-purple-100 text-purple-800 dark:bg-purple-900 dark:text-purple-200",
-            rejected: "bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200",
-            inactive: "bg-orange-100 text-orange-800 dark:bg-orange-900 dark:text-orange-200"
+            contacted:
+                "bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200",
+            interested:
+                "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200",
+            notInterested:
+                "bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-200",
+            enrolled:
+                "bg-purple-100 text-purple-800 dark:bg-purple-900 dark:text-purple-200",
+            rejected:
+                "bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200",
+            inactive:
+                "bg-orange-100 text-orange-800 dark:bg-orange-900 dark:text-orange-200",
         };
         return colors[status] || colors.new;
     };
@@ -280,9 +378,7 @@ export default function LeadManagement() {
                                     Manage prospective students
                                 </p>
                                 <div className="hidden h-3.5 w-px bg-gray-300 dark:bg-gray-700 xl:block"></div>
-                                <p className="text-sm text-gray-500 dark:text-gray-400">
-                                    {total} leads
-                                </p>
+                                <p className="text-sm text-gray-500 dark:text-gray-400">{total} leads</p>
                             </div>
                         </div>
                     </div>
@@ -291,8 +387,18 @@ export default function LeadManagement() {
                             onClick={openCreateModal}
                             className="flex w-full items-center justify-center gap-2 rounded-full border border-gray-300 bg-white px-4 py-3 text-sm font-medium text-gray-700 shadow-theme-xs hover:bg-gray-50 hover:text-gray-800 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-400 dark:hover:bg-white/[0.03] dark:hover:text-gray-200 lg:inline-flex lg:w-auto"
                         >
-                            <svg className="fill-current" width="18" height="18" viewBox="0 0 18 18">
-                                <path fillRule="evenodd" clipRule="evenodd" d="M15.0911 2.78206C14.2125 1.90338 12.7878 1.90338 11.9092 2.78206L4.57524 10.116C4.26682 10.4244 4.0547 10.8158 3.96468 11.2426L3.31231 14.3352C3.25997 14.5833 3.33653 14.841 3.51583 15.0203C3.69512 15.1996 3.95286 15.2761 4.20096 15.2238L7.29355 14.5714C7.72031 14.4814 8.11172 14.2693 8.42013 13.9609L15.7541 6.62695C16.6327 5.74827 16.6327 4.32365 15.7541 3.44497L15.0911 2.78206ZM12.9698 3.84272C13.2627 3.54982 13.7376 3.54982 14.0305 3.84272L14.6934 4.50563C14.9863 4.79852 14.9863 5.2734 14.6934 5.56629L14.044 6.21573L12.3204 4.49215L12.9698 3.84272ZM11.2597 5.55281L5.6359 11.1766C5.53309 11.2794 5.46238 11.4099 5.43238 11.5522L5.01758 13.5185L6.98394 13.1037C7.1262 13.0737 7.25666 13.003 7.35947 12.9002L12.9833 7.27639L11.2597 5.55281Z" fill="currentColor" />
+                            <svg
+                                className="fill-current"
+                                width="18"
+                                height="18"
+                                viewBox="0 0 18 18"
+                            >
+                                <path
+                                    fillRule="evenodd"
+                                    clipRule="evenodd"
+                                    d="M15.0911 2.78206C14.2125 1.90338 12.7878 1.90338 11.9092 2.78206L4.57524 10.116C4.26682 10.4244 4.0547 10.8158 3.96468 11.2426L3.31231 14.3352C3.25997 14.5833 3.33653 14.841 3.51583 15.0203C3.69512 15.1996 3.95286 15.2761 4.20096 15.2238L7.29355 14.5714C7.72031 14.4814 8.11172 14.2693 8.42013 13.9609L15.7541 6.62695C16.6327 5.74827 16.6327 4.32365 15.7541 3.44497L15.0911 2.78206ZM12.9698 3.84272C13.2627 3.54982 13.7376 3.54982 14.0305 3.84272L14.6934 4.50563C14.9863 4.79852 14.9863 5.2734 14.6934 5.56629L14.044 6.21573L12.3204 4.49215L12.9698 3.84272ZM11.2597 5.55281L5.6359 11.1766C5.53309 11.2794 5.46238 11.4099 5.43238 11.5522L5.01758 13.5185L6.98394 13.1037C7.1262 13.0737 7.25666 13.003 7.35947 12.9002L12.9833 7.27639L11.2597 5.55281Z"
+                                    fill="currentColor"
+                                />
                             </svg>
                             Add New Lead
                         </button>
@@ -302,7 +408,7 @@ export default function LeadManagement() {
 
             {/* Filters */}
             <div className="min-h-[70vh] overflow-x-auto rounded-2xl border border-gray-200 bg-white px-4 py-4 dark:border-gray-800 dark:bg-white/[0.03] xl:px-4 xl:py-4">
-                <div className="mb-6 grid grid-cols-1 gap-4 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5">
+                <div className="mb-6 grid grid-cols-1 gap-4 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-6">
                     <div>
                         <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                             Search (Name, Email, Phone)
@@ -316,8 +422,11 @@ export default function LeadManagement() {
                             className="w-full rounded-md border border-gray-300 bg-white py-2 px-3 text-sm focus:border-indigo-500 focus:outline-none focus:ring-indigo-500 dark:border-gray-600 dark:bg-gray-800 dark:text-white"
                         />
                     </div>
+
                     <div>
-                        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Status</label>
+                        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                            Status
+                        </label>
                         <select
                             name="status"
                             value={filters.status}
@@ -332,110 +441,106 @@ export default function LeadManagement() {
                             ))}
                         </select>
                     </div>
-                    {user.role && user.role !== "counselor" && <> <div>
-                        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Source</label>
-                        <select
-                            name="source"
-                            value={filters.source}
+
+                    {user.role && user.role !== "counselor" && (
+                        <>
+                            <div>
+                                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                                    Source
+                                </label>
+                                <select
+                                    name="source"
+                                    value={filters.source}
+                                    onChange={handleFilterChange}
+                                    className="w-full rounded-md border border-gray-300 bg-white py-2 px-3 text-sm focus:border-indigo-500 focus:outline-none focus:ring-indigo-500 dark:border-gray-600 dark:bg-gray-800 dark:text-white"
+                                >
+                                    <option value="">All Sources</option>
+                                    {LeadSources.map((s) => (
+                                        <option key={s} value={s}>
+                                            {s.replace(/_/g, " ").replace(/\b\w/g, (l) => l.toUpperCase())}
+                                        </option>
+                                    ))}
+                                </select>
+                            </div>
+
+                            <div>
+                                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                                    Counselor
+                                </label>
+                                <select
+                                    name="assignedCounselor"
+                                    value={filters.assignedCounselor}
+                                    onChange={handleFilterChange}
+                                    className="w-full rounded-md border border-gray-300 bg-white py-2 px-3 text-sm focus:border-indigo-500 focus:outline-none focus:ring-indigo-500 dark:border-gray-600 dark:bg-gray-800 dark:text-white"
+                                >
+                                    <option value="">All Counselors</option>
+                                    {allCounselors.map((c) => (
+                                        <option key={c._id} value={c._id}>
+                                            {c.name || c.email}
+                                        </option>
+                                    ))}
+                                </select>
+                            </div>
+                        </>
+                    )}
+
+                    <div>
+                        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                            Course Preference
+                        </label>
+                        <input
+                            type="text"
+                            name="coursePreference"
+                            value={filters.coursePreference}
                             onChange={handleFilterChange}
+                            placeholder="e.g. MBA, Computer Science"
                             className="w-full rounded-md border border-gray-300 bg-white py-2 px-3 text-sm focus:border-indigo-500 focus:outline-none focus:ring-indigo-500 dark:border-gray-600 dark:bg-gray-800 dark:text-white"
-                        >
-                            <option value="">All Sources</option>
-                            {LeadSources.map((s) => (
-                                <option key={s} value={s}>
-                                    {s.replace(/_/g, " ").replace(/\b\w/g, l => l.toUpperCase())}
-                                </option>
-                            ))}
-                        </select>
+                        />
                     </div>
-                        <div>
-                            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                                Counselor
-                            </label>
-                            <select
-                                name="assignedCounselor"
-                                value={filters.assignedCounselor}
-                                onChange={handleFilterChange}
-                                className="w-full rounded-md border border-gray-300 bg-white py-2 px-3 text-sm focus:border-indigo-500 focus:outline-none focus:ring-indigo-500 dark:border-gray-600 dark:bg-gray-800 dark:text-white"
-                            >
-                                <option value="">All Counselors</option>
-                                {allCounselors.map((c) => (
-                                    <option key={c._id} value={c._id}>
-                                        {c.name || c.email}
-                                    </option>
-                                ))}
-                            </select>
+
+                    <div>
+                        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                            Country of Residence
+                        </label>
+                        <input
+                            type="text"
+                            name="countryOfResidence"
+                            value={filters.countryOfResidence}
+                            onChange={handleFilterChange}
+                            placeholder="e.g. India, Nigeria"
+                            className="w-full rounded-md border border-gray-300 bg-white py-2 px-3 text-sm focus:border-indigo-500 focus:outline-none focus:ring-indigo-500 dark:border-gray-600 dark:bg-gray-800 dark:text-white"
+                        />
+                    </div>
+
+                    {/* Date Range */}
+                    <div>
+                        <label className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                            Date Range (Start - End)
+                        </label>
+                        <div className="flex gap-2">
+                            <input
+                                type="date"
+                                name="dateRangeStart"
+                                value={dateRangeStart}
+                                onChange={(e) => handleDateRangeChange("start", e.target.value)}
+                                className=" rounded-md border border-gray-300 bg-white py-2 px-2 text-sm focus:border-indigo-500 focus:outline-none focus:ring-indigo-500 dark:border-gray-600 dark:bg-gray-800 dark:text-white"
+                            />
+                            <input
+                                type="date"
+                                name="dateRangeEnd"
+                                value={dateRangeEnd}
+                                onChange={(e) => handleDateRangeChange("end", e.target.value)}
+                                className=" rounded-md border border-gray-300 bg-white py-2 px-2 text-sm focus:border-indigo-500 focus:outline-none focus:ring-indigo-500 dark:border-gray-600 dark:bg-gray-800 dark:text-white"
+                            />
                         </div>
-                    </>}
-                    {/* <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-              Course Preference
-            </label>
-            <input
-              type="text"
-              name="coursePreference"
-              value={filters.coursePreference}
-              onChange={handleFilterChange}
-              placeholder="e.g. MBA, Computer Science"
-              className="w-full rounded-md border border-gray-300 bg-white py-2 px-3 text-sm focus:border-indigo-500 focus:outline-none focus:ring-indigo-500 dark:border-gray-600 dark:bg-gray-800 dark:text-white"
-            />
-          </div>
-          <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-              Country of Residence
-            </label>
-            <input
-              type="text"
-              name="countryOfResidence"
-              value={filters.countryOfResidence}
-              onChange={handleFilterChange}
-              placeholder="e.g. India, Nigeria"
-              className="w-full rounded-md border border-gray-300 bg-white py-2 px-3 text-sm focus:border-indigo-500 focus:outline-none focus:ring-indigo-500 dark:border-gray-600 dark:bg-gray-800 dark:text-white"
-            />
-          </div>
-          <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-              Intake Date Range
-            </label>
-            <input
-              type="text"
-              name="intakeDateRange"
-              value={filters.intakeDateRange}
-              onChange={handleFilterChange}
-              placeholder="YYYY-MM-DD_YYYY-MM-DD"
-              className="w-full rounded-md border border-gray-300 bg-white py-2 px-3 text-sm focus:border-indigo-500 focus:outline-none focus:ring-indigo-500 dark:border-gray-600 dark:bg-gray-800 dark:text-white"
-            />
-          </div> */}
-                    <div className="flex items-end">
-                        <button
-                            onClick={() =>
-                                setFilters({
-                                    page: 1,
-                                    limit: 10,
-                                    sortBy: "-createdAt",
-                                    status: "",
-                                    source: "",
-                                    assignedCounselor: "",
-                                    coursePreference: "",
-                                    countryOfResidence: "",
-                                    intakeDateRange: ""
-                                })
-                            }
-                            className="w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm font-medium text-gray-700 shadow-sm hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 dark:border-gray-600 dark:bg-gray-800 dark:text-white dark:hover:bg-gray-700"
-                        >
-                            Reset Filters
-                        </button>
                     </div>
                 </div>
-
-                {/* Pagination */}
                 {total > 0 && (
-                    <div className="mt-4 flex flex-col items-center justify-between space-y-4 sm:flex-row sm:space-y-0">
-                        <div className="flex items-center space-x-4">
-                            {/* Add the rows per page dropdown here */}
-                            <div className="flex items-center space-x-2 mb-[20px]">
+                    <div className="">
+                        <div className="flex items-center justify-between space-x-4 mb-2">
+                            <div className="flex items-center space-x-2">
                                 <label className="text-sm font-medium text-gray-700 dark:text-gray-300">
-                                    Rows per page:
+                                    Limit:
                                 </label>
                                 <select
                                     name="limit"
@@ -449,11 +554,29 @@ export default function LeadManagement() {
                                     <option value="50">50</option>
                                 </select>
                             </div>
+                            <button
+                                onClick={() =>
+                                    setFilters({
+                                        page: 1,
+                                        limit: 10,
+                                        sortBy: "-createdAt",
+                                        status: "",
+                                        source: "",
+                                        assignedCounselor: "",
+                                        coursePreference: "",
+                                        countryOfResidence: "",
+                                        dateRange: "",
+                                        search: "",
+                                    })
+                                }
+                                className=" rounded-md border border-gray-300 bg-white px-3 py-2 text-sm font-medium text-gray-700 shadow-sm hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 dark:border-gray-600 dark:bg-gray-800 dark:text-white dark:hover:bg-gray-700"
+                            >
+                                Reset Filters
+                            </button>
                         </div>
                     </div>
                 )}
 
-                {/* Table */}
                 <div className="overflow-x-auto rounded-lg border border-gray-200 dark:border-gray-700">
                     {loading ? (
                         <div className="flex h-64 items-center justify-center">
@@ -463,26 +586,44 @@ export default function LeadManagement() {
                         <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
                             <thead className="bg-gray-50 dark:bg-gray-800">
                                 <tr>
-                                    <th className="px-2 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500 dark:text-gray-300">Name</th>
-                                    <th className="px-2 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500 dark:text-gray-300">Contact</th>
-                                    <th className="px-2 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500 dark:text-gray-300">Course</th>
-                                    <th className="px-2 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500 dark:text-gray-300">Intake</th>
-                                    <th className="px-2 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500 dark:text-gray-300">Counselor</th>
-                                    <th className="px-2 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500 dark:text-gray-300">Status</th>
-                                    <th className="px-2 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500 dark:text-gray-300">{user?.role == "counselor" ? "Date" : "Source"}</th>
-                                    <th className="px-2 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500 dark:text-gray-300">Actions</th>
+                                    <th className="px-2 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500 dark:text-gray-300">
+                                        Name
+                                    </th>
+                                    <th className="px-2 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500 dark:text-gray-300">
+                                        Contact
+                                    </th>
+                                    <th className="px-2 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500 dark:text-gray-300">
+                                        Course
+                                    </th>
+                                    <th className="px-2 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500 dark:text-gray-300">
+                                        Intake
+                                    </th>
+                                    <th className="px-2 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500 dark:text-gray-300">
+                                        Counselor
+                                    </th>
+                                    <th className="px-2 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500 dark:text-gray-300">
+                                        Status
+                                    </th>
+                                    <th className="px-2 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500 dark:text-gray-300">
+                                        {user?.role == "counselor" ? "Date" : "Source"}
+                                    </th>
+                                    <th className="px-2 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500 dark:text-gray-300">
+                                        Actions
+                                    </th>
                                 </tr>
                             </thead>
                             <tbody className="divide-y divide-gray-200 bg-white dark:divide-gray-700 dark:bg-gray-800">
                                 {leads.length > 0 ? (
                                     leads.map((lead) => (
-                                        <tr key={lead._id} className="hover:bg-gray-50 dark:hover:bg-gray-700">
+                                        <tr
+                                            key={lead._id}
+                                            className="hover:bg-gray-50 dark:hover:bg-gray-700"
+                                        >
                                             <td className="whitespace-nowrap px-2 py-4 text-sm font-medium capitalize text-gray-900 dark:text-white">
                                                 {lead?.fullName || "—"}
                                             </td>
                                             <td className="whitespace-nowrap px-2 py-2 text-sm text-gray-500 dark:text-gray-300">
                                                 Email:{lead.email || "—"} <br />
-                                                {/* Mob:{lead.phone || "—"} */}
                                             </td>
                                             <td className="whitespace-nowrap px-2 py-4 text-sm text-gray-500 dark:text-gray-300">
                                                 {lead.coursePreference}
@@ -493,17 +634,26 @@ export default function LeadManagement() {
                                                     : "—"}
                                             </td>
                                             <td className="whitespace-nowrap px-2 py-4 text-sm text-gray-500 dark:text-gray-300">
-                                                {lead.assignedCounselor?.name || lead.assignedCounselor?.email || "Unassigned"}
+                                                {lead.assignedCounselor?.name ||
+                                                    lead.assignedCounselor?.email ||
+                                                    "Unassigned"}
                                             </td>
                                             <td className="whitespace-nowrap px-2 py-4">
-                                                <span className={`inline-flex rounded-full px-2 text-xs font-semibold ${getStatusColor(lead.status)}`}>
-                                                    {lead.status.charAt(0).toUpperCase() + lead.status.slice(1)}
+                                                <span
+                                                    className={`inline-flex rounded-full px-2 text-xs font-semibold ${getStatusColor(
+                                                        lead.status
+                                                    )}`}
+                                                >
+                                                    {lead.status.charAt(0).toUpperCase() +
+                                                        lead.status.slice(1)}
                                                 </span>
                                             </td>
                                             <td className="whitespace-nowrap px-2 py-2 text-sm text-gray-500 dark:text-gray-300 capitalize">
-                                                {lead?.createdAt && moment(lead.createdAt).format("MMM D, YYYY h:mm A")}
+                                                {lead?.createdAt &&
+                                                    moment(lead.createdAt).format("MMM D, YYYY h:mm A")}
                                                 <br />
-                                                {user?.role !== "counselor" && lead.source.replace(/_/g, " ")}
+                                                {user?.role !== "counselor" &&
+                                                    lead.source.replace(/_/g, " ")}
                                             </td>
                                             <td className="whitespace-nowrap px-2 py-4 text-sm font-medium">
                                                 <div className="flex space-x-2">
@@ -519,22 +669,27 @@ export default function LeadManagement() {
                                                     >
                                                         <Pencil className="h-5 w-5" />
                                                     </button>
-                                                    {user.role == 'admin' && <button
-                                                        onClick={() => {
-                                                            setSelectedLead(lead);
-                                                            setDeleteModalOpen(true);
-                                                        }}
-                                                        className="p-1 rounded-lg text-red-600 hover:text-red-900 dark:text-red-400 dark:hover:text-red-300"
-                                                    >
-                                                        <Trash2 className="h-5 w-5" />
-                                                    </button>}
+                                                    {user.role == "admin" && (
+                                                        <button
+                                                            onClick={() => {
+                                                                setSelectedLead(lead);
+                                                                setDeleteModalOpen(true);
+                                                            }}
+                                                            className="p-1 rounded-lg text-red-600 hover:text-red-900 dark:text-red-400 dark:hover:text-red-300"
+                                                        >
+                                                            <Trash2 className="h-5 w-5" />
+                                                        </button>
+                                                    )}
                                                 </div>
                                             </td>
                                         </tr>
                                     ))
                                 ) : (
                                     <tr>
-                                        <td colSpan={9} className="px-2 py-4 text-center text-sm text-gray-500 dark:text-gray-300">
+                                        <td
+                                            colSpan={9}
+                                            className="px-2 py-4 text-center text-sm text-gray-500 dark:text-gray-300"
+                                        >
                                             No leads found
                                         </td>
                                     </tr>
@@ -673,23 +828,6 @@ export default function LeadManagement() {
                                 </div>
                             </div>
 
-                            <div className="mt-4">
-                                <Label>Add Note</Label>
-                                <TextArea
-                                    value={newNote}
-                                    onChange={setNewNote}
-                                    className="w-full rounded-md border border-gray-300 p-2 text-sm"
-                                    placeholder="Type your note here..."
-                                />
-                                <button
-                                    onClick={handleAddNote}
-                                    className="mt-2 rounded bg-indigo-600 px-3 py-2 text-sm text-white hover:bg-indigo-700"
-                                    disabled={!newNote.trim()}
-                                >
-                                    Add Note
-                                </button>
-                            </div>
-
                             {selectedLead.notes && selectedLead.notes.length > 0 && (
                                 <div>
                                     <h6 className="mb-3 text-base font-medium text-gray-800 dark:text-white/90">Notes</h6>
@@ -706,6 +844,23 @@ export default function LeadManagement() {
                                     </div>
                                 </div>
                             )}
+
+                            <div className="mt-2">
+                                <Label>Add Note</Label>
+                                <TextArea
+                                    value={newNote}
+                                    onChange={setNewNote}
+                                    className="w-full rounded-md border border-gray-300 p-2 text-sm"
+                                    placeholder="Type your note here..."
+                                />
+                                <button
+                                    onClick={handleAddNote}
+                                    className="mt-2 rounded bg-indigo-600 px-3 py-2 text-sm text-white hover:bg-indigo-700"
+                                    disabled={!newNote.trim()}
+                                >
+                                    Add Note
+                                </button>
+                            </div>
                         </div>
                     )}
                     <div className="flex items-center gap-3 px-2 mt-6 lg:justify-end">

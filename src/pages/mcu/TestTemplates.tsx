@@ -15,6 +15,8 @@ import {
     X,
     Tag,
     IndianRupee,
+    UserPlus2Icon,
+    Play,
 } from "lucide-react";
 import PageMeta from "../../components/common/PageMeta";
 import Button from "../../components/ui/button/Button";
@@ -24,6 +26,7 @@ import Select from "../../components/form/Select";
 import { toast } from "react-toastify";
 import api from "../../axiosInstance";
 import { motion, AnimatePresence } from "framer-motion";
+import { useNavigate } from "react-router";
 
 interface Exam {
     _id: string;
@@ -145,10 +148,10 @@ const DIFFICULTY_LABEL_OPTIONS = [
 ];
 
 const LIMIT_OPTIONS = [
-    { value: 10, label: "10 per page" },
-    { value: 20, label: "20 per page" },
-    { value: 50, label: "50 per page" },
-    { value: 100, label: "100 per page" },
+    { value: 10, label: "10" },
+    { value: 20, label: "20" },
+    { value: 50, label: "50" },
+    { value: 100, label: "100" },
 ];
 
 export default function TestTemplateManagementPage() {
@@ -588,6 +591,8 @@ export default function TestTemplateManagementPage() {
         setEditingId(null);
     };
 
+    let navigate = useNavigate();
+
     const formatDate = (iso?: string) =>
         iso ? new Date(iso).toLocaleDateString("en-IN") : "";
 
@@ -769,43 +774,33 @@ export default function TestTemplateManagementPage() {
 
     return (
         <>
-            <PageMeta
-                title="Test Template Management"
-                description="Manage full-length, sectional and quiz tests with pricing and bundles."
-            />
             <div className="relative">
-                {/* Header */}
-                <div className="mb-4 flex items-center justify-between gap-3">
-                    <div>
-                        <h1 className="flex items-center gap-2 text-xl font-semibold text-gray-900 dark:text-gray-100">
-                            <BookOpen className="h-5 w-5" />
-                            Test Templates
-                        </h1>
-                        <p className="text-sm text-gray-500 dark:text-gray-400">
-                            Configure GMAT, GRE and SAT tests with sections, quiz config and pricing.
-                        </p>
-                    </div>
-                    <Button
-                        onClick={openCreateDrawer}
-                        className="flex items-center gap-2 rounded-xl px-4 py-2"
-                    >
-                        <Plus className="h-4 w-4" />
-                        New Test
-                    </Button>
-                </div>
-                {/* Filter Card */}
                 <div className="mb-4 rounded-2xl border border-gray-200 bg-white p-4 shadow-sm dark:border-gray-800 dark:bg-gray-900/60">
                     <div className="mb-3 flex items-center justify-between gap-3">
                         <div className="flex items-center gap-2 text-sm font-medium text-gray-700 dark:text-gray-200">
                             <SlidersHorizontal className="h-4 w-4" />
                             Filters
                         </div>
-                        <button
-                            onClick={resetFilters}
-                            className="text-xs text-blue-600 hover:underline dark:text-blue-400"
-                        >
-                            Clear filters
-                        </button>
+                        <div className="flex gap-2 ">
+                            <Button
+                                variant="outline"
+                                size="sm"
+                                onClick={resetFilters}
+                                className=""
+                            >
+                                Clear filters
+                            </Button>
+                            <Button
+                                variant="outline"
+                                size="sm"
+                                onClick={openCreateDrawer}
+                                className="!m-0"
+                            >
+                                <Plus className="h-4 w-4" />
+                                New Test
+                            </Button>
+                        </div>
+
                     </div>
                     <div className="grid gap-3 md:grid-cols-6">
                         {/* Search */}
@@ -879,6 +874,7 @@ export default function TestTemplateManagementPage() {
                         </div>
                         <div>
                             <Select
+                                className=""
                                 options={LIMIT_OPTIONS.map(opt => ({ value: opt.value.toString(), label: opt.label }))}
                                 defaultValue={limit.toString()}
                                 onChange={(value: string) => {
@@ -888,7 +884,7 @@ export default function TestTemplateManagementPage() {
                             />
                         </div>
                     </div>
-                    <div className="mt-3 flex items-center justify-between text-xs text-gray-500 dark:text-gray-400">
+                    <div className="mt-1 flex items-center justify-between text-xs text-gray-500 dark:text-gray-400">
                         <div>
                             Showing page <span className="font-semibold">{page}</span> of{" "}
                             <span className="font-semibold">{totalPages}</span> •{" "}
@@ -928,18 +924,26 @@ export default function TestTemplateManagementPage() {
                                 transition={{ duration: 0.2 }}
                                 className="group rounded-2xl border border-gray-200 bg-white p-4 shadow-sm transition hover:-translate-y-0.5 hover:shadow-md dark:border-gray-800 dark:bg-gray-900"
                             >
-                                <div className="space-y-2 gap-3">
+                                <div className="space-y-2 gap-3 relative ">
+                                    <Button
+                                        variant="outline"
+                                        size="sm"
+                                        className="absolute -top-1 right-1 !p-0 h-6 w-6 rounded-full text-xs text-red-600 hover:text-red-700"
+                                        onClick={() => { if (t.exam?.name.toLowerCase().includes("gmat")) { navigate(`/gmat/tests/${t._id}`) } else navigate(`/gre/tests/${t._id}`) }}
+                                    >
+                                        <Play className="h-3 w-3" />
+                                    </Button>
                                     <div className="flex-1">
+                                        <h3 className="block mb-2 px-1 text-base uppercase text-gray-900 dark:text-gray-100">
+                                            {t.title}
+                                        </h3>
                                         <div className="mb-1 flex flex-wrap items-center gap-2">
-                                            <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100">
-                                                {t.title}
-                                            </h3>
-                                            {t.description && (
+                                            {/* {t.description && (
                                                 <p className="mt-1 text-xs text-gray-500 line-clamp-2 dark:text-gray-400">
                                                     {t.description}
                                                 </p>
-                                            )}
-                                            <span className="rounded-full bg-gray-100 px-2 py-0.5 text-xs font-medium text-gray-700 dark:bg-gray-800 dark:text-gray-200">
+                                            )} */}
+                                            <span className="rounded-full bg-gray-100 px-2 py-0.5 text-xs text-gray-700 dark:bg-gray-800 dark:text-gray-200">
                                                 {t.exam?.name || "Unknown exam"}
                                             </span>
                                             <span className="rounded-full bg-gray-100 px-2 py-0.5 text-xs text-gray-700 dark:bg-gray-800 dark:text-gray-300">
@@ -981,21 +985,22 @@ export default function TestTemplateManagementPage() {
                                         <Button
                                             variant="outline"
                                             size="sm"
-                                            className="rounded-xl px-3 py-1 text-xs"
+                                            className="rounded-xl px-1 py-1 text-xs"
                                             onClick={() => openEditDrawer(t._id)}
                                         >
-                                            <Edit3 className="mr-1 h-3 w-3" />
+                                            <Edit3 className="mr- h-3 w-3" />
                                             Edit
                                         </Button>
                                         <Button
                                             variant="outline"
                                             size="sm"
-                                            className="rounded-xl px-3 py-1 text-xs text-red-600 hover:text-red-700"
+                                            className="rounded-xl px-1 py-1 text-xs text-red-600 hover:text-red-700"
                                             onClick={() => handleDelete(t)}
                                         >
-                                            <Trash2 className="mr-1 h-3 w-3" />
+                                            <Trash2 className="mr- h-3 w-3" />
                                             Delete
                                         </Button>
+
                                     </div>
                                 </div>
                             </motion.div>
