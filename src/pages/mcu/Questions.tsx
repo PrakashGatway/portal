@@ -114,7 +114,7 @@ const LIMIT_OPTIONS = [
 ];
 
 const isMCQType = (questionType: string) => {
-  return questionType && !["essay", "other", "gre_analytical_writing","gre_quantitative_value", "gre_verbal_text_completion"].includes(questionType);
+  return questionType && !["essay", "other", "gre_analytical_writing", "gre_quantitative_value", "gre_verbal_text_completion"].includes(questionType);
 };
 
 export default function QuestionManagementPage() {
@@ -766,9 +766,8 @@ export default function QuestionManagementPage() {
                       )}
                     </div>
                     {q.stimulus && (
-                      <p className="mb-1 text-xs text-gray-500 line-clamp-1 dark:text-gray-400">
-                        {q.stimulus}
-                      </p>
+                      <div className="mb-1 text-xs text-gray-500 line-clamp-1 dark:text-gray-400"
+                        dangerouslySetInnerHTML={{ __html: q?.stimulus }} />
                     )}
                     {/* <p className="text-sm font-medium text-gray-900 line-clamp-1 dark:text-gray-100">
                       {q.questionText}
@@ -859,7 +858,7 @@ export default function QuestionManagementPage() {
               />
               {/* panel */}
               <motion.div
-                className="relative ml-auto flex h-full w-full max-w-2xl flex-col border-l border-gray-200 bg-white shadow-xl dark:border-gray-800 dark:bg-gray-900"
+                className="relative ml-auto flex h-full w-full max-w-4xl flex-col border-l border-gray-200 bg-white shadow-xl dark:border-gray-800 dark:bg-gray-900"
                 initial={{ x: "100%" }}
                 animate={{ x: 0 }}
                 exit={{ x: "100%" }}
@@ -983,11 +982,16 @@ export default function QuestionManagementPage() {
                   {/* Stimulus - Using Custom Component */}
                   <div>
                     <Label>Stimulus / Passage (optional)</Label>
-                    <Input
+                    {/* <Input
                       type="text"
                       placeholder="Paste passage or context here"
                       value={watchStimulus}
                       onChange={(e) => setValue("stimulus", e.target.value)}
+                    /> */}
+                    <RichTextEditor
+                      header={false}
+                      initialValue={watchStimulus}
+                      onChange={(html) => setValue("stimulus", html)}
                     />
                   </div>
 
@@ -1003,6 +1007,7 @@ export default function QuestionManagementPage() {
                       hint={errors.questionText?.message} // Pass error message as hint
                     /> */}
                     <RichTextEditor
+                      header={false}
                       initialValue={watchQuestionText}
                       onChange={(html) => setValue("questionText", html)}
                     />

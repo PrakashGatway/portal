@@ -88,20 +88,20 @@ export default function LeadManagement() {
         }
     };
 
-    useEffect(() => {
-        fetchLeads();
-    }, [
-        filters.page,
-        filters.limit,
-        filters.sortBy,
-        filters.status,
-        filters.source,
-        filters.assignedCounselor,
-        filters.coursePreference,
-        filters.countryOfResidence,
-        filters.dateRange,
-        filters.search,
-    ]);
+    // useEffect(() => {
+    //     fetchLeads();
+    // }, [
+    //     filters.page,
+    //     filters.limit,
+    //     filters.sortBy,
+    //     filters.status,
+    //     filters.source,
+    //     filters.assignedCounselor,
+    //     filters.coursePreference,
+    //     filters.countryOfResidence,
+    //     filters.dateRange,
+    //     filters.search,
+    // ]);
 
     useEffect(() => {
         if (user?.role === "admin") {
@@ -125,8 +125,12 @@ export default function LeadManagement() {
         }
     }, [filters.dateRange]);
 
-    const fetchLeads = async () => {
-        setLoading(true);
+
+    // Inside your component
+    const fetchLeads = async (status) => {
+        if (status) {
+            setLoading(true);
+        }
         try {
             const params = {
                 ...filters,
@@ -135,7 +139,6 @@ export default function LeadManagement() {
                 sort: filters.sortBy,
             };
 
-            // clean empty params
             Object.keys(params).forEach((k) => {
                 if (params[k] === "" || params[k] === null || params[k] === undefined) {
                     delete params[k];
@@ -146,11 +149,73 @@ export default function LeadManagement() {
             setLeads(response.data?.data || []);
             setTotal(response.data?.pagination?.totalLeads || 0);
         } catch (error) {
-            toast.error(error?.response?.data?.message || "Failed to fetch leads");
+            toast.error(error?.message || "Failed to fetch leads");
         } finally {
             setLoading(false);
         }
     };
+
+    useEffect(() => {
+        let pollInterval = null;
+        const twoMinutes = 2 * 60 * 1000; // 120,000 ms
+
+        const startPolling = () => {
+            if (pollInterval) return;
+
+            pollInterval = setInterval(() => {
+                if (document.visibilityState === 'visible' && navigator.onLine) {
+                    fetchLeads();
+                }
+            }, twoMinutes);
+        };
+
+        const stopPolling = () => {
+            if (pollInterval) {
+                clearInterval(pollInterval);
+                pollInterval = null;
+            }
+        };
+
+        const handleVisibilityChange = () => {
+            if (document.visibilityState === 'visible' && navigator.onLine) {
+                fetchLeads(); // Refetch when returning
+                startPolling();
+            } else {
+                stopPolling();
+            }
+        };
+
+        const handleOnline = () => {
+            if (document.visibilityState === 'visible') {
+                fetchLeads();
+                startPolling();
+            }
+        };
+
+        const handleOffline = () => {
+            stopPolling();
+        };
+
+        if (document.visibilityState === 'visible' && navigator.onLine) {
+            fetchLeads(true); // 👈 THIS IS THE KEY ADDITION
+            startPolling();
+        } else {
+        }
+
+        // Add event listeners
+        document.addEventListener('visibilitychange', handleVisibilityChange);
+        window.addEventListener('online', handleOnline);
+        window.addEventListener('offline', handleOffline);
+
+        // Cleanup
+        return () => {
+            stopPolling(); 
+            document.removeEventListener('visibilitychange', handleVisibilityChange);
+            window.removeEventListener('online', handleOnline);
+            window.removeEventListener('offline', handleOffline);
+        };
+    }, [filters]); // Re-run if filters change
+
 
     const fetchCounselors = async () => {
         try {

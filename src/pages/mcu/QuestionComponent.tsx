@@ -65,9 +65,8 @@ export const TableAnalysisSection: React.FC<TableAnalysisSectionProps> = ({
       <div className="space-y-4">
         {qDoc.stimulus && (
           <div className="rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-900/60 p-4 text-base leading-relaxed text-slate-700 dark:text-slate-300">
-            <div className="prose prose-sm dark:prose-invert max-w-none">
-              {qDoc.stimulus}
-            </div>
+            <div className="prose prose-sm dark:prose-invert max-w-none"
+              dangerouslySetInnerHTML={{ __html: qDoc?.stimulus }} />
           </div>
         )}
 
@@ -243,10 +242,10 @@ export const MultiSourceComponent: React.FC<MultiSourceComponentProps> = ({
     tabs[0].id
   );
   useEffect(() => {
-    if (tabs.length > 0 ) {
-     setActiveTabId(tabs[0].id);
-    }    
-  }, [tabs]);   
+    if (tabs.length > 0) {
+      setActiveTabId(tabs[0].id);
+    }
+  }, [tabs]);
 
 
 
@@ -383,11 +382,11 @@ export const MultiSourceComponent: React.FC<MultiSourceComponentProps> = ({
 import { Save } from 'lucide-react';
 import Button from '../../components/ui/button/Button';
 
-export const IntroScreen = ({ 
-  introPage, 
-  setIntroPage, 
-  onContinue 
-}:any) => {
+export const IntroScreen = ({
+  introPage,
+  setIntroPage,
+  onContinue
+}: any) => {
   const introPages = [
     {
       title: "Introduction",
@@ -1190,9 +1189,8 @@ const QuestionBody: React.FC<QuestionBodyProps> = ({
       <>
         {qDoc.stimulus && (
           <div className="mb-2 max-h-60 overflow-auto rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-900/60 p-4 text-base leading-relaxed text-slate-700 dark:text-slate-300">
-            <div className="prose prose-sm dark:prose-invert max-w-none">
-              {qDoc.stimulus}
-            </div>
+            <div className="prose prose-sm dark:prose-invert max-w-none"
+              dangerouslySetInnerHTML={{ __html: qDoc?.stimulus }} />
           </div>
         )}
 
@@ -1249,9 +1247,8 @@ const QuestionBody: React.FC<QuestionBodyProps> = ({
     <>
       {qDoc.stimulus && (
         <div className="mb-3 max-h-60 overflow-auto rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-900/60 p-4 text-sm leading-relaxed text-slate-700 dark:text-slate-300">
-          <div className="prose prose-sm dark:prose-invert max-w-none">
-            {qDoc.stimulus}
-          </div>
+          <div className="prose prose-sm dark:prose-invert max-w-none"
+            dangerouslySetInnerHTML={{ __html: qDoc?.stimulus }} />
         </div>
       )}
 

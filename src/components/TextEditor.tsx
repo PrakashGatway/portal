@@ -1,14 +1,9 @@
 import { useRef, useState, useMemo, useEffect } from 'react';
 import { Editor } from '@tinymce/tinymce-react';
 
-interface RichTextEditorProps {
-    initialValue?: string;
-    onChange: (content: string) => void;
-    disabled?: boolean;
-}
 
 
-const RichTextEditor = ({ initialValue = '', onChange, disabled = false }: RichTextEditorProps) => {
+const RichTextEditor = ({ initialValue = '', onChange, disabled = false, header = true }: any) => {
     const editorRef = useRef<any>(null);
     const [isDarkMode, setIsDarkMode] = useState(false);
 
@@ -18,7 +13,7 @@ const RichTextEditor = ({ initialValue = '', onChange, disabled = false }: RichT
 
     const initConfig = useMemo(() => {
         return {
-            height: 600,
+            height: header ? 600 : 300,
             width: '100%',
             zindex: 9999999,
             placeholder: 'Start typing your content here...',
@@ -43,13 +38,13 @@ const RichTextEditor = ({ initialValue = '', onChange, disabled = false }: RichT
                 'emoticons', 'hr', 'pagebreak', 'nonbreaking', 'quickbars',
                 'save', 'directionality', 'visualchars', 'paste'
             ],
-            toolbar: `
+            toolbar: header ? `
         undo redo | cut copy paste | selectall | save | print | code | fullscreen | help |
         bold italic underline strikethrough | superscript subscript |
         alignleft aligncenter alignright alignjustify | outdent indent |
         bullist numlist | table | link image media | formatpainter removeformat |
         forecolor backcolor | emoticons | hr pagebreak
-      `,
+      ` : `undo redo | cut copy paste | selectall | save | print | code | fullscreen|bold italic underline | table`,
             toolbar_mode: 'wrap',
             skin: isDarkMode ? 'oxide-dark' : 'oxide',
             content_css: isDarkMode ? 'dark' : 'default',

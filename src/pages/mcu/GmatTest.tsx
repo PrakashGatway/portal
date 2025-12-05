@@ -22,9 +22,6 @@ import FullScreenLoader from "../../components/fullScreeLoader";
 import { useGmatTimers } from "./SectionTimer";
 import QuestionBody, { IntroScreen, SectionInstructionsScreen, SelectOrderScreen } from "./QuestionComponent";
 
-// ===================
-// Types
-// ===================
 interface QuestionDoc {
     _id: string;
     questionText: string;

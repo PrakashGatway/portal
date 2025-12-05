@@ -3,7 +3,7 @@ import { Flag, Save } from "lucide-react";
 import Button from "../../components/ui/button/Button";
 
 interface QuestionRendererProps {
-    qDoc: QuestionDoc | null;
+    qDoc: any | null;
     currentQuestion: any; // Ideally typed via AttemptQuestion
     isCompleted: boolean;
     handleOptionClick: (idx: number) => void;

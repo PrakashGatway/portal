@@ -48,7 +48,7 @@ import FullLengthTestPage from "./pages/TestScreen/FullTest";
 import FullTestsPage from "./userView/SatTest";
 import QuestionManagementPage from "./pages/mcu/Questions";
 import TestTemplateManagementPage from "./pages/mcu/TestTemplates";
-import SatTestAttemptPage from "./pages/mcu/Attempts";
+import SatTestAttemptPage from "./pages/SatTest/SatAttempts";
 import GmatTestAttemptPage from "./pages/mcu/GmatTest";
 import GreTestAttemptPage from "./pages/mcu/GreAttempts";
 import GmatTestAnalysisPage from "./pages/mcu/GmatAnaysis";
