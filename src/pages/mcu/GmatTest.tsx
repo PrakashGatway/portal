@@ -172,31 +172,22 @@ export default function GmatTestAttemptPage() {
     const [timerSecondsLeft, setTimerSecondsLeft] = useState(0);
     const [timerRunning, setTimerRunning] = useState(false);
     const [sectionTimedOut, setSectionTimedOut] = useState(false);
-
-    // GMAT-only: module sequence step
     const [hasChosenSequence, setHasChosenSequence] = useState(false);
     const [selectedSequenceIndex, setSelectedSequenceIndex] =
         useState<number | null>(null);
-
-    // Timer for section order selection (2 minutes)
     const [orderSelectionTimer, setOrderSelectionTimer] =
         useState<number>(120);
     const [isOrderSelectionTimerRunning, setIsOrderSelectionTimerRunning] =
         useState(false);
-
-    // Current screen state
     const [currentScreen, setCurrentScreen] = useState<GmatScreen>(
         "introduction"
     );
 
-    // Intro pages (1..4)
     const [introPage, setIntroPage] = useState(1);
 
-    // Answer required modal
     const [showAnswerRequiredModal, setShowAnswerRequiredModal] =
         useState(false);
 
-    // Review mode (editing from review center)
     const [isInReviewMode, setIsInReviewMode] = useState(false);
     const [editsRemaining, setEditsRemaining] = useState(3);
 
@@ -210,7 +201,7 @@ export default function GmatTestAttemptPage() {
         if (!attempt || !hasChosenSequence || isCompleted) return;
         if (timerSecondsLeft == 0) {
             setTimerRunning(false);
-            setSectionTimedOut(true); // 🔒 NEW: lock the section
+            setSectionTimedOut(true);
             toast.info("Time is up for this module. Moving to review.");
             setCurrentScreen("review");
         }
@@ -221,9 +212,6 @@ export default function GmatTestAttemptPage() {
         (attempt as any)?.testTemplate?.name ||
         "GMAT Practice Test";
 
-    // ===================
-    // 1️⃣ Start or resume GMAT attempt
-    // ===================
     const startAttempt = useCallback(
         async () => {
             if (!testTemplateId) {
@@ -298,10 +286,10 @@ export default function GmatTestAttemptPage() {
                             screen = "break";
                             break;
                     }
-                    if(testType !=="full_length" ){
+                    if (testType !== "full_length") {
                         setCurrentScreen("question");
                         screen = "question";
-                    }else{
+                    } else {
                         setCurrentScreen(screen);
                     }
 
@@ -322,14 +310,10 @@ export default function GmatTestAttemptPage() {
                             );
                         }
                     }
-
-                    // If in select_order phase, start 2min timer again
                     if (screen === "select_order" && !meta.orderChosen) {
                         setOrderSelectionTimer(120);
                         setIsOrderSelectionTimerRunning(true);
                     }
-
-                    // If in break, compute remaining from breakExpiresAt if backend sets it
                     if (screen === "break" && meta.breakExpiresAt) {
                         const diffMs =
                             new Date(meta.breakExpiresAt).getTime() - Date.now();
@@ -337,7 +321,6 @@ export default function GmatTestAttemptPage() {
                         setBreakSecondsLeft(remaining || 600);
                     }
                 } else {
-                    // Fallback if backend doesn't have gmatMeta yet
                     setActiveSectionIndex(0);
                     setActiveQuestionIndex(0);
                     setHasChosenSequence(false);
@@ -365,9 +348,6 @@ export default function GmatTestAttemptPage() {
         startAttempt();
     }, [startAttempt]);
 
-    // ===================
-    // 2️⃣ Derive modules (3 sections) for order screen
-    // ===================
     const moduleSections = useMemo<AttemptSection[]>(() => {
         if (!attempt) return [];
         if (attempt.sections.length === 3) return attempt.sections;
@@ -391,9 +371,6 @@ export default function GmatTestAttemptPage() {
         });
     }, [moduleSections]);
 
-    // ===================
-    // 3️⃣ Current section & question
-    // ===================
     const currentSection = useMemo(
         () =>
             attempt && attempt.sections[activeSectionIndex]
@@ -413,9 +390,6 @@ export default function GmatTestAttemptPage() {
 
     const qDoc = currentQuestion?.questionDoc || null;
 
-    // ===================
-    // 4️⃣ Re-init section timer when section changes (after sequence chosen)
-    // ===================
     useEffect(() => {
         if (!attempt) return;
         if (!hasChosenSequence) return;
@@ -647,13 +621,11 @@ export default function GmatTestAttemptPage() {
             metaSectionIndex: activeSectionIndex,
             metaQuestionIndex: activeQuestionIndex,
         });
-
         if (isLastSectionLocal) {
             toast.info(
                 "You have reached the end of the last module. You can submit your GMAT test after final review."
             );
         }
-
         setCurrentScreen("review");
         setIsInReviewMode(false);
     };
@@ -664,13 +636,8 @@ export default function GmatTestAttemptPage() {
 
     const isLastSection =
         !!attempt && activeSectionIndex >= attempt.sections.length - 1;
-
-    // Only disabled when test completed or submitting
     const isNextDisabled = isCompleted || submitting;
 
-    // ===================
-    // 🔟 Submit GMAT attempt
-    // ===================
     const submitTestAttempt = async (fromTimeUp: boolean = false) => {
         if (!attempt || isCompleted) return;
         if (!fromTimeUp) {
@@ -695,7 +662,7 @@ export default function GmatTestAttemptPage() {
             if (!res.data?.success) {
                 throw new Error(res.data?.message || "Failed to submit GMAT test");
             }
-            navigate(`/gmat/analysis/${res.data.data._id}`);
+            navigate(`/gmat/analysis/${res.data.data._id}`, { replace: true });
 
             toast.success("GMAT test submitted successfully");
         } catch (err: any) {

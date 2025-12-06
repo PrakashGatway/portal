@@ -96,6 +96,7 @@ const QUESTION_TYPE_OPTIONS = [
   { value: "sat_reading_writing", label: "SAT – Reading & Writing" },
   { value: "sat_math_calculator", label: "SAT – Math (Calculator)" },
   { value: "sat_math_no_calculator", label: "SAT – Math (No Calculator)" },
+  { value: "sat_value", label: "SAT – Value" },
   { value: "essay", label: "Essay / Long Answer" },
   { value: "other", label: "Other" },
 ];
@@ -114,7 +115,7 @@ const LIMIT_OPTIONS = [
 ];
 
 const isMCQType = (questionType: string) => {
-  return questionType && !["essay", "other", "gre_analytical_writing", "gre_quantitative_value", "gre_verbal_text_completion"].includes(questionType);
+  return questionType && !["essay", "other","sat_value" ,"gre_analytical_writing", "gre_quantitative_value", "gre_verbal_text_completion"].includes(questionType);
 };
 
 export default function QuestionManagementPage() {
@@ -159,8 +160,6 @@ export default function QuestionManagementPage() {
       stimulus: "",
       questionText: "",
       options: [
-        { label: "A", text: "", isCorrect: false },
-        { label: "B", text: "", isCorrect: false },
       ],
       correctAnswerText: "",
       marks: 1,
@@ -187,9 +186,6 @@ export default function QuestionManagementPage() {
   const watchExplanation = watch("explanation");
   const watchSource = watch("source");
 
-  // =========================
-  // Fetch Exams & Sections
-  // =========================
   const fetchExams = async () => {
     try {
       setLoadingExams(true);
@@ -1091,7 +1087,7 @@ export default function QuestionManagementPage() {
                                   Correct answer
                                 </label>
                               </div>
-                              {optionFields.length > 2 && (
+                              {optionFields.length > 0 && (
                                 <button
                                   type="button"
                                   onClick={() => remove(index)}

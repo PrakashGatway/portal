@@ -61,7 +61,6 @@ export const TableAnalysisSection: React.FC<TableAnalysisSectionProps> = ({
 
   return (
     <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-      {/* Left Panel - Stimulus and Table */}
       <div className="space-y-4">
         {qDoc.stimulus && (
           <div className="rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-900/60 p-4 text-base leading-relaxed text-slate-700 dark:text-slate-300">

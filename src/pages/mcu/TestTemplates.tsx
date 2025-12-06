@@ -18,7 +18,6 @@ import {
     UserPlus2Icon,
     Play,
 } from "lucide-react";
-import PageMeta from "../../components/common/PageMeta";
 import Button from "../../components/ui/button/Button";
 import Input from "../../components/form/input/InputField";
 import Label from "../../components/form/Label";
@@ -803,7 +802,6 @@ export default function TestTemplateManagementPage() {
 
                     </div>
                     <div className="grid gap-3 md:grid-cols-6">
-                        {/* Search */}
                         <div className="md:col-span-2">
                             <div className="relative">
                                 <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" />
@@ -816,7 +814,6 @@ export default function TestTemplateManagementPage() {
                                 />
                             </div>
                         </div>
-                        {/* Exam filter */}
                         <div>
                             <Select
                                 defaultValue={filters.examId}
@@ -830,7 +827,6 @@ export default function TestTemplateManagementPage() {
                                 }}
                             />
                         </div>
-                        {/* TestType filter */}
                         <div>
                             <Select
                                 defaultValue={filters.testType}
@@ -844,7 +840,6 @@ export default function TestTemplateManagementPage() {
                                 }}
                             />
                         </div>
-                        {/* Difficulty / Free / Limit */}
                         <div>
                             <Select
                                 defaultValue={filters.difficultyLabel}
@@ -929,7 +924,7 @@ export default function TestTemplateManagementPage() {
                                         variant="outline"
                                         size="sm"
                                         className="absolute -top-1 right-1 !p-0 h-6 w-6 rounded-full text-xs text-red-600 hover:text-red-700"
-                                        onClick={() => { if (t.exam?.name.toLowerCase().includes("gmat")) { navigate(`/gmat/tests/${t._id}`) } else navigate(`/gre/tests/${t._id}`) }}
+                                        onClick={() => { if (t.exam?.name.toLowerCase().includes("gmat")) { navigate(`/gmat/tests/${t._id}`, { replace: true }) } else if (t.exam?.name.toLowerCase().includes("gre")) { navigate(`/gre/tests/${t._id}`, { replace: true }) } else navigate(`/mcq/tests/${t._id}`, { replace: true }) }}
                                     >
                                         <Play className="h-3 w-3" />
                                     </Button>

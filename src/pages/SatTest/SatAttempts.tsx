@@ -13,7 +13,8 @@ import Button from "../../components/ui/button/Button";
 import { toast } from "react-toastify";
 import api from "../../axiosInstance";
 import FullScreenLoader from "../../components/fullScreeLoader";
-import QuestionRenderer, { GRETestHeader, GRETestResults, SectionInstructions, SectionReview } from "./SatComponents";
+import QuestionRenderer, { GRETestResults, SectionInstructions, SectionReview } from "./SatComponents";
+import { GRETestHead } from "./SatHeader";
 
 interface QuestionDoc {
   _id: string;
@@ -508,7 +509,7 @@ export default function SatExamPage() {
 
     await saveCurrentQuestionProgress({
       silent: true,
-      phase: "review",
+      phase: "in_section",
       metaSectionIndex: activeSectionIndex,
       metaQuestionIndex: activeQuestionIndex,
     });
@@ -522,7 +523,7 @@ export default function SatExamPage() {
     const nextIndex = activeSectionIndex + 1;
     setActiveSectionIndex(nextIndex);
     setActiveQuestionIndex(0);
-    setCurrentScreen("section_instructions");
+    setCurrentScreen("question");
   };
 
 
@@ -626,7 +627,7 @@ export default function SatExamPage() {
   return (
     <>
       <div className="relative min-h-screen bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-50">
-        <GRETestHeader
+        <GRETestHead
           testTitle={testTitle}
           currentSection={currentSection}
           currentQuestion={currentQuestion}
@@ -642,17 +643,12 @@ export default function SatExamPage() {
 
         {/* Scrollable main area between header & footer */}
         <div className="pt-14 pb-14">
-          {currentScreen === "section_instructions" && currentSection && (
-            <SectionInstructions
-              currentSection={currentSection}
-              activeSectionIndex={activeSectionIndex}
-              setCurrentScreen={(screen) => setCurrentScreen(screen)}
-            />
-          )}
           {currentScreen === "question" && currentSection && currentQuestion && (
             <QuestionRenderer
               qDoc={qDoc}
+              sectionQuestions={currentSection.questions}
               currentQuestion={currentQuestion}
+              onReviewSection={setCurrentScreen}
               isCompleted={isCompleted}
               handleOptionClick={handleOptionClick}
               handleTextAnswerChange={handleTextAnswerChange}
