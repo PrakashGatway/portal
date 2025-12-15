@@ -140,7 +140,7 @@ export default function SatExamPage() {
   const testTitle =
     attempt?.testTemplate.title ||
     (attempt as any)?.testTemplate?.name ||
-    "GRE Practice Test";
+    "Practice Test";
 
   const startAttempt = useCallback(
     async () => {
@@ -170,7 +170,7 @@ export default function SatExamPage() {
         const loaded: TestAttempt = detailRes.data.data;
 
         if (!loaded.sections || loaded.sections.length === 0) {
-          setError("This GRE test has no sections configured.");
+          setError("This test has no sections configured.");
           setLoading(false);
           return;
         }
@@ -216,10 +216,10 @@ export default function SatExamPage() {
         setError(
           err?.response?.data?.message ||
           err.message ||
-          "Failed to start GRE test"
+          "Failed to start test"
         );
         toast.error(
-          err?.response?.data?.message || "Failed to start GRE test"
+          err?.response?.data?.message || "Failed to start test"
         );
       } finally {
         setStarting(false);
@@ -531,7 +531,7 @@ export default function SatExamPage() {
     if (!attempt || isCompleted) return;
 
     const confirmed = window.confirm(
-      "Are you sure you want to submit your GRE test? You won’t be able to change your answers afterwards."
+      "Are you sure you want to submit your test? You won’t be able to change your answers afterwards."
     );
     if (!confirmed) return;
 
@@ -561,7 +561,7 @@ export default function SatExamPage() {
       setAttempt(submittedAttempt);
       setCurrentScreen("results");
 
-      toast.success("GRE test submitted successfully");
+      toast.success("test submitted successfully");
       // Optional: if you want a separate analysis page:
       // navigate(`/gre/analysis/${submittedAttempt._id}`);
     } catch (err: any) {
@@ -605,7 +605,7 @@ export default function SatExamPage() {
           <div className="max-w-md rounded-2xl border border-red-200 bg-red-50 p-5 text-sm text-red-700 shadow-sm dark:border-red-800 dark:bg-red-900/20 dark:text-red-200">
             <div className="mb-2 flex items-center gap-2">
               <AlertTriangle className="h-5 w-5" />
-              <h2 className="font-semibold">Unable to load GRE test</h2>
+              <h2 className="font-semibold">Unable to load test</h2>
             </div>
             <p className="mb-3">
               {error ||

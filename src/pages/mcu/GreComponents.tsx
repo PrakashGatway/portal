@@ -3,639 +3,639 @@ import { Flag, Save } from "lucide-react";
 import Button from "../../components/ui/button/Button";
 
 interface QuestionRendererProps {
-    qDoc: any | null;
-    currentQuestion: any; // Ideally typed via AttemptQuestion
-    isCompleted: boolean;
-    handleOptionClick: (idx: number) => void;
-    handleTextAnswerChange: (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => void;
-    toggleMarkForReview: () => void;
-    updateCurrentQuestion: (patch: Partial<any>) => void; // Replace `any` with AttemptQuestion if typed
-    saveCurrentQuestionProgress: (opts?: { silent?: boolean }) => Promise<void>;
-    activeQuestionIndex: number;
-    sectionTotal: number;
-    isLastQuestionInCurrentSection: boolean;
-    isNextDisabled: boolean;
-    goToQuestion: (idx: number) => Promise<void>;
-    goNextQuestion: () => Promise<void>;
+  qDoc: any | null;
+  currentQuestion: any; // Ideally typed via AttemptQuestion
+  isCompleted: boolean;
+  handleOptionClick: (idx: number) => void;
+  handleTextAnswerChange: (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => void;
+  toggleMarkForReview: () => void;
+  updateCurrentQuestion: (patch: Partial<any>) => void; // Replace `any` with AttemptQuestion if typed
+  saveCurrentQuestionProgress: (opts?: { silent?: boolean }) => Promise<void>;
+  activeQuestionIndex: number;
+  sectionTotal: number;
+  isLastQuestionInCurrentSection: boolean;
+  isNextDisabled: boolean;
+  goToQuestion: (idx: number) => Promise<void>;
+  goNextQuestion: () => Promise<void>;
 }
 
 const QuestionRenderer: React.FC<QuestionRendererProps> = React.memo(
-    ({
-        qDoc,
-        currentQuestion,
-        isCompleted,
-        handleOptionClick,
-        handleTextAnswerChange,
-        toggleMarkForReview,
-        updateCurrentQuestion,
-        saveCurrentQuestionProgress,
-        activeQuestionIndex,
-        sectionTotal,
-        isLastQuestionInCurrentSection,
-        isNextDisabled,
-        goToQuestion,
-        goNextQuestion,
-    }) => {
-        const questionNumber = currentQuestion.order || activeQuestionIndex + 1;
+  ({
+    qDoc,
+    currentQuestion,
+    isCompleted,
+    handleOptionClick,
+    handleTextAnswerChange,
+    toggleMarkForReview,
+    updateCurrentQuestion,
+    saveCurrentQuestionProgress,
+    activeQuestionIndex,
+    sectionTotal,
+    isLastQuestionInCurrentSection,
+    isNextDisabled,
+    goToQuestion,
+    goNextQuestion,
+  }) => {
+    const questionNumber = currentQuestion.order || activeQuestionIndex + 1;
 
-        // 👇 Render only the question content (no footer controls)
-        const renderQuestionContent = useMemo(() => {
-            if (!qDoc || !currentQuestion) return null;
+    // 👇 Render only the question content (no footer controls)
+    const renderQuestionContent = useMemo(() => {
+      if (!qDoc || !currentQuestion) return null;
 
-            const type = qDoc.questionType;
+      const type = qDoc.questionType;
 
-            if (type === "gre_analytical_writing") {
-                return (
-                    <>
-                        <div className="p-4 bg-gray-300 dark:bg-gray-700 text-red-700 dark:text-red-100 mb-3 mx-auto">
-                            Type your essay into the provided editor.
-                        </div>
-                        <div className="grid md:grid-cols-2 grid-cols-1 gap-4">
-                            <div className="rounded-xl bg-slate-50 dark:bg-slate-900/60 p-4">
-                                <div
-                                    className="dark:prose-invert max-w-none text-lg text-slate-900 dark:text-slate-100 mb-4"
-                                    dangerouslySetInnerHTML={{ __html: qDoc.stimulus || "" }}
-                                />
-                                <div
-                                    className="text-lg text-justify dark:prose-invert"
-                                    dangerouslySetInnerHTML={{ __html: qDoc.questionText }}
-                                />
-                            </div>
-                            <textarea
-                                className="w-full min-h-[360px] rounded border-2 border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 p-3 text-sm"
-                                value={currentQuestion.answerText || ""}
-                                onChange={handleTextAnswerChange}
-                                disabled={isCompleted}
-                            />
-                        </div>
-                    </>
-                );
-            }
-
-            // 🟢 Add other question types similarly (copy from original)
-            // You can break these further into sub-components later (e.g., TextCompletionQuestion, etc.)
-
-            // Example for one more:
-            if (type === "gre_verbal_reading_comp") {
-                return (
-                    <>
-                        <div className="p-4 bg-gray-300 dark:bg-gray-700 text-red-700 dark:text-red-100 mb-3 mx-auto">
-                            Choose the option that best answers the question.
-                        </div>
-                        <div className="grid md:grid-cols-2 gap-4">
-                            <div className="max-h-[70vh] overflow-auto rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-900/60 p-4">
-                                <div
-                                    className="prose prose-sm dark:prose-invert max-w-none"
-                                    dangerouslySetInnerHTML={{ __html: qDoc.stimulus || "" }}
-                                />
-                            </div>
-                            <div className="space-y-3">
-                                <div className="rounded-xl bg-slate-50 dark:bg-slate-900/60 p-4">
-                                    <div dangerouslySetInnerHTML={{ __html: qDoc.questionText }} />
-                                </div>
-                                <div className="space-y-2">
-                                    {qDoc.options?.map((opt, idx) => {
-                                        const selected = currentQuestion.answerOptionIndexes.includes(idx);
-                                        const label = opt.label || String.fromCharCode("A".charCodeAt(0) + idx);
-                                        return (
-                                            <button
-                                                key={idx}
-                                                onClick={() => handleOptionClick(idx)}
-                                                disabled={isCompleted}
-                                                className={`flex items-start w-full gap-3 rounded border-2 px-4 py-2 text-left text-sm transition ${selected
-                                                        ? "border-indigo-300 bg-indigo-50 dark:bg-indigo-500/20"
-                                                        : "border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 hover:border-indigo-300"
-                                                    }`}
-                                            >
-                                                <span className="mt-0.5 text-xs font-semibold">{label}.</span>
-                                                <span dangerouslySetInnerHTML={{ __html: opt.text }} />
-                                            </button>
-                                        );
-                                    })}
-                                </div>
-                            </div>
-                        </div>
-                    </>
-                );
-            }
-
-            if (type === "gre_verbal_text_completion") {
-                // ---- 1. Determine number of blanks ----
-                const blanksFromTypeSpecific: number | undefined =
-                    (qDoc as any).typeSpecific?.blanks;
-
-                const blanksFromText =
-                    (qDoc.questionText.match(/\{\{\d+\}\}/g) || []).length;
-
-                const blanksCount = blanksFromTypeSpecific || blanksFromText || 1;
-
-                // ---- 2. Group options by blankIndex ----
-                type TextCompletionOption = {
-                    blankIndex: number;
-                    label?: string;
-                    text: string;
-                };
-
-                const rawOptions: TextCompletionOption[] =
-                    ((qDoc as any).typeSpecific?.options as TextCompletionOption[]) || [];
-
-                // grouped[blankIndex] = [{ option, globalIndex }, ...]
-                const grouped: {
-                    blankIndex: number;
-                    label?: string;
-                    text: string;
-                    globalIndex: number;
-                }[][] = Array.from({ length: blanksCount }, () => []);
-
-                rawOptions.forEach((opt, globalIndex) => {
-                    const idx =
-                        typeof opt.blankIndex === "number" && opt.blankIndex >= 0
-                            ? opt.blankIndex
-                            : 0;
-                    if (idx < blanksCount) {
-                        grouped[idx].push({ ...opt, globalIndex });
-                    }
-                });
-
-                // ---- 3. Parse current answers (blankIndex -> globalOptionIndex) ----
-                const answers: Record<number, number> = (() => {
-                    try {
-                        return currentQuestion.answerText
-                            ? JSON.parse(currentQuestion.answerText)
-                            : {};
-                    } catch {
-                        return {};
-                    }
-                })();
-
-                // ---- 4. Click handler for a blank's option ----
-                const handleBlankOptionClick = (blankIndex: number, globalIndex: number) => {
-                    if (isCompleted) return;
-
-                    const next = { ...answers, [blankIndex]: globalIndex };
-
-                    // all blanks must be filled
-                    const allFilled =
-                        blanksCount > 0 &&
-                        Array.from({ length: blanksCount }, (_, i) => next[i] !== undefined).every(
-                            Boolean
-                        );
-
-                    updateCurrentQuestion({
-                        answerText: JSON.stringify(next),
-                        isAnswered: allFilled,
-                    });
-                };
-
-                const roman = ["(i)_____", "(ii)_____", "(iii)_____", "(iv)_____", "(v)_____"];
-
-                const renderedQuestionHtml = qDoc.questionText.replace(
-                    /\{\{(\d+)\}\}/g,
-                    (_match, numStr) => {
-                        const idx = parseInt(numStr, 10) - 1;
-                        return roman[idx] || _match;
-                    }
-                );
-
-                return (
-                    <>
-                        <div className="p-4 bg-gray-300 dark:bg-gray-700 text-red-700 dark:text-red-100 mb-3 mx-auto">For each blank select one word from each column that best completes the
-                            sentence..</div>
-                        <div className="rounded-xl bg-slate-50 dark:bg-slate-900/60 p-4 mb-6">
-                            <div
-                                className="prose prose-sm dark:prose-invert max-w-none"
-                                dangerouslySetInnerHTML={{ __html: renderedQuestionHtml }}
-                            />
-                        </div>
-                        <div
-                            className="flex justify-center gap-2"
-                        >
-                            {Array.from({ length: blanksCount }).map((_, blankIdx) => (
-                                <div
-                                    key={blankIdx}
-                                    className="rounded-xl min-w-[200px] bg-slate-50 dark:bg-slate-900/60 p-3"
-                                >
-                                    <div className="text-xs font-semibold text-center mb-2 uppercase tracking-wide text-slate-600">
-                                        Blank {roman[blankIdx] || `(${blankIdx + 1})`}
-                                    </div>
-
-                                    <div className="space-y-1">
-                                        {grouped[blankIdx].map(({ label, text, globalIndex }, optIdx) => {
-                                            const optionLabel =
-                                                label || String.fromCharCode("A".charCodeAt(0) + optIdx);
-                                            const selected = answers[blankIdx] === globalIndex;
-
-                                            return (
-                                                <button
-                                                    key={globalIndex}
-                                                    onClick={() => handleBlankOptionClick(blankIdx, globalIndex)}
-                                                    disabled={isCompleted}
-                                                    className={`flex w-full items-start gap-3 rounded border-2 px-3 py-2 text-left text-sm transition ${selected
-                                                        ? "border-indigo-400 bg-indigo-50 dark:bg-indigo-500/20"
-                                                        : "border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 hover:border-indigo-300"
-                                                        }`}
-                                                >
-                                                    <span className="mt-0.5 text-xs font-semibold">
-                                                        {optionLabel}
-                                                    </span>
-                                                    <span
-                                                        className="flex-1"
-                                                        dangerouslySetInnerHTML={{ __html: text }}
-                                                    />
-                                                </button>
-                                            );
-                                        })}
-                                    </div>
-                                </div>
-                            ))}
-                        </div>
-                    </>
-                );
-            }
-
-            if (type === "gre_verbal_sentence_equivalence") {
-                const selectedSet = new Set(currentQuestion.answerOptionIndexes || []);
-
-                const toggleEquiv = (idx: number) => {
-                    if (isCompleted) return;
-                    const nextSet = new Set(selectedSet);
-                    if (nextSet.has(idx)) nextSet.delete(idx);
-                    else {
-                        if (nextSet.size >= 2) {
-                            const first = nextSet.values().next().value;
-                            nextSet.delete(first);
-                            nextSet.add(idx);
-                        } else {
-                            nextSet.add(idx);
-                        }
-                    }
-                    updateCurrentQuestion({ answerOptionIndexes: Array.from(nextSet), isAnswered: (nextSet.size === 2) });
-                };
-
-                return (
-                    <>
-                        <div className="p-4 bg-gray-300 dark:bg-gray-700 text-red-700 dark:text-red-100 mb-3 mx-auto">Select exactly two answer choices that best complete the sentence .</div>
-
-                        <div className="grid md:grid-cols-2 gap-4">
-                            <div className="rounded-xl bg-slate-50 dark:bg-slate-900/60 p-4">
-                                <div dangerouslySetInnerHTML={{ __html: qDoc.questionText }} />
-                            </div>
-
-                            <div className="space-y-2">
-                                {qDoc.options?.map((opt, idx) => {
-                                    const selected = selectedSet.has(idx);
-                                    const label = opt.label || String.fromCharCode(65 + idx);
-                                    return (
-                                        <button
-                                            key={idx}
-                                            onClick={() => toggleEquiv(idx)}
-                                            className={`flex w-full items-start gap-3 rounded border-2 px-4 py-2 text-left text-sm transition ${selected
-                                                ? "border-indigo-300 bg-indigo-50 dark:bg-indigo-500/20"
-                                                : "border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 hover:border-indigo-300"
-                                                }`}
-                                            disabled={isCompleted}
-                                        >
-                                            <span className="mt-0.5 text-xs font-semibold">{label}.</span>
-                                            <span dangerouslySetInnerHTML={{ __html: opt.text }} />
-                                        </button>
-                                    );
-                                })}
-                            </div>
-                        </div>
-                    </>
-                );
-            }
-
-            if (type === "gre_verbal_reading_multi") {
-                const mainSelected = new Set<number>(currentQuestion.answerOptionIndexes || []);
-
-                const toggleMainOption = (idx: number) => {
-                    if (isCompleted) return;
-                    const set = new Set<number>(currentQuestion.answerOptionIndexes || []);
-                    if (set.has(idx)) set.delete(idx);
-                    else set.add(idx);
-                    const arr = Array.from(set);
-                    updateCurrentQuestion({
-                        answerOptionIndexes: arr,
-                        isAnswered: arr.length > 0,
-                    });
-                };
-
-                return (
-                    <>
-                        <div className="p-4 bg-gray-300 dark:bg-gray-700 text-red-700 dark:text-red-100 mb-3 mx-auto">
-                            Consider each of the choices separately and select all that apply.
-                        </div>
-
-                        <div className="grid md:grid-cols-2 gap-4">
-                            <div className="max-h-[70vh] overflow-auto rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-900/60 p-4">
-                                <div dangerouslySetInnerHTML={{ __html: qDoc.stimulus || "" }} />
-                            </div>
-
-                            <div className="space-y-4">
-                                <div className="rounded-xl bg-slate-50 dark:bg-slate-900/60 p-4">
-                                    <div dangerouslySetInnerHTML={{ __html: qDoc.questionText }} />
-                                </div>
-
-                                <div className="space-y-2">
-                                    {qDoc.options?.map((opt, idx) => {
-                                        const selected = mainSelected.has(idx);
-                                        const label = opt.label || String.fromCharCode(65 + idx);
-                                        return (
-                                            <button
-                                                key={idx}
-                                                onClick={() => toggleMainOption(idx)}
-                                                disabled={isCompleted}
-                                                className={`flex items-start w-full gap-3 rounded border-2 px-4 py-2 text-left text-sm transition ${selected
-                                                    ? "border-indigo-300 bg-indigo-50 dark:bg-indigo-500/20"
-                                                    : "border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 hover:border-indigo-300"
-                                                    }`}
-                                            >
-                                                <span className="mt-0.5 text-xs font-semibold">{label}.</span>
-                                                <span dangerouslySetInnerHTML={{ __html: opt.text }} />
-                                            </button>
-                                        );
-                                    })}
-                                </div>
-                            </div>
-                        </div>
-                    </>
-                );
-            }
-
-            if (type === "gre_quantitative") {
-                return (
-                    <>
-                        <div className="p-4 bg-gray-300 dark:bg-gray-700 text-red-700 dark:text-red-100 mb-3 mx-auto">
-                            Choose the option that best answers the question.
-                        </div>
-                        <div className="grid md:grid-cols-2 gap-4">
-                            <div className="rounded-xl bg-slate-50 dark:bg-slate-900/60 p-4">
-                                <div dangerouslySetInnerHTML={{ __html: qDoc.questionText }} />
-                            </div>
-
-
-                            <div className="space-y-2 ml-1 mt-2">
-                                {qDoc.stimulus && (
-                                    <div className="rounded-xl bg-slate-50 dark:bg-slate-900/60 p-4">
-                                        <div dangerouslySetInnerHTML={{ __html: qDoc.stimulus }} />
-                                    </div>
-                                )}
-                                {qDoc.options?.map((opt, idx) => {
-                                    const selected = currentQuestion.answerOptionIndexes.includes(idx);
-                                    const label = opt.label || String.fromCharCode(65 + idx);
-                                    return (
-                                        <button
-                                            key={idx}
-                                            onClick={() => handleOptionClick(idx)}
-                                            disabled={isCompleted}
-                                            className={`flex w-full items-start gap-3 rounded border-2 px-4 py-2 text-left text-sm transition ${selected
-                                                ? "border-indigo-300 bg-indigo-50 dark:bg-indigo-500/20"
-                                                : "border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 hover:border-indigo-300"
-                                                }`}
-                                        >
-                                            <span className="mt-0.5 text-xs font-semibold">{label}.</span>
-                                            <span dangerouslySetInnerHTML={{ __html: opt.text }} />
-                                        </button>
-                                    );
-                                })}
-                            </div>
-                        </div>
-                    </>
-
-                );
-            }
-
-            if (type === "gre_quantitative_multi") {
-                const mainSelected = new Set<number>(currentQuestion.answerOptionIndexes || []);
-
-                const toggleMainOption = (idx: number) => {
-                    if (isCompleted) return;
-                    const set = new Set<number>(currentQuestion.answerOptionIndexes || []);
-                    if (set.has(idx)) set.delete(idx);
-                    else set.add(idx);
-                    const arr = Array.from(set);
-                    updateCurrentQuestion({
-                        answerOptionIndexes: arr,
-                        isAnswered: arr.length > 0,
-                    });
-                };
-
-                return (
-                    <>
-                        <div className="p-4 bg-gray-300 dark:bg-gray-700 text-red-700 dark:text-red-100 mb-3 mx-auto">
-                            Consider each of the choices separately and select all that apply.
-                        </div>
-
-                        <div className="grid md:grid-cols-2 gap-4">
-                            <div className="max-h-[70vh] overflow-auto rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-900/60 p-4">
-                                <div dangerouslySetInnerHTML={{ __html: qDoc.stimulus || "" }} />
-                                <div dangerouslySetInnerHTML={{ __html: qDoc.questionText }} />
-
-                            </div>
-
-                            <div className="space-y-4">
-
-                                <div className="space-y-2">
-                                    {qDoc.options?.map((opt, idx) => {
-                                        const selected = mainSelected.has(idx);
-                                        const label = opt.label || String.fromCharCode(65 + idx);
-                                        return (
-                                            <button
-                                                key={idx}
-                                                onClick={() => toggleMainOption(idx)}
-                                                disabled={isCompleted}
-                                                className={`flex items-start w-full gap-3 rounded border-2 px-4 py-2 text-left text-sm transition ${selected
-                                                    ? "border-indigo-300 bg-indigo-50 dark:bg-indigo-500/20"
-                                                    : "border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 hover:border-indigo-300"
-                                                    }`}
-                                            >
-                                                <span className="mt-0.5 text-xs font-semibold">{label}.</span>
-                                                <span dangerouslySetInnerHTML={{ __html: opt.text }} />
-                                            </button>
-                                        );
-                                    })}
-                                </div>
-                            </div>
-                        </div>
-                    </>
-                );
-            }
-
-            if (type === "gre_quantitative_value") {
-                const value = currentQuestion.answerText ?? "";
-
-                const onChangeValue = (val: string) => {
-                    updateCurrentQuestion({ answerText: val, isAnswered: val.trim() !== "" });
-                };
-
-                return (
-                    <>
-                        <div className="p-4 bg-gray-300 dark:bg-gray-700 text-red-700 dark:text-red-100 mb-3 mx-auto">
-                            Enter the answer in the blank.
-                        </div>
-                        <div className="grid md:grid-cols-2 gap-4">
-                            <div className="rounded-xl bg-slate-50 dark:bg-slate-900/60 p-4" dangerouslySetInnerHTML={{ __html: qDoc.questionText }} />
-                            <div className="max-w-sm mt-4">
-                                <input
-                                    inputMode="decimal"
-                                    className="w-full rounded border px-3 py-2 bg-white dark:bg-slate-800"
-                                    value={value}
-                                    onChange={(e) => onChangeValue(e.target.value)}
-                                    disabled={isCompleted}
-                                    placeholder="Enter your answer..."
-                                />
-                            </div>
-                        </div>
-                    </>
-                );
-            }
-
-            if (qDoc.options && qDoc.options.length) {
-                return (
-                    <>
-                        <div className="p-4 bg-gray-300 dark:bg-gray-700 text-red-700 dark:text-red-100 mb-3 mx-auto">
-                            Choose the option that best answers the question.
-                        </div>
-                        <div className="space-y-3">
-                            {qDoc.stimulus && (
-                                <div className="rounded-xl bg-slate-50 dark:bg-slate-900/60 p-4">
-                                    <div
-                                        className="prose prose-sm dark:prose-invert max-w-none"
-                                        dangerouslySetInnerHTML={{ __html: qDoc.stimulus }}
-                                    />
-                                </div>
-                            )}
-
-                            <div className="rounded-xl bg-slate-50 dark:bg-slate-900/60 p-4">
-                                <div
-                                    className="text-sm font-semibold"
-                                    dangerouslySetInnerHTML={{ __html: qDoc.questionText }}
-                                />
-                            </div>
-
-                            <div className="space-y-2 ml-1">
-                                {qDoc.options.map((opt, idx) => {
-                                    const selected =
-                                        currentQuestion.answerOptionIndexes.includes(idx);
-                                    const label =
-                                        opt.label ||
-                                        String.fromCharCode("A".charCodeAt(0) + idx);
-                                    return (
-                                        <button
-                                            key={idx}
-                                            onClick={() => handleOptionClick(idx)}
-                                            disabled={isCompleted}
-                                            className={`flex w-full items-start gap-3 rounded border-2 px-4 py-2 text-left text-sm transition ${selected
-                                                ? "border-indigo-300 bg-indigo-50 dark:bg-indigo-500/20"
-                                                : "border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 hover:border-indigo-300"
-                                                }`}
-                                        >
-                                            <span className="mt-0.5 text-xs font-semibold">
-                                                {label}.
-                                            </span>
-                                            <span
-                                                dangerouslySetInnerHTML={{ __html: opt.text }}
-                                            />
-                                        </button>
-                                    );
-                                })}
-                            </div>
-                        </div>
-                    </>
-
-                );
-            }
-            // ➕ Add all other types (text completion, sentence equivalence, etc.)
-
-            return (
+      if (type === "gre_analytical_writing") {
+        return (
+          <>
+            <div className="p-4 bg-gray-300 dark:bg-gray-700 text-red-700 dark:text-red-100 mb-3 mx-auto">
+              Type your essay into the provided editor.
+            </div>
+            <div className="grid md:grid-cols-2 grid-cols-1 gap-4">
+              <div className="rounded-xl bg-slate-50 dark:bg-slate-900/60 p-4">
                 <div
-                    className="prose prose-sm dark:prose-invert max-w-none"
-                    dangerouslySetInnerHTML={{ __html: qDoc.questionText }}
+                  className="dark:prose-invert max-w-none text-lg text-slate-900 dark:text-slate-100 mb-4"
+                  dangerouslySetInnerHTML={{ __html: qDoc.stimulus || "" }}
                 />
-            );
-        }, [
-            qDoc,
-            currentQuestion,
-            isCompleted,
-            handleOptionClick,
-            handleTextAnswerChange,
-            updateCurrentQuestion,
-        ]);
+                <div
+                  className="text-lg text-justify dark:prose-invert"
+                  dangerouslySetInnerHTML={{ __html: qDoc.questionText }}
+                />
+              </div>
+              <textarea
+                className="w-full min-h-[360px] rounded border-2 border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 p-3 text-sm"
+                value={currentQuestion.answerText || ""}
+                onChange={handleTextAnswerChange}
+                disabled={isCompleted}
+              />
+            </div>
+          </>
+        );
+      }
 
-        if (!qDoc || !currentQuestion) {
-            return (
-                <div className="flex min-h-[60vh] items-center justify-center">
-                    <div className="max-w-md rounded-2xl border border-red-200 bg-red-50 p-5 text-sm text-red-700 shadow-sm dark:border-red-800 dark:bg-red-900/20 dark:text-red-200">
-                        <div className="mb-2 flex items-center gap-2">
-                            <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
-                                <path
-                                    fillRule="evenodd"
-                                    d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92z"
-                                    clipRule="evenodd"
-                                />
-                            </svg>
-                            <h2 className="font-semibold">Unable to load question</h2>
-                        </div>
-                        <p>Please try reloading or contact support.</p>
-                    </div>
+      // 🟢 Add other question types similarly (copy from original)
+      // You can break these further into sub-components later (e.g., TextCompletionQuestion, etc.)
+
+      // Example for one more:
+      if (type === "gre_verbal_reading_comp") {
+        return (
+          <>
+            <div className="p-4 bg-gray-300 dark:bg-gray-700 text-red-700 dark:text-red-100 mb-3 mx-auto">
+              Choose the option that best answers the question.
+            </div>
+            <div className="grid md:grid-cols-2 gap-4">
+              <div className="max-h-[70vh] overflow-auto rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-900/60 p-4">
+                <div
+                  className="prose prose-sm dark:prose-invert max-w-none"
+                  dangerouslySetInnerHTML={{ __html: qDoc.stimulus || "" }}
+                />
+              </div>
+              <div className="space-y-3">
+                <div className="rounded-xl bg-slate-50 dark:bg-slate-900/60 p-4">
+                  <div dangerouslySetInnerHTML={{ __html: qDoc.questionText }} />
                 </div>
+                <div className="space-y-2">
+                  {qDoc.options?.map((opt, idx) => {
+                    const selected = currentQuestion.answerOptionIndexes.includes(idx);
+                    const label = opt.label || String.fromCharCode("A".charCodeAt(0) + idx);
+                    return (
+                      <button
+                        key={idx}
+                        onClick={() => handleOptionClick(idx)}
+                        disabled={isCompleted}
+                        className={`flex items-start w-full gap-3 rounded border-2 px-4 py-2 text-left text-sm transition ${selected
+                          ? "border-indigo-300 bg-indigo-50 dark:bg-indigo-500/20"
+                          : "border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 hover:border-indigo-300"
+                          }`}
+                      >
+                        <span className="mt-0.5 text-xs font-semibold">{label}.</span>
+                        <span dangerouslySetInnerHTML={{ __html: opt.text }} />
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+            </div>
+          </>
+        );
+      }
+
+      if (type === "gre_verbal_text_completion") {
+        // ---- 1. Determine number of blanks ----
+        const blanksFromTypeSpecific: number | undefined =
+          (qDoc as any).typeSpecific?.blanks;
+
+        const blanksFromText =
+          (qDoc.questionText.match(/\{\{\d+\}\}/g) || []).length;
+
+        const blanksCount = blanksFromTypeSpecific || blanksFromText || 1;
+
+        // ---- 2. Group options by blankIndex ----
+        type TextCompletionOption = {
+          blankIndex: number;
+          label?: string;
+          text: string;
+        };
+
+        const rawOptions: TextCompletionOption[] =
+          ((qDoc as any).typeSpecific?.options as TextCompletionOption[]) || [];
+
+        // grouped[blankIndex] = [{ option, globalIndex }, ...]
+        const grouped: {
+          blankIndex: number;
+          label?: string;
+          text: string;
+          globalIndex: number;
+        }[][] = Array.from({ length: blanksCount }, () => []);
+
+        rawOptions.forEach((opt, globalIndex) => {
+          const idx =
+            typeof opt.blankIndex === "number" && opt.blankIndex >= 0
+              ? opt.blankIndex
+              : 0;
+          if (idx < blanksCount) {
+            grouped[idx].push({ ...opt, globalIndex });
+          }
+        });
+
+        // ---- 3. Parse current answers (blankIndex -> globalOptionIndex) ----
+        const answers: Record<number, number> = (() => {
+          try {
+            return currentQuestion.answerText
+              ? JSON.parse(currentQuestion.answerText)
+              : {};
+          } catch {
+            return {};
+          }
+        })();
+
+        // ---- 4. Click handler for a blank's option ----
+        const handleBlankOptionClick = (blankIndex: number, globalIndex: number) => {
+          if (isCompleted) return;
+
+          const next = { ...answers, [blankIndex]: globalIndex };
+
+          // all blanks must be filled
+          const allFilled =
+            blanksCount > 0 &&
+            Array.from({ length: blanksCount }, (_, i) => next[i] !== undefined).every(
+              Boolean
             );
-        }
+
+          updateCurrentQuestion({
+            answerText: JSON.stringify(next),
+            isAnswered: allFilled,
+          });
+        };
+
+        const roman = ["(i)_____", "(ii)_____", "(iii)_____", "(iv)_____", "(v)_____"];
+
+        const renderedQuestionHtml = qDoc.questionText.replace(
+          /\{\{(\d+)\}\}/g,
+          (_match, numStr) => {
+            const idx = parseInt(numStr, 10) - 1;
+            return roman[idx] || _match;
+          }
+        );
 
         return (
-            <div className="max-w-7xl mx-auto p-4 space-y-4">
-                {/* Question body */}
-                <div className="bg-white dark:bg-slate-900">{renderQuestionContent}</div>
-
-                {/* Fixed bottom controls */}
-                <div className="fixed bottom-0 left-0 right-0 z-50 border-t border-slate-200 dark:border-slate-700 bg-white/95 dark:bg-slate-900/95 backdrop-blur supports-backdrop-blur:bg-white/60">
-                    <div className="mx-auto max-w-7xl px-4 py-4">
-                        <div className="flex flex-wrap items-center justify-between gap-4">
-                            <div className="flex flex-wrap items-center gap-3">
-                                <Button
-                                    variant="outline"
-                                    size="sm"
-                                    onClick={toggleMarkForReview}
-                                    disabled={isCompleted}
-                                >
-                                    <Flag className="mr-1 h-3 w-3" />
-                                    {currentQuestion.markedForReview ? "Unmark" : "Mark for Review"}
-                                </Button>
-                                <Button
-                                    variant="outline"
-                                    size="sm"
-                                    onClick={() => saveCurrentQuestionProgress({ silent: false })}
-                                    disabled={isCompleted}
-                                >
-                                    <Save className="mr-1 h-3 w-3" />
-                                    Save
-                                </Button>
-                            </div>
-
-                            <div className="text-slate-800 dark:text-slate-100">
-                                Question {questionNumber} of {sectionTotal}
-                            </div>
-
-                            <div className="flex items-center gap-3">
-                                <Button
-                                    size="sm"
-                                    variant="outline"
-                                    disabled={activeQuestionIndex <= 0 || isCompleted}
-                                    onClick={() => goToQuestion(Math.max(0, activeQuestionIndex - 1))}
-                                >
-                                    Previous
-                                </Button>
-                                <Button size="sm" disabled={isNextDisabled} onClick={goNextQuestion}>
-                                    {isLastQuestionInCurrentSection ? "Review Section" : "Next"}
-                                </Button>
-                            </div>
-                        </div>
-                    </div>
-                </div>
+          <>
+            <div className="p-4 bg-gray-300 dark:bg-gray-700 text-red-700 dark:text-red-100 mb-3 mx-auto">For each blank select one word from each column that best completes the
+              sentence..</div>
+            <div className="rounded-xl bg-slate-50 dark:bg-slate-900/60 p-4 mb-6">
+              <div
+                className="prose prose-sm dark:prose-invert max-w-none"
+                dangerouslySetInnerHTML={{ __html: renderedQuestionHtml }}
+              />
             </div>
+            <div
+              className="flex justify-center gap-2"
+            >
+              {Array.from({ length: blanksCount }).map((_, blankIdx) => (
+                <div
+                  key={blankIdx}
+                  className="rounded-xl min-w-[200px] bg-slate-50 dark:bg-slate-900/60 p-3"
+                >
+                  <div className="text-xs font-semibold text-center mb-2 uppercase tracking-wide text-slate-600">
+                    Blank {roman[blankIdx] || `(${blankIdx + 1})`}
+                  </div>
+
+                  <div className="space-y-1">
+                    {grouped[blankIdx].map(({ label, text, globalIndex }, optIdx) => {
+                      const optionLabel =
+                        label || String.fromCharCode("A".charCodeAt(0) + optIdx);
+                      const selected = answers[blankIdx] === globalIndex;
+
+                      return (
+                        <button
+                          key={globalIndex}
+                          onClick={() => handleBlankOptionClick(blankIdx, globalIndex)}
+                          disabled={isCompleted}
+                          className={`flex w-full items-start gap-3 rounded border-2 px-3 py-2 text-left text-sm transition ${selected
+                            ? "border-indigo-400 bg-indigo-50 dark:bg-indigo-500/20"
+                            : "border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 hover:border-indigo-300"
+                            }`}
+                        >
+                          <span className="mt-0.5 text-xs font-semibold">
+                            {optionLabel}
+                          </span>
+                          <span
+                            className="flex-1"
+                            dangerouslySetInnerHTML={{ __html: text }}
+                          />
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+              ))}
+            </div>
+          </>
         );
+      }
+
+      if (type === "gre_verbal_sentence_equivalence") {
+        const selectedSet = new Set(currentQuestion.answerOptionIndexes || []);
+
+        const toggleEquiv = (idx: number) => {
+          if (isCompleted) return;
+          const nextSet = new Set(selectedSet);
+          if (nextSet.has(idx)) nextSet.delete(idx);
+          else {
+            if (nextSet.size >= 2) {
+              const first = nextSet.values().next().value;
+              nextSet.delete(first);
+              nextSet.add(idx);
+            } else {
+              nextSet.add(idx);
+            }
+          }
+          updateCurrentQuestion({ answerOptionIndexes: Array.from(nextSet), isAnswered: (nextSet.size === 2) });
+        };
+
+        return (
+          <>
+            <div className="p-4 bg-gray-300 dark:bg-gray-700 text-red-700 dark:text-red-100 mb-3 mx-auto">Select exactly two answer choices that best complete the sentence .</div>
+
+            <div className="grid md:grid-cols-2 gap-4">
+              <div className="rounded-xl bg-slate-50 dark:bg-slate-900/60 p-4">
+                <div dangerouslySetInnerHTML={{ __html: qDoc.questionText }} />
+              </div>
+
+              <div className="space-y-2">
+                {qDoc.options?.map((opt, idx) => {
+                  const selected = selectedSet.has(idx);
+                  const label = opt.label || String.fromCharCode(65 + idx);
+                  return (
+                    <button
+                      key={idx}
+                      onClick={() => toggleEquiv(idx)}
+                      className={`flex w-full items-start gap-3 rounded border-2 px-4 py-2 text-left text-sm transition ${selected
+                        ? "border-indigo-300 bg-indigo-50 dark:bg-indigo-500/20"
+                        : "border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 hover:border-indigo-300"
+                        }`}
+                      disabled={isCompleted}
+                    >
+                      <span className="mt-0.5 text-xs font-semibold">{label}.</span>
+                      <span dangerouslySetInnerHTML={{ __html: opt.text }} />
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+          </>
+        );
+      }
+
+      if (type === "gre_verbal_reading_multi") {
+        const mainSelected = new Set<number>(currentQuestion.answerOptionIndexes || []);
+
+        const toggleMainOption = (idx: number) => {
+          if (isCompleted) return;
+          const set = new Set<number>(currentQuestion.answerOptionIndexes || []);
+          if (set.has(idx)) set.delete(idx);
+          else set.add(idx);
+          const arr = Array.from(set);
+          updateCurrentQuestion({
+            answerOptionIndexes: arr,
+            isAnswered: arr.length > 0,
+          });
+        };
+
+        return (
+          <>
+            <div className="p-4 bg-gray-300 dark:bg-gray-700 text-red-700 dark:text-red-100 mb-3 mx-auto">
+              Consider each of the choices separately and select all that apply.
+            </div>
+
+            <div className="grid md:grid-cols-2 gap-4">
+              <div className="max-h-[70vh] overflow-auto rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-900/60 p-4">
+                <div dangerouslySetInnerHTML={{ __html: qDoc.stimulus || "" }} />
+              </div>
+
+              <div className="space-y-4">
+                <div className="rounded-xl bg-slate-50 dark:bg-slate-900/60 p-4">
+                  <div dangerouslySetInnerHTML={{ __html: qDoc.questionText }} />
+                </div>
+
+                <div className="space-y-2">
+                  {qDoc.options?.map((opt, idx) => {
+                    const selected = mainSelected.has(idx);
+                    const label = opt.label || String.fromCharCode(65 + idx);
+                    return (
+                      <button
+                        key={idx}
+                        onClick={() => toggleMainOption(idx)}
+                        disabled={isCompleted}
+                        className={`flex items-start w-full gap-3 rounded border-2 px-4 py-2 text-left text-sm transition ${selected
+                          ? "border-indigo-300 bg-indigo-50 dark:bg-indigo-500/20"
+                          : "border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 hover:border-indigo-300"
+                          }`}
+                      >
+                        <span className="mt-0.5 text-xs font-semibold">{label}.</span>
+                        <span dangerouslySetInnerHTML={{ __html: opt.text }} />
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+            </div>
+          </>
+        );
+      }
+
+      if (type === "gre_quantitative") {
+        return (
+          <>
+            <div className="p-4 bg-gray-300 dark:bg-gray-700 text-red-700 dark:text-red-100 mb-3 mx-auto">
+              Choose the option that best answers the question.
+            </div>
+            <div className="grid md:grid-cols-2 gap-4">
+              <div className="rounded-xl bg-slate-50 dark:bg-slate-900/60 p-4">
+                <div dangerouslySetInnerHTML={{ __html: qDoc.questionText }} />
+              </div>
+
+
+              <div className="space-y-2 ml-1 mt-2">
+                {qDoc.stimulus && (
+                  <div className="rounded-xl bg-slate-50 dark:bg-slate-900/60 p-4">
+                    <div dangerouslySetInnerHTML={{ __html: qDoc.stimulus }} />
+                  </div>
+                )}
+                {qDoc.options?.map((opt, idx) => {
+                  const selected = currentQuestion.answerOptionIndexes.includes(idx);
+                  const label = opt.label || String.fromCharCode(65 + idx);
+                  return (
+                    <button
+                      key={idx}
+                      onClick={() => handleOptionClick(idx)}
+                      disabled={isCompleted}
+                      className={`flex w-full items-start gap-3 rounded border-2 px-4 py-2 text-left text-sm transition ${selected
+                        ? "border-indigo-300 bg-indigo-50 dark:bg-indigo-500/20"
+                        : "border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 hover:border-indigo-300"
+                        }`}
+                    >
+                      <span className="mt-0.5 text-xs font-semibold">{label}.</span>
+                      <span dangerouslySetInnerHTML={{ __html: opt.text }} />
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+          </>
+
+        );
+      }
+
+      if (type === "gre_quantitative_multi") {
+        const mainSelected = new Set<number>(currentQuestion.answerOptionIndexes || []);
+
+        const toggleMainOption = (idx: number) => {
+          if (isCompleted) return;
+          const set = new Set<number>(currentQuestion.answerOptionIndexes || []);
+          if (set.has(idx)) set.delete(idx);
+          else set.add(idx);
+          const arr = Array.from(set);
+          updateCurrentQuestion({
+            answerOptionIndexes: arr,
+            isAnswered: arr.length > 0,
+          });
+        };
+
+        return (
+          <>
+            <div className="p-4 bg-gray-300 dark:bg-gray-700 text-red-700 dark:text-red-100 mb-3 mx-auto">
+              Consider each of the choices separately and select all that apply.
+            </div>
+
+            <div className="grid md:grid-cols-2 gap-4">
+              <div className="max-h-[70vh] overflow-auto rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-900/60 p-4">
+                <div dangerouslySetInnerHTML={{ __html: qDoc.stimulus || "" }} />
+                <div dangerouslySetInnerHTML={{ __html: qDoc.questionText }} />
+
+              </div>
+
+              <div className="space-y-4">
+
+                <div className="space-y-2">
+                  {qDoc.options?.map((opt, idx) => {
+                    const selected = mainSelected.has(idx);
+                    const label = opt.label || String.fromCharCode(65 + idx);
+                    return (
+                      <button
+                        key={idx}
+                        onClick={() => toggleMainOption(idx)}
+                        disabled={isCompleted}
+                        className={`flex items-start w-full gap-3 rounded border-2 px-4 py-2 text-left text-sm transition ${selected
+                          ? "border-indigo-300 bg-indigo-50 dark:bg-indigo-500/20"
+                          : "border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 hover:border-indigo-300"
+                          }`}
+                      >
+                        <span className="mt-0.5 text-xs font-semibold">{label}.</span>
+                        <span dangerouslySetInnerHTML={{ __html: opt.text }} />
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+            </div>
+          </>
+        );
+      }
+
+      if (type === "gre_quantitative_value") {
+        const value = currentQuestion.answerText ?? "";
+
+        const onChangeValue = (val: string) => {
+          updateCurrentQuestion({ answerText: val, isAnswered: val.trim() !== "" });
+        };
+
+        return (
+          <>
+            <div className="p-4 bg-gray-300 dark:bg-gray-700 text-red-700 dark:text-red-100 mb-3 mx-auto">
+              Enter the answer in the blank.
+            </div>
+            <div className="grid md:grid-cols-2 gap-4">
+              <div className="rounded-xl bg-slate-50 dark:bg-slate-900/60 p-4" dangerouslySetInnerHTML={{ __html: qDoc.questionText }} />
+              <div className="max-w-sm mt-4">
+                <input
+                  inputMode="decimal"
+                  className="w-full rounded border px-3 py-2 bg-white dark:bg-slate-800"
+                  value={value}
+                  onChange={(e) => onChangeValue(e.target.value)}
+                  disabled={isCompleted}
+                  placeholder="Enter your answer..."
+                />
+              </div>
+            </div>
+          </>
+        );
+      }
+
+      if (qDoc.options && qDoc.options.length) {
+        return (
+          <>
+            <div className="p-4 bg-gray-300 dark:bg-gray-700 text-red-700 dark:text-red-100 mb-3 mx-auto">
+              Choose the option that best answers the question.
+            </div>
+            <div className="space-y-3">
+              {qDoc.stimulus && (
+                <div className="rounded-xl bg-slate-50 dark:bg-slate-900/60 p-4">
+                  <div
+                    className="prose prose-sm dark:prose-invert max-w-none"
+                    dangerouslySetInnerHTML={{ __html: qDoc.stimulus }}
+                  />
+                </div>
+              )}
+
+              <div className="rounded-xl bg-slate-50 dark:bg-slate-900/60 p-4">
+                <div
+                  className="text-sm font-semibold"
+                  dangerouslySetInnerHTML={{ __html: qDoc.questionText }}
+                />
+              </div>
+
+              <div className="space-y-2 ml-1">
+                {qDoc.options.map((opt, idx) => {
+                  const selected =
+                    currentQuestion.answerOptionIndexes.includes(idx);
+                  const label =
+                    opt.label ||
+                    String.fromCharCode("A".charCodeAt(0) + idx);
+                  return (
+                    <button
+                      key={idx}
+                      onClick={() => handleOptionClick(idx)}
+                      disabled={isCompleted}
+                      className={`flex w-full items-start gap-3 rounded border-2 px-4 py-2 text-left text-sm transition ${selected
+                        ? "border-indigo-300 bg-indigo-50 dark:bg-indigo-500/20"
+                        : "border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 hover:border-indigo-300"
+                        }`}
+                    >
+                      <span className="mt-0.5 text-xs font-semibold">
+                        {label}.
+                      </span>
+                      <span
+                        dangerouslySetInnerHTML={{ __html: opt.text }}
+                      />
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+          </>
+
+        );
+      }
+      // ➕ Add all other types (text completion, sentence equivalence, etc.)
+
+      return (
+        <div
+          className="prose prose-sm dark:prose-invert max-w-none"
+          dangerouslySetInnerHTML={{ __html: qDoc.questionText }}
+        />
+      );
+    }, [
+      qDoc,
+      currentQuestion,
+      isCompleted,
+      handleOptionClick,
+      handleTextAnswerChange,
+      updateCurrentQuestion,
+    ]);
+
+    if (!qDoc || !currentQuestion) {
+      return (
+        <div className="flex min-h-[60vh] items-center justify-center">
+          <div className="max-w-md rounded-2xl border border-red-200 bg-red-50 p-5 text-sm text-red-700 shadow-sm dark:border-red-800 dark:bg-red-900/20 dark:text-red-200">
+            <div className="mb-2 flex items-center gap-2">
+              <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                <path
+                  fillRule="evenodd"
+                  d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92z"
+                  clipRule="evenodd"
+                />
+              </svg>
+              <h2 className="font-semibold">Unable to load question</h2>
+            </div>
+            <p>Please try reloading or contact support.</p>
+          </div>
+        </div>
+      );
     }
+
+    return (
+      <div className="max-w-7xl mx-auto p-4 space-y-4">
+        {/* Question body */}
+        <div className="bg-white dark:bg-slate-900">{renderQuestionContent}</div>
+
+        {/* Fixed bottom controls */}
+        <div className="fixed bottom-0 left-0 right-0 z-50 border-t border-slate-200 dark:border-slate-700 bg-white/95 dark:bg-slate-900/95 backdrop-blur supports-backdrop-blur:bg-white/60">
+          <div className="mx-auto max-w-7xl px-4 py-4">
+            <div className="flex flex-wrap items-center justify-between gap-4">
+              <div className="flex flex-wrap items-center gap-3">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={toggleMarkForReview}
+                  disabled={isCompleted}
+                >
+                  <Flag className="mr-1 h-3 w-3" />
+                  {currentQuestion.markedForReview ? "Unmark" : "Mark for Review"}
+                </Button>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => saveCurrentQuestionProgress({ silent: false })}
+                  disabled={isCompleted}
+                >
+                  <Save className="mr-1 h-3 w-3" />
+                  Save
+                </Button>
+              </div>
+
+              <div className="text-slate-800 dark:text-slate-100">
+                Question {questionNumber} of {sectionTotal}
+              </div>
+
+              <div className="flex items-center gap-3">
+                <Button
+                  size="sm"
+                  variant="outline"
+                  disabled={activeQuestionIndex <= 0 || isCompleted}
+                  onClick={() => goToQuestion(Math.max(0, activeQuestionIndex - 1))}
+                >
+                  Previous
+                </Button>
+                <Button size="sm" disabled={isNextDisabled} onClick={goNextQuestion}>
+                  {isLastQuestionInCurrentSection ? "Review Section" : "Next"}
+                </Button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
 );
 
 export default QuestionRenderer;
@@ -1074,22 +1074,20 @@ export const SectionReview: React.FC<SectionReviewProps> = React.memo(
                             setActiveQuestionIndex(idx);
                             setCurrentScreen("question");
                           }}
-                          className={`group flex flex-col items-center justify-center gap-1 p-2 rounded-xl border transition-colors ${
-                            isBookmarked
+                          className={`group flex flex-col items-center justify-center gap-1 p-2 rounded-xl border transition-colors ${isBookmarked
                               ? "border-purple-300 bg-purple-50 dark:bg-purple-500/10"
                               : isAnsweredLocal
-                              ? "border-emerald-200 bg-emerald-50"
-                              : "border-slate-200 bg-white dark:bg-slate-900 hover:border-indigo-300"
-                          }`}
+                                ? "border-emerald-200 bg-emerald-50"
+                                : "border-slate-200 bg-white dark:bg-slate-900 hover:border-indigo-300"
+                            }`}
                         >
                           <div
-                            className={`h-8 w-8 rounded-full flex items-center justify-center font-semibold ${
-                              isBookmarked
+                            className={`h-8 w-8 rounded-full flex items-center justify-center font-semibold ${isBookmarked
                                 ? "bg-purple-500 text-white"
                                 : isAnsweredLocal
-                                ? "bg-emerald-500 text-white"
-                                : "bg-slate-200 text-slate-700"
-                            }`}
+                                  ? "bg-emerald-500 text-white"
+                                  : "bg-slate-200 text-slate-700"
+                              }`}
                           >
                             {q.order || idx + 1}
                           </div>
@@ -1125,9 +1123,8 @@ export const SectionReview: React.FC<SectionReviewProps> = React.memo(
                     >
                       <div className="flex items-center gap-3">
                         <div
-                          className={`h-9 w-9 rounded-full flex items-center justify-center font-semibold ${
-                            answered ? "bg-emerald-600 text-white" : "bg-slate-200 text-slate-700"
-                          }`}
+                          className={`h-9 w-9 rounded-full flex items-center justify-center font-semibold ${answered ? "bg-emerald-600 text-white" : "bg-slate-200 text-slate-700"
+                            }`}
                         >
                           {q.order || idx + 1}
                         </div>
@@ -1491,9 +1488,14 @@ export const GRETestResults: React.FC<GRETestResultsProps> = React.memo(
                         ? q.answerOptionIndexes.map(getOptionLabel).join(", ")
                         : q.answerText || "--";
 
-                      const correctLabel = typeof qd?.correctOptionIndex === "number"
-                        ? getOptionLabel(qd.correctOptionIndex)
-                        : "--";
+                      const correctLabels = qd.options
+                        .filter(o => o.isCorrect)
+                        .map(o => `${o.label}. ${o.text}`);  // label + text
+
+                      const correctLabel = correctLabels.length > 0
+                        ? correctLabels.join(", ")           // multiple values joined
+                        : qd.correctAnswerText || "--";
+
 
                       return (
                         <tr
@@ -1502,13 +1504,12 @@ export const GRETestResults: React.FC<GRETestResultsProps> = React.memo(
                         >
                           <td className="py-3 px-4 align-middle">
                             <div className="flex items-center">
-                              <div className={`h-8 w-8 rounded-lg flex items-center justify-center ${
-                                status === "correct"
+                              <div className={`h-8 w-8 rounded-lg flex items-center justify-center ${status === "correct"
                                   ? "bg-emerald-100 dark:bg-emerald-900/30 text-emerald-600 dark:text-emerald-400"
                                   : status === "incorrect"
-                                  ? "bg-red-100 dark:bg-red-900/30 text-red-600 dark:text-red-400"
-                                  : "bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400"
-                              }`}>
+                                    ? "bg-red-100 dark:bg-red-900/30 text-red-600 dark:text-red-400"
+                                    : "bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400"
+                                }`}>
                                 <span className="font-bold">{q.order || qIdx + 1}</span>
                               </div>
                             </div>
@@ -1520,13 +1521,12 @@ export const GRETestResults: React.FC<GRETestResultsProps> = React.memo(
                             </span>
                           </td>
                           <td className="py-3 px-4 align-middle">
-                            <div className={`font-medium ${
-                              status === "correct"
+                            <div className={`font-medium ${status === "correct"
                                 ? "text-emerald-700 dark:text-emerald-300"
                                 : status === "incorrect"
-                                ? "text-red-700 dark:text-red-300"
-                                : "text-slate-700 dark:text-slate-300"
-                            }`}>
+                                  ? "text-red-700 dark:text-red-300"
+                                  : "text-slate-700 dark:text-slate-300"
+                              }`}>
                               {userLabel}
                             </div>
                           </td>

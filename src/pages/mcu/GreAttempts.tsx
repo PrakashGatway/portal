@@ -169,7 +169,7 @@ export default function GRETestAttemptPage() {
         }
 
         const loaded: TestAttempt = detailRes.data.data;
-
+        const testType = loaded?.testType;
         if (!loaded.sections || loaded.sections.length === 0) {
           setError("This GRE test has no sections configured.");
           setLoading(false);
@@ -181,7 +181,7 @@ export default function GRETestAttemptPage() {
         const meta = loaded.gmatMeta;
         let secIdx = 0;
         let qIdx = 0;
-        let nextScreen: GreScreen = "intro";
+        let nextScreen: GreScreen = (testType !== "full_length") ? "question" : "intro";
 
         if (loaded.status === "completed") {
           setCurrentScreen("results");
@@ -194,7 +194,7 @@ export default function GRETestAttemptPage() {
           qIdx = meta.currentQuestionIndex || 0;
           if (meta.phase === "in_section") nextScreen = "question";
           else if (meta.phase === "review") nextScreen = "section_review";
-          else nextScreen = "intro";
+          else nextScreen = (testType !== "full_length") ? "question" : "intro";
         } else {
           outer: for (let s = 0; s < loaded.sections.length; s++) {
             const sec = loaded.sections[s];

@@ -2,16 +2,13 @@ import { useState, useEffect } from 'react';
 import Input from '../../components/form/input/InputField';
 import Label from '../../components/form/Label';
 import { toast } from 'react-toastify';
-import api from '../../axiosInstance';
+import api, { ImageBaseUrl } from '../../axiosInstance';
 import RichTextEditor from '../../components/TextEditor';
 
 const EXAM_TYPES = [
   { value: 'ielts', label: 'IELTS' },
   { value: 'toefl', label: 'TOEFL' },
   { value: 'pte', label: 'PTE' },
-  { value: 'gre', label: 'GRE' },
-  { value: 'gmat', label: 'GMAT' },
-  { value: 'sat', label: 'SAT' },
   { value: 'duolingo', label: 'Duolingo' },
   { value: 'other', label: 'Other' },
 ];
@@ -35,23 +32,6 @@ const MAIN_SECTIONS = {
     { value: 'writing', label: 'Writing' },
     { value: 'speaking', label: 'Speaking' },
   ],
-  gre: [
-    { value: 'verbal', label: 'Verbal Reasoning' },
-    { value: 'quant', label: 'Quantitative Reasoning' },
-    { value: 'awa', label: 'Analytical Writing' },
-  ],
-  gmat: [
-    { value: 'verbal', label: 'Verbal' },
-    { value: 'quant', label: 'Quantitative' },
-    { value: 'ir', label: 'Integrated Reasoning' },
-    { value: 'awa', label: 'Analytical Writing' },
-  ],
-  sat: [
-    { value: 'reading', label: 'Reading' },
-    { value: 'writing', label: 'Writing & Language' },
-    { value: 'math', label: 'Math' },
-    { value: 'essay', label: 'Essay (Optional)' },
-  ],
   duolingo: [
     { value: 'listening', label: 'Listening' },
     { value: 'reading', label: 'Reading' },
@@ -71,18 +51,25 @@ const MAIN_SECTIONS = {
   ],
 };
 
+// reading: [
+//   'multiple_choice_single', 'multiple_choice_multiple', 'true_false_not_given', 'yes_no_not_given',
+//   'matching_headings', 'matching_information', 'matching_features', 'sentence_completion',
+//   'summary_completion', 'note_completion', 'table_completion', 'flow_chart_completion',
+//   'diagram_labelling', 'short_answer', 'matching_sentence_endings', 'classification_reading'
+// ],
+
 const QUESTION_SUBTYPES = {
   ielts: {
     listening: [
-      'form_completion', 'note_completion', 'table_completion', 'flow_chart_completion',
-      'summary_completion', 'sentence_completion', 'short_answer', 'map_labelling',
-      'plan_labelling', 'diagram_labelling', 'multiple_choice_single', 'multiple_choice_multiple',
+      'note_completion',
+      'summary_completion', 'sentence_completion', 'short_answer', 'diagram_labelling', 'multiple_choice_single', 'multiple_choice_multiple',
       'matching', 'pick_from_a_list', 'classification'
     ],
+
     reading: [
       'multiple_choice_single', 'multiple_choice_multiple', 'true_false_not_given', 'yes_no_not_given',
       'matching_headings', 'matching_information', 'matching_features', 'sentence_completion',
-      'summary_completion', 'note_completion', 'table_completion', 'flow_chart_completion',
+      'summary_completion', 'note_completion',
       'diagram_labelling', 'short_answer', 'matching_sentence_endings', 'classification_reading'
     ],
     writing: ['writing_task_1_academic', 'writing_task_1_general', 'writing_task_2'],
@@ -380,9 +367,9 @@ export default function QuestionForm({
           if (isReading(formData.mainType) && !formData.content.passageText?.trim()) {
             newErrors.passageText = 'Reading passage is required';
           }
-          if (isListening(formData.mainType) && !formData.content.audioUrl?.trim()) {
-            newErrors.audioUrl = 'Audio URL is required for Listening';
-          }
+          // if (isListening(formData.mainType) && !formData.content.audioUrl?.trim()) {
+          //   newErrors.audioUrl = 'Audio URL is required for Listening';
+          // }
           group.questions.forEach((q, qIndex) => {
             if (!q.question?.trim()) newErrors[`group_${gIndex}_q_${qIndex}`] = 'Question text is required';
           });
@@ -471,30 +458,7 @@ export default function QuestionForm({
       case 1:
         return (
           <div className="space-y-8">
-            {/* Toggle Dark Mode */}
-            <div className="flex justify-end">
-              <button
-                onClick={() => setIsDarkMode(!isDarkMode)}
-                className="flex items-center gap-2 px-4 py-2 rounded-full bg-gray-200 dark:bg-gray-700 text-gray-800 dark:text-gray-200 transition-colors duration-300"
-                aria-label={isDarkMode ? "Switch to light mode" : "Switch to dark mode"}
-              >
-                {isDarkMode ? (
-                  <>
-                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z"></path>
-                    </svg>
-                    Light Mode
-                  </>
-                ) : (
-                  <>
-                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z"></path>
-                    </svg>
-                    Dark Mode
-                  </>
-                )}
-              </button>
-            </div>
+
 
             {/* Question Group Toggle */}
             <div className="p-6 bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-blue-900/30 dark:to-indigo-900/30 rounded-2xl border border-blue-100 dark:border-blue-800/50">
@@ -686,13 +650,11 @@ export default function QuestionForm({
               <div className="mb-6">
                 <Label className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Instruction *</Label>
                 <div className="relative">
-                  <textarea
-                    name="content.instruction"
-                    value={formData.content.instruction}
-                    onChange={handleChange}
-                    rows={4}
-                    className="w-full px-4 py-2 rounded-xl border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-800 dark:text-gray-200 shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 resize-none"
-                    placeholder="e.g., Complete the form. Write ONE WORD ONLY."
+
+                  <RichTextEditor
+                    header={false}
+                    initialValue={formData.content.instruction}
+                    onChange={(e) => handleChange({ target: { name: 'content.instruction', value: e } })}
                   />
                   {errors.instruction && <p className="text-red-500 text-xs mt-1 flex items-center gap-1"><svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20"><path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd"></path></svg>{errors.instruction}</p>}
                 </div>
@@ -721,6 +683,7 @@ export default function QuestionForm({
                   <Label className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Passage Content *</Label>
                   <div className="relative">
                     <RichTextEditor
+                      header={false}
                       initialValue={formData.content.passageText}
                       onChange={(e) => handleChange({ target: { name: 'content.passageText', value: e } })}
                     />
@@ -1104,19 +1067,12 @@ export default function QuestionForm({
 
                           <div className="mb-4">
                             <Label className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Question Stem</Label>
-
-                            {group.type === "summary_completion" ?
-                              <RichTextEditor
-                                initialValue={q.question}
-                                onChange={(e) => updateGroupQuestion(gIndex, qIndex, 'question', e)}
-                                className="rounded-xl border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200"
-                              /> : <Input
-                                placeholder="Enter the question text"
-                                value={q.question}
-                                onChange={(e) => updateGroupQuestion(gIndex, qIndex, 'question', e.target.value)}
-                                className="w-full px-4 py-2 rounded-xl border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-800 dark:text-gray-200 shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200"
-                              />
-                            }
+                            <RichTextEditor
+                              header={false}
+                              initialValue={q.question}
+                              onChange={(e) => updateGroupQuestion(gIndex, qIndex, 'question', e)}
+                              className="rounded-xl border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200"
+                            />
                             {errors[`group_${gIndex}_q_${qIndex}`] && <p className="text-red-500 text-xs mt-1 flex items-center gap-1"><svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20"><path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd"></path></svg>{errors[`group_${gIndex}_q_${qIndex}`]}</p>}
                           </div>
 
@@ -1270,7 +1226,7 @@ export default function QuestionForm({
                               setFormData(prev => ({
                                 ...prev,
                                 content: {
-                                  ...prev.content, audioUrl: `http://localhost:5000/${uploadedPath}`
+                                  ...prev.content, audioUrl: `${uploadedPath}`
                                 }
                               }));
                             }
@@ -1290,7 +1246,7 @@ export default function QuestionForm({
                   </div>
                   {formData.content.audioUrl && (
                     <audio controls className="mt-2 w-full">
-                      <source src={`http://localhost:5000/${formData.content.audioUrl}`} />
+                      <source src={`${api.defaults.baseURL}${formData.content.audioUrl}`} />
                     </audio>
                   )}
 

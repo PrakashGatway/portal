@@ -286,7 +286,7 @@ export default function LeadManagement() {
         openModal();
         if (lead.status === "new") {
             try {
-                await api.put(`/leads/${lead._id}`, { ...lead, status: "viewed" });
+                await api.put(`/leads/${lead._id}`, { status: "viewed" });
                 fetchLeads();
             } catch (err) {
                 // ignore silently

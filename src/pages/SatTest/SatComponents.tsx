@@ -943,9 +943,13 @@ export const GRETestResults: React.FC<GRETestResultsProps> = React.memo(
                         ? q.answerOptionIndexes.map(getOptionLabel).join(", ")
                         : q.answerText || "--";
 
-                      const correctLabel = typeof qd?.correctOptionIndex === "number"
-                        ? getOptionLabel(qd.correctOptionIndex)
-                        : "--";
+                      const correctLabels = qd.options
+                        .filter(o => o.isCorrect)
+                        .map(o => `${o.label}. ${o.text}`);  // label + text
+
+                      const correctLabel = correctLabels.length > 0
+                        ? correctLabels.join(", ")           // multiple values joined
+                        : qd.correctAnswerText || "--";
 
                       return (
                         <tr
