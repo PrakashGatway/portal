@@ -22,6 +22,9 @@ const TestQuestionPage = () => {
   const [isTestCompleted, setIsTestCompleted] = useState(false);
   const [testResults, setTestResults] = useState(null);
   const [totalQuestionsFromPrevious, setTotalQuestionsFromPrevious] = useState(0);
+  const [startingQuestionNumber, setStartingQuestionNumber] = useState(1);
+  const [totalQuestions, setTotalQuestions] = useState(0);
+
 
   // Theme classes
   const theme = {
@@ -47,17 +50,21 @@ const TestQuestionPage = () => {
     const [progress, setProgress] = useState(0);
     const audioRef = useRef(null);
 
-    const togglePlayPause = () => {
-      if (audioRef.current) {
-        if (isPlaying) {
-          audioRef.current.pause();
-          console.log(audioUrl)
-        } else {
-          audioRef.current.play();
-        }
-        setIsPlaying(!isPlaying);
-      }
-    };
+  const togglePlayPause = async () => {
+  if (!audioRef.current) return;
+
+  try {
+    if (isPlaying) {
+      audioRef.current.pause();
+      setIsPlaying(false);
+    } else {
+      await audioRef.current.play(); // WAIT FOR PLAY
+      setIsPlaying(true);
+    }
+  } catch (error) {
+    console.log("Play error:", error);
+  }
+};
 
     const handleTimeUpdate = () => {
       if (audioRef.current) {
@@ -81,9 +88,9 @@ const TestQuestionPage = () => {
         </div>
         
         <audio
-          ref={audioRef}
-          onTimeUpdate={handleTimeUpdate}
-          onEnded={handleEnded}
+         ref={audioRef}
+  onTimeUpdate={handleTimeUpdate}
+  onEnded={handleEnded}
           onPlay={() => setIsPlaying(true)}
           onPause={() => setIsPlaying(false)}
         >
@@ -745,30 +752,31 @@ const TestQuestionPage = () => {
     return total;
   };
 
-  const calculateQuestionStartingNumber = (questionIndex) => {
-    const allQuestions = getAllQuestions();
-    let globalQuestionCount = totalQuestionsFromPrevious + 1;
+const calculateQuestionStartingNumber = (questionIndex) => {
+  const allQuestions = getAllQuestions();
+  let currentNumber = startingQuestionNumber;
+  
+  // 0 se questionIndex tak ke liye count karein
+  for (let i = 0; i < questionIndex; i++) {
+    const question = allQuestions?.[i];
+    if (!question) continue;
     
-    for (let i = 0; i < questionIndex; i++) {
-      const question = allQuestions?.[i];
-      if (!question) continue;
-      
-      const questionText = getSafeQuestionText(question);
-      const groupType = findQuestionGroupType(i);
-      
-      if (hasPlaceholders(questionText)) {
-        const placeholderCount = (questionText.match(/\{\{\d+\}\}/g) || []).length;
-        globalQuestionCount += placeholderCount;
-      } else if (groupType === 'multiple_choice_multiple' &&
-        (questionText?.includes('TWO') || questionText?.includes('10-11') || questionText?.includes('12-13'))) {
-        globalQuestionCount += 2;
-      } else {
-        globalQuestionCount += 1;
-      }
+    const questionText = getSafeQuestionText(question);
+    const groupType = findQuestionGroupType(i);
+    
+    if (hasPlaceholders(questionText)) {
+      const placeholderCount = (questionText.match(/\{\{\d+\}\}/g) || []).length;
+      currentNumber += placeholderCount;
+    } else if (groupType === 'multiple_choice_multiple' &&
+      (questionText?.includes('TWO') || questionText?.includes('10-11') || questionText?.includes('12-13'))) {
+      currentNumber += 2;
+    } else {
+      currentNumber += 1;
     }
-    
-    return globalQuestionCount;
-  };
+  }
+  
+  return currentNumber;
+};
 
   const goToNextQuestion = () => {
     const allQuestions = getAllQuestions();
@@ -1001,108 +1009,117 @@ const TestQuestionPage = () => {
     });
   }, [isTestCompleted, testResults, isSubmitting, loading]);
 
-  useEffect(() => {
-    if (!testId) return;
-    const fetchTestData = async () => {
-      try {
-        setLoading(true);
-        const response = await api.post('/test/start', {
-          testSeriesId: testId
-        });
-        setTestData(response.data);
-        const sessionId = response.data?.sessionId ||
-          response.data?.testSessionId ||
-          response.data?.data?.sessionId ||
-          response.data?.data?.testSessionId;
-        setSessionId(sessionId);
+useEffect(() => {
+  if (!testId) return;
+  
+  const fetchTestData = async () => {
+    try {
+      setLoading(true);
+      const response = await api.post('/test/start', {
+        testSeriesId: testId
+      });
+      setTestData(response.data);
+      
+      const sessionId = response.data?.sessionId ||
+        response.data?.testSessionId ||
+        response.data?.data?.sessionId ||
+        response.data?.data?.testSessionId;
+      setSessionId(sessionId);
 
-        // Save total questions from current question
-        if (response.data.totalQuestions) {
-          setTotalQuestionsFromPrevious(response.data.totalQuestions);
-        } else if (response.data.currentQuestion?.totalQuestions) {
-          setTotalQuestionsFromPrevious(response.data.currentQuestion.totalQuestions);
-        } else {
-          // Fallback: calculate from current section questions
-          const calculatedTotal = calculateTotalQuestions();
-          setTotalQuestionsFromPrevious(calculatedTotal);
-        }
+      // Save starting question number for numbering
+      if (response.data.numbering?.firstSectionQuestionNumber) {
+        setStartingQuestionNumber(response.data.numbering.firstSectionQuestionNumber);
+      } else {
+        
+      }
 
-        // Set initial time for Timer component
-        let initialTime = 60 * 60; // Default fallback
-        if (response.data.timeRemaining) {
-          initialTime = response.data.timeRemaining;
-        } else if (response.data.duration || response.data?.data?.duration) {
-          const duration = response.data.duration || response.data?.data?.duration;
-          initialTime = duration * 60;
-        }
-        setTimeLeft(initialTime);
+      // Save total questions for display
+      if (response.data.numbering?.totalSectionQuestions) {
+        setTotalQuestions(response.data.numbering.totalSectionQuestions);
+      } else if (response.data.currentQuestion?.totalQuestions) {
+        setTotalQuestions(response.data.currentQuestion.totalQuestions);
+      } else {
+        const calculatedTotal = calculateTotalQuestions();
+        setTotalQuestions(calculatedTotal);
+      }
 
-        if (response.data.lastQuestionIndex !== undefined) {
-          setCurrentQuestionIndex(response.data.lastQuestionIndex);
-        }
+      // Set initial time for Timer component
+      let initialTime = 60 * 60; // Default fallback
+      if (response.data.timeRemaining) {
+        initialTime = response.data.timeRemaining;
+      } else if (response.data.duration || response.data?.data?.duration) {
+        const duration = response.data.duration || response.data?.data?.duration;
+        initialTime = duration * 60;
+      }
+      setTimeLeft(initialTime);
 
-        // Auto-fill all saved answers on initial load
-        if (response.data.userAnswer) {
-          const allQuestions = getAllQuestions();
+      if (response.data.lastQuestionIndex !== undefined) {
+        setCurrentQuestionIndex(response.data.lastQuestionIndex);
+      }
 
-          // Process all valid answers
-          response.data.userAnswer
-            .filter(item => item.questionId && item.answer !== null && item.answer !== '')
-            .forEach(item => {
-              console.log("Setting initial value for:", item.questionId, item.answer);
+      // Auto-fill all saved answers on initial load
+      if (response.data.userAnswer) {
+        const allQuestions = getAllQuestions();
 
-              // Find the question to determine its type
-              const questionIndex = allQuestions?.findIndex(q =>
-                q?._id === item.questionId || q?.id === item.questionId
-              );
+        // Process all valid answers
+        response.data.userAnswer
+          .filter(item => item.questionId && item.answer !== null && item.answer !== '')
+          .forEach(item => {
+            console.log("Setting initial value for:", item.questionId, item.answer);
 
-              if (questionIndex !== -1) {
-                const question = allQuestions[questionIndex];
-                const groupType = findQuestionGroupType(questionIndex);
+            // Find the question to determine its type
+            const questionIndex = allQuestions?.findIndex(q =>
+              q?._id === item.questionId || q?.id === item.questionId
+            );
 
-                if (groupType === 'multiple_choice_multiple') {
-                  // Multiple Choice Multiple
-                  if (Array.isArray(item.answer)) {
-                    setValue(item.questionId, JSON.stringify(item.answer));
-                  }
-                }
-                else if (groupType === 'multiple_choice_single') {
-                  // Multiple Choice Single - FIXED: Direct set value
-                  setValue(item.questionId, item.answer);
-                }
-                else if (groupType === 'summary_completion' || groupType === 'note_completion') {
-                  // Summary Completion or Note Completion - handle array format
-                  if (Array.isArray(item.answer)) {
-                    const questionText = getSafeQuestionText(question);
-                    const placeholderCount = (questionText.match(/\{\{\d+\}\}/g) || []).length;
-                    for (let i = 0; i < placeholderCount; i++) {
-                      const subQuestionId = `${item.questionId}_${i + 1}`;
-                      setValue(subQuestionId, item.answer[i] || '');
-                    }
-                  }
-                }
-                else {
-                  // All other question types
-                  setValue(item.questionId, item.answer);
-                }
-              } else {
-                // If question not found, set value anyway (fallback)
+            if (questionIndex !== -1) {
+              const question = allQuestions[questionIndex];
+              const groupType = findQuestionGroupType(questionIndex);
+
+              if (groupType === 'multiple_choice_multiple') {
+                // Multiple Choice Multiple
                 if (Array.isArray(item.answer)) {
                   setValue(item.questionId, JSON.stringify(item.answer));
-                } else {
-                  setValue(item.questionId, item.answer);
                 }
               }
-            });
-        }
-      } catch (err) {
-        setError(err.response?.data?.message || err.message || "Failed to load test");
-      } finally {
-        setLoading(false);
+              else if (groupType === 'multiple_choice_single') {
+                // Multiple Choice Single
+                setValue(item.questionId, item.answer);
+              }
+              else if (groupType === 'summary_completion' || groupType === 'note_completion') {
+                // Summary Completion or Note Completion - handle array format
+                if (Array.isArray(item.answer)) {
+                  const questionText = getSafeQuestionText(question);
+                  const placeholderCount = (questionText.match(/\{\{\d+\}\}/g) || []).length;
+                  for (let i = 0; i < placeholderCount; i++) {
+                    const subQuestionId = `${item.questionId}_${i + 1}`;
+                    setValue(subQuestionId, item.answer[i] || '');
+                  }
+                }
+              }
+              else {
+                // All other question types
+                setValue(item.questionId, item.answer);
+              }
+            } else {
+              // If question not found, set value anyway (fallback)
+              if (Array.isArray(item.answer)) {
+                setValue(item.questionId, JSON.stringify(item.answer));
+              } else {
+                setValue(item.questionId, item.answer);
+              }
+            }
+          });
       }
-    };
-    fetchTestData();
-  }, [testId]);
+    } catch (err) {
+      setError(err.response?.data?.message || err.message || "Failed to load test");
+    } finally {
+      setLoading(false);
+    }
+  };
+  
+  fetchTestData();
+}, [testId]);
 
   useEffect(() => {
     if (testData && testData.currentQuestion) {
@@ -1369,23 +1386,7 @@ const TestQuestionPage = () => {
                 initialTime={timeLeft}
                 onTimeUp={handleTimeUp}
               />
-              {isLastQuestion ? (
-                <button
-                  onClick={handleSubmit(handleFinalSubmission)}
-                  disabled={isSubmitting}
-                  className="bg-green-600 hover:bg-green-700 px-4 sm:px-6 py-2 rounded-lg font-medium transition-all duration-200 text-white disabled:opacity-50 text-sm sm:text-base"
-                >
-                  {isSubmitting ? "Submitting..." : "Submit Test"}
-                </button>
-              ) : (
-                <button
-                  onClick={handleNextQuestion}
-                  disabled={isSubmitting}
-                  className="bg-blue-600 hover:bg-blue-700 px-4 sm:px-6 py-2 rounded-lg font-medium transition-all duration-200 text-white disabled:opacity-50 text-sm sm:text-base"
-                >
-                  {isSubmitting ? "Loading..." : "Next Question"}
-                </button>
-              )}
+             
             </div>
           </div>
         </div>
@@ -1405,47 +1406,61 @@ const TestQuestionPage = () => {
               <p className="text-gray-400 mb-6 text-base sm:text-lg whitespace-pre-line">{extractInstruction()}</p>
             </div>
             <form onSubmit={handleSubmit(handleFinalSubmission)} className="space-y-4 sm:space-y-6">
-              {getAllQuestions()?.map((question, index) => {
-                if (typeof question !== 'object' || !question) return null;
-                const questionId = question?._id || question?.id || `q-${index}`;
-                const questionText = getSafeQuestionText(question);
-                const startingNumber = calculateQuestionStartingNumber(index);
-                const hasPlaceholdersFlag = hasPlaceholders(questionText);
-                const groupType = findQuestionGroupType(index);
-                let displayNumber;
-                let showQuestionNumber = true;
-                if (hasPlaceholdersFlag) {
-                  showQuestionNumber = false;
-                  displayNumber = startingNumber;
-                } else if (groupType === 'multiple_choice_multiple' &&
-                  (questionText?.includes('TWO') || questionText?.includes('10-11') || questionText?.includes('12-13'))) {
-                  displayNumber = `${startingNumber}-${startingNumber + 1}`;
-                } else {
-                  displayNumber = startingNumber.toString();
-                }
-                return (
-                  <div key={questionId} className="bg-gray-800 rounded-lg p-4 sm:p-6 border border-gray-700">
-                    <div className="flex items-start space-x-3 sm:space-x-4">
-                      {showQuestionNumber && (
-                        <span className="flex-shrink-0 w-8 h-8 sm:w-10 sm:h-10 bg-blue-600 text-white rounded-full flex items-center justify-center text-base sm:text-lg font-medium">
-                          {displayNumber}
-                        </span>
-                      )}
-                      {!showQuestionNumber && (
-                        <span className="flex-shrink-0 w-8 h-8 sm:w-10 sm:h-10 bg-gray-800 rounded-full flex items-center justify-center text-base sm:text-lg font-medium opacity-0">
-                          {index + 1}
-                        </span>
-                      )}
-                      <SafeQuestionRenderer
-                        question={question}
-                        questionId={questionId}
-                        index={index}
-                        groupType={groupType}
-                      />
-                    </div>
-                  </div>
-                );
-              })}
+             {getAllQuestions()?.map((question, index) => {
+  if (typeof question !== 'object' || !question) return null;
+  
+  const questionId = question?._id || question?.id || `q-${index}`;
+  const questionText = getSafeQuestionText(question);
+  const hasPlaceholdersFlag = hasPlaceholders(questionText);
+  const groupType = findQuestionGroupType(index);
+  
+  // Calculate actual display number based on startingQuestionNumber
+  const actualQuestionNumber = startingQuestionNumber + index;
+  
+  let displayNumber;
+  let showQuestionNumber = true;
+  
+  if (hasPlaceholdersFlag) {
+    showQuestionNumber = false;
+    displayNumber = actualQuestionNumber; // Starting number for placeholders
+  } else if (groupType === 'multiple_choice_multiple' &&
+    (questionText?.includes('TWO') || questionText?.includes('10-11') || questionText?.includes('12-13'))) {
+    
+    // Special case: multiple questions with range
+    const nextQuestionNumber = actualQuestionNumber + 1;
+    displayNumber = `${actualQuestionNumber}-${nextQuestionNumber}`;
+    
+    // Skip next question since it's included in range
+    // (You might need to handle this differently based on your logic)
+    
+  } else {
+    displayNumber = actualQuestionNumber.toString();
+  }
+  
+  return (
+    <div key={questionId} className="bg-gray-800 rounded-lg p-4 sm:p-6 border border-gray-700">
+      <div className="flex items-start space-x-3 sm:space-x-4">
+        {showQuestionNumber && (
+          <span className="flex-shrink-0 w-8 h-8 sm:w-10 sm:h-10 bg-blue-600 text-white rounded-full flex items-center justify-center text-base sm:text-lg font-medium">
+            {displayNumber}
+          </span>
+        )}
+        {!showQuestionNumber && (
+          <span className="flex-shrink-0 w-8 h-8 sm:w-10 sm:h-10 bg-gray-800 rounded-full flex items-center justify-center text-base sm:text-lg font-medium opacity-0">
+            {index + 1}
+          </span>
+        )}
+        <SafeQuestionRenderer
+          question={question}
+          questionId={questionId}
+          index={index}
+          groupType={groupType}
+          questionNumber={actualQuestionNumber} // Pass question number as prop
+        />
+      </div>
+    </div>
+  );
+})}
               <div className="flex justify-between mt-6 pt-6 border-t border-gray-700">
                 {currentQuestionIndex > 0 ? (
                   <button

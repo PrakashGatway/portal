@@ -96,7 +96,7 @@ export default function App() {
 
               <Route path="/mocks" element={<MockTestsPage />} />
               <Route path="/mock-tests" element={<MockTest />} />
-              <Route path="/test/:testId" element={<TestQuestionPage />} />
+              {/* <Route path="/test/:testId" element={<TestQuestionPage/>} /> */}
               <Route path="/events" element={<EventCalendar />} />
 
               <Route element={<ProtectedRoute roles={[ROLES.ADMIN]} />}>
