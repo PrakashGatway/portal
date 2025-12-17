@@ -1,22 +1,14 @@
-// components/speaking/SpeakingTestSection.tsx
 import React, { useState, useEffect, useRef } from "react";
 import {
   ChevronLeft,
   Clock,
   Mic,
   Square,
-  ArrowLeft,
-  ArrowRight,
   Volume2,
   Pause,
   Play,
   CheckCircle,
-  Download,
-  Headphones,
-  Send,
-  Shrink,
 } from "lucide-react";
-import axios from "axios";
 import api from "../../axiosInstance";
 
 interface SpeakingTestSectionProps {
@@ -60,6 +52,7 @@ interface SpeakingTestSectionProps {
     questionsAnswered?: number;
     totalQuestions?: number;
     completionPercentage?: number;
+    sectionTimeRemaining?: number;
   };
   onBack: () => void;
   onSubmit: (answers: Array<{ questionId: string; audioUrl: string; transcript: string }>) => void;
@@ -74,6 +67,7 @@ interface QuestionAnswer {
   audioBlob: Blob | null;
   audioUrl: string | null;
   transcript: string;
+  duration: number;
 }
 
 const SpeakingTestSection: React.FC<SpeakingTestSectionProps> = ({
@@ -88,12 +82,10 @@ const SpeakingTestSection: React.FC<SpeakingTestSectionProps> = ({
 }) => {
   // State management
   const [recordingTime, setRecordingTime] = useState(0);
-  const [currentQuestionGroupIndex, setCurrentQuestionGroupIndex] = useState(0);
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
   const [answers, setAnswers] = useState<QuestionAnswer[]>([]);
   const [transcript, setTranscript] = useState("");
   const [isPlaying, setIsPlaying] = useState(false);
-  const [showQuestionsOverview, setShowQuestionsOverview] = useState(false);
   
   // Recording specific states
   const [isRecording, setIsRecording] = useState(false);
@@ -109,27 +101,18 @@ const SpeakingTestSection: React.FC<SpeakingTestSectionProps> = ({
   const [autoRecordEnabled, setAutoRecordEnabled] = useState(true);
   const [isSubmitting, setIsSubmitting] = useState(false);
   
-  // Combined audio states
-  const [combinedAudioUrl, setCombinedAudioUrl] = useState<string | null>(null);
-  const [combinedAudioBlob, setCombinedAudioBlob] = useState<Blob | null>(null);
-  const [compressedAudioBlob, setCompressedAudioBlob] = useState<Blob | null>(null);
-  const [isPlayingCombined, setIsPlayingCombined] = useState(false);
-  const [showReviewModal, setShowReviewModal] = useState(false);
-  const [isCombining, setIsCombining] = useState(false);
-  const [isCompressing, setIsCompressing] = useState(false);
-  const [compressionInfo, setCompressionInfo] = useState<{
-    originalSize: number;
-    compressedSize: number;
-    ratio: number;
-    bitrate: number;
-  } | null>(null);
+  // Timer states
+  const [sectionTimeRemaining, setSectionTimeRemaining] = useState<number>(
+    progress.sectionTimeRemaining || question.timeLimit * 60
+  );
   
   // Refs
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
   const audioChunksRef = useRef<Blob[]>([]);
   const timerRef = useRef<NodeJS.Timeout | null>(null);
+  const sectionTimerRef = useRef<NodeJS.Timeout | null>(null);
+  const autoStopTimerRef = useRef<NodeJS.Timeout | null>(null);
   const audioRef = useRef<HTMLAudioElement | null>(null);
-  const combinedAudioRef = useRef<HTMLAudioElement | null>(null);
   const analyserRef = useRef<AnalyserNode | null>(null);
   const animationRef = useRef<number | null>(null);
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
@@ -145,7 +128,7 @@ const SpeakingTestSection: React.FC<SpeakingTestSectionProps> = ({
   const autoRecordTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const voicesLoadedRef = useRef<boolean>(false);
   const audioBlobsRef = useRef<Map<string, Blob>>(new Map());
-
+  
   // Get all questions from all groups
   const allQuestions = React.useMemo(() => {
     const questions: any[] = [];
@@ -205,11 +188,34 @@ const SpeakingTestSection: React.FC<SpeakingTestSectionProps> = ({
         questionId: q._id,
         audioBlob: null,
         audioUrl: null,
-        transcript: ""
+        transcript: "",
+        duration: 0
       }));
       setAnswers(initialAnswers);
     }
   }, [allQuestions]);
+
+  // Section timer
+  useEffect(() => {
+    if (sectionTimeRemaining > 0) {
+      sectionTimerRef.current = setInterval(() => {
+        setSectionTimeRemaining(prev => {
+          if (prev <= 1) {
+            if (sectionTimerRef.current) clearInterval(sectionTimerRef.current);
+            handleAutoSubmit();
+            return 0;
+          }
+          return prev - 1;
+        });
+      }, 1000);
+    }
+    
+    return () => {
+      if (sectionTimerRef.current) {
+        clearInterval(sectionTimerRef.current);
+      }
+    };
+  }, []);
 
   // Component mount पर ही auto speak start करें
   useEffect(() => {
@@ -242,7 +248,7 @@ const SpeakingTestSection: React.FC<SpeakingTestSectionProps> = ({
     };
   }, [currentQuestion, answers, hasRecorded, hasQuestionSpoken]);
 
-  // Load voices for speech synthesis
+  // Load voices for speech synthesis - Female voice preference
   useEffect(() => {
     if ('speechSynthesis' in window && !voicesLoadedRef.current) {
       const loadVoices = () => {
@@ -261,16 +267,24 @@ const SpeakingTestSection: React.FC<SpeakingTestSectionProps> = ({
     }
   }, []);
 
-  // Handle recording timer
+  // Handle recording timer and auto stop after 2 minutes
   useEffect(() => {
     if (isRecording) {
       timerRef.current = setInterval(() => {
-        setRecordingTime(prev => prev + 1);
+        setRecordingTime(prev => {
+          if (prev >= 120) { // 2 minutes = 120 seconds
+            handleRecordClick(); // Auto stop recording
+            return 120;
+          }
+          return prev + 1;
+        });
       }, 1000);
     } else {
       if (timerRef.current) {
         clearInterval(timerRef.current);
-        setRecordingTime(0);
+      }
+      if (autoStopTimerRef.current) {
+        clearTimeout(autoStopTimerRef.current);
       }
     }
     
@@ -278,22 +292,17 @@ const SpeakingTestSection: React.FC<SpeakingTestSectionProps> = ({
       if (timerRef.current) {
         clearInterval(timerRef.current);
       }
+      if (autoStopTimerRef.current) {
+        clearTimeout(autoStopTimerRef.current);
+      }
     };
   }, [isRecording]);
 
   // Speech ended होने पर auto recording start करें
   useEffect(() => {
-    // केवल तभी auto record करें जब:
-    // 1. Speech ended हो
-    // 2. Auto record enabled हो  
-    // 3. Currently recording न हो
-    // 4. User ने manually stop न किया हो
-    // 5. पहले से recording न हुई हो
     if (speechEnded && autoRecordEnabled && !isRecording && !userManuallyStopped && !hasRecorded) {
-      // 1 सेकंड का delay देकर recording start करें
       autoRecordTimeoutRef.current = setTimeout(() => {
         if (!isRecording && currentQuestion && !userManuallyStopped && !hasRecorded) {
-          console.log("Auto recording starting...");
           handleRecordClick();
         }
       }, 1000);
@@ -311,15 +320,6 @@ const SpeakingTestSection: React.FC<SpeakingTestSectionProps> = ({
     const mins = Math.floor(seconds / 60);
     const secs = seconds % 60;
     return `${mins}:${secs.toString().padStart(2, '0')}`;
-  };
-
-  // Format file size
-  const formatFileSize = (bytes: number) => {
-    if (bytes === 0) return '0 Bytes';
-    const k = 1024;
-    const sizes = ['Bytes', 'KB', 'MB', 'GB'];
-    const i = Math.floor(Math.log(bytes) / Math.log(k));
-    return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
   };
 
   // Initialize speech recognition
@@ -372,7 +372,19 @@ const SpeakingTestSection: React.FC<SpeakingTestSectionProps> = ({
     recognitionRef.current = recognition;
   };
 
-  // Auto speak function
+  // Generate beep sound for combining
+  const generateBeep = (duration = 0.5, frequency = 1000, sampleRate = 44100): Float32Array => {
+    const numSamples = Math.round(duration * sampleRate);
+    const beepData = new Float32Array(numSamples);
+    
+    for (let i = 0; i < numSamples; i++) {
+      beepData[i] = Math.sin(2 * Math.PI * frequency * i / sampleRate) * 0.3; // 30% volume
+    }
+    
+    return beepData;
+  };
+
+  // Auto speak function with FEMALE voice
   const startAutoSpeak = () => {
     if (!currentQuestion || !('speechSynthesis' in window)) {
       console.warn("Speech synthesis not supported");
@@ -395,20 +407,18 @@ const SpeakingTestSection: React.FC<SpeakingTestSectionProps> = ({
     
     const utterance = new SpeechSynthesisUtterance(currentQuestion.question);
     
-    // Voice settings
+    // Voice settings for female voice
     utterance.rate = 0.9;
-    utterance.pitch = 1;
+    utterance.pitch = 1.1;
     utterance.volume = 1;
     
     // Voice events
     utterance.onstart = () => {
-      console.log("Auto speech started");
       setAutoSpeaking(true);
       setRecordingStatus("Listening to question...");
     };
     
     utterance.onend = () => {
-      console.log("Auto speech ended");
       setAutoSpeaking(false);
       setSpeechEnded(true);
       setHasQuestionSpoken(true);
@@ -423,20 +433,34 @@ const SpeakingTestSection: React.FC<SpeakingTestSectionProps> = ({
       setRecordingStatus("Speech error. Click microphone to record manually.");
     };
     
-    // Select voice
+    // Select FEMALE voice
     const voices = window.speechSynthesis.getVoices();
     if (voices.length > 0) {
-      const englishVoice = voices.find(voice => 
-        voice.lang.startsWith('en')
-      );
-      if (englishVoice) {
-        utterance.voice = englishVoice;
+      const femaleVoices = voices.filter(voice => {
+        const voiceName = voice.name.toLowerCase();
+        return (
+          voice.lang.startsWith('en') && 
+          (voiceName.includes('female') || 
+           voiceName.includes('woman') || 
+           voiceName.includes('samantha') || 
+           voiceName.includes('zira') ||
+           voiceName.includes('google uk female') ||
+           voice.pitch > 1.0)
+        );
+      });
+      
+      if (femaleVoices.length > 0) {
+        utterance.voice = femaleVoices[0];
+      } else {
+        const englishVoice = voices.find(voice => voice.lang.startsWith('en'));
+        if (englishVoice) {
+          utterance.voice = englishVoice;
+        }
       }
     }
     
     speechSynthesisRef.current = utterance;
     
-    // Small delay for better UX
     setTimeout(() => {
       window.speechSynthesis.speak(utterance);
     }, 300);
@@ -455,7 +479,6 @@ const SpeakingTestSection: React.FC<SpeakingTestSectionProps> = ({
   const toggleQuestionSpeech = () => {
     if (!currentQuestion || !('speechSynthesis' in window)) return;
     
-    // अगर पहले ही speak हो चुका है तो दोबारा नहीं होगा
     if (hasQuestionSpoken) {
       setRecordingStatus("Question already spoken. Ready for recording.");
       return;
@@ -494,7 +517,6 @@ const SpeakingTestSection: React.FC<SpeakingTestSectionProps> = ({
       for(let i = 0; i < bufferLength; i++) {
         const barHeight = (dataArray[i] / 255) * canvas.height * 1.5;
         
-        // Create gradient for bars
         const gradient = ctx.createLinearGradient(0, canvas.height - barHeight, 0, canvas.height);
         gradient.addColorStop(0, '#60a5fa');
         gradient.addColorStop(0.5, '#3b82f6');
@@ -548,156 +570,82 @@ const SpeakingTestSection: React.FC<SpeakingTestSectionProps> = ({
     }
   };
 
-  // Start audio recording
-  const startAudioRecording = (stream: MediaStream) => {
-     try {
-    // Low bitrate recording settings for speech
-    const options = {
-      audioBitsPerSecond: 16000, // 16 kbps recording
-    };
-    
-    // Try different MIME types
-    const mimeTypes = [
-      'audio/webm;codecs=opus',
-      'audio/webm',
-      'audio/ogg;codecs=opus',
-      'audio/mp4;codecs="mp4a.40.2"',
-      ''
-    ];
-    
-    for (const mimeType of mimeTypes) {
-      if (MediaRecorder.isTypeSupported(mimeType)) {
-        if (mimeType) {
-          options.mimeType = mimeType;
-        }
-        break;
-      }
-    }
-      
-      const mediaRecorder = new MediaRecorder(stream, options);
-      mediaRecorderRef.current = mediaRecorder;
-      audioChunksRef.current = [];
-      
-      mediaRecorder.ondataavailable = (e) => {
-        if (e.data.size > 0) {
-          audioChunksRef.current.push(e.data);
-        }
-      };
-      
-      mediaRecorder.onstop = () => {
-        if (audioChunksRef.current.length === 0) {
-          setRecordingStatus("Recording failed: No audio data");
-          return;
-        }
-        
-        try {
-          const audioBlob = new Blob(audioChunksRef.current, { 
-            type: mediaRecorder.mimeType || 'audio/webm' 
-          });
-          
-          // Store blob in ref
-          if (currentQuestion) {
-            audioBlobsRef.current.set(currentQuestion._id, audioBlob);
-          }
-          
-          const audioUrl = URL.createObjectURL(audioBlob);
-          setRecordedAudio(audioUrl);
-          
-          // Mark that recording has been completed for this question
-          setHasRecorded(true);
-          
-          // Update answer with recorded audio
-          if (currentQuestion) {
-            setAnswers(prev => prev.map(answer => 
-              answer.questionId === currentQuestion._id 
-                ? { ...answer, audioBlob, audioUrl, transcript }
-                : answer
-            ));
-          }
-          
-          setRecordingStatus("Recording completed successfully");
-        } catch (blobError) {
-          console.error("Blob creation error:", blobError);
-          setRecordingStatus("Recording failed: Could not create audio file");
-        }
-      };
-      
-      mediaRecorder.onerror = (e) => {
-        console.error("MediaRecorder error:", e);
-        setRecordingStatus("Recording error occurred");
-      };
-      
-      mediaRecorder.start(100); // Collect data every 100ms
-      
-    } catch (err) {
-      console.error("Audio recording initialization failed:", err);
-      setRecordingStatus("Audio recording not supported in this browser");
-    }
-  };
-
-  // Combine all audio blobs into one
-  const combineAudioBlobs = async (): Promise<Blob | null> => {
+  // Combine audio with beep between questions
+  const combineAudioWithBeeps = async (): Promise<Blob | null> => {
     const audioBlobs = Array.from(audioBlobsRef.current.values());
     
     if (audioBlobs.length === 0) {
       return null;
     }
     
-    if (audioBlobs.length === 1) {
-      return audioBlobs[0];
-    }
-    
     try {
-      setIsCombining(true);
-      setRecordingStatus("Combining all recordings...");
+      setRecordingStatus("Combining recordings with beep markers...");
       
-      // Create a new audio context
       const audioContext = new (window.AudioContext || (window as any).webkitAudioContext)();
+      const sampleRate = audioContext.sampleRate;
+      
+      // Create beep sound
+      const beepDuration = 0.5; // 500ms beep
+      const beepData = generateBeep(beepDuration, 1000, sampleRate);
+      const beepBuffer = audioContext.createBuffer(1, beepData.length, sampleRate);
+      beepBuffer.copyToChannel(beepData, 0);
       
       // Array to hold decoded audio buffers
-      const audioBuffers = [];
+      const audioBuffers: AudioBuffer[] = [];
+      let totalLength = 0;
       
-      // Decode each audio blob
-      for (const blob of audioBlobs) {
+      // Decode each audio blob and calculate total length
+      for (let i = 0; i < audioBlobs.length; i++) {
+        const blob = audioBlobs[i];
         const arrayBuffer = await blob.arrayBuffer();
         const audioBuffer = await audioContext.decodeAudioData(arrayBuffer);
         audioBuffers.push(audioBuffer);
-      }
-      
-      // Calculate total length
-      let totalLength = 0;
-      for (const buffer of audioBuffers) {
-        totalLength += buffer.length;
+        
+        // Add actual audio length
+        totalLength += audioBuffer.length;
+        
+        // Add beep between questions (except after last one)
+        if (i < audioBlobs.length - 1) {
+          totalLength += beepBuffer.length;
+        }
       }
       
       // Create new buffer for combined audio
-      const combinedBuffer = audioContext.createBuffer(
-        audioBuffers[0].numberOfChannels,
-        totalLength,
-        audioBuffers[0].sampleRate
-      );
+      const combinedBuffer = audioContext.createBuffer(1, totalLength, sampleRate);
+      const output = combinedBuffer.getChannelData(0);
       
-      // Copy audio data from each buffer
       let offset = 0;
-      for (const buffer of audioBuffers) {
-        for (let channel = 0; channel < buffer.numberOfChannels; channel++) {
-          const channelData = buffer.getChannelData(channel);
-          combinedBuffer.getChannelData(channel).set(channelData, offset);
+      
+      // Mix in all audio with beeps
+      for (let i = 0; i < audioBuffers.length; i++) {
+        const audioBuffer = audioBuffers[i];
+        
+        // Add actual recorded audio
+        const audioData = audioBuffer.getChannelData(0);
+        for (let j = 0; j < audioData.length; j++) {
+          output[offset + j] = audioData[j];
         }
-        offset += buffer.length;
+        offset += audioData.length;
+        
+        // Add beep between questions (except after last one)
+        if (i < audioBuffers.length - 1) {
+          const beepChannelData = beepBuffer.getChannelData(0);
+          for (let j = 0; j < beepChannelData.length; j++) {
+            output[offset + j] = beepChannelData[j];
+          }
+          offset += beepChannelData.length;
+        }
       }
       
       // Convert back to blob (WAV format)
       const wavBlob = await audioBufferToWav(combinedBuffer);
       
-      setIsCombining(false);
-      setRecordingStatus("All recordings combined successfully");
+      setRecordingStatus("Recordings combined with beep markers");
       
       return wavBlob;
       
     } catch (error) {
-      console.error("Error combining audio blobs:", error);
-      setIsCombining(false);
+      console.error("Error combining audio:", error);
       setRecordingStatus("Error combining recordings");
       
       // Fallback: simple concatenation
@@ -707,7 +655,7 @@ const SpeakingTestSection: React.FC<SpeakingTestSectionProps> = ({
           const arrayBuffer = await blob.arrayBuffer();
           combinedChunks.push(arrayBuffer);
         }
-        return new Blob(combinedChunks, { type: 'audio/wav' });
+        return new Blob(combinedChunks, { type: 'audio/webm;codecs=opus' });
       } catch (fallbackError) {
         console.error("Fallback combining also failed:", fallbackError);
         return null;
@@ -715,7 +663,7 @@ const SpeakingTestSection: React.FC<SpeakingTestSectionProps> = ({
     }
   };
 
-  // Helper function to convert AudioBuffer to WAV blob
+  // Convert AudioBuffer to WAV blob
   const audioBufferToWav = async (buffer: AudioBuffer): Promise<Blob> => {
     return new Promise((resolve) => {
       const numberOfChannels = buffer.numberOfChannels;
@@ -727,29 +675,17 @@ const SpeakingTestSection: React.FC<SpeakingTestSectionProps> = ({
       
       // RIFF identifier
       writeString(wav, 0, 'RIFF');
-      // File length
       wav.setUint32(4, 36 + length * numberOfChannels * 2, true);
-      // RIFF type
       writeString(wav, 8, 'WAVE');
-      // Format chunk identifier
       writeString(wav, 12, 'fmt ');
-      // Format chunk length
       wav.setUint32(16, 16, true);
-      // Sample format (PCM)
       wav.setUint16(20, 1, true);
-      // Channel count
       wav.setUint16(22, numberOfChannels, true);
-      // Sample rate
       wav.setUint32(24, sampleRate, true);
-      // Byte rate (sample rate * block align)
       wav.setUint32(28, sampleRate * numberOfChannels * 2, true);
-      // Block align (channel count * bytes per sample)
       wav.setUint16(32, numberOfChannels * 2, true);
-      // Bits per sample
       wav.setUint16(34, 16, true);
-      // Data chunk identifier
       writeString(wav, 36, 'data');
-      // Data chunk length
       wav.setUint32(40, length * numberOfChannels * 2, true);
       
       // Write audio data
@@ -772,415 +708,149 @@ const SpeakingTestSection: React.FC<SpeakingTestSectionProps> = ({
     }
   };
 
-  // Compress audio using Web Audio API
- const compressAudio = async (audioBlob: Blob): Promise<{ compressedBlob: Blob; info: any }> => {
-  return new Promise(async (resolve, reject) => {
-    let audioContext: AudioContext | null = null;
-    let offlineContext: OfflineAudioContext | null = null;
-    
+  // Start audio recording with Opus
+  const startAudioRecording = (stream: MediaStream) => {
     try {
-      setIsCompressing(true);
-      setRecordingStatus("Compressing audio for optimal upload...");
+      const opusMimeType = 'audio/webm;codecs=opus';
+      const isOpusSupported = MediaRecorder.isTypeSupported(opusMimeType);
       
-      // Create audio context
-      audioContext = new (window.AudioContext || (window as any).webkitAudioContext)();
+      let options: MediaRecorderOptions = {
+        audioBitsPerSecond: 16000,
+      };
       
-      // Decode the audio data
-      const arrayBuffer = await audioBlob.arrayBuffer();
-      const audioBuffer = await audioContext.decodeAudioData(arrayBuffer);
-      
-      // Calculate duration in minutes
-      const durationInMinutes = audioBuffer.duration / 60;
-      
-      // TARGET: 1MB per 3 minutes
-      const targetBytesPerMinute = 350 * 1024; // ~350KB per minute
-      const targetSizeBytes = Math.max(
-        100 * 1024, // Minimum 100KB
-        Math.round(durationInMinutes * targetBytesPerMinute)
-      );
-      
-      // Calculate required bitrate
-      const durationInSeconds = audioBuffer.duration;
-      const targetBitrate = Math.round((targetSizeBytes * 8) / durationInSeconds);
-      
-      // Speech के लिए optimal bitrate range
-      const minBitrate = 8000;
-      const optimalBitrate = 16000;
-      const maxBitrate = 32000;
-      
-      // Bitrate को optimal range में लाएं
-      let adjustedBitrate = targetBitrate;
-      if (targetBitrate < minBitrate) adjustedBitrate = minBitrate;
-      if (targetBitrate > maxBitrate) adjustedBitrate = maxBitrate;
-      
-      // मोनो में convert करें
-      const isMono = audioBuffer.numberOfChannels === 1;
-      let monoBuffer = audioBuffer;
-      
-      if (!isMono) {
-        monoBuffer = audioContext.createBuffer(1, audioBuffer.length, audioBuffer.sampleRate);
-        const monoData = monoBuffer.getChannelData(0);
+      if (isOpusSupported) {
+        options.mimeType = opusMimeType;
+      } else {
+        const fallbackTypes = [
+          'audio/webm',
+          'audio/mp4',
+          'audio/ogg;codecs=opus',
+          ''
+        ];
         
-        for (let i = 0; i < audioBuffer.length; i++) {
-          let sum = 0;
-          for (let channel = 0; channel < audioBuffer.numberOfChannels; channel++) {
-            sum += audioBuffer.getChannelData(channel)[i];
+        for (const mimeType of fallbackTypes) {
+          if (MediaRecorder.isTypeSupported(mimeType)) {
+            if (mimeType) {
+              options.mimeType = mimeType;
+            }
+            break;
           }
-          monoData[i] = sum / audioBuffer.numberOfChannels;
         }
       }
       
-      // Speech के लिए sample rate
-      const targetSampleRate = adjustedBitrate <= 16000 ? 8000 : 16000;
-      const ratio = targetSampleRate / monoBuffer.sampleRate;
-      const newLength = Math.round(monoBuffer.length * ratio);
-      
-      // Offline context create करें
-      offlineContext = new (window.OfflineAudioContext || (window as any).webkitOfflineAudioContext)(
-        1, // channels (mono)
-        newLength,
-        targetSampleRate
-      );
-      
-      // Create buffer source
-      const source = offlineContext.createBufferSource();
-      source.buffer = monoBuffer;
-      source.connect(offlineContext.destination);
-      source.start(0);
-      
-      // Render to new buffer
-      const renderedBuffer = await offlineContext.startRendering();
-      
-      // Codec select करें
-      const supportedTypes = [
-        'audio/webm;codecs=opus',
-        'audio/mp4;codecs="mp4a.40.2"',
-        'audio/ogg;codecs=opus',
-        'audio/webm',
-      ];
-      
-      let selectedMimeType = 'audio/webm;codecs=opus';
-      for (const mimeType of supportedTypes) {
-        if (MediaRecorder.isTypeSupported(mimeType)) {
-          selectedMimeType = mimeType;
-          break;
-        }
-      }
-      
-      // Create new audio context for MediaRecorder
-      const compressionAudioContext = new (window.AudioContext || (window as any).webkitAudioContext)();
-      const mediaStream = compressionAudioContext.createMediaStreamDestination();
-      const sourceNode = compressionAudioContext.createBufferSource();
-      sourceNode.buffer = renderedBuffer;
-      sourceNode.connect(mediaStream);
-      
-      const mediaRecorder = new MediaRecorder(mediaStream.stream, {
-        mimeType: selectedMimeType,
-        audioBitsPerSecond: adjustedBitrate
-      });
-      
-      const chunks: Blob[] = [];
+      const mediaRecorder = new MediaRecorder(stream, options);
+      mediaRecorderRef.current = mediaRecorder;
+      audioChunksRef.current = [];
       
       mediaRecorder.ondataavailable = (e) => {
         if (e.data.size > 0) {
-          chunks.push(e.data);
+          audioChunksRef.current.push(e.data);
         }
       };
       
       mediaRecorder.onstop = () => {
-        const compressedBlob = new Blob(chunks, { type: selectedMimeType });
-        
-        // Calculate compression info - यहाँ audioBuffer का use करें
-        const originalSize = audioBlob.size;
-        const compressedSize = compressedBlob.size;
-        const ratio = compressedSize / originalSize;
-        const actualBitrate = Math.round((compressedSize * 8) / durationInSeconds);
-        const bytesPerMinute = durationInMinutes > 0 ? compressedSize / durationInMinutes : 0;
-        
-        // Cleanup contexts
-        try {
-          compressionAudioContext.close();
-          if (audioContext.state !== 'closed') audioContext.close();
-          if (offlineContext) {
-            // OfflineAudioContext को close करने का कोई method नहीं है
-          }
-        } catch (cleanupError) {
-          console.warn("Context cleanup warning:", cleanupError);
+        if (audioChunksRef.current.length === 0) {
+          setRecordingStatus("Recording failed: No audio data");
+          return;
         }
         
-        setCompressionInfo({
-          originalSize,
-          compressedSize,
-          ratio,
-          bitrate: actualBitrate
-        });
-        
-        setIsCompressing(false);
-        setRecordingStatus(`Audio compressed: ${formatFileSize(compressedSize)}`);
-        
-        resolve({
-          compressedBlob,
-          info: {
-            originalSize,
-            compressedSize,
-            ratio,
-            bitrate: actualBitrate,
-            duration: durationInSeconds,
-            bytesPerMinute,
-            estimatedSize: `${formatFileSize(compressedSize)} for ${durationInMinutes.toFixed(1)} minutes`
+        try {
+          const audioBlob = new Blob(audioChunksRef.current, { 
+            type: mediaRecorder.mimeType || 'audio/webm' 
+          });
+          
+          // Always accept recording - NO WORD COUNT CHECK
+          if (currentQuestion) {
+            audioBlobsRef.current.set(currentQuestion._id, audioBlob);
           }
-        });
+          
+          const audioUrl = URL.createObjectURL(audioBlob);
+          setRecordedAudio(audioUrl);
+          setHasRecorded(true);
+          
+          if (currentQuestion) {
+            setAnswers(prev => prev.map(answer => 
+              answer.questionId === currentQuestion._id 
+                ? { 
+                    ...answer, 
+                    audioBlob, 
+                    audioUrl, 
+                    transcript: transcriptRef.current,
+                    duration: recordingTime
+                  }
+                : answer
+            ));
+          }
+          
+          setRecordingStatus("Recording completed ✓");
+          
+        } catch (error) {
+          console.error("Blob creation error:", error);
+          setRecordingStatus("Recording failed");
+        }
       };
       
-      mediaRecorder.onerror = (error) => {
-        console.error("MediaRecorder error:", error);
-        try {
-          compressionAudioContext.close();
-          if (audioContext.state !== 'closed') audioContext.close();
-        } catch (cleanupError) {
-          console.warn("Context cleanup warning:", cleanupError);
-        }
-        
-        // Fallback
-        resolve({
-          compressedBlob: audioBlob,
-          info: {
-            originalSize: audioBlob.size,
-            compressedSize: audioBlob.size,
-            ratio: 1,
-            bitrate: 0,
-            duration: durationInSeconds,
-            bytesPerMinute: 0,
-            estimatedSize: "Compression failed"
-          }
-        });
-      };
+      mediaRecorder.start(100);
       
-      // Start recording
-      mediaRecorder.start();
-      sourceNode.start(0);
-      
-      // Stop after duration
-      const stopTimeout = setTimeout(() => {
-        try {
-          mediaRecorder.stop();
-          sourceNode.stop();
-        } catch (stopError) {
-          console.error("Error stopping recorder:", stopError);
-        }
-      }, (renderedBuffer.duration * 1000) + 1000);
-      
-    } catch (error) {
-      console.error("Audio compression error:", error);
-      
-      // Cleanup
-      try {
-        if (audioContext && audioContext.state !== 'closed') audioContext.close();
-      } catch (cleanupError) {
-        console.warn("Context cleanup warning:", cleanupError);
-      }
-      
-      setIsCompressing(false);
-      setRecordingStatus("Compression failed, using original audio");
-      
-      // Fallback
-      resolve({
-        compressedBlob: audioBlob,
-        info: {
-          originalSize: audioBlob.size,
-          compressedSize: audioBlob.size,
-          ratio: 1,
-          bitrate: 0,
-          duration: 0,
-          bytesPerMinute: 0,
-          estimatedSize: "Compression failed"
-        }
-      });
+    } catch (err) {
+      console.error("Audio recording initialization failed:", err);
+      setRecordingStatus("Audio recording not supported");
     }
-  });
-};
+  };
 
-  // Preview combined audio
-  const previewCombinedAudio = async () => {
+  // Upload all audio directly - NO REVIEW
+  const uploadAllAudio = async () => {
+    setIsSubmitting(true);
+    setRecordingStatus("Preparing submission...");
+    
     try {
-      setRecordingStatus("Preparing combined audio preview...");
-      
-      // Combine audio first
-      const combinedBlob = await combineAudioBlobs();
+      // Combine audio with beeps
+      const combinedBlob = await combineAudioWithBeeps();
       
       if (!combinedBlob) {
-        setRecordingStatus("No recordings available to preview");
+        setRecordingStatus("No recordings to submit");
+        setIsSubmitting(false);
         return;
       }
       
-      // Compress the audio
-      const { compressedBlob, info } = await compressAudio(combinedBlob);
-      
-      // Create URL for compressed audio
-      const audioUrl = URL.createObjectURL(compressedBlob);
-      setCombinedAudioUrl(audioUrl);
-      setCombinedAudioBlob(combinedBlob);
-      setCompressedAudioBlob(compressedBlob);
-      
-      // Show review modal
-      setShowReviewModal(true);
-      
-      setRecordingStatus("Combined audio ready for preview");
-      
-    } catch (error) {
-      console.error("Error previewing combined audio:", error);
-      setRecordingStatus("Error preparing preview");
-    }
-  };
-
-  // Play combined audio
-  const playCombinedAudio = () => {
-    if (!combinedAudioUrl || !combinedAudioRef.current) return;
-    
-    if (!combinedAudioRef.current) {
-      combinedAudioRef.current = new Audio(combinedAudioUrl);
-    } else {
-      combinedAudioRef.current.src = combinedAudioUrl;
-    }
-    
-    const audioElement = combinedAudioRef.current;
-    
-    audioElement.onended = () => {
-      setIsPlayingCombined(false);
-    };
-    
-    audioElement.onerror = () => {
-      setRecordingStatus("Error playing combined audio");
-      setIsPlayingCombined(false);
-    };
-    
-    if (isPlayingCombined) {
-      audioElement.pause();
-      setIsPlayingCombined(false);
-    } else {
-      audioElement.play()
-        .then(() => {
-          setIsPlayingCombined(true);
-          setRecordingStatus("Playing combined recording...");
-        })
-        .catch(err => {
-          console.error("Play failed:", err);
-          setRecordingStatus(`Cannot play: ${err.message}`);
-        });
-    }
-  };
-
-  // Download combined audio (original)
-  const downloadCombinedAudio = () => {
-    if (!combinedAudioBlob) {
-      setRecordingStatus("No combined audio available to download");
-      return;
-    }
-    
-    try {
-      const url = URL.createObjectURL(combinedAudioBlob);
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = `speaking_test_${question.title.replace(/\s+/g, '_')}_${new Date().getTime()}.wav`;
-      document.body.appendChild(a);
-      a.click();
-      document.body.removeChild(a);
-      URL.revokeObjectURL(url);
-      
-      setRecordingStatus("Original audio downloaded successfully");
-      
-    } catch (error) {
-      console.error("Error downloading audio:", error);
-      setRecordingStatus("Error downloading audio");
-    }
-  };
-
-  // Download compressed audio
-  const downloadCompressedAudio = () => {
-    if (!compressedAudioBlob) {
-      setRecordingStatus("No compressed audio available to download");
-      return;
-    }
-    
-    try {
-      const url = URL.createObjectURL(compressedAudioBlob);
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = `speaking_test_compressed_${question.title.replace(/\s+/g, '_')}_${new Date().getTime()}.m4a`;
-      document.body.appendChild(a);
-      a.click();
-      document.body.removeChild(a);
-      URL.revokeObjectURL(url);
-      
-      setRecordingStatus("Compressed audio downloaded successfully");
-      
-    } catch (error) {
-      console.error("Error downloading compressed audio:", error);
-      setRecordingStatus("Error downloading compressed audio");
-    }
-  };
-
-  // Upload compressed audio to API
-  const uploadCombinedAudio = async () => {
-    if (!compressedAudioBlob) {
-      setRecordingStatus("No audio to upload");
-      return;
-    }
-    
-    setIsSubmitting(true);
-    
-    try {
+      // Prepare form data
       const formData = new FormData();
-      formData.append('file', compressedAudioBlob, 'speaking_test_compressed.m4a');
-
+      formData.append('file', combinedBlob, 'speaking_test_with_beeps.wav');
       
-      // Add compression info
-      if (compressionInfo) {
-        formData.append('compressionInfo', JSON.stringify({
-          originalSize: compressionInfo.originalSize,
-          compressedSize: compressionInfo.compressedSize,
-          compressionRatio: compressionInfo.ratio,
-          bitrate: compressionInfo.bitrate,
-          estimatedSizePerMinute: Math.round((compressionInfo.compressedSize / (compressionInfo.originalSize > 0 ? compressionInfo.originalSize / (1024 * 1024) : 1)) * 1024 * 1024)
+      // Add transcripts for all recordings
+      const transcripts = answers
+        .filter(answer => answer.audioBlob)
+        .map(answer => ({
+          questionId: answer.questionId,
+          transcript: answer.transcript
         }));
-      }
       
-      // Add transcripts
-      const transcripts = answers.map(answer => ({
-        questionId: answer.questionId,
-        transcript: answer.transcript
-      }));
       formData.append('transcripts', JSON.stringify(transcripts));
       
+      // Upload
       const response = await api.post('/upload/audio', formData, {
         headers: {
           'Content-Type': 'multipart/form-data',
           'Authorization': `Bearer ${localStorage.getItem('token')}`
         },
-        // Add timeout and progress
-        timeout: 300000, // 5 minutes timeout
-        onUploadProgress: (progressEvent) => {
-          if (progressEvent.total) {
-            const percentCompleted = Math.round((progressEvent.loaded * 100) / progressEvent.total);
-            setRecordingStatus(`Uploading: ${percentCompleted}%`);
-          }
-        }
+        timeout: 60000,
       });
       
       console.log('Audio uploaded successfully:', response.data);
       
       // Prepare answers for parent component
-      const formattedAnswers = answers.map(answer => ({
-        questionId: answer.questionId,
-        audioUrl: answer.audioUrl || '',
-        transcript: answer.transcript
-      }));
+      const formattedAnswers = answers
+        .filter(answer => answer.audioBlob)
+        .map(answer => ({
+          questionId: answer.questionId,
+          audioUrl: answer.audioUrl || '',
+          transcript: answer.transcript
+        }));
       
-      // Call parent onSubmit
+      // Submit directly
       onSubmit(formattedAnswers);
       
       setRecordingStatus("Test submitted successfully!");
-      setShowReviewModal(false);
       
     } catch (error: any) {
       console.error('Error uploading audio:', error);
@@ -1197,35 +867,47 @@ const SpeakingTestSection: React.FC<SpeakingTestSectionProps> = ({
     }
   };
 
-  // Submit test - show review modal
-  const handleSubmitTest = async () => {
-    // Check if all questions are recorded
-    const recordedCount = answers.filter(a => a.audioBlob).length;
-    if (recordedCount < allQuestions.length) {
-      setRecordingStatus(`Please record all questions. ${recordedCount}/${allQuestions.length} recorded.`);
+  // Auto submit when time is up
+  const handleAutoSubmit = async () => {
+    if (isSubmitting) return;
+    
+    const recordingsCount = answers.filter(a => a.audioBlob).length;
+    
+    if (recordingsCount === 0) {
+      setRecordingStatus("Time's up! No recordings to submit.");
       return;
     }
     
-    // Show review modal
-    previewCombinedAudio();
+    setRecordingStatus("Time's up! Submitting your test...");
+    await uploadAllAudio();
+  };
+
+  // Submit test - DIRECT without review
+  const handleSubmitTest = async () => {
+    // Check if all questions are recorded (NO WORD COUNT CHECK)
+    const recordingsCount = answers.filter(a => a.audioBlob).length;
+    
+    if (recordingsCount < allQuestions.length) {
+      setRecordingStatus(`Please record all questions. ${recordingsCount}/${allQuestions.length} recorded.`);
+      return;
+    }
+    
+    await uploadAllAudio();
   };
 
   // Complete recording function
   const handleRecordClick = async () => {
     if (!currentQuestion) return;
     
-    // अगर पहले ही recording हो चुकी है तो return करें
     if (hasRecorded && !isRecording) {
       setRecordingStatus("Recording already completed for this question");
       return;
     }
     
     if (isRecording) {
-      // User ने manually recording stop की है
-      setUserManuallyStopped(true);
-      
       // Stop recording
-      setRecordingStatus("Recording completed");
+      setUserManuallyStopped(true);
+      setRecordingStatus("Stopping recording...");
       
       if (recognitionRef.current) {
         recognitionRef.current.stop();
@@ -1237,6 +919,7 @@ const SpeakingTestSection: React.FC<SpeakingTestSectionProps> = ({
       
       stopVisualization();
       setIsRecording(false);
+      setRecordingTime(0);
       
       try {
         await onRecord("stop", currentQuestion._id);
@@ -1245,32 +928,29 @@ const SpeakingTestSection: React.FC<SpeakingTestSectionProps> = ({
       }
       
     } else {
-      // Start recording - reset manually stopped flag
+      // Start recording
       setUserManuallyStopped(false);
-      setRecordingStatus("Starting recording...");
+      setRecordingStatus("Preparing to record...");
       transcriptRef.current = "";
       setTranscript("");
       audioChunksRef.current = [];
       setRecordedAudio("");
       
-       try {
-      const stream = await navigator.mediaDevices.getUserMedia({ 
-        audio: {
-          echoCancellation: true,
-          noiseSuppression: true,
-          autoGainControl: true,
-          sampleRate: 16000, // Low sample rate for speech
-          channelCount: 1,    // Mono recording
-          bitrate: 16000     // Low bitrate
-        }
-      });
+      try {
+        const stream = await navigator.mediaDevices.getUserMedia({ 
+          audio: {
+            echoCancellation: true,
+            noiseSuppression: true,
+            autoGainControl: true,
+            sampleRate: 16000,
+            channelCount: 1
+          }
+        });
         
         mediaStreamRef.current = stream;
         
-        // Start audio recording
         startAudioRecording(stream);
         
-        // Start speech recognition
         if (recognitionRef.current) {
           try {
             recognitionRef.current.start();
@@ -1279,11 +959,10 @@ const SpeakingTestSection: React.FC<SpeakingTestSectionProps> = ({
           }
         }
         
-        // Start visualization
         startVisualization(stream);
         
         setIsRecording(true);
-        setRecordingStatus("Recording... Speak now");
+        setRecordingStatus("Recording... Speak now (2 minutes max)");
         setRecordingTime(0);
         
         try {
@@ -1294,7 +973,7 @@ const SpeakingTestSection: React.FC<SpeakingTestSectionProps> = ({
         
       } catch (err) {
         console.error("Microphone access error:", err);
-        setRecordingStatus("Microphone access denied or not available");
+        setRecordingStatus("Microphone access denied");
         setIsRecording(false);
       }
     }
@@ -1343,8 +1022,16 @@ const SpeakingTestSection: React.FC<SpeakingTestSectionProps> = ({
     }
   };
 
-  // Navigation functions
+  // Next question function - only if current question is recorded
   const handleNextQuestion = () => {
+    const currentAnswer = answers.find(a => a.questionId === currentQuestion._id);
+    
+    // ONLY CHECK IF RECORDED - NO WORD COUNT CHECK
+    if (!currentAnswer?.audioBlob) {
+      setRecordingStatus("Please record your answer before proceeding");
+      return;
+    }
+    
     if (currentQuestionIndex < allQuestions.length - 1) {
       const nextIndex = currentQuestionIndex + 1;
       setCurrentQuestionIndex(nextIndex);
@@ -1359,7 +1046,6 @@ const SpeakingTestSection: React.FC<SpeakingTestSectionProps> = ({
       setUserManuallyStopped(false);
       setHasQuestionSpoken(false);
       
-      // Stop any ongoing recording/playback/speech
       stopAutoSpeak();
       stopVisualization();
       if (audioRef.current) {
@@ -1367,44 +1053,12 @@ const SpeakingTestSection: React.FC<SpeakingTestSectionProps> = ({
         setIsPlaying(false);
       }
       
-      // Clear auto record timeout
       if (autoRecordTimeoutRef.current) {
         clearTimeout(autoRecordTimeoutRef.current);
       }
       
     } else {
-      // Last question - show review modal
       handleSubmitTest();
-    }
-  };
-
-  const handlePrevQuestion = () => {
-    if (currentQuestionIndex > 0) {
-      const prevIndex = currentQuestionIndex - 1;
-      setCurrentQuestionIndex(prevIndex);
-      
-      // Reset states for previous question
-      setRecordingTime(0);
-      setIsRecording(false);
-      setRecordedAudio("");
-      setRecordingStatus("");
-      setAutoSpeaking(false);
-      setSpeechEnded(false);
-      setUserManuallyStopped(false);
-      setHasQuestionSpoken(false);
-      
-      // Stop any ongoing recording/playback/speech
-      stopAutoSpeak();
-      stopVisualization();
-      if (audioRef.current) {
-        audioRef.current.pause();
-        setIsPlaying(false);
-      }
-      
-      // Clear auto record timeout
-      if (autoRecordTimeoutRef.current) {
-        clearTimeout(autoRecordTimeoutRef.current);
-      }
     }
   };
 
@@ -1416,9 +1070,6 @@ const SpeakingTestSection: React.FC<SpeakingTestSectionProps> = ({
       if (audioRef.current) {
         audioRef.current.pause();
       }
-      if (combinedAudioRef.current) {
-        combinedAudioRef.current.pause();
-      }
       if (mediaRecorderRef.current) {
         mediaRecorderRef.current.stream?.getTracks().forEach(track => track.stop());
       }
@@ -1428,17 +1079,13 @@ const SpeakingTestSection: React.FC<SpeakingTestSectionProps> = ({
       if (autoRecordTimeoutRef.current) {
         clearTimeout(autoRecordTimeoutRef.current);
       }
-      // Cleanup URLs
-      if (combinedAudioUrl) {
-        URL.revokeObjectURL(combinedAudioUrl);
-      }
     };
   }, []);
 
   // Get answer for current question
   const currentAnswer = answers.find(a => a.questionId === currentQuestion?._id);
 
-  // Calculate progress
+  // Calculate answered questions
   const answeredQuestions = answers.filter(a => a.audioBlob).length;
   const totalQuestions = allQuestions.length;
 
@@ -1469,30 +1116,42 @@ const SpeakingTestSection: React.FC<SpeakingTestSectionProps> = ({
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-gray-50 to-gray-100">
-      {/* Header */}
+      {/* Header with section timer ONLY */}
       <div className="bg-white border-b shadow-sm sticky top-0 z-10">
         <div className="px-4 py-3">
           <div className="flex items-center justify-between">
             <div className="flex items-center space-x-4">
               <button
                 onClick={onBack}
-                className="p-2 hover:bg-gray-100 rounded-lg"
+                className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
+                title="Go back"
               >
                 <ChevronLeft className="h-5 w-5" />
               </button>
               <div>
-                <h1 className="font-semibold text-sm">{question.title}</h1>
+                <h1 className="font-semibold text-sm text-gray-900">{question.title}</h1>
                 <div className="text-xs text-gray-500">
                   {currentQuestion?.groupTitle} • 
-                  Question {currentQuestionIndex + 1} of {allQuestions.length}
+                  Question {currentQuestionIndex + 1} of {totalQuestions}
                 </div>
               </div>
             </div>
             
-            <div className="flex items-center space-x-3">
+            {/* Section Timer ONLY */}
+            <div className="flex items-center space-x-4">
+              <div className="flex items-center space-x-2 bg-blue-50 px-4 py-2 rounded-lg border border-blue-200">
+                <Clock className="h-4 w-4 text-blue-600" />
+                <div className="text-center">
+                  <div className="text-xs text-blue-500">Section Time</div>
+                  <div className="font-bold text-blue-700 text-sm">
+                    {formatTime(sectionTimeRemaining)}
+                  </div>
+                </div>
+              </div>
+              
               {/* Question spoken indicator */}
               {hasQuestionSpoken && !autoSpeaking && (
-                <div className="flex items-center space-x-1 bg-green-50 px-3 py-1 rounded-full">
+                <div className="flex items-center space-x-1 bg-green-50 px-3 py-1 rounded-full border border-green-200">
                   <Volume2 className="h-3 w-3 text-green-600" />
                   <span className="text-xs font-medium text-green-700">Question Spoken</span>
                 </div>
@@ -1500,7 +1159,7 @@ const SpeakingTestSection: React.FC<SpeakingTestSectionProps> = ({
               
               {/* Recording completed indicator */}
               {hasRecorded && !isRecording && (
-                <div className="flex items-center space-x-1 bg-green-50 px-3 py-1 rounded-full">
+                <div className="flex items-center space-x-1 bg-green-50 px-3 py-1 rounded-full border border-green-200">
                   <CheckCircle className="h-3 w-3 text-green-600" />
                   <span className="text-xs font-medium text-green-700">Recorded</span>
                 </div>
@@ -1508,481 +1167,307 @@ const SpeakingTestSection: React.FC<SpeakingTestSectionProps> = ({
               
               {/* Auto speaking indicator */}
               {autoSpeaking && (
-                <div className="flex items-center space-x-1 bg-purple-50 px-3 py-1 rounded-full">
+                <div className="flex items-center space-x-1 bg-purple-50 px-3 py-1 rounded-full border border-purple-200">
                   <div className="h-2 w-2 bg-purple-600 rounded-full animate-pulse"></div>
                   <span className="text-xs font-medium text-purple-700">Speaking...</span>
                 </div>
               )}
               
-              <div className="flex items-center space-x-2 bg-red-50 px-3 py-1 rounded-full">
-                <Clock className="h-3 w-3 text-red-600" />
-                <span className="font-bold text-red-700 text-sm">
-                  {formatTime(recordingTime)}
-                </span>
-              </div>
+              {/* Recording timer */}
+              {isRecording && (
+                <div className="flex items-center space-x-2 bg-red-50 px-3 py-1 rounded-full border border-red-200">
+                  <div className="h-2 w-2 bg-red-600 rounded-full animate-pulse"></div>
+                  <span className="font-bold text-red-700 text-sm">
+                    {formatTime(recordingTime)} / 2:00
+                  </span>
+                </div>
+              )}
             </div>
           </div>
         </div>
       </div>
 
-      {/* Main Content Grid */}
-      <div className=" gap-4 p-4  mx-auto">
-        {/* Right Column - Question & Recording */}
-        <div className="lg:col-span-4">
-          <div className="space-y-4 flex flex-wrap justify-around">
+      {/* Main Content */}
+      <div className="max-w-6xl mx-auto p-4">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          {/* Left Column - Question */}
+          <div className="space-y-6">
             {/* Current Group Info */}
             {currentQuestionGroup && (
-              <div className="bg-white rounded-xl shadow-md p-5">
-                <div className="flex items-start justify-between">
+              <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
+                <div className="flex items-start justify-between mb-4">
                   <div>
-                    <h2 className="font-bold text-xl mb-2">{currentQuestionGroup.title}</h2>
-                    <p className="text-gray-600 whitespace-pre-line">{currentQuestionGroup.instruction}</p>
-                  </div>
-                  <div className="text-sm px-3 py-1 bg-blue-100 text-blue-800 rounded-full">
-                    {currentQuestionGroup.type.replace('speaking_', 'Part ').toUpperCase()}
+                    <div className="flex items-center space-x-2 mb-2">
+                      <div className="text-sm px-3 py-1 bg-blue-100 text-blue-800 rounded-full font-medium">
+                        {currentQuestionGroup.type.replace('speaking_', 'Part ').toUpperCase()}
+                      </div>
+                    </div>
+                    <h2 className="font-bold text-xl text-gray-900 mb-3">{currentQuestionGroup.title}</h2>
+                    <p className="text-gray-700 whitespace-pre-line leading-relaxed">
+                      {currentQuestionGroup.instruction}
+                    </p>
                   </div>
                 </div>
-                <div className="mb-6">
-                <div className="flex justify-between items-center mb-4">
-                  <div className="flex items-center space-x-3">
-                    <div className="bg-blue-600 text-white px-4 py-1 rounded-full text-sm font-bold">
-                      {currentQuestion.isCueCard ? 'Cue Card' : `Question ${currentQuestionIndex + 1}`}
-                    </div>
-                    {hasQuestionSpoken && (
-                      <div className="bg-green-100 text-green-800 px-3 py-1 rounded-full text-xs font-medium">
-                        ✓ Spoken
-                      </div>
-                    )}
-                    {hasRecorded && (
-                      <div className="bg-green-100 text-green-800 px-3 py-1 rounded-full text-xs font-medium">
-                        ✓ Recorded
-                      </div>
-                    )}
-                    <div className="text-sm text-gray-500">
-                      {currentQuestionIndex + 1} of {totalQuestions}
-                    </div>
-                  </div>
-                  <button
-                    onClick={toggleQuestionSpeech}
-                    className="p-2 hover:bg-gray-100 rounded-full relative"
-                    title={hasQuestionSpoken ? "Question already spoken" : autoSpeaking ? "Stop speech" : "Play question aloud"}
-                  >
-                    <Volume2 className={`h-5 w-5 ${
-                      hasQuestionSpoken ? 'text-green-600' : 
-                      autoSpeaking ? 'text-blue-600' : 
-                      'text-gray-600'
-                    }`} />
-                    {autoSpeaking && (
-                      <div className="absolute -top-1 -right-1 h-2 w-2 bg-blue-600 rounded-full animate-ping"></div>
-                    )}
-                    {hasQuestionSpoken && !autoSpeaking && (
-                      <div className="absolute -top-1 -right-1 h-2 w-2 bg-green-600 rounded-full"></div>
-                    )}
-                  </button>
-                </div>
-
-                {/* Question Text */}
-                <h3 className="text-xl font-bold mb-4">
-                  {currentQuestion.question}
-                </h3>
-
-                {/* Cue Card Prompts */}
-                {currentQuestion.isCueCard && question.cueCard?.prompts && question.cueCard.prompts.length > 0 && (
-                  <div className="mt-4 p-4 bg-gray-50 rounded-lg border">
-                    <h4 className="font-semibold mb-3 text-gray-800">You should say:</h4>
-                    <ul className="space-y-2">
-                      {question.cueCard.prompts.map((prompt, index) => (
-                        <li key={index} className="flex items-start">
-                          <span className="inline-block w-6 h-6 bg-gray-800 text-white rounded-full text-sm leading-6 text-center mr-3 mt-0.5">
-                            {index + 1}
-                          </span>
-                          <span className="text-gray-700">{prompt}</span>
-                        </li>
-                      ))}
-                    </ul>
-                  </div>
-                )}
-              </div>
-              </div>
-            )}
-
-            {/* Question Card */}
-            <div className="bg-white rounded-xl shadow-md p-5 w-[50%]">
-              
-              {/* Recording Section */}
-              <div className="border-t pt-3">
-                <div className="space-y-6">
-                    {/* Audio Visualizer */}
-                    <div className="mb-4">
-                      <div className="bg-gray-900 rounded-xl p-3">
-                        <canvas
-                          ref={canvasRef}
-                          width={800}
-                          height={100}
-                          className="w-full h-12 rounded"
-                        />
-                      </div>
-                      <div className="flex justify-between text-sm text-gray-600 mt-2 px-1">
-                        <span>Status: <span className={
-                          isRecording ? "text-green-500 font-bold" : 
-                          hasRecorded ? "text-green-600" :
-                          autoSpeaking ? "text-purple-500" :
-                          hasQuestionSpoken ? "text-green-600" :
-                          speechEnded && !isRecording && !userManuallyStopped && !hasRecorded ? "text-orange-500" : 
-                          "text-gray-500"
-                        }>
-                          {isRecording ? '● Recording' : 
-                           hasRecorded ? '✓ Recorded' :
-                           autoSpeaking ? 'Speaking question...' :
-                           hasQuestionSpoken ? '✓ Question Spoken' :
-                           speechEnded && !isRecording && !userManuallyStopped && !hasRecorded ? 'Recording starting...' : 
-                           'Ready'}
-                        </span></span>
-                        <span className="font-mono">
-                          {isRecording ? formatTime(recordingTime) : "00:00"}
-                        </span>
+                
+                <div className="border-t pt-4">
+                  <div className="flex items-center justify-between mb-4">
+                    <div className="flex items-center space-x-3">
+                      <div className={`px-4 py-2 rounded-full text-sm font-bold ${
+                        currentQuestion.isCueCard 
+                          ? 'bg-amber-100 text-amber-800 border border-amber-200' 
+                          : 'bg-blue-600 text-white'
+                      }`}>
+                        {currentQuestion.isCueCard ? 'Cue Card' : `Question ${currentQuestionIndex + 1}`}
                       </div>
                       
-                      {recordingStatus && (
-                        <div className={`mt-2 p-2 rounded text-center text-sm ${
-                          recordingStatus.includes('failed') || recordingStatus.includes('error') 
-                            ? 'bg-red-50 text-red-700'
-                            : recordingStatus.includes('success') || recordingStatus.includes('completed')
-                            ? 'bg-green-50 text-green-700'
-                            : 'bg-blue-50 text-blue-700'
-                        }`}>
-                          {recordingStatus}
+                      {hasQuestionSpoken && (
+                        <div className="flex items-center space-x-1 bg-green-50 px-3 py-1 rounded-full border border-green-200">
+                          <CheckCircle className="h-3 w-3 text-green-600" />
+                          <span className="text-xs font-medium text-green-700">Spoken</span>
+                        </div>
+                      )}
+                      
+                      {hasRecorded && (
+                        <div className="flex items-center space-x-1 bg-green-50 px-3 py-1 rounded-full border border-green-200">
+                          <CheckCircle className="h-3 w-3 text-green-600" />
+                          <span className="text-xs font-medium text-green-700">Recorded</span>
                         </div>
                       )}
                     </div>
+                    
+                    <button
+                      onClick={toggleQuestionSpeech}
+                      className={`p-2 rounded-full transition-colors ${
+                        autoSpeaking 
+                          ? 'bg-blue-100 text-blue-600' 
+                          : 'hover:bg-gray-100 text-gray-600'
+                      }`}
+                      title={hasQuestionSpoken ? "Question already spoken" : autoSpeaking ? "Stop speech" : "Play question with female voice"}
+                      disabled={hasQuestionSpoken}
+                    >
+                      <Volume2 className={`h-5 w-5 ${
+                        hasQuestionSpoken ? 'text-green-600' : 
+                        autoSpeaking ? 'text-blue-600 animate-pulse' : 
+                        'text-gray-600'
+                      }`} />
+                    </button>
+                  </div>
 
-                    {/* Recording Controls */}
-                    <div className="text-center">
-                      <div className="flex justify-center items-center space-x-6 mb-2">
-                        <button
-                          onClick={handleRecordClick}
-                          disabled={hasRecorded && !isRecording}
-                          className={`w-12 h-12 rounded-full flex items-center justify-center ${
-                            isRecording 
-                              ? 'bg-red-600 hover:bg-red-700 animate-pulse shadow-xl' 
-                              : hasRecorded
-                              ? 'bg-gray-400 cursor-not-allowed'
-                              : 'bg-blue-600 hover:bg-blue-700'
-                          } text-white transition-all shadow-lg ${hasRecorded && !isRecording ? 'opacity-50' : ''}`}
-                        >
-                          {isRecording ? (
-                            <Square className="h-6 w-6" />
-                          ) : hasRecorded ? (
-                            <CheckCircle className="h-6 w-6" />
-                          ) : (
-                            <Mic className="h-6 w-6" />
-                          )}
-                        </button>
-                        
-                        {(recordedAudio || currentAnswer?.audioUrl) && (
-                          <button
-                            onClick={handlePlayRecording}
-                            className="w-12 h-12 rounded-full bg-green-600 hover:bg-green-700 text-white flex items-center justify-center shadow-lg"
-                          >
-                            {isPlaying ? (
-                              <Pause className="h-6 w-6" />
-                            ) : (
-                              <Play className="h-6 w-6" />
-                            )}
-                          </button>
-                        )}
-                      </div>
-                      
-                      <div className="mb-4">
-                        <p className="text-gray-600">
-                          {isRecording 
-                            ? 'Recording... Speak clearly and confidently' 
-                            : recordedAudio || currentAnswer?.audioUrl
-                            ? 'Recording completed. You can listen to your answer.'
-                            : hasRecorded
-                            ? 'Recording already completed for this question'
-                            : speechEnded && autoRecordEnabled && !isRecording && !userManuallyStopped
-                            ? 'Question spoken. Auto recording will start in 1 second...'
-                            : autoSpeaking
-                            ? 'Listening to question... Please wait'
-                            : hasQuestionSpoken && !hasRecorded
-                            ? 'Question spoken. Ready for recording.'
-                            : 'Click the microphone to start recording your answer'}
-                        </p>
-                      </div>
-                    </div>
+                  {/* Question Text */}
+                  <div className="mb-6">
+                    <h3 className="text-xl font-bold text-gray-900 mb-4 leading-relaxed">
+                      {currentQuestion.question}
+                    </h3>
 
-                    {/* Playback Section */}
-                    {(recordedAudio || currentAnswer?.audioUrl) && (
-                      <div className="border-t pt-6">
-                        <div className="flex items-center justify-between mb-4">
-                          <h4 className="font-bold">Your Recording</h4>
-                          <div className="flex space-x-2">
-                            <div className="px-4 py-2 border-2 border-green-600 text-green-600 rounded-lg bg-green-50 text-sm">
-                              Recording Completed
-                            </div>
+                    {/* Cue Card Prompts */}
+                    {currentQuestion.isCueCard && question.cueCard?.prompts && question.cueCard.prompts.length > 0 && (
+                      <div className="mt-4 p-4 bg-gray-50 rounded-lg border border-gray-200">
+                        <h4 className="font-semibold mb-3 text-gray-800 flex items-center">
+                          <div className="mr-2 p-1 bg-gray-800 rounded">
+                            <CheckCircle className="h-3 w-3 text-white" />
                           </div>
-                        </div>
-                        <audio 
-                          ref={audioRef}
-                          controls 
-                          className="w-full"
-                        />
+                          You should say:
+                        </h4>
+                        <ul className="space-y-2">
+                          {question.cueCard.prompts.map((prompt, index) => (
+                            <li key={index} className="flex items-start group">
+                              <span className="inline-flex items-center justify-center w-6 h-6 bg-gray-800 text-white rounded-full text-xs leading-6 text-center mr-3 mt-0.5 group-hover:bg-gray-700 transition-colors">
+                                {index + 1}
+                              </span>
+                              <span className="text-gray-700 group-hover:text-gray-900 transition-colors">{prompt}</span>
+                            </li>
+                          ))}
+                        </ul>
                       </div>
                     )}
-                  
                   </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
 
-      {/* Bottom Navigation */}
-      <div className="fixed bottom-0 w-[100%] bg-white border-t shadow-lg">
-        <div className="px-4 py-4">
-          <div className="flex items-center justify-between max-w-7xl mx-auto">
-            <div className="flex items-center space-x-4">
-              <button
-                onClick={handlePrevQuestion}
-                disabled={currentQuestionIndex === 0}
-                className="flex items-center px-6 py-3 border-2 border-gray-300 rounded-lg hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
-              >
-                <ArrowLeft className="h-5 w-5 mr-2" />
-                Previous
-              </button>
-            </div>
-            
-            <div className="flex items-center space-x-6">
-              <div className="text-center">
-                <div className="font-medium text-gray-600">
-                  Question {currentQuestionIndex + 1} of {totalQuestions}
+                  {/* Next Button ONLY */}
+                  <div className="mt-6">
+                    <button
+                      onClick={handleNextQuestion}
+                      disabled={!currentAnswer?.audioBlob || isSubmitting}
+                      className={`w-full py-3 rounded-lg font-medium transition-all ${
+                        !currentAnswer?.audioBlob || isSubmitting
+                          ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
+                          : currentQuestionIndex < totalQuestions - 1
+                          ? 'bg-blue-600 text-white hover:bg-blue-700 shadow-sm'
+                          : 'bg-green-600 text-white hover:bg-green-700 shadow-sm'
+                      }`}
+                    >
+                      {isSubmitting ? (
+                        <>
+                          <div className="h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent mr-2 inline-block"></div>
+                          Submitting...
+                        </>
+                      ) : !currentAnswer?.audioBlob ? (
+                        'Record First'
+                      ) : currentQuestionIndex < totalQuestions - 1 ? (
+                        `Next Question (${answeredQuestions}/${totalQuestions})`
+                      ) : (
+                        `Submit Test (${answeredQuestions}/${totalQuestions})`
+                      )}
+                    </button>
+                  </div>
                 </div>
-                <div className="w-64 h-2 bg-gray-200 rounded-full overflow-hidden mt-1">
-                  <div 
-                    className="h-full bg-blue-600 transition-all"
-                    style={{ width: `${((currentQuestionIndex + 1) / totalQuestions) * 100}%` }}
+              </div>
+            )}
+          </div>
+
+          {/* Right Column - Recording */}
+          <div className="space-y-6">
+            <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
+              <div className="mb-6">
+                <h3 className="font-bold text-lg text-gray-900 mb-2">Record Your Answer</h3>
+                <p className="text-sm text-gray-600">
+                  Speak clearly into your microphone. Recording will automatically stop after 2 minutes.
+                  <br />
+                  <span className="text-xs text-blue-600 mt-1 block">
+                    Audio will be combined with beep markers between questions for easy backend processing.
+                  </span>
+                </p>
+              </div>
+              
+              {/* Audio Visualizer */}
+              <div className="mb-6">
+                <div className="bg-gray-900 rounded-xl p-3">
+                  <canvas
+                    ref={canvasRef}
+                    width={600}
+                    height={100}
+                    className="w-full h-12 rounded-lg"
                   />
                 </div>
-              </div>
-              
-              <button
-                onClick={handleNextQuestion}
-                disabled={isCombining || isSubmitting || isCompressing}
-                className={`flex items-center ${isCombining || isSubmitting || isCompressing ? 'bg-gray-400' : 'bg-blue-600 hover:bg-blue-700'} text-white px-8 py-3 rounded-lg font-medium text-lg`}
-              >
-                {isCombining ? (
-                  <>
-                    <div className="h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent mr-2"></div>
-                    Combining...
-                  </>
-                ) : isCompressing ? (
-                  <>
-                    <div className="h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent mr-2"></div>
-                    Compressing...
-                  </>
-                ) : isSubmitting ? (
-                  <>
-                    <div className="h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent mr-2"></div>
-                    Submitting...
-                  </>
-                ) : (
-                  <>
-                    {currentQuestionIndex < totalQuestions - 1 ? 'Next Question' : 'Review & Submit'}
-                    <ArrowRight className="h-5 w-5 ml-2" />
-                  </>
+                <div className="flex justify-between text-sm text-gray-600 mt-2 px-1">
+                  <span>
+                    Status: <span className={
+                      isRecording ? "text-green-500 font-bold animate-pulse" : 
+                      hasRecorded ? "text-green-600" :
+                      autoSpeaking ? "text-purple-500" :
+                      hasQuestionSpoken ? "text-green-600" :
+                      speechEnded && !isRecording && !userManuallyStopped && !hasRecorded ? "text-amber-500" : 
+                      "text-gray-500"
+                    }>
+                      {isRecording ? '● Recording' : 
+                       hasRecorded ? '✓ Recorded' :
+                       autoSpeaking ? 'Speaking question...' :
+                       hasQuestionSpoken ? '✓ Question Spoken' :
+                       speechEnded && !isRecording && !userManuallyStopped && !hasRecorded ? 'Recording starting...' : 
+                       'Ready'}
+                    </span>
+                  </span>
+                  <span className="font-mono">
+                    {isRecording ? formatTime(recordingTime) : "00:00"}
+                  </span>
+                </div>
+                
+                {recordingStatus && (
+                  <div className={`mt-3 p-3 rounded-lg text-center text-sm ${
+                    recordingStatus.includes('failed') || recordingStatus.includes('error')
+                      ? 'bg-red-50 text-red-700 border border-red-200'
+                      : recordingStatus.includes('success') || recordingStatus.includes('completed') || recordingStatus.includes('✓')
+                      ? 'bg-green-50 text-green-700 border border-green-200'
+                      : recordingStatus.includes('Uploading') || recordingStatus.includes('Preparing') || recordingStatus.includes('Combining')
+                      ? 'bg-blue-50 text-blue-700 border border-blue-200'
+                      : 'bg-blue-50 text-blue-700 border border-blue-200'
+                  }`}>
+                    {recordingStatus}
+                  </div>
                 )}
-              </button>
-            </div>
-          </div>
-        </div>
-      </div>
+              </div>
 
-      {/* Review Combined Audio Modal */}
-      {showReviewModal && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-2xl shadow-2xl w-full max-w-2xl">
-            <div className="p-6">
-              <div className="flex items-center justify-between mb-6">
-                <h2 className="text-2xl font-bold text-gray-800">Review & Submit Recording</h2>
-                <button
-                  onClick={() => setShowReviewModal(false)}
-                  className="p-2 hover:bg-gray-100 rounded-full"
-                >
-                  <ChevronLeft className="h-5 w-5" />
-                </button>
-              </div>
-              
-              <div className="mb-6">
-                {/* Compression Info */}
-            
-{/* // Review modal section में: */}
-{compressionInfo && (
-  <div className="bg-blue-50 p-4 rounded-xl mb-4">
-    <div className="flex items-center justify-between mb-2">
-      <h3 className="font-semibold text-lg flex items-center">
-        <Shrink className="h-5 w-5 mr-2 text-blue-600" />
-        Audio Compression
-      </h3>
-      <span className="text-sm font-medium bg-blue-100 text-blue-800 px-3 py-1 rounded-full">
-        Optimized for Upload
-      </span>
-    </div>
-    
-    <div className="grid grid-cols-2 gap-4 mb-3">
-      <div className="bg-white p-3 rounded-lg border">
-        <div className="text-sm text-gray-500">Original Size</div>
-        <div className="font-bold">{formatFileSize(compressionInfo.originalSize)}</div>
-      </div>
-      <div className="bg-white p-3 rounded-lg border">
-        <div className="text-sm text-gray-500">Compressed Size</div>
-        <div className="font-bold text-green-600">{formatFileSize(compressionInfo.compressedSize)}</div>
-      </div>
-      <div className="bg-white p-3 rounded-lg border">
-        <div className="text-sm text-gray-500">Compression Ratio</div>
-        <div className="font-bold">{Math.round(compressionInfo.ratio * 100)}%</div>
-      </div>
-      <div className="bg-white p-3 rounded-lg border">
-        <div className="text-sm text-gray-500">Bitrate</div>
-        <div className="font-bold">{Math.round(compressionInfo.bitrate / 1000)} kbps</div>
-      </div>
-    </div>
-    
-    <div className="text-sm text-gray-600">
-      ✓ Target achieved: ~1MB per 3 minutes
-      <br />
-      ✓ Audio optimized for speech clarity
-      <br />
-      ✓ Perfect for online submission
-    </div>
-  </div>
-)}
-                {/* Combined Audio Player */}
-                <div className="bg-gray-50 p-4 rounded-xl mb-4">
-                  <div className="flex items-center justify-between mb-3">
-                    <h3 className="font-semibold text-lg">Final Recording</h3>
-                    <div className="flex items-center space-x-2">
-                      <span className="text-sm text-gray-600">
-                        {answeredQuestions} of {totalQuestions} questions
-                      </span>
-                    </div>
-                  </div>
-                  
-                  <div className="mb-4">
-                    <p className="text-gray-600 text-sm">
-                      Listen to your combined recording. Audio has been compressed for optimal upload speed while maintaining speech clarity.
-                    </p>
-                  </div>
-                  
-                  {/* Combined Audio Player */}
-                  <div className="space-y-4">
-                    <div className="flex justify-center space-x-6">
-                      <button
-                        onClick={playCombinedAudio}
-                        className="w-14 h-14 rounded-full bg-blue-600 hover:bg-blue-700 text-white flex items-center justify-center shadow-lg"
-                      >
-                        {isPlayingCombined ? (
-                          <Pause className="h-7 w-7" />
-                        ) : (
-                          <Headphones className="h-7 w-7" />
-                        )}
-                      </button>
-                      
-                      <button
-                        onClick={downloadCompressedAudio}
-                        className="w-14 h-14 rounded-full bg-green-600 hover:bg-green-700 text-white flex items-center justify-center shadow-lg"
-                        title="Download Compressed Version"
-                      >
-                        <Download className="h-7 w-7" />
-                      </button>
-                      
-                      <button
-                        onClick={downloadCombinedAudio}
-                        className="w-14 h-14 rounded-full bg-gray-600 hover:bg-gray-700 text-white flex items-center justify-center shadow-lg"
-                        title="Download Original (Larger)"
-                      >
-                        <Download className="h-7 w-7" />
-                        <div className="absolute -top-1 -right-1 h-3 w-3 bg-yellow-500 rounded-full"></div>
-                      </button>
-                    </div>
-                    
-                    <div className="text-center text-xs text-gray-500">
-                      <div>Left: Play • Middle: Compressed • Right: Original</div>
-                    </div>
-                    
-                    <audio 
-                      ref={combinedAudioRef}
-                      controls 
-                      className="w-full"
-                    />
-                  </div>
-                </div>
-                
-                {/* Transcript Summary */}
-                <div className="bg-gray-50 p-4 rounded-xl">
-                  <h4 className="font-semibold mb-3">Transcript Summary</h4>
-                  <div className="max-h-40 overflow-y-auto space-y-2">
-                    {answers.map((answer, index) => {
-                      const question = allQuestions.find(q => q._id === answer.questionId);
-                      return (
-                        <div key={answer.questionId} className="bg-white p-3 rounded-lg border">
-                          <div className="flex items-center justify-between mb-1">
-                            <span className="text-sm font-medium">Question {index + 1}</span>
-                            <span className={`text-xs px-2 py-1 rounded-full ${answer.audioBlob ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}`}>
-                              {answer.audioBlob ? 'Recorded' : 'Not Recorded'}
-                            </span>
-                          </div>
-                          <p className="text-xs text-gray-600 truncate">
-                            {answer.transcript || "No transcript available"}
-                          </p>
-                        </div>
-                      );
-                    })}
-                  </div>
-                </div>
-              </div>
-              
-              {/* Action Buttons */}
-              <div className="flex justify-between pt-4 border-t">
-                <button
-                  onClick={() => setShowReviewModal(false)}
-                  className="px-6 py-3 border-2 border-gray-300 rounded-lg hover:bg-gray-50"
-                >
-                  Back to Test
-                </button>
-                
-                <div className="flex space-x-4">
+              {/* Recording Controls */}
+              <div className="text-center">
+                <div className="flex justify-center items-center space-x-8 mb-4">
                   <button
-                    onClick={downloadCompressedAudio}
-                    className="flex items-center px-6 py-3 border-2 border-green-600 text-green-600 rounded-lg hover:bg-green-50"
+                    onClick={handleRecordClick}
+                    disabled={hasRecorded && !isRecording}
+                    className={`w-16 h-16 rounded-full flex items-center justify-center transition-all shadow-lg ${
+                      isRecording 
+                        ? 'bg-red-600 hover:bg-red-700 animate-pulse ring-4 ring-red-200' 
+                        : hasRecorded
+                        ? 'bg-gray-300 cursor-not-allowed'
+                        : 'bg-blue-600 hover:bg-blue-700 hover:scale-105'
+                    } text-white ${hasRecorded && !isRecording ? 'opacity-50' : ''}`}
                   >
-                    <Download className="h-5 w-5 mr-2" />
-                    Download Compressed
-                  </button>
-                  
-                  <button
-                    onClick={uploadCombinedAudio}
-                    disabled={isSubmitting}
-                    className="flex items-center bg-blue-600 text-white px-8 py-3 rounded-lg hover:bg-blue-700 font-medium"
-                  >
-                    {isSubmitting ? (
-                      <>
-                        <div className="h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent mr-2"></div>
-                        Uploading...
-                      </>
+                    {isRecording ? (
+                      <Square className="h-7 w-7" />
+                    ) : hasRecorded ? (
+                      <CheckCircle className="h-7 w-7" />
                     ) : (
-                      <>
-                        <Send className="h-5 w-5 mr-2" />
-                        Submit Test
-                      </>
+                      <Mic className="h-7 w-7" />
                     )}
                   </button>
+                  
+                  {(recordedAudio || currentAnswer?.audioUrl) && (
+                    <button
+                      onClick={handlePlayRecording}
+                      className="w-16 h-16 rounded-full bg-green-600 hover:bg-green-700 text-white flex items-center justify-center shadow-lg hover:scale-105 transition-all"
+                    >
+                      {isPlaying ? (
+                        <Pause className="h-7 w-7" />
+                      ) : (
+                        <Play className="h-7 w-7" />
+                      )}
+                    </button>
+                  )}
+                </div>
+                
+                <div className="mb-6">
+                  <p className="text-gray-600 text-sm">
+                    {isRecording 
+                      ? `Recording... ${120 - recordingTime} seconds remaining` 
+                      : recordedAudio || currentAnswer?.audioUrl
+                      ? 'Recording completed. Listen to your answer.'
+                      : hasRecorded
+                      ? 'Recording already completed for this question'
+                      : speechEnded && autoRecordEnabled && !isRecording && !userManuallyStopped
+                      ? 'Question spoken. Auto recording will start in 1 second...'
+                      : autoSpeaking
+                      ? 'Listening to question... Please wait'
+                      : hasQuestionSpoken && !hasRecorded
+                      ? 'Question spoken. Ready for recording.'
+                      : 'Click the microphone to start recording your answer'}
+                  </p>
                 </div>
               </div>
+
+              {/* Playback Section */}
+              {(recordedAudio || currentAnswer?.audioUrl) && (
+                <div className="border-t pt-6">
+                  <div className="flex items-center justify-between mb-4">
+                    <h4 className="font-bold text-gray-900">Your Recording</h4>
+                    <div className="flex space-x-2">
+                      <div className="flex items-center space-x-1 px-3 py-1 border-2 border-green-600 text-green-600 rounded-lg bg-green-50 text-sm">
+                        <CheckCircle className="h-3 w-3" />
+                        <span>Recorded</span>
+                      </div>
+                    </div>
+                  </div>
+                  <audio 
+                    ref={audioRef}
+                    controls 
+                    className="w-full"
+                  />
+                  
+                  {/* Transcript */}
+                  {currentAnswer?.transcript && (
+                    <div className="mt-4 p-4 bg-gray-50 rounded-lg border border-gray-200">
+                      <div className="flex items-center justify-between mb-2">
+                        <h5 className="font-medium text-gray-900">Transcript</h5>
+                        <div className="text-xs px-2 py-1 rounded-full bg-gray-100 text-gray-800">
+                          Transcript
+                        </div>
+                      </div>
+                      <p className="text-gray-700 text-sm">{currentAnswer.transcript}</p>
+                    </div>
+                  )}
+                </div>
+              )}
             </div>
           </div>
         </div>
-      )}
+      </div>
     </div>
   );
 };
