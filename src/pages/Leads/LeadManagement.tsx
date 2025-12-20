@@ -44,7 +44,71 @@ export default function LeadManagement() {
     const [allCounselors, setAllCounselors] = useState([]);
     const { user } = useAuth();
 
+    const [selectedLeads, setSelectedLeads] = useState(new Set()); // Track selected lead IDs
+    const [selectAll, setSelectAll] = useState(false); // Track "select all" checkbox state
+
     const [showExcelUpload, setShowExcelUpload] = useState(false);
+
+    const toggleLeadSelection = (leadId) => {
+        const newSelectedLeads = new Set(selectedLeads);
+        if (newSelectedLeads.has(leadId)) {
+            newSelectedLeads.delete(leadId);
+        } else {
+            newSelectedLeads.add(leadId);
+        }
+        setSelectedLeads(newSelectedLeads);
+
+        // Update "select all" checkbox state based on individual selections
+        if (newSelectedLeads.size === 0) {
+            setSelectAll(false);
+        } else if (newSelectedLeads.size === leads.length && leads.every(l => newSelectedLeads.has(l._id))) {
+            // Check if all visible leads on the current page are selected
+            const visibleLeadIds = leads.map(l => l._id);
+            const allVisibleSelected = visibleLeadIds.every(id => newSelectedLeads.has(id));
+            setSelectAll(allVisibleSelected);
+        }
+        // If some are selected but not all, keep selectAll false
+    };
+
+    const toggleSelectAll = () => {
+        if (selectAll) {
+            // Deselect all
+            setSelectedLeads(new Set());
+        } else {
+            // Select all leads currently displayed
+            const allVisibleLeadIds = leads.map(l => l._id);
+            setSelectedLeads(new Set(allVisibleLeadIds));
+        }
+        setSelectAll(!selectAll);
+    };
+
+    const handleBulkDelete = async () => {
+        if (selectedLeads.size === 0) {
+            toast.warn("Please select at least one lead to delete.");
+            return;
+        }
+
+        const confirmMessage = `Are you sure you want to delete ${selectedLeads.size} selected lead(s)? This action cannot be undone.`;
+        if (!window.confirm(confirmMessage)) {
+            return; 
+        }
+
+        try {
+            setLoading(true); // Show loading indicator for the whole table
+            const response = await api.delete("/leads/bulk/delete", {
+                data: { ids: Array.from(selectedLeads) } // Send selected IDs in request body
+            });
+            toast.success(`Successfully deleted ${response.data.deletedCount} lead(s).`);
+            fetchLeads(); // Refresh the list
+            setSelectedLeads(new Set()); // Clear selections
+            setSelectAll(false); // Reset "select all" checkbox
+        } catch (error) {
+            console.error("Bulk delete error:", error);
+            toast.error(error.response?.data?.message || "Failed to delete leads.");
+        } finally {
+            setLoading(false); // Hide loading indicator
+        }
+    };
 
     const handleExcelUploadComplete = (leads) => {
         fetchLeads();
@@ -647,6 +711,8 @@ export default function LeadManagement() {
                                     <option value="50">50</option>
                                 </select>
                             </div>
+                            <div className="flex gap-2">
+
                             <button
                                 onClick={() =>
                                     setFilters({
@@ -666,6 +732,21 @@ export default function LeadManagement() {
                             >
                                 Reset Filters
                             </button>
+                            {selectedLeads.size > 0 && (
+                                <div className="flex items-center justify-between rounded-lg bg-indigo-50 dark:bg-indigo-900/20 ps-2 sticky top-0 z-10">
+                                    <span className="text-sm font-medium text-indigo-800 dark:text-indigo-200">
+                                        {selectedLeads.size} lead{selectedLeads.size > 1 ? 's' : ''} 
+                                    </span>
+                                    <button
+                                        onClick={handleBulkDelete}
+                                        className="rounded bg-red-600 px-3 py-2 rounded-lg text-sm text-white hover:bg-red-700"
+                                    >
+                                        Delete Selected
+                                    </button>
+                                </div>
+                            )}
+                            </div>
+
                         </div>
                     </div>
                 )}
@@ -679,6 +760,14 @@ export default function LeadManagement() {
                         <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
                             <thead className="bg-gray-50 dark:bg-gray-800">
                                 <tr>
+                                    <th className="px-2 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500 dark:text-gray-300 w-12">
+                                        <input
+                                            type="checkbox"
+                                            checked={selectAll}
+                                            onChange={toggleSelectAll}
+                                            className="rounded h-[14px] w-[14px] border-gray-300 text-indigo-600 focus:ring-indigo-500 dark:border-gray-600 dark:bg-gray-700 dark:ring-offset-gray-800"
+                                        />
+                                    </th>
                                     <th className="px-2 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500 dark:text-gray-300">
                                         Name
                                     </th>
@@ -712,26 +801,34 @@ export default function LeadManagement() {
                                             key={lead._id}
                                             className="hover:bg-gray-50 dark:hover:bg-gray-700"
                                         >
-                                            <td className="whitespace-nowrap px-2 py-4 text-sm font-medium capitalize text-gray-900 dark:text-white">
+                                            <td className="whitespace-nowrap px-2 py-3">
+                                                <input
+                                                    type="checkbox"
+                                                    checked={selectedLeads.has(lead._id)}
+                                                    onChange={() => toggleLeadSelection(lead._id)}
+                                                    className="rounded h-[14px] w-[14px] border-gray-300 text-indigo-600 focus:ring-indigo-500 dark:border-gray-600 dark:bg-gray-700 dark:ring-offset-gray-800"
+                                                />
+                                            </td>
+                                            <td className="whitespace-nowrap px-2 py-3 text-sm font-medium capitalize text-gray-900 dark:text-white">
                                                 {lead?.fullName || "—"}
                                             </td>
                                             <td className="whitespace-nowrap px-2 py-2 text-sm text-gray-500 dark:text-gray-300">
                                                 Email:{lead.email || "—"} <br />
                                             </td>
-                                            <td className="whitespace-nowrap px-2 py-4 text-sm text-gray-500 dark:text-gray-300">
+                                            <td className="whitespace-nowrap px-2 py-3 text-sm text-gray-500 dark:text-gray-300">
                                                 {lead.coursePreference}
                                             </td>
-                                            <td className="whitespace-nowrap px-2 py-4 text-sm text-gray-500 dark:text-gray-300">
+                                            <td className="whitespace-nowrap px-2 py-3 text-sm text-gray-500 dark:text-gray-300">
                                                 {lead.intendedIntake
                                                     ? moment(lead.intendedIntake).format("MMM YYYY")
                                                     : "—"}
                                             </td>
-                                            <td className="whitespace-nowrap px-2 py-4 text-sm text-gray-500 dark:text-gray-300">
+                                            <td className="whitespace-nowrap px-2 py-3 text-sm text-gray-500 dark:text-gray-300">
                                                 {lead.assignedCounselor?.name ||
                                                     lead.assignedCounselor?.email ||
                                                     "Unassigned"}
                                             </td>
-                                            <td className="whitespace-nowrap px-2 py-4">
+                                            <td className="whitespace-nowrap px-2 py-3">
                                                 <span
                                                     className={`inline-flex rounded-full px-2 text-xs font-semibold ${getStatusColor(
                                                         lead.status
@@ -748,7 +845,7 @@ export default function LeadManagement() {
                                                 {user?.role !== "counselor" &&
                                                     lead.source.replace(/_/g, " ")}
                                             </td>
-                                            <td className="whitespace-nowrap px-2 py-4 text-sm font-medium">
+                                            <td className="whitespace-nowrap px-2 py-3 text-sm font-medium">
                                                 <div className="flex space-x-2">
                                                     <button
                                                         onClick={() => viewLeadDetails(lead)}

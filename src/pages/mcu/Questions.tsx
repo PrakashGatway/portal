@@ -101,6 +101,7 @@ const QUESTION_TYPE_OPTIONS = [
   { value: "describe_image", label: "PTE-Describe Image" },
   { value: "retell_lesson", label: "PTE-Retell Lesson" },
   { value: "short_answer", label: "PTE-Short Answer" },
+  { value: "summarize_group_discussions", label: "Summarize Group Discussions" },
   { value: "pte_summarize_writing", label: "PTE-Summarize Writing" },
   { value: "pte_situational", label: "PTE-Situational" },
   { value: "pte_writing", label: "PTE-Writing" },
@@ -134,7 +135,7 @@ const LIMIT_OPTIONS = [
 ];
 
 const isPTEType = (questionType: string) => {
-  return questionType && ["repeat_sentence", "retell_lesson","pte_summarize_listening","pte_summarize_spoken"].includes(questionType);
+  return questionType && ["repeat_sentence", "retell_lesson","summarize_group_discussions","pte_summarize_listening","pte_summarize_spoken"].includes(questionType);
 };
 
 const isNewFeild = (questionType: string) => {
