@@ -8,9 +8,10 @@ import Label from "../../components/form/Label";
 import Select from "../../components/form/Select";
 import { toast } from "react-toastify";
 import api from "../../axiosInstance";
-import { Eye, Pencil, Trash2, User } from "lucide-react";
+import { Eye, Pencil, Trash2, Upload, User } from "lucide-react";
 import TextArea from "../../components/form/input/TextArea";
 import { useAuth } from "../../context/UserContext";
+import ExcelUpload from "./ExcelUpload";
 
 const LeadStatuses = [
     "new",
@@ -21,6 +22,7 @@ const LeadStatuses = [
     "rejected",
     "inactive",
 ];
+
 
 const LeadSources = [
     "googleAds",
@@ -41,6 +43,14 @@ export default function LeadManagement() {
     const [isDeleteModalOpen, setDeleteModalOpen] = useState(false);
     const [allCounselors, setAllCounselors] = useState([]);
     const { user } = useAuth();
+
+    const [showExcelUpload, setShowExcelUpload] = useState(false);
+
+    const handleExcelUploadComplete = (leads) => {
+        fetchLeads();
+        setShowExcelUpload(false);
+    };
+
 
     const [filters, setFilters] = useState({
         page: 1,
@@ -209,7 +219,7 @@ export default function LeadManagement() {
 
         // Cleanup
         return () => {
-            stopPolling(); 
+            stopPolling();
             document.removeEventListener('visibilitychange', handleVisibilityChange);
             window.removeEventListener('online', handleOnline);
             window.removeEventListener('offline', handleOffline);
@@ -448,6 +458,7 @@ export default function LeadManagement() {
                         </div>
                     </div>
                     <div className="flex w-full flex-col gap-3 sm:flex-row sm:items-center sm:justify-end xl:gap-4">
+
                         <button
                             onClick={openCreateModal}
                             className="flex w-full items-center justify-center gap-2 rounded-full border border-gray-300 bg-white px-4 py-3 text-sm font-medium text-gray-700 shadow-theme-xs hover:bg-gray-50 hover:text-gray-800 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-400 dark:hover:bg-white/[0.03] dark:hover:text-gray-200 lg:inline-flex lg:w-auto"
@@ -467,10 +478,27 @@ export default function LeadManagement() {
                             </svg>
                             Add New Lead
                         </button>
+                        <button
+                            onClick={() => setShowExcelUpload(true)}
+                            className="flex w-full items-center justify-center gap-2 rounded-full border border-indigo-600 bg-indigo-600 px-4 py-3 text-sm font-medium text-white shadow-theme-xs hover:bg-indigo-700 hover:text-white lg:inline-flex lg:w-auto"
+                        >
+                            <Upload className="h-4 w-4" />
+                            Upload Excel
+                        </button>
                     </div>
                 </div>
             </div>
 
+            <Modal
+                isOpen={showExcelUpload}
+                onClose={() => setShowExcelUpload(false)}
+                className="max-w-4xl m-4"
+            >
+                <ExcelUpload
+                    onUploadComplete={handleExcelUploadComplete}
+                    onClose={() => setShowExcelUpload(false)}
+                />
+            </Modal>
             {/* Filters */}
             <div className="min-h-[70vh] overflow-x-auto rounded-2xl border border-gray-200 bg-white px-4 py-4 dark:border-gray-800 dark:bg-white/[0.03] xl:px-4 xl:py-4">
                 <div className="mb-6 grid grid-cols-1 gap-4 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-6">

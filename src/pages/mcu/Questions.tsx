@@ -96,7 +96,26 @@ const QUESTION_TYPE_OPTIONS = [
   { value: "sat_reading_writing", label: "SAT – Reading & Writing" },
   { value: "sat_math_calculator", label: "SAT – Math (Calculator)" },
   { value: "sat_math_no_calculator", label: "SAT – Math (No Calculator)" },
-  { value: "sat_value", label: "SAT – Value" },
+  { value: "read_aloud", label: "PTE-Read Aloud" },
+  { value: "repeat_sentence", label: "PTE-Repeat Sentence" },
+  { value: "describe_image", label: "PTE-Describe Image" },
+  { value: "retell_lesson", label: "PTE-Retell Lesson" },
+  { value: "short_answer", label: "PTE-Short Answer" },
+  { value: "pte_summarize_writing", label: "PTE-Summarize Writing" },
+  { value: "pte_situational", label: "PTE-Situational" },
+  { value: "pte_writing", label: "PTE-Writing" },
+  { value: "pte_fill_in_blanks", label: "PTE-Fill in the Blanks" },
+  { value: "pte_mcq_multiple", label: "PTE-MCQ (Multiple Choice)" },
+  { value: "pte_reorder", label: "PTE-Reorder" },
+  { value: "pte_fill_drag", label: "PTE-Fill and Drag" },
+  { value: "pte_mcq_single", label: "PTE-MCQ (Single Choice)" },
+  { value: "pte_summarize_spoken", label: "PTE-Summarize Spoken" },
+  { value: "pte_mcq_multiple_listening", label: "PTE-MCQ (Multiple Choice) listening" },
+  { value: "pte_fill_listening", label: "PTE-Fill listening" },
+  { value: "pte_highlight", label: "PTE-Highlight" },
+  { value: "pte_mcq_single_listening", label: "PTE-MCQ (Single Choice) listening" },
+  { value: "pte_summarize_listening", label: "PTE-Summarize listening" },
+  { value: "pte_writing_listening", label: "PTE-Writing listening" },
   { value: "essay", label: "Essay / Long Answer" },
   { value: "other", label: "Other" },
 ];
@@ -114,8 +133,16 @@ const LIMIT_OPTIONS = [
   { value: 100, label: "100 per page" },
 ];
 
+const isPTEType = (questionType: string) => {
+  return questionType && ["repeat_sentence", "retell_lesson","pte_summarize_listening","pte_summarize_spoken"].includes(questionType);
+};
+
+const isNewFeild = (questionType: string) => {
+  return questionType && ["pte_situational","pte_reorder","pte_highlight","pte_summarize_listening","pte_mcq_single_listening","pte_fill_listening","pte_fill_drag","pte_mcq_multiple_listening","pte_fill_in_blanks"].includes(questionType);
+};
+
 const isMCQType = (questionType: string) => {
-  return questionType && !["essay", "other","sat_value" ,"gre_analytical_writing", "gre_quantitative_value", "gre_verbal_text_completion"].includes(questionType);
+  return questionType && !["essay", "other","pte_reorder","pte_fill_listening","pte_summarize_listening","pte_highlight","pte_summarize_spoken","pte_fill_drag","pte_situational","pte_fill_in_blanks","pte_summarize_writing", "retell_lesson", "describe_image", "sat_value", "repeat_sentence", "read_aloud", "gre_analytical_writing", "gre_quantitative_value", "gre_verbal_text_completion"].includes(questionType);
 };
 
 export default function QuestionManagementPage() {
@@ -441,7 +468,6 @@ export default function QuestionManagementPage() {
   };
 
   const onSubmit = async (values: any) => {
-    console.log("Form values:", values);
     try {
       // Validation: exam/section/type/text required
       if (!values.exam) {
@@ -994,24 +1020,33 @@ export default function QuestionManagementPage() {
                   {/* Question Text - Using Custom Component */}
                   <div>
                     <Label>Question Text</Label>
-                    {/* <Input
+                    {isPTEType(watchQuestionType) ? <Input
                       type="text"
                       placeholder="Enter the actual question"
                       value={watchQuestionText}
                       onChange={(e) => setValue("questionText", e.target.value)}
                       error={!!errors.questionText} // Pass error state
                       hint={errors.questionText?.message} // Pass error message as hint
-                    /> */}
-                    <RichTextEditor
-                      header={false}
-                      initialValue={watchQuestionText}
-                      onChange={(html) => setValue("questionText", html)}
-                    />
+                    /> :
+                      <RichTextEditor
+                        header={false}
+                        initialValue={watchQuestionText}
+                        onChange={(html) => setValue("questionText", html)}
+                      />}
                     {/* <RichTextEditor
                       initialValue={formData.content.passageText}
                       onChange={(e) => handleChange({ target: { name: 'content.passageText', value: e } })}
                     /> */}
                   </div>
+                  {isNewFeild(watchQuestionType) && <div>
+                    <Label>Extratext</Label>
+                    <Input
+                      type="text"
+                      placeholder="Enter the listening text"
+                      value={watch("typeSpecific.listeningText")}
+                      onChange={(e) => setValue("typeSpecific.listeningText", e.target.value)}
+                    />
+                  </div>}
 
                   {/* MCQ Options or Text Answer */}
                   {isDataInsights ? (

@@ -87,23 +87,6 @@ const QUESTION_SUBTYPES = {
     writing: ['summarize_written_text', 'essay'],
     speaking: ['read_aloud', 'repeat_sentence', 'describe_image', 're_tell_lecture', 'answer_short_question'],
   },
-  gre: {
-    verbal: ['text_completion', 'sentence_equivalence', 'reading_comprehension'],
-    quant: ['quantitative_comparison', 'multiple_choice_single', 'multiple_choice_multiple', 'numeric_entry'],
-    awa: ['issue_task', 'argument_task'],
-  },
-  gmat: {
-    verbal: ['critical_reasoning', 'reading_comprehension', 'sentence_correction'],
-    quant: ['data_sufficiency', 'problem_solving'],
-    ir: ['table_analysis', 'graphics_interpretation', 'multi_source_reasoning', 'two_part_analysis'],
-    awa: ['analysis_of_an_argument'],
-  },
-  sat: {
-    reading: ['evidence_support', 'vocabulary_in_context', 'main_idea', 'inference'],
-    writing: ['grammar', 'sentence_structure', 'punctuation', 'organization'],
-    math: ['heart_of_algebra', 'problem_solving_data_analysis', 'passport_to_advanced_math', 'additional_topics'],
-    essay: ['reading_analysis_writing'],
-  },
   duolingo: {
     listening: ['listen_and_type', 'listen_and_speak'],
     reading: ['read_and_complete', 'read_and_answer'],
@@ -148,7 +131,7 @@ export default function QuestionForm({
   initialData = null,
   onClose,
   onSuccess,
-}) {
+}: any) {
   const isEditing = !!initialData;
   const [step, setStep] = useState(1);
   const [formData, setFormData] = useState({
@@ -198,30 +181,27 @@ export default function QuestionForm({
     return false;
   });
 
-  useEffect(() => {
-    if (initialData) {
-      setFormData(prev => ({
-        ...prev, mainType: initialData.questionCategory,
-        examType: initialData.exam, ...initialData
-      }));
-    }
-  }, [initialData]);
-
   // Fetch exams/sections
   useEffect(() => {
     if (initialExamId && initialSectionId) return;
     const fetchRelated = async () => {
       try {
         const [sectionsRes] = await Promise.all([
-          api.get('/test/sections'),
+          api.get('/test/sections?limit=100'),
         ]);
         setAllSections(sectionsRes.data?.data || []);
+        if (initialData) {
+          setFormData(prev => ({
+            ...prev, mainType: initialData.questionCategory,
+            examType: initialData.exam, ...initialData
+          }));
+        }
       } catch (err) {
         toast.error('Failed to load exams/sections');
       }
     };
     fetchRelated();
-  }, [initialExamId, initialSectionId]);
+  }, [initialExamId, initialData, initialSectionId]);
 
   // Toggle dark mode
   useEffect(() => {
@@ -401,6 +381,7 @@ export default function QuestionForm({
       timeLimit: formData.timeLimit,
       isActive: formData.isActive,
       content: formData.content,
+      source: formData.source,
       totalQuestions: formData.totalQuestions
     };
     if (!formData.isQuestionGroup) {
@@ -457,18 +438,16 @@ export default function QuestionForm({
     switch (step) {
       case 1:
         return (
-          <div className="space-y-8">
-
-
+          <div className="space-y-2">
             {/* Question Group Toggle */}
-            <div className="p-6 bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-blue-900/30 dark:to-indigo-900/30 rounded-2xl border border-blue-100 dark:border-blue-800/50">
+            <div className="p-4 bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-blue-900/30 dark:to-indigo-900/30 rounded-2xl border border-blue-100 dark:border-blue-800/50">
               <div className="flex items-start gap-4">
                 <input
                   type="checkbox"
                   id="isQuestionGroup"
                   checked={formData.isQuestionGroup}
                   onChange={(e) => handleChange({ target: { name: 'isQuestionGroup', checked: e.target.checked } })}
-                  className="mt-1 h-5 w-5 text-blue-600 rounded focus:ring-blue-500 dark:focus:ring-blue-400"
+                  className="mt-1 h-4 w-4 text-blue-600 rounded focus:ring-blue-500 dark:focus:ring-blue-400"
                 />
                 <div>
                   <Label htmlFor="isQuestionGroup" className="font-semibold text-gray-800 dark:text-gray-200">
@@ -482,7 +461,7 @@ export default function QuestionForm({
             </div>
 
             {/* Form Grid */}
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
               {/* Title */}
               <div>
                 <Label className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Title *</Label>
@@ -519,10 +498,6 @@ export default function QuestionForm({
                   {errors.examType && <p className="text-red-500 text-xs mt-1 flex items-center gap-1"><svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20"><path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd"></path></svg>{errors.examType}</p>}
                 </div>
               </div>
-            </div>
-
-            {/* Section Selection */}
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
               {!initialSectionId && (
                 <div>
                   <Label className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Section *</Label>
@@ -570,7 +545,7 @@ export default function QuestionForm({
 
             {/* Exam Type Icon Preview */}
             {formData.examType && (
-              <div className="flex items-center gap-3 p-4 bg-gray-50 dark:bg-gray-800/50 rounded-xl">
+              <div className="flex items-center gap-3 p-4 mt-6 bg-gray-50 dark:bg-gray-800/50 rounded-xl">
                 <div className="w-12 h-12 rounded-full flex items-center justify-center bg-gradient-to-br from-blue-500 to-indigo-600 text-white font-bold text-lg shadow-md">
                   {formData.examType.charAt(0).toUpperCase()}
                 </div>
@@ -585,13 +560,13 @@ export default function QuestionForm({
 
       case 2:
         return (
-          <div className="space-y-8">
+          <div className="space-y-2">
 
             {/* Main Fields Card */}
-            <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-lg border border-gray-100 dark:border-gray-700 p-6">
-              <h3 className="text-xl font-semibold text-gray-800 dark:text-white mb-6 pb-4 border-b border-gray-100 dark:border-gray-700">Basic Settings</h3>
+            <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-lg border border-gray-100 dark:border-gray-700 p-4">
+              <h3 className="text- font-semibold text-gray-800 dark:text-white mb-4">Basic Settings</h3>
 
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-4">
                 {!formData.isQuestionGroup && (
                   <div>
                     <Label className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Question Type *</Label>
@@ -628,6 +603,17 @@ export default function QuestionForm({
                     />
                   </div>
                 </div>
+                <div>
+                  <Label className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Source</Label>
+                  <div className="relative">
+                    <Input
+                      name="source"
+                      value={formData.source}
+                      onChange={handleChange}
+                      className="w-full px-4 py-2 rounded-xl border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-800 dark:text-gray-200 shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200"
+                    />
+                  </div>
+                </div>
 
                 <div>
                   <Label className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Difficulty</Label>
@@ -647,7 +633,7 @@ export default function QuestionForm({
               </div>
 
               {/* Instruction */}
-              <div className="mb-6">
+              <div className="mb-4">
                 <Label className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Instruction *</Label>
                 <div className="relative">
 
@@ -666,7 +652,7 @@ export default function QuestionForm({
               <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-lg border border-gray-100 dark:border-gray-700 p-6">
                 <h3 className="text-xl font-semibold text-gray-800 dark:text-white mb-6 pb-4 border-b border-gray-100 dark:border-gray-700">Reading Passage</h3>
 
-                <div className="mb-6">
+                <div className="mb-4">
                   <Label className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Passage Title</Label>
                   <div className="relative">
                     <Input
@@ -679,7 +665,7 @@ export default function QuestionForm({
                   </div>
                 </div>
 
-                <div className="mb-6">
+                <div className="mb-4">
                   <Label className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Passage Content *</Label>
                   <div className="relative">
                     <RichTextEditor
@@ -693,31 +679,8 @@ export default function QuestionForm({
               </div>
             )}
 
-            {/* Image URL */}
-            <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-lg border border-gray-100 dark:border-gray-700 p-6">
-              <h3 className="text-xl font-semibold text-gray-800 dark:text-white mb-6 pb-4 border-b border-gray-100 dark:border-gray-700">Media</h3>
-
-              <div className="grid grid-cols-1 md:grid-cols-1 gap-6">
-                <div>
-                  <Label className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Image URL</Label>
-                  <div className="relative">
-                    <Input
-                      type="text"
-                      name="content.imageUrl"
-                      value={formData.content.imageUrl}
-                      onChange={handleChange}
-                      placeholder="https://example.com/image.jpg"
-                      className="w-full px-4 py-2 rounded-xl border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-800 dark:text-gray-200 shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200"
-                    />
-                    {errors.imageUrl && <p className="text-red-500 text-xs mt-1 flex items-center gap-1"><svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20"><path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd"></path></svg>{errors.imageUrl}</p>}
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            {/* Conditional: Options */}
             {showOptions && (
-              <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-lg border border-gray-100 dark:border-gray-700 p-6">
+              <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-lg border border-gray-100 dark:border-gray-700 p-4">
                 <h3 className="text-xl font-semibold text-gray-800 dark:text-white mb-6 pb-4 border-b border-gray-100 dark:border-gray-700">Answer Options</h3>
 
                 <p className="text-gray-600 dark:text-gray-300 mb-4">Define the answer choices. Mark the correct one with the checkbox.</p>
@@ -936,9 +899,9 @@ export default function QuestionForm({
 
             {/* GROUP MODE */}
             {formData.isQuestionGroup && (
-              <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-lg border border-gray-100 dark:border-gray-700 p-6">
-                <div className="flex justify-between items-center mb-6">
-                  <h3 className="text-xl font-semibold text-gray-800 dark:text-white">Question Groups</h3>
+              <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-lg border border-gray-100 dark:border-gray-700 p-4">
+                <div className="flex justify-between items-center mb-2">
+                  <h3 className=" font-semibold text-gray-800 dark:text-white">Question Groups</h3>
                   <button
                     type="button"
                     onClick={addGroup}
@@ -952,8 +915,8 @@ export default function QuestionForm({
                 </div>
 
                 {formData.questionGroup.map((group, gIndex) => (
-                  <div key={gIndex} className="mb-6 p-6 bg-gray-50 dark:bg-gray-700/50 rounded-2xl border border-gray-200 dark:border-gray-700">
-                    <div className="flex justify-between items-center mb-6">
+                  <div key={gIndex} className="mb-2 p-4 bg-gray-50 dark:bg-gray-700/50 rounded-2xl border border-gray-200 dark:border-gray-700">
+                    <div className="flex justify-between items-center mb-2">
                       <h4 className="text-lg font-medium text-gray-800 dark:text-white">Group {gIndex + 1}</h4>
                       {formData.questionGroup.length > 1 && (
                         <button
@@ -969,7 +932,7 @@ export default function QuestionForm({
                       )}
                     </div>
 
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
                       <div>
                         <Label className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Title *</Label>
                         <div className="relative">
@@ -1015,7 +978,7 @@ export default function QuestionForm({
                       </div>
                     </div>
 
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
                       <div>
                         <Label className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Marks per question *</Label>
                         <div className="relative">
@@ -1157,7 +1120,7 @@ export default function QuestionForm({
 
       case 3:
         return (
-          <div className="space-y-8">
+          <div className="space-y-2">
             {/* Review Card */}
             <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-lg border border-gray-100 dark:border-gray-700 p-6">
               <h3 className="text-xl font-semibold text-gray-800 dark:text-white mb-6 pb-4 border-b border-gray-100 dark:border-gray-700">Question Details</h3>
@@ -1352,13 +1315,13 @@ export default function QuestionForm({
 
   return (
     <div className="bg-gray-50 dark:bg-gray-900">
-      <div className="max-w-6xl mx-auto">
-        <div className="bg-white dark:bg-gray-800 rounded-3xl shadow-xl overflow-hidden border border-gray-100 dark:border-gray-700">
-          <div className="p-4 max-h-[72vh] overflow-y-auto">
+      <div className=" mx-auto">
+        <div className="">
+          <div className="max-h-[72vh] overflow-y-auto">
             {renderStepContent()}
           </div>
 
-          <div className="bg-gray-50 dark:bg-gray-700/50 px-6 md:px-8 py-6 flex justify-between items-center border-t border-gray-200 dark:border-gray-700">
+          <div className="fixed bottom-0 left-0 right-0 bg-white dark:bg-gray-900 border-t border-gray-200 dark:border-gray-700 px-4 py-3 flex  justify-between items-center">
             <button
               type="button"
               onClick={prevStep}

@@ -1,6 +1,5 @@
 import { useState, useEffect } from "react";
 import moment from "moment";
-import { useModal } from "../../hooks/useModal";
 import { Modal } from "../../components/ui/modal";
 import Button from "../../components/ui/button/Button";
 import { toast } from "react-toastify";
@@ -12,7 +11,6 @@ export default function QuestionManagement() {
     const [questions, setQuestions] = useState([]);
     const [loading, setLoading] = useState(true);
     const [total, setTotal] = useState(0);
-    const { isOpen, openModal, closeModal } = useModal();
     const [editModalOpen, setEditModalOpen] = useState(false);
     const [selectedQuestion, setSelectedQuestion] = useState(null);
     const [isDeleteModalOpen, setDeleteModalOpen] = useState(false);
@@ -29,6 +27,7 @@ export default function QuestionManagement() {
         tag: "",
         examId: "",
         sectionId: "",
+        search: ""
     });
 
     const [formData, setFormData] = useState({
@@ -67,7 +66,6 @@ export default function QuestionManagement() {
     // Fetch on mount & filter change
     useEffect(() => {
         fetchQuestions();
-        fetchRelatedData();
     }, [filters]);
 
     const fetchQuestions = async () => {
@@ -89,14 +87,16 @@ export default function QuestionManagement() {
         }
     };
 
+    useEffect(() => {
+        fetchRelatedData();
+    }, []);
+
     const fetchRelatedData = async () => {
         try {
-            const [examsRes, sectionsRes] = await Promise.all([
-                api.get("/test/exams"),
-                api.get("/test/sections")
+            const [examsRes] = await Promise.all([
+                api.get("/test/exams?limit=100"),
             ]);
             setAllExams(examsRes.data?.data || []);
-            setAllSections(sectionsRes.data?.data || []);
         } catch (error) {
             console.error("Failed to fetch related data:", error);
         }
@@ -104,6 +104,10 @@ export default function QuestionManagement() {
 
     const handleFilterChange = (e) => {
         const { name, value } = e.target;
+        if (name == "examId") {
+            const exams = allExams.find((exam) => exam?._id === value);
+            setAllSections(exams?.sections || []);
+        }
         setFilters((prev) => ({
             ...prev,
             [name]: value,
@@ -128,13 +132,7 @@ export default function QuestionManagement() {
         }
     };
 
-    const viewQuestionDetails = (question) => {
-        setSelectedQuestion(question);
-        openModal();
-    };
-
-
-    const openEditModal = (question) => {
+    const openEditModal = (question:any) => {
         setSelectedQuestion(question);
         setFormData({
             examId: question.examId?._id || "",
@@ -142,6 +140,7 @@ export default function QuestionManagement() {
             marks: question.marks || 1,
             questionType: question.questionType || "multiple_choice_single",
             difficulty: question.difficulty || "medium",
+            isQuestionGroup: question.isQuestionGroup || false,
             content: question.content || {
                 instruction: "",
                 passageText: "",
@@ -160,9 +159,11 @@ export default function QuestionManagement() {
             tags: question.tags?.length > 0 ? question.tags : [""],
             timeLimit: question.timeLimit || 0,
             isActive: question.isActive !== undefined ? question.isActive : true,
+            source:question.source || "",
         });
         setEditModalOpen(true);
     };
+
 
     const deleteQuestion = async () => {
         if (!selectedQuestion) return;
@@ -255,12 +256,12 @@ export default function QuestionManagement() {
                 <div className="mb-6 grid grid-cols-1 gap-4 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4">
                     <div>
                         <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                            Search (Instruction, Tags)
+                            Search (Title,Exam)
                         </label>
                         <input
                             type="text"
-                            name="tag"
-                            value={filters.tag}
+                            name="search"
+                            value={filters.search}
                             onChange={handleFilterChange}
                             placeholder="Search by tag..."
                             className="w-full rounded-md border border-gray-300 bg-white py-2 px-3 text-sm focus:border-indigo-500 focus:outline-none focus:ring-indigo-500 dark:border-gray-600 dark:bg-gray-800 dark:text-white"
@@ -391,11 +392,13 @@ export default function QuestionManagement() {
                         <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
                             <thead className="bg-gray-50 dark:bg-gray-800">
                                 <tr>
-                                    <th className="px-2 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500 dark:text-gray-300">Instruction</th>
+                                    <th className="px-2 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500 dark:text-gray-300">Title</th>
                                     <th className="px-2 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500 dark:text-gray-300">Exam</th>
-                                    <th className="px-2 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500 dark:text-gray-300">Type</th>
+                                    <th className="px-2 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500 dark:text-gray-300">Category</th>
+                                    <th className="px-2 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500 dark:text-gray-300">Grouped/single</th>
+
                                     <th className="px-2 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500 dark:text-gray-300">Difficulty</th>
-                                    <th className="px-2 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500 dark:text-gray-300">Marks</th>
+                                    <th className="px-2 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500 dark:text-gray-300">Source</th>
                                     <th className="px-2 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500 dark:text-gray-300">Status</th>
                                     <th className="px-2 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500 dark:text-gray-300">Created</th>
                                     <th className="px-2 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500 dark:text-gray-300">Actions</th>
@@ -406,19 +409,22 @@ export default function QuestionManagement() {
                                     questions.map((q) => (
                                         <tr key={q._id} className="hover:bg-gray-50 dark:hover:bg-gray-700">
                                             <td className="whitespace-nowrap px-2 py-4 text-sm text-gray-900 dark:text-white max-w-xs truncate">
-                                                {q.content.instruction}
+                                                {q.title}
                                             </td>
                                             <td className="whitespace-nowrap px-2 py-4 text-sm text-gray-500 dark:text-gray-300">
-                                                {q.exam?.title || "—"}
+                                                {q.exam || "—"}
                                             </td>
                                             <td className="whitespace-nowrap px-2 py-4 text-sm text-gray-500 dark:text-gray-300">
-                                                {getQuestionTypeLabel(q.questionType)}
+                                                {q.questionCategory || "—"}
+                                            </td>
+                                            <td className="whitespace-nowrap px-2 py-4 text-sm text-gray-500 dark:text-gray-300">
+                                                {q.isQuestionGroup ? "Grouped" : "Single" || "—"}
                                             </td>
                                             <td className="whitespace-nowrap px-2 py-4 text-sm capitalize text-gray-500 dark:text-gray-300">
                                                 {q.difficulty}
                                             </td>
                                             <td className="whitespace-nowrap px-2 py-4 text-sm text-gray-500 dark:text-gray-300">
-                                                {q.marks}
+                                                {q.source || "—"}
                                             </td>
                                             <td className="whitespace-nowrap px-2 py-4 text-sm text-gray-500 dark:text-gray-300">
                                                 <span
@@ -436,12 +442,6 @@ export default function QuestionManagement() {
                                             </td>
                                             <td className="whitespace-nowrap px-2 py-4 text-sm font-medium text-gray-900 dark:text-white">
                                                 <div className="flex space-x-2">
-                                                    <button
-                                                        onClick={() => viewQuestionDetails(q)}
-                                                        className="p-1 rounded-lg text-indigo-600 hover:text-indigo-900 dark:text-indigo-400 dark:hover:text-indigo-300"
-                                                    >
-                                                        <Eye className="h-5 w-5" />
-                                                    </button>
                                                     <button
                                                         onClick={() => openEditModal(q)}
                                                         className="p-1 rounded-lg text-blue-600 hover:text-blue-900 dark:text-blue-400 dark:hover:text-blue-300"
@@ -518,106 +518,11 @@ export default function QuestionManagement() {
                 )}
             </div>
 
-            {/* View Modal */}
-            <Modal isOpen={isOpen} onClose={closeModal} className="max-w-[800px] m-4">
-                <div className="no-scrollbar relative w-full max-w-[800px] overflow-y-auto rounded-3xl bg-white p-4 dark:bg-gray-900 lg:p-11">
-                    <div className="px-2 pr-14">
-                        <h4 className="mb-2 text-2xl font-semibold text-gray-800 dark:text-white/90">
-                            Question Details
-                        </h4>
-                    </div>
-                    <div className="custom-scrollbar h-[500px] overflow-y-auto px-2 pb-3">
-                        {selectedQuestion && (
-                            <div className="space-y-6">
-                                <div>
-                                    <h6 className="mb-2 text-base font-medium text-gray-800 dark:text-white/90">Instruction</h6>
-                                    <p className="text-sm text-gray-700 dark:text-gray-300">{selectedQuestion.content.instruction}</p>
-                                </div>
-                                <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-                                    <div>
-                                        <h6 className="mb-2 text-base font-medium text-gray-800 dark:text-white/90">Exam</h6>
-                                        <p>{selectedQuestion.exam?.title || "—"}</p>
-                                    </div>
-                                    <div>
-                                        <h6 className="mb-2 text-base font-medium text-gray-800 dark:text-white/90">Section</h6>
-                                        <p>{selectedQuestion.section?.title || "—"}</p>
-                                    </div>
-                                    <div>
-                                        <h6 className="mb-2 text-base font-medium text-gray-800 dark:text-white/90">Type</h6>
-                                        <p>{getQuestionTypeLabel(selectedQuestion.questionType)}</p>
-                                    </div>
-                                    <div>
-                                        <h6 className="mb-2 text-base font-medium text-gray-800 dark:text-white/90">Difficulty</h6>
-                                        <p className="capitalize">{selectedQuestion.difficulty}</p>
-                                    </div>
-                                    <div>
-                                        <h6 className="mb-2 text-base font-medium text-gray-800 dark:text-white/90">Marks</h6>
-                                        <p>{selectedQuestion.marks}</p>
-                                    </div>
-                                    <div>
-                                        <h6 className="mb-2 text-base font-medium text-gray-800 dark:text-white/90">Time Limit (sec)</h6>
-                                        <p>{selectedQuestion.timeLimit || "—"} </p>
-                                    </div>
-                                </div>
-                                {selectedQuestion.content.passageText && (
-                                    <div>
-                                        <h6 className="mb-2 text-base font-medium text-gray-800 dark:text-white/90">Passage</h6>
-                                        <p className="text-sm text-gray-700 dark:text-gray-300">{selectedQuestion.content.passageText}</p>
-                                    </div>
-                                )}
-                                {selectedQuestion.options?.length > 0 && (
-                                    <div>
-                                        <h6 className="mb-2 text-base font-medium text-gray-800 dark:text-white/90">Options</h6>
-                                        <ul className="list-disc pl-5 space-y-1">
-                                            {selectedQuestion.options.map((opt, i) => (
-                                                <li key={i} className="text-sm">
-                                                    <strong>{opt.label}:</strong> {opt.text} {opt.isCorrect && "(✓)"}
-                                                    {opt.explanation && <div className="text-xs text-gray-500">Explanation: {opt.explanation}</div>}
-                                                </li>
-                                            ))}
-                                        </ul>
-                                    </div>
-                                )}
-                                {selectedQuestion.correctAnswer && (
-                                    <div>
-                                        <h6 className="mb-2 text-base font-medium text-gray-800 dark:text-white/90">Correct Answer</h6>
-                                        <p className="font-mono">{JSON.stringify(selectedQuestion.correctAnswer)}</p>
-                                    </div>
-                                )}
-                                {selectedQuestion.explanation && (
-                                    <div>
-                                        <h6 className="mb-2 text-base font-medium text-gray-800 dark:text-white/90">Explanation</h6>
-                                        <p className="text-sm text-gray-700 dark:text-gray-300">{selectedQuestion.explanation}</p>
-                                    </div>
-                                )}
-                                {selectedQuestion.tags?.length > 0 && (
-                                    <div>
-                                        <h6 className="mb-2 text-base font-medium text-gray-800 dark:text-white/90">Tags</h6>
-                                        <div className="flex flex-wrap gap-2">
-                                            {selectedQuestion.tags.map((tag, i) => (
-                                                <span key={i} className="px-2 py-1 bg-blue-100 text-blue-800 rounded text-xs">
-                                                    {tag}
-                                                </span>
-                                            ))}
-                                        </div>
-                                    </div>
-                                )}
-                            </div>
-                        )}
-                    </div>
-                    <div className="flex items-center gap-3 px-2 mt-6 lg:justify-end">
-                        <Button size="sm" variant="outline" onClick={closeModal}>
-                            Close
-                        </Button>
-                    </div>
-                </div>
-            </Modal>
-
             {/* Edit/Create Modal */}
             <Modal isOpen={editModalOpen} isFullscreen onClose={() => setEditModalOpen(false)} className="bg-white dark:bg-gray-900">
-                <div className="max-w-6xl mx-auto relative w-full rounded-3xl bg-white p-4 dark:bg-gray-900 lg:p-6">
+                <div className="mx-auto relative w-full rounded-3xl bg-white p-4 dark:bg-gray-900 lg:p-6">
                     <div className="px-2 pr-14">
-                        <h4 className="mb-2 text-2xl font-semibold text-gray-800 dark:text-white/90">
+                        <h4 className="mb-2 text-xl font-semibold text-gray-800 dark:text-white/90">
                             {selectedQuestion ? "Edit Question" : "Add New Question"}
                         </h4>
                     </div>

@@ -3,10 +3,6 @@ import React, { useEffect, useMemo, useRef, useState } from "react";
 import { useParams } from "react-router";
 import { Controller, useForm } from "react-hook-form";
 import {
-    // ... other imports
-    Download, // Add this
-} from "lucide-react";
-import {
     BookOpen,
     Clock,
     CheckCircle,

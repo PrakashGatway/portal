@@ -52,6 +52,7 @@ import SatTestAttemptPage from "./pages/SatTest/SatAttempts";
 import GmatTestAttemptPage from "./pages/mcu/GmatTest";
 import GreTestAttemptPage from "./pages/mcu/GreAttempts";
 import GmatTestAnalysisPage from "./pages/mcu/GmatAnaysis";
+import PteExamPage from "./pages/PTEtest/PteAttempts";
 
 // Define roles
 export const ROLES = {
@@ -144,6 +145,7 @@ export default function App() {
             <Route path="/gmat/tests/:testTemplateId" element={<GmatTestAttemptPage />} />
             <Route path="/gre/tests/:testTemplateId" element={<GreTestAttemptPage />} />
             <Route path="/gmat/analysis/:attemptId" element={<GmatTestAnalysisPage />} />
+            <Route path="/pte/tests/:testTemplateId" element={<PteExamPage />} />
           </Route>
           <Route path="/unauthorized" element={<NotFound />} />
         </Routes>

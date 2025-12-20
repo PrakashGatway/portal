@@ -433,7 +433,6 @@ const QuestionRenderer: React.FC<QuestionRendererProps> = React.memo(
                 <div dangerouslySetInnerHTML={{ __html: qDoc.questionText }} />
 
               </div>
-
               <div className="space-y-4">
 
                 <div className="space-y-2">

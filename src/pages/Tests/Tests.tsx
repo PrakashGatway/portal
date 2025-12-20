@@ -13,15 +13,16 @@ import {
     Trash2,
     BookOpen,
     Search,
-    GripVertical // Icon for drag handle
+    GripVertical,
 } from "lucide-react";
 import TextArea from "../../components/form/input/TextArea";
 
 const TestSeriesTypes = ["Full-Length", "Mini-Series", "Sectional"];
 const DifficultyLevels = ["Beginner", "Intermediate", "Advanced", "Expert"];
-const SubTypes = ["reading", "listening", "speaking", "writing"]; // Added SubTypes
+const SubTypes = ["reading", "listening", "speaking", "writing"];
 
 export default function TestSeriesManagement() {
+    // ====== STATES ======
     const [testSeriesList, setTestSeriesList] = useState([]);
     const [loading, setLoading] = useState(true);
     const [total, setTotal] = useState(0);
@@ -32,8 +33,6 @@ export default function TestSeriesManagement() {
 
     // Related data
     const [allExams, setAllExams] = useState([]);
-    const [allSections, setAllSections] = useState([]);
-    const [allQuestions, setAllQuestions] = useState({}); // Changed to store questions per sectionId { sectionId: [questions] }
     const [allCourses, setAllCourses] = useState([]);
 
     // Filters
@@ -46,40 +45,46 @@ export default function TestSeriesManagement() {
         search: "",
     });
 
-    // Stepper state
+    // Stepper state → **Only 2 steps now**
     const [currentStep, setCurrentStep] = useState(1);
     const [formData, setFormData] = useState({
         title: "",
         type: TestSeriesTypes[0],
-        subType: "", // Added subType
+        subType: "",
         description: "",
         examId: "",
         thumbnailPic: "",
-        slug: "", // Added slug
+        slug: "",
         difficultyLevel: "Intermediate",
         isPaid: false,
         price: { amount: 0, discount: 0, currency: "INR" },
         negativeMarking: 0,
-        duration: 60, // minutes
+        duration: 60,
         totalQuestions: 0,
         passingScore: 0,
         isTimed: true,
         allowPause: false,
         courseAccess: [],
-        isActive: true, // Added isActive
-        sections: [], // will be built step-by-step [{ sectionId, order, questionIds: [ObjectId], duration, totalQuestions }]
+        isActive: true,
+        sections: [], // [{ sectionId, order, questionIds: [], duration, totalQuestions }]
     });
 
     const [errors, setErrors] = useState({});
-    const [sectionSearch, setSectionSearch] = useState("");
-    const [selectedSectionId, setSelectedSectionId] = useState(null); // Now tracks the sectionId for which questions are being managed
+    const [questionSearchTerm, setQuestionSearchTerm] = useState("");
+    const [selectedSectionId, setSelectedSectionId] = useState(null); // Tracks which section we're managing questions for
+    const [questionsForSection, setQuestionsForSection] = useState([]); // Fetched questions for selected section
+    const [loadingQuestions, setLoadingQuestions] = useState(false);
 
-    // Fetch data
+    // ====== EFFECTS ======
     useEffect(() => {
         fetchTestSeries();
-        fetchRelatedData();
     }, [filters]);
 
+    useEffect(() => {
+        fetchRelatedData();
+    }, []);
+
+    // ====== FETCH DATA ======
     const fetchTestSeries = async () => {
         setLoading(true);
         try {
@@ -103,20 +108,18 @@ export default function TestSeriesManagement() {
 
     const fetchRelatedData = async () => {
         try {
-            const [examsRes, sectionsRes, coursesRes] = await Promise.all([
+            const [examsRes, coursesRes] = await Promise.all([
                 api.get("/test/exams?limit=100"),
-                api.get("/test/sections?limit=100"),
                 api.get("/courses?limit=100"),
             ]);
             setAllExams(examsRes.data?.data || []);
-            setAllSections(sectionsRes.data?.data || []);
             setAllCourses(coursesRes.data?.data || []);
         } catch (error) {
             console.error("Failed to fetch related data", error);
         }
     };
 
-    // --- FILTERS ---
+    // ====== UTILS ======
     const handleFilterChange = (e) => {
         const { name, value } = e.target;
         setFilters((prev) => ({ ...prev, [name]: value, page: 1 }));
@@ -126,71 +129,16 @@ export default function TestSeriesManagement() {
         setFilters((prev) => ({ ...prev, page: newPage }));
     };
 
-    // --- VIEW ---
-    const viewTestSeries = async (ts) => {
-        try {
-            const res = await api.get(`/test/series/${ts._id}`);
-            setSelectedTestSeries(res.data?.data || ts);
-            openModal();
-        } catch (error) {
-            toast.error("Failed to load details");
-        }
-    };
-
-    // --- MODAL HANDLERS ---
-    const openCreateModal = () => {
-        setSelectedTestSeries(null);
-        resetForm();
-        setCurrentStep(1);
-        setEditModalOpen(true);
-    };
-
-    const openEditModal = (ts) => {
-        setSelectedTestSeries(ts);
-        // Ensure questionIds are mapped correctly from the backend response
-        const mappedSections = ts.sections?.map(section => ({
-            ...section,
-            // Ensure questionIds is always an array, even if backend sends null/undefined
-            questionIds: Array.isArray(section.questionIds) ? section.questionIds : [],
-        })) || [];
-        setFormData({
-            title: ts.title || "",
-            type: ts.type || TestSeriesTypes[0],
-            subType: ts.subType || "", // Added subType
-            description: ts.description || "",
-            examId: ts.examId?._id || "",
-            thumbnailPic: ts.thumbnailPic || "",
-            slug: ts.slug || "", // Added slug
-            difficultyLevel: ts.difficultyLevel || "Intermediate",
-            isPaid: !!ts.isPaid,
-            price: {
-                amount: ts.price?.amount || 0,
-                discount: ts.price?.discount || 0,
-                currency: ts.price?.currency || "INR",
-            },
-            negativeMarking: ts.negativeMarking || 0,
-            duration: ts.duration || 60,
-            totalQuestions: ts.totalQuestions || 0,
-            passingScore: ts.passingScore || 0,
-            isTimed: ts.isTimed !== false,
-            allowPause: !!ts.allowPause,
-            courseAccess: ts.courseAccess?.map(c => c._id) || [],
-            isActive: ts.isActive !== false, // Added isActive
-            sections: mappedSections, // Use mapped sections
-        });
-        setCurrentStep(1);
-        setEditModalOpen(true);
-    };
-
+    // ====== MODAL HANDLERS ======
     const resetForm = () => {
         setFormData({
             title: "",
             type: TestSeriesTypes[0],
-            subType: "", // Added subType
+            subType: "",
             description: "",
             examId: "",
             thumbnailPic: "",
-            slug: "", // Added slug
+            slug: "",
             difficultyLevel: "Intermediate",
             isPaid: false,
             price: { amount: 0, discount: 0, currency: "INR" },
@@ -201,60 +149,100 @@ export default function TestSeriesManagement() {
             isTimed: true,
             allowPause: false,
             courseAccess: [],
-            isActive: true, // Added isActive
+            isActive: true,
             sections: [],
         });
-        setAllQuestions({}); // Reset questions state
-        setSelectedSectionId(null); // Reset selected section ID
+        setSelectedSectionId(null);
         setErrors({});
     };
 
-    // --- VALIDATION ---
+    const openCreateModal = () => {
+        setSelectedTestSeries(null);
+        resetForm();
+        setCurrentStep(1);
+        setEditModalOpen(true);
+    };
+
+    const openEditModal = async (ts) => {
+        try {
+            const res = await api.get(`/test/series/${ts._id}`);
+            const data = res.data?.data || ts;
+            setSelectedTestSeries(data);
+            const mappedSections = (data.sections || []).map((sec) => ({
+                ...sec,
+                questionIds: Array.isArray(sec.questionIds) ? sec.questionIds.map(String) : [],
+            }));
+            setFormData({
+                title: data.title || "",
+                type: data.type || TestSeriesTypes[0],
+                subType: data.subType || "",
+                description: data.description || "",
+                examId: data.examId?._id || "",
+                thumbnailPic: data.thumbnailPic || "",
+                slug: data.slug || "",
+                difficultyLevel: data.difficultyLevel || "Intermediate",
+                isPaid: !!data.isPaid,
+                price: {
+                    amount: data.price?.amount || 0,
+                    discount: data.price?.discount || 0,
+                    currency: data.price?.currency || "INR",
+                },
+                negativeMarking: data.negativeMarking || 0,
+                duration: data.duration || 60,
+                totalQuestions: data.totalQuestions || 0,
+                passingScore: data.passingScore || 0,
+                isTimed: data.isTimed !== false,
+                allowPause: !!data.allowPause,
+                courseAccess: (data.courseAccess || []).map((c) => c._id),
+                isActive: data.isActive !== false,
+                sections: mappedSections,
+            });
+            setCurrentStep(1);
+            setEditModalOpen(true);
+        } catch (err) {
+            toast.error("Failed to load test series");
+        }
+    };
+
+    // ====== VALIDATION ======
     const validateStep1 = () => {
         const err = {};
         if (!formData.title?.trim()) err.title = "Title is required";
         if (!formData.examId) err.examId = "Exam is required";
-        if (!formData.slug?.trim()) err.slug = "Slug is required"; // Added slug validation
+        if (!formData.slug?.trim()) err.slug = "Slug is required";
         setErrors(err);
         return Object.keys(err).length === 0;
     };
 
-    // Removed validateStep2 as sections are not strictly required by the schema itself,
-    // only its internal fields if a section exists. The UI logic for adding sections remains.
-    // If you want to enforce at least one section via UI, you can uncomment this:
-    // const validateStep2 = () => {
-    //     const err = {};
-    //     if (formData.sections.length === 0) err.sections = "At least one section is required";
-    //     setErrors(err);
-    //     return Object.keys(err).length === 0;
-    // };
-
-    // --- SECTION MANAGEMENT ---
-    const addSectionToTest = (sectionId) => {
-        const section = allSections.find(s => s._id === sectionId);
-        if (!section) return;
+    // ====== SECTION HANDLING ======
+    const addSectionToTest = (section) => {
+        const exists = formData.sections.some((s) => s.sectionId === section._id);
+        if (exists) {
+            toast.warn("Section already added");
+            return;
+        }
         const newSection = {
             sectionId: section._id,
             order: formData.sections.length + 1,
             questionIds: [],
             duration: section.duration || 30,
-            totalQuestions: section.questionCount || 0,
+            totalQuestions: 0,
         };
-        setFormData(prev => ({
+        setFormData((prev) => ({
             ...prev,
             sections: [...prev.sections, newSection],
         }));
     };
 
     const removeSectionFromTest = (index) => {
-        setFormData(prev => ({
+        setFormData((prev) => ({
             ...prev,
             sections: prev.sections.filter((_, i) => i !== index),
         }));
     };
 
     const updateSectionField = (index, field, value) => {
-        setFormData(prev => ({
+        setFormData((prev) => ({
             ...prev,
             sections: prev.sections.map((sec, i) =>
                 i === index ? { ...sec, [field]: value } : sec
@@ -262,108 +250,66 @@ export default function TestSeriesManagement() {
         }));
     };
 
-    // --- QUESTION MANAGEMENT WITHIN SECTION ---
-const toggleQuestionInSection = (sectionIndex, questionId) => {
-    console.log("Toggle question:", sectionIndex, questionId);
-    console.log("Current section questions:", formData.sections[sectionIndex]?.questionIds);
-    
-    setFormData(prev => {
-        const newSections = prev.sections.map((section, idx) => {
-            if (idx !== sectionIndex) return section;
-            
-            // Create a new array for questionIds to maintain immutability
-            const currentQuestionIds = [...section.questionIds];
-            const questionIdStr = String(questionId);
-            
-            // Find index using strict comparison with string conversion
-            const existingIndex = currentQuestionIds.findIndex(
-                qId => String(qId) === questionIdStr
-            );
-            
-            let newQuestionIds;
-            if (existingIndex > -1) {
-                // Remove question
-                newQuestionIds = [
-                    ...currentQuestionIds.slice(0, existingIndex),
-                    ...currentQuestionIds.slice(existingIndex + 1)
-                ];
-            } else {
-                // Add question
-                newQuestionIds = [...currentQuestionIds, questionId];
-            }
-            
-            // Return updated section
-            return {
-                ...section,
-                questionIds: newQuestionIds,
-                totalQuestions: newQuestionIds.length
-            };
-        });
-        
-        console.log("Updated sections:", newSections);
-        return { ...prev, sections: newSections };
-    });
-};
+    // ====== QUESTION HANDLING ======
+    const fetchQuestionsForSection = async (sectionId, search = "") => {
+        if (!sectionId) return;
+        setLoadingQuestions(true);
+        try {
+            const res = await api.get(`/test/questions`, {
+                params: { sectionId, search, limit: 100 },
+            });
+            setQuestionsForSection(res.data?.questions || []);
+            setSelectedSectionId(sectionId);
+        } catch (error) {
+            toast.error("Failed to load questions");
+            setQuestionsForSection([]);
+        } finally {
+            setLoadingQuestions(false);
+        }
+    };
 
-    // --- DRAG & DROP LOGIC FOR QUESTIONS ---
-    // This function handles the reordering of questions within a specific section
-    const moveQuestionInSection = (sectionIndex, fromIndex, toIndex) => {
-        setFormData(prev => {
+    const toggleQuestionInSection = (sectionIndex, questionId) => {
+        setFormData((prev) => {
             const newSections = [...prev.sections];
-            const section = newSections[sectionIndex];
-            const updatedQuestionIds = [...section.questionIds]; // Create a copy of the array
-            // Remove question from old position
-            const [movedQuestionId] = updatedQuestionIds.splice(fromIndex, 1);
-            // Insert question at new position
-            updatedQuestionIds.splice(toIndex, 0, movedQuestionId);
-            // Update the section's questionIds array with the new order
-            section.questionIds = updatedQuestionIds;
-            // TotalQuestions remains the same after reordering
-            section.totalQuestions = updatedQuestionIds.length;
+            const sec = newSections[sectionIndex];
+            const qIdStr = String(questionId);
+            const idx = sec.questionIds.findIndex((id) => String(id) === qIdStr);
+            let newQuestionIds;
+            if (idx > -1) {
+                newQuestionIds = sec.questionIds.filter((id) => String(id) !== qIdStr);
+            } else {
+                newQuestionIds = [...sec.questionIds, questionId];
+            }
+            sec.questionIds = newQuestionIds;
+            sec.totalQuestions = newQuestionIds.length;
             return { ...prev, sections: newSections };
         });
     };
 
-    const fetchQuestionsForSection = async (sectionId) => {
-        try {
-            const res = await api.get(`/test/questions/?sectionId=${sectionId}`);
-            setAllQuestions(prev => ({
-                ...prev,
-                [sectionId]: res.data?.questions || [] // Store questions under the section ID
-            }));
-            setSelectedSectionId(sectionId); // Set the section ID after fetching
-        } catch (error) {
-            toast.error("Failed to load questions");
-            setAllQuestions(prev => ({
-                ...prev,
-                [sectionId]: [] // Store empty array on error
-            }));
-            setSelectedSectionId(sectionId); // Still set the ID so the UI shows the error state
-        }
+    const moveQuestionInSection = (sectionIndex, fromIndex, toIndex) => {
+        setFormData((prev) => {
+            const newSections = [...prev.sections];
+            const sec = newSections[sectionIndex];
+            const updated = [...sec.questionIds];
+            const [moved] = updated.splice(fromIndex, 1);
+            updated.splice(toIndex, 0, moved);
+            sec.questionIds = updated;
+            return { ...prev, sections: newSections };
+        });
     };
 
-    // --- STEPPER NAV ---
+    // ====== STEPPER & SUBMIT ======
     const goToNext = () => {
         if (currentStep === 1 && validateStep1()) {
             setCurrentStep(2);
-        } else if (currentStep === 2 /*&& validateStep2()*/ ) { // Removed validation call if not enforcing sections
-            setCurrentStep(3);
         }
     };
 
-    const goToPrev = () => {
-        setCurrentStep((prev) => Math.max(1, prev - 1));
-    };
+    const goToPrev = () => setCurrentStep(1);
 
-    // --- SUBMIT ---
     const handleCreate = async () => {
-        // The payload structure matches the updated schema
-        const payload = {
-            ...formData,
-            // No need to transform questionIds, they are already ObjectId arrays
-        };
         try {
-            await api.post("/test/series", payload);
+            await api.post("/test/series", formData);
             toast.success("Test series created!");
             fetchTestSeries();
             setEditModalOpen(false);
@@ -373,11 +319,8 @@ const toggleQuestionInSection = (sectionIndex, questionId) => {
     };
 
     const handleUpdate = async () => {
-        const payload = {
-            ...formData,
-        };
         try {
-            await api.put(`/test/series/${selectedTestSeries._id}`, payload);
+            await api.put(`/test/series/${selectedTestSeries._id}`, formData);
             toast.success("Test series updated!");
             fetchTestSeries();
             setEditModalOpen(false);
@@ -388,18 +331,15 @@ const toggleQuestionInSection = (sectionIndex, questionId) => {
 
     const handleSubmit = (e) => {
         e.preventDefault();
-        if (currentStep < 3) {
+        if (currentStep === 1) {
             goToNext();
         } else {
-            if (selectedTestSeries) {
-                handleUpdate();
-            } else {
-                handleCreate();
-            }
+            if (selectedTestSeries) handleUpdate();
+            else handleCreate();
         }
     };
 
-    // --- DELETE ---
+    // ====== DELETE ======
     const deleteTestSeries = async () => {
         if (!selectedTestSeries) return;
         try {
@@ -412,15 +352,19 @@ const toggleQuestionInSection = (sectionIndex, questionId) => {
         }
     };
 
-    // --- FILTERED SECTIONS ---
-    const filteredSections = useMemo(() => {
-        if (!sectionSearch) return allSections;
-        return allSections.filter(s =>
-            s.name.toLowerCase().includes(sectionSearch.toLowerCase())
-        );
-    }, [allSections, sectionSearch]);
+    // ====== DERIVED DATA ======
+    const examSections = useMemo(() => {
+        const exam = allExams.find((e) => e._id === formData.examId);
+        return exam?.sections || [];
+    }, [formData.examId, allExams]);
 
-    // --- RENDER ---
+    const filteredSections = useMemo(() => {
+        return examSections.filter((s) =>
+            s.name.toLowerCase().includes(questionSearchTerm.toLowerCase())
+        );
+    }, [examSections, questionSearchTerm]);
+
+    // ====== RENDER ======
     return (
         <div className="w-full overflow-x-auto">
             {/* Header */}
@@ -454,6 +398,7 @@ const toggleQuestionInSection = (sectionIndex, questionId) => {
                     </div>
                 </div>
             </div>
+
             {/* Filters */}
             <div className="min-h-[70vh] overflow-x-auto rounded-2xl border border-gray-200 bg-white px-4 py-4 dark:border-gray-800 dark:bg-white/[0.03]">
                 <div className="mb-6 grid grid-cols-1 gap-4 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4">
@@ -465,7 +410,9 @@ const toggleQuestionInSection = (sectionIndex, questionId) => {
                             type="text"
                             name="search"
                             value={filters.search}
-                            onChange={(e) => setFilters(prev => ({ ...prev, search: e.target.value, page: 1 }))}
+                            onChange={(e) =>
+                                setFilters((prev) => ({ ...prev, search: e.target.value, page: 1 }))
+                            }
                             placeholder="Search..."
                             className="w-full rounded-md border border-gray-300 bg-white py-2 px-3 text-sm focus:border-indigo-500 focus:outline-none focus:ring-indigo-500 dark:border-gray-600 dark:bg-gray-800 dark:text-white"
                         />
@@ -481,7 +428,7 @@ const toggleQuestionInSection = (sectionIndex, questionId) => {
                             className="w-full rounded-md border border-gray-300 bg-white py-2 px-3 text-sm focus:border-indigo-500 focus:outline-none focus:ring-indigo-500 dark:border-gray-600 dark:bg-gray-800 dark:text-white"
                         >
                             <option value="">All Exams</option>
-                            {allExams.map(exam => (
+                            {allExams.map((exam) => (
                                 <option key={exam._id} value={exam._id}>{exam.name}</option>
                             ))}
                         </select>
@@ -497,20 +444,30 @@ const toggleQuestionInSection = (sectionIndex, questionId) => {
                             className="w-full rounded-md border border-gray-300 bg-white py-2 px-3 text-sm focus:border-indigo-500 focus:outline-none focus:ring-indigo-500 dark:border-gray-600 dark:bg-gray-800 dark:text-white"
                         >
                             <option value="">All Types</option>
-                            {TestSeriesTypes.map(t => (
+                            {TestSeriesTypes.map((t) => (
                                 <option key={t} value={t}>{t}</option>
                             ))}
                         </select>
                     </div>
                     <div className="flex items-end">
                         <button
-                            onClick={() => setFilters({ page: 1, limit: 10, examId: "", type: "", isPaid: "", search: "" })}
+                            onClick={() =>
+                                setFilters({
+                                    page: 1,
+                                    limit: 10,
+                                    examId: "",
+                                    type: "",
+                                    isPaid: "",
+                                    search: "",
+                                })
+                            }
                             className="w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm font-medium text-gray-700 shadow-sm hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 dark:border-gray-600 dark:bg-gray-800 dark:text-white dark:hover:bg-gray-700"
                         >
                             Reset Filters
                         </button>
                     </div>
                 </div>
+
                 {/* Table */}
                 <div className="overflow-x-auto rounded-lg border border-gray-200 dark:border-gray-700">
                     {loading ? (
@@ -524,16 +481,16 @@ const toggleQuestionInSection = (sectionIndex, questionId) => {
                                     <th className="px-2 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500 dark:text-gray-300">Title</th>
                                     <th className="px-2 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500 dark:text-gray-300">Exam</th>
                                     <th className="px-2 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500 dark:text-gray-300">Type</th>
-                                    <th className="px-2 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500 dark:text-gray-300">Sub-Type</th> {/* Added Sub-Type column */}
+                                    <th className="px-2 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500 dark:text-gray-300">Sub-Type</th>
                                     <th className="px-2 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500 dark:text-gray-300">Paid</th>
                                     <th className="px-2 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500 dark:text-gray-300">Duration</th>
-                                    <th className="px-2 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500 dark:text-gray-300">Active</th> {/* Added Active column */}
+                                    <th className="px-2 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500 dark:text-gray-300">Active</th>
                                     <th className="px-2 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500 dark:text-gray-300">Actions</th>
                                 </tr>
                             </thead>
                             <tbody className="divide-y divide-gray-200 bg-white dark:divide-gray-700 dark:bg-gray-800">
                                 {testSeriesList.length > 0 ? (
-                                    testSeriesList.map(ts => (
+                                    testSeriesList.map((ts) => (
                                         <tr key={ts._id} className="hover:bg-gray-50 dark:hover:bg-gray-700">
                                             <td className="whitespace-nowrap px-2 py-2">
                                                 <div className="text-sm font-semibold text-gray-900 dark:text-white">{ts.title}</div>
@@ -542,28 +499,15 @@ const toggleQuestionInSection = (sectionIndex, questionId) => {
                                                 )}
                                             </td>
                                             <td className="whitespace-nowrap px-2 py-2 text-sm text-gray-500 dark:text-gray-300">
-                                                {ts.examId?.name || "—"}
+                                                {ts?.populatedExams?.name || "—"}
                                             </td>
-                                            <td className="whitespace-nowrap px-2 py-2 text-sm text-gray-500 dark:text-gray-300">
-                                                {ts.type}
-                                            </td>
-                                            <td className="whitespace-nowrap px-2 py-2 text-sm text-gray-500 dark:text-gray-300"> {/* Added Sub-Type cell */}
-                                                {ts.subType || "—"}
-                                            </td>
-                                            <td className="whitespace-nowrap px-2 py-2 text-sm text-gray-500 dark:text-gray-300">
-                                                {ts.isPaid ? "Yes" : "No"}
-                                            </td>
-                                            <td className="whitespace-nowrap px-2 py-2 text-sm text-gray-500 dark:text-gray-300">
-                                                {ts.duration} min
-                                            </td>
-                                            <td className="whitespace-nowrap px-2 py-2 text-sm text-gray-500 dark:text-gray-300"> {/* Added Active cell */}
-                                                {ts.isActive ? "Yes" : "No"}
-                                            </td>
+                                            <td className="whitespace-nowrap px-2 py-2 text-sm text-gray-500 dark:text-gray-300">{ts.type}</td>
+                                            <td className="whitespace-nowrap px-2 py-2 text-sm text-gray-500 dark:text-gray-300">{ts.subType || "—"}</td>
+                                            <td className="whitespace-nowrap px-2 py-2 text-sm text-gray-500 dark:text-gray-300">{ts.isPaid ? "Yes" : "No"}</td>
+                                            <td className="whitespace-nowrap px-2 py-2 text-sm text-gray-500 dark:text-gray-300">{ts.duration} min</td>
+                                            <td className="whitespace-nowrap px-2 py-2 text-sm text-gray-500 dark:text-gray-300">{ts.isActive ? "Yes" : "No"}</td>
                                             <td className="whitespace-nowrap px-2 py-2 text-sm font-medium">
                                                 <div className="flex space-x-2">
-                                                    <button onClick={() => viewTestSeries(ts)} className="p-1 rounded-lg text-indigo-600 hover:text-indigo-900 dark:text-indigo-400 dark:hover:text-indigo-300">
-                                                        <Eye className="h-5 w-5" />
-                                                    </button>
                                                     <button onClick={() => openEditModal(ts)} className="p-1 rounded-lg text-blue-600 hover:text-blue-900 dark:text-blue-400 dark:hover:text-blue-300">
                                                         <Pencil className="h-5 w-5" />
                                                     </button>
@@ -579,7 +523,7 @@ const toggleQuestionInSection = (sectionIndex, questionId) => {
                                     ))
                                 ) : (
                                     <tr>
-                                        <td colSpan="7" className="px-2 py-4 text-center text-sm text-gray-500 dark:text-gray-300"> {/* Updated colspan */}
+                                        <td colSpan="8" className="px-2 py-4 text-center text-sm text-gray-500 dark:text-gray-300">
                                             No test series found
                                         </td>
                                     </tr>
@@ -588,6 +532,7 @@ const toggleQuestionInSection = (sectionIndex, questionId) => {
                         </table>
                     )}
                 </div>
+
                 {/* Pagination */}
                 {total > 0 && (
                     <div className="mt-4 flex flex-col items-center justify-between space-y-4 sm:flex-row sm:space-y-0">
@@ -606,7 +551,7 @@ const toggleQuestionInSection = (sectionIndex, questionId) => {
                             </button>
                             {Array.from({ length: Math.ceil(total / filters.limit) }, (_, i) => i + 1)
                                 .slice(Math.max(0, filters.page - 3), Math.min(Math.ceil(total / filters.limit), filters.page + 2))
-                                .map(pageNum => (
+                                .map((pageNum) => (
                                     <button
                                         key={pageNum}
                                         onClick={() => handlePageChange(pageNum)}
@@ -626,73 +571,27 @@ const toggleQuestionInSection = (sectionIndex, questionId) => {
                     </div>
                 )}
             </div>
-            {/* View Modal */}
-            <Modal isOpen={isOpen} onClose={closeModal} className="max-w-[700px] m-4">
-                <div className="no-scrollbar relative w-full max-w-[700px] overflow-y-auto rounded-3xl bg-white p-4 dark:bg-gray-900 lg:p-11">
-                    <div className="px-2 pr-14">
-                        <h4 className="mb-2 text-2xl font-semibold text-gray-800 dark:text-white/90">Test Series Details</h4>
-                        <p className="mb-6 text-sm text-gray-500 dark:text-gray-400 lg:mb-7">Detailed information</p>
-                    </div>
-                    {selectedTestSeries && (
-                        <div className="space-y-4 px-2">
-                            <div><p className="text-sm text-gray-500">Title</p><p className="text-sm font-medium">{selectedTestSeries.title}</p></div>
-                            <div><p className="text-sm text-gray-500">Exam</p><p className="text-sm font-medium">{selectedTestSeries.examId?.name}</p></div>
-                            <div><p className="text-sm text-gray-500">Type</p><p className="text-sm font-medium">{selectedTestSeries.type}</p></div>
-                            <div><p className="text-sm text-gray-500">Sub-Type</p><p className="text-sm font-medium">{selectedTestSeries.subType || "—"}</p></div> {/* Added Sub-Type detail */}
-                            <div><p className="text-sm text-gray-500">Duration</p><p className="text-sm font-medium">{selectedTestSeries.duration} minutes</p></div>
-                            <div><p className="text-sm text-gray-500">Total Questions</p><p className="text-sm font-medium">{selectedTestSeries.totalQuestions}</p></div>
-                            <div><p className="text-sm text-gray-500">Is Active</p><p className="text-sm font-medium">{selectedTestSeries.isActive ? "Yes" : "No"}</p></div> {/* Added Active detail */}
-                            <div><p className="text-sm text-gray-500">Sections</p>
-                                <ul className="mt-1 space-y-1">
-                                    {selectedTestSeries.sections?.map((s, i) => (
-                                        <li key={i} className="text-sm">• {s.sectionId?.name || s.sectionId} ({s.questionIds?.length || 0} Qs)</li>
-                                    ))}
-                                </ul>
-                            </div>
-                        </div>
-                    )}
-                    <div className="flex items-center gap-3 px-2 mt-6 lg:justify-end">
-                        <Button size="sm" variant="outline" onClick={closeModal}>Close</Button>
-                    </div>
-                </div>
-            </Modal>
-            {/* Stepper Create/Edit Modal */}
-            <Modal isOpen={editModalOpen} onClose={() => setEditModalOpen(false)} className="max-w-[700px] m-4">
-                <div className="no-scrollbar relative w-full max-w-[700px] overflow-y-auto rounded-3xl bg-white p-4 dark:bg-gray-900 lg:p-11">
+
+            {/* Create/Edit Modal - 2 STEPS ONLY */}
+            <Modal isOpen={editModalOpen} onClose={() => setEditModalOpen(false)} className="m-4">
+                <div className="no-scrollbar relative w-full overflow-y-auto rounded-3xl bg-white p-4 dark:bg-gray-900 lg:p-11">
                     <div className="px-2 pr-14">
                         <div className="flex items-center justify-between mb-4">
-                            <h4 className="text-2xl font-semibold text-gray-800 dark:text-white/90">
+                            <h4 className="text-xl font-semibold text-gray-800 dark:text-white/90">
                                 {selectedTestSeries ? "Edit Test Series" : "Create Test Series"}
                             </h4>
-                            <div className="flex items-center gap-2">
-                                <span className="text-sm text-gray-500 dark:text-gray-400">
-                                    Step {currentStep} of 3
-                                </span>
-                            </div>
+                            <span className="text-sm text-gray-500 dark:text-gray-400">
+                                Step {currentStep} of 2
+                            </span>
                         </div>
-                        <div className="flex justify-between mx-auto items-center w-[200px] mb-3">
-                            {[1, 2, 3].map((step) => (
-                                <div key={step} className="flex items-center">
-                                    <div className={`flex items-center justify-center w-8 h-8 rounded-full ${currentStep === step ? 'bg-indigo-600 text-white' : 'bg-gray-300 text-gray-600 dark:bg-gray-700 dark:text-gray-400'}`}>
-                                        {step}
-                                    </div>
-                                    {step < 3 && (
-                                        <div className={`flex-1 h-1 mx-2 ${currentStep > step ? 'bg-indigo-600' : 'bg-gray-300'} transition-colors`}></div>
-                                    )}
-                                </div>
-                            ))}
-                        </div>
-                        <p className="text-sm text-gray-500 dark:text-gray-400 lg:mb-4">
-                            {currentStep === 1
-                                ? "Basic information"
-                                : currentStep === 2
-                                    ? "Configure sections & questions"
-                                    : "Pricing, timing & settings"}
+                        <p className="text-lg text-gray-500 mb-6 dark:text-gray-400">
+                            {currentStep === 1 ? "Basic information" : "Configure sections & questions"}
                         </p>
                     </div>
+
                     <form onSubmit={handleSubmit} className="flex flex-col">
-                        <div className="custom-scrollbar max-h-[450px] min-h-[350px] overflow-y-auto px-2 pb-3">
-                            {/* Step 1: Basic Info */}
+                        <div className="custom-scrollbar max-h-[450px] min-h-[450px] overflow-y-auto px-2 pb-3">
+                            {/* STEP 1: Basic Info */}
                             {currentStep === 1 && (
                                 <div className="space-y-4">
                                     <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
@@ -706,7 +605,7 @@ const toggleQuestionInSection = (sectionIndex, questionId) => {
                                             {errors.title && <p className="text-red-600 text-sm mt-1">{errors.title}</p>}
                                         </div>
                                         <div>
-                                            <Label>Slug *</Label> {/* Added Slug field */}
+                                            <Label>Slug *</Label>
                                             <Input
                                                 value={formData.slug}
                                                 onChange={(e) => setFormData({ ...formData, slug: e.target.value })}
@@ -717,7 +616,7 @@ const toggleQuestionInSection = (sectionIndex, questionId) => {
                                         <div>
                                             <Label>Exam *</Label>
                                             <Select
-                                                options={allExams.map(e => ({ value: e._id, label: e.name }))}
+                                                options={allExams.map((e) => ({ value: e._id, label: e.name }))}
                                                 defaultValue={formData.examId}
                                                 onChange={(val) => setFormData({ ...formData, examId: val })}
                                             />
@@ -726,25 +625,25 @@ const toggleQuestionInSection = (sectionIndex, questionId) => {
                                         <div>
                                             <Label>Type</Label>
                                             <Select
-                                                options={TestSeriesTypes.map(t => ({ value: t, label: t }))}
+                                                options={TestSeriesTypes.map((t) => ({ value: t, label: t }))}
                                                 defaultValue={formData.type}
                                                 onChange={(val) => setFormData({ ...formData, type: val })}
                                             />
                                         </div>
-                                        {formData.type === "Sectional" && // Show Sub-Type only if type is Sectional
+                                        {formData.type === "Sectional" && (
                                             <div>
-                                                <Label>Sub-Type</Label> {/* Added Sub-Type field */}
+                                                <Label>Sub-Type</Label>
                                                 <Select
-                                                    options={SubTypes.map(st => ({ value: st, label: st }))}
+                                                    options={SubTypes.map((st) => ({ value: st, label: st }))}
                                                     defaultValue={formData.subType}
                                                     onChange={(val) => setFormData({ ...formData, subType: val })}
                                                 />
                                             </div>
-                                        }
+                                        )}
                                         <div>
                                             <Label>Difficulty</Label>
                                             <Select
-                                                options={DifficultyLevels.map(d => ({ value: d, label: d }))}
+                                                options={DifficultyLevels.map((d) => ({ value: d, label: d }))}
                                                 defaultValue={formData.difficultyLevel}
                                                 onChange={(val) => setFormData({ ...formData, difficultyLevel: val })}
                                             />
@@ -758,198 +657,28 @@ const toggleQuestionInSection = (sectionIndex, questionId) => {
                                             />
                                         </div>
                                     </div>
-                                </div>
-                            )}
-                            {/* Step 2: Sections & Questions */}
-                            {currentStep === 2 && (
-                                <div className="space-y-4">
-                                    {/* Add Section Picker */}
-                                    <div>
-                                        <Label>Add Sections</Label>
-                                        <div className="flex gap-2 mt-2">
-                                            <div className="relative flex-1">
-                                                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
-                                                <input
-                                                    type="text"
-                                                    placeholder="Search sections..."
-                                                    value={sectionSearch}
-                                                    onChange={(e) => setSectionSearch(e.target.value)}
-                                                    className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 dark:border-gray-600 dark:bg-gray-700 dark:text-white text-sm"
-                                                />
-                                            </div>
-                                            <button
-                                                type="button"
-                                                onClick={() => {
-                                                    if (filteredSections.length > 0) {
-                                                        addSectionToTest(filteredSections[0]._id);
-                                                        setSectionSearch("");
-                                                    }
-                                                }}
-                                                className="px-3 py-2 text-sm bg-indigo-600 text-white rounded-lg hover:bg-indigo-700"
-                                            >
-                                                Add
-                                            </button>
-                                        </div>
-                                        {filteredSections.slice(0, 5).length > 0 && (
-                                            <div className="mt-2 max-h-32 overflow-y-auto border border-gray-200 rounded dark:border-gray-700">
-                                                {filteredSections.slice(0, 5).map(sec => (
-                                                    <div
-                                                        key={sec._id}
-                                                        onClick={() => {
-                                                            addSectionToTest(sec._id);
-                                                            setSectionSearch("");
-                                                        }}
-                                                        className="p-2 hover:bg-gray-100 dark:hover:bg-gray-800 cursor-pointer text-sm"
-                                                    >
-                                                        {sec.name} ({sec.questionCount || 0} Qs)
-                                                    </div>
-                                                ))}
-                                            </div>
-                                        )}
-                                    </div>
-                                    {/* Added Sections */}
-                                    <div>
-                                        <Label>Selected Sections ({formData.sections.length})</Label>
-                                        {formData.sections.length === 0 ? (
-                                            <p className="text-sm text-gray-500 mt-2 italic">No sections added yet. Add sections to configure questions.</p>
-                                        ) : (
-                                            <div className="mt-2 space-y-3">
-                                                {formData.sections.map((sec, idx) => {
-                                                    const sectionDetails = allSections.find(s => s._id === sec.sectionId);
-                                                    const sectionQuestions = allQuestions[sec.sectionId] || []; // Get questions for this specific section
-                                                    const isManagingThisSection = selectedSectionId === sec.sectionId;
 
-                                                    return (
-                                                        <div key={idx} className="border border-gray-200 rounded-lg p-3 dark:border-gray-700">
-                                                            <div className="flex justify-between items-start">
-                                                                <div>
-                                                                    <h6 className="font-medium">{sectionDetails?.name || "Unknown Section"}</h6>
-                                                                    <div className="grid grid-cols-2 gap-2 mt-2">
-                                                                        <Input
-                                                                            type="number"
-                                                                            label="Duration (min)"
-                                                                            value={sec.duration}
-                                                                            onChange={(e) => updateSectionField(idx, "duration", Number(e.target.value))}
-                                                                            className="text-xs"
-                                                                        />
-                                                                        <Input
-                                                                            type="number"
-                                                                            label="Total Questions"
-                                                                            value={sec.totalQuestions}
-                                                                            onChange={(e) => updateSectionField(idx, "totalQuestions", Number(e.target.value))}
-                                                                            className="text-xs"
-                                                                            disabled // Disable direct input, it's calculated
-                                                                        />
-                                                                    </div>
-                                                                </div>
-                                                                <button
-                                                                    type="button"
-                                                                    onClick={() => removeSectionFromTest(idx)}
-                                                                    className="text-red-600 hover:text-red-800"
-                                                                >
-                                                                    <Trash2 className="h-4 w-4" />
-                                                                </button>
-                                                            </div>
-                                                            {/* Questions */}
-                                                            <div className="mt-3">
-                                                                <button
-                                                                    type="button"
-                                                                    onClick={() => fetchQuestionsForSection(sec.sectionId)} // Fetch questions for this specific section
-                                                                    className="text-sm text-indigo-600 hover:text-indigo-800 underline"
-                                                                >
-                                                                    {isManagingThisSection ? "Hide Questions" : "Manage Questions"}
-                                                                </button>
-                                                                {isManagingThisSection && (
-                                                                    <div className="mt-2 border border-gray-200 rounded-lg p-2 dark:border-gray-700">
-                                                                        <div className="max-h-64 overflow-y-auto">
-                                                                            {sectionQuestions.length === 0 ? (
-                                                                                <p className="text-sm text-gray-500 py-2 text-center">No questions found for this section.</p>
-                                                                            ) : (
-                                                                                sectionQuestions.map((question, questionIdx) => {
-                                                                                    console.log("Rendering question:", question._id);
-                                                                                    console.log("Is selected:", sec.questionIds);
-                                                                                    const isQuestionSelected = sec.questionIds.includes(question._id);
-                                                                                    console.log("isQuestionSelected:", isQuestionSelected);
-                                                                                    return (
-                                                                                        <div
-                                                                                            key={question._id}
-                                                                                            className={`flex items-center gap-2 text-sm p-2 border-b border-gray-100 dark:border-gray-700 ${isQuestionSelected ? 'bg-indigo-50 dark:bg-gray-800' : ''}`} // Highlight selected
-                                                                                            draggable // Enable dragging
-                                                                                            onDragStart={(e) => {
-                                                                                                e.dataTransfer.setData("text/plain", JSON.stringify({ sectionIndex: idx, questionIndex: sec.questionIds.indexOf(question._id), questionId: question._id })); // Use index in current selection for drag
-                                                                                            }}
-                                                                                            onDragOver={(e) => e.preventDefault()} // Necessary for drop
-                                                                                            onDrop={(e) => {
-                                                                                                e.preventDefault();
-                                                                                                const dragData = JSON.parse(e.dataTransfer.getData("text/plain"));
-                                                                                                if (dragData.sectionIndex === idx) {
-                                                                                                    const newQuestionIndex = sec.questionIds.indexOf(question._id);
-                                                                                                    if (newQuestionIndex !== -1) { // Only reorder if the question is already selected
-                                                                                                        moveQuestionInSection(idx, dragData.questionIndex, newQuestionIndex);
-                                                                                                    }
-                                                                                                }
-                                                                                            }}
-                                                                                        >
-                                                                                            {/* Drag Handle */}
-                                                                                            {isQuestionSelected && <GripVertical className="h-4 w-4 text-gray-400 cursor-grab" />}
-                                                                                            {/* Show visual indicator of position if selected */}
-                                                                                            {isQuestionSelected && <span className="text-xs bg-gray-100 dark:bg-gray-700 px-1 rounded">{sec.questionIds.indexOf(question._id) + 1}</span>}
-                                                                                            <span className="flex-1 truncate">{question?.title}</span>
-                                                                                            <input
-                                                                                                type="checkbox"
-                                                                                                checked={isQuestionSelected}
-                                                                                                onChange={() => toggleQuestionInSection(idx, question._id)}
-                                                                                                className="rounded"
-                                                                                            />
-                                                                                        </div>
-                                                                                    );
-                                                                                })
-                                                                            )}
-                                                                        </div>
-                                                                        {/* Counter for selected questions */}
-                                                                        <p className="text-xs text-gray-500 mt-1 text-right">
-                                                                            Selected: {sec.questionIds.length} / {sectionQuestions.length}
-                                                                        </p>
-                                                                    </div>
-                                                                )}
-                                                            </div>
-                                                        </div>
-                                                    );
-                                                })}
-                                            </div>
-                                        )}
-                                        {/* Removed error display for sections if validation is removed */}
-                                        {/* {errors.sections && <p className="text-red-600 text-sm mt-1">{errors.sections}</p>} */}
-                                    </div>
-                                </div>
-                            )}
-                            {/* Step 3: Pricing & Settings */}
-                            {currentStep === 3 && (
-                                <div className="space-y-4">
                                     <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-                                        <div>
-                                            <Label className="flex items-center gap-2">
-                                                <input
-                                                    type="checkbox"
-                                                    checked={formData.isPaid}
-                                                    onChange={(e) => setFormData({ ...formData, isPaid: e.target.checked })}
-                                                    className="h-4 w-4 text-indigo-600 rounded"
-                                                />
-                                                Paid Test Series
-                                            </Label>
-                                        </div>
-                                         <div> {/* Added Active toggle */}
-                                            <Label className="flex items-center gap-2">
-                                                <input
-                                                    type="checkbox"
-                                                    checked={formData.isActive}
-                                                    onChange={(e) => setFormData({ ...formData, isActive: e.target.checked })}
-                                                    className="h-4 w-4 text-indigo-600 rounded"
-                                                />
-                                                Is Active
-                                            </Label>
-                                        </div>
+                                        <Label className="flex items-center gap-2">
+                                            <input
+                                                type="checkbox"
+                                                checked={formData.isPaid}
+                                                onChange={(e) => setFormData({ ...formData, isPaid: e.target.checked })}
+                                                className="h-4 w-4 text-indigo-600 rounded"
+                                            />
+                                            Paid Test Series
+                                        </Label>
+                                        <Label className="flex items-center gap-2">
+                                            <input
+                                                type="checkbox"
+                                                checked={formData.isActive}
+                                                onChange={(e) => setFormData({ ...formData, isActive: e.target.checked })}
+                                                className="h-4 w-4 text-indigo-600 rounded"
+                                            />
+                                            Is Active
+                                        </Label>
                                     </div>
+
                                     {formData.isPaid && (
                                         <div className="grid grid-cols-1 gap-4 md:grid-cols-3 p-3 bg-gray-50 rounded-lg dark:bg-gray-800">
                                             <div>
@@ -957,10 +686,12 @@ const toggleQuestionInSection = (sectionIndex, questionId) => {
                                                 <Input
                                                     type="number"
                                                     value={formData.price.amount}
-                                                    onChange={(e) => setFormData({
-                                                        ...formData,
-                                                        price: { ...formData.price, amount: Number(e.target.value) }
-                                                    })}
+                                                    onChange={(e) =>
+                                                        setFormData({
+                                                            ...formData,
+                                                            price: { ...formData.price, amount: Number(e.target.value) },
+                                                        })
+                                                    }
                                                 />
                                             </div>
                                             <div>
@@ -968,10 +699,12 @@ const toggleQuestionInSection = (sectionIndex, questionId) => {
                                                 <Input
                                                     type="number"
                                                     value={formData.price.discount}
-                                                    onChange={(e) => setFormData({
-                                                        ...formData,
-                                                        price: { ...formData.price, discount: Number(e.target.value) }
-                                                    })}
+                                                    onChange={(e) =>
+                                                        setFormData({
+                                                            ...formData,
+                                                            price: { ...formData.price, discount: Number(e.target.value) },
+                                                        })
+                                                    }
                                                 />
                                             </div>
                                             <div>
@@ -980,9 +713,10 @@ const toggleQuestionInSection = (sectionIndex, questionId) => {
                                             </div>
                                         </div>
                                     )}
+
                                     <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
                                         <div>
-                                            <Label>Total Duration (minutes) *</Label>
+                                            <Label>Total Duration (minutes)</Label>
                                             <Input
                                                 type="number"
                                                 value={formData.duration}
@@ -990,7 +724,7 @@ const toggleQuestionInSection = (sectionIndex, questionId) => {
                                             />
                                         </div>
                                         <div>
-                                            <Label>Total Questions *</Label>
+                                            <Label>Total Questions</Label>
                                             <Input
                                                 type="number"
                                                 value={formData.totalQuestions}
@@ -1015,43 +749,248 @@ const toggleQuestionInSection = (sectionIndex, questionId) => {
                                             />
                                         </div>
                                     </div>
+
                                     <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-                                        <div>
-                                            <Label className="flex items-center gap-2">
-                                                <input
-                                                    type="checkbox"
-                                                    checked={formData.isTimed}
-                                                    onChange={(e) => setFormData({ ...formData, isTimed: e.target.checked })}
-                                                    className="h-4 w-4 text-indigo-600 rounded"
-                                                />
-                                                Timed Test
-                                            </Label>
-                                        </div>
-                                        <div>
-                                            <Label className="flex items-center gap-2">
-                                                <input
-                                                    type="checkbox"
-                                                    checked={formData.allowPause}
-                                                    onChange={(e) => setFormData({ ...formData, allowPause: e.target.checked })}
-                                                    className="h-4 w-4 text-indigo-600 rounded"
-                                                />
-                                                Allow Pause
-                                            </Label>
-                                        </div>
+                                        <Label className="flex items-center gap-2">
+                                            <input
+                                                type="checkbox"
+                                                checked={formData.isTimed}
+                                                onChange={(e) => setFormData({ ...formData, isTimed: e.target.checked })}
+                                                className="h-4 w-4 text-indigo-600 rounded"
+                                            />
+                                            Timed Test
+                                        </Label>
+                                        <Label className="flex items-center gap-2">
+                                            <input
+                                                type="checkbox"
+                                                checked={formData.allowPause}
+                                                onChange={(e) => setFormData({ ...formData, allowPause: e.target.checked })}
+                                                className="h-4 w-4 text-indigo-600 rounded"
+                                            />
+                                            Allow Pause
+                                        </Label>
                                     </div>
+
                                     <div>
                                         <Label>Course Access (Optional)</Label>
                                         <Select
                                             isMulti
-                                            options={allCourses.map(c => ({ value: c._id, label: c.title }))}
+                                            options={allCourses.map((c) => ({ value: c._id, label: c.title }))}
                                             defaultValue={formData.courseAccess}
                                             onChange={(vals) => setFormData({ ...formData, courseAccess: vals })}
                                         />
                                     </div>
                                 </div>
                             )}
+
+                            {/* STEP 2: Sections & Questions */}
+                            {currentStep === 2 && (
+                                <div className="space-y-4">
+                                    {/* Section Picker */}
+                                    <div>
+                                        <Label>Add Sections (from selected exam)</Label>
+                                        <div className="flex gap-2 mt-2">
+                                            <div className="relative flex-1">
+                                                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
+                                                <input
+                                                    type="text"
+                                                    placeholder="Search sections..."
+                                                    value={questionSearchTerm}
+                                                    onChange={(e) => setQuestionSearchTerm(e.target.value)}
+                                                    className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 dark:border-gray-600 dark:bg-gray-700 dark:text-white text-sm"
+                                                />
+                                            </div>
+                                        </div>
+                                        {filteredSections.length > 0 && (
+                                            <div className="mt-2 max-h-32 overflow-y-auto border border-gray-200 rounded dark:border-gray-700">
+                                                {filteredSections.map((sec) => (
+                                                    <div
+                                                        key={sec._id}
+                                                        onClick={() => addSectionToTest(sec)}
+                                                        className="p-2 hover:bg-gray-100 dark:hover:bg-gray-800 cursor-pointer text-sm"
+                                                    >
+                                                        {sec.name} ({sec.questionCount || 0} Qs)
+                                                    </div>
+                                                ))}
+                                            </div>
+                                        )}
+                                        {filteredSections.length === 0 && questionSearchTerm && (
+                                            <p className="text-sm text-gray-500 mt-2 italic">No sections match your search.</p>
+                                        )}
+                                    </div>
+
+                                    {/* Added Sections */}
+                                    <div>
+                                        <Label>Selected Sections ({formData.sections.length})</Label>
+                                        {formData.sections.length === 0 ? (
+                                            <p className="text-sm text-gray-500 mt-2 italic">No sections added yet.</p>
+                                        ) : (
+                                            <div className="mt-2 space-y-3">
+                                                {formData.sections.map((sec, idx) => {
+                                                    const sectionDetails = examSections.find((s) => s._id === sec.sectionId);
+                                                    const isSelectedSection = selectedSectionId === sec.sectionId;
+                                                    const selectedQuestions = sec.questionIds.map(String);
+                                                    return (
+                                                        <div key={idx} className="border border-gray-200 rounded-lg p-3 dark:border-gray-700">
+                                                            <div className="flex justify-between items-start">
+                                                                <div>
+                                                                    <h6 className="font-medium">{sectionDetails?.name || "Unknown Section"}</h6>
+                                                                    <div className="grid grid-cols-2 gap-2 mt-2">
+                                                                        <Input
+                                                                            type="number"
+                                                                            label="Duration (min)"
+                                                                            value={sec.duration}
+                                                                            onChange={(e) => updateSectionField(idx, "duration", Number(e.target.value))}
+                                                                            className="text-xs"
+                                                                        />
+                                                                        <Input
+                                                                            type="number"
+                                                                            label="Total Questions"
+                                                                            value={sec.totalQuestions}
+                                                                            disabled
+                                                                            className="text-xs"
+                                                                        />
+                                                                    </div>
+                                                                </div>
+                                                                <button
+                                                                    type="button"
+                                                                    onClick={() => removeSectionFromTest(idx)}
+                                                                    className="text-red-600 hover:text-red-800"
+                                                                >
+                                                                    <Trash2 className="h-4 w-4" />
+                                                                </button>
+                                                            </div>
+
+                                                            {/* Manage Questions */}
+                                                            <div className="mt-3">
+                                                                <button
+                                                                    type="button"
+                                                                    onClick={() => {
+                                                                        if (isSelectedSection) {
+                                                                            setSelectedSectionId(null);
+                                                                        } else {
+                                                                            fetchQuestionsForSection(sec.sectionId, "");
+                                                                            setQuestionSearchTerm("");
+                                                                        }
+                                                                    }}
+                                                                    className="text-sm text-indigo-600 hover:text-indigo-800 underline"
+                                                                >
+                                                                    {isSelectedSection ? "Hide Questions" : "Manage Questions"}
+                                                                </button>
+
+                                                                {isSelectedSection && (
+                                                                    <div className="mt-2 border border-gray-200 rounded-lg p-2 dark:border-gray-700">
+                                                                        {/* Question Search within section */}
+                                                                        {/* Question Search within section */}
+                                                                        <div className="relative mb-2">
+                                                                            <Search className="absolute left-2 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
+                                                                            <input
+                                                                                type="text"
+                                                                                placeholder="Search questions..."
+                                                                                value={questionSearchTerm}
+                                                                                onChange={(e) => {
+                                                                                    setQuestionSearchTerm(e.target.value);
+                                                                                    fetchQuestionsForSection(sec.sectionId, e.target.value);
+                                                                                }}
+                                                                                className="w-full pl-8 pr-4 py-1 text-sm border border-gray-300 rounded dark:border-gray-600 dark:bg-gray-800 dark:text-white"
+                                                                            />
+                                                                        </div>
+
+                                                                        {loadingQuestions ? (
+                                                                            <p className="text-sm text-gray-500 py-2 text-center">Loading...</p>
+                                                                        ) : questionsForSection.length === 0 ? (
+                                                                            <p className="text-sm text-gray-500 py-2 text-center">No questions found.</p>
+                                                                        ) : (
+                                                                            <div className="max-h-64 overflow-y-auto border rounded p-1 mb-3 bg-gray-50 dark:bg-gray-800/50">
+                                                                                {questionsForSection.map((q) => {
+                                                                                    const isChecked = sec.questionIds.some(id => String(id) === String(q._id));
+                                                                                    return (
+                                                                                        <div
+                                                                                            key={q._id}
+                                                                                            className={`flex items-center gap-2 p-2 text-sm cursor-pointer ${isChecked
+                                                                                                    ? "bg-indigo-100 dark:bg-indigo-900/40"
+                                                                                                    : "hover:bg-gray-100 dark:hover:bg-gray-700"
+                                                                                                }`}
+                                                                                            onClick={() => toggleQuestionInSection(idx, q._id)}
+                                                                                        >
+                                                                                            <input
+                                                                                                type="checkbox"
+                                                                                                checked={isChecked}
+                                                                                                onChange={(e) => e.stopPropagation()} // prevent double toggle
+                                                                                                className="rounded"
+                                                                                            />
+                                                                                            <span className="truncate flex-1">{q.title || "Untitled Question"}</span>
+                                                                                        </div>
+                                                                                    );
+                                                                                })}
+                                                                            </div>
+                                                                        )}
+
+                                                                        {/* ✅ NEW: Dedicated reorder zone for selected questions */}
+                                                                        {sec.questionIds.length > 0 && (
+                                                                            <div className="mt-3 pt-2 border-t border-gray-200 dark:border-gray-700">
+                                                                                <p className="text-xs text-gray-500 mb-2">Selected Questions (drag to reorder):</p>
+                                                                                <div
+                                                                                    className="space-y-1 min-h-[40px]"
+                                                                                    onDragOver={(e) => e.preventDefault()}
+                                                                                    onDrop={(e) => {
+                                                                                        e.preventDefault();
+                                                                                        const draggedId = e.dataTransfer.getData("draggedQuestionId");
+                                                                                        if (!draggedId) return;
+
+                                                                                        // Find drop position based on mouse Y
+                                                                                        const rect = e.currentTarget.getBoundingClientRect();
+                                                                                        const y = e.clientY - rect.top;
+                                                                                        const itemHeight = 40; // approx height of each item
+                                                                                        let newIndex = Math.floor(y / itemHeight);
+                                                                                        newIndex = Math.max(0, Math.min(newIndex, sec.questionIds.length - 1));
+
+                                                                                        const currentIndex = sec.questionIds.findIndex(id => String(id) === draggedId);
+                                                                                        if (currentIndex !== -1 && currentIndex !== newIndex) {
+                                                                                            moveQuestionInSection(idx, currentIndex, newIndex);
+                                                                                        }
+                                                                                    }}
+                                                                                >
+                                                                                    {sec.questionIds.map((qId, orderIdx) => {
+                                                                                        const q = questionsForSection.find(q => String(q._id) === String(qId));
+                                                                                        if (!q) return null;
+                                                                                        return (
+                                                                                            <div
+                                                                                                key={qId}
+                                                                                                draggable
+                                                                                                className="flex items-center gap-2 bg-white dark:bg-gray-800 p-2 rounded border text-sm cursor-grab"
+                                                                                                onDragStart={(e) => {
+                                                                                                    e.dataTransfer.setData("draggedQuestionId", String(qId));
+                                                                                                    e.dataTransfer.effectAllowed = "move";
+                                                                                                }}
+                                                                                            >
+                                                                                                <GripVertical className="h-4 w-4 text-gray-400" />
+                                                                                                <span>#{orderIdx + 1}</span>
+                                                                                                <span className="truncate">{q.title || "Untitled"}</span>
+                                                                                            </div>
+                                                                                        );
+                                                                                    })}
+                                                                                </div>
+                                                                            </div>
+                                                                        )}
+
+                                                                        <p className="text-xs text-gray-500 mt-1 text-right">
+                                                                            Selected: {sec.questionIds.length} / {questionsForSection.length}
+                                                                        </p>
+                                                                    </div>
+                                                                )}
+                                                            </div>
+                                                        </div>
+                                                    );
+                                                })}
+                                            </div>
+                                        )}
+                                    </div>
+                                </div>
+                            )}
                         </div>
-                        {/* Footer */}
+
+                        {/* Modal Footer */}
                         <div className="flex items-center justify-between px-2 mt-6">
                             <div>
                                 {currentStep > 1 && (
@@ -1079,7 +1018,7 @@ const toggleQuestionInSection = (sectionIndex, questionId) => {
                                     type="submit"
                                     className="rounded-md bg-indigo-600 px-4 py-2 text-sm font-medium text-white hover:bg-indigo-700"
                                 >
-                                    {currentStep < 3
+                                    {currentStep === 1
                                         ? "Continue →"
                                         : selectedTestSeries
                                             ? "Save Changes"
@@ -1090,6 +1029,7 @@ const toggleQuestionInSection = (sectionIndex, questionId) => {
                     </form>
                 </div>
             </Modal>
+
             {/* Delete Modal */}
             <Modal isOpen={isDeleteModalOpen} onClose={() => setDeleteModalOpen(false)} className="max-w-lg">
                 {selectedTestSeries && (
