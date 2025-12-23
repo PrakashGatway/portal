@@ -135,7 +135,7 @@ const LIMIT_OPTIONS = [
 ];
 
 const isPTEType = (questionType: string) => {
-  return questionType && ["repeat_sentence", "retell_lesson","summarize_group_discussions","pte_summarize_listening","pte_summarize_spoken"].includes(questionType);
+  return questionType && ["repeat_sentence", "retell_lesson","pte_writing_listening","summarize_group_discussions","pte_summarize_listening","pte_summarize_spoken"].includes(questionType);
 };
 
 const isNewFeild = (questionType: string) => {
@@ -143,7 +143,7 @@ const isNewFeild = (questionType: string) => {
 };
 
 const isMCQType = (questionType: string) => {
-  return questionType && !["essay", "other","pte_reorder","pte_fill_listening","pte_summarize_listening","pte_highlight","pte_summarize_spoken","pte_fill_drag","pte_situational","pte_fill_in_blanks","pte_summarize_writing", "retell_lesson", "describe_image", "sat_value", "repeat_sentence", "read_aloud", "gre_analytical_writing", "gre_quantitative_value", "gre_verbal_text_completion"].includes(questionType);
+  return questionType && !["essay", "other","pte_reorder","pte_fill_listening","pte_writing_listening","summarize_group_discussions","pte_summarize_listening","pte_highlight","pte_summarize_spoken","pte_fill_drag","pte_situational","pte_fill_in_blanks","pte_summarize_writing", "retell_lesson", "describe_image", "sat_value", "repeat_sentence", "read_aloud", "gre_analytical_writing", "gre_quantitative_value", "gre_verbal_text_completion"].includes(questionType);
 };
 
 export default function QuestionManagementPage() {

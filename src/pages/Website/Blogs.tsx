@@ -133,7 +133,7 @@ export default function ArticleManagement() {
         setFormData(prev => ({
             ...prev,
             title: value,
-            slug: generateSlug(value) // Auto-generate slug when title changes
+            // slug: generateSlug(value) // Auto-generate slug when title changes
         }));
         if (errors.title) setErrors(prev => ({ ...prev, title: "" }));
     };

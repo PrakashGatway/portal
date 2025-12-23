@@ -1,5 +1,13 @@
 import React, { useEffect, useRef, useState, useCallback, useMemo, use } from "react";
 import {
+  AlertTriangle,
+  BookOpen,
+  Edit3,
+} from "lucide-react";
+import SpeakingQuestion, { RecordingOnlyComponent, TTSPlayer } from "./SpeakingQuestion";
+import PTEFillDrag, { PTEFillListeningInput, PTEFillSelect, PTEHighlightText, PTEMCQMultiple, PTEReorder } from "./DragandFill";
+
+import {
   Flag,
   Save,
   LogOut,
@@ -68,33 +76,18 @@ const QuestionRenderer: any = React.memo(
         const timer = setTimeout(() => {
           startRecordingCountdown();
         }, 100);
-
         return () => clearTimeout(timer);
       }
     }, [qDoc?.questionType, startRecordingCountdown]);
 
-
-
-    const onMove = useCallback((e: MouseEvent) => {
-      if (!draggingRef.current || !containerRef.current) return;
-      const rect = containerRef.current.getBoundingClientRect();
-      const percent = ((e.clientX - rect.left) / rect.width) * 100;
-      setLeftPercent(Math.min(80, Math.max(20, percent)));
-    }, []);
-
-    const onUp = useCallback(() => {
-      draggingRef.current = false;
-      document.body.style.userSelect = "";
-    }, []);
-
     useEffect(() => {
-      window.addEventListener("mousemove", onMove);
-      window.addEventListener("mouseup", onUp);
       return () => {
-        window.removeEventListener("mousemove", onMove);
-        window.removeEventListener("mouseup", onUp);
+        if (window.speechSynthesis) {
+          window.speechSynthesis.cancel();
+        }
       };
-    }, [onMove, onUp]);
+    }, [currentQuestion?._id, qDoc?._id]); // Clean up when question ID changes
+
 
     const onDividerDown = (e: React.MouseEvent) => {
       draggingRef.current = true;
@@ -119,20 +112,6 @@ const QuestionRenderer: any = React.memo(
       "retell_lesson",
       "short_answer"
     ].includes(type);
-
-    const renderAudio = () => {
-      if (qDoc?.typeSpecific?.listeningText) {
-        return (
-          <div className="mb-4">
-            <audio controls className="w-full">
-              <source src={qDoc.stimulusAudio} type="audio/mpeg" />
-              Your browser does not support audio.
-            </audio>
-          </div>
-        );
-      }
-      return null;
-    };
 
     const renderPassage = () => {
       if (qDoc.stimulus) {
@@ -279,7 +258,6 @@ const QuestionRenderer: any = React.memo(
               />
             </div>
           );
-
         case "repeat_sentence":
           return (
             <div className="bg-white rounded dark:bg-slate-900 p-4 min-h-[65vh] overflow-y-auto">
@@ -287,33 +265,29 @@ const QuestionRenderer: any = React.memo(
               {renderPassage()}
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <TTSPlayer
-                  key={qDoc._id}
-                  text={qDoc?.questionText || "Describe the image shown."}
-                  delayBeforePlay={1000} // 1 second
+                  key={"player-" + qDoc._id}
+                  text={qDoc.questionText || "Describe the image shown."}
+                  delayBeforePlay={3000} // 1 second
                   onPlaybackEnd={onTTSFinished}
                   rate={0.8}
                   pitch={0.9}
                 />
                 <RecordingOnlyComponent
+                  key={qDoc._id}
                   recordingDurationSeconds={20}
                   preRecordingWaitSeconds={10}
                   onRecordingComplete={handleRecordingComplete}
                   onStartCountdown={handleStartCountdownCallback}
                 />
-
               </div>
             </div>
           );
 
         case "describe_image":
-
           return (
             <div className="bg-white rounded dark:bg-slate-900 p-4 min-h-[65vh] overflow-y-auto">
               {/* {renderHeader()} */}
               {renderPassage()}
-              {/* <button onClick={onTTSFinished} disabled={!startRecordingCountdown}>
-                Start Recording Countdown (after TTS)
-              </button> */}
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <h2
                   className="text-base sm:text-lg"
@@ -322,41 +296,48 @@ const QuestionRenderer: any = React.memo(
                   }}
                 />
                 <RecordingOnlyComponent
+                  key={qDoc._id}
                   recordingDurationSeconds={40}
                   preRecordingWaitSeconds={25}
                   onRecordingComplete={handleRecordingComplete}
                   onStartCountdown={handleStartCountdownCallback}
                 />
-
               </div>
-
             </div>
           );
 
         case "retell_lesson":
         case "pte_situational":
-          return qDoc && <SpeakingQuestion key={qDoc?._id} qDoc={qDoc} />;
         case "short_answer":
+          return qDoc && <SpeakingQuestion key={qDoc?._id} qDoc={qDoc} />;
+
+        case "summarize_group_discussions":
           return (
             <div className="bg-white rounded dark:bg-slate-900 p-4 min-h-[65vh] overflow-y-auto">
-              {renderHeader()}
-              {renderAudio()}
-              {renderQuestionText()}
-              <textarea
-                value={currentQuestion.answerText || ""}
-                onChange={handleTextAnswerChange}
-                rows={3}
-                disabled={isCompleted}
-                className="w-full rounded-lg border border-slate-300 dark:border-slate-600 px-3 py-2 text-base focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 dark:bg-slate-800 dark:text-white"
-                placeholder="Type your short answer..."
-              />
+              {renderPassage()}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <TTSPlayer
+                  key={"player-" + qDoc._id}
+                  text={qDoc.questionText || "Describe the image shown."}
+                  delayBeforePlay={3000} // 1 second
+                  onPlaybackEnd={onTTSFinished}
+                  rate={0.7}
+                  pitch={0.6}
+                />
+                <RecordingOnlyComponent
+                  key={qDoc._id}
+                  recordingDurationSeconds={120}
+                  preRecordingWaitSeconds={10}
+                  onRecordingComplete={handleRecordingComplete}
+                  onStartCountdown={handleStartCountdownCallback}
+                />
+              </div>
             </div>
           );
         case "pte_summarize_writing":
         case "pte_writing":
           return (
             <div className="bg-white rounded dark:bg-slate-900 p-2 min-h-[65vh] overflow-y-auto">
-              {/* {renderHeader()} */}
               {renderPassage()}
               {renderQuestionText()}
               <textarea
@@ -399,7 +380,6 @@ const QuestionRenderer: any = React.memo(
             <div className="bg-white rounded dark:bg-slate-900 p-4 min-h-[65vh] overflow-y-auto">
               {/* {renderHeader()} */}
               {renderPassage()}
-              {type === "pte_fill_listening" && renderAudio()}
               <PTEFillSelect
                 key={qDoc._id} // 🔥 VERY IMPORTANT
                 questionHTML={qDoc.questionText || ""}
@@ -416,19 +396,19 @@ const QuestionRenderer: any = React.memo(
           return (
             <div className="bg-white rounded dark:bg-slate-900 p-4 min-h-[65vh] overflow-y-auto">
               {renderPassage()}
-
+              {/* <SpeakingQuestion key={qDoc?._id} qDoc={qDoc} /> */}
               <TTSPlayer
-                key={qDoc._id}
-                text={qDoc?.typeSpecific?.listeningText || ""}
-                delayBeforePlay={3000}
-                onPlaybackEnd={onTTSFinished}
-                rate={0.8}
+                key={"player-" + qDoc._id}
+                text={qDoc?.typeSpecific?.listeningText || "Describe the image shown."}
+                delayBeforePlay={5000}
+                onPlaybackEnd={() => null}
+                rate={0.7}
                 pitch={0.8}
               />
 
               <div className="mt-4">
                 <PTEFillListeningInput
-                  key={qDoc._id} // 🔥 important (timer-safe)
+                  key={"iuii" + qDoc._id}
                   questionHTML={qDoc.questionText || ""}
                   currentAnswer={currentQuestion.answerText || ""}
                   isCompleted={isCompleted}
@@ -460,16 +440,16 @@ const QuestionRenderer: any = React.memo(
               {/* {renderHeader()} */}
               {renderPassage()}
               <TTSPlayer
-                key={qDoc._id}
+                key={"dfdf" + qDoc._id}
                 text={qDoc?.typeSpecific?.listeningText || "Describe the image shown."}
-                delayBeforePlay={3000} // 1 second
+                delayBeforePlay={5000} // 1 second
                 onPlaybackEnd={onTTSFinished}
                 rate={0.8}
                 pitch={0.8}
               />
               <div className="mt-4">
                 <PTEHighlightText
-                  key={qDoc._id} // 🔥 VERY IMPORTANT
+                  key={"a" + qDoc._id} // 🔥 VERY IMPORTANT
                   html={qDoc?.questionText || ""}
                   currentAnswer={currentQuestion.answerText || ""}
                   isCompleted={false}
@@ -490,7 +470,7 @@ const QuestionRenderer: any = React.memo(
                 <TTSPlayer
                   key={qDoc._id}
                   text={qDoc?.typeSpecific?.listeningText || "Describe the image shown."}
-                  delayBeforePlay={3000} // 1 second
+                  delayBeforePlay={5000} // 1 second
                   onPlaybackEnd={onTTSFinished}
                   rate={0.8}
                   pitch={0.8}
@@ -566,7 +546,7 @@ const QuestionRenderer: any = React.memo(
                 <TTSPlayer
                   key={qDoc._id}
                   text={qDoc?.typeSpecific?.listeningText || "Describe the image shown."}
-                  delayBeforePlay={3000} // 1 second
+                  delayBeforePlay={5000} // 1 second
                   onPlaybackEnd={onTTSFinished}
                   rate={0.8}
                   pitch={0.8}
@@ -612,8 +592,6 @@ const QuestionRenderer: any = React.memo(
                 isCompleted={isCompleted}
                 onAnswerChange={(answer) => {
                   handleTextAnswerChange({ target: { value: answer } });
-                  // Auto-save progress
-                  saveCurrentQuestionProgress?.();
                 }}
               />
             </div>
@@ -631,7 +609,6 @@ const QuestionRenderer: any = React.memo(
                 isCompleted={isCompleted}
                 onAnswerChange={(answer) => {
                   handleTextAnswerChange({ target: { value: answer } });
-                  saveCurrentQuestionProgress?.();
                 }}
               />
             </div>
@@ -645,7 +622,7 @@ const QuestionRenderer: any = React.memo(
               {["pte_summarize_spoken"].includes(type) && <TTSPlayer
                 key={qDoc._id}
                 text={qDoc?.questionText || "Describe the image shown."}
-                delayBeforePlay={3000} // 1 second
+                delayBeforePlay={5000} // 1 second
                 onPlaybackEnd={onTTSFinished}
                 rate={0.8}
                 pitch={0.8}
@@ -1089,13 +1066,6 @@ export const SectionReview: React.FC<SectionReviewProps> = React.memo(
   }
 );
 
-import {
-  AlertTriangle,
-  BookOpen,
-  Edit3,
-} from "lucide-react";
-import SpeakingQuestion, { RecordingOnlyComponent, TTSPlayer } from "./SpeakingQuestion";
-import PTEFillDrag, { PTEFillListeningInput, PTEFillSelect, PTEHighlightText, PTEMCQMultiple, PTEReorder } from "./DragandFill";
 
 interface GRETestResultsProps {
   attempt: any;

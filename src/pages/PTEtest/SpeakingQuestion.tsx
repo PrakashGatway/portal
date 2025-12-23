@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef, useCallback } from "react"
+import React, { useState, useEffect, useRef, useCallback, memo } from "react"
 import { Volume2, Mic, Clock } from "lucide-react"
 
 const SpeakingQuestion = ({ qDoc }) => {
@@ -33,7 +33,7 @@ const SpeakingQuestion = ({ qDoc }) => {
             if (hasValidQuestion && !hasPlayedTTS) {
                 playTTS()
             }
-        }, 1000)
+        }, 3000)
 
         // Cleanup
         return () => {
@@ -246,9 +246,11 @@ const SpeakingQuestion = ({ qDoc }) => {
             )}
 
             {/* Question */}
-            <div className="mb-6">
+
+            {qDoc?.questionType != "retell_lesson" &&  <div className="mb-6">
                 <h2 className="" dangerouslySetInnerHTML={{ __html: qDoc?.questionText }} />
-            </div>
+            </div>}
+           
 
             <div className="grid grid-cols-2 gap-4">
                 <div className="bg-blue-50 dark:bg-blue-900/20 p-4 rounded-lg border border-blue-200 dark:border-blue-800">
@@ -373,7 +375,7 @@ export default React.memo(SpeakingQuestion)
 
 
 
-export const RecordingOnlyComponent = ({
+export const RecordingOnlyComponent = memo(({
     recordingDurationSeconds = 40,
     preRecordingWaitSeconds = 10,
     onRecordingComplete,
@@ -597,10 +599,8 @@ export const RecordingOnlyComponent = ({
             )}
         </div>
     );
-};
+});
 // TTSPlayerWithUI.tsx
-import { Play, Pause, StopCircle } from "lucide-react";
-
 interface TTSPlayerWithUIProps {
     text: string;
     delayBeforePlay?: number; // ms, default 0
@@ -611,7 +611,7 @@ interface TTSPlayerWithUIProps {
     volume?: number; // initial volume 0-1, default 1.0
 }
 
-const TTSPlayerWithUI: React.FC<TTSPlayerWithUIProps> = ({
+const TTSPlayerWithUI: React.FC<TTSPlayerWithUIProps> = memo(({
     text,
     delayBeforePlay = 0,
     onPlaybackEnd,
@@ -620,6 +620,7 @@ const TTSPlayerWithUI: React.FC<TTSPlayerWithUIProps> = ({
     pitch = 1.0,
     volume: initialVolume = 1.0,
 }) => {
+
     const [isPlaying, setIsPlaying] = useState(false);
     const [isPaused, setIsPaused] = useState(false);
     const [countdown, setCountdown] = useState<number | null>(null); // seconds
@@ -845,6 +846,6 @@ const TTSPlayerWithUI: React.FC<TTSPlayerWithUIProps> = ({
             )} */}
         </div>
     );
-};
+})
 
-export const TTSPlayer = React.memo(TTSPlayerWithUI);
+export const TTSPlayer = TTSPlayerWithUI
