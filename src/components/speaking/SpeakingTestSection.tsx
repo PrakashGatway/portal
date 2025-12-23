@@ -1,4 +1,5 @@
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect, useRef, useCallback, useMemo } from "react";
+import { zipSync } from 'fflate';
 import {
   ChevronLeft,
   Clock,
@@ -13,6 +14,7 @@ import {
 } from "lucide-react";
 import * as fflate from 'fflate';
 import api from "../../axiosInstance";
+import TestHeader from "./speakingHeader";
 
 interface SpeakingTestSectionProps {
   question: {
@@ -58,12 +60,23 @@ interface SpeakingTestSectionProps {
     sectionTimeRemaining?: number;
   };
   onBack: () => void;
-  onSubmit: (answers: Array<{ questionId: string; audioUrl: string; transcript: string }>) => void;
-  onRecord: (action: "start" | "stop", questionId?: string) => Promise<void>;
-  recording: boolean;
-  recordedUrl: string | null;
+  onSubmit: (answers: Array<{
+    questionId: string;
+    audioUrl: string;
+    transcript: string;
+    sectionId?: string;
+    questionGroupId?: string;
+    testId?: string;
+    questionText?: string;
+  }>) => void;
+ onRecord: (action: string, questionId: string) => Promise<void> | void;
+  recording?: boolean;
+  recordedUrl?: string;
   currentQuestionId?: string;
+  sectionId?: string;
 }
+
+
 
 interface QuestionAnswer {
   questionId: string;
@@ -71,6 +84,9 @@ interface QuestionAnswer {
   audioUrl: string | null;
   transcript: string;
   duration: number;
+  questionGroupId?: string;
+  testId?: string;
+  sectionId?: string;
 }
 
 const SpeakingTestSection: React.FC<SpeakingTestSectionProps> = ({
@@ -82,12 +98,11 @@ const SpeakingTestSection: React.FC<SpeakingTestSectionProps> = ({
   recording,
   recordedUrl,
   currentQuestionId,
+  sectionId,
 }) => {
-  // State management
   const [recordingTime, setRecordingTime] = useState(0);
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
   const [answers, setAnswers] = useState<QuestionAnswer[]>([]);
-  const [transcript, setTranscript] = useState("");
   const [isPlaying, setIsPlaying] = useState(false);
 
   // Recording specific states
@@ -134,7 +149,6 @@ const SpeakingTestSection: React.FC<SpeakingTestSectionProps> = ({
   const audioChunksRef = useRef<Blob[]>([]);
   const timerRef = useRef<NodeJS.Timeout | null>(null);
   const sectionTimerRef = useRef<NodeJS.Timeout | null>(null);
-  const autoStopTimerRef = useRef<NodeJS.Timeout | null>(null);
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const analyserRef = useRef<AnalyserNode | null>(null);
   const animationRef = useRef<number | null>(null);
@@ -185,53 +199,33 @@ const SpeakingTestSection: React.FC<SpeakingTestSectionProps> = ({
         });
       });
     });
-
     return questions;
   }, [question.questionGroup]);
 
-  // Ensure currentQuestionIndex is valid
-  useEffect(() => {
-    if (allQuestions.length > 0 && currentQuestionIndex >= allQuestions.length) {
-      setCurrentQuestionIndex(0);
-    }
-  }, [allQuestions, currentQuestionIndex]);
+  const currentQuestion = useMemo(() => 
+    allQuestions[currentQuestionIndex] || allQuestions[0] || null
+  , [allQuestions, currentQuestionIndex]);
 
-  // Current question - safely get
-  const currentQuestion = allQuestions[currentQuestionIndex] || allQuestions[0] || null;
+const currentQuestionGroup = useMemo(() => {
+  if (!currentQuestion || !question.questionGroup) return null;
+  return question.questionGroup.find(group => group._id === currentQuestion.groupId);
+}, [currentQuestion, question.questionGroup]);
 
-  // Current question group
-  const currentQuestionGroup = React.useMemo(() => {
-    if (!currentQuestion) return question.questionGroup?.[0];
-    return question.questionGroup?.find(group => group._id === currentQuestion.groupId);
-  }, [currentQuestion, question.questionGroup]);
+  const currentAnswer = useMemo(() => 
+    answers.find(a => a.questionId === currentQuestion?._id)
+  , [answers, currentQuestion]);
 
-  // Initialize answers
-  useEffect(() => {
-    if (allQuestions.length > 0) {
-      const initialAnswers: QuestionAnswer[] = allQuestions.map(q => ({
-        questionId: q._id,
-        audioBlob: null,
-        audioUrl: null,
-        transcript: "",
-        duration: 0
-      }));
-      setAnswers(initialAnswers);
-    }
-  }, [allQuestions]);
+  const validAnsweredQuestions = useMemo(() => 
+    answers.filter(a => a.audioUrl).length
+  , [answers]);
 
-  // Section timer
-  useEffect(() => {
-    if (sectionTimeRemaining > 0) {
-      sectionTimerRef.current = setInterval(() => {
-        setSectionTimeRemaining(prev => {
-          if (prev <= 1) {
-            if (sectionTimerRef.current) clearInterval(sectionTimerRef.current);
-            handleAutoSubmit();
-            return 0;
-          }
-          return prev - 1;
-        });
-      }, 1000);
+  const totalQuestions = useMemo(() => allQuestions.length, [allQuestions]);
+
+   const initialTimeRemaining = useMemo(() => {
+    
+    if (progress.sectionTimeRemaining !== undefined) {
+     
+      return progress.sectionTimeRemaining;
     }
 
     return () => {
@@ -397,7 +391,7 @@ const SpeakingTestSection: React.FC<SpeakingTestSectionProps> = ({
     const mins = Math.floor(seconds / 60);
     const secs = seconds % 60;
     return `${mins}:${secs.toString().padStart(2, '0')}`;
-  };
+  }, []);
 
   // Calculate estimated size
   const calculateEstimatedSize = (durationSeconds: number, bitrate: number): string => {
@@ -559,14 +553,11 @@ const SpeakingTestSection: React.FC<SpeakingTestSectionProps> = ({
   // Audio visualization
   const drawVisualizer = () => {
     if (!canvasRef.current || !analyserRef.current) return;
-
     const canvas = canvasRef.current;
     const ctx = canvas.getContext('2d');
     if (!ctx) return;
-
     const bufferLength = analyserRef.current.frequencyBinCount;
     const dataArray = new Uint8Array(bufferLength);
-
     const draw = () => {
       animationRef.current = requestAnimationFrame(draw);
 
@@ -594,17 +585,14 @@ const SpeakingTestSection: React.FC<SpeakingTestSectionProps> = ({
     };
 
     draw();
-  };
+  }, []);
 
-  // Start visualization
-  const startVisualization = (stream: MediaStream) => {
+  const startVisualization = useCallback((stream: MediaStream) => {
     if (!canvasRef.current) return;
-
     const canvas = canvasRef.current;
     const audioContext = new (window.AudioContext || (window as any).webkitAudioContext)();
     const analyser = audioContext.createAnalyser();
     const microphone = audioContext.createMediaStreamSource(stream);
-
     analyser.fftSize = 256;
     analyser.minDecibels = -60;
     analyser.maxDecibels = -10;
@@ -616,7 +604,7 @@ const SpeakingTestSection: React.FC<SpeakingTestSectionProps> = ({
     mediaStreamRef.current = stream;
 
     drawVisualizer();
-  };
+  }, [drawVisualizer]);
 
   // Stop visualization
   const stopVisualization = () => {
@@ -626,13 +614,12 @@ const SpeakingTestSection: React.FC<SpeakingTestSectionProps> = ({
 
     if (analyserRef.current && audioContextRef.current) {
       analyserRef.current.disconnect();
-      audioContextRef.current.close();
+      // audioContextRef.current.close();
     }
-
     if (mediaStreamRef.current) {
       mediaStreamRef.current.getTracks().forEach(track => track.stop());
     }
-  };
+  }, []);
 
   // Start audio recording with AAC/M4A compression
   const startAudioRecording = (stream: MediaStream) => {
@@ -667,7 +654,6 @@ const SpeakingTestSection: React.FC<SpeakingTestSectionProps> = ({
       const mediaRecorder = new MediaRecorder(stream, options);
       mediaRecorderRef.current = mediaRecorder;
       audioChunksRef.current = [];
-
       mediaRecorder.ondataavailable = (e) => {
         if (e.data.size > 0) {
           audioChunksRef.current.push(e.data);
@@ -697,6 +683,19 @@ const SpeakingTestSection: React.FC<SpeakingTestSectionProps> = ({
           }
 
           const audioUrl = URL.createObjectURL(audioBlob);
+          
+          setAnswers(prev => prev.map(answer => {
+            if (answer.questionId === currentQuestion._id) {
+              return {
+                ...answer,
+                audioBlob: audioBlob,
+                audioUrl: audioUrl,
+                duration: finalDuration,
+              };
+            }
+            return answer;
+          }));
+          
           setRecordedAudio(audioUrl);
           setHasRecorded(true);
 
@@ -747,7 +746,7 @@ const SpeakingTestSection: React.FC<SpeakingTestSectionProps> = ({
       console.error("Recording failed:", err);
       setRecordingStatus("Recording failed");
     }
-  };
+  }, [currentQuestion, recordingTime, formatTime]);
 
   // Create ZIP file of all individual recordings
   const createZipFile = async (): Promise<Blob | null> => {
@@ -902,9 +901,8 @@ const SpeakingTestSection: React.FC<SpeakingTestSectionProps> = ({
       // Create combined audio for upload
       const combinedBlob = combineAudioSimple();
       
-      if (!combinedBlob) {
-        setRecordingStatus("No recordings to submit");
-        setIsSubmitting(false);
+      if (validAnswers.length === 0) {
+        setRecordingStatus("No recordings found to submit");
         return;
       }
 
@@ -949,7 +947,7 @@ const SpeakingTestSection: React.FC<SpeakingTestSectionProps> = ({
     } finally {
       setIsSubmitting(false);
     }
-  };
+  }, [answers, allQuestions, question, sectionId, onSubmit]);
 
   // Auto submit when time is up
   const handleAutoSubmit = async () => {
@@ -1051,9 +1049,38 @@ const SpeakingTestSection: React.FC<SpeakingTestSectionProps> = ({
         setRecordingTime(0);
 
         try {
-          await onRecord("start", currentQuestion._id);
+          const audioBlob = new Blob(audioChunksRef.current, { 
+            type: mediaRecorder.mimeType || 'audio/mp4' 
+          });
+          
+          const recordingEndTime = Date.now();
+          const accurateDuration = Math.round((recordingEndTime - recordingStartTime) / 1000);
+          const finalDuration = Math.max(recordingTime, accurateDuration);
+          
+          if (currentQuestion) {
+            audioBlobsRef.current.set(currentQuestion._id, audioBlob);
+          }
+          
+          const audioUrl = URL.createObjectURL(audioBlob);
+          
+          setAnswers(prev => prev.map(answer => {
+            if (answer.questionId === currentQuestion._id) {
+              return {
+                ...answer,
+                audioBlob: audioBlob,
+                audioUrl: audioUrl,
+                duration: finalDuration,
+              };
+            }
+            return answer;
+          }));
+          
+          setRecordedAudio(audioUrl);
+          setHasRecorded(true);
+          setRecordingStatus(`Recording completed ✓ (${formatTime(finalDuration)})`);
+          
         } catch (error) {
-          console.error("Error starting recording:", error);
+          setRecordingStatus("Recording failed");
         }
 
       } catch (err) {
@@ -1062,7 +1089,8 @@ const SpeakingTestSection: React.FC<SpeakingTestSectionProps> = ({
         setIsRecording(false);
       }
     }
-  };
+  }
+}, [currentQuestion, hasRecorded, isRecording, stopVisualization, startVisualization, formatTime, onRecord, MAX_RECORDING_TIME]); 
 
   // Play recording
   const handlePlayRecording = () => {
@@ -1144,10 +1172,37 @@ const SpeakingTestSection: React.FC<SpeakingTestSectionProps> = ({
     } else {
       handleSubmitTest();
     }
-  };
+  }, [currentQuestionIndex, allQuestions.length, stopAutoSpeak, stopVisualization, handleSubmitTest]);
 
-  // Cleanup
+  // ✅ useEffect hooks
   useEffect(() => {
+    if (allQuestions.length > 0 && currentQuestionIndex >= allQuestions.length) {
+      setCurrentQuestionIndex(0);
+    }
+  }, [allQuestions, currentQuestionIndex]);
+
+  useEffect(() => {
+    if (allQuestions.length > 0) {
+      const initialAnswers: QuestionAnswer[] = allQuestions.map(q => ({
+        questionId: q._id,
+        audioBlob: null,
+        audioUrl: null,
+        transcript: "",
+        duration: 0,
+        questionGroupId: q.groupId,
+        testId: question._id,
+        sectionId: sectionId
+      }));
+      setAnswers(initialAnswers);
+    }
+  }, [allQuestions, sectionId, question._id]);
+
+  useEffect(() => {
+    if (sectionTimeRemaining > 0) {
+      sectionTimerRef.current = setInterval(() => {
+        setSectionTimeRemaining(prev => prev <= 1 ? 0 : prev - 1);
+      }, 1000);
+    }
     return () => {
       stopVisualization();
       stopAutoSpeak();
@@ -1182,12 +1237,31 @@ const SpeakingTestSection: React.FC<SpeakingTestSectionProps> = ({
     };
   }, [answers, recordedAudio, combinedAudioUrl, zipUrl]);
 
-  // Get answer for current question
-  const currentAnswer = answers.find(a => a.questionId === currentQuestion?._id);
+  useEffect(() => {
+  if (isRecording && !timerRef.current) {
+    
+    if (timerRef.current) {
+      clearInterval(timerRef.current);
+      timerRef.current = null;
+    }
+    
+    const startTime = Date.now();
+    
+    timerRef.current = setInterval(() => {
+      const elapsedSeconds = Math.floor((Date.now() - startTime) / 1000);
+      setRecordingTime(elapsedSeconds);
 
-  // Calculate answered questions
-  const answeredQuestions = answers.filter(a => a.audioBlob).length;
-  const totalQuestions = allQuestions.length;
+      if (elapsedSeconds >= MAX_RECORDING_TIME) {
+        
+        if (handleRecordClickRef.current) {
+          handleRecordClickRef.current();
+        }
+      }
+    }, 1000);
+  } else if (!isRecording && timerRef.current) {
+    clearInterval(timerRef.current);
+    timerRef.current = null;
+  }
 
   // Calculate current recording estimated size
   const currentRecordingSize = calculateEstimatedSize(recordingTime, audioQuality.bitrate);
@@ -1198,9 +1272,7 @@ const SpeakingTestSection: React.FC<SpeakingTestSectionProps> = ({
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
         <div className="text-center">
           <h3 className="text-red-600">No questions available</h3>
-          <button onClick={onBack} className="mt-4 px-4 py-2 bg-blue-600 text-white rounded">
-            Go Back
-          </button>
+          <button onClick={onBack} className="mt-4 px-4 py-2 bg-blue-600 text-white rounded">Go Back</button>
         </div>
       </div>
     );
@@ -1218,6 +1290,7 @@ const SpeakingTestSection: React.FC<SpeakingTestSectionProps> = ({
   }
 
   return (
+    
     <div className="min-h-screen bg-gradient-to-b from-gray-50 to-gray-100">
       {/* Header */}
       <div className="bg-white border-b shadow-sm sticky top-0 z-10">
@@ -1364,9 +1437,8 @@ const SpeakingTestSection: React.FC<SpeakingTestSectionProps> = ({
       {/* Main Content */}
       <div className="max-w-6xl mx-auto p-4">
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          {/* Left Column - Question */}
+          {/* Left: Question */}
           <div className="space-y-6">
-            {/* Current Group Info */}
             {currentQuestionGroup && (
               <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
                 <div className="flex items-start justify-between mb-4">
@@ -1375,11 +1447,14 @@ const SpeakingTestSection: React.FC<SpeakingTestSectionProps> = ({
                       <div className="text-sm px-3 py-1 bg-blue-100 text-blue-800 rounded-full font-medium">
                         {currentQuestionGroup.type.replace('speaking_', 'Part ').toUpperCase()}
                       </div>
+                      {hasQuestionSpoken && (
+                        <div className="flex items-center text-xs text-green-600">
+                          <User className="h-3 w-3 mr-1" /> Female Voice
+                        </div>
+                      )}
                     </div>
                     <h2 className="font-bold text-xl text-gray-900 mb-3">{currentQuestionGroup.title}</h2>
-                    <p className="text-gray-700 whitespace-pre-line leading-relaxed">
-                      {currentQuestionGroup.instruction}
-                    </p>
+                    <p className="text-gray-700 whitespace-pre-line leading-relaxed">{currentQuestionGroup.instruction}</p>
                   </div>
                 </div>
 
@@ -1399,7 +1474,6 @@ const SpeakingTestSection: React.FC<SpeakingTestSectionProps> = ({
                           <span className="text-xs font-medium text-green-700">Spoken</span>
                         </div>
                       )}
-
                       {hasRecorded && (
                         <div className="flex items-center space-x-1 bg-green-50 px-3 py-1 rounded-full border border-green-200">
                           <CheckCircle className="h-3 w-3 text-green-600" />
@@ -1423,21 +1497,12 @@ const SpeakingTestSection: React.FC<SpeakingTestSectionProps> = ({
                         }`} />
                     </button>
                   </div>
-
-                  {/* Question Text */}
                   <div className="mb-6">
-                    <h3 className="text-xl font-bold text-gray-900 mb-4 leading-relaxed">
-                      {currentQuestion.question}
-                    </h3>
-
-                    {/* Cue Card Prompts */}
+                    <h3 className="text-xl font-bold text-gray-900 mb-4 leading-relaxed">{currentQuestion.question}</h3>
                     {currentQuestion.isCueCard && question.cueCard?.prompts && question.cueCard.prompts.length > 0 && (
                       <div className="mt-4 p-4 bg-gray-50 rounded-lg border border-gray-200">
                         <h4 className="font-semibold mb-3 text-gray-800 flex items-center">
-                          <div className="mr-2 p-1 bg-gray-800 rounded">
-                            <CheckCircle className="h-3 w-3 text-white" />
-                          </div>
-                          You should say:
+                          <div className="mr-2 p-1 bg-gray-800 rounded"><CheckCircle className="h-3 w-3 text-white" /></div> You should say:
                         </h4>
                         <ul className="space-y-2">
                           {question.cueCard.prompts.map((prompt, index) => (
@@ -1482,9 +1547,10 @@ const SpeakingTestSection: React.FC<SpeakingTestSectionProps> = ({
                 </div>
               </div>
             )}
+            
           </div>
 
-          {/* Right Column - Recording */}
+          {/* Right: Recording */}
           <div className="space-y-6">
             <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
               <div className="mb-6">
@@ -1514,13 +1580,9 @@ const SpeakingTestSection: React.FC<SpeakingTestSectionProps> = ({
               {/* Audio Visualizer */}
               <div className="mb-6">
                 <div className="bg-gray-900 rounded-xl p-3">
-                  <canvas
-                    ref={canvasRef}
-                    width={600}
-                    height={100}
-                    className="w-full h-12 rounded-lg"
-                  />
+                  <canvas ref={canvasRef} width={600} height={100} className="w-full h-12 rounded-lg" />
                 </div>
+                {/* Recording status display */}
                 <div className="flex justify-between text-sm text-gray-600 mt-2 px-1">
                   <span>
                     Status: <span className={
@@ -1539,9 +1601,7 @@ const SpeakingTestSection: React.FC<SpeakingTestSectionProps> = ({
                                 'Ready'}
                     </span>
                   </span>
-                  <span className="font-mono">
-                    {isRecording ? formatTime(recordingTime) : "00:00"}
-                  </span>
+                  
                 </div>
 
                 {recordingStatus && (
@@ -1557,8 +1617,6 @@ const SpeakingTestSection: React.FC<SpeakingTestSectionProps> = ({
                   </div>
                 )}
               </div>
-
-              {/* Recording Controls */}
               <div className="text-center">
                 <div className="flex justify-center items-center space-x-8 mb-4">
                   <button
@@ -1571,13 +1629,7 @@ const SpeakingTestSection: React.FC<SpeakingTestSectionProps> = ({
                         : 'bg-blue-600 hover:bg-blue-700 hover:scale-105'
                       } text-white ${hasRecorded && !isRecording ? 'opacity-50' : ''}`}
                   >
-                    {isRecording ? (
-                      <Square className="h-7 w-7" />
-                    ) : hasRecorded ? (
-                      <CheckCircle className="h-7 w-7" />
-                    ) : (
-                      <Mic className="h-7 w-7" />
-                    )}
+                    {currentQuestionIndex < totalQuestions - 1 ? 'Next Question' : 'Submit Test'}
                   </button>
 
                   {(recordedAudio || currentAnswer?.audioUrl) && (

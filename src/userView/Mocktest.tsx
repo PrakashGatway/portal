@@ -15,10 +15,10 @@ const MockTest = () => {
   const [error, setError] = useState(null);
 
   const testTypes = [
-    { id: "reading", name: "Reading", emoji: "📖", color: "blue" },
-    { id: "writing", name: "Writing", emoji: "✍️", color: "green" },
-    { id: "speaking", name: "Speaking", emoji: "🎤", color: "purple" },
-    { id: "listening", name: "Listening", emoji: "👂", color: "orange" }
+    { id: "reading", name: "Reading",color: "blue" },
+    { id: "writing", name: "Writing",  color: "green" },
+    { id: "speaking", name: "Speaking", color: "purple" },
+    { id: "listening", name: "Listening",  color: "orange" }
   ];
 
   // Fetch test series from API
@@ -28,24 +28,24 @@ const MockTest = () => {
         setLoading(true);
         setError(null);
         
-        console.log("Starting API call...");
+     
         const response = await api.get("/test/series?page=1&limit=10");
 
-        console.log("Full API Response:", response.data);
+      
 
         if (response.data && response.data.success) {
-          console.log("API Success - Transforming data...");
+        
           // Transform API data to match our structure
           const transformedData = transformApiData(response.data.data);
-          console.log("Transformed Data:", transformedData);
+        
           setMockTests(transformedData);
         } else {
-          console.log("API returned success: false");
+         
           setError("Failed to fetch test series - API returned error");
           setMockTests(getFallbackData());
         }
       } catch (err) {
-        console.error("API Error:", err);
+     
         setError(err.response?.data?.message || err.message || "Failed to fetch test series");
         // Fallback to mock data if API fails
         setMockTests(getFallbackData());
@@ -59,7 +59,7 @@ const MockTest = () => {
 
   // Transform API data to match our component structure - ORIGINAL FUNCTION
   const transformApiData = (apiData) => {
-    console.log("Raw API Data for transformation:", apiData);
+   
     
     const transformed = {
       reading: [],
@@ -69,12 +69,12 @@ const MockTest = () => {
     };
 
     if (!apiData || !Array.isArray(apiData)) {
-      console.log("API data is not an array");
+   
       return transformed;
     }
 
     apiData.forEach((test, index) => {
-      console.log(`Processing test ${index}:`, test);
+      
       
       // Extract section information to determine test type
       let testType = "reading"; // Default to reading
@@ -98,8 +98,8 @@ const MockTest = () => {
         title: test.title || `Full Mock Test #${140 + index}`,
         duration: `${test.duration || 174} Min`,
         questions: test.totalQuestions || 40,
-        // ORIGINAL: Use API's isPaid value directly
-        isPaid: test.isPaid || false, // API se value use karo
+    
+        isPaid: test.isPaid || false, 
         price: finalPrice,
         description: test.description || "Comprehensive mock test with detailed analysis",
         category: testType,
@@ -110,8 +110,8 @@ const MockTest = () => {
         examName: test.exam?.name || "IELTS"
       };
 
-      console.log(`Created test item for ${testType}:`, testItem);
-      console.log(`isPaid value: ${testItem.isPaid}`);
+      
+      
 
       // Add to the appropriate category
       if (transformed[testType]) {
@@ -121,7 +121,7 @@ const MockTest = () => {
       }
     });
 
-    console.log("Final transformed data:", transformed);
+    
     return transformed;
   };
 
@@ -134,8 +134,7 @@ const MockTest = () => {
         title: `Full Mock Test #${i}`,
         duration: "174 Min",
         questions: 40,
-        // ORIGINAL: SIRF Test #140 FREE hai, baaki sab PAID
-        isPaid: i !== 140, // #140 free hai (false), baaki paid (true)
+        isPaid: i !== 140, 
         price: 199,
         description: "Comprehensive IELTS mock test with detailed analysis and performance report",
         category: "reading",
@@ -183,7 +182,7 @@ const MockTest = () => {
 
   const handleBuyTest = (testId, testType) => {
     const testData = mockTests[testType]?.find(test => test.id === testId);
-    console.log("Buying test:", testData);
+    
     alert(`Redirecting to payment for ${testData.title} - ₹${testData.price}`);
   };
 
@@ -198,27 +197,27 @@ const MockTest = () => {
         paidBadge: "bg-orange-100 text-orange-800 dark:bg-orange-900/30 dark:text-orange-400"
       },
       green: {
-        bg: "bg-green-50 dark:bg-green-900/20",
-        border: "border-green-200 dark:border-green-800",
-        text: "text-green-700 dark:text-green-300",
-        button: "bg-green-600 hover:bg-green-700 text-white",
-        badge: "bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400",
+        bg: "bg-blue-50 dark:bg-blue-900/20",
+        border: "border-blue-200 dark:border-blue-800",
+        text: "text-blue-700 dark:text-blue-300",
+        button: "bg-blue-600 hover:bg-blue-700 text-white",
+        badge: "bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-400",
         paidBadge: "bg-orange-100 text-orange-800 dark:bg-orange-900/30 dark:text-orange-400"
       },
       purple: {
-        bg: "bg-purple-50 dark:bg-purple-900/20",
-        border: "border-purple-200 dark:border-purple-800",
-        text: "text-purple-700 dark:text-purple-300",
-        button: "bg-purple-600 hover:bg-purple-700 text-white",
-        badge: "bg-purple-100 text-purple-800 dark:bg-purple-900/30 dark:text-purple-400",
+        bg: "bg-blue-50 dark:bg-blue-900/20",
+        border: "border-blue-200 dark:border-blue-800",
+        text: "text-blue-700 dark:text-blue-300",
+        button: "bg-blue-600 hover:bg-blue-700 text-white",
+        badge: "bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-400",
         paidBadge: "bg-orange-100 text-orange-800 dark:bg-orange-900/30 dark:text-orange-400"
       },
       orange: {
-        bg: "bg-orange-50 dark:bg-orange-900/20",
-        border: "border-orange-200 dark:border-orange-800",
-        text: "text-orange-700 dark:text-orange-300",
-        button: "bg-orange-600 hover:bg-orange-700 text-white",
-        badge: "bg-orange-100 text-orange-800 dark:bg-orange-900/30 dark:text-orange-400",
+        bg: "bg-blue-50 dark:bg-blue-900/20",
+        border: "border-blue-200 dark:border-blue-800",
+        text: "text-blue-700 dark:text-blue-300",
+        button: "bg-blue-600 hover:bg-blue-700 text-white",
+        badge: "bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-400",
         paidBadge: "bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400"
       }
     };
@@ -306,9 +305,7 @@ const MockTest = () => {
   className={`flex items-center space-x-2 px-5 py-3 rounded-xl font-medium transition-all duration-300 flex-1 justify-center relative overflow-hidden ${
     isActive
       ? `bg-gradient-to-r ${tab.color === 'blue' ? 'from-blue-500 to-blue-600' : 
-         tab.color === 'green' ? 'from-green-500 to-green-600' :
-         tab.color === 'purple' ? 'from-purple-500 to-purple-600' :
-         'from-orange-500 to-orange-600'} text-white shadow-md`
+         "from-blue-500 to-blue-600"} text-white shadow-md`
       : "text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-700/50"
   }`}
 >
@@ -389,7 +386,7 @@ const MockTest = () => {
                   {/* Action Buttons - ORIGINAL LOGIC EXACTLY */}
                   <div className="flex space-x-3">
                     {!test.isPaid ? (
-                      // ORIGINAL: Agar isPaid: false hai to "Start FREE Test" button
+                
                      <button
   onClick={() => handleStartTest(test.id, activeTab)}
   className={`flex-1 py-3 px-4 rounded-xl font-medium transition-all duration-300 ${currentColor.button} shadow-md hover:shadow-xl transform hover:scale-[1.03] active:scale-[0.98] relative overflow-hidden group`}
@@ -398,7 +395,7 @@ const MockTest = () => {
   <span className="absolute inset-0 bg-white/20 translate-y-full group-hover:translate-y-0 transition-transform duration-300"></span>
 </button>
                     ) : (
-                      // ORIGINAL: Agar isPaid: true hai to "Preview" aur "Buy Now" buttons
+                  
                       <>
                         <button 
                           onClick={() => handlePreviewTest(test.id, activeTab)}

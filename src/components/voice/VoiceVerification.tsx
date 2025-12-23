@@ -20,7 +20,7 @@ interface VoiceVerificationProps {
     sectionName?: string;
 }
 
-const TEST_SENTENCE = "I Appreciate Everyone Taking The Time To Join This Meeting";
+const TEST_SENTENCE = "Testing one, two, three. My microphone is working fine.";
 
 const VoiceVerification: React.FC<VoiceVerificationProps> = ({
     onComplete,
@@ -112,7 +112,7 @@ const VoiceVerification: React.FC<VoiceVerificationProps> = ({
         };
 
         recognition.onerror = (event: any) => {
-            console.error("Speech recognition error:", event.error);
+         
             setStatus(`Error: ${event.error}`);
             setIsRecording(false);
             
@@ -187,7 +187,7 @@ const VoiceVerification: React.FC<VoiceVerificationProps> = ({
         try {
             recognitionRef.current.start();
         } catch (recognitionError) {
-            console.error("Speech recognition start error:", recognitionError);
+         
             setStatus("Speech recognition failed to start");
             setIsRecording(false);
             return;
@@ -205,7 +205,7 @@ const VoiceVerification: React.FC<VoiceVerificationProps> = ({
         }, 5000);
         
     } catch (err) {
-        console.error("Microphone access error:", err);
+       
         setStatus("Microphone access denied or not available");
         setIsRecording(false);
     }
@@ -238,15 +238,15 @@ const startAudioRecording = (stream: MediaStream) => {
         mediaRecorder.ondataavailable = (e) => {
             if (e.data.size > 0) {
                 audioChunksRef.current.push(e.data);
-                console.log("Audio chunk received:", e.data.size, "bytes");
+            
             }
         };
         
         mediaRecorder.onstop = () => {
-            console.log("MediaRecorder stopped, chunks:", audioChunksRef.current.length);
+          
             
             if (audioChunksRef.current.length === 0) {
-                console.error("No audio chunks recorded");
+            
                 setStatus("Recording failed: No audio data");
                 return;
             }
@@ -255,10 +255,10 @@ const startAudioRecording = (stream: MediaStream) => {
                 const audioBlob = new Blob(audioChunksRef.current, { 
                     type: mediaRecorder.mimeType || 'audio/webm' 
                 });
-                console.log("Audio blob created:", audioBlob.size, "bytes", audioBlob.type);
+            
                 
                 const audioUrl = URL.createObjectURL(audioBlob);
-                console.log("Audio URL created:", audioUrl);
+            
                 
                 setRecordedAudio(audioUrl);
                 
@@ -266,93 +266,91 @@ const startAudioRecording = (stream: MediaStream) => {
                 const testAudio = new Audio();
                 testAudio.src = audioUrl;
                 testAudio.oncanplaythrough = () => {
-                    console.log("Audio is playable");
+                
                 };
                 testAudio.onerror = (e) => {
-                    console.error("Audio test error:", e);
+        
                 };
                 
             } catch (blobError) {
-                console.error("Blob creation error:", blobError);
+    
                 setStatus("Recording failed: Could not create audio file");
             }
         };
         
         mediaRecorder.onerror = (e) => {
-            console.error("MediaRecorder error:", e);
+    
             setStatus("Recording error occurred");
         };
         
-        console.log("Starting MediaRecorder with:", options);
+        
         mediaRecorder.start(100); // Collect data every 100ms
-        console.log("MediaRecorder started, state:", mediaRecorder.state);
+    
         
     } catch (err) {
-        console.error("Audio recording initialization failed:", err);
+    
         setStatus("Audio recording not supported in this browser");
     }
 };
 
 const playRecording = () => {
-    console.log("playRecording called");
-    console.log("recordedAudio:", recordedAudio);
-    console.log("audioElementRef.current:", audioElementRef.current);
+
     
     if (!recordedAudio) {
-        console.error("No recorded audio available");
+    
         setStatus("No recording available");
         return;
     }
     
-    // Agar ref available nahi hai, toh naya audio element create karo
+    
     if (!audioElementRef.current) {
-        console.log("Creating new audio element");
+        
         const newAudio = new Audio(recordedAudio);
         audioElementRef.current = newAudio;
     } else {
-        // Existing audio element update karo
+        
         audioElementRef.current.src = recordedAudio;
     }
     
     const audioElement = audioElementRef.current;
     
-    // Event listeners add karo
+
     audioElement.onended = () => {
-        console.log("Playback ended");
+        
         setIsPlaying(false);
     };
     
     audioElement.onerror = (e) => {
-        console.error("Audio playback error:", e);
+        
         setStatus("Error playing audio");
         setIsPlaying(false);
     };
     
     if (isPlaying) {
-        console.log("Pausing audio");
+        
         audioElement.pause();
         setIsPlaying(false);
     } else {
-        console.log("Starting playback");
+        
         audioElement.play()
             .then(() => {
-                console.log("Playback started successfully");
+        
                 setIsPlaying(true);
                 setStatus("Playing recording...");
             })
             .catch(err => {
-                console.error("Play failed:", err);
+            
                 
                 // Try with new audio element
                 const tempAudio = new Audio(recordedAudio);
                 tempAudio.play()
                     .then(() => {
-                        console.log("Playback with new audio successful");
+                    
                         setIsPlaying(true);
                         audioElementRef.current = tempAudio;
                     })
                     .catch(secondErr => {
-                        console.error("Second attempt failed:", secondErr);
+                
                         setStatus(`Cannot play: ${err.message}`);
                     });
             });
@@ -377,7 +375,7 @@ const playRecording = () => {
     // System Requirements Screen (Screenshot 67)
     const renderSystemCheck = () => {
         return (
-            <div className="min-h-screen bg-gradient-to-b from-gray-50 to-gray-100 dark:from-gray-900 dark:to-gray-800 p-6">
+            <div className="min-h-screen  bg-gradient-to-b from-gray-50 to-gray-100 dark:from-gray-900 dark:to-gray-800 p-6">
 
                
 <audio 
@@ -385,11 +383,11 @@ const playRecording = () => {
     style={{ display: 'none' }}
     controls
     preload="metadata"
-    onError={(e) => console.error("Audio element error:", e)}
+
 />
-                <div className="max-w-7xl mx-auto">
+                <div className="max-w-4xl mx-auto">
                     {/* Header */}
-                    <div className="mb-8">
+                    <div className="">
                         <button
                             onClick={onBack}
                             className="flex items-center gap-2 text-gray-600 dark:text-gray-400 hover:text-gray-800 dark:hover:text-white mb-6"
@@ -402,7 +400,7 @@ const playRecording = () => {
                     </div>
 
                     {/* System Requirements Card */}
-                    <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-lg p-8 mb-8">
+                    <div className="bg-white dark:bg-gray-800 rounded-lg border border-black p-8 mb-2">
                         <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-8 text-center">
                             System Requirement for Test
                         </h2>
@@ -481,7 +479,7 @@ const playRecording = () => {
                     <div className="text-center">
                         <button
                             onClick={() => setCurrentStep("voice_test")}
-                            className="px-12 py-4 bg-gradient-to-r from-blue-500 to-blue-600 text-white font-bold text-lg rounded-xl hover:from-blue-600 hover:to-blue-700 transition-all shadow-lg flex items-center gap-3 mx-auto"
+                            className="px-4 py-2 bg-[#3c50e0] text-white font-bold text-medium rounded-sm hover:from-blue-600 hover:to-blue-700 transition-all shadow-lg flex items-center gap-3 mx-auto"
                         >
                             Next
                             <ArrowRight className="h-6 w-6" />
@@ -492,7 +490,7 @@ const playRecording = () => {
         );
     };
 
-    // Microphone Check Screen (Screenshot 66)
+    // Microphone Check Screen 
     const renderVoiceTest = () => {
         return (
             <div className="min-h-screen bg-gradient-to-b from-gray-50 to-gray-100 dark:from-gray-900 dark:to-gray-800 p-6">
@@ -511,7 +509,7 @@ const playRecording = () => {
                     </div>
 
                     {/* Microphone Check Card */}
-                    <div className="bg-white gap-[20px] dark:bg-gray-800 rounded-2xl shadow-lg p-8 mb-8 flex justify-evenly">
+                    <div className="bg-white gap-[20px] dark:bg-gray-800 rounded-2xl  p-8 mb-8 flex justify-evenly">
                        <div className="title w-[50%]"> <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-6 text-center">
                             Microphone Check
                         </h2>
@@ -545,10 +543,10 @@ const playRecording = () => {
                        
                         
                         {/* Divider */}
-                        <div className="border-t border-gray-300 dark:border-gray-700 my-8"></div>
+                        <div className="border-t border-gray-300 dark:border-gray-700  "></div>
                         
                         {/* Test Sentence */}
-                        <div className="text-center mb-8">
+                        <div className="text-center mb-2">
                             <p className="text-gray-700 dark:text-gray-300 mb-4">
                                 To check your microphone please repeat below sentence
                             </p>
@@ -558,18 +556,18 @@ const playRecording = () => {
                                 </p>
                             </div>
                               {/* Divider */}
-                        <div className="border-t border-gray-300 dark:border-gray-700 my-8"></div>
+                        <div className="border-t border-gray-300 dark:border-gray-700 my-2"></div>
                         
                         {/* Recording Controls */}
-                        <div className="space-y-6">
+                        <div className="space-y-2">
                             {/* Status */}
                             {status && (
                                 <div className={`p-4 rounded-xl text-center ${
                                     status.includes('Recording finished') 
-                                        ? 'bg-green-50 dark:bg-green-900/20 text-green-700 dark:text-green-300' 
+                                        ? 'text-green-700 dark:text-green-300' 
                                         : status.includes('Error') 
-                                        ? 'bg-red-50 dark:bg-red-900/20 text-red-700 dark:text-red-300'
-                                        : 'bg-blue-50 dark:bg-blue-900/20 text-blue-700 dark:text-blue-300'
+                                        ? ' text-red-700 dark:text-red-300'
+                                        : 'text-blue-700 dark:text-blue-300'
                                 }`}>
                                     <div className="flex items-center justify-center gap-2">
                                         {isRecording && (
@@ -586,7 +584,7 @@ const playRecording = () => {
                             {/* Check Microphone Button */}
                             <button
                                 onClick={startRecording}
-                                disabled={isRecording}
+                                disabled={isRecording && passed}
                                 className={`w-full py-2 rounded-xl font-bold text-base flex items-center justify-center gap-3 ${
                                     isRecording 
                                         ? 'bg-gray-400 dark:bg-gray-700 cursor-not-allowed' 
@@ -601,8 +599,8 @@ const playRecording = () => {
                             {hasResult && (
                                 <div className={`p-2 rounded-xl ${
                                     passed 
-                                        ? 'bg-green-50 dark:bg-green-900/20 border-2 text-base border-green-200 dark:border-green-800' 
-                                        : 'bg-red-50 dark:bg-red-900/20 text-base border-2 border-red-200 dark:border-red-800'
+                                        ? '  text-base ' 
+                                        : ' text-base dark:border-red-800'
                                 }`}>
                                     <div className="text-center">
                                         <div className="flex items-center justify-center gap-3 mb-4">
@@ -620,12 +618,7 @@ const playRecording = () => {
                                             Accuracy: <span className="font-bold">{accuracy.toFixed(1)}%</span>
                                         </p>
                                         
-                                        {spokenText && (
-                                            <div className="bg-gray-100 dark:bg-gray-700/50 p-3 rounded-lg mb-4">
-                                                <p className="text-sm text-gray-600 dark:text-gray-400 mb-1">You said:</p>
-                                                <p className="text-gray-800 dark:text-gray-200">{spokenText}</p>
-                                            </div>
-                                        )}
+                                      
                                         
                                         {recordedAudio && (
                                             <button

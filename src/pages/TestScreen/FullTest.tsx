@@ -23,6 +23,10 @@ import {
     Globe,
     Chrome,
     Info,
+    ListOrdered,
+    Edit,
+    MessageSquare,
+    Eye,
 
 
 } from "lucide-react";
@@ -157,6 +161,40 @@ const formatSeconds = (totalSeconds: number | null | undefined) => {
     return `${mm}:${ss}`;
 };
 
+
+// Icon mapping function
+const getSectionIcon = (sectionName: string) => {
+    if (!sectionName) return HelpCircle;
+
+    const name = sectionName.toUpperCase();
+
+    if (name.includes('READING')) {
+        return BookOpen;
+    } else if (name.includes('WRITING')) {
+        return Edit;
+    } else if (name.includes('LISTENING')) {
+        return Volume2;
+    } else if (name.includes('SPEAKING')) {
+        return MessageSquare;
+    } else if (name.includes('VIEWING') || name.includes('VISUAL')) {
+        return Eye;
+    } else {
+        return HelpCircle;
+    }
+};
+
+// Background color mapping function
+const getSectionColor = (sectionName: string) => {
+    const name = sectionName?.toUpperCase() || '';
+
+    if (name.includes('READING')) return 'bg-blue-600';
+    if (name.includes('WRITING')) return 'bg-green-600';
+    if (name.includes('LISTENING')) return 'bg-purple-600';
+    if (name.includes('SPEAKING')) return 'bg-yellow-600';
+    if (name.includes('VIEWING') || name.includes('VISUAL')) return 'bg-pink-600';
+    return 'bg-gray-600';
+};
+
 const getSectionStatusBadge = (status: SectionDTO["status"]) => {
     switch (status) {
         case "completed":
@@ -171,17 +209,17 @@ const getSectionStatusBadge = (status: SectionDTO["status"]) => {
 // Improve the isWritingType function
 const isWritingType = (t: string) => {
     if (!t) return false;
-    
+
     const writingTypes = [
         'writing_task_1_academic',
-        'writing_task_1_general', 
+        'writing_task_1_general',
         'writing_task_2',
         'writing',
         'essay',
         'letter',
         'report'
     ];
-    
+
     const text = t.toLowerCase();
     return writingTypes.some(type => text.includes(type));
 };
@@ -192,10 +230,10 @@ const isWritingType = (t: string) => {
 
 const isSpeakingType = (t: string, instruction?: string) => {
     if (!t && !instruction) return false;
-    
+
     const textToCheck = (t + " " + (instruction || "")).toLowerCase();
     console.log(`🔊 isSpeakingType checking: "${textToCheck}"`);
-    
+
     // Expand the speaking keywords - make them case-insensitive
     const speakingKeywords = [
         'speaking',
@@ -206,8 +244,8 @@ const isSpeakingType = (t: string, instruction?: string) => {
         'oral test',
         'speech',
         'cue card',      // This should match
-        'describe',     
-        'talk about',   
+        'describe',
+        'talk about',
         'topic',
         'part 2',
         'part 3',
@@ -215,30 +253,20 @@ const isSpeakingType = (t: string, instruction?: string) => {
         'preparation time', // Cue card specific
         'speaking time'     // Cue card specific
     ];
-    
+
     // Check all keywords
     const result = speakingKeywords.some(keyword => textToCheck.includes(keyword));
     console.log(`🔊 isSpeakingType result: ${result}`);
-    
+
     return result;
 };
 
-// FullLengthTestPage.tsx mein detectSpeakingQuestion function ko update karo:
+
 
 const detectSpeakingQuestion = (question: QuestionDTO): boolean => {
-    console.log("🎤 DETECTING SPEAKING QUESTION:", {
-        title: question.title,
-        type: question.questionType,
-        instruction: question.content.instruction?.substring(0, 100) + "...",
-        hasCueCard: !!question.cueCard,
-        cueCardPrompts: question.cueCard?.prompts,
-        cueCardPromptsLength: question.cueCard?.prompts?.length,
-        hasQuestionGroup: !!question.questionGroup,
-        questionGroupType: question.questionGroup?.[0]?.type,
-        questionGroupTitle: question.questionGroup?.[0]?.title
-    });
 
-    // IMPORTANT: Pehle writing check - agar writing hai to definitely NOT speaking
+
+
     if (isWritingType(question.questionType)) {
         console.log("📝 Writing section detected - NOT speaking");
         return false;
@@ -246,7 +274,7 @@ const detectSpeakingQuestion = (question: QuestionDTO): boolean => {
 
     // Method 1: Check question type directly
     if (question.questionCategory?.toLowerCase() === 'speaking') {
-        console.log("✅ Detected via questionCategory");
+
         return true;
     }
 
@@ -258,9 +286,9 @@ const detectSpeakingQuestion = (question: QuestionDTO): boolean => {
 
     // Method 3: Check question group type
     if (question.questionGroup?.some(group => {
-        const isSpeakingGroup = group.type?.toLowerCase().includes('speaking') || 
-                               group.title?.toLowerCase().includes('cue card') ||
-                               group.instruction?.toLowerCase().includes('you should say');
+        const isSpeakingGroup = group.type?.toLowerCase().includes('speaking') ||
+            group.title?.toLowerCase().includes('cue card') ||
+            group.instruction?.toLowerCase().includes('you should say');
         return isSpeakingGroup;
     })) {
         console.log("✅ Detected via questionGroup");
@@ -284,7 +312,7 @@ const detectSpeakingQuestion = (question: QuestionDTO): boolean => {
 
     const found = speakingIndicators.some(indicator => combinedText.includes(indicator));
     console.log(`📊 Title/instruction detection: ${found}`);
-    
+
     return found;
 };
 
@@ -302,7 +330,7 @@ const FullLengthTestPage: React.FC = () => {
     const [sections, setSections] = useState<SectionDTO[]>([]);
     const [sessionId, setSessionId] = useState<string | null>(null);
 
-    // Line 60 ke aas paas
+
     const [viewMode, setViewMode] = useState<"sections" | "question" | "result" | "voice_verification">("sections");
     const [activeSectionIndex, setActiveSectionIndex] = useState<number | null>(null);
 
@@ -320,7 +348,7 @@ const FullLengthTestPage: React.FC = () => {
     const [recordedUrl, setRecordedUrl] = useState<string | null>(null);
     const [audioPlaying, setAudioPlaying] = useState(false);
     const globalCounterRef = useRef(1);
-    // const [showVoiceVerification, setShowVoiceVerification] = useState(false);
+    const [showVoiceVerification, setShowVoiceVerification] = useState(false);
 
 
 
@@ -331,7 +359,7 @@ const FullLengthTestPage: React.FC = () => {
 
 
 
-    // YE FUNCTION ADD KARO Component ke top mein:
+
     const [currentTime, setCurrentTime] = useState(0);
     const [audioDuration, setAudioDuration] = useState(0);
 
@@ -359,7 +387,7 @@ const FullLengthTestPage: React.FC = () => {
             return;
         }
 
-        // HTML tags remove karo
+
         const cleanText = text.replace(/<[^>]*>/g, ' ').replace(/\s+/g, ' ').trim();
 
         if (!cleanText) {
@@ -383,35 +411,29 @@ const FullLengthTestPage: React.FC = () => {
                 if (englishVoice) utter.voice = englishVoice;
             }
 
-            utter.onerror = (event) => {
-                console.error('Speech synthesis error:', event);
-            };
-
-            utter.onend = () => {
-                console.log('Speech finished');
-            };
+          
 
             window.speechSynthesis.speak(utter);
-            console.log("Speaking started:", cleanText.substring(0, 50) + "...");
+        
         };
 
         // Add voice selection for speaking questions
-    const utter = new SpeechSynthesisUtterance(cleanText);
-    utter.rate = 1;
-    utter.pitch = 1;
-    utter.volume = 1;
-    
-    // For speaking questions, use a more natural voice
-    const voices = window.speechSynthesis.getVoices();
-    if (voices.length > 0) {
-        // Prefer US English female voice for speaking tests
-        const speakingVoice = voices.find(v => 
-            v.lang.startsWith('en-US') && 
-            v.name.toLowerCase().includes('female')
-        ) || voices.find(v => v.lang.startsWith('en'));
-        
-        if (speakingVoice) utter.voice = speakingVoice;
-    }
+        const utter = new SpeechSynthesisUtterance(cleanText);
+        utter.rate = 1;
+        utter.pitch = 1;
+        utter.volume = 1;
+
+        // For speaking questions, use a more natural voice
+        const voices = window.speechSynthesis.getVoices();
+        if (voices.length > 0) {
+            // Prefer US English female voice for speaking tests
+            const speakingVoice = voices.find(v =>
+                v.lang.startsWith('en-US') &&
+                v.name.toLowerCase().includes('female')
+            ) || voices.find(v => v.lang.startsWith('en'));
+
+            if (speakingVoice) utter.voice = speakingVoice;
+        }
 
         // Check if voices are loaded
         if (window.speechSynthesis.getVoices().length === 0) {
@@ -538,7 +560,7 @@ const FullLengthTestPage: React.FC = () => {
 
         fixedUrl = fixedUrl.replace(/\/\//g, '/');
 
-        // 3. IMPORTANT: Production server URL add करें
+
         const baseUrl = 'https://uat.gatewayabroadeducations.com';
 
 
@@ -652,203 +674,209 @@ const FullLengthTestPage: React.FC = () => {
         questionStartRef.current = Date.now();
     };
 
-   const startSpeakingSection = () => {
-  if (currentQuestion && progress) {
-    setShowVoiceVerification(false);
-    setViewMode("question");
-  
-  }
-};
-
-   const handleStartSection = async (sectionIndex: number) => {
-    if (!sessionId) return;
-    setGlobalError(null);
-
-    try {
-        const res = await api.post(`/test/session/${sessionId}/start-section`, {
-            sectionIndex,
-        });
-
-        const data = res.data;
-        if (!data.success) throw new Error(data.message || "Failed to start section");
-
-        setActiveSectionIndex(sectionIndex);
-
-        const currentQuestion: QuestionDTO = data.currentQuestion;
-
-        // Check if speaking section
-        const section = sections[sectionIndex];
-        let sectionName = "";
-        if (section) {
-            if (typeof section.sectionId === "object") {
-                sectionName = (section.sectionId as any).name || "";
-            } else {
-                sectionName = String(section.sectionId);
-            }
-        }
-
-        const isSpeaking = sectionName.toLowerCase().includes("speaking") ||
-            isSpeakingType(currentQuestion.questionType);
-
-        if (isSpeaking) {
-          
-            // setShowVoiceVerification(true);
-         
-            // setCurrentQuestion(currentQuestion);
-            // setProgress(data.progress);
-             setViewMode("question");
-             hydrateQuestionState(currentQuestion, data.progress, null, null);
-            if (data.sectionTimeRemaining != null) {
-                setSectionTimeLeft(data.sectionTimeRemaining);
-            }
-            // ✅ YEH LINE ADD KARO - Speaking section will be shown after voice verification
-            // No need to set viewMode here, VoiceVerification will handle it
-        } else {
-            // Non-speaking section - direct to question
+    const startSpeakingSection = () => {
+        if (currentQuestion && progress) {
+            setShowVoiceVerification(false);
             setViewMode("question");
-            hydrateQuestionState(currentQuestion, data.progress, null, null);
-            if (data.sectionTimeRemaining != null) {
-                setSectionTimeLeft(data.sectionTimeRemaining);
-            }
+
         }
-    } catch (err: any) {
-        console.error(err);
-        setGlobalError(err.response?.data?.message || err.message || "Fail to start section");
-    }
-};
+    };
+
+    const handleStartSection = async (sectionIndex: number) => {
+        if (!sessionId) return;
+        setGlobalError(null);
+
+        try {
+            const res = await api.post(`/test/session/${sessionId}/start-section`, {
+                sectionIndex,
+            });
+
+            const data = res.data;
+            if (!data.success) throw new Error(data.message || "Failed to start section");
+
+            setActiveSectionIndex(sectionIndex);
+
+            const currentQuestion: QuestionDTO = data.currentQuestion;
+
+            // Check if speaking section
+            const section = sections[sectionIndex];
+            let sectionName = "";
+            if (section) {
+                if (typeof section.sectionId === "object") {
+                    sectionName = (section.sectionId as any).name || "";
+                } else {
+                    sectionName = String(section.sectionId);
+                }
+            }
+
+            const isSpeaking = sectionName.toLowerCase().includes("speaking") ||
+                isSpeakingType(currentQuestion.questionType);
+
+            if (isSpeaking) {
+
+                setShowVoiceVerification(true);
+
+                setCurrentQuestion(currentQuestion);
+                setProgress(data.progress);
+                if (data.sectionTimeRemaining != null) {
+                    setSectionTimeLeft(data.sectionTimeRemaining);
+                }
+                // setViewMode("question");
+                // hydrateQuestionState(currentQuestion, data.progress, null, null);
+
+
+
+            } else {
+                // Non-speaking section - direct to question
+                setViewMode("question");
+                hydrateQuestionState(currentQuestion, data.progress, null, null);
+                if (data.sectionTimeRemaining != null) {
+                    setSectionTimeLeft(data.sectionTimeRemaining);
+                }
+            }
+        } catch (err: any) {
+            console.error(err);
+            setGlobalError(err.response?.data?.message || err.message || "Fail to start section");
+        }
+    };
 
     // ---------- Submit answer ----------
     const sendAnswerAndGoNext = async (values: QuestionFormValues) => {
-    if (!sessionId || !currentQuestion || !progress) return;
+        if (!sessionId || !currentQuestion || !progress) return;
 
-    setGlobalError(null);
+        setGlobalError(null);
 
-    const now = Date.now();
-    const timeSpent =
-        questionStartRef.current != null
-            ? Math.max(1, Math.round((now - questionStartRef.current) / 1000))
-            : 0;
+        const now = Date.now();
+        const timeSpent =
+            questionStartRef.current != null
+                ? Math.max(1, Math.round((now - questionStartRef.current) / 1000))
+                : 0;
 
-    const rawAnswers = values.answers || {};
-    const answersPayload: UserAnswerItem[] = [];
+        const rawAnswers = values.answers || {};
+        const answersPayload: UserAnswerItem[] = [];
 
-    const isSpeakingQuestion = isSpeakingType(currentQuestion.questionType);
-    
-    if (isSpeakingQuestion) {
-        // Handle speaking answers differently
-        Object.entries(rawAnswers).forEach(([questionId, answer]) => {
-            if (answer && (typeof answer === 'string' || answer.audioUrl)) {
-                answersPayload.push({
-                    questionId: questionId,
-                    answer: typeof answer === 'string' ? answer : answer.audioUrl
-                });
-            }
-        });
-    }
-  
+        const isSpeakingQuestion = isSpeakingType(currentQuestion.questionType);
 
-    // Existing code for other question types
-    else if (currentQuestion.isQuestionGroup && currentQuestion.questionGroup?.length) {
-        for (const group of currentQuestion.questionGroup) {
-            for (const sub of group.questions) {
-                if (group.type === "summary_completion" || group.type === "note_completion") {
-                    const placeholderCount = (sub.question.match(/\{\{\d+\}\}/g) || []).length;
-                    const subQuestionAnswers: string[] = [];
+        if (isSpeakingQuestion) {
+            // Handle speaking answers differently
+            Object.entries(rawAnswers).forEach(([questionId, answer]) => {
+                if (answer && (typeof answer === 'string' || answer.audioUrl)) {
+                    answersPayload.push({
+                        questionId: questionId,
+                        answer: typeof answer === 'string' ? answer : answer.audioUrl
+                    });
+                }
+            });
+        }
 
-                    for (let i = 1; i <= placeholderCount; i++) {
-                        const fieldName = `${sub._id}_${i}`;
-                        const answer = rawAnswers[fieldName];
-                        if (answer && answer.trim() !== "") {
-                            subQuestionAnswers.push(answer.trim());
+
+        // Existing code for other question types
+        else if (currentQuestion.isQuestionGroup && currentQuestion.questionGroup?.length) {
+            for (const group of currentQuestion.questionGroup) {
+                for (const sub of group.questions) {
+                    if (group.type === "summary_completion" || group.type === "note_completion") {
+                        const placeholderCount = (sub.question.match(/\{\{\d+\}\}/g) || []).length;
+                        const subQuestionAnswers: string[] = [];
+
+                        for (let i = 1; i <= placeholderCount; i++) {
+                            const fieldName = `${sub._id}_${i}`;
+                            const answer = rawAnswers[fieldName];
+                            if (answer && answer.trim() !== "") {
+                                subQuestionAnswers.push(answer.trim());
+                            }
                         }
-                    }
 
-                    if (subQuestionAnswers.length > 0) {
-                        answersPayload.push({
-                            questionGroupId: group._id,
-                            questionId: sub._id,
-                            answer: subQuestionAnswers
-                        });
-                    }
-                } else {
-                    const answer = rawAnswers[sub._id];
-                    if (answer !== null && answer !== undefined && answer !== "" &&
-                        !(Array.isArray(answer) && answer.length === 0)) {
-                        answersPayload.push({
-                            questionGroupId: group._id,
-                            questionId: sub._id,
-                            answer: answer
-                        });
+                        if (subQuestionAnswers.length > 0) {
+                            answersPayload.push({
+                                questionGroupId: group._id,
+                                questionId: sub._id,
+                                answer: subQuestionAnswers
+                            });
+                        }
+                    } else {
+                        const answer = rawAnswers[sub._id];
+                        if (answer !== null && answer !== undefined && answer !== "" &&
+                            !(Array.isArray(answer) && answer.length === 0)) {
+                            answersPayload.push({
+                                questionGroupId: group._id,
+                                questionId: sub._id,
+                                answer: answer
+                            });
+                        }
                     }
                 }
             }
-        }
-    } else if (currentQuestion.questionType === "summary_completion" || currentQuestion.questionType === "note_completion") {
-        const questionText = currentQuestion.content.passageText || currentQuestion.content.instruction;
-        const placeholderCount = (questionText.match(/\{\{\d+\}\}/g) || []).length;
-        const questionAnswers: string[] = [];
+        } else if (currentQuestion.questionType === "summary_completion" || currentQuestion.questionType === "note_completion") {
+            const questionText = currentQuestion.content.passageText || currentQuestion.content.instruction;
+            const placeholderCount = (questionText.match(/\{\{\d+\}\}/g) || []).length;
+            const questionAnswers: string[] = [];
 
-        for (let i = 1; i <= placeholderCount; i++) {
-            const fieldName = `${currentQuestion._id}_${i}`;
-            const answer = rawAnswers[fieldName];
-            if (answer && answer.trim() !== "") {
-                questionAnswers.push(answer.trim());
+            for (let i = 1; i <= placeholderCount; i++) {
+                const fieldName = `${currentQuestion._id}_${i}`;
+                const answer = rawAnswers[fieldName];
+                if (answer && answer.trim() !== "") {
+                    questionAnswers.push(answer.trim());
+                }
             }
+
+            if (questionAnswers.length > 0) {
+                answersPayload.push({
+                    questionId: currentQuestion._id,
+                    answer: questionAnswers
+                });
+            }
+        } else {
+            Object.entries(rawAnswers)
+                .filter(([, val]) => val !== null && val !== undefined && val !== "" && !(Array.isArray(val) && val.length === 0))
+                .forEach(([questionId, answer]) => {
+                    answersPayload.push({ questionId, answer });
+                });
         }
 
-        if (questionAnswers.length > 0) {
-            answersPayload.push({
-                questionId: currentQuestion._id,
-                answer: questionAnswers
+        // Rest of the existing code...
+        try {
+            const res = await api.post(`/test/session/${sessionId}/submit`, {
+                answers: answersPayload,
+                timeSpent,
+                lastQuestionIndex: progress.currentQuestion ?? 0,
             });
+
+            const data = res.data;
+            if (!data.success) throw new Error(data.message || "Failed to submit answer");
+
+            if (data.isTestCompleted && data.analysis) {
+                setAnalysis(data.analysis);
+                setViewMode("result");
+                return;
+            }
+
+            if (data.sectionCompleted && data.sections) {
+                setSections(data.sections);
+                setActiveSectionIndex(null);
+                setCurrentQuestion(null);
+                setProgress(null);
+                setNumbering(null);
+                setSectionTimeLeft(null);
+                setViewMode("sections");
+                return;
+            }
+
+            const nextQuestion: QuestionDTO = data.currentQuestion;
+            const progressData: ProgressDTO = data.progress;
+            const userAnswer: UserAnswerItem[] | null = data.userAnswer || null;
+            const numberingData: NumberingDTO | null = data.numbering || null;
+
+
+            if (data.sectionTimeRemaining != null) {
+                setSectionTimeLeft(data.sectionTimeRemaining);
+            }
+
+            hydrateQuestionState(nextQuestion, progressData, userAnswer, numberingData || undefined);
+        } catch (err: any) {
+            console.error(err);
+            setGlobalError(err.response?.data?.message || err.message || "Failed to submit answer");
         }
-    } else {
-        Object.entries(rawAnswers)
-            .filter(([, val]) => val !== null && val !== undefined && val !== "" && !(Array.isArray(val) && val.length === 0))
-            .forEach(([questionId, answer]) => {
-                answersPayload.push({ questionId, answer });
-            });
-    }
-
-    // Rest of the existing code...
-    try {
-        const res = await api.post(`/test/session/${sessionId}/submit`, {
-            answers: answersPayload,
-            timeSpent,
-            lastQuestionIndex: progress.currentQuestion ?? 0,
-        });
-
-        const data = res.data;
-        if (!data.success) throw new Error(data.message || "Failed to submit answer");
-
-        if (data.isTestCompleted && data.analysis) {
-            setAnalysis(data.analysis);
-            setViewMode("result");
-            return;
-        }
-
-        if (data.sectionCompleted && data.sections) {
-            setSections(data.sections);
-            setActiveSectionIndex(null);
-            setCurrentQuestion(null);
-            setProgress(null);
-            setNumbering(null);
-            setSectionTimeLeft(null);
-            setViewMode("sections");
-            return;
-        }
-
-        const nextQuestion: QuestionDTO = data.currentQuestion;
-        const progressData: ProgressDTO = data.progress;
-        const userAnswer: UserAnswerItem[] | null = data.userAnswer || null;
-        const numberingData: NumberingDTO | null = data.numbering || null;
-
-        hydrateQuestionState(nextQuestion, progressData, userAnswer, numberingData || undefined);
-    } catch (err: any) {
-        console.error(err);
-        setGlobalError(err.response?.data?.message || err.message || "Failed to submit answer");
-    }
-};
+    };
 
 
 
@@ -1657,6 +1685,10 @@ const FullLengthTestPage: React.FC = () => {
 
 
 
+    // Then use it like this in the component:
+
+
+
 
 
 
@@ -1678,7 +1710,7 @@ const FullLengthTestPage: React.FC = () => {
             <div className="min-h-screen bg-gradient-to-br from-gray-50 to-blue-50 dark:from-gray-900 dark:to-gray-800 px-4 py-8">
                 <div className="mx-auto max-w-6xl">
                     {/* Header */}
-                    <div className="mb-8 text-center">
+                    <div className="mb-5 text-center">
                         <button
                             className="mb-4 inline-flex items-center gap-2 rounded-xl bg-white px-4 py-2 text-sm font-medium text-gray-700 shadow-sm transition-all hover:bg-gray-50 dark:bg-gray-800 dark:text-gray-300 dark:hover:bg-gray-700"
                             onClick={() => window.history.back()}
@@ -1686,52 +1718,10 @@ const FullLengthTestPage: React.FC = () => {
                             <ChevronLeft className="h-4 w-4" />
                             Back to Dashboard
                         </button>
-                        <h1 className="text-3xl font-bold text-gray-900 dark:text-white sm:text-4xl">
-                            {testSeries.title}
-                        </h1>
-                        <p className="mt-3 text-lg text-gray-600 dark:text-gray-400">
-                            Full-Length Test • {testSeries.totalQuestions} questions • {testSeries.duration} minutes
-                        </p>
+
+
                     </div>
 
-                    {/* Progress Summary */}
-                    <div className="mb-8 grid grid-cols-1 gap-4 sm:grid-cols-3">
-                        <div className="rounded-2xl bg-white p-6 shadow-sm dark:bg-gray-800">
-                            <div className="flex items-center gap-3">
-                                <div className="rounded-xl bg-blue-100 p-2 dark:bg-blue-900/30">
-                                    <BookOpen className="h-6 w-6 text-blue-600 dark:text-blue-400" />
-                                </div>
-                                <div>
-                                    <p className="text-sm font-medium text-gray-600 dark:text-gray-400">Sections</p>
-                                    <p className="text-2xl font-bold text-gray-900 dark:text-white">{testSeries.totalSections}</p>
-                                </div>
-                            </div>
-                        </div>
-                        <div className="rounded-2xl bg-white p-6 shadow-sm dark:bg-gray-800">
-                            <div className="flex items-center gap-3">
-                                <div className="rounded-xl bg-green-100 p-2 dark:bg-green-900/30">
-                                    <CheckCircle className="h-6 w-6 text-green-600 dark:text-green-400" />
-                                </div>
-                                <div>
-                                    <p className="text-sm font-medium text-gray-600 dark:text-gray-400">Completed</p>
-                                    <p className="text-2xl font-bold text-gray-900 dark:text-white">
-                                        {sections.filter(s => s.status === "completed").length}
-                                    </p>
-                                </div>
-                            </div>
-                        </div>
-                        <div className="rounded-2xl bg-white p-6 shadow-sm dark:bg-gray-800">
-                            <div className="flex items-center gap-3">
-                                <div className="rounded-xl bg-amber-100 p-2 dark:bg-amber-900/30">
-                                    <Clock className="h-6 w-6 text-amber-600 dark:text-amber-400" />
-                                </div>
-                                <div>
-                                    <p className="text-sm font-medium text-gray-600 dark:text-gray-400">Total Duration</p>
-                                    <p className="text-2xl font-bold text-gray-900 dark:text-white">{testSeries.duration}m</p>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
 
                     {/* Sections Grid */}
                     <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
@@ -1741,6 +1731,10 @@ const FullLengthTestPage: React.FC = () => {
                             const secDesc = isObj ? (sec.sectionId as any).description : "Test section";
                             const canStart = sec.status !== "completed";
                             const statusBadge = getSectionStatusBadge(sec.status);
+
+                            // Get icon and color
+                            const SectionIcon = getSectionIcon(secName);
+                            const sectionColor = getSectionColor(secName);
 
                             return (
                                 <div
@@ -1756,24 +1750,71 @@ const FullLengthTestPage: React.FC = () => {
                                         </span>
                                     </div>
 
-                                    <h3 className="mb-2 text-xl font-bold text-gray-900 dark:text-white">{secName}</h3>
+                                    <div className="flex">
+                                        {/* Left: Section Name with Icon */}
+                                        <div className="flex-1">
+                                            <div className=" items-center  mb-2">
+                                                
+                                                <div>
+                                                    <h3 className="text-base font-bold text-gray-900 dark:text-white">
+                                                        {secName}
+                                                    </h3>
+                                                </div>
+                                                {/* Icon circle */}
+                                                <div className={`w-10 mt-4 h-10 rounded-full ${sectionColor} flex items-center justify-center`}>
+                                                    <SectionIcon className="h-5 w-5 text-white" />
+                                                </div>
+                                            </div>
+                                        </div>
 
-                                    <p className="mb-4 text-sm text-gray-600 dark:text-gray-400 line-clamp-2">{secDesc}</p>
+                                        {/* Right: Stats */}
+                                        <div className="mr-4">
+                                            <div className="gap-3">
+                                                {/* Duration */}
+                                                <div className="flex items-center gap-2">
+                                                    <div className="w-8 h-8 my-1 flex items-center justify-center rounded-full bg-[#dcdcdd]">
+                                                        <Clock className="h-4 w-4  text-black" />
+                                                    </div>
+                                                    <div>
+                                                        <div className="text-xs text-gray-500 dark:text-gray-400">Duration</div>
+                                                        <div className="text-sm font-semibold text-black dark:text-white">
+                                                            {sec.duration / 60} min
+                                                        </div>
+                                                    </div>
+                                                </div>
 
-                                    <div className="mb-4 flex items-center gap-4 text-sm text-gray-500 dark:text-gray-400">
-                                        <span className="flex items-center gap-1">
-                                            <Clock className="h-4 w-4" />
-                                            {sec.duration} min
-                                        </span>
-                                        <span className="flex items-center gap-1">
-                                            <HelpCircle className="h-4 w-4" />
-                                            {sec.totalQuestions} questions
-                                        </span>
+                                                {/* Section */}
+                                                <div className="flex items-center gap-2">
+                                                    <div className="w-8 my-1 h-8 flex items-center justify-center rounded-full bg-[#dcdcdd]">
+                                                        <SectionIcon className="h-4 w-4 text-black" />
+                                                    </div>
+                                                    <div>
+                                                        <div className="text-xs text-gray-500 dark:text-gray-400">Section</div>
+                                                        <div className="text-sm font-semibold text-black dark:text-white">
+                                                            {sec.totalQuestions}
+                                                        </div>
+                                                    </div>
+                                                </div>
+
+                                                {/* Questions */}
+                                                <div className="flex items-center gap-2">
+                                                    <div className="w-8 my-1 h-8 flex items-center justify-center rounded-full bg-[#dcdcdd]">
+                                                        <ListOrdered className="h-4 w-4 text-black" />
+                                                    </div>
+                                                    <div>
+                                                        <div className="text-xs text-gray-500 dark:text-gray-400">Questions</div>
+                                                        <div className="text-sm font-semibold text-black dark:text-white">
+                                                            {sec.sectionId?.totalQuestions || 0}
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
                                     </div>
 
                                     <Button
                                         size="lg"
-                                        className={`w-full ${sec.status === "completed"
+                                        className={`w-full mt-6 ${sec.status === "completed"
                                             ? "bg-gray-100 text-gray-400 dark:bg-gray-700 dark:text-gray-500"
                                             : "bg-blue-600 text-white hover:bg-blue-700"
                                             }`}
@@ -1781,7 +1822,7 @@ const FullLengthTestPage: React.FC = () => {
                                         onClick={() => handleStartSection(sec.index)}
                                     >
                                         {sec.status === "not_started" ? "Start Section" : "Continue Section"}
-                                        <ArrowRight className="h-4 w-4" />
+                                        <ArrowRight className="h-4 w-4 ml-2" />
                                     </Button>
                                 </div>
                             );
@@ -1800,166 +1841,154 @@ const FullLengthTestPage: React.FC = () => {
     };
 
     const renderQuestionView = () => {
-       
 
-      
 
- if (!testSeries || !currentQuestion || !progress) return null;
 
-    const canGoPrevious = !(progress.currentSection === 1 && progress.currentQuestion === 1);
-    const mainQuestionType = currentQuestion.questionType;
-  
-    const showListeningLayout = isListeningType(mainQuestionType) || !!currentQuestion.content.audioUrl;
+
+        if (!testSeries || !currentQuestion || !progress) return null;
+
+        const canGoPrevious = !(progress.currentSection === 1 && progress.currentQuestion === 1);
+        const mainQuestionType = currentQuestion.questionType;
+
+        const showListeningLayout = isListeningType(mainQuestionType) || !!currentQuestion.content.audioUrl;
 
 
 
         const showWritingLayout = isWritingType(mainQuestionType);
 
-   const showSpeakingLayout = detectSpeakingQuestion(currentQuestion);
-    
-    console.log("🎤 FINAL SPEAKING DETECTION RESULT:", {
-        showSpeakingLayout,
-        questionData: {
-            id: currentQuestion._id,
-            title: currentQuestion.title,
-            category: currentQuestion.questionCategory,
-            hasCueCard: !!currentQuestion.cueCard,
-            questionGroups: currentQuestion.questionGroup?.length,
-            groupTypes: currentQuestion.questionGroup?.map(g => g.type)
-        }
-    });
+        const showSpeakingLayout = detectSpeakingQuestion(currentQuestion);
 
-    if (showSpeakingLayout) {
-        console.log("✅ SPEAKING SECTION CONFIRMED!");
-        
-        // Prepare speaking question data
-        const speakingQuestionData = {
-            _id: currentQuestion._id,
-            title: currentQuestion.title || "Speaking Test",
-            exam: currentQuestion.exam || "ielts",
-            sectionId: currentQuestion.sectionId || "",
-            questionCategory: currentQuestion.questionCategory || "speaking",
-            marks: currentQuestion.marks || 1,
-            isQuestionGroup: currentQuestion.isQuestionGroup,
-            questionGroup: currentQuestion.questionGroup || [],
-            totalQuestions: currentQuestion.totalQuestions || 0,
-            difficulty: currentQuestion.difficulty || "medium",
-            content: {
-                instruction: currentQuestion.content.instruction || "",
-                passageTitle: currentQuestion.content.passageTitle || "",
-                passageText: currentQuestion.content.passageText || "",
-                transcript: currentQuestion.content.transcript || "",
-                imageUrl: currentQuestion.content.imageUrl || "",
-                audioUrl: currentQuestion.content.audioUrl || "",
-                videoUrl: currentQuestion.content.videoUrl || ""
-            },
-            cueCard: currentQuestion.cueCard || { prompts: [] },
-            tags: currentQuestion.tags || [],
-            timeLimit: currentQuestion.timeLimit || 5,
-            isActive: currentQuestion.isActive !== false,
-            options: currentQuestion.options || [],
-            createdAt: currentQuestion.createdAt || new Date().toISOString(),
-            updatedAt: currentQuestion.updatedAt || new Date().toISOString(),
-            __v: 0
-        };
 
-        // Calculate total questions if not provided
-        if (!speakingQuestionData.totalQuestions && speakingQuestionData.questionGroup?.length > 0) {
-            speakingQuestionData.totalQuestions = speakingQuestionData.questionGroup.reduce(
-                (total, group) => total + (group.questions?.length || 0), 0
+
+        if (showSpeakingLayout) {
+
+
+
+            const apiSectionTimeRemaining = sectionTimeLeft;
+
+            // Prepare speaking question data
+            const speakingQuestionData = {
+                _id: currentQuestion._id,
+                title: currentQuestion.title || "Speaking Test",
+                exam: currentQuestion.exam || "ielts",
+                sectionId: currentQuestion.sectionId || "",
+                questionCategory: currentQuestion.questionCategory || "speaking",
+                marks: currentQuestion.marks || 1,
+                isQuestionGroup: currentQuestion.isQuestionGroup,
+                questionGroup: currentQuestion.questionGroup || [],
+                totalQuestions: currentQuestion.totalQuestions || 0,
+                difficulty: currentQuestion.difficulty || "medium",
+                content: {
+                    instruction: currentQuestion.content.instruction || "",
+                    passageTitle: currentQuestion.content.passageTitle || "",
+                    passageText: currentQuestion.content.passageText || "",
+                    transcript: currentQuestion.content.transcript || "",
+                    imageUrl: currentQuestion.content.imageUrl || "",
+                    audioUrl: currentQuestion.content.audioUrl || "",
+                    videoUrl: currentQuestion.content.videoUrl || ""
+                },
+                cueCard: currentQuestion.cueCard || { prompts: [] },
+                tags: currentQuestion.tags || [],
+                timeLimit: currentQuestion.timeLimit || 5,
+                isActive: currentQuestion.isActive !== false,
+                options: currentQuestion.options || [],
+                createdAt: currentQuestion.createdAt || new Date().toISOString(),
+                updatedAt: currentQuestion.updatedAt || new Date().toISOString(),
+                __v: 0
+            };
+
+            // Calculate total questions if not provided
+            if (!speakingQuestionData.totalQuestions && speakingQuestionData.questionGroup?.length > 0) {
+                speakingQuestionData.totalQuestions = speakingQuestionData.questionGroup.reduce(
+                    (total, group) => total + (group.questions?.length || 0), 0
+                );
+            }
+
+
+
+            // Show speaking section
+            return (
+                <SpeakingTestSection
+                    key={speakingQuestionData._id}
+                    question={speakingQuestionData}
+                    progress={{
+                        currentSection: progress.currentSection,
+                        totalSections: progress.totalSections,
+                        currentQuestion: progress.currentQuestion,
+                        questionsAnswered: progress.questionsAnswered,
+                        totalQuestions: progress.totalQuestions,
+                        completionPercentage: progress.completionPercentage,
+                        sectionTimeRemaining: sectionTimeLeft
+                    }}
+                    onBack={() => {
+                        setViewMode("sections");
+                        setActiveSectionIndex(null);
+                        setCurrentQuestion(null);
+                        setProgress(null);
+                    }}
+                    onSubmit={async (speakingAnswers) => {
+
+
+                        const values: QuestionFormValues = {
+                            answers: {}
+                        };
+
+                        // Convert speaking answers to format expected by sendAnswerAndGoNext
+                        speakingAnswers.forEach((answer) => {
+                            if (answer.audioUrl) {
+                                values.answers[answer.questionId] = answer.audioUrl;
+                            }
+                        });
+
+                        try {
+                            await sendAnswerAndGoNext(values);
+                        } catch (error) {
+                            console.error("Error submitting speaking answers:", error);
+                        }
+                    }}
+                    onRecord={async (action: "start" | "stop", questionId?: string) => {
+
+
+                        if (questionId) {
+                            setCurrentQuestionId(questionId);
+                        }
+
+                        if (action === "start") {
+                            try {
+                                const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+                                const mediaRecorder = new MediaRecorder(stream);
+                                mediaRecorderRef.current = mediaRecorder;
+                                const chunks: BlobPart[] = [];
+
+                                mediaRecorder.ondataavailable = (e) => {
+                                    chunks.push(e.data);
+                                };
+
+                                mediaRecorder.onstop = () => {
+                                    const blob = new Blob(chunks, { type: "audio/webm" });
+                                    const url = URL.createObjectURL(blob);
+                                    setRecordedUrl(url);
+                                };
+
+                                mediaRecorder.start();
+                                setRecording(true);
+                            } catch (e) {
+                                console.error("Unable to access microphone", e);
+                                setGlobalError("Could not access microphone. Check permissions.");
+                            }
+                        } else {
+                            if (mediaRecorderRef.current) {
+                                mediaRecorderRef.current.stop();
+                                setRecording(false);
+                            }
+                        }
+                    }}
+                    recording={recording}
+                    recordedUrl={recordedUrl}
+                    currentQuestionId={currentQuestionId}
+                />
             );
         }
-
-        console.log("🎤 Prepared Speaking Data:", {
-            totalQuestions: speakingQuestionData.totalQuestions,
-            questionGroups: speakingQuestionData.questionGroup?.length,
-            groupDetails: speakingQuestionData.questionGroup?.map(g => ({
-                title: g.title,
-                questions: g.questions?.length
-            }))
-        });
-
-        // Show speaking section
-        return (
-            <SpeakingTestSection
-                question={speakingQuestionData}
-                progress={{
-                    currentSection: progress.currentSection,
-                    totalSections: progress.totalSections,
-                    currentQuestion: progress.currentQuestion,
-                    questionsAnswered: progress.questionsAnswered,
-                    totalQuestions: progress.totalQuestions,
-                    completionPercentage: progress.completionPercentage
-                }}
-                onBack={() => {
-                    setViewMode("sections");
-                    setActiveSectionIndex(null);
-                    setCurrentQuestion(null);
-                    setProgress(null);
-                }}
-                onSubmit={async (speakingAnswers) => {
-                    console.log("🎤 Submitting speaking answers:", speakingAnswers);
-                    
-                    const values: QuestionFormValues = {
-                        answers: {}
-                    };
-                    
-                    // Convert speaking answers to format expected by sendAnswerAndGoNext
-                    speakingAnswers.forEach((answer) => {
-                        if (answer.audioUrl) {
-                            values.answers[answer.questionId] = answer.audioUrl;
-                        }
-                    });
-                    
-                    try {
-                        await sendAnswerAndGoNext(values);
-                    } catch (error) {
-                        console.error("Error submitting speaking answers:", error);
-                    }
-                }}
-                onRecord={async (action: "start" | "stop", questionId?: string) => {
-                    console.log("🎤 Recording action:", action, "for question:", questionId);
-                    
-                    if (questionId) {
-                        setCurrentQuestionId(questionId);
-                    }
-                    
-                    if (action === "start") {
-                        try {
-                            const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-                            const mediaRecorder = new MediaRecorder(stream);
-                            mediaRecorderRef.current = mediaRecorder;
-                            const chunks: BlobPart[] = [];
-
-                            mediaRecorder.ondataavailable = (e) => {
-                                chunks.push(e.data);
-                            };
-
-                            mediaRecorder.onstop = () => {
-                                const blob = new Blob(chunks, { type: "audio/webm" });
-                                const url = URL.createObjectURL(blob);
-                                setRecordedUrl(url);
-                            };
-
-                            mediaRecorder.start();
-                            setRecording(true);
-                        } catch (e) {
-                            console.error("Unable to access microphone", e);
-                            setGlobalError("Could not access microphone. Check permissions.");
-                        }
-                    } else {
-                        if (mediaRecorderRef.current) {
-                            mediaRecorderRef.current.stop();
-                            setRecording(false);
-                        }
-                    }
-                }}
-                recording={recording}
-                recordedUrl={recordedUrl}
-                currentQuestionId={currentQuestionId}
-            />
-        );
-    }
 
 
 
@@ -2197,7 +2226,7 @@ const FullLengthTestPage: React.FC = () => {
                                                                 overflow: 'hidden'
                                                             }}
                                                         >
-                                                            {/* Fill part - track ke andar hi */}
+
                                                             <div
                                                                 id="progress-fill"
                                                                 style={{
@@ -2212,7 +2241,7 @@ const FullLengthTestPage: React.FC = () => {
                                                                 }}
                                                             />
 
-                                                            {/* Hidden range input jo actual seek karega */}
+
                                                             <input
                                                                 type="range"
                                                                 min="0"
@@ -2351,7 +2380,7 @@ const FullLengthTestPage: React.FC = () => {
                                                         onPlay={() => setAudioPlaying(true)}
                                                         onPause={() => setAudioPlaying(false)}
                                                         onEnded={() => setAudioPlaying(false)}
-                                                        // YEH LISTENERS ADD KARO:
+
                                                         onLoadedMetadata={(e) => {
                                                             const audio = e.target;
                                                             updateCurrentTimeDisplay(audio);
@@ -2570,9 +2599,11 @@ const FullLengthTestPage: React.FC = () => {
 
                                         {!showWritingLayout && (
                                             <div className="mt-4 rounded-xl bg-blue-50 p-4 dark:bg-blue-900/20">
-                                                <p className="text-sm text-blue-800 dark:text-blue-200">
-                                                    {currentQuestion.content.instruction}
-                                                </p>
+                                                <p className="text-sm text-blue-800 dark:text-blue-200"
+                                                    dangerouslySetInnerHTML={{
+                                                        __html: currentQuestion.content.instruction
+                                                    }}
+                                                />
                                             </div>
                                         )}
                                     </div>
@@ -2673,9 +2704,9 @@ const FullLengthTestPage: React.FC = () => {
                                             <div className="space-y-4">
                                                 {/* Show question number for single questions */}
                                                 <div className="flex items-center gap-2 mb-3">
-                                                    <span className="w-8 h-8 rounded-full bg-gray-800 text-white flex items-center justify-center text-sm font-semibold">
+                                                    {/* <span className="w-8 h-8 rounded-full bg-gray-800 text-white flex items-center justify-center text-sm font-semibold">
                                                         {numbering?.firstSectionQuestionNumber || 1}
-                                                    </span>
+                                                    </span> */}
                                                     <span className="text-sm font-medium text-gray-700 dark:text-gray-300">
                                                         Question {numbering?.firstSectionQuestionNumber || 1}
                                                     </span>
@@ -2965,7 +2996,7 @@ const FullLengthTestPage: React.FC = () => {
         return (
             <div className="flex min-h-screen items-center justify-center bg-gray-50 dark:bg-gray-900">
                 <div className="text-center">
-                    <div className="mb-4 h-12 w-12 animate-spin rounded-full border-4 border-blue-600 border-t-transparent"></div>
+                    <div className="mb-4 ml-7 h-12 w-12 animate-spin rounded-full border-4 border-blue-600 border-t-transparent"></div>
                     <p className="text-lg text-gray-600 dark:text-gray-400">Loading test...</p>
                 </div>
             </div>
@@ -2987,24 +3018,24 @@ const FullLengthTestPage: React.FC = () => {
         );
     }
 
-    // Component ke END mein, return se pehle:
 
-    console.log("🔄 Current view mode:", viewMode);
+
+
 
     /// Main render logic
-    // if (showVoiceVerification) {
-    //     return (
-    //         <VoiceVerification
-    //             onComplete={startSpeakingSection}
-    //             onBack={() => {
-    //                 setShowVoiceVerification(false);
-    //                 setViewMode("sections");
-    //             }}
-    //             sessionId={sessionId}
-    //             sectionName="Speaking Test"
-    //         />
-    //     );
-    // }
+    if (showVoiceVerification) {
+        return (
+            <VoiceVerification
+                onComplete={startSpeakingSection}
+                onBack={() => {
+                    setShowVoiceVerification(false);
+                    setViewMode("sections");
+                }}
+                sessionId={sessionId}
+                sectionName="Speaking Test"
+            />
+        );
+    }
 
     if (viewMode === "sections") return renderSectionsView();
     if (viewMode === "question") return renderQuestionView();
