@@ -162,28 +162,20 @@ const formatSeconds = (totalSeconds: number | null | undefined) => {
 };
 
 
-// Icon mapping function
-const getSectionIcon = (sectionName: string) => {
-    if (!sectionName) return HelpCircle;
+const getSectionImage = (sectionName: string): string => {
+    if (!sectionName) return '';
 
     const name = sectionName.toUpperCase();
 
-    if (name.includes('READING')) {
-        return BookOpen;
-    } else if (name.includes('WRITING')) {
-        return Edit;
-    } else if (name.includes('LISTENING')) {
-        return Volume2;
-    } else if (name.includes('SPEAKING')) {
-        return MessageSquare;
-    } else if (name.includes('VIEWING') || name.includes('VISUAL')) {
-        return Eye;
-    } else {
-        return HelpCircle;
-    }
+    // अपने images के नाम के according बदलें
+    if (name.includes('ILETS READING')) return '/public/images/iels/reading.webp';
+    if (name.includes('ILETS WRITING')) return '/public/images/iels/writing.png';
+    if (name.includes('ILETS LISTENING')) return '/public/images/iels/listening.png';
+    if (name.includes('ILETS SPEAKING')) return '/public/images/iels/speaking.jpg';
+
+    return '';
 };
 
-// Background color mapping function
 const getSectionColor = (sectionName: string) => {
     const name = sectionName?.toUpperCase() || '';
 
@@ -191,7 +183,6 @@ const getSectionColor = (sectionName: string) => {
     if (name.includes('WRITING')) return 'bg-green-600';
     if (name.includes('LISTENING')) return 'bg-purple-600';
     if (name.includes('SPEAKING')) return 'bg-yellow-600';
-    if (name.includes('VIEWING') || name.includes('VISUAL')) return 'bg-pink-600';
     return 'bg-gray-600';
 };
 
@@ -360,6 +351,9 @@ const FullLengthTestPage: React.FC = () => {
 
 
 
+
+
+
     const [currentTime, setCurrentTime] = useState(0);
     const [audioDuration, setAudioDuration] = useState(0);
 
@@ -373,6 +367,35 @@ const FullLengthTestPage: React.FC = () => {
     } = useForm<QuestionFormValues>({
         defaultValues: { answers: {} },
     });
+
+
+
+    // Add this useEffect in your component
+useEffect(() => {
+    // Reset audio state when question changes
+    setAudioPlaying(false);
+    setCurrentTime(0);
+    
+    // Reset progress bar
+    setTimeout(() => {
+        const progressFill = document.getElementById('progress-fill');
+        const audioProgress = document.getElementById('audio-progress');
+        const currentTimeEl = document.getElementById('current-time');
+        const durationEl = document.getElementById('duration');
+        
+        if (progressFill) progressFill.style.width = '0%';
+        if (audioProgress) audioProgress.value = '0';
+        if (currentTimeEl) currentTimeEl.textContent = '0:00';
+        if (durationEl) durationEl.textContent = '0:00';
+    }, 100);
+    
+    // Stop any playing audio
+    document.querySelectorAll('audio').forEach(audio => {
+        audio.pause();
+        audio.currentTime = 0;
+    });
+}, [currentQuestion?._id]);
+
 
     // ---------- TTS ----------
     const handleSpeak = (text: string | undefined) => {
@@ -411,10 +434,10 @@ const FullLengthTestPage: React.FC = () => {
                 if (englishVoice) utter.voice = englishVoice;
             }
 
-          
+
 
             window.speechSynthesis.speak(utter);
-        
+
         };
 
         // Add voice selection for speaking questions
@@ -1724,110 +1747,126 @@ const FullLengthTestPage: React.FC = () => {
 
 
                     {/* Sections Grid */}
-                    <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-                        {sections.map((sec) => {
-                            const isObj = typeof sec.sectionId === "object";
-                            const secName = isObj ? (sec.sectionId as any).name : String(sec.sectionId);
-                            const secDesc = isObj ? (sec.sectionId as any).description : "Test section";
-                            const canStart = sec.status !== "completed";
-                            const statusBadge = getSectionStatusBadge(sec.status);
+                    <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-2 w-full md:w-[70%] mx-auto px-4">
+    {sections.map((sec) => {
+        const isObj = typeof sec.sectionId === "object";
+        const secName = isObj ? (sec.sectionId as any).name : String(sec.sectionId);
+        const secDesc = isObj ? (sec.sectionId as any).description : "Test section";
+        const canStart = sec.status !== "completed";
+        const statusBadge = getSectionStatusBadge(sec.status);
 
-                            // Get icon and color
-                            const SectionIcon = getSectionIcon(secName);
-                            const sectionColor = getSectionColor(secName);
+        return (
+           <div
+    key={sec.index}
+    className={`group relative bg-[#e9edf4] rounded-2xl border-2 border-gray-200 p-6 shadow-sm transition-all hover:shadow-md dark:border-gray-600 dark:bg-gray-800 
+        ${canStart 
+            ? 'hover:border-blue-500 dark:hover:border-blue-400 cursor-pointer hover:scale-[1.02]' 
+            : 'opacity-70 cursor-not-allowed'
+        }`}
+    onClick={() => canStart && handleStartSection(sec.index)}
+    role={canStart ? "button" : "presentation"}
+    tabIndex={canStart ? 0 : -1}
+    onKeyDown={(e) => {
+        if (canStart && (e.key === 'Enter' || e.key === ' ')) {
+            e.preventDefault();
+            handleStartSection(sec.index);
+        }
+    }}
+    aria-label={canStart ? `Start ${secName} section` : `${secName} section completed`}
+    aria-disabled={!canStart}
+>
+   
+<div className="absolute top-0 right-0 w-48 h-48 ">
+    <div className="w-full h-full bg-[#d0dff9] rounded-tr-2xl" 
+         style={{ clipPath: 'circle(60% at 100% 0)' }}></div>
+</div>
+    
+    {/* Bottom-left circle corner */}
+<div className="absolute bottom-0 left-0 w-32 h-32">
+    <div className="w-full h-full bg-[#bcd3fb] rounded-bl-2xl" 
+         style={{ clipPath: 'circle(60% at 0 100%)' }}></div>
+</div>
 
-                            return (
-                                <div
-                                    key={sec.index}
-                                    className="group rounded-2xl border-2 border-gray-200 bg-white p-6 shadow-sm transition-all hover:border-blue-500 hover:shadow-md dark:border-gray-600 dark:bg-gray-800 dark:hover:border-blue-400"
-                                >
-                                    <div className="mb-4 flex items-start justify-between">
-                                        <div className="rounded-xl bg-blue-100 px-3 py-1 text-xs font-semibold uppercase tracking-wide text-blue-800 dark:bg-blue-900/30 dark:text-blue-300">
-                                            Section {sec.index + 1}
-                                        </div>
-                                        <span className={`rounded-full border px-3 py-1 text-xs font-medium ${statusBadge}`}>
-                                            {sec.status === "completed" ? "Completed" : sec.status === "in_progress" ? "In Progress" : "Not Started"}
-                                        </span>
-                                    </div>
+    <div className="relative z-10">
+        <div className="mb-4 flex items-start justify-between">
+            <div className="rounded-xl bg-blue-100 px-3 py-1 text-xs font-semibold uppercase tracking-wide text-blue-800 dark:bg-blue-900/30 dark:text-blue-300">
+                Section {sec.index + 1}
+            </div>
+            <span className={`rounded-full border px-3 py-1 text-xs font-medium ${statusBadge}`}>
+                {sec.status === "completed" ? "Completed" : sec.status === "in_progress" ? "In Progress" : "Not Started"}
+            </span>
+        </div>
 
-                                    <div className="flex">
-                                        {/* Left: Section Name with Icon */}
-                                        <div className="flex-1">
-                                            <div className=" items-center  mb-2">
-                                                
-                                                <div>
-                                                    <h3 className="text-base font-bold text-gray-900 dark:text-white">
-                                                        {secName}
-                                                    </h3>
-                                                </div>
-                                                {/* Icon circle */}
-                                                <div className={`w-10 mt-4 h-10 rounded-full ${sectionColor} flex items-center justify-center`}>
-                                                    <SectionIcon className="h-5 w-5 text-white" />
-                                                </div>
-                                            </div>
-                                        </div>
-
-                                        {/* Right: Stats */}
-                                        <div className="mr-4">
-                                            <div className="gap-3">
-                                                {/* Duration */}
-                                                <div className="flex items-center gap-2">
-                                                    <div className="w-8 h-8 my-1 flex items-center justify-center rounded-full bg-[#dcdcdd]">
-                                                        <Clock className="h-4 w-4  text-black" />
-                                                    </div>
-                                                    <div>
-                                                        <div className="text-xs text-gray-500 dark:text-gray-400">Duration</div>
-                                                        <div className="text-sm font-semibold text-black dark:text-white">
-                                                            {sec.duration / 60} min
-                                                        </div>
-                                                    </div>
-                                                </div>
-
-                                                {/* Section */}
-                                                <div className="flex items-center gap-2">
-                                                    <div className="w-8 my-1 h-8 flex items-center justify-center rounded-full bg-[#dcdcdd]">
-                                                        <SectionIcon className="h-4 w-4 text-black" />
-                                                    </div>
-                                                    <div>
-                                                        <div className="text-xs text-gray-500 dark:text-gray-400">Section</div>
-                                                        <div className="text-sm font-semibold text-black dark:text-white">
-                                                            {sec.totalQuestions}
-                                                        </div>
-                                                    </div>
-                                                </div>
-
-                                                {/* Questions */}
-                                                <div className="flex items-center gap-2">
-                                                    <div className="w-8 my-1 h-8 flex items-center justify-center rounded-full bg-[#dcdcdd]">
-                                                        <ListOrdered className="h-4 w-4 text-black" />
-                                                    </div>
-                                                    <div>
-                                                        <div className="text-xs text-gray-500 dark:text-gray-400">Questions</div>
-                                                        <div className="text-sm font-semibold text-black dark:text-white">
-                                                            {sec.sectionId?.totalQuestions || 0}
-                                                        </div>
-                                                    </div>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </div>
-
-                                    <Button
-                                        size="lg"
-                                        className={`w-full mt-6 ${sec.status === "completed"
-                                            ? "bg-gray-100 text-gray-400 dark:bg-gray-700 dark:text-gray-500"
-                                            : "bg-blue-600 text-white hover:bg-blue-700"
-                                            }`}
-                                        disabled={!canStart}
-                                        onClick={() => handleStartSection(sec.index)}
-                                    >
-                                        {sec.status === "not_started" ? "Start Section" : "Continue Section"}
-                                        <ArrowRight className="h-4 w-4 ml-2" />
-                                    </Button>
-                                </div>
-                            );
-                        })}
+        <div className="flex items-start">
+            <div className="flex-1">
+                <div className="items-start gap-4 mb-1">
+                    <div className="w-25 h-25 rounded-full overflow-hidden flex-shrink-0 border-2 border-blue-700 shadow-sm mb-3">
+                        <img
+                            src={getSectionImage(secName)}
+                            alt={secName}
+                            className="h-[100px] w-full object-cover"
+                            onError={(e) => {
+                                e.target.style.display = 'none';
+                                const parent = e.target.parentElement;
+                                parent.className = 'w-14 h-14 rounded-full flex items-center justify-center ' + sectionColor;
+                                parent.innerHTML = `<span class="text-white font-bold">${secName.charAt(0)}</span>`;
+                            }}
+                        />
                     </div>
+
+                    <div className="flex-1">
+                        <h3 className="text-lg font-bold text-gray-900 dark:text-white mb-2">
+                            {secName}
+                        </h3>
+                    </div>
+                </div>
+            </div>
+
+            <div className="mr-12">
+                <div className="space-y-1">
+                    <div className="flex items-center gap-3">
+                        <div className="w-10 h-10 rounded-full bg-blue-50 flex items-center justify-center">
+                            <Clock className="h-5 w-5 text-blue-600" />
+                        </div>
+                        <div>
+                            <div className="text-xs text-gray-500">Duration</div>
+                            <div className="text-sm font-semibold text-gray-900">
+                                {sec.duration / 60} min
+                            </div>
+                        </div>
+                    </div>
+
+                    <div className="flex items-center gap-3">
+                        <div className="w-10 h-10 rounded-full bg-green-50 flex items-center justify-center">
+                            <ListOrdered className="h-5 w-5 text-green-600" />
+                        </div>
+                        <div>
+                            <div className="text-xs text-gray-500">Questions</div>
+                            <div className="text-sm font-semibold text-gray-900">
+                                {sec.sectionId.totalQuestions}
+                            </div>
+                        </div>
+                    </div>
+
+                    <div className="flex items-center gap-3">
+                        <div className="w-10 h-10 rounded-full bg-green-50 flex items-center justify-center">
+                            <Info className="h-5 w-5 text-red-600" />
+                        </div>
+                        <div>
+                            <div className="text-xs text-gray-500">Section</div>
+                            <div className="text-sm font-semibold text-gray-900">
+                                {sec.totalQuestions}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+        );
+    })}
+</div>
 
                     {globalError && (
                         <div className="mt-6 flex items-center gap-3 rounded-2xl bg-red-50 p-4 text-red-800 dark:bg-red-900/20 dark:text-red-200">
@@ -2064,441 +2103,417 @@ const FullLengthTestPage: React.FC = () => {
                                         </div>
                                     )}
 
-                                    {showListeningLayout && currentQuestion.content.audioUrl && (
-                                        <div className="mb-6 rounded-2xl border p-6 shadow-lg"
-                                            style={{
-                                                background: 'linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%)',
-                                                borderColor: '#e2e8f0'
-                                            }}>
+                                   {showListeningLayout && currentQuestion.content.audioUrl && (
+    <div className="mb-6 rounded-2xl border p-6 shadow-lg"
+        style={{
+            background: 'linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%)',
+            borderColor: '#e2e8f0'
+        }}>
 
-                                            {/* Header */}
-                                            <div className="mb-6 flex items-center justify-between">
-                                                <div className="flex items-center gap-4">
-                                                    <div style={{ position: 'relative' }}>
-                                                        <div style={{
-                                                            position: 'absolute',
-                                                            inset: 0,
-                                                            background: 'linear-gradient(to right, #3b82f6, #8b5cf6)',
-                                                            borderRadius: '9999px',
-                                                            filter: 'blur(12px)',
-                                                            opacity: 0.3
-                                                        }}></div>
-                                                        <div style={{
-                                                            position: 'relative',
-                                                            borderRadius: '9999px',
-                                                            background: 'linear-gradient(to right, #2563eb, #7c3aed)',
-                                                            padding: '12px'
-                                                        }}>
-                                                            <Volume2 className="h-6 w-6 text-white" />
-                                                        </div>
-                                                    </div>
-                                                    <div>
-                                                        <h4 className="text-lg font-bold text-gray-900"
-                                                            style={{ color: '#111827' }}>
-                                                            🎧 Listen Carefully
-                                                        </h4>
-                                                        <p className="text-sm flex items-center gap-2"
-                                                            style={{ color: '#4b5563' }}>
-                                                            <span style={{ display: 'flex', height: '8px', width: '8px' }}>
-                                                                <span style={{
-                                                                    position: 'absolute',
-                                                                    height: '8px',
-                                                                    width: '8px',
-                                                                    borderRadius: '9999px',
-                                                                    backgroundColor: audioPlaying ? '#10b981' : '#9ca3af',
-                                                                    animation: audioPlaying ? 'ping 1.5s cubic-bezier(0, 0, 0.2, 1) infinite' : 'none'
-                                                                }}></span>
-                                                                <span style={{
-                                                                    position: 'relative',
-                                                                    height: '8px',
-                                                                    width: '8px',
-                                                                    borderRadius: '9999px',
-                                                                    backgroundColor: audioPlaying ? '#10b981' : '#9ca3af'
-                                                                }}></span>
-                                                            </span>
-                                                            {audioPlaying ? 'Playing...' : 'Ready to play'}
-                                                        </p>
-                                                    </div>
-                                                </div>
+        {/* Header */}
+        <div className="mb-6 flex items-center justify-between">
+            <div className="flex items-center gap-4">
+                <div style={{ position: 'relative' }}>
+                    <div style={{
+                        position: 'absolute',
+                        inset: 0,
+                        background: 'linear-gradient(to right, #3b82f6, #8b5cf6)',
+                        borderRadius: '9999px',
+                        filter: 'blur(12px)',
+                        opacity: 0.3
+                    }}></div>
+                    <div style={{
+                        position: 'relative',
+                        borderRadius: '9999px',
+                        background: 'linear-gradient(to right, #2563eb, #7c3aed)',
+                        padding: '12px'
+                    }}>
+                        <Volume2 className="h-6 w-6 text-white" />
+                    </div>
+                </div>
+                <div>
+                    <h4 className="text-lg font-bold text-gray-900"
+                        style={{ color: '#111827' }}>
+                        🎧 Listen Carefully
+                    </h4>
+                    <p className="text-sm flex items-center gap-2"
+                        style={{ color: '#4b5563' }}>
+                        <span style={{ display: 'flex', height: '8px', width: '8px' }}>
+                            <span style={{
+                                position: 'absolute',
+                                height: '8px',
+                                width: '8px',
+                                borderRadius: '9999px',
+                                backgroundColor: audioPlaying ? '#10b981' : '#9ca3af',
+                                animation: audioPlaying ? 'ping 1.5s cubic-bezier(0, 0, 0.2, 1) infinite' : 'none'
+                            }}></span>
+                            <span style={{
+                                position: 'relative',
+                                height: '8px',
+                                width: '8px',
+                                borderRadius: '9999px',
+                                backgroundColor: audioPlaying ? '#10b981' : '#9ca3af'
+                            }}></span>
+                        </span>
+                        {audioPlaying ? 'Playing...' : 'Ready to play'}
+                    </p>
+                </div>
+            </div>
 
+            {/* Playback Speed Control - FIXED */}
+            <div className="flex items-center gap-2">
+                <span className="text-xs font-medium" style={{ color: '#4b5563' }}>Speed:</span>
+                <div className="flex rounded-lg p-1" style={{ backgroundColor: '#f3f4f6' }}>
+                    {[0.75, 1, 1.25, 1.5].map((speed) => (
+                        <button
+                            key={speed}
+                            type="button"
+                            onClick={(e) => {
+                                const audio = document.getElementById('listening-audio');
+                                if (audio) {
+                                    audio.playbackRate = speed;
+                                    // Update active state
+                                    const buttons = e.currentTarget.parentElement.querySelectorAll('button');
+                                    buttons.forEach(btn => {
+                                        btn.style.backgroundColor = '#f3f4f6';
+                                        btn.style.color = '#4b5563';
+                                    });
+                                    e.currentTarget.style.backgroundColor = '#ffffff';
+                                    e.currentTarget.style.color = '#2563eb';
+                                }
+                            }}
+                            data-speed={speed}
+                            style={{
+                                padding: '4px 8px',
+                                fontSize: '12px',
+                                borderRadius: '6px',
+                                transition: 'all 0.2s',
+                                backgroundColor: speed === 1 ? '#ffffff' : '#f3f4f6',
+                                color: speed === 1 ? '#2563eb' : '#4b5563',
+                                fontWeight: speed === 1 ? '500' : '400',
+                                boxShadow: speed === 1 ? '0 1px 2px rgba(0,0,0,0.05)' : 'none'
+                            }}
+                            onMouseOver={(e) => {
+                                if (speed !== 1) {
+                                    e.currentTarget.style.backgroundColor = '#e5e7eb';
+                                }
+                            }}
+                            onMouseOut={(e) => {
+                                if (speed !== 1) {
+                                    e.currentTarget.style.backgroundColor = '#f3f4f6';
+                                }
+                            }}
+                        >
+                            {speed}x
+                        </button>
+                    ))}
+                </div>
+            </div>
+        </div>
 
-                                                {/* Playback Speed Control - WORKING */}
-                                                <div className="flex items-center gap-2">
-                                                    <span className="text-xs font-medium" style={{ color: '#4b5563' }}>Speed:</span>
-                                                    <div className="flex rounded-lg p-1" style={{ backgroundColor: '#f3f4f6' }}>
-                                                        {[0.75, 1, 1.25, 1.5].map((speed) => (
-                                                            <button
-                                                                key={speed}
-                                                                onClick={() => {
-                                                                    const audio = document.getElementById('listening-audio');
-                                                                    if (audio) {
-                                                                        audio.playbackRate = speed;
-                                                                        // Update active state
-                                                                        document.querySelectorAll('[data-speed]').forEach(btn => {
-                                                                            btn.style.backgroundColor = '#f3f4f6';
-                                                                            btn.style.color = '#4b5563';
-                                                                        });
-                                                                        event.currentTarget.style.backgroundColor = '#ffffff';
-                                                                        event.currentTarget.style.color = '#2563eb';
-                                                                    }
-                                                                }}
-                                                                data-speed={speed}
-                                                                style={{
-                                                                    padding: '4px 8px',
-                                                                    fontSize: '12px',
-                                                                    borderRadius: '6px',
-                                                                    transition: 'all 0.2s',
-                                                                    backgroundColor: speed === 1 ? '#ffffff' : '#f3f4f6',
-                                                                    color: speed === 1 ? '#2563eb' : '#4b5563',
-                                                                    fontWeight: speed === 1 ? '500' : '400',
-                                                                    boxShadow: speed === 1 ? '0 1px 2px rgba(0,0,0,0.05)' : 'none'
-                                                                }}
-                                                                onMouseOver={(e) => {
-                                                                    if (speed !== 1) {
-                                                                        e.currentTarget.style.backgroundColor = '#e5e7eb';
-                                                                    }
-                                                                }}
-                                                                onMouseOut={(e) => {
-                                                                    if (speed !== 1) {
-                                                                        e.currentTarget.style.backgroundColor = '#f3f4f6';
-                                                                    }
-                                                                }}
-                                                            >
-                                                                {speed}x
-                                                            </button>
-                                                        ))}
-                                                    </div>
-                                                </div>
-                                            </div>
+        {/* EQUALIZER VISUALIZER */}
+        <div className="mb-4">
+            <div style={{
+                display: 'flex',
+                alignItems: 'flex-end',
+                justifyContent: 'center',
+                height: '64px',
+                gap: '2px',
+                marginBottom: '8px'
+            }}>
+                {Array.from({ length: 40 }).map((_, i) => {
+                    const height = audioPlaying
+                        ? Math.floor(Math.random() * 16) + 4
+                        : Math.floor(Math.random() * 4) + 2;
 
-                                            {/* EQUALIZER VISUALIZER */}
-                                            <div className="mb-4">
-                                                <div style={{
-                                                    display: 'flex',
-                                                    alignItems: 'flex-end',
-                                                    justifyContent: 'center',
-                                                    height: '64px',
-                                                    gap: '2px',
-                                                    marginBottom: '8px'
-                                                }}>
-                                                    {Array.from({ length: 40 }).map((_, i) => {
-                                                        const height = audioPlaying
-                                                            ? Math.floor(Math.random() * 16) + 4
-                                                            : Math.floor(Math.random() * 4) + 2;
+                    const colors = audioPlaying
+                        ? i % 3 === 0 ? ['#3b82f6', '#60a5fa'] :
+                            i % 3 === 1 ? ['#8b5cf6', '#a78bfa'] :
+                                ['#10b981', '#34d399']
+                        : ['#d1d5db', '#e5e7eb'];
 
-                                                        const colors = audioPlaying
-                                                            ? i % 3 === 0 ? ['#3b82f6', '#60a5fa'] :
-                                                                i % 3 === 1 ? ['#8b5cf6', '#a78bfa'] :
-                                                                    ['#10b981', '#34d399']
-                                                            : ['#d1d5db', '#e5e7eb'];
+                    return (
+                        <div
+                            key={i}
+                            style={{
+                                width: '3px',
+                                borderTopLeftRadius: '3px',
+                                borderTopRightRadius: '3px',
+                                background: `linear-gradient(to top, ${colors[0]}, ${colors[1]})`,
+                                height: `${height}px`,
+                                transition: 'all 0.3s',
+                                animation: audioPlaying
+                                    ? `equalizerBar ${300 + (i % 5) * 100}ms ease-in-out infinite ${i * 20}ms`
+                                    : 'none'
+                            }}
+                        />
+                    );
+                })}
+            </div>
 
-                                                        return (
-                                                            <div
-                                                                key={i}
-                                                                style={{
-                                                                    width: '3px',
-                                                                    borderTopLeftRadius: '3px',
-                                                                    borderTopRightRadius: '3px',
-                                                                    background: `linear-gradient(to top, ${colors[0]}, ${colors[1]})`,
-                                                                    height: `${height}px`,
-                                                                    transition: 'all 0.3s',
-                                                                    animation: audioPlaying
-                                                                        ? `equalizerBar ${300 + (i % 5) * 100}ms ease-in-out infinite ${i * 20}ms`
-                                                                        : 'none'
-                                                                }}
-                                                            />
-                                                        );
-                                                    })}
-                                                </div>
+            <div className="mt-4 space-y-2">
+                {/* Progress Bar */}
+                <div style={{ position: 'relative', width: '100%' }}>
+                    <div
+                        id="progress-track"
+                        style={{
+                            width: '100%',
+                            height: '6px',
+                            background: '#e5e7eb',
+                            borderRadius: '9999px',
+                            position: 'relative',
+                            overflow: 'hidden'
+                        }}
+                    >
+                        <div
+                            id="progress-fill"
+                            style={{
+                                position: 'absolute',
+                                top: '0',
+                                left: '0',
+                                height: '100%',
+                                width: '0%',
+                                background: 'linear-gradient(90deg, #3b82f6, #8b5cf6)',
+                                borderRadius: '9999px',
+                                transition: 'width 0.1s linear'
+                            }}
+                        />
+                        <input
+                            type="range"
+                            min="0"
+                            max="100"
+                            defaultValue="0"
+                            id="audio-progress"
+                            style={{
+                                position: 'absolute',
+                                top: '0',
+                                left: '0',
+                                width: '100%',
+                                height: '100%',
+                                opacity: '0',
+                                cursor: 'pointer',
+                                zIndex: 2,
+                                margin: 0
+                            }}
+                            onChange={(e) => {
+                                const audio = document.getElementById('listening-audio');
+                                if (audio && audio.duration) {
+                                    const percent = parseInt(e.target.value);
+                                    audio.currentTime = (percent / 100) * audio.duration;
+                                    const progressFill = document.getElementById('progress-fill');
+                                    if (progressFill) {
+                                        progressFill.style.width = `${percent}%`;
+                                    }
+                                    updateCurrentTimeDisplay(audio);
+                                }
+                            }}
+                        />
+                    </div>
+                </div>
 
+                {/* Time Display */}
+                <div style={{
+                    display: 'flex',
+                    justifyContent: 'space-between',
+                    alignItems: 'center',
+                    marginTop: '8px'
+                }}>
+                    <span id="current-time" style={{
+                        fontSize: '12px',
+                        fontWeight: '500',
+                        color: '#3b82f6'
+                    }}>0:00</span>
+                    <span id="duration" style={{
+                        fontSize: '12px',
+                        fontWeight: '500',
+                        color: '#6b7280'
+                    }}>0:00</span>
+                </div>
+            </div>
+        </div>
 
-                                                <div className="mt-4 space-y-2">
-                                                    {/* Single Progress Bar Element with Fill */}
-                                                    <div style={{ position: 'relative', width: '100%' }}>
-                                                        <div
-                                                            id="progress-track"
-                                                            style={{
-                                                                width: '100%',
-                                                                height: '6px',
-                                                                background: '#e5e7eb',
-                                                                borderRadius: '9999px',
-                                                                position: 'relative',
-                                                                overflow: 'hidden'
-                                                            }}
-                                                        >
-
-                                                            <div
-                                                                id="progress-fill"
-                                                                style={{
-                                                                    position: 'absolute',
-                                                                    top: '0',
-                                                                    left: '0',
-                                                                    height: '100%',
-                                                                    width: '0%',
-                                                                    background: 'linear-gradient(90deg, #3b82f6, #8b5cf6)',
-                                                                    borderRadius: '9999px',
-                                                                    transition: 'width 0.1s linear'
-                                                                }}
-                                                            />
-
-
-                                                            <input
-                                                                type="range"
-                                                                min="0"
-                                                                max="100"
-                                                                defaultValue="0"
-                                                                id="audio-progress"
-                                                                style={{
-                                                                    position: 'absolute',
-                                                                    top: '0',
-                                                                    left: '0',
-                                                                    width: '100%',
-                                                                    height: '100%',
-                                                                    opacity: '0',
-                                                                    cursor: 'pointer',
-                                                                    zIndex: 2,
-                                                                    margin: 0
-                                                                }}
-                                                                onChange={(e) => {
-                                                                    const audio = document.getElementById('listening-audio');
-                                                                    if (audio && audio.duration) {
-                                                                        const percent = parseInt(e.target.value);
-                                                                        audio.currentTime = (percent / 100) * audio.duration;
-
-                                                                        // Update fill width
-                                                                        const progressFill = document.getElementById('progress-fill');
-                                                                        if (progressFill) {
-                                                                            progressFill.style.width = `${percent}%`;
-                                                                        }
-
-                                                                        // Update time display
-                                                                        updateCurrentTimeDisplay(audio);
-                                                                    }
-                                                                }}
-                                                            />
-                                                        </div>
-                                                    </div>
-
-                                                    {/* Time Display */}
-                                                    <div style={{
-                                                        display: 'flex',
-                                                        justifyContent: 'space-between',
-                                                        alignItems: 'center',
-                                                        marginTop: '8px'
-                                                    }}>
-                                                        <span id="current-time" style={{
-                                                            fontSize: '12px',
-                                                            fontWeight: '500',
-                                                            color: '#3b82f6'
-                                                        }}>0:00</span>
-
-                                                        <span id="duration" style={{
-                                                            fontSize: '12px',
-                                                            fontWeight: '500',
-                                                            color: '#6b7280'
-                                                        }}>0:00</span>
-                                                    </div>
-                                                </div>
-                                            </div>
-
-                                            {/* CUSTOM CONTROLS */}
-                                            <div className="mb-4">
-                                                <div className="flex items-center justify-between mb-2">
-                                                    {/* Custom Play/Pause Button */}
-                                                    <div style={{
-                                                        position: 'absolute',
-                                                        left: '43%',
-                                                        top: '48%',
-                                                        transform: 'translateY(-50%)'
-                                                    }}>
-                                                        <button
-                                                            onClick={() => {
-                                                                const audio = document.getElementById('listening-audio');
-                                                                if (audio) {
-                                                                    if (audioPlaying) {
-                                                                        audio.pause();
-                                                                    } else {
-                                                                        audio.play();
-                                                                    }
-                                                                }
-                                                            }}
-                                                            style={{ position: 'relative' }}
-                                                        >
-                                                            <div style={{
-                                                                position: 'absolute',
-                                                                inset: 0,
-                                                                background: 'linear-gradient(to right, #3b82f6, #8b5cf6)',
-                                                                borderRadius: '9999px',
-                                                                filter: 'blur(12px)',
-                                                                opacity: 0,
-                                                                transition: 'opacity 0.2s'
-                                                            }}></div>
-                                                            <div style={{
-                                                                position: 'relative',
-                                                                width: '40px',
-                                                                height: '40px',
-                                                                borderRadius: '9999px',
-                                                                display: 'flex',
-                                                                alignItems: 'center',
-                                                                justifyContent: 'center',
-                                                                transition: 'all 0.2s',
-                                                                ...(audioPlaying ? {
-                                                                    background: 'linear-gradient(to right, #ef4444, #ec4899)'
-                                                                } : {
-                                                                    background: 'linear-gradient(to right, #10b981, #059669)'
-                                                                })
-                                                            }}
-                                                                onMouseOver={(e) => {
-                                                                    e.currentTarget.previousElementSibling.style.opacity = '0.3';
-                                                                }}
-                                                                onMouseOut={(e) => {
-                                                                    e.currentTarget.previousElementSibling.style.opacity = '0';
-                                                                }}
-                                                            >
-                                                                {audioPlaying ? (
-                                                                    <Pause className="h-5 w-5 text-white" />
-                                                                ) : (
-                                                                    <Play className="h-5 w-5 text-white" />
-                                                                )}
-                                                            </div>
-                                                        </button>
-                                                    </div>
-
-
-                                                </div>
-                                            </div>
-
-                                            {/* MAIN AUDIO PLAYER */}
-                                            <div className="space-y-4">
-                                                <div style={{ position: 'relative' }}>
-                                                    <audio
-                                                        id="listening-audio"
-                                                        key={currentQuestion.content.audioUrl}
-                                                        src={fixAudioUrl(currentQuestion.content.audioUrl)}
-                                                        className="w-full h-12"
-                                                        preload="metadata"
-                                                        onPlay={() => setAudioPlaying(true)}
-                                                        onPause={() => setAudioPlaying(false)}
-                                                        onEnded={() => setAudioPlaying(false)}
-
-                                                        onLoadedMetadata={(e) => {
-                                                            const audio = e.target;
-                                                            updateCurrentTimeDisplay(audio);
-                                                            setAudioDuration(audio.duration);
-                                                        }}
-                                                        onTimeUpdate={(e) => {
-                                                            const audio = e.target;
-                                                            updateCurrentTimeDisplay(audio);
-                                                            setCurrentTime(audio.currentTime);
-                                                        }}
-                                                    />
-
-
-                                                </div>
-
-
-                                                {/* TIME & VOLUME */}
-                                                <div className="flex items-center justify-between text-xs" style={{ color: '#4b5563' }}>
-
-
-                                                    <div className="flex items-center gap-2">
-                                                        <Volume2 className="h-3 w-3" />
-                                                        <input
-                                                            type="range"
-                                                            min="0"
-                                                            max="1"
-                                                            step="0.1"
-                                                            defaultValue="1"
-                                                            onChange={(e) => {
-                                                                const audio = document.querySelector('audio');
-                                                                if (audio) audio.volume = parseFloat(e.target.value);
-                                                            }}
-                                                            style={{
-                                                                width: '80px',
-                                                                accentColor: '#3b82f6'
-                                                            }}
-                                                        />
-                                                    </div>
-                                                </div>
-
-
-                                            </div>
-
-                                            {/* INLINE STYLES FOR ANIMATIONS */}
-                                            <style>
-                                                {`
-    /* Range slider thumb styling */
-    #audio-progress::-webkit-slider-thumb {
-        -webkit-appearance: none;
-        appearance: none;
-        height: 16px;
-        width: 16px;
-        border-radius: 50%;
-        background: #3b82f6;
-        cursor: pointer;
-        border: 2px solid white;
-        box-shadow: 0 2px 8px rgba(59, 130, 246, 0.5);
-        position: relative;
-        z-index: 3;
-    }
-    
-    #audio-progress::-moz-range-thumb {
-        height: 16px;
-        width: 16px;
-        border-radius: 50%;
-        background: #3b82f6;
-        cursor: pointer;
-        border: 2px solid white;
-        box-shadow: 0 2px 8px rgba(59, 130, 246, 0.5);
-    }
-    
-    /* Optional: Background gradient when dragging */
-    #audio-progress:active::-webkit-slider-thumb {
-        transform: scale(1.2);
-        box-shadow: 0 2px 12px rgba(59, 130, 246, 0.7);
-    }
-`}
-                                            </style>
-
-                                            {/* TIME UPDATE SCRIPT */}
-                                            <script dangerouslySetInnerHTML={{
-                                                __html: `
-                document.addEventListener('DOMContentLoaded', function() {
-                    const audio = document.getElementById('listening-audio');
-                    const currentTimeEl = document.getElementById('current-time');
-                    const durationEl = document.getElementById('duration');
-                    
-                    if (audio && currentTimeEl && durationEl) {
-                        // Set initial duration
-                        audio.addEventListener('loadedmetadata', function() {
-                            if (!isNaN(audio.duration)) {
-                                const minutes = Math.floor(audio.duration / 60);
-                                const seconds = Math.floor(audio.duration % 60);
-                                durationEl.textContent = \`\${minutes}:\${seconds.toString().padStart(2, '0')}\`;
+        {/* CUSTOM CONTROLS - FIXED */}
+        <div className="mb-4">
+            <div className="flex items-center justify-center mb-2">
+                <button
+                    type="button"
+                    onClick={() => {
+                        const audio = document.getElementById('listening-audio');
+                        if (audio) {
+                            if (audioPlaying) {
+                                audio.pause();
+                            } else {
+                                // Stop all other audios
+                                document.querySelectorAll('audio').forEach(a => {
+                                    if (a !== audio && !a.paused) {
+                                        a.pause();
+                                        a.currentTime = 0;
+                                    }
+                                });
+                                audio.play().catch(e => {
+                                    console.error('Play failed:', e);
+                                    setAudioPlaying(false);
+                                });
                             }
-                        });
-                        
-                        // Update current time
-                        audio.addEventListener('timeupdate', function() {
-                            if (!isNaN(audio.currentTime)) {
-                                const minutes = Math.floor(audio.currentTime / 60);
-                                const seconds = Math.floor(audio.currentTime % 60);
-                                currentTimeEl.textContent = \`\${minutes}:\${seconds.toString().padStart(2, '0')}\`;
-                            }
-                        });
-                        
-                        // Force load metadata
-                        if (audio.readyState >= 1) {
-                            const minutes = Math.floor(audio.duration / 60);
-                            const seconds = Math.floor(audio.duration % 60);
-                            durationEl.textContent = \`\${minutes}:\${seconds.toString().padStart(2, '0')}\`;
                         }
+                    }}
+                    style={{ position: 'relative' }}
+                    disabled={!currentQuestion.content.audioUrl}
+                >
+                    <div style={{
+                        position: 'absolute',
+                        inset: 0,
+                        background: 'linear-gradient(to right, #3b82f6, #8b5cf6)',
+                        borderRadius: '9999px',
+                        filter: 'blur(12px)',
+                        opacity: 0,
+                        transition: 'opacity 0.2s'
+                    }}></div>
+                    <div style={{
+                        position: 'relative',
+                        width: '40px',
+                        height: '40px',
+                        borderRadius: '9999px',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        transition: 'all 0.2s',
+                        ...(audioPlaying ? {
+                            background: 'linear-gradient(to right, #ef4444, #ec4899)'
+                        } : {
+                            background: 'linear-gradient(to right, #10b981, #059669)'
+                        })
+                    }}
+                        onMouseOver={(e) => {
+                            e.currentTarget.previousElementSibling.style.opacity = '0.3';
+                        }}
+                        onMouseOut={(e) => {
+                            e.currentTarget.previousElementSibling.style.opacity = '0';
+                        }}
+                    >
+                        {audioPlaying ? (
+                            <Pause className="h-5 w-5 text-white" />
+                        ) : (
+                            <Play className="h-5 w-5 text-white" />
+                        )}
+                    </div>
+                </button>
+            </div>
+        </div>
+
+        {/* MAIN AUDIO PLAYER - FIXED */}
+        <div className="space-y-4">
+            <div style={{ position: 'relative' }}>
+                <audio
+                    id="listening-audio"
+                    key={`audio-${currentQuestion._id}`} // IMPORTANT FIX: Add unique key
+                    src={fixAudioUrl(currentQuestion.content.audioUrl)}
+                    className="w-full h-12"
+                    preload="metadata"
+                    onPlay={() => {
+                        setAudioPlaying(true);
+                    }}
+                    onPause={() => setAudioPlaying(false)}
+                    onEnded={() => {
+                        setAudioPlaying(false);
+                        setCurrentTime(0);
+                        const progressFill = document.getElementById('progress-fill');
+                        const audioProgress = document.getElementById('audio-progress');
+                        if (progressFill) progressFill.style.width = '0%';
+                        if (audioProgress) audioProgress.value = '0';
+                    }}
+                    onLoadedMetadata={(e) => {
+                        const audio = e.target;
+                        if (audio) {
+                            updateCurrentTimeDisplay(audio);
+                            setAudioDuration(audio.duration || 0);
+                        }
+                    }}
+                    onTimeUpdate={(e) => {
+                        const audio = e.target;
+                        if (audio) {
+                            updateCurrentTimeDisplay(audio);
+                            setCurrentTime(audio.currentTime);
+                        }
+                    }}
+                    onError={(e) => {
+                        console.error('Audio loading error:', e);
+                        setAudioPlaying(false);
+                    }}
+                />
+            </div>
+
+            {/* VOLUME */}
+            <div className="flex items-center justify-between text-xs" style={{ color: '#4b5563' }}>
+                <div className="flex items-center gap-2">
+                    <Volume2 className="h-3 w-3" />
+                    <input
+                        type="range"
+                        min="0"
+                        max="1"
+                        step="0.1"
+                        defaultValue="1"
+                        onChange={(e) => {
+                            const audio = document.getElementById('listening-audio');
+                            if (audio) audio.volume = parseFloat(e.target.value);
+                        }}
+                        style={{
+                            width: '80px',
+                            accentColor: '#3b82f6'
+                        }}
+                    />
+                </div>
+            </div>
+        </div>
+
+        {/* STYLES */}
+        <style>
+            {`
+                #audio-progress::-webkit-slider-thumb {
+                    -webkit-appearance: none;
+                    appearance: none;
+                    height: 16px;
+                    width: 16px;
+                    border-radius: 50%;
+                    background: #3b82f6;
+                    cursor: pointer;
+                    border: 2px solid white;
+                    box-shadow: 0 2px 8px rgba(59, 130, 246, 0.5);
+                    position: relative;
+                    z-index: 3;
+                }
+                
+                #audio-progress::-moz-range-thumb {
+                    height: 16px;
+                    width: 16px;
+                    border-radius: 50%;
+                    background: #3b82f6;
+                    cursor: pointer;
+                    border: 2px solid white;
+                    box-shadow: 0 2px 8px rgba(59, 130, 246, 0.5);
+                }
+                
+                #audio-progress:active::-webkit-slider-thumb {
+                    transform: scale(1.2);
+                    box-shadow: 0 2px 12px rgba(59, 130, 246, 0.7);
+                }
+                
+                /* Equalizer animation */
+                @keyframes equalizerBar {
+                    0%, 100% { height: 4px; }
+                    50% { height: 16px; }
+                }
+                
+                @keyframes ping {
+                    75%, 100% {
+                        transform: scale(2);
+                        opacity: 0;
                     }
-                });
-            `
-                                            }} />
-                                        </div>
-                                    )}
+                }
+            `}
+        </style>
+    </div>
+)}
 
                                     {currentQuestion.content.passageTitle && (
                                         <div className="mb-6 p-4 bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700">
