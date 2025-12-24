@@ -3,7 +3,8 @@ import {
     Calculator as CalculatorIcon,
     LogOut,
     Clock,
-    Eye
+    Eye,
+    AlertCircle
 } from "lucide-react";
 
 export type GRETestHeaderProps = {
@@ -66,9 +67,9 @@ export const GRETestHead: React.FC<GRETestHeaderProps> = React.memo(
         return (
             <>
                 <div
-                    className="fixed top-0 left-0 right-0 z-50 bg-gray-400 dark:bg-slate-900/50 backdrop-blur"
+                    className="fixed top-0 left-0 right-0 z-50 bg-[#bfbbbc]  backdrop-blur"
                 >
-                    <div className="mx-auto grid grid-cols-2 items-center max-w-7xl h-16 items-center justify-between gap-4 px-4 py-1">
+                    <div className="mx-auto grid grid-cols-2 items-center max-w-7xl h-15 items-center justify-between gap-4 px-4">
                         <div className="flex items-center gap-3">
                             <div>
                                 <p className="uppercase">{testTitle}</p>
@@ -84,8 +85,9 @@ export const GRETestHead: React.FC<GRETestHeaderProps> = React.memo(
                                         <div className="flex items-center">
                                         <Clock className="w-5 h-5 mr-1 text-slate-800 font-bold dark:text-slate-400" /><span className="tabular-nums">Time Remaining: {formatTime(timerSecondsLeft)}</span>
                                         </div>
-                                       <div>
-                                        Question {questionNumber} of {currentSection?.questions?.length}
+                                       <div className="flex item-center">
+                                        <AlertCircle className="w-5 h-5 mr-1 text-slate-800 font-bold dark:text-slate-400"/>
+                                         {questionNumber} of {currentSection?.questions?.length}
                                         </div> 
                                         {/* <button
                                             onClick={() => setTimerHidden(true)}

@@ -56,6 +56,13 @@ const QuestionRenderer: any = React.memo(
     const [recordedAudio, setRecordedAudio] = useState(null);
     const [startRecordingCountdown, setStartRecordingCountdown] = useState<(() => void) | null>(null);
 
+
+   
+   
+
+  
+
+
     const handleRecordingComplete = useCallback((audioBlob: Blob) => {
       setRecordedAudio(audioBlob);
       console.log("Recorded audio ready for upload:", audioBlob);
@@ -237,6 +244,7 @@ const QuestionRenderer: any = React.memo(
     };
 
     const renderPTEQuestion = () => {
+
       switch (type) {
         case "read_aloud":
           return (
@@ -264,14 +272,21 @@ const QuestionRenderer: any = React.memo(
               {/* {renderHeader()} */}
               {renderPassage()}
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+
+
+
                 <TTSPlayer
-                  key={"player-" + qDoc._id}
-                  text={qDoc.questionText || "Describe the image shown."}
-                  delayBeforePlay={3000} // 1 second
+                  key={`player-${qDoc._id}`}
+                  audioUrl={qDoc.typeSpecific?.audio
+                    ? audioBaseUrl + qDoc.typeSpecific.audio
+                    : undefined}
+                  text={qDoc.questionText}   // 🔁 fallback
+                  delayBeforePlay={3000}
                   onPlaybackEnd={onTTSFinished}
-                  rate={0.8}
-                  pitch={0.9}
                 />
+
+
+
                 <RecordingOnlyComponent
                   key={qDoc._id}
                   recordingDurationSeconds={20}
@@ -708,7 +723,9 @@ const QuestionRenderer: any = React.memo(
 
     return (
       <>
-        <div className="flex items-center justify-between py-4 bg-slate-600 dark:bg-slate-800">
+        <div className="flex items-center justify-between py-[6px] bg-white-300">
+        </div>
+        <div className="flex items-center justify-between py-4 bg-[#0080a3] ">
         </div>
         <div className="max-w-7xl mx-auto p-2 space-y-4">
           {renderPTEQuestion()}
@@ -787,8 +804,8 @@ const QuestionRenderer: any = React.memo(
           </div>
 
           {/* BOTTOM BAR */}
-          <div className="fixed bottom-0 left-0 right-0 z-40 border-t-3 border-dashed border-slate-900 dark:border-slate-700 bg-slate-300 dark:bg-slate-900/90 backdrop-blur">
-            <div className="mx-auto max-w-7xl px-4 py-3">
+          <div className="fixed bottom-0 left-0 right-0 z-40  dark:border-slate-700 bg-[#bfbbbc]  backdrop-blur">
+            <div className="mx-auto max-w-7xl px-4 py-3 ">
               <div className="grid grid-cols-2 items-center gap-3">
                 <div className="flex text-lg text-slate-900 dark:text-slate-100 flex-wrap gap-2">
                   PTE Practice
@@ -909,6 +926,7 @@ export const SectionInstructions: React.FC<SectionInstructionsProps> = React.mem
 );
 
 import { Eye, ArrowLeft, CheckCircle2 } from "lucide-react";
+import { audioBaseUrl } from "../../axiosInstance";
 
 interface SectionReviewProps {
   currentSection: any;
@@ -1031,7 +1049,7 @@ export const SectionReview: React.FC<SectionReviewProps> = React.memo(
 
         {/* Fixed bottom actions */}
 
-        <div className="fixed bottom-0 left-0 right-0 z-40 border-t-3 border-dashed border-slate-900 dark:border-slate-700 bg-slate-300 dark:bg-slate-900/90 backdrop-blur">
+        <div className="fixed bottom-0 left-0 right-0 z-40 border-t-3 border-dashed border-slate-900 dark:border-slate-700 bg-[#bfbbbc]  backdrop-blur">
           <div className="mx-auto max-w-7xl px-4 py-3">
             <div className="flex flex-wrap items-center justify-between gap-3">
               <div className="flex text-lg text-slate-900 dark:text-slate-100 flex-wrap gap-2">

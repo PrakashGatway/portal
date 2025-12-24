@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef, useCallback, memo } from "react"
-import { Volume2, Mic, Clock } from "lucide-react"
+import { Volume2, Mic, Clock, Volume2Icon, Play, Pause, StopCircle } from "lucide-react"
 
 const SpeakingQuestion = ({ qDoc }) => {
     const [isPlaying, setIsPlaying] = useState(false)
@@ -247,10 +247,10 @@ const SpeakingQuestion = ({ qDoc }) => {
 
             {/* Question */}
 
-            {qDoc?.questionType != "retell_lesson" &&  <div className="mb-6">
+            {qDoc?.questionType != "retell_lesson" && <div className="mb-6">
                 <h2 className="" dangerouslySetInnerHTML={{ __html: qDoc?.questionText }} />
             </div>}
-           
+
 
             <div className="grid grid-cols-2 gap-4">
                 <div className="bg-blue-50 dark:bg-blue-900/20 p-4 rounded-lg border border-blue-200 dark:border-blue-800">
@@ -388,6 +388,9 @@ export const RecordingOnlyComponent = memo(({
     const [audioSizeKB, setAudioSizeKB] = useState(0);
     const [hasRecorded, setHasRecorded] = useState(false);
     const [status, setStatus] = useState("Ready");
+    const [volume, setVolume] = useState(75);
+
+    
 
     const mediaRecorderRef = useRef(null);
     const chunksRef = useRef([]);
@@ -549,41 +552,110 @@ export const RecordingOnlyComponent = memo(({
         <div className="space-y-6">
             {/* Countdown */}
             {countdown >= 0 && (
-                <div className="bg-orange-50 dark:bg-orange-900/20 p-6 rounded-lg border border-orange-200 dark:border-orange-800 text-center">
-                    <Clock className="w-8 h-8 mx-auto mb-2 text-orange-600 animate-pulse" />
-                    <h3 className="text-2xl font-bold text-orange-900 dark:text-orange-100 mb-2">Get Ready!</h3>
-                    <p className="text-5xl font-bold text-orange-600 dark:text-orange-400">{countdown}</p>
-                    {/* <p className="mt-2 text-sm text-orange-700 dark:text-orange-300">
-            Recording starts in {countdown} second{countdown !== 1 ? "s" : ""}
-          </p> */}
+                <div className="flex items-center justify-center gap-4 p-6 rounded-lg text-center">
+                    <div className="relative">
+
+
+                        {/* Countdown circle */}
+                        <div className="relative w-16 h-16 rounded-full border-4 border-slate-500 dark:border-slate-700 bg-white  flex items-center justify-center ">
+                            <span className="text-2xl font-bold text-slate-400  dark:text-orange-400">
+                                {countdown}
+                            </span>
+                        </div>
+                    </div>
+
+                    <div>
+                        <h3 className="text-base font-bold text-slate-400  mb-1">
+                            Recording in {countdown} seconds
+                        </h3>
+
+                    </div>
                 </div>
             )}
 
             {/* Recording in progress */}
             {isRecording && (
-                <div className="bg-red-50 dark:bg-red-900/20 p-6 rounded-lg border border-red-200 dark:border-red-800">
-                    <div className="flex items-center justify-center gap-3 mb-4">
-                        <Mic className="w-6 h-6 text-red-600 animate-pulse" />
-                        <h3 className="text-xl font-bold text-red-900 dark:text-red-100">RECORDING</h3>
-                        <div className="w-3 h-3 bg-red-600 rounded-full animate-pulse" />
+                <div className="
+    bg-gray-200
+    p-4 rounded-xl
+    shadow-lg
+  ">
+
+                    {/* Header */}
+                    <div className="flex items-center justify-between mb-3">
+                        <div className="flex items-center gap-2">
+                            <span className="relative flex h-2 w-2">
+                                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-500 opacity-75"></span>
+                                <span className="relative inline-flex rounded-full h-2 w-2 bg-red-500"></span>
+                            </span>
+                            <Mic className="w-4 h-4 text-red-400" />
+                            <span className="text-sm font-semibold text-black tracking-wide">
+                                RECORDING LIVE
+                            </span>
+                        </div>
+
+                        <span className="text-xs text-black">
+                            Speak clearly
+                        </span>
                     </div>
-                    <div className="text-center mb-4">
-                        <p className="text-4xl font-bold text-red-600 dark:text-red-400">{formatTime(recordingTime)}</p>
-                        <p className="text-sm text-red-700 dark:text-red-300 mt-1">
-                            Time remaining: {formatTime(recordingDurationSeconds - recordingTime)}
-                        </p>
+
+                    {/* Progress */}
+                    <div className="mb-3">
+                        <div className="w-full bg-white rounded-full h-2 overflow-hidden">
+                            <div
+                                className="h-full bg-gray-500 transition-all"
+                                style={{
+                                    width: `${(recordingTime / recordingDurationSeconds) * 100}%`,
+                                }}
+                            />
+                        </div>
+
+                       
                     </div>
-                    <div className="w-full bg-red-200 dark:bg-red-800 rounded-full h-3">
-                        <div
-                            className="bg-red-600 h-3 rounded-full transition-all duration-1000"
-                            style={{ width: `${(recordingTime / recordingDurationSeconds) * 100}%` }}
-                        />
+
+                    
+
+                    {/* Controls */}
+                    <div className="flex items-center justify-between">
+
+                        {/* Status */}
+                        <span className="text-xs text-black">
+                            Your voice is being recorded
+                        </span>
+
+                        {/* Volume */}
+                        <div className="flex items-center gap-2">
+
+                            {/* Mute */}
+                            <button
+                                onClick={() => setVolume(volume === 0 ? 70 : 0)}
+                                className="p-1.5 rounded-full bg-slate-700 hover:bg-slate-600 transition"
+                            >
+                                {volume === 0 ? (
+                                    <svg className="w-4 h-4 text-red-400" fill="currentColor" viewBox="0 0 20 20">
+                                        <path d="M9.383 3.076A1 1 0 0110 4v12a1 1 0 01-1.707.707L4.586 13H2a1 1 0 01-1-1V8a1 1 0 011-1h2.586l3.707-3.707a1 1 0 011.09-.217zM12.707 7.293a1 1 0 00-1.414 1.414L13.586 10l-2.293 2.293a1 1 0 001.414 1.414L15 11.414l2.293 2.293a1 1 0 001.414-1.414L16.414 10l2.293-2.293a1 1 0 00-1.414-1.414L15 8.586l-2.293-2.293z" />
+                                    </svg>
+                                ) : (
+                                    <svg className="w-4 h-4 text-slate-200" fill="currentColor" viewBox="0 0 20 20">
+                                        <path d="M9.383 3.076A1 1 0 0110 4v12a1 1 0 01-1.707.707L4.586 13H2a1 1 0 01-1-1V8a1 1 0 011-1h2.586l3.707-3.707a1 1 0 011.09-.217zM14.657 2.929a1 1 0 011.414 0A9.972 9.972 0 0119 10a9.972 9.972 0 01-2.929 7.071 1 1 0 01-1.414-1.414A7.971 7.971 0 0017 10c0-2.21-.894-4.208-2.343-5.657a1 1 0 010-1.414z" />
+                                    </svg>
+                                )}
+                            </button>
+
+                            {/* Slider */}
+                            <input
+                                type="range"
+                                min="0"
+                                max="100"
+                                value={volume}
+                                onChange={(e) => setVolume(+e.target.value)}
+                                className="w-16 h-1 accent-red-400 cursor-pointer"
+                            />
+                        </div>
                     </div>
-                    <p className="mt-3 text-xs text-center text-red-700 dark:text-red-300">
-                        Recording will stop automatically after {recordingDurationSeconds} seconds
-                    </p>
                 </div>
             )}
+
 
             {/* Recording preview */}
             {audioPreviewUrl && hasRecorded && (
@@ -602,6 +674,7 @@ export const RecordingOnlyComponent = memo(({
 });
 // TTSPlayerWithUI.tsx
 interface TTSPlayerWithUIProps {
+    audioUrl?: string;
     text: string;
     delayBeforePlay?: number; // ms, default 0
     onPlaybackEnd?: () => void;
@@ -611,241 +684,181 @@ interface TTSPlayerWithUIProps {
     volume?: number; // initial volume 0-1, default 1.0
 }
 
-const TTSPlayerWithUI: React.FC<TTSPlayerWithUIProps> = memo(({
+const TTSPlayerWithUI: React.FC<TTSPlayerWithUIProps> = ({
+    audioUrl,
     text,
     delayBeforePlay = 0,
     onPlaybackEnd,
-    voiceNamePattern = /female|samantha|zira|jane|serena|karen|ava|tessa/i,
+    initialVolume = 1,
+    voiceNamePattern = /female|zira|jane|ava|samantha/i,
     rate = 0.9,
-    pitch = 1.0,
-    volume: initialVolume = 1.0,
+    pitch = 1,
 }) => {
+    const audioRef = useRef<HTMLAudioElement | null>(null);
+    const utteranceRef = useRef<SpeechSynthesisUtterance | null>(null);
 
     const [isPlaying, setIsPlaying] = useState(false);
     const [isPaused, setIsPaused] = useState(false);
-    const [countdown, setCountdown] = useState<number | null>(null); // seconds
-    const [currentStatus, setCurrentStatus] = useState("Ready");
+    const [countdown, setCountdown] = useState<number | null>(null);
+    const [currentTime, setCurrentTime] = useState(0);
+    const [duration, setDuration] = useState(0);
     const [volume, setVolume] = useState(initialVolume);
 
-    const utteranceRef = useRef<SpeechSynthesisUtterance | null>(null);
-    const timeoutRef = useRef<NodeJS.Timeout | null>(null);
-    const intervalRef = useRef<NodeJS.Timeout | null>(null);
-    const hasPlayedRef = useRef(false);
+    const isUsingTTS = !audioUrl && !!text; // 🔑 decision flag
 
-    const estimatedDuration = Math.max(2, text.length / 100);
-    const autoPlayTriggeredRef = useRef(false);
+    /* 🔊 Start Playback (API OR TTS) */
+    const startPlayback = () => {
+        /* 🎧 API AUDIO */
+        if (audioUrl && audioRef.current) {
+            audioRef.current.play();
+            setIsPlaying(true);
+            return;
+        }
 
-    const startPlayback = useCallback(() => {
-        if (!text?.trim()) return;
+        /* 🔊 TTS FALLBACK */
+        if (!text) return;
 
         window.speechSynthesis.cancel();
-        hasPlayedRef.current = false;
 
-        const utterance = new SpeechSynthesisUtterance(text.trim());
-        utterance.rate = rate;
-        utterance.pitch = pitch;
-        utterance.volume = volume;
+        const speak = () => {
+            const utterance = new SpeechSynthesisUtterance(text);
+            utterance.rate = rate;
+            utterance.pitch = pitch;
+            utterance.volume = volume;
 
-        const voices = window.speechSynthesis.getVoices();
-        const preferredVoice = voices.find((v) => voiceNamePattern.test(v.name));
-        if (preferredVoice) {
-            utterance.voice = preferredVoice;
+            const voices = window.speechSynthesis.getVoices();
+            const preferred = voices.find(v => voiceNamePattern.test(v.name));
+            if (preferred) utterance.voice = preferred;
+
+            utterance.onend = () => {
+                setIsPlaying(false);
+                setIsPaused(false);
+                onPlaybackEnd?.();
+            };
+
+            utterance.onerror = () => {
+                setIsPlaying(false);
+                setIsPaused(false);
+                onPlaybackEnd?.();
+            };
+
+            utteranceRef.current = utterance;
+            window.speechSynthesis.speak(utterance);
+            setIsPlaying(true);
+        };
+
+        // 🔑 KEY FIX: wait for voices
+        if (window.speechSynthesis.getVoices().length === 0) {
+            window.speechSynthesis.onvoiceschanged = speak;
+        } else {
+            speak();
         }
+    };
 
-        utterance.onend = () => {
-            setIsPlaying(false);
-            setIsPaused(false);
-            hasPlayedRef.current = true;
-            setCurrentStatus("Playback finished");
-            onPlaybackEnd?.();
-        };
-
-        utterance.onerror = () => {
-            setIsPlaying(false);
-            setIsPaused(false);
-            setCurrentStatus("Error occurred");
-            onPlaybackEnd?.();
-        };
-
-        utteranceRef.current = utterance;
-        window.speechSynthesis.speak(utterance);
-        setIsPlaying(true);
-        setIsPaused(false);
-        setCurrentStatus("Playing...");
-    }, [text, rate, pitch, volume, voiceNamePattern, onPlaybackEnd]);
-
-    // Handle countdown before auto-play
-    useEffect(() => {
-        if (
-            delayBeforePlay > 0 &&
-            !autoPlayTriggeredRef.current &&
-            text?.trim()
-        ) {
-            autoPlayTriggeredRef.current = true;
-
-            const seconds = Math.ceil(delayBeforePlay / 1000);
-            setCountdown(seconds);
-            setCurrentStatus(`Beginning in ${seconds} seconds`);
-
-            timeoutRef.current = setTimeout(() => {
-                setCountdown(null);
-                setCurrentStatus("Starting playback...");
-                startPlayback();
-            }, delayBeforePlay);
-        }
-
-        return () => {
-            if (timeoutRef.current) clearTimeout(timeoutRef.current);
-        };
-    }, [delayBeforePlay, text, startPlayback]);
-
-
-    // Cleanup
-    useEffect(() => {
-        return () => {
-            if (timeoutRef.current) clearTimeout(timeoutRef.current);
-            if (intervalRef.current) clearInterval(intervalRef.current);
-            window.speechSynthesis.cancel();
-        };
-    }, []);
 
     useEffect(() => {
-        autoPlayTriggeredRef.current = false;
-    }, [text]);
+        if (!audioUrl && !text) return;
 
+        if (delayBeforePlay > 0) {
+            const totalSeconds = Math.ceil(delayBeforePlay / 1000);
+            setCountdown(totalSeconds);
 
-    // Control functions
-    const handlePlayPause = () => {
-        if (isPlaying && !isPaused) {
-            window.speechSynthesis.pause();
-            setIsPaused(true);
-            setCurrentStatus("Paused");
-        } else if (isPaused) {
-            window.speechSynthesis.resume();
-            setIsPaused(false);
-            setCurrentStatus("Playing...");
+            let remaining = totalSeconds;
+
+            const interval = setInterval(() => {
+                remaining -= 1;
+                setCountdown(remaining);
+
+                if (remaining <= 0) {
+                    clearInterval(interval);
+                    setCountdown(null);
+                    startPlayback();
+                }
+            }, 1000);
+
+            return () => clearInterval(interval);
         } else {
             startPlayback();
         }
-    };
-
-    const handleStop = () => {
-        window.speechSynthesis.cancel();
-        setIsPlaying(false);
-        setIsPaused(false);
-        setCurrentStatus("Stopped");
-
-        autoPlayTriggeredRef.current = false; // 🔑 allow replay
-        hasPlayedRef.current = false;
-
-        if (timeoutRef.current) clearTimeout(timeoutRef.current);
-        setCountdown(null);
-    };
+    }, [audioUrl, text, delayBeforePlay]);
 
 
-    const handleVolumeChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-        const newVolume = parseFloat(e.target.value);
-        setVolume(newVolume);
-        if (utteranceRef.current) {
-            utteranceRef.current.volume = newVolume;
-        }
-    };
+
+    /* 🔊 Volume sync */
+    useEffect(() => {
+        if (audioRef.current) audioRef.current.volume = volume;
+        if (utteranceRef.current) utteranceRef.current.volume = volume;
+    }, [volume]);
+
+
+
+
+
+    const progress =
+        !isUsingTTS && duration ? (currentTime / duration) * 100 : 0;
 
     return (
-        <div className="bg-white dark:bg-slate-800 p-4 rounded-lg border border-slate-200 dark:border-slate-700 shadow-sm">
-            <h3 className="font-semibold mb-3 flex items-center gap-2">
-                <Volume2 className="w-5 h-5 text-blue-600" />
-                Text-to-Speech Player
-            </h3>
+        <div className="bg-gray-200 p-5 rounded-lg border border-blue-200 shadow-sm">
 
-            {/* Status */}
-            <div className="mb-3 flex items-center gap-2 text-sm">
-                <span className="font-medium">Current Status:</span>
-                <span
-                    className={`px-2 py-1 rounded text-xs font-medium ${isPlaying && !isPaused
-                        ? "bg-green-100 text-green-800"
-                        : isPaused
-                            ? "bg-yellow-100 text-yellow-800"
-                            : "bg-gray-100 text-gray-800"
-                        }`}
-                >
-                    {countdown !== null
-                        ? `Beginning in ${Math.ceil(countdown)} second${Math.ceil(countdown) !== 1 ? "s" : ""}`
-                        : currentStatus}
+            {/* Header */}
+            <div className="flex justify-between mb-4 text-black">
+                <span className="font-bold">
+                    {isUsingTTS ? "TEXT TO SPEECH" : "AUDIO PLAYBACK"}
                 </span>
+                {countdown !== null && <span>Starting in {countdown}s</span>}
             </div>
 
-            {/* Volume Slider */}
-            <div className="mb-4">
-                <label className="flex items-center gap-2 text-sm mb-1">
-                    <Volume2 className="w-4 h-4" />
-                    Volume:
-                </label>
+            {/* Progress (audio only) */}
+            {!isUsingTTS && (
+                <div className="mb-4">
+                    <div className="w-full bg-white/40 h-3 rounded-full overflow-hidden">
+                        <div
+                            className="bg-slate-500 h-full transition-all"
+                            style={{ width: `${progress}%` }}
+                        />
+                    </div>
+
+                </div>
+            )}
+
+            {/* Controls */}
+            <div className="flex items-center gap-3">
+
+
                 <input
                     type="range"
                     min="0"
                     max="1"
                     step="0.01"
                     value={volume}
-                    onChange={handleVolumeChange}
-                    className="w-100 h-2 bg-pink-300 rounded-full appearance-none cursor-pointer slider"
-                    style={{
-                        background: `linear-gradient(to right, #ec4899 ${volume * 100}%, #fbcfe8 ${volume * 100}%)`,
-                    }}
+                    onChange={(e) => setVolume(+e.target.value)}
+                    className="w-24"
                 />
             </div>
 
-            {/* Controls */}
-            {/* <div className="flex gap-2">
-                <button
-                    onClick={handlePlayPause}
-                    disabled={!!countdown || !text?.trim()}
-                    className={`px-3 py-1 rounded-lg flex items-center gap-1 text-sm font-medium transition ${!!countdown || !text?.trim()
-                        ? "bg-gray-300 text-gray-500 cursor-not-allowed"
-                        : isPlaying && !isPaused
-                            ? "bg-red-600 hover:bg-red-700 text-white"
-                            : "bg-blue-600 hover:bg-blue-700 text-white"
-                        }`}
-                >
-                    {isPlaying && !isPaused ? (
-                        <>
-                            <Pause className="w-4 h-4" /> Pause
-                        </>
-                    ) : (
-                        <>
-                            <Play className="w-4 h-4" /> {countdown !== null ? "Wait" : "Play"}
-                        </>
-                    )}
-                </button>
-
-                <button
-                    onClick={handleStop}
-                    disabled={!isPlaying && !isPaused}
-                    className={`px-3 py-1 rounded-lg flex items-center gap-1 text-sm font-medium transition ${!isPlaying && !isPaused
-                        ? "bg-gray-300 text-gray-500 cursor-not-allowed"
-                        : "bg-gray-600 hover:bg-gray-700 text-white"
-                        }`}
-                >
-                    <StopCircle className="w-4 h-4" /> Stop
-                </button>
-            </div> */}
-
-            {/* Optional: Progress Bar (if you want to simulate it) */}
-            {/* {isPlaying && !isPaused && (
-                <div className="mt-3">
-                    <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-1">
-                        <div
-                            className="bg-blue-600 h-1 rounded-full transition-all duration-1000"
-                            style={{ width: `${Math.min(100, (Date.now() % 1000) / 10)}%` }} // placeholder animation
-                        />
-                    </div>
-                    <p className="text-xs text-gray-500 mt-1">
-                        Estimated duration: {estimatedDuration.toFixed(1)}s
-                    </p>
-                </div>
-            )} */}
+            {/* 🎧 REAL AUDIO (only if audioUrl exists) */}
+            {audioUrl && (
+                <audio
+                    ref={audioRef}
+                    src={audioUrl}
+                    preload="metadata"
+                    onTimeUpdate={() =>
+                        setCurrentTime(audioRef.current?.currentTime || 0)
+                    }
+                    onLoadedMetadata={() =>
+                        setDuration(audioRef.current?.duration || 0)
+                    }
+                    onEnded={() => {
+                        setIsPlaying(false);
+                        setIsPaused(false);
+                        onPlaybackEnd?.();
+                    }}
+                />
+            )}
         </div>
     );
-})
+};
+
+
 
 export const TTSPlayer = TTSPlayerWithUI
