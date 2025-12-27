@@ -1,5 +1,4 @@
 import React, { useEffect, useRef, useState, useCallback, useMemo, use } from "react";
-import api from "../../axiosInstance";
 import {
   AlertTriangle,
   BookOpen,
@@ -54,8 +53,6 @@ const QuestionRenderer: any = React.memo(
     const [crossedOptions, setCrossedOptions] = useState<number[]>([]);
     const [isPaletteOpen, setIsPaletteOpen] = useState(false);
 
-    const [pendingAudioUpload, setPendingAudioUpload] = useState<Blob | null>(null);
-
     const [recordedAudio, setRecordedAudio] = useState(null);
     const [startRecordingCountdown, setStartRecordingCountdown] = useState<(() => void) | null>(null);
 
@@ -66,40 +63,15 @@ const [showConfirmNextPopup, setShowConfirmNextPopup] = useState(false);
 const [isRecordingInProgress, setIsRecordingInProgress] = useState(false);
 
 
+   
+   
+
+  
 
 
-
- const uploadAudioToAPI = useCallback(async (audioBlob: Blob) => {
-      try {
-        const formData = new FormData();
-        // Sirf audio file append karein
-        formData.append('file', audioBlob, 'recording.webm');
-
-        // Axios instance se upload karein
-        const response = await api.post('/upload/pteupload', formData, {
-          headers: {
-            'Content-Type': 'multipart/form-data',
-          },
-        });
-
-        console.log('✅ Audio uploaded successfully:', response.data);
-
-        handleTextAnswerChange({target:{value:response.data?.file?.path}})
-
-        return response.data;
-      } catch (error) {
-        console.error('❌ Audio upload failed:', error);
-        return null;
-      }
-    }, []);
-
-
-   const handleRecordingComplete = useCallback(async (audioBlob: Blob) => {
+    const handleRecordingComplete = useCallback((audioBlob: Blob) => {
       setRecordedAudio(audioBlob);
-      setPendingAudioUpload(audioBlob); 
-      console.log("Recorded audio ready for upload");
-      
-     
+      console.log("Recorded audio ready for upload:", audioBlob);
     }, []);
 
     const handleStartCountdownCallback = useCallback((startFn: () => void) => {
@@ -286,13 +258,13 @@ const [isRecordingInProgress, setIsRecordingInProgress] = useState(false);
               {/* {renderHeader()} */}
               {renderPassage()}
               <RecordingOnlyComponent
-          key={qDoc._id}
-          recordingDurationSeconds={35}
-          preRecordingWaitSeconds={40}
-          onRecordingComplete={handleRecordingComplete}
-          onStartCountdown={handleStartCountdownCallback}
-          onRecordingStatusChange={(isRecording) => setIsRecordingInProgress(isRecording)}
-        />
+                key={qDoc._id}
+                recordingDurationSeconds={35}
+                preRecordingWaitSeconds={40}
+                onRecordingComplete={handleRecordingComplete}
+                onStartCountdown={handleStartCountdownCallback}
+                onRecordingStatusChange={(isRecording) => setIsRecordingInProgress(isRecording)}
+              />
               <div
                 className="text- mt-4"
                 dangerouslySetInnerHTML={{
@@ -865,7 +837,7 @@ const [isRecordingInProgress, setIsRecordingInProgress] = useState(false);
                   <button
   className="p-1.5 bg-blue-800 text-slate-100 font-semibold border-slate-200 rounded-full px-4"
   disabled={isNextDisabled}
-  onClick={async() => {
+  onClick={() => {
     // ✅ Yahaan check karein
     const isSpeakingQuestion = [
       "read_aloud",
@@ -877,32 +849,18 @@ const [isRecordingInProgress, setIsRecordingInProgress] = useState(false);
       "summarize_group_discussions"
     ].includes(qDoc?.questionType || "");
     
-    if (isSpeakingQuestion && !recordedAudio && !isRecordingInProgress) {
-      setShowRecordFirstPopup(true);
-      return;
-    }
+    // if (isSpeakingQuestion && !recordedAudio && !isRecordingInProgress) {
+    //   setShowRecordFirstPopup(true);
+    //   return;
+    // }
     
-    if (isRecordingInProgress) {
-      setShowConfirmNextPopup(true);
-      return;
-    }
-    if (pendingAudioUpload) {
-      try {
-      
-        const result = await uploadAudioToAPI(pendingAudioUpload);
-        if (result) {
-          
-          setPendingAudioUpload(null); 
-        }
-      } catch (error) {
-        console.error("❌ Audio upload failed:", error);
-        
-      }
-    }
+    // if (isRecordingInProgress) {
+    //   setShowConfirmNextPopup(true);
+    //   return;
+    // }
     
     goNextQuestion();
     setCrossedOptions([]);
-   
   }}
 >
   {isLastQuestionInCurrentSection ? "Review Section" : "Next"}
