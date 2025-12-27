@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef, useCallback, memo } from "react"
 import { Volume2, Mic, Clock, Volume2Icon, Play, Pause, StopCircle , Square } from "lucide-react"
 import { audioBaseUrl } from "../../axiosInstance"
 
-const SpeakingQuestion = ({ qDoc }) => {
+const SpeakingQuestion = ({ qDoc ,handleRecordingComplete}) => {
     const [isPlaying, setIsPlaying] = useState(false)
     const [isRecording, setIsRecording] = useState(false)
     const [recordingTime, setRecordingTime] = useState(0)

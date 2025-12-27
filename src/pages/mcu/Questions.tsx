@@ -25,6 +25,7 @@ import api from "../../axiosInstance";
 import { motion, AnimatePresence } from "framer-motion";
 import { GMATDataInsightsBlock } from "./DiBlock";
 import RichTextEditor from "../../components/TextEditor";
+import AudioUploadComponent from "./AudioUpload";
 
 interface Exam {
   _id: string;
@@ -135,16 +136,20 @@ const LIMIT_OPTIONS = [
 ];
 
 const isPTEType = (questionType: string) => {
-  return questionType && ["repeat_sentence", "retell_lesson","pte_writing_listening","summarize_group_discussions","pte_summarize_listening","pte_summarize_spoken"].includes(questionType);
+  return questionType && ["repeat_sentence", "retell_lesson", "pte_writing_listening", "summarize_group_discussions", "pte_summarize_listening", "pte_summarize_spoken"].includes(questionType);
 };
 
 const isNewFeild = (questionType: string) => {
-  return questionType && ["pte_situational","pte_reorder","pte_highlight","pte_summarize_listening","pte_mcq_single_listening","pte_fill_listening","pte_fill_drag","pte_mcq_multiple_listening","pte_fill_in_blanks"].includes(questionType);
+  return questionType && ["pte_situational", "pte_reorder", "pte_highlight", "pte_summarize_listening", "pte_mcq_single_listening", "pte_fill_listening", "pte_fill_drag", "pte_mcq_multiple_listening"].includes(questionType);
 };
 
+
+
 const isMCQType = (questionType: string) => {
-  return questionType && !["essay", "other","pte_reorder","pte_fill_listening","pte_writing_listening","summarize_group_discussions","pte_summarize_listening","pte_highlight","pte_summarize_spoken","pte_fill_drag","pte_situational","pte_fill_in_blanks","pte_summarize_writing", "retell_lesson", "describe_image", "sat_value", "repeat_sentence", "read_aloud", "gre_analytical_writing", "gre_quantitative_value", "gre_verbal_text_completion"].includes(questionType);
+  return questionType && !["essay", "other", "pte_reorder", "pte_fill_listening", "pte_writing_listening", "summarize_group_discussions", "pte_summarize_listening", "pte_highlight", "pte_summarize_spoken", "pte_fill_drag", "pte_situational", "pte_fill_in_blanks", "pte_summarize_writing", "retell_lesson", "describe_image", "sat_value", "repeat_sentence", "read_aloud", "gre_analytical_writing", "gre_quantitative_value", "gre_verbal_text_completion"].includes(questionType);
 };
+
+
 
 export default function QuestionManagementPage() {
   const [questions, setQuestions] = useState<Question[]>([]);
@@ -202,6 +207,7 @@ export default function QuestionManagementPage() {
     name: "options",
   });
 
+  const [audioData, setAudioData] = useState<string | null>(null);
 
   const watchQuestionType = watch("questionType");
   const watchExam = watch("exam");
@@ -246,9 +252,6 @@ export default function QuestionManagementPage() {
     }
   }, [watchExam, exams, setValue]); // Add exams and setValue to dependency array
 
-  // =========================
-  // Fetch Questions
-  // =========================
   const fetchQuestions = async () => {
     try {
       setLoading(true);
@@ -324,9 +327,6 @@ export default function QuestionManagementPage() {
   const isTable = isDataInsights && diSubtype === "table_analysis";
   const isGraphics = isDataInsights && diSubtype === "graphics_interpretation";
 
-  // =========================
-  // Form helpers
-  // =========================
   const openCreateDrawer = () => {
     setEditingQuestion(null);
     reset({
@@ -583,9 +583,6 @@ export default function QuestionManagementPage() {
     }
   };
 
-  const formatDate = (iso?: string) =>
-    iso ? new Date(iso).toLocaleDateString("en-IN") : "";
-
   const currentQuestionTypeLabel = useMemo(
     () =>
       QUESTION_TYPE_OPTIONS.find((x) => x.value === watchQuestionType)?.label ||
@@ -596,9 +593,6 @@ export default function QuestionManagementPage() {
 
   const isMCQ = isMCQType(watchQuestionType);
 
-  // =========================
-  // JSX
-  // =========================
   return (
     <>
       <PageMeta title="Question Management" description="Manage GMAT / GRE / SAT questions" />
@@ -986,7 +980,6 @@ export default function QuestionManagementPage() {
                     </div>
                   )}
 
-                  {/* Tags - Using Custom Component */}
                   <div>
                     <Label className="flex items-center gap-1">
                       Tags
@@ -1039,6 +1032,7 @@ export default function QuestionManagementPage() {
                       onChange={(e) => handleChange({ target: { name: 'content.passageText', value: e } })}
                     /> */}
                   </div>
+
                   {isNewFeild(watchQuestionType) && <div>
                     <Label>Extratext</Label>
                     <Input
@@ -1048,6 +1042,53 @@ export default function QuestionManagementPage() {
                       onChange={(e) => setValue("typeSpecific.listeningText", e.target.value)}
                     />
                   </div>}
+
+                  {watchQuestionType === "pte_fill_in_blanks" && (
+                    <div>
+                      <Label>Number of Blanks</Label>
+                      <Select
+                        options={[
+                          { value: "1", label: "1 Blank" },
+                          { value: "2", label: "2 Blanks" },
+                          { value: "3", label: "3 Blanks" },
+                          { value: "4", label: "4 Blanks" },
+                          { value: "5", label: "5 Blanks" },
+                          { value: "6", label: "6 Blanks" },
+                          { value: "7", label: "7 Blanks" },
+                          { value: "8", label: "8 Blanks" },
+                          { value: "9", label: "9 Blanks" },
+                        ]}
+                        defaultValue={(watch("typeSpecific.blanks")?.toString() || "1")}
+                        onChange={(value: string) => setValue("typeSpecific.blanks", value)}
+                      />
+                      {watch("typeSpecific.blanks") && Array.from({ length: Number(watch("typeSpecific.blanks")) }).map((_, index) => (
+                        <div key={index} className="mt-2">
+                          <Label>Blank {index + 1} Options</Label>
+                          <Input
+                            type="text"
+                            placeholder={`Options for Blank ${index + 1} (comma separated)`}
+                            value={watch(`typeSpecific.options.${index}`)}
+                            onChange={(e) => setValue(`typeSpecific.options.${index}`, e.target.value)}
+                          />
+                        </div>
+                      ))}
+                    </div>
+                  )}
+
+
+                  {(isPTEType(watchQuestionType) || isNewFeild(watchQuestionType)) && (
+                    <div>
+                      <AudioUploadComponent
+                        questionText={watch("typeSpecific.listeningText") || watchQuestionText}
+                        initialAudioUrl={editingQuestion?.typeSpecific?.audio || ""}
+                        onAudioChange={(audioData) => {
+                          setAudioData(audioData)
+                          setValue("typeSpecific.audio", audioData)
+                        }}
+                        disabled={saving}
+                      />
+                    </div>
+                  )}
 
                   {/* MCQ Options or Text Answer */}
                   {isDataInsights ? (

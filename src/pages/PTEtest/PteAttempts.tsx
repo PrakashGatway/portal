@@ -140,7 +140,7 @@ export default function PteExamPage() {
   const isCompleted = attempt?.status === "completed";
 
   // Memoize derived values - MOVE ALL HOOKS TO TOP LEVEL
-  const testTitle = useMemo(() => 
+  const testTitle = useMemo(() =>
     attempt?.testTemplate.title ||
     (attempt as any)?.testTemplate?.name ||
     "Practice Test",
@@ -186,7 +186,7 @@ export default function PteExamPage() {
   );
 
   // Memoize sectionQuestions - FIXED: This hook must be called unconditionally
-  const sectionQuestions = useMemo(() => 
+  const sectionQuestions = useMemo(() =>
     currentSection?.questions || [],
     [currentSection?.questions]
   );
@@ -384,7 +384,7 @@ export default function PteExamPage() {
     }) => {
       if (!attempt || !currentSection || !currentQuestion) return;
       if (attempt.status !== "in_progress") return;
-      console.log("dsfdsfddddddddddddddddddddddd",currentQuestion?.answerText)
+      console.log("dsfdsfddddddddddddddddddddddd", currentQuestion?.answerText)
       const silent = opts?.silent ?? true;
       try {
         setSavingProgress(!silent);
@@ -438,7 +438,7 @@ export default function PteExamPage() {
   const handleOptionClick = useCallback((optionIndex: number) => {
     if (!attempt || !currentSection || !currentQuestion) return;
     if (isCompleted) return;
-    
+
     setAttempt((prev) => {
       if (!prev) return prev;
       const clone = structuredClone(prev) as TestAttempt;
@@ -456,7 +456,7 @@ export default function PteExamPage() {
     const value = e.target.value;
     if (!attempt || !currentSection || !currentQuestion) return;
     if (isCompleted) return;
-    
+
     setAttempt((prev) => {
       if (!prev) return prev;
       const clone = structuredClone(prev) as TestAttempt;
@@ -472,7 +472,7 @@ export default function PteExamPage() {
   const toggleMarkForReview = useCallback(() => {
     if (!attempt || !currentSection || !currentQuestion) return;
     if (isCompleted) return;
-    
+
     setAttempt((prev) => {
       if (!prev) return prev;
       const clone = structuredClone(prev) as TestAttempt;
@@ -591,7 +591,7 @@ export default function PteExamPage() {
   // Memoize updateCurrentQuestion function
   const updateCurrentQuestion = useCallback((patch: Partial<AttemptQuestion>) => {
     if (!attempt) return;
-    
+
     setAttempt(prev => {
       if (!prev) return prev;
       const clone = { ...prev };
@@ -607,6 +607,24 @@ export default function PteExamPage() {
       return clone;
     });
   }, [attempt, activeSectionIndex, activeQuestionIndex]);
+
+  const updateCurrentQuestionAsync = (patch) => {
+    return new Promise<void>((resolve) => {
+      setAttempt(prev => {
+        if (!prev) return prev;
+
+        const clone = structuredClone(prev);
+        const q =
+          clone.sections[activeSectionIndex].questions[activeQuestionIndex];
+
+        Object.assign(q, patch);
+
+        resolve(); // resolve AFTER state set
+        return clone;
+      });
+    });
+  };
+
 
   // Memoize setCurrentScreen function
   const memoizedSetCurrentScreen = useCallback((screen: GreScreen) => {
@@ -696,6 +714,7 @@ export default function PteExamPage() {
               handleTextAnswerChange={handleTextAnswerChange}
               toggleMarkForReview={toggleMarkForReview}
               updateCurrentQuestion={updateCurrentQuestion}
+              updateCurrentQuestionAsync={updateCurrentQuestionAsync}
               saveCurrentQuestionProgress={saveCurrentQuestionProgress}
               activeQuestionIndex={activeQuestionIndex}
               sectionTotal={currentSection.questions.length}

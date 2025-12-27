@@ -35,6 +35,7 @@ const QuestionRenderer: any = React.memo(
     handleTextAnswerChange,
     toggleMarkForReview,
     saveCurrentQuestionProgress,
+    updateCurrentQuestionAsync,
     activeQuestionIndex,
     updateCurrentQuestion,
     sectionTotal,
@@ -53,26 +54,20 @@ const QuestionRenderer: any = React.memo(
     const [crossedOptions, setCrossedOptions] = useState<number[]>([]);
     const [isPaletteOpen, setIsPaletteOpen] = useState(false);
 
-    const [recordedAudio, setRecordedAudio] = useState(null);
+    const [recordedAudio, setRecordedAudio] = useState<Blob | null>(null);
     const [startRecordingCountdown, setStartRecordingCountdown] = useState<(() => void) | null>(null);
 
-
-    // Popup states - existing state ke baad add karein
     const [showRecordFirstPopup, setShowRecordFirstPopup] = useState(false);
     const [showConfirmNextPopup, setShowConfirmNextPopup] = useState(false);
     const [isRecordingInProgress, setIsRecordingInProgress] = useState(false);
 
 
-
-
-
-
-
-
-    const handleRecordingComplete = useCallback((audioBlob: Blob) => {
+    const handleRecordingComplete = useCallback(async(audioBlob: Blob) => {
       setRecordedAudio(audioBlob);
-      console.log("Recorded audio ready for upload:", audioBlob);
-    }, []);
+      const audioPath = await uploadAudioAndGetPath(audioBlob);
+      handleTextAnswerChange({ target: { value: audioPath } })
+    }, [])
+
 
     const handleStartCountdownCallback = useCallback((startFn: () => void) => {
       setStartRecordingCountdown(() => startFn);
@@ -115,6 +110,23 @@ const QuestionRenderer: any = React.memo(
         </div>
       );
     }
+
+
+    const uploadAudioAndGetPath = async (audioBlob: Blob) => {
+      const formData = new FormData();
+      formData.append("file", audioBlob, "answer.webm");
+
+      const res = await api.post("/upload/pteupload", formData, {
+        headers: {
+          "Content-Type": "multipart/form-data",
+        },
+      });
+
+      if (!res.data?.success) {
+        throw new Error("Audio upload failed");
+      }
+      return res.data.file.path;
+    };
 
     const isMCQ = Array.isArray(qDoc.options) && qDoc.options.length > 0;
     const type = qDoc.questionType || "";
@@ -257,7 +269,7 @@ const QuestionRenderer: any = React.memo(
             <div className="bg-white rounded dark:bg-slate-900 p-4 min-h-[65vh] overflow-y-auto">
               {/* {renderHeader()} */}
               {renderPassage()}
-              
+
               <div
                 className="text- mt-4 "
                 dangerouslySetInnerHTML={{
@@ -266,16 +278,15 @@ const QuestionRenderer: any = React.memo(
               />
               <div className="w-[60%] mx-auto">
                 <RecordingOnlyComponent
-                key={qDoc._id}
-                recordingDurationSeconds={35}
-                preRecordingWaitSeconds={40}
-                onRecordingComplete={handleRecordingComplete}
-                onStartCountdown={handleStartCountdownCallback}
-                onRecordingStatusChange={(isRecording) => setIsRecordingInProgress(isRecording)}
-              />
+                  key={qDoc._id}
+                  recordingDurationSeconds={35}
+                  preRecordingWaitSeconds={40}
+                  onRecordingComplete={handleRecordingComplete}
+                  onStartCountdown={handleStartCountdownCallback}
+                />
 
               </div>
-              
+
             </div>
           );
         case "repeat_sentence":
@@ -284,9 +295,6 @@ const QuestionRenderer: any = React.memo(
               {/* {renderHeader()} */}
               {renderPassage()}
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-
-
-
                 <TTSPlayer
                   key={`player-${qDoc._id}`}
                   audioUrl={qDoc.typeSpecific?.audio
@@ -296,8 +304,6 @@ const QuestionRenderer: any = React.memo(
                   delayBeforePlay={3000}
                   onPlaybackEnd={onTTSFinished}
                 />
-
-
 
                 <RecordingOnlyComponent
                   key={qDoc._id}
@@ -336,7 +342,41 @@ const QuestionRenderer: any = React.memo(
         case "retell_lesson":
         case "pte_situational":
         case "short_answer":
-          return qDoc && <SpeakingQuestion key={qDoc?._id} qDoc={qDoc} />;
+          return qDoc && (
+            <div className="bg-white rounded dark:bg-slate-900 p-4 min-h-[65vh] overflow-y-auto">
+              {/* {renderHeader()} */}
+              <div className="flex-block">
+                {qDoc?.stimulus && (
+                  <div
+                    className="prose text-base prose-sm dark:prose-invert max-w-none mb-6"
+                    dangerouslySetInnerHTML={{ __html: qDoc.stimulus }}
+                  />
+                )}
+                {qDoc?.questionType != "retell_lesson" && <div className="mb-6">
+                  <h2 className="" dangerouslySetInnerHTML={{ __html: qDoc?.questionText }} />
+                </div>}
+              </div>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <TTSPlayer
+                  key={`player-${qDoc._id}`}
+                  audioUrl={qDoc.typeSpecific?.audio
+                    ? audioBaseUrl + qDoc.typeSpecific.audio
+                    : undefined}
+                  text={qDoc.questionText}   // 🔁 fallback
+                  delayBeforePlay={3000}
+                  onPlaybackEnd={onTTSFinished}
+                />
+
+                <RecordingOnlyComponent
+                  key={qDoc._id}
+                  recordingDurationSeconds={40}
+                  preRecordingWaitSeconds={10}
+                  onRecordingComplete={handleRecordingComplete}
+                  onStartCountdown={handleStartCountdownCallback}
+                />
+              </div>
+            </div>
+          );
 
         case "summarize_group_discussions":
           return (
@@ -424,7 +464,6 @@ const QuestionRenderer: any = React.memo(
           return (
             <div className="bg-white rounded dark:bg-slate-900 p-4 min-h-[65vh] overflow-y-auto">
               {renderPassage()}
-              {/* <SpeakingQuestion key={qDoc?._id} qDoc={qDoc} /> */}
               <TTSPlayer
                 key={"player-" + qDoc._id}
                 text={qDoc?.typeSpecific?.listeningText || "Describe the image shown."}
@@ -843,8 +882,7 @@ const QuestionRenderer: any = React.memo(
                   <button
                     className="p-1.5 bg-blue-800 text-slate-100 font-semibold border-slate-200 rounded-full px-4"
                     disabled={isNextDisabled}
-                    onClick={() => {
-                      // ✅ Yahaan check karein
+                    onClick={async () => {
                       const isSpeakingQuestion = [
                         "read_aloud",
                         "repeat_sentence",
@@ -865,6 +903,14 @@ const QuestionRenderer: any = React.memo(
                       //   return;
                       // }
 
+                      // if (recordedAudio) {
+                      //   const audioPath = await uploadAudioAndGetPath(recordedAudio);
+                      //   await updateCurrentQuestionAsync({
+                      //     answerText: audioPath,
+                      //     isAnswered: true,
+                      //   });
+                      //   setRecordedAudio(null);
+                      // }
                       goNextQuestion();
                       setCrossedOptions([]);
                     }}
@@ -993,7 +1039,8 @@ export const SectionInstructions: React.FC<SectionInstructionsProps> = React.mem
 );
 
 import { Eye, ArrowLeft, CheckCircle2 } from "lucide-react";
-import { audioBaseUrl } from "../../axiosInstance";
+import api, { audioBaseUrl } from "../../axiosInstance";
+import { set } from "react-hook-form";
 
 interface SectionReviewProps {
   currentSection: any;
