@@ -58,15 +58,15 @@ const QuestionRenderer: any = React.memo(
 
 
     // Popup states - existing state ke baad add karein
-const [showRecordFirstPopup, setShowRecordFirstPopup] = useState(false);
-const [showConfirmNextPopup, setShowConfirmNextPopup] = useState(false);
-const [isRecordingInProgress, setIsRecordingInProgress] = useState(false);
+    const [showRecordFirstPopup, setShowRecordFirstPopup] = useState(false);
+    const [showConfirmNextPopup, setShowConfirmNextPopup] = useState(false);
+    const [isRecordingInProgress, setIsRecordingInProgress] = useState(false);
 
 
-   
-   
 
-  
+
+
+
 
 
     const handleRecordingComplete = useCallback((audioBlob: Blob) => {
@@ -257,7 +257,15 @@ const [isRecordingInProgress, setIsRecordingInProgress] = useState(false);
             <div className="bg-white rounded dark:bg-slate-900 p-4 min-h-[65vh] overflow-y-auto">
               {/* {renderHeader()} */}
               {renderPassage()}
-              <RecordingOnlyComponent
+              
+              <div
+                className="text- mt-4 "
+                dangerouslySetInnerHTML={{
+                  __html: qDoc.questionText || "Question missing",
+                }}
+              />
+              <div className="w-[60%] mx-auto">
+                <RecordingOnlyComponent
                 key={qDoc._id}
                 recordingDurationSeconds={35}
                 preRecordingWaitSeconds={40}
@@ -265,12 +273,9 @@ const [isRecordingInProgress, setIsRecordingInProgress] = useState(false);
                 onStartCountdown={handleStartCountdownCallback}
                 onRecordingStatusChange={(isRecording) => setIsRecordingInProgress(isRecording)}
               />
-              <div
-                className="text- mt-4"
-                dangerouslySetInnerHTML={{
-                  __html: qDoc.questionText || "Question missing",
-                }}
-              />
+
+              </div>
+              
             </div>
           );
         case "repeat_sentence":
@@ -339,12 +344,13 @@ const [isRecordingInProgress, setIsRecordingInProgress] = useState(false);
               {renderPassage()}
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <TTSPlayer
-                  key={"player-" + qDoc._id}
-                  text={qDoc.questionText || "Describe the image shown."}
-                  delayBeforePlay={3000} // 1 second
+                  key={`player-${qDoc._id}`}
+                  audioUrl={qDoc.typeSpecific?.audio
+                    ? audioBaseUrl + qDoc.typeSpecific.audio
+                    : undefined}
+                  text={qDoc.questionText}   // 🔁 fallback
+                  delayBeforePlay={3000}
                   onPlaybackEnd={onTTSFinished}
-                  rate={0.7}
-                  pitch={0.6}
                 />
                 <RecordingOnlyComponent
                   key={qDoc._id}
@@ -810,7 +816,7 @@ const [isRecordingInProgress, setIsRecordingInProgress] = useState(false);
             </div>
           </div>
 
-          
+
 
           {/* BOTTOM BAR */}
           <div className="fixed bottom-0 left-0 right-0 z-40  dark:border-slate-700 bg-[#bfbbbc]  backdrop-blur">
@@ -835,36 +841,36 @@ const [isRecordingInProgress, setIsRecordingInProgress] = useState(false);
                   )}
 
                   <button
-  className="p-1.5 bg-blue-800 text-slate-100 font-semibold border-slate-200 rounded-full px-4"
-  disabled={isNextDisabled}
-  onClick={() => {
-    // ✅ Yahaan check karein
-    const isSpeakingQuestion = [
-      "read_aloud",
-      "repeat_sentence", 
-      "describe_image",
-      "retell_lesson",
-      "short_answer",
-      "pte_situational",
-      "summarize_group_discussions"
-    ].includes(qDoc?.questionType || "");
-    
-    // if (isSpeakingQuestion && !recordedAudio && !isRecordingInProgress) {
-    //   setShowRecordFirstPopup(true);
-    //   return;
-    // }
-    
-    // if (isRecordingInProgress) {
-    //   setShowConfirmNextPopup(true);
-    //   return;
-    // }
-    
-    goNextQuestion();
-    setCrossedOptions([]);
-  }}
->
-  {isLastQuestionInCurrentSection ? "Review Section" : "Next"}
-</button>
+                    className="p-1.5 bg-blue-800 text-slate-100 font-semibold border-slate-200 rounded-full px-4"
+                    disabled={isNextDisabled}
+                    onClick={() => {
+                      // ✅ Yahaan check karein
+                      const isSpeakingQuestion = [
+                        "read_aloud",
+                        "repeat_sentence",
+                        "describe_image",
+                        "retell_lesson",
+                        "short_answer",
+                        "pte_situational",
+                        "summarize_group_discussions"
+                      ].includes(qDoc?.questionType || "");
+
+                      // if (isSpeakingQuestion && !recordedAudio && !isRecordingInProgress) {
+                      //   setShowRecordFirstPopup(true);
+                      //   return;
+                      // }
+
+                      // if (isRecordingInProgress) {
+                      //   setShowConfirmNextPopup(true);
+                      //   return;
+                      // }
+
+                      goNextQuestion();
+                      setCrossedOptions([]);
+                    }}
+                  >
+                    {isLastQuestionInCurrentSection ? "Review Section" : "Next"}
+                  </button>
                 </div>
               </div>
             </div>
@@ -872,35 +878,35 @@ const [isRecordingInProgress, setIsRecordingInProgress] = useState(false);
         </div>
 
         {/* Return statement ke andar, sabse last mein */}
-{showRecordFirstPopup && (
-  <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
-    <div className="bg-white rounded-xl max-w-md w-full mx-4 p-6">
-      <h3 className="text-lg font-bold mb-4">Recording Required</h3>
-      <p className="mb-4">Please record your response before proceeding.</p>
-      <div className="flex justify-end gap-3">
-        <button onClick={() => setShowRecordFirstPopup(false)} className="px-4 py-2">Cancel</button>
-        <button onClick={() => setShowRecordFirstPopup(false)} className="px-4 py-2 bg-blue-600 text-white">OK</button>
-      </div>
-    </div>
-  </div>
-)}
+        {showRecordFirstPopup && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
+            <div className="bg-white rounded-xl max-w-md w-full mx-4 p-6">
+              <h3 className="text-lg font-bold mb-4">Recording Required</h3>
+              <p className="mb-4">Please record your response before proceeding.</p>
+              <div className="flex justify-end gap-3">
+                <button onClick={() => setShowRecordFirstPopup(false)} className="px-4 py-2">Cancel</button>
+                <button onClick={() => setShowRecordFirstPopup(false)} className="px-4 py-2 bg-blue-600 text-white">OK</button>
+              </div>
+            </div>
+          </div>
+        )}
 
-{showConfirmNextPopup && (
-  <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
-    <div className="bg-white rounded-xl max-w-md w-full mx-4 p-6">
-      <h3 className="text-lg font-bold mb-4">Confirm Navigation</h3>
-      <p className="mb-4">Recording is in progress. Proceeding will stop the recording.</p>
-      <div className="flex justify-end gap-3">
-        <button onClick={() => setShowConfirmNextPopup(false)} className="px-4 py-2">Cancel</button>
-        <button onClick={() => {
-          setShowConfirmNextPopup(false);
-          goNextQuestion();
-          setCrossedOptions([]);
-        }} className="px-4 py-2 bg-blue-600 text-white">Proceed</button>
-      </div>
-    </div>
-  </div>
-)}
+        {showConfirmNextPopup && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
+            <div className="bg-white rounded-xl max-w-md w-full mx-4 p-6">
+              <h3 className="text-lg font-bold mb-4">Confirm Navigation</h3>
+              <p className="mb-4">Recording is in progress. Proceeding will stop the recording.</p>
+              <div className="flex justify-end gap-3">
+                <button onClick={() => setShowConfirmNextPopup(false)} className="px-4 py-2">Cancel</button>
+                <button onClick={() => {
+                  setShowConfirmNextPopup(false);
+                  goNextQuestion();
+                  setCrossedOptions([]);
+                }} className="px-4 py-2 bg-blue-600 text-white">Proceed</button>
+              </div>
+            </div>
+          </div>
+        )}
       </>
     );
   }

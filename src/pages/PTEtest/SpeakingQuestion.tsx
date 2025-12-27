@@ -468,7 +468,10 @@ const SpeakingQuestion = ({ qDoc }) => {
 
     return (
         <div className="bg-white flex justify-between dark:bg-slate-900 pt-4 rounded-lg min-h-[65vh] overflow-y-auto">
-            {/* Stimulus */}
+
+            <div className="flex-block">
+
+                 {/* Stimulus */}
             {qDoc?.stimulus && (
                 <div
                     className="prose text-base prose-sm dark:prose-invert max-w-none mb-6"
@@ -481,20 +484,23 @@ const SpeakingQuestion = ({ qDoc }) => {
                 <h2 className="" dangerouslySetInnerHTML={{ __html: qDoc?.questionText }} />
             </div>}
 
+            </div>
+           
+
             <div className="w-[70%] mx-7">
                 {/* ✅ UPDATED: Audio/TTS Player */}
-                <div className="bg-blue-50 dark:bg-blue-900/20 p-4 rounded-lg border border-blue-200 dark:border-blue-800">
+                <div className="bg-gray-200 dark:bg-blue-900/20 p-4 rounded-lg border border-blue-200 dark:border-blue-800">
                     <div className="flex items-center justify-between mb-3">
                         <div className="flex items-center gap-2">
-                            <Volume2 className={`w-5 h-5 ${isPlaying ? "text-blue-600 animate-pulse" : "text-blue-500"}`} />
-                            <span className="font-semibold text-blue-900 dark:text-blue-100">
+                            
+                            <span className="font-semibold text-black dark:text-blue-100">
                                 {useAudio ? "AUDIO PLAYER" : "TEXT TO SPEECH"}
                             </span>
                         </div>
                         
                         {/* Volume Control */}
                         <div className="flex items-center gap-2">
-                            <Volume2 className="w-4 h-4 text-blue-600" />
+
                             <input
                                 type="range"
                                 min="0"
@@ -502,7 +508,7 @@ const SpeakingQuestion = ({ qDoc }) => {
                                 step="0.1"
                                 value={audioVolume}
                                 onChange={(e) => handleVolumeChange(parseFloat(e.target.value))}
-                                className="w-20 h-2 bg-blue-200 rounded-lg appearance-none cursor-pointer"
+                                className="w-20 h-2  rounded-lg  cursor-pointer"
                             />
                         </div>
                     </div>
@@ -514,9 +520,9 @@ const SpeakingQuestion = ({ qDoc }) => {
                            
                         </div>
                         
-                        <div className="w-full bg-blue-200 dark:bg-blue-800 rounded-full h-2">
+                        <div className="w-full bg-white rounded-full h-4">
                             <div
-                                className="bg-blue-600 h-2 rounded-full transition-all duration-100"
+                                className="bg-slate-500 h-4 rounded-full transition-all duration-100"
                                 style={{ 
                                     width: useAudio 
                                         ? `${audioDuration > 0 ? (audioCurrentTime / audioDuration) * 100 : 0}%`
@@ -589,7 +595,7 @@ const SpeakingQuestion = ({ qDoc }) => {
 
                     {/* Progress */}
                     <div className="mb-3">
-                        <div className="w-full bg-white rounded-full h-2 overflow-hidden">
+                        <div className="w-full bg-white rounded-full h-4 overflow-hidden">
                             <div
                                 className="h-full bg-gray-500 transition-all"
                                 style={{
@@ -1006,7 +1012,7 @@ export const RecordingOnlyComponent = memo(({
 
             {/* Recording in progress */}
             {isRecording && (
-                <div className="bg-gray-200 p-4 rounded-xl shadow-lg w-[70%] mx-auto">
+                <div className="bg-gray-200 p-4 rounded-xl shadow-lg w-[50%] mx-auto">
                     {/* Header */}
                     <div className="flex items-center justify-between mb-3">
                         <div className="flex items-center gap-2">
@@ -1024,7 +1030,7 @@ export const RecordingOnlyComponent = memo(({
 
                     {/* Progress */}
                     <div className="mb-3">
-                        <div className="w-full bg-white rounded-full h-2 overflow-hidden">
+                        <div className="w-full bg-white rounded-full h-4 overflow-hidden">
                             <div
                                 className="h-full bg-gray-500 transition-all"
                                 style={{
@@ -1055,7 +1061,7 @@ export const RecordingOnlyComponent = memo(({
                             Your voice is being recorded
                         </span>
                         <span className="text-xs text-gray-600">
-                            {formatTime(recordingTime)} / {formatTime(recordingDurationSeconds)}
+                            {formatTime(recordingTime)}
                         </span>
                     </div>
                 </div>
@@ -1211,7 +1217,7 @@ const TTSPlayerWithUI: React.FC<TTSPlayerWithUIProps> = ({
             {/* Progress (audio only) */}
             {!isUsingTTS && (
                 <div className="mb-4">
-                    <div className="w-full bg-white/40 h-3 rounded-full overflow-hidden">
+                    <div className="w-full bg-white/40 h-4 rounded-full overflow-hidden">
                         <div
                             className="bg-slate-500 h-full transition-all"
                             style={{ width: `${progress}%` }}
