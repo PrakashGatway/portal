@@ -384,9 +384,8 @@ export default function PteExamPage() {
     }) => {
       if (!attempt || !currentSection || !currentQuestion) return;
       if (attempt.status !== "in_progress") return;
-
+      console.log("dsfdsfddddddddddddddddddddddd",currentQuestion?.answerText)
       const silent = opts?.silent ?? true;
-
       try {
         setSavingProgress(!silent);
 
@@ -452,7 +451,7 @@ export default function PteExamPage() {
   }, [attempt, currentSection, currentQuestion, isCompleted, activeSectionIndex, activeQuestionIndex]);
 
   const handleTextAnswerChange = useCallback((
-    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
+    e: any
   ) => {
     const value = e.target.value;
     if (!attempt || !currentSection || !currentQuestion) return;
@@ -467,6 +466,7 @@ export default function PteExamPage() {
       q.isAnswered = value.trim().length > 0;
       return clone;
     });
+
   }, [attempt, currentSection, currentQuestion, isCompleted, activeSectionIndex, activeQuestionIndex]);
 
   const toggleMarkForReview = useCallback(() => {

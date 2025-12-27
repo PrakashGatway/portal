@@ -1,4 +1,5 @@
 import React, { useEffect, useRef, useState, useCallback, useMemo, use } from "react";
+import api from "../../axiosInstance";
 import {
   AlertTriangle,
   BookOpen,
@@ -53,19 +54,52 @@ const QuestionRenderer: any = React.memo(
     const [crossedOptions, setCrossedOptions] = useState<number[]>([]);
     const [isPaletteOpen, setIsPaletteOpen] = useState(false);
 
+    const [pendingAudioUpload, setPendingAudioUpload] = useState<Blob | null>(null);
+
     const [recordedAudio, setRecordedAudio] = useState(null);
     const [startRecordingCountdown, setStartRecordingCountdown] = useState<(() => void) | null>(null);
 
 
-   
-   
+    // Popup states - existing state ke baad add karein
+const [showRecordFirstPopup, setShowRecordFirstPopup] = useState(false);
+const [showConfirmNextPopup, setShowConfirmNextPopup] = useState(false);
+const [isRecordingInProgress, setIsRecordingInProgress] = useState(false);
 
-  
 
 
-    const handleRecordingComplete = useCallback((audioBlob: Blob) => {
+
+
+ const uploadAudioToAPI = useCallback(async (audioBlob: Blob) => {
+      try {
+        const formData = new FormData();
+        // Sirf audio file append karein
+        formData.append('file', audioBlob, 'recording.webm');
+
+        // Axios instance se upload karein
+        const response = await api.post('/upload/pteupload', formData, {
+          headers: {
+            'Content-Type': 'multipart/form-data',
+          },
+        });
+
+        console.log('✅ Audio uploaded successfully:', response.data);
+
+        handleTextAnswerChange({target:{value:response.data?.file?.path}})
+
+        return response.data;
+      } catch (error) {
+        console.error('❌ Audio upload failed:', error);
+        return null;
+      }
+    }, []);
+
+
+   const handleRecordingComplete = useCallback(async (audioBlob: Blob) => {
       setRecordedAudio(audioBlob);
-      console.log("Recorded audio ready for upload:", audioBlob);
+      setPendingAudioUpload(audioBlob); 
+      console.log("Recorded audio ready for upload");
+      
+     
     }, []);
 
     const handleStartCountdownCallback = useCallback((startFn: () => void) => {
@@ -252,12 +286,13 @@ const QuestionRenderer: any = React.memo(
               {/* {renderHeader()} */}
               {renderPassage()}
               <RecordingOnlyComponent
-                key={qDoc._id}
-                recordingDurationSeconds={35}
-                preRecordingWaitSeconds={40}
-                onRecordingComplete={handleRecordingComplete}
-                onStartCountdown={handleStartCountdownCallback}
-              />
+          key={qDoc._id}
+          recordingDurationSeconds={35}
+          preRecordingWaitSeconds={40}
+          onRecordingComplete={handleRecordingComplete}
+          onStartCountdown={handleStartCountdownCallback}
+          onRecordingStatusChange={(isRecording) => setIsRecordingInProgress(isRecording)}
+        />
               <div
                 className="text- mt-4"
                 dangerouslySetInnerHTML={{
@@ -803,6 +838,8 @@ const QuestionRenderer: any = React.memo(
             </div>
           </div>
 
+          
+
           {/* BOTTOM BAR */}
           <div className="fixed bottom-0 left-0 right-0 z-40  dark:border-slate-700 bg-[#bfbbbc]  backdrop-blur">
             <div className="mx-auto max-w-7xl px-4 py-3 ">
@@ -826,20 +863,86 @@ const QuestionRenderer: any = React.memo(
                   )}
 
                   <button
-                    className="p-1.5 bg-blue-800 text-slate-100 font-semibold border-slate-200 rounded-full px-4"
-                    disabled={isNextDisabled}
-                    onClick={() => {
-                      goNextQuestion();
-                      setCrossedOptions([]);
-                    }}
-                  >
-                    {isLastQuestionInCurrentSection ? "Review Section" : "Next"}
-                  </button>
+  className="p-1.5 bg-blue-800 text-slate-100 font-semibold border-slate-200 rounded-full px-4"
+  disabled={isNextDisabled}
+  onClick={async() => {
+    // ✅ Yahaan check karein
+    const isSpeakingQuestion = [
+      "read_aloud",
+      "repeat_sentence", 
+      "describe_image",
+      "retell_lesson",
+      "short_answer",
+      "pte_situational",
+      "summarize_group_discussions"
+    ].includes(qDoc?.questionType || "");
+    
+    if (isSpeakingQuestion && !recordedAudio && !isRecordingInProgress) {
+      setShowRecordFirstPopup(true);
+      return;
+    }
+    
+    if (isRecordingInProgress) {
+      setShowConfirmNextPopup(true);
+      return;
+    }
+    if (pendingAudioUpload) {
+      try {
+      
+        const result = await uploadAudioToAPI(pendingAudioUpload);
+        if (result) {
+          
+          setPendingAudioUpload(null); 
+        }
+      } catch (error) {
+        console.error("❌ Audio upload failed:", error);
+        
+      }
+    }
+    
+    goNextQuestion();
+    setCrossedOptions([]);
+   
+  }}
+>
+  {isLastQuestionInCurrentSection ? "Review Section" : "Next"}
+</button>
                 </div>
               </div>
             </div>
           </div>
         </div>
+
+        {/* Return statement ke andar, sabse last mein */}
+{showRecordFirstPopup && (
+  <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
+    <div className="bg-white rounded-xl max-w-md w-full mx-4 p-6">
+      <h3 className="text-lg font-bold mb-4">Recording Required</h3>
+      <p className="mb-4">Please record your response before proceeding.</p>
+      <div className="flex justify-end gap-3">
+        <button onClick={() => setShowRecordFirstPopup(false)} className="px-4 py-2">Cancel</button>
+        <button onClick={() => setShowRecordFirstPopup(false)} className="px-4 py-2 bg-blue-600 text-white">OK</button>
+      </div>
+    </div>
+  </div>
+)}
+
+{showConfirmNextPopup && (
+  <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
+    <div className="bg-white rounded-xl max-w-md w-full mx-4 p-6">
+      <h3 className="text-lg font-bold mb-4">Confirm Navigation</h3>
+      <p className="mb-4">Recording is in progress. Proceeding will stop the recording.</p>
+      <div className="flex justify-end gap-3">
+        <button onClick={() => setShowConfirmNextPopup(false)} className="px-4 py-2">Cancel</button>
+        <button onClick={() => {
+          setShowConfirmNextPopup(false);
+          goNextQuestion();
+          setCrossedOptions([]);
+        }} className="px-4 py-2 bg-blue-600 text-white">Proceed</button>
+      </div>
+    </div>
+  </div>
+)}
       </>
     );
   }

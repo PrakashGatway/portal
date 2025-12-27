@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef, useCallback, memo } from "react"
-import { Volume2, Mic, Clock, Volume2Icon, Play, Pause, StopCircle } from "lucide-react"
+import { Volume2, Mic, Clock, Volume2Icon, Play, Pause, StopCircle , Square } from "lucide-react"
+import { audioBaseUrl } from "../../axiosInstance"
 
 const SpeakingQuestion = ({ qDoc }) => {
     const [isPlaying, setIsPlaying] = useState(false)
@@ -11,8 +12,25 @@ const SpeakingQuestion = ({ qDoc }) => {
     const [audioSize, setAudioSize] = useState(0)
     const [ttsProgress, setTtsProgress] = useState(0)
     const [estimatedTtsDuration, setEstimatedTtsDuration] = useState(0)
-    const [hasPlayedTTS, setHasPlayedTTS] = useState(false)
+    const [hasPlayed, setHasPlayed] = useState(false)
     const [hasRecorded, setHasRecorded] = useState(false)
+    const [audioVolume, setAudioVolume] = useState(1)
+    const [audioCurrentTime, setAudioCurrentTime] = useState(0)
+    const [audioDuration, setAudioDuration] = useState(0)
+
+    // ✅ FIRST: Check for audio URL from API
+    const audioUrl = qDoc.typeSpecific?.audio
+                        ? audioBaseUrl + qDoc.typeSpecific.audio
+                        : undefined
+    
+    // ✅ SECOND: Fallback to TTS text
+    const questionText = qDoc?.typeSpecific?.listeningText || qDoc?.questionText || "No question available"
+    
+    // ✅ Priority logic
+    const hasAudioUrl = !!audioUrl
+    const hasQuestionText = !!questionText && questionText !== "No question available"
+    const useAudio = hasAudioUrl
+    const useTTS = !hasAudioUrl && hasQuestionText
 
     const mediaRecorderRef = useRef(null)
     const chunksRef = useRef([])
@@ -20,18 +38,181 @@ const SpeakingQuestion = ({ qDoc }) => {
     const recordingTimerRef = useRef(null)
     const countdownTimerRef = useRef(null)
     const ttsTimerRef = useRef(null)
+    const audioRef = useRef<HTMLAudioElement | null>(null)
+    const utteranceRef = useRef<SpeechSynthesisUtterance | null>(null)
 
-    const questionText = qDoc?.typeSpecific?.listeningText || qDoc?.questionText || "No question available"
-    const hasValidQuestion = Boolean(qDoc && (qDoc.typeSpecific?.listeningText || qDoc.questionText))
 
-    // Initialize audio context and auto-play TTS once
+     // State for audio level
+    const [audioLevel, setAudioLevel] = useState(0);
+    const canvasRef = useRef<HTMLCanvasElement>(null);
+    const analyserRef = useRef<AnalyserNode | null>(null);
+    const audioContext = useRef<AudioContext | null>(null);
+    const mediaStreamRef = useRef<MediaStream | null>(null);
+    const animationRef = useRef<number | null>(null);
+
+    const drawVisualizer = useCallback(() => {
+        if (!canvasRef.current || !analyserRef.current) return;
+        
+        const canvas = canvasRef.current;
+        const ctx = canvas.getContext('2d');
+        if (!ctx) return;
+        
+        // Set canvas size
+        const width = canvas.offsetWidth;
+        const height = canvas.offsetHeight;
+        canvas.width = width;
+        canvas.height = height;
+        
+        const bufferLength = analyserRef.current.frequencyBinCount;
+        const dataArray = new Uint8Array(bufferLength);
+        
+        const draw = () => {
+            animationRef.current = requestAnimationFrame(draw);
+            analyserRef.current!.getByteFrequencyData(dataArray);
+            
+            // Clear canvas with light gray background like image
+            ctx.fillStyle = '#e4e7ec'; // Light gray background
+            ctx.fillRect(0, 0, width, height);
+            
+            // Calculate average audio level for state
+            let sum = 0;
+            let count = 0;
+            for (let i = 0; i < Math.min(bufferLength, 64); i++) { // Use only low frequencies for voice
+                sum += dataArray[i];
+                count++;
+            }
+            const avg = count > 0 ? sum / count : 0;
+            setAudioLevel(Math.min(100, (avg / 255) * 100));
+            
+            // Draw bars - thinner and more numerous like image
+            const barCount = 60; // More bars for detailed look
+            const barWidth = width / barCount;
+            const spacing = 0.5;
+            
+            for (let i = 0; i < barCount; i++) {
+                // Map bar index to frequency data
+                const freqIndex = Math.floor((i / barCount) * bufferLength * 0.4); // Focus on lower frequencies
+                const barHeight = (dataArray[freqIndex] / 255) * height;
+                
+                // Calculate position
+                const x = i * barWidth;
+                const y = height - barHeight;
+                
+                // Use the exact blue color from image: #4669e3
+                const gradient = ctx.createLinearGradient(0, y, 0, height);
+                gradient.addColorStop(0, '#ef4444'); // Top color
+                gradient.addColorStop(0.5, '#f97316'); // Middle color
+                gradient.addColorStop(1, '#eab308'); // Bottom color - same solid color
+                
+                ctx.fillStyle = gradient;
+                
+                // Draw rounded bar
+                const barRadius = 1;
+                const actualWidth = barWidth - spacing;
+                
+                // Rounded rectangle
+                ctx.beginPath();
+                ctx.moveTo(x + barRadius, y);
+                ctx.lineTo(x + actualWidth - barRadius, y);
+                ctx.quadraticCurveTo(x + actualWidth, y, x + actualWidth, y + barRadius);
+                ctx.lineTo(x + actualWidth, height);
+                ctx.lineTo(x, height);
+                ctx.lineTo(x, y + barRadius);
+                ctx.quadraticCurveTo(x, y, x + barRadius, y);
+                ctx.closePath();
+                ctx.fill();
+            }
+            
+            // Add bottom border like in image
+            ctx.fillStyle = '#e4e7ec';
+            ctx.fillRect(0, height - 1, width, 1);
+        };
+        
+        draw();
+    }, []);
+
+    const startVisualization = useCallback(async () => {
+        try {
+            const stream = await navigator.mediaDevices.getUserMedia({ 
+                audio: {
+                    echoCancellation: true,
+                    noiseSuppression: true,
+                    autoGainControl: true
+                } 
+            });
+            
+            if (!canvasRef.current) return;
+            
+            const audioCtx = new (window.AudioContext || (window as any).webkitAudioContext)();
+            const analyser = audioCtx.createAnalyser();
+            const microphone = audioCtx.createMediaStreamSource(stream);
+            
+            analyser.fftSize = 512; // Higher for more detail
+            analyser.minDecibels = -60;
+            analyser.maxDecibels = -10;
+            analyser.smoothingTimeConstant = 0.7;
+            
+            microphone.connect(analyser);
+            
+            analyserRef.current = analyser;
+            audioContext.current = audioCtx;
+            mediaStreamRef.current = stream;
+            
+            drawVisualizer();
+            
+        } catch (error) {
+            console.error('Error accessing microphone:', error);
+        }
+    }, [drawVisualizer]);
+
+    const stopVisualization = useCallback(() => {
+        if (animationRef.current) {
+            cancelAnimationFrame(animationRef.current);
+            animationRef.current = null;
+        }
+        
+        if (analyserRef.current && audioContext.current) {
+            analyserRef.current.disconnect();
+        }
+        
+        if (mediaStreamRef.current) {
+            mediaStreamRef.current.getTracks().forEach(track => track.stop());
+            mediaStreamRef.current = null;
+        }
+        
+        setAudioLevel(0);
+    }, []);
+
+    // Start/stop visualization based on recording state
+    useEffect(() => {
+        if (isRecording) {
+            startVisualization();
+        } else {
+            stopVisualization();
+        }
+        
+        return () => {
+            stopVisualization();
+        };
+    }, [isRecording, startVisualization, stopVisualization]);
+
+
+
+
+
+
+    // Initialize and auto-play (audio first, TTS fallback)
     useEffect(() => {
         audioContextRef.current = new (window.AudioContext || window.webkitAudioContext)()
 
-        // Auto-play TTS after 1 second (ONLY ONCE)
+        // Auto-play after 3 seconds (ONLY ONCE)
         setTimeout(() => {
-            if (hasValidQuestion && !hasPlayedTTS) {
-                playTTS()
+            if ((useAudio || useTTS) && !hasPlayed) {
+                if (useAudio) {
+                    playAudio()
+                } else if (useTTS) {
+                    playTTS()
+                }
             }
         }, 3000)
 
@@ -47,40 +228,77 @@ const SpeakingQuestion = ({ qDoc }) => {
             window.speechSynthesis.cancel()
             if (audioContextRef.current) audioContextRef.current.close()
             if (chunksRef.current) chunksRef.current = []
+            if (audioRef.current) {
+                audioRef.current.pause()
+                audioRef.current.currentTime = 0
+            }
         }
     }, [])
 
-    // Play TTS with progress simulation (ONE TIME ONLY)
-    const playTTS = () => {
-        if (hasPlayedTTS) return // Prevent replay
-
-        if (!hasValidQuestion) {
-            setCurrentStatus("No question text available")
+    // ✅ Audio playback function
+    const playAudio = () => {
+        if (!audioUrl || !audioRef.current) {
+            // Fallback to TTS if audio fails
+            if (useTTS) {
+                playTTS()
+            }
             return
         }
 
-        setHasPlayedTTS(true) // Mark as played
+        setHasPlayed(true)
+        setIsPlaying(true)
+        setCurrentStatus("Playing audio...")
+
+        audioRef.current.volume = audioVolume
+        audioRef.current.play().catch(error => {
+            console.error("Audio playback failed:", error)
+            setCurrentStatus("Audio playback failed")
+            setIsPlaying(false)
+            
+            // Fallback to TTS
+            if (useTTS) {
+                playTTS()
+            }
+        })
+
+        // Auto start countdown after audio ends
+        audioRef.current.onended = () => {
+            setIsPlaying(false)
+            startCountdown()
+        }
+    }
+
+ 
+
+    // ✅ TTS playback function (fallback)
+    const playTTS = () => {
+        if (hasPlayed) return
+
+        if (!useTTS) {
+            setCurrentStatus("No audio or text available")
+            return
+        }
+
+        setHasPlayed(true)
         const estimatedDuration = Math.max(2, questionText.length / 150)
         setEstimatedTtsDuration(estimatedDuration)
         setTtsProgress(0)
         setIsPlaying(true)
-        setCurrentStatus("Playing question...")
+        setCurrentStatus("Playing TTS...")
 
-        // Cancel any existing speech
         window.speechSynthesis.cancel()
 
         const utterance = new SpeechSynthesisUtterance(questionText)
 
-        // Select female voice
         const voices = window.speechSynthesis.getVoices()
         const femaleVoice = voices.find((v) => /female|samantha|zira|jane|serena|karen|ava|tessa/i.test(v.name))
         if (femaleVoice) utterance.voice = femaleVoice
 
         utterance.rate = 0.7
         utterance.pitch = 0.7
-        utterance.volume = 0.9
+        utterance.volume = audioVolume
 
-        // Simulate progress
+        // Progress simulation
         ttsTimerRef.current = setInterval(() => {
             setTtsProgress((prev) => {
                 const newProgress = prev + 0.1
@@ -105,12 +323,26 @@ const SpeakingQuestion = ({ qDoc }) => {
             startCountdown()
         }
 
+        utteranceRef.current = utterance
         window.speechSynthesis.speak(utterance)
+    }
+
+
+
+    // ✅ Volume control
+    const handleVolumeChange = (value: number) => {
+        setAudioVolume(value)
+        if (audioRef.current) {
+            audioRef.current.volume = value
+        }
+        if (utteranceRef.current) {
+            utteranceRef.current.volume = value
+        }
     }
 
     // Start 10-second countdown
     const startCountdown = () => {
-        if (hasRecorded) return // Prevent re-recording
+        if (hasRecorded) return
 
         setCurrentStatus("Preparing to record...")
         let count = 10
@@ -123,14 +355,14 @@ const SpeakingQuestion = ({ qDoc }) => {
             setCountdown(count)
 
             if (count <= 3 && count > 0) {
-                playBeep(600, 0.2) // Short beep for last 3
+                playBeep(600, 0.2)
                 setCurrentStatus(`Starting in ${count}...`)
             }
 
             if (count <= 0) {
                 clearInterval(countdownTimerRef.current)
                 setCountdown(-1)
-                playBeep(800, 0.5) // Long beep to start recording
+                playBeep(800, 0.5)
                 setTimeout(startRecording, 500)
             }
         }, 1000)
@@ -160,7 +392,7 @@ const SpeakingQuestion = ({ qDoc }) => {
     }
 
     const startRecording = async () => {
-        if (hasRecorded) return // Prevent re-recording
+        if (hasRecorded) return
 
         try {
             const stream = await navigator.mediaDevices.getUserMedia({
@@ -189,7 +421,7 @@ const SpeakingQuestion = ({ qDoc }) => {
                 setAudioSize((blob.size / 1024).toFixed(2))
                 setAudioPreviewUrl(URL.createObjectURL(blob))
                 setCurrentStatus("Recording complete - No replay or re-record allowed")
-                setHasRecorded(true) // Mark as recorded
+                setHasRecorded(true)
                 stream.getTracks().forEach((track) => track.stop())
             }
 
@@ -218,7 +450,6 @@ const SpeakingQuestion = ({ qDoc }) => {
         }
     }
 
-
     // Format time
     const formatTime = (seconds) => {
         const mins = Math.floor(seconds / 60)
@@ -236,7 +467,7 @@ const SpeakingQuestion = ({ qDoc }) => {
     }
 
     return (
-        <div className="bg-white dark:bg-slate-900 pt-4 rounded-lg min-h-[65vh] overflow-y-auto">
+        <div className="bg-white flex justify-between dark:bg-slate-900 pt-4 rounded-lg min-h-[65vh] overflow-y-auto">
             {/* Stimulus */}
             {qDoc?.stimulus && (
                 <div
@@ -246,39 +477,64 @@ const SpeakingQuestion = ({ qDoc }) => {
             )}
 
             {/* Question */}
-
             {qDoc?.questionType != "retell_lesson" && <div className="mb-6">
                 <h2 className="" dangerouslySetInnerHTML={{ __html: qDoc?.questionText }} />
             </div>}
 
-
-            <div className="grid grid-cols-2 gap-4">
+            <div className="w-[70%] mx-7">
+                {/* ✅ UPDATED: Audio/TTS Player */}
                 <div className="bg-blue-50 dark:bg-blue-900/20 p-4 rounded-lg border border-blue-200 dark:border-blue-800">
-                    <div className="flex items-center gap-2 mb-3">
-                        <Volume2 className={`w-5 h-5 ${isPlaying ? "text-blue-600 animate-pulse" : "text-blue-500"}`} />
-                        <span className="font-semibold text-blue-900 dark:text-blue-100">Question Audio (Plays Once)</span>
+                    <div className="flex items-center justify-between mb-3">
+                        <div className="flex items-center gap-2">
+                            <Volume2 className={`w-5 h-5 ${isPlaying ? "text-blue-600 animate-pulse" : "text-blue-500"}`} />
+                            <span className="font-semibold text-blue-900 dark:text-blue-100">
+                                {useAudio ? "AUDIO PLAYER" : "TEXT TO SPEECH"}
+                            </span>
+                        </div>
+                        
+                        {/* Volume Control */}
+                        <div className="flex items-center gap-2">
+                            <Volume2 className="w-4 h-4 text-blue-600" />
+                            <input
+                                type="range"
+                                min="0"
+                                max="1"
+                                step="0.1"
+                                value={audioVolume}
+                                onChange={(e) => handleVolumeChange(parseFloat(e.target.value))}
+                                className="w-20 h-2 bg-blue-200 rounded-lg appearance-none cursor-pointer"
+                            />
+                        </div>
                     </div>
 
-                    <div className="flex justify-between text-sm mb-2">
-                        <span className="font-medium">Progress</span>
-                        <span>
-                            {ttsProgress.toFixed(1)}s / {estimatedTtsDuration.toFixed(1)}s
-                        </span>
+                    {/* Progress Bar */}
+                    <div className="mb-3">
+                        <div className="flex justify-between text-sm mb-1">
+                            <span className="font-medium">Progress</span>
+                           
+                        </div>
+                        
+                        <div className="w-full bg-blue-200 dark:bg-blue-800 rounded-full h-2">
+                            <div
+                                className="bg-blue-600 h-2 rounded-full transition-all duration-100"
+                                style={{ 
+                                    width: useAudio 
+                                        ? `${audioDuration > 0 ? (audioCurrentTime / audioDuration) * 100 : 0}%`
+                                        : `${Math.min(100, (ttsProgress / estimatedTtsDuration) * 100)}%`
+                                }}
+                            />
+                        </div>
                     </div>
 
-                    <div className="w-full bg-blue-200 dark:bg-blue-800 rounded-full h-3">
-                        <div
-                            className="bg-blue-600 h-3 rounded-full transition-all duration-100"
-                            style={{ width: `${Math.min(100, (ttsProgress / estimatedTtsDuration) * 100)}%` }}
-                        />
-                    </div>
+                  
 
+                    {/* Status */}
                     <div className="mt-3 text-sm flex items-center gap-2">
                         <span className="font-medium">Status:</span>
                         <span
                             className={`px-2 py-1 rounded ${isPlaying
                                 ? "bg-blue-200 dark:bg-blue-800"
-                                : hasPlayedTTS
+                                : hasPlayed
                                     ? "bg-green-200 dark:bg-green-800"
                                     : "bg-gray-200 dark:bg-gray-700"
                                 }`}
@@ -287,92 +543,124 @@ const SpeakingQuestion = ({ qDoc }) => {
                         </span>
                     </div>
 
-                    {hasPlayedTTS && !isPlaying && (
+                    {/* Info */}
+                    {hasPlayed && !isPlaying && (
                         <p className="mt-2 text-xs text-blue-700 dark:text-blue-300 font-medium">
-                            ⚠️ Question has been played. No replay allowed.
+                            ⚠️ {useAudio ? "Audio" : "Question"} has been played.
                         </p>
                     )}
                 </div>
 
+                {/* Rest of your existing code remains the same */}
                 {/* Countdown Display */}
                 {countdown >= 0 && (
-                    <div className="">
-                        <div className="bg-orange-50 dark:bg-orange-900/20 p-6 rounded-lg border border-orange-200 dark:border-orange-800 text-center">
-                            <Clock className="w-8 h-8 mx-auto mb-2 text-orange-600 animate-pulse" />
-                            <h3 className="text-2xl font-bold text-orange-900 dark:text-orange-100 mb-2">Get Ready!</h3>
-                            <p className="text-5xl font-bold text-orange-600 dark:text-orange-400">{countdown}</p>
-                            <p className="mt-2 text-sm text-orange-700 dark:text-orange-300">
-                                Recording starts in {countdown} second{countdown !== 1 ? "s" : ""}
-                            </p>
+                <div className="flex items-center justify-center gap-4 p-6 rounded-lg text-center">
+                    <div className="relative">
+                        <div className="relative w-16 h-16 rounded-full border-4 border-slate-500 dark:border-slate-700 bg-white flex items-center justify-center">
+                            <span className="text-2xl font-bold text-slate-400 dark:text-orange-400">
+                                {countdown}
+                            </span>
                         </div>
                     </div>
-                )}
+                    <div>
+                        <h3 className="text-base font-bold text-slate-400 mb-1">
+                            Recording in {countdown} seconds
+                        </h3>
+                    </div>
+                </div>
+            )}
 
-                {/* Recording Display */}
-                {isRecording && (
-                    <div className="">
-                        <div className="bg-red-50 dark:bg-red-900/20 p-6 rounded-lg border border-red-200 dark:border-red-800">
-                            <div className="flex items-center justify-center gap-3 mb-4">
-                                <Mic className="w-6 h-6 text-red-600 animate-pulse" />
-                                <h3 className="text-xl font-bold text-red-900 dark:text-red-100">RECORDING IN PROGRESS</h3>
-                                <div className="w-3 h-3 bg-red-600 rounded-full animate-pulse" />
-                            </div>
+                 {isRecording && (
+                <div className="bg-gray-200 p-4 mt-3 rounded-xl shadow-lg w-[70%] mx-auto">
+                    {/* Header */}
+                    <div className="flex items-center justify-between mb-3">
+                        <div className="flex items-center gap-2">
+                            <span className="relative flex h-2 w-2">
+                                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-500 opacity-75"></span>
+                                <span className="relative inline-flex rounded-full h-2 w-2 bg-red-500"></span>
+                            </span>
+                            <Mic className="w-4 h-4 text-red-400" />
+                            <span className="text-sm font-semibold text-black tracking-wide">
+                                RECORDING LIVE
+                            </span>
+                        </div>
+                        <span className="text-xs text-black">Speak clearly</span>
+                    </div>
 
-                            <div className="text-center mb-4">
-                                <p className="text-4xl font-bold text-red-600 dark:text-red-400">{formatTime(recordingTime)}</p>
-                                <p className="text-sm text-red-700 dark:text-red-300 mt-1">
-                                    Time remaining: {formatTime(40 - recordingTime)}
-                                </p>
-                            </div>
-
-                            <div className="w-full bg-red-200 dark:bg-red-800 rounded-full h-3">
-                                <div
-                                    className="bg-red-600 h-3 rounded-full transition-all duration-1000"
-                                    style={{ width: `${(recordingTime / 40) * 100}%` }}
-                                />
-                            </div>
-
-                            <p className="mt-3 text-xs text-center text-red-700 dark:text-red-300 font-medium">
-                                Recording will automatically stop at 40 seconds
-                            </p>
+                    {/* Progress */}
+                    <div className="mb-3">
+                        <div className="w-full bg-white rounded-full h-2 overflow-hidden">
+                            <div
+                                className="h-full bg-gray-500 transition-all"
+                                style={{
+                                    width: `${(recordingTime / 40) * 100}%`,
+                                }}
+                            />
                         </div>
                     </div>
-                )}
 
-                {/* Recording Preview (No Replay of Question) */}
+                    {/* Audio Visualizer */}
+                    <div className="mb-4">
+                        
+                        
+                        {/* Canvas container with border like image */}
+                    
+                            <canvas 
+                                ref={canvasRef}
+                                className="w-full h-16"
+                            />
+                        
+                        
+                       
+                    </div>
+
+                    {/* Status */}
+                    <div className="flex items-center justify-between">
+                        <span className="text-xs text-black">
+                            Your voice is being recorded
+                        </span>
+                        <span className="text-xs text-gray-600">
+                            {formatTime(recordingTime)}
+                        </span>
+                    </div>
+                </div>
+            )}
+
+                {/* Recording Preview */}
                 {audioPreviewUrl && hasRecorded && (
-                    <div className="p-4 bg-green-50 dark:bg-green-900/20 rounded-lg border border-green-200 dark:border-green-800">
+                    <div className="p-4 mt-3 bg-green-50 dark:bg-green-900/20 rounded-lg border border-green-200 dark:border-green-800">
                         <h3 className="text-lg font-semibold mb-4 text-green-900 dark:text-green-100">
-                            ✓ Your Recording (Final - No Re-record Allowed)
+                            ✓ Your voice has been recorded
                         </h3>
 
-                        <audio controls className="w-full mb-4" src={audioPreviewUrl} />
+                      
 
-                        <div className="flex flex-wrap justify-between items-center gap-4 p-3 bg-white dark:bg-slate-800 rounded border border-green-200 dark:border-green-700">
-                            <div className="text-sm">
-                                <p className="font-semibold mb-1">Recording Details:</p>
-                                <p className="text-gray-700 dark:text-gray-300">
-                                    Format: WebM/Opus • Duration: 40s • Size: {audioSize} KB
-                                </p>
-                            </div>
-                            <button
-                                onClick={downloadAudio}
-                                className="px-6 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg font-medium transition-colors"
-                            >
-                                Download Recording
-                            </button>
-                        </div>
+                       
                     </div>
                 )}
-
             </div>
 
+            {/* ✅ Hidden audio element for API audio */}
+            {audioUrl && (
+                <audio
+                    ref={audioRef}
+                    src={audioUrl}
+                    preload="metadata"
+                    onTimeUpdate={() => setAudioCurrentTime(audioRef.current?.currentTime || 0)}
+                    onLoadedMetadata={() => setAudioDuration(audioRef.current?.duration || 0)}
+                    onEnded={() => {
+                        setIsPlaying(false)
+                        setCurrentStatus("Audio finished")
+                    }}
+                    className="hidden"
+                />
+            )}
         </div>
     )
 }
 
-export default React.memo(SpeakingQuestion)
 
+export default React.memo(SpeakingQuestion)
 
 
 export const RecordingOnlyComponent = memo(({
@@ -390,14 +678,166 @@ export const RecordingOnlyComponent = memo(({
     const [status, setStatus] = useState("Ready");
     const [volume, setVolume] = useState(75);
 
-    
-
     const mediaRecorderRef = useRef(null);
     const chunksRef = useRef([]);
     const audioContextRef = useRef(null);
     const recordingTimerRef = useRef(null);
     const countdownTimerRef = useRef(null);
     const streamRef = useRef(null);
+
+    // State for audio level
+    const [audioLevel, setAudioLevel] = useState(0);
+    const canvasRef = useRef<HTMLCanvasElement>(null);
+    const analyserRef = useRef<AnalyserNode | null>(null);
+    const audioContext = useRef<AudioContext | null>(null);
+    const mediaStreamRef = useRef<MediaStream | null>(null);
+    const animationRef = useRef<number | null>(null);
+
+    const drawVisualizer = useCallback(() => {
+        if (!canvasRef.current || !analyserRef.current) return;
+        
+        const canvas = canvasRef.current;
+        const ctx = canvas.getContext('2d');
+        if (!ctx) return;
+        
+        // Set canvas size
+        const width = canvas.offsetWidth;
+        const height = canvas.offsetHeight;
+        canvas.width = width;
+        canvas.height = height;
+        
+        const bufferLength = analyserRef.current.frequencyBinCount;
+        const dataArray = new Uint8Array(bufferLength);
+        
+        const draw = () => {
+            animationRef.current = requestAnimationFrame(draw);
+            analyserRef.current!.getByteFrequencyData(dataArray);
+            
+            // Clear canvas with light gray background like image
+            ctx.fillStyle = '#e4e7ec'; // Light gray background
+            ctx.fillRect(0, 0, width, height);
+            
+            // Calculate average audio level for state
+            let sum = 0;
+            let count = 0;
+            for (let i = 0; i < Math.min(bufferLength, 64); i++) { // Use only low frequencies for voice
+                sum += dataArray[i];
+                count++;
+            }
+            const avg = count > 0 ? sum / count : 0;
+            setAudioLevel(Math.min(100, (avg / 255) * 100));
+            
+            // Draw bars - thinner and more numerous like image
+            const barCount = 60; // More bars for detailed look
+            const barWidth = width / barCount;
+            const spacing = 0.5;
+            
+            for (let i = 0; i < barCount; i++) {
+                // Map bar index to frequency data
+                const freqIndex = Math.floor((i / barCount) * bufferLength * 0.4); // Focus on lower frequencies
+                const barHeight = (dataArray[freqIndex] / 255) * height;
+                
+                // Calculate position
+                const x = i * barWidth;
+                const y = height - barHeight;
+                
+                // Use the exact blue color from image: #4669e3
+                const gradient = ctx.createLinearGradient(0, y, 0, height);
+                gradient.addColorStop(0, '#ef4444'); // Top color
+                gradient.addColorStop(0.5, '#f97316'); // Middle color
+                gradient.addColorStop(1, '#eab308'); // Bottom color - same solid color
+                
+                ctx.fillStyle = gradient;
+                
+                // Draw rounded bar
+                const barRadius = 1;
+                const actualWidth = barWidth - spacing;
+                
+                // Rounded rectangle
+                ctx.beginPath();
+                ctx.moveTo(x + barRadius, y);
+                ctx.lineTo(x + actualWidth - barRadius, y);
+                ctx.quadraticCurveTo(x + actualWidth, y, x + actualWidth, y + barRadius);
+                ctx.lineTo(x + actualWidth, height);
+                ctx.lineTo(x, height);
+                ctx.lineTo(x, y + barRadius);
+                ctx.quadraticCurveTo(x, y, x + barRadius, y);
+                ctx.closePath();
+                ctx.fill();
+            }
+            
+            // Add bottom border like in image
+            ctx.fillStyle = '#e4e7ec';
+            ctx.fillRect(0, height - 1, width, 1);
+        };
+        
+        draw();
+    }, []);
+
+    const startVisualization = useCallback(async () => {
+        try {
+            const stream = await navigator.mediaDevices.getUserMedia({ 
+                audio: {
+                    echoCancellation: true,
+                    noiseSuppression: true,
+                    autoGainControl: true
+                } 
+            });
+            
+            if (!canvasRef.current) return;
+            
+            const audioCtx = new (window.AudioContext || (window as any).webkitAudioContext)();
+            const analyser = audioCtx.createAnalyser();
+            const microphone = audioCtx.createMediaStreamSource(stream);
+            
+            analyser.fftSize = 512; // Higher for more detail
+            analyser.minDecibels = -60;
+            analyser.maxDecibels = -10;
+            analyser.smoothingTimeConstant = 0.7;
+            
+            microphone.connect(analyser);
+            
+            analyserRef.current = analyser;
+            audioContext.current = audioCtx;
+            mediaStreamRef.current = stream;
+            
+            drawVisualizer();
+            
+        } catch (error) {
+            console.error('Error accessing microphone:', error);
+        }
+    }, [drawVisualizer]);
+
+    const stopVisualization = useCallback(() => {
+        if (animationRef.current) {
+            cancelAnimationFrame(animationRef.current);
+            animationRef.current = null;
+        }
+        
+        if (analyserRef.current && audioContext.current) {
+            analyserRef.current.disconnect();
+        }
+        
+        if (mediaStreamRef.current) {
+            mediaStreamRef.current.getTracks().forEach(track => track.stop());
+            mediaStreamRef.current = null;
+        }
+        
+        setAudioLevel(0);
+    }, []);
+
+    // Start/stop visualization based on recording state
+    useEffect(() => {
+        if (isRecording) {
+            startVisualization();
+        } else {
+            stopVisualization();
+        }
+        
+        return () => {
+            stopVisualization();
+        };
+    }, [isRecording, startVisualization, stopVisualization]);
 
     // Initialize audio context for beeps
     useEffect(() => {
@@ -422,7 +862,6 @@ export const RecordingOnlyComponent = memo(({
         };
     }, [audioPreviewUrl]);
 
-    // 👇 NEW: Expose startCountdown as a controlled action via parent
     const startCountdown = () => {
         if (hasRecorded) return;
         setStatus("Preparing to record...");
@@ -436,15 +875,14 @@ export const RecordingOnlyComponent = memo(({
             setCountdown(count);
 
             if (count <= 3 && count > 0) {
-                playBeep(600, 0.2); // Short beep for 3, 2, 1
+                playBeep(600, 0.2);
                 setStatus(`Starting in ${count}...`);
             }
 
             if (count <= 0) {
                 clearInterval(countdownTimerRef.current);
                 setCountdown(-1);
-                // 🔊 BEEP just before recording starts!
-                playBeep(800, 0.5); // Longer, higher beep to signal "GO"
+                playBeep(800, 0.5);
                 setTimeout(() => {
                     startRecording();
                 }, 500);
@@ -515,7 +953,6 @@ export const RecordingOnlyComponent = memo(({
             setRecordingTime(0);
             setStatus("Recording...");
 
-            // Auto-stop after recordingDurationSeconds
             recordingTimerRef.current = setInterval(() => {
                 setRecordingTime((prev) => {
                     if (prev >= recordingDurationSeconds - 1) {
@@ -541,10 +978,9 @@ export const RecordingOnlyComponent = memo(({
         return `${mins}:${secs.toString().padStart(2, "0")}`;
     };
 
-    // 👇 NEW: Once mounted, notify parent that it can start the countdown
     useEffect(() => {
         if (onStartCountdown) {
-            onStartCountdown(startCountdown); // Pass the function up
+            onStartCountdown(startCountdown);
         }
     }, [onStartCountdown]);
 
@@ -554,33 +990,23 @@ export const RecordingOnlyComponent = memo(({
             {countdown >= 0 && (
                 <div className="flex items-center justify-center gap-4 p-6 rounded-lg text-center">
                     <div className="relative">
-
-
-                        {/* Countdown circle */}
-                        <div className="relative w-16 h-16 rounded-full border-4 border-slate-500 dark:border-slate-700 bg-white  flex items-center justify-center ">
-                            <span className="text-2xl font-bold text-slate-400  dark:text-orange-400">
+                        <div className="relative w-16 h-16 rounded-full border-4 border-slate-500 dark:border-slate-700 bg-white flex items-center justify-center">
+                            <span className="text-2xl font-bold text-slate-400 dark:text-orange-400">
                                 {countdown}
                             </span>
                         </div>
                     </div>
-
                     <div>
-                        <h3 className="text-base font-bold text-slate-400  mb-1">
+                        <h3 className="text-base font-bold text-slate-400 mb-1">
                             Recording in {countdown} seconds
                         </h3>
-
                     </div>
                 </div>
             )}
 
             {/* Recording in progress */}
             {isRecording && (
-                <div className="
-    bg-gray-200
-    p-4 rounded-xl
-    shadow-lg
-  ">
-
+                <div className="bg-gray-200 p-4 rounded-xl shadow-lg w-[70%] mx-auto">
                     {/* Header */}
                     <div className="flex items-center justify-between mb-3">
                         <div className="flex items-center gap-2">
@@ -593,10 +1019,7 @@ export const RecordingOnlyComponent = memo(({
                                 RECORDING LIVE
                             </span>
                         </div>
-
-                        <span className="text-xs text-black">
-                            Speak clearly
-                        </span>
+                        <span className="text-xs text-black">Speak clearly</span>
                     </div>
 
                     {/* Progress */}
@@ -609,64 +1032,41 @@ export const RecordingOnlyComponent = memo(({
                                 }}
                             />
                         </div>
+                    </div>
 
+                    {/* Audio Visualizer */}
+                    <div className="mb-4">
+                        
+                        
+                        {/* Canvas container with border like image */}
+                    
+                            <canvas 
+                                ref={canvasRef}
+                                className="w-full h-16"
+                            />
+                        
+                        
                        
                     </div>
 
-                    
-
-                    {/* Controls */}
+                    {/* Status */}
                     <div className="flex items-center justify-between">
-
-                        {/* Status */}
                         <span className="text-xs text-black">
                             Your voice is being recorded
                         </span>
-
-                        {/* Volume */}
-                        <div className="flex items-center gap-2">
-
-                            {/* Mute */}
-                            <button
-                                onClick={() => setVolume(volume === 0 ? 70 : 0)}
-                                className="p-1.5 rounded-full bg-slate-700 hover:bg-slate-600 transition"
-                            >
-                                {volume === 0 ? (
-                                    <svg className="w-4 h-4 text-red-400" fill="currentColor" viewBox="0 0 20 20">
-                                        <path d="M9.383 3.076A1 1 0 0110 4v12a1 1 0 01-1.707.707L4.586 13H2a1 1 0 01-1-1V8a1 1 0 011-1h2.586l3.707-3.707a1 1 0 011.09-.217zM12.707 7.293a1 1 0 00-1.414 1.414L13.586 10l-2.293 2.293a1 1 0 001.414 1.414L15 11.414l2.293 2.293a1 1 0 001.414-1.414L16.414 10l2.293-2.293a1 1 0 00-1.414-1.414L15 8.586l-2.293-2.293z" />
-                                    </svg>
-                                ) : (
-                                    <svg className="w-4 h-4 text-slate-200" fill="currentColor" viewBox="0 0 20 20">
-                                        <path d="M9.383 3.076A1 1 0 0110 4v12a1 1 0 01-1.707.707L4.586 13H2a1 1 0 01-1-1V8a1 1 0 011-1h2.586l3.707-3.707a1 1 0 011.09-.217zM14.657 2.929a1 1 0 011.414 0A9.972 9.972 0 0119 10a9.972 9.972 0 01-2.929 7.071 1 1 0 01-1.414-1.414A7.971 7.971 0 0017 10c0-2.21-.894-4.208-2.343-5.657a1 1 0 010-1.414z" />
-                                    </svg>
-                                )}
-                            </button>
-
-                            {/* Slider */}
-                            <input
-                                type="range"
-                                min="0"
-                                max="100"
-                                value={volume}
-                                onChange={(e) => setVolume(+e.target.value)}
-                                className="w-16 h-1 accent-red-400 cursor-pointer"
-                            />
-                        </div>
+                        <span className="text-xs text-gray-600">
+                            {formatTime(recordingTime)} / {formatTime(recordingDurationSeconds)}
+                        </span>
                     </div>
                 </div>
             )}
-
 
             {/* Recording preview */}
             {audioPreviewUrl && hasRecorded && (
                 <div className="p-4 bg-green-50 dark:bg-green-900/20 rounded-lg border border-green-200 dark:border-green-800">
                     <h3 className="text-lg font-semibold mb-3 text-green-900 dark:text-green-100">
-                        ✓ Your Response (Final)
+                        ✓ Your voice has been recorded
                     </h3>
-                    <audio controls className="w-full mb-3" src={audioPreviewUrl} />
-                    <p className="text-sm text-gray-700 dark:text-gray-300">
-                        Duration: {recordingDurationSeconds}s • Size: {audioSizeKB} KB
-                    </p>
                 </div>
             )}
         </div>
