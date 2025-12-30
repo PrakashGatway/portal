@@ -4,23 +4,34 @@ import {
     LogOut,
     Clock,
     Eye,
-    AlertCircle
+    AlertCircle,
+    ChevronLeft,
+    BookOpen,
+    SkipForward
 } from "lucide-react";
 
 export type GRETestHeaderProps = {
     testTitle?: string;
-    currentSection?: { name?: string; durationMinutes?: number };
+    currentSection?: { 
+        name?: string; 
+        durationMinutes?: number;
+        questions?: any[];
+    };
     currentQuestion?: any;
     activeSectionIndex: number;
     totalSections: number;
     timerSecondsLeft: number;
-    currentScreen: "intro" | "test" | "results" | string;
+    currentScreen: "instructions" | "intro" | "test" | "question" | "section_review" | "results" | string;
     isCompleted: boolean;
     savingProgress?: boolean;
     saveCurrentQuestionProgress?: () => void;
     navigateBack?: () => void;
     onThemeToggle?: () => void;
     theme?: "light" | "dark";
+    onTimeUp?: () => void;
+    currentInstructionStep?: number;
+    totalInstructionSteps?: number;
+    onSkipInstructions?: () => void;
 };
 
 export const GRETestHead: React.FC<GRETestHeaderProps> = React.memo(
@@ -35,11 +46,14 @@ export const GRETestHead: React.FC<GRETestHeaderProps> = React.memo(
         isCompleted,
         savingProgress,
         saveCurrentQuestionProgress,
-        navigateBack
+        navigateBack,
+        currentInstructionStep = 0,
+        totalInstructionSteps = 0,
+        onSkipInstructions,
     }) => {
         const [timerHidden, setTimerHidden] = useState(false);
         const [timeWarning, setTimeWarning] = useState(false);
-        const questionNumber = currentQuestion.order
+        const questionNumber = currentQuestion?.order || 0;
 
         const formatTime = useCallback((seconds: number) => {
             if (seconds < 0) seconds = 0;
@@ -57,72 +71,135 @@ export const GRETestHead: React.FC<GRETestHeaderProps> = React.memo(
             }
         }, [timerSecondsLeft]);
 
+        const timeUpRef = React.useRef(false);
+
+        // section change hone par reset
+        useEffect(() => {
+            timeUpRef.current = false;
+        }, [currentSection]);
+
         const handleSaveProgress = () => {
-            setOpenMore(false);
             if (saveCurrentQuestionProgress && !isCompleted && !savingProgress) {
                 saveCurrentQuestionProgress();
             }
         };
 
+        // Instructions screen में अलग UI
+        if (currentScreen === "instructions") {
+            return (
+                <>
+                    <div className="fixed top-0 left-0 right-0 z-50 bg-[#bfbbbc] backdrop-blur">
+                        <div className="mx-auto grid grid-cols-3 items-center max-w-7xl h-15 px-4 py-2">
+                            {/* Left: Back button */}
+                            <div className="flex items-center">
+                                <button
+                                    onClick={navigateBack}
+                                    className="flex items-center gap-2 text-slate-800 dark:text-slate-200 hover:text-blue-600 dark:hover:text-blue-400 transition-colors"
+                                >
+                                    <ChevronLeft className="w-5 h-5" />
+                                    <span className="hidden sm:inline">Exit Test</span>
+                                </button>
+                            </div>
+
+                            {/* Center: Progress indicator */}
+                            <div className="text-center">
+                                <div className="text-sm font-medium text-slate-800 dark:text-slate-200">
+                                    Step {currentInstructionStep + 1} of {totalInstructionSteps || 4}
+                                </div>
+                                <div className="mt-1 h-1.5 w-full max-w-xs mx-auto bg-slate-300 dark:bg-slate-700 rounded-full overflow-hidden">
+                                    <div 
+                                        className="h-full bg-blue-600 transition-all duration-300"
+                                        style={{ 
+                                            width: `${((currentInstructionStep + 1) / (totalInstructionSteps || 4)) * 100}%` 
+                                        }}
+                                    ></div>
+                                </div>
+                            </div>
+
+                            {/* Right: Skip button */}
+                            <div className="flex items-center justify-end">
+                                <button
+                                    onClick={onSkipInstructions}
+                                    className="flex items-center gap-2 px-3 py-1.5 rounded-lg border border-slate-300 dark:border-slate-700 text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
+                                >
+                                    <SkipForward className="w-4 h-4" />
+                                    <span className="text-sm">Skip Instructions</span>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </>
+            );
+        }
+
+        // Normal test screen UI
         return (
             <>
-                <div
-                    className="fixed top-0 left-0 right-0 z-50 bg-[#bfbbbc]  backdrop-blur"
-                >
+                <div className="fixed top-0 left-0 right-0 z-50 bg-[#bfbbbc] backdrop-blur">
                     <div className="mx-auto grid grid-cols-2 items-center max-w-7xl h-15 items-center justify-between gap-4 px-4">
+                        {/* Left: Test info */}
                         <div className="flex items-center gap-3">
                             <div>
-                                <p className="uppercase">{testTitle}</p>
+                                <p className="uppercase font-medium text-slate-800 dark:text-slate-200">
+                                    {testTitle || "PTE Mock Test"}
+                                </p>
                                 <p className="text-xs capitalize text-slate-800 dark:text-slate-200">
-                                    Section {activeSectionIndex + 1} : {currentSection?.name || "Section"}
+                                    {currentScreen === "question" ? (
+                                        <>Section {activeSectionIndex + 1} : {currentSection?.name || "Section"}</>
+                                    ) : currentScreen === "section_review" ? (
+                                        "Section Review"
+                                    ) : currentScreen === "results" ? (
+                                        "Test Results"
+                                    ) : (
+                                        `Section ${activeSectionIndex + 1} of ${totalSections}`
+                                    )}
                                 </p>
                             </div>
                         </div>
+
+                        {/* Right: Timer and navigation */}
                         <div className="flex items-center justify-end gap-3">
                             <div className="">
-                                {currentSection?.durationMinutes && currentScreen !== "intro" && !timerHidden ? (
-                                    <div className="flex flex-col items-end rounded-full px-3 py-1">
-                                        <div className="flex items-center">
-                                        <Clock className="w-5 h-5 mr-1 text-slate-800 font-bold dark:text-slate-400" /><span className="tabular-nums">Time Remaining: {formatTime(timerSecondsLeft)}</span>
+                                {currentSection?.durationMinutes && 
+                                 currentScreen === "question" && 
+                                 !timerHidden && 
+                                 timerSecondsLeft > 0 ? (
+                                    <div className="flex flex-col items-end">
+                                        <div className="flex items-center bg-slate-800/10 dark:bg-slate-800/30 px-3 py-1.5 rounded-lg">
+                                            <Clock className="w-5 h-5 mr-1.5 text-slate-800 font-bold dark:text-slate-400" />
+                                            <span className={`tabular-nums font-medium ${timeWarning ? 'text-red-600 dark:text-red-400' : 'text-slate-800 dark:text-slate-300'}`}>
+                                                {formatTime(timerSecondsLeft)}
+                                            </span>
                                         </div>
-                                       <div className="flex item-center">
-                                        <AlertCircle className="w-5 h-5 mr-1 text-slate-800 font-bold dark:text-slate-400"/>
-                                         {questionNumber} of {currentSection?.questions?.length}
-                                        </div> 
-                                        {/* <button
-                                            onClick={() => setTimerHidden(true)}
-                                            className="rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
-                                            aria-label="Hide timer"
-                                        >
-                                            <EyeOff className="w-4 h-4 text-slate-600 dark:text-slate-400" />
-                                        </button> */}
+                                        <div className="flex items-center mt-1">
+                                            <AlertCircle className="w-4 h-4 mr-1.5 text-slate-800 dark:text-slate-400"/>
+                                            <span className="text-sm text-slate-800 dark:text-slate-300">
+                                                Q{questionNumber} of {currentSection?.questions?.length}
+                                            </span>
+                                        </div>
                                     </div>
-                                ) : currentSection?.durationMinutes && currentScreen !== "intro" ? (
+                                ) : currentScreen === "question" && currentSection?.durationMinutes ? (
                                     <button
                                         onClick={() => setTimerHidden(false)}
-                                        className="flex items-center flex-col gap-2 rounded-lg transition-colors group"
+                                        className="flex items-center gap-2 px-3 py-1.5 rounded-lg border border-slate-300 dark:border-slate-700 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
                                     >
-                                        <div className="relative">
-                                            <Clock className="w-6 h-6 text-slate-600 dark:text-slate-400" />
-                                        </div>
-                                        <Eye className="w-4 h-4 text-slate-600 dark:text-slate-400 group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors" />
+                                        <Clock className="w-5 h-5 text-slate-600 dark:text-slate-400" />
+                                        <Eye className="w-4 h-4 text-slate-600 dark:text-slate-400" />
+                                        <span className="text-sm">Show Timer</span>
                                     </button>
                                 ) : null}
                             </div>
 
-                            {(currentScreen === "results" || isCompleted) && navigateBack && (
-                                <button
-                                    onClick={navigateBack}
-                                    className="ml-2 px-4 py-2 rounded-lg bg-gradient-to-r from-blue-500 to-purple-500 hover:from-blue-600 hover:to-purple-600 text-white font-medium transition-all shadow hover:shadow-lg"
-                                >
-                                    <span className="flex items-center gap-2">
-                                        <LogOut className="w-4 h-4" />
-                                        Exit Test
-                                    </span>
-                                </button>
-                            )}
+                         
                         </div>
                     </div>
+
+                    {/* Time warning bar */}
+                    {timeWarning && currentScreen === "question" && !timerHidden && (
+                        <div className="w-full bg-gradient-to-r from-red-500 to-orange-500 text-white text-center py-1 text-sm font-medium animate-pulse">
+                            ⚠️ Less than 5 minutes remaining in this section!
+                        </div>
+                    )}
                 </div >
             </>
         );

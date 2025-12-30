@@ -3,6 +3,9 @@ import {
   AlertTriangle,
   BookOpen,
   Edit3,
+  BarChart3,
+  Headphones
+
 } from "lucide-react";
 import SpeakingQuestion, { RecordingOnlyComponent, TTSPlayer } from "./SpeakingQuestion";
 import PTEFillDrag, { PTEFillListeningInput, PTEFillSelect, PTEHighlightText, PTEMCQMultiple, PTEReorder } from "./DragandFill";
@@ -45,6 +48,7 @@ const QuestionRenderer: any = React.memo(
     goNextQuestion,
     sectionQuestions,
     onReviewSection,
+    onShowInstructions,
   }: any) => {
     const questionNumber = currentQuestion.order || activeQuestionIndex + 1;
     const containerRef = useRef<HTMLDivElement | null>(null);
@@ -62,7 +66,7 @@ const QuestionRenderer: any = React.memo(
     const [isRecordingInProgress, setIsRecordingInProgress] = useState(false);
 
 
-    const handleRecordingComplete = useCallback(async(audioBlob: Blob) => {
+    const handleRecordingComplete = useCallback(async (audioBlob: Blob) => {
       setRecordedAudio(audioBlob);
       const audioPath = await uploadAudioAndGetPath(audioBlob);
       handleTextAnswerChange({ target: { value: audioPath } })
@@ -276,7 +280,8 @@ const QuestionRenderer: any = React.memo(
                   __html: qDoc.questionText || "Question missing",
                 }}
               />
-              <div className="w-[60%] mx-auto">
+              <div className="w-full md:w-3/5
+mx-auto">
                 <RecordingOnlyComponent
                   key={qDoc._id}
                   recordingDurationSeconds={35}
@@ -427,6 +432,9 @@ const QuestionRenderer: any = React.memo(
               {/* {renderQuestionText()} */}
               <TTSPlayer
                 key={qDoc._id}
+                audioUrl={qDoc.typeSpecific?.audio
+                  ? audioBaseUrl + qDoc.typeSpecific.audio
+                  : undefined}
                 text={qDoc?.questionText || "Describe the image shown."}
                 delayBeforePlay={3000} // 1 second
                 onPlaybackEnd={onTTSFinished}
@@ -464,8 +472,14 @@ const QuestionRenderer: any = React.memo(
           return (
             <div className="bg-white rounded dark:bg-slate-900 p-4 min-h-[65vh] overflow-y-auto">
               {renderPassage()}
+              {/* <SpeakingQuestion key={qDoc?._id} qDoc={qDoc} /> */}
+
+
               <TTSPlayer
                 key={"player-" + qDoc._id}
+                audioUrl={qDoc.typeSpecific?.audio
+                  ? audioBaseUrl + qDoc.typeSpecific.audio
+                  : undefined}
                 text={qDoc?.typeSpecific?.listeningText || "Describe the image shown."}
                 delayBeforePlay={5000}
                 onPlaybackEnd={() => null}
@@ -508,6 +522,9 @@ const QuestionRenderer: any = React.memo(
               {renderPassage()}
               <TTSPlayer
                 key={"dfdf" + qDoc._id}
+                audioUrl={qDoc.typeSpecific?.audio
+                  ? audioBaseUrl + qDoc.typeSpecific.audio
+                  : undefined}
                 text={qDoc?.typeSpecific?.listeningText || "Describe the image shown."}
                 delayBeforePlay={5000} // 1 second
                 onPlaybackEnd={onTTSFinished}
@@ -536,6 +553,9 @@ const QuestionRenderer: any = React.memo(
 
                 <TTSPlayer
                   key={qDoc._id}
+                  audioUrl={qDoc.typeSpecific?.audio
+                    ? audioBaseUrl + qDoc.typeSpecific.audio
+                    : undefined}
                   text={qDoc?.typeSpecific?.listeningText || "Describe the image shown."}
                   delayBeforePlay={5000} // 1 second
                   onPlaybackEnd={onTTSFinished}
@@ -612,6 +632,9 @@ const QuestionRenderer: any = React.memo(
 
                 <TTSPlayer
                   key={qDoc._id}
+                  audioUrl={qDoc.typeSpecific?.audio
+                    ? audioBaseUrl + qDoc.typeSpecific.audio
+                    : undefined}
                   text={qDoc?.typeSpecific?.listeningText || "Describe the image shown."}
                   delayBeforePlay={5000} // 1 second
                   onPlaybackEnd={onTTSFinished}
@@ -688,6 +711,9 @@ const QuestionRenderer: any = React.memo(
 
               {["pte_summarize_spoken"].includes(type) && <TTSPlayer
                 key={qDoc._id}
+                audioUrl={qDoc.typeSpecific?.audio
+                  ? audioBaseUrl + qDoc.typeSpecific.audio
+                  : undefined}
                 text={qDoc?.questionText || "Describe the image shown."}
                 delayBeforePlay={5000} // 1 second
                 onPlaybackEnd={onTTSFinished}
@@ -1040,7 +1066,6 @@ export const SectionInstructions: React.FC<SectionInstructionsProps> = React.mem
 
 import { Eye, ArrowLeft, CheckCircle2 } from "lucide-react";
 import api, { audioBaseUrl } from "../../axiosInstance";
-import { set } from "react-hook-form";
 
 interface SectionReviewProps {
   currentSection: any;
@@ -1171,16 +1196,7 @@ export const SectionReview: React.FC<SectionReviewProps> = React.memo(
               </div>
 
               <div className="flex gap-2">
-                {activeQuestionIndex <= 0 ? "" : <button
-                  className="p-1.5 bg-slate-800 text-slate-100 font-semibold border-slate-200 rounded-full px-4"
-                  onClick={() => {
-                    setActiveQuestionIndex(Math.max(0, activeQuestionIndex - 1));
-                    setCurrentScreen("question");
-                  }}
-                  disabled={activeQuestionIndex <= 0}
-                >
-                  Previous
-                </button>}
+
 
                 <button
                   className="p-1.5 bg-blue-800 text-slate-100 font-semibold border-slate-200 rounded-full px-4"
@@ -1208,6 +1224,241 @@ interface GRETestResultsProps {
 export const GRETestResults: React.FC<GRETestResultsProps> = React.memo(
   ({ attempt, navigateBack, onTakeAnotherTest }) => {
     const overall = attempt.overallStats;
+
+    // ✅ State for active tab
+    const [activeTab, setActiveTab] = useState('');
+
+    // ✅ Get unique section names from attempt
+    const sectionNames = attempt.sections.reduce((acc, section) => {
+      if (section.name && !acc.includes(section.name)) {
+        acc.push(section.name);
+      }
+      return acc;
+    }, []);
+
+    const getSectionsForActiveTab = () => {
+      if (!activeTab) {
+        return [];
+      }
+      return attempt.sections.filter(section => section.name === activeTab);
+    };
+
+    const activeSections = getSectionsForActiveTab();
+
+    // ✅ Get icon for section
+    const getSectionIcon = (sectionName: string) => {
+      const name = sectionName?.toLowerCase() || '';
+      if (name.includes('speaking') || name.includes('writing')) {
+        return Mic;
+      } else if (name.includes('reading')) {
+        return BookOpen;
+      } else if (name.includes('listening')) {
+        return Headphones;
+      }
+      return BookOpen;
+    };
+
+    // ✅ Audio URL check function
+    const isAudioUrl = (text: string) => {
+      return text && (
+        text.includes('.mp3') ||
+        text.includes('.wav') ||
+        text.includes('.webm') ||
+        text.includes('.ogg') ||
+        text.startsWith('/uploads/') ||
+        text.includes('blob:')
+      );
+    };
+
+    const formatStructuredAnswer = (answer: any) => {
+      try {
+        const parsed =
+          typeof answer === "string" ? JSON.parse(answer) : answer;
+
+        // ✅ ARRAY CASE
+        if (Array.isArray(parsed)) {
+          return parsed.map((item, index) => (
+            <div key={index}>
+              {index + 1}. {String(item).trim()}
+            </div>
+          ));
+        }
+
+        // ✅ OBJECT CASE (zone-1, zone-2 etc.)
+        if (typeof parsed === "object" && parsed !== null) {
+          return Object.values(parsed).map((value: any, index: number) => (
+            <div key={index}>
+              {index + 1}. {String(value).trim()}
+            </div>
+          ));
+        }
+
+        return null;
+      } catch {
+        return null;
+      }
+    };
+
+
+
+    // ✅ Render user answer
+    const renderUserAnswer = (q: any, qd: any) => {
+      const userAnswer = q.answerText || "";
+
+      // 🎤 AUDIO
+      if (isAudioUrl(userAnswer)) {
+        const audioUrl = userAnswer.startsWith("http")
+          ? userAnswer
+          : `${audioBaseUrl}${userAnswer}`;
+
+        return (
+          <div className="flex flex-col gap-1">
+            <div className="text-xs text-slate-500 mb-1">🎤 Recording</div>
+            <audio controls className="h-8 w-full">
+              <source src={audioUrl} type="audio/webm" />
+              <source src={audioUrl} type="audio/mp3" />
+            </audio>
+          </div>
+        );
+      }
+
+      // ✅ ARRAY / OBJECT JSON ANSWERS
+      const structured = formatStructuredAnswer(userAnswer);
+      if (structured) {
+        return (
+          <div className="text-sm  text-slate-700 dark:text-slate-300 space-y-1">
+            {structured}
+          </div>
+        );
+      }
+
+      // 📝 NORMAL HTML TEXT
+      if (q.answerText) {
+        return (
+          <div
+            className="prose prose-sm dark:prose-invert max-w-none"
+            dangerouslySetInnerHTML={{ __html: q.answerText }}
+          />
+        );
+      }
+
+      // 🔠 MCQ
+      const getOptionLabel = (idx: number) => {
+        if (!qd?.options || !qd.options[idx]) return "--";
+        return (
+          qd.options[idx].label ||
+          String.fromCharCode("A".charCodeAt(0) + idx)
+        );
+      };
+
+      if (q.answerOptionIndexes?.length > 0) {
+        return q.answerOptionIndexes.map(getOptionLabel).join(", ");
+      }
+
+      return "--";
+    };
+
+
+
+    // ✅ Render correct answer
+    const renderCorrectAnswer = (qd: any, q: any) => {
+      const correctLabels = qd?.options
+        ?.filter((o: any) => o.isCorrect)
+        .map((o: any) => `${o.label}. ${o.text}`);
+
+      const evaluationMeta = q?.evaluationMeta;
+
+      return (
+        <div className="space-y-3">
+
+          {/* MCQ correct answers */}
+          {correctLabels?.length > 0 && (
+            <div className="space-y-1">
+              {correctLabels.map((label: string, idx: number) => (
+                <div key={idx} className="text-emerald-700 dark:text-emerald-300">
+                  {label}
+                </div>
+              ))}
+            </div>
+          )}
+
+          {/* Text correct answer */}
+          {!correctLabels?.length && qd?.correctAnswerText && (
+            <div
+              className="prose prose-sm dark:prose-invert max-w-none text-emerald-700 dark:text-emerald-300"
+              dangerouslySetInnerHTML={{ __html: qd.correctAnswerText }}
+            />
+          )}
+
+          {/* Explanation */}
+          {qd?.explanation && (
+            <div className="p-2 rounded-md bg-emerald-50 dark:bg-emerald-900/30">
+              <div className="text-xs font-semibold text-emerald-600 dark:text-emerald-400 mb-1">
+                Explanation
+              </div>
+              <div className="text-sm text-slate-700 dark:text-slate-300">
+                {qd.explanation}
+              </div>
+            </div>
+          )}
+
+
+          {evaluationMeta && (
+            <div className="rounded-lg border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/60 p-3 space-y-3">
+
+              <div className="text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">
+                Evaluation Feedback
+              </div>
+
+              {evaluationMeta.transcript && (
+                <p className="text-sm text-slate-800 dark:text-slate-200">
+                  <span className="font-bold">Transcript :</span> {evaluationMeta.transcript}
+                </p>
+              )}
+
+              {typeof evaluationMeta.accuracy === "number" && (
+                <div className="flex items-center gap-2">
+                  <p className="text-sm text-slate-800 dark:text-slate-200"><span className="font-bold">Accuracy :</span> <span className="text-xs font-bold">
+                    {Math.round(evaluationMeta.accuracy * 100)}%
+                  </span></p>
+
+                </div>
+              )}
+
+              {evaluationMeta.missingKeywords?.length > 0 && (
+                <div className="text-sm text-red-600">
+                  <span className="font-bold">Missing Keywords: </span>
+                  {evaluationMeta.missingKeywords.join(", ")}
+                </div>
+              )}
+
+
+              {evaluationMeta.extraWords?.length > 0 && (
+                <div className="text-sm text-amber-600">
+                  <span className="font-bold">Extra Words: </span>
+                  {evaluationMeta.extraWords.join(", ")}
+                </div>
+              )}
+
+            </div>
+          )}
+
+          {!correctLabels?.length &&
+            !qd?.correctAnswerText &&
+            !qd?.explanation &&
+            !evaluationMeta &&
+            "--"}
+        </div>
+      );
+    };
+
+
+
+    useEffect(() => {
+      if (sectionNames.length > 0 && !activeTab) {
+        setActiveTab(sectionNames[0]);
+      }
+    }, [sectionNames, activeTab]);
 
     const getQuestionStatus = (q: any, qd?: any | null) => {
       if (!q.isAnswered) return "skipped";
@@ -1239,6 +1490,14 @@ export const GRETestResults: React.FC<GRETestResultsProps> = React.memo(
       }
     };
 
+    const formatFillUps = (text: string) => {
+      if (!text) return "";
+
+      // {{1}}, {{2}}, {{10}} → _____
+      return text.replace(/\{\{\d+\}\}/g, "_____");
+    };
+
+
     const formatTimeSpent = (seconds: number) => {
       const m = Math.floor(seconds / 60);
       const s = seconds % 60;
@@ -1259,268 +1518,240 @@ export const GRETestResults: React.FC<GRETestResultsProps> = React.memo(
               Review your performance and detailed answers
             </p>
           </div>
-          <Button
-            variant="outline"
-            size="sm"
-            className="border-slate-300 dark:border-slate-600 hover:bg-slate-50 dark:hover:bg-slate-800"
-            onClick={navigateBack}
-          >
-            <LogOut className="h-4 w-4 mr-2" />
-            Back to Dashboard
-          </Button>
+
+          <div className="flex">
+            <Button
+              size="sm"
+              className="bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 mx-2"
+              onClick={onTakeAnotherTest}
+            >
+              Take Another Test
+            </Button>
+            <Button
+              variant="outline"
+              size="sm"
+              className="border-slate-300 dark:border-slate-600 hover:bg-slate-50 dark:hover:bg-slate-800"
+              onClick={navigateBack}
+            >
+              <LogOut className="h-4 w-4 mr-2" />
+              Back to Dashboard
+            </Button>
+            <Button variant="outline" size="sm" className="border-slate-300 mx-2 dark:border-slate-600" onClick={() => window.print()}>
+              Print Results
+            </Button>
+          </div>
+
+
         </div>
 
         {/* Overall Stats */}
         {overall && (
-          <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
+          <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
             {[
-              { label: "Total Questions", value: overall.totalQuestions, icon: BookOpen, color: "indigo" },
-              { label: "Attempted", value: `${overall.totalAttempted} (${Math.round((overall.totalAttempted / overall.totalQuestions) * 100)}%)`, icon: Edit3, color: "blue" },
-              { label: "Correct", value: `${overall.totalCorrect} (${Math.round((overall.totalCorrect / overall.totalQuestions) * 100)}%)`, icon: CheckCircle2, color: "emerald" },
-              { label: "Incorrect", value: `${overall.totalIncorrect} (${Math.round((overall.totalIncorrect / overall.totalQuestions) * 100)}%)`, icon: AlertTriangle, color: "red" },
-              { label: "Raw Score", value: `${overall.rawScore}/${overall.totalQuestions}`, icon: Flag, color: "purple" },
-            ].map((item, i) => (
-              <div
-                key={i}
-                className="rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 p-4 transition-all duration-200 hover:shadow-lg hover:border-slate-300 dark:hover:border-slate-600"
-              >
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="text-xs font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400">
-                      {item.label}
-                    </p>
-                    <p className="text-2xl font-bold text-slate-800 dark:text-slate-100 mt-1">
-                      {item.value}
-                    </p>
-                  </div>
-                  <div className={`h-10 w-10 rounded-full bg-${item.color}-100 dark:bg-${item.color}-900/30 flex items-center justify-center`}>
-                    <item.icon className={`h-5 w-5 text-${item.color}-600 dark:text-${item.color}-400`} />
+              {
+                label: "Total Questions",
+                value: overall.totalQuestions,
+                icon: BookOpen,
+                color: "indigo",
+              },
+              {
+                label: "Attempted",
+                value: `${overall.totalAttempted} (${Math.round(
+                  (overall.totalAttempted / overall.totalQuestions) * 100
+                )}%)`,
+                icon: Edit3,
+                color: "blue",
+              },
+              {
+                label: "Correct",
+                value: `${overall.totalCorrect} (${Math.round(
+                  (overall.totalCorrect / overall.totalQuestions) * 100
+                )}%)`,
+                icon: CheckCircle2,
+                color: "emerald",
+              },
+              {
+                label: "Incorrect",
+                value: `${overall.totalIncorrect} (${Math.round(
+                  (overall.totalIncorrect / overall.totalQuestions) * 100
+                )}%)`,
+                icon: AlertTriangle,
+                color: "red",
+              },
+              {
+                label: "Raw Score",
+                value: `${overall.rawScore}/${overall.totalQuestions}`,
+                icon: Flag,
+                color: "purple",
+              },
+            ].map((item, i) => {
+              const colorMap: any = {
+                indigo:
+                  "from-indigo-500/10 to-indigo-500/0 text-indigo-600 dark:text-indigo-400 bg-indigo-100 dark:bg-indigo-900/30",
+                blue:
+                  "from-blue-500/10 to-blue-500/0 text-blue-600 dark:text-blue-400 bg-blue-100 dark:bg-blue-900/30",
+                emerald:
+                  "from-emerald-500/10 to-emerald-500/0 text-emerald-600 dark:text-emerald-400 bg-emerald-100 dark:bg-emerald-900/30",
+                red:
+                  "from-red-500/10 to-red-500/0 text-red-600 dark:text-red-400 bg-red-100 dark:bg-red-900/30",
+                purple:
+                  "from-purple-500/10 to-purple-500/0 text-purple-600 dark:text-purple-400 bg-purple-100 dark:bg-purple-900/30",
+              };
+
+              return (
+                <div
+                  key={i}
+                  className="
+            relative overflow-hidden rounded-2xl
+            border border-slate-200/60 dark:border-slate-700/60
+            bg-white/80 dark:bg-slate-900/60
+            backdrop-blur-md
+            p-2
+            transition-all duration-300
+            hover:-translate-y-1 hover:shadow-xl
+          "
+                >
+
+                  <div
+                    className={`absolute inset-0 bg-gradient-to-br ${colorMap[item.color].split(" ")[0]} pointer-events-none`}
+                  />
+
+                  <div className="relative flex items-center justify-between gap-3">
+                    <div>
+                      <p className="text-base font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400">
+                        {item.label}
+                      </p>
+                      <p className="text-base font-bold text-slate-800 dark:text-slate-100 mt-1">
+                        {item.value}
+                      </p>
+                    </div>
+
+                    <div
+                      className={`h-11 w-11 rounded-xl flex items-center justify-center ${colorMap[item.color].split(" ").slice(-2).join(" ")}`}
+                    >
+                      <item.icon
+                        className={`h-5 w-5 ${colorMap[item.color].split(" ")[2]}`}
+                      />
+                    </div>
                   </div>
                 </div>
-              </div>
-            ))}
+              );
+            })}
           </div>
         )}
 
-        {/* Section-wise Results */}
-        <div className="space-y-6">
-          <h3 className="text-xl font-semibold text-slate-800 dark:text-slate-100 px-2">
-            Section-wise Performance
-          </h3>
-
-          {attempt.sections.map((sec, sIdx) => (
-            <div
-              key={sIdx}
-              className="rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 overflow-hidden transition-all duration-200 hover:shadow-lg"
-            >
-              <div className="p-4 border-b border-slate-100 dark:border-slate-800 bg-gradient-to-r from-slate-50 to-white dark:from-slate-800 dark:to-slate-900">
-                <div className="flex flex-col md:flex-row md:items-center justify-between gap-3">
-                  <div className="flex items-center gap-3">
-                    <div className="h-10 w-10 rounded-lg bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center">
-                      <span className="text-white font-bold">{sIdx + 1}</span>
-                    </div>
-                    <div>
-                      <h4 className="font-semibold text-slate-800 dark:text-slate-100">
-                        {sec.name || `Section ${sIdx + 1}`}
-                      </h4>
-                      <p className="text-sm text-slate-600 dark:text-slate-400">
-                        {sec.questions.length} Questions • {sec.durationMinutes || 45} minutes
-                      </p>
-                    </div>
-                  </div>
-
-                  {sec.stats && (
-                    <div className="flex items-center gap-4">
-                      <div className="text-center">
-                        <div className="text-lg font-bold text-emerald-600 dark:text-emerald-400">{sec.stats.correct}</div>
-                        <div className="text-xs text-slate-500">Correct</div>
-                      </div>
-                      <div className="h-8 w-px bg-slate-200 dark:bg-slate-700"></div>
-                      <div className="text-center">
-                        <div className="text-lg font-bold text-red-600 dark:text-red-400">{sec.stats.incorrect}</div>
-                        <div className="text-xs text-slate-500">Incorrect</div>
-                      </div>
-                      <div className="h-8 w-px bg-slate-200 dark:bg-slate-700"></div>
-                      <div className="text-center">
-                        <div className="text-lg font-bold text-slate-600 dark:text-slate-400">{sec.stats.skipped}</div>
-                        <div className="text-xs text-slate-500">Skipped</div>
-                      </div>
-                    </div>
-                  )}
-                </div>
-              </div>
-
-              <div className="overflow-x-auto">
-                <table className="w-full text-sm">
-                  <thead>
-                    <tr className="border-b border-slate-100 dark:border-slate-800">
-                      {["Q.No", "Status", "Your Answer", "Correct Answer", "Time Spent", "Question Preview"].map((col) => (
-                        <th key={col} className="py-3 px-4 text-left font-semibold text-slate-700 dark:text-slate-300 text-xs uppercase tracking-wider">
-                          {col}
-                        </th>
-                      ))}
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {sec.questions.map((q, qIdx) => {
-                      const qd = q.questionDoc;
-                      const status = getQuestionStatus(q, qd);
-                      const statusClass = getStatusColor(status);
-
-                      const getOptionLabel = (idx: number) => {
-                        if (!qd?.options || !qd.options[idx]) return "--";
-                        return qd.options[idx].label || String.fromCharCode("A".charCodeAt(0) + idx);
-                      };
-
-                      const userLabel = q.answerOptionIndexes.length > 0
-                        ? q.answerOptionIndexes.map(getOptionLabel).join(", ")
-                        : q.answerText || "--";
-
-                      const correctLabels = qd.options
-                        .filter(o => o.isCorrect)
-                        .map(o => `${o.label}. ${o.text}`);  // label + text
-
-                      const correctLabel = correctLabels.length > 0
-                        ? correctLabels.join(", ")           // multiple values joined
-                        : qd.correctAnswerText || "--";
-
-                      return (
-                        <tr
-                          key={q.question}
-                          className={`border-b border-slate-50 dark:border-slate-800/50 transition-colors hover:bg-slate-50 dark:hover:bg-slate-800/30 ${status === "correct" ? "bg-emerald-50/20 dark:bg-emerald-900/5" : ""}`}
-                        >
-                          <td className="py-3 px-4 align-middle">
-                            <div className="flex items-center">
-                              <div className={`h-8 w-8 rounded-lg flex items-center justify-center ${status === "correct"
-                                ? "bg-emerald-100 dark:bg-emerald-900/30 text-emerald-600 dark:text-emerald-400"
-                                : status === "incorrect"
-                                  ? "bg-red-100 dark:bg-red-900/30 text-red-600 dark:text-red-400"
-                                  : "bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400"
-                                }`}>
-                                <span className="font-bold">{q.order || qIdx + 1}</span>
-                              </div>
-                            </div>
-                          </td>
-                          <td className="py-3 px-4 align-middle">
-                            <span className={`inline-flex items-center rounded-full px-3 py-1.5 text-xs font-medium shadow-sm ${statusClass}`}>
-                              {getStatusIcon(status)}
-                              {status.charAt(0).toUpperCase() + status.slice(1)}
-                            </span>
-                          </td>
-                          <td className="py-3 px-4 align-middle">
-                            <div className={`font-medium ${status === "correct"
-                              ? "text-emerald-700 dark:text-emerald-300"
-                              : status === "incorrect"
-                                ? "text-red-700 dark:text-red-300"
-                                : "text-slate-700 dark:text-slate-300"
-                              }`}>
-                              {userLabel}
-                            </div>
-                          </td>
-                          <td className="py-3 px-4 align-middle">
-                            <div className="font-medium text-emerald-700 dark:text-emerald-300">{correctLabel}</div>
-                          </td>
-                          <td className="py-3 px-4 align-middle">
-                            <div className="flex items-center text-slate-600 dark:text-slate-400">
-                              <Clock className="h-3.5 w-3.5 mr-1.5" />
-                              <span className="font-mono">{formatTimeSpent(q.timeSpentSeconds)}</span>
-                            </div>
-                          </td>
-                          <td className="py-3 px-4 align-middle max-w-xs">
-                            {qd ? (
-                              <div className="line-clamp-2 text-slate-700 dark:text-slate-300 text-xs leading-relaxed">
-                                {qd.questionText.replace(/<[^>]*>/g, "")}
-                              </div>
-                            ) : (
-                              <span className="text-slate-400 dark:text-slate-500 italic">No preview available</span>
-                            )}
-                          </td>
-                        </tr>
-                      );
-                    })}
-                  </tbody>
-                </table>
-              </div>
-
-              <div className="p-3 border-t border-slate-100 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-800/20">
-                <div className="flex justify-between items-center text-xs text-slate-500 dark:text-slate-400">
-                  <div>Showing {sec.questions.length} questions</div>
-                  {sec.stats && (
-                    <div className="flex items-center gap-2">
-                      {[
-                        { label: "Correct", count: sec.stats.correct, color: "emerald" },
-                        { label: "Incorrect", count: sec.stats.incorrect, color: "red" },
-                        { label: "Skipped", count: sec.stats.skipped, color: "slate" },
-                      ].map((item) => (
-                        <div key={item.label} className="flex items-center gap-1">
-                          <div className={`h-2 w-2 rounded-full bg-${item.color}-500`}></div>
-                          <span>{item.label}: {item.count}</span>
-                        </div>
-                      ))}
-                    </div>
-                  )}
-                </div>
-              </div>
-            </div>
-          ))}
-        </div>
 
         {/* Performance Summary */}
         {overall && (
-          <div className="rounded-xl border border-slate-200 dark:border-slate-700 bg-gradient-to-r from-indigo-50 to-white dark:from-indigo-900/20 dark:to-slate-900 p-5">
-            <h3 className="text-lg font-semibold text-slate-800 dark:text-slate-100 mb-3">Performance Summary</h3>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div className="space-y-3">
-                <div className="flex items-center justify-between">
-                  <span className="text-slate-600 dark:text-slate-400">Accuracy</span>
-                  <span className="font-bold text-lg text-slate-800 dark:text-slate-100">
-                    {overall.totalAttempted > 0 ? ((overall.totalCorrect / overall.totalAttempted) * 100).toFixed(1) : "0"}%
-                  </span>
-                </div>
-                <div className="h-2 bg-slate-200 dark:bg-slate-700 rounded-full overflow-hidden">
-                  <div
-                    className="h-full bg-gradient-to-r from-emerald-500 to-emerald-600 rounded-full"
-                    style={{ width: `${overall.totalAttempted > 0 ? (overall.totalCorrect / overall.totalAttempted) * 100 : 0}%` }}
-                  ></div>
+          <div className="
+    relative overflow-hidden rounded-2xl
+    border border-slate-200/60 dark:border-slate-700/60
+    bg-white/70 dark:bg-slate-900/60
+    backdrop-blur-xl
+    shadow-xl
+    p-6
+  ">
+            {/* Soft background glow */}
+            <div className="absolute -top-24 -right-24 h-64 w-64 rounded-full bg-indigo-500/10 blur-3xl" />
+            <div className="absolute -bottom-24 -left-24 h-64 w-64 rounded-full bg-emerald-500/10 blur-3xl" />
+
+            <h3 className="text-3xl md:text-4xl font-bold bg-gradient-to-r from-slate-800 via-blue-600 to-cyan-600 dark:from-slate-50 dark:via-blue-300 dark:to-cyan-300 bg-clip-text text-transparent tracking-tight">
+              Performance Summary
+            </h3>
+
+            <div className="relative grid grid-cols-1 md:grid-cols-2 gap-6">
+
+              {/* ===== LEFT: METRICS ===== */}
+              <div className="space-y-6">
+
+                {/* Accuracy */}
+                <div className="space-y-2">
+                  <div className="flex items-center justify-between">
+                    <span className="text-sm font-medium text-slate-600 dark:text-slate-400">
+                      Accuracy
+                    </span>
+                    <span className="text-xl font-bold bg-gradient-to-r from-emerald-600 to-cyan-600 dark:from-emerald-400 dark:to-cyan-400 bg-clip-text text-transparent">
+                      {overall.totalAttempted > 0
+                        ? ((overall.totalCorrect / overall.totalAttempted) * 100).toFixed(1)
+                        : "0"}%
+                    </span>
+                  </div>
+
+                  <div className="h-2.5 rounded-full bg-slate-200/70 dark:bg-slate-700/70 overflow-hidden">
+                    <div
+                      className="h-full rounded-full bg-gradient-to-r from-emerald-400 to-emerald-600 transition-all duration-700 ease-out"
+                      style={{
+                        width: `${overall.totalAttempted > 0
+                            ? (overall.totalCorrect / overall.totalAttempted) * 100
+                            : 0
+                          }%`
+                      }}
+                    />
+                  </div>
                 </div>
 
-                <div className="flex items-center justify-between mt-4">
-                  <span className="text-slate-600 dark:text-slate-400">Completion Rate</span>
-                  <span className="font-bold text-lg text-slate-800 dark:text-slate-100">
-                    {((overall.totalAttempted / overall.totalQuestions) * 100).toFixed(1)}%
-                  </span>
-                </div>
-                <div className="h-2 bg-slate-200 dark:bg-slate-700 rounded-full overflow-hidden">
-                  <div
-                    className="h-full bg-gradient-to-r from-blue-500 to-blue-600 rounded-full"
-                    style={{ width: `${(overall.totalAttempted / overall.totalQuestions) * 100}%` }}
-                  ></div>
+                {/* Completion Rate */}
+                <div className="space-y-2">
+                  <div className="flex items-center justify-between">
+                    <span className="text-sm font-medium text-slate-600 dark:text-slate-400">
+                      Completion Rate
+                    </span>
+                    <span className="text-xl font-bold bg-gradient-to-r from-blue-600 to-indigo-600 dark:from-blue-400 dark:to-indigo-400 bg-clip-text text-transparent">
+                      {((overall.totalAttempted / overall.totalQuestions) * 100).toFixed(1)}%
+                    </span>
+                  </div>
+
+                  <div className="h-2.5 rounded-full bg-slate-200/70 dark:bg-slate-700/70 overflow-hidden">
+                    <div
+                      className="h-full rounded-full bg-gradient-to-r from-blue-400 to-blue-600 transition-all duration-700 ease-out"
+                      style={{
+                        width: `${(overall.totalAttempted / overall.totalQuestions) * 100}%`
+                      }}
+                    />
+                  </div>
                 </div>
               </div>
 
+              {/* ===== RIGHT: SCORE CIRCLE ===== */}
               <div className="flex items-center justify-center">
-                <div className="relative h-40 w-40">
+                <div className="relative h-44 w-44">
+
+                  {/* Center content */}
                   <div className="absolute inset-0 flex items-center justify-center">
                     <div className="text-center">
-                      <div className="text-3xl font-bold text-indigo-600 dark:text-indigo-400">{overall.rawScore}</div>
-                      <div className="text-sm text-slate-600 dark:text-slate-400">Raw Score</div>
+                      <div className="text-4xl font-bold text-indigo-600 dark:text-indigo-400">
+                        {overall.rawScore}
+                      </div>
+                      <div className="text-xs uppercase tracking-wide text-slate-500 dark:text-slate-400">
+                        Raw Score
+                      </div>
                     </div>
                   </div>
-                  <svg className="h-full w-full" viewBox="0 0 100 100">
-                    <circle cx="50" cy="50" r="40" fill="none" stroke="#e2e8f0" strokeWidth="8" strokeLinecap="round" />
+
+                  {/* SVG Ring */}
+                  <svg className="h-full w-full -rotate-90" viewBox="0 0 100 100">
                     <circle
                       cx="50"
                       cy="50"
                       r="40"
                       fill="none"
-                      stroke="url(#gradient1)"
+                      stroke="#e5e7eb"
+                      strokeWidth="8"
+                      className="dark:stroke-slate-700"
+                    />
+                    <circle
+                      cx="50"
+                      cy="50"
+                      r="40"
+                      fill="none"
+                      stroke="url(#scoreGradient)"
                       strokeWidth="8"
                       strokeLinecap="round"
-                      strokeDasharray={`${(overall.rawScore / overall.totalQuestions) * 251.2} 251.2`}
-                      transform="rotate(-90 50 50)"
+                      strokeDasharray={`${(overall.rawScore / overall.totalQuestions) * 251.2
+                        } 251.2`}
                     />
                     <defs>
-                      <linearGradient id="gradient1" x1="0%" y1="0%" x2="100%" y2="0%">
+                      <linearGradient id="scoreGradient" x1="0%" y1="0%" x2="100%" y2="0%">
                         <stop offset="0%" stopColor="#6366f1" />
                         <stop offset="100%" stopColor="#8b5cf6" />
                       </linearGradient>
@@ -1528,32 +1759,215 @@ export const GRETestResults: React.FC<GRETestResultsProps> = React.memo(
                   </svg>
                 </div>
               </div>
+
             </div>
           </div>
         )}
 
-        {/* Action Buttons */}
-        <div className="flex flex-col sm:flex-row items-center justify-between gap-4 p-4 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900">
-          <div className="text-sm text-slate-600 dark:text-slate-400">
-            Review your answers carefully before leaving
+
+
+        <div className="bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-700 overflow-hidden">
+          {/* Tabs Navigation */}
+          <div className="flex overflow-x-auto border-b border-slate-200 dark:border-slate-700">
+            {/* All Sections Tab */}
+
+
+            {/* Individual Section Tabs */}
+            {sectionNames.map((sectionName) => {
+              const Icon = getSectionIcon(sectionName);
+              const sectionData = attempt.sections.find(sec => sec.name === sectionName);
+              const sectionStats = sectionData?.stats || {};
+              const sectionQuestions = sectionData?.questions?.length || 0;
+
+              return (
+                <button
+                  key={sectionName}
+                  onClick={() => setActiveTab(sectionName)}
+                  className={`flex-shrink-0 flex items-center justify-center p-4 gap-3 transition-colors ${activeTab === sectionName
+                    ? ' border-b-2 border-indigo-600'
+                    : 'hover:bg-slate-50 dark:hover:bg-slate-800'
+                    }`}
+                >
+                  <div className={`h-10 w-10 rounded-lg flex items-center justify-center ${activeTab === sectionName
+                    ? 'bg-indigo-600 text-white'
+                    : 'bg-slate-200 dark:bg-slate-700 text-slate-600 dark:text-slate-400'
+                    }`}>
+                    <Icon className="h-5 w-5" />
+                  </div>
+                  <div className="text-left">
+                    <div className="font-semibold text-slate-800 dark:text-slate-100">{sectionName}</div>
+
+                  </div>
+                </button>
+              );
+            })}
           </div>
-          <div className="flex items-center gap-3">
-            <Button variant="outline" size="sm" className="border-slate-300 dark:border-slate-600" onClick={() => window.print()}>
-              Print Results
-            </Button>
-            <Button variant="outline" size="sm" className="border-slate-300 dark:border-slate-600" onClick={navigateBack}>
-              <LogOut className="h-4 w-4 mr-2" />
-              Return to Dashboard
-            </Button>
-            <Button
-              size="sm"
-              className="bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700"
-              onClick={onTakeAnotherTest}
-            >
-              Take Another Test
-            </Button>
+
+          {/* Active Tab Content */}
+
+          <div className="p-4">
+            {activeSections.length > 0 ? (
+              <div className="space-y-6">
+                {activeSections.map((sec, sIdx) => (
+                  <div
+                    key={sIdx}
+                    className="rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 overflow-hidden transition-all duration-200 hover:shadow-lg"
+                  >
+
+
+                    {/* ✅ UPDATED: Questions in Card/Block Layout */}
+                    <div className="p-4 space-y-4">
+                      {sec.questions.map((q, qIdx) => {
+                        const qd = q.questionDoc;
+                        const status = getQuestionStatus(q, qd);
+                        const statusClass = getStatusColor(status);
+
+                        return (
+                          <div
+                            key={qIdx}
+                            className={`rounded-lg border ${status === "correct"
+                              ? "border-emerald-200 dark:border-emerald-800 bg-emerald-50/30 dark:bg-emerald-900/10"
+                              : status === "incorrect"
+                                ? "border-red-200 dark:border-red-800 bg-red-50/30 dark:bg-red-900/10"
+                                : "border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800"
+                              } p-4 transition-all duration-200 hover:shadow-md`}
+                          >
+                            {/* Question Header */}
+                            <div className="flex items-center justify-between mb-4">
+                              <div className="flex items-center gap-3">
+                                <div className={`h-8 w-8 rounded-lg flex items-center justify-center ${status === "correct"
+                                  ? "bg-emerald-100 dark:bg-emerald-900/30 text-emerald-600 dark:text-emerald-400"
+                                  : status === "incorrect"
+                                    ? "bg-red-100 dark:bg-red-900/30 text-red-600 dark:text-red-400"
+                                    : "bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400"
+                                  }`}>
+                                  <span className="font-bold text-sm">{q.order || qIdx + 1}</span>
+                                </div>
+                                <span className={`inline-flex items-center rounded-full px-3 py-1 text-xs font-medium shadow-sm ${statusClass}`}>
+                                  {getStatusIcon(status)}
+                                  {status.charAt(0).toUpperCase() + status.slice(1)}
+                                </span>
+                              </div>
+
+                              <div className="flex items-center text-slate-600 dark:text-slate-400">
+                                <Clock className="h-3.5 w-3.5 mr-1.5" />
+                                <span className="font-mono text-xs">{formatTimeSpent(q.timeSpentSeconds)}</span>
+                              </div>
+                            </div>
+
+                            {/* Question Text */}
+                            <div className="mb-4">
+                              <h5 className="text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
+                                Question:
+                              </h5>
+
+                              {qd ? (
+                                <div className="prose prose-sm dark:prose-invert max-w-none bg-slate-50 dark:bg-slate-800/50 p-3 rounded-lg">
+                                  <div
+                                    dangerouslySetInnerHTML={{
+                                      __html: formatFillUps(qd.questionText),
+                                    }}
+                                  />
+                                </div>
+                              ) : (
+                                <div className="text-slate-400 dark:text-slate-500 italic p-3 rounded-lg bg-slate-50 dark:bg-slate-800/50">
+                                  No question preview available
+                                </div>
+                              )}
+                            </div>
+
+
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                              {/* Correct Answer */}
+                              <div>
+                                <div className="flex items-center gap-2 mb-2">
+                                  <div className="h-2 w-2 rounded-full bg-emerald-500"></div>
+                                  <h5 className="text-sm font-medium text-emerald-700 dark:text-emerald-300">Correct Answer</h5>
+                                </div>
+                                <div className={`p-3 rounded-lg ${status === "correct"
+                                  ? "bg-emerald-50 dark:bg-emerald-900/20 border border-emerald-200 dark:border-emerald-800 "
+                                  : "bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700"
+                                  }`}>
+                                  {renderCorrectAnswer(qd, q)}
+                                </div>
+                              </div>
+
+                              {/* User's Answer */}
+                              <div>
+                                <div className="flex items-center gap-2 mb-2">
+                                  <div className={`h-2 w-2 rounded-full ${status === "correct"
+                                    ? "bg-emerald-500"
+                                    : status === "incorrect"
+                                      ? "bg-red-500"
+                                      : "bg-slate-500"
+                                    }`}></div>
+                                  <h5 className={`text-sm font-medium ${status === "correct"
+                                    ? "text-emerald-700 dark:text-emerald-300"
+                                    : status === "incorrect"
+                                      ? "text-red-700 dark:text-red-300"
+                                      : "text-slate-700 dark:text-slate-300"
+                                    }`}>Your Answer</h5>
+                                </div>
+                                <div className={`p-3 rounded-lg ${status === "correct"
+                                  ? "bg-emerald-50 dark:bg-emerald-900/20 border border-emerald-200 dark:border-emerald-800"
+                                  : status === "incorrect"
+                                    ? "bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800"
+                                    : "bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700"
+                                  }`}>
+                                  <div className={` ${status === "correct"
+                                    ? "text-emerald-700 dark:text-emerald-300"
+                                    : status === "incorrect"
+                                      ? "text-red-700  dark:text-red-300"
+                                      : "text-slate-700 dark:text-slate-300"
+                                    }`}>
+                                    {renderUserAnswer(q, qd)}
+                                  </div>
+                                </div>
+                              </div>
+                            </div>
+                          </div>
+                        );
+                      })}
+                    </div>
+
+                    <div className="p-3 border-t border-slate-100 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-800/20">
+                      <div className="flex justify-between items-center text-xs text-slate-500 dark:text-slate-400">
+                        <div>Showing {sec.questions.length} questions</div>
+                        {sec.stats && (
+                          <div className="flex items-center gap-2">
+                            {[
+                              { label: "Correct", count: sec.stats.correct, color: "emerald" },
+                              { label: "Incorrect", count: sec.stats.incorrect, color: "red" },
+                              { label: "Skipped", count: sec.stats.skipped, color: "slate" },
+                            ].map((item) => (
+                              <div key={item.label} className="flex items-center gap-1">
+                                <div className={`h-2 w-2 rounded-full bg-${item.color}-500`}></div>
+                                <span>{item.label}: {item.count}</span>
+                              </div>
+                            ))}
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <div className="text-center py-12">
+                <div className="text-slate-400 text-4xl mb-4">📝</div>
+                <h3 className="text-xl font-semibold text-slate-600 dark:text-slate-300 mb-2">
+                  Loading section results...
+                </h3>
+                <p className="text-slate-500 dark:text-slate-400">
+                  Please wait or select a section
+                </p>
+              </div>
+            )}
           </div>
         </div>
+
+
+
       </div>
     );
   }

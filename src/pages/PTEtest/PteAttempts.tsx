@@ -16,6 +16,8 @@ import api from "../../axiosInstance";
 import FullScreenLoader from "../../components/fullScreeLoader";
 import QuestionRenderer, { GRETestResults, SectionInstructions, SectionReview } from "./Components";
 import { GRETestHead } from "./PteHeader";
+import { IntroScreen } from "../mcu/GreComponents";
+import { PteIntroScreen } from "./instructions";
 
 interface QuestionDoc {
   _id: string;
@@ -112,6 +114,7 @@ interface StartAttemptResponse {
 
 // Screens for GRE flow
 type GreScreen =
+  | "intro"
   | "section_instructions"
   | "question"
   | "section_review"
@@ -134,10 +137,13 @@ export default function PteExamPage() {
   const [timerRunning, setTimerRunning] = useState(false);
   const [showingReviewScreen, setShowingReviewScreen] = useState(false);
 
-  const [currentScreen, setCurrentScreen] = useState<GreScreen>("question");
+
   const [filter, setFilter] = useState<"all" | "answered" | "not_answered" | "flagged">("all");
 
   const isCompleted = attempt?.status === "completed";
+
+  const [introPage, setIntroPage] = useState(1);
+const [currentScreen, setCurrentScreen] = useState('intro');
 
   // Memoize derived values - MOVE ALL HOOKS TO TOP LEVEL
   const testTitle = useMemo(() =>
@@ -218,9 +224,9 @@ export default function PteExamPage() {
         }
 
         const loaded: TestAttempt = detailRes.data.data;
-
+        const testType = loaded?.testType;
         if (!loaded.sections || loaded.sections.length === 0) {
-          setError("This test has no sections configured.");
+          setError("This GRE test has no sections configured.");
           setLoading(false);
           return;
         }
@@ -230,7 +236,7 @@ export default function PteExamPage() {
         const meta = loaded.gmatMeta;
         let secIdx = 0;
         let qIdx = 0;
-        let nextScreen: GreScreen = "question";
+        let nextScreen: GreScreen = (testType !== "full_length") ? "question" : "intro";
 
         if (loaded.status === "completed") {
           setCurrentScreen("results");
@@ -243,7 +249,7 @@ export default function PteExamPage() {
           qIdx = meta.currentQuestionIndex || 0;
           if (meta.phase === "in_section") nextScreen = "question";
           else if (meta.phase === "review") nextScreen = "section_review";
-          else nextScreen = "question";
+          else nextScreen = (testType !== "full_length") ? "question" : "intro";
         } else {
           outer: for (let s = 0; s < loaded.sections.length; s++) {
             const sec = loaded.sections[s];
@@ -251,7 +257,7 @@ export default function PteExamPage() {
               if (!sec.questions[i].isAnswered) {
                 secIdx = s;
                 qIdx = i;
-                nextScreen = "question";
+                nextScreen = "intro";
                 break outer;
               }
             }
@@ -260,16 +266,16 @@ export default function PteExamPage() {
 
         setActiveSectionIndex(secIdx);
         setActiveQuestionIndex(qIdx);
-        setCurrentScreen(nextScreen || "question");
+        setCurrentScreen(nextScreen || "intro");
       } catch (err: any) {
         console.error("startAttempt error:", err);
         setError(
           err?.response?.data?.message ||
           err.message ||
-          "Failed to start test"
+          "Failed to start GRE test"
         );
         toast.error(
-          err?.response?.data?.message || "Failed to start test"
+          err?.response?.data?.message || "Failed to start GRE test"
         );
       } finally {
         setStarting(false);
@@ -686,6 +692,8 @@ export default function PteExamPage() {
   return (
     <>
       <div className="relative min-h-screen bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-50">
+
+
         <GRETestHead
           testTitle={testTitle}
           currentSection={currentSection}
@@ -702,6 +710,24 @@ export default function PteExamPage() {
 
         {/* Scrollable main area between header & footer */}
         <div className="pt-14 pb-14">
+
+          {currentScreen === "intro" && (
+            <PteIntroScreen
+              introPage={introPage}
+              setIntroPage={setIntroPage}
+              setCurrentScreen={setCurrentScreen}
+            />
+          )}
+
+          
+
+          {currentScreen === "section_instructions" && currentSection && (
+            <SectionInstructions
+              currentSection={currentSection}
+              activeSectionIndex={activeSectionIndex}
+              setCurrentScreen={(screen) => setCurrentScreen(screen)}
+            />
+          )}
           {currentScreen === "question" && currentSection && currentQuestion && (
             <QuestionRenderer
               key={`question-${currentQuestion.question}-${activeQuestionIndex}`}

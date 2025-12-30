@@ -961,7 +961,7 @@ export const RecordingOnlyComponent = memo(({
 
             recordingTimerRef.current = setInterval(() => {
                 setRecordingTime((prev) => {
-                    if (prev >= recordingDurationSeconds - 1) {
+                    if (prev >= 5 - 1) {
                         clearInterval(recordingTimerRef.current);
                         if (mediaRecorderRef.current?.state === "recording") {
                             mediaRecorderRef.current.stop();
