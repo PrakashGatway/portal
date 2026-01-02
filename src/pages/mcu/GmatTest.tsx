@@ -13,6 +13,19 @@ import {
     LogOut,
     Save,
     ChevronRight,
+    FileStack,
+    BookMarked,
+    BookmarkIcon,
+    Bookmark,
+    BookmarkCheckIcon,
+    HelpCircle,
+    Pause,
+    DownloadIcon,
+    ForwardIcon,
+    StepForward,
+    SkipForward,
+    NotebookPenIcon,
+    CalculatorIcon,
 } from "lucide-react";
 import PageMeta from "../../components/common/PageMeta";
 import Button from "../../components/ui/button/Button";
@@ -21,6 +34,8 @@ import api from "../../axiosInstance";
 import FullScreenLoader from "../../components/fullScreeLoader";
 import { useGmatTimers } from "./SectionTimer";
 import QuestionBody, { IntroScreen, SectionInstructionsScreen, SelectOrderScreen } from "./QuestionComponent";
+import GmatHelpModal, { GmatCalculatorModal, GmatWhiteboardModal } from "./GmatHelp";
+import { get } from "react-hook-form";
 
 interface QuestionDoc {
     _id: string;
@@ -182,6 +197,7 @@ export default function GmatTestAttemptPage() {
     const [currentScreen, setCurrentScreen] = useState<GmatScreen>(
         "introduction"
     );
+    const [showHelp, setShowHelp] = useState(false);
 
     const [introPage, setIntroPage] = useState(1);
 
@@ -193,19 +209,50 @@ export default function GmatTestAttemptPage() {
 
     const [breakSecondsLeft, setBreakSecondsLeft] = useState(600);
     const [breakStarted, setBreakStarted] = useState(false);
+    const [openBoard, setOpenBoard] = useState(false);
+
+    const [openCalc, setOpenCalc] = useState(false);
 
     const isCompleted = attempt?.status === "completed";
 
+    const PAUSE_LIMIT_SECONDS = 20 * 60;
+
+    const [pauseSecondsLeft, setPauseSecondsLeft] = useState(PAUSE_LIMIT_SECONDS);
+    const [pauseActive, setPauseActive] = useState(false);
 
     useEffect(() => {
         if (!attempt || !hasChosenSequence || isCompleted) return;
-        if (timerSecondsLeft == 0) {
-            setTimerRunning(false);
-            setSectionTimedOut(true);
-            toast.info("Time is up for this module. Moving to review.");
-            setCurrentScreen("review");
+        if (sectionTimedOut) return;
+
+        if (currentScreen !== "question") return;
+
+        if (timerSecondsLeft !== 0) return;
+
+        const isLastSection =
+            activeSectionIndex >= attempt.sections.length - 1;
+
+        setTimerRunning(false);
+        setSectionTimedOut(true);
+
+        if (isLastSection) {
+            toast.info("Time is up. Submitting your GMAT test...");
+            submitTestAttempt(true);
+        } else {
+            toast.info("Time is up. Moving to the next section.");
+            setActiveSectionIndex(prev => prev + 1);
+            setActiveQuestionIndex(0);
+            setCurrentScreen("section_instructions");
         }
-    }, [timerSecondsLeft]);
+    }, [
+        timerSecondsLeft,
+        attempt,
+        activeSectionIndex,
+        hasChosenSequence,
+        isCompleted,
+        sectionTimedOut, // ✅ IMPORTANT
+    ]);
+
+
 
     const testTitle =
         attempt?.testTemplate.title ||
@@ -311,7 +358,7 @@ export default function GmatTestAttemptPage() {
                         }
                     }
                     if (screen === "select_order" && !meta.orderChosen) {
-                        setOrderSelectionTimer(120);
+                        setOrderSelectionTimer(60);
                         setIsOrderSelectionTimerRunning(true);
                     }
                     if (screen === "break" && meta.breakExpiresAt) {
@@ -681,20 +728,17 @@ export default function GmatTestAttemptPage() {
     const exitReview = async () => {
         if (!attempt || !currentSection) return;
 
-        const isLast = activeSectionIndex >= attempt.sections.length - 1;
+        const nextSectionIndex = activeSectionIndex + 1;
+        const isLastSection = nextSectionIndex >= attempt.sections.length;
 
-        if (isLast) {
-            // Last section: submit test from review screen
+        if (isLastSection) {
             await submitTestAttempt(false);
             return;
         }
 
-        // Non-last section → go to next section (with optional break)
-        const nextSectionIndex = activeSectionIndex + 1;
-
         await saveCurrentQuestionProgress({
             silent: true,
-            phase: "break",
+            phase: "section_instructions",
             metaSectionIndex: nextSectionIndex,
             metaQuestionIndex: 0,
         });
@@ -702,12 +746,17 @@ export default function GmatTestAttemptPage() {
         setActiveSectionIndex(nextSectionIndex);
         setActiveQuestionIndex(0);
         setEditsRemaining(3);
-
-        setBreakSecondsLeft(600);
-        setBreakStarted(false);
-        setCurrentScreen("break");
         setIsInReviewMode(false);
+
+        if (activeSectionIndex === 1) {
+            setBreakSecondsLeft(600);
+            setBreakStarted(false);
+            setCurrentScreen("break");
+        } else {
+            setCurrentScreen("section_instructions");
+        }
     };
+
 
     const handleReviewQuestionClick = (questionIndex: number) => {
         if (editsRemaining <= 0) {
@@ -722,7 +771,6 @@ export default function GmatTestAttemptPage() {
     const handleBackToReview = async () => {
         if (!attempt || !currentSection || !currentQuestion) return;
 
-        // Save edited question, phase remains "review"
         await saveCurrentQuestionProgress({
             silent: true,
             phase: "review",
@@ -738,8 +786,8 @@ export default function GmatTestAttemptPage() {
     type DiAnswers = {
         multiSource?: Record<string, "yes" | "no">;
         tableAnalysis?: Record<string, "true" | "false">;
-        twoPart?: Record<string, string>; // columnId -> optionId
-        graphics?: Record<string, number>; // dropdownId -> selectedIndex
+        twoPart?: Record<string, string>;
+        graphics?: Record<string, number>;
     };
 
     const computeDiIsAnswered = (answers: DiAnswers, subtype: string, question: any): boolean => {
@@ -807,8 +855,6 @@ export default function GmatTestAttemptPage() {
         if (!attempt || !currentSection || !currentQuestion) return;
         if (isCompleted) return;
 
-        console.log(currentQuestion)
-
         const subtype = currentQuestion?.questionDoc?.dataInsights?.subtype;
         const prevAnswers = getDiAnswers();
         const nextAnswers = updater(prevAnswers);
@@ -870,9 +916,6 @@ export default function GmatTestAttemptPage() {
             setAttempt((prev) => {
                 if (!prev) return prev;
                 const clone = structuredClone(prev) as TestAttempt;
-
-                // Only reorder the first 3 sections (moduleSections maps to first 3)
-                // but preserve any additional sections after index 3 if present.
                 const firstThree = chosen?.order.map((i) => prev.sections[i]);
                 const rest = prev.sections.slice(3);
                 clone.sections = [...firstThree, ...rest];
@@ -922,16 +965,20 @@ export default function GmatTestAttemptPage() {
             });
         }, [activeSectionIndex, activeQuestionIndex]),
         onSectionTimerComplete: useCallback(() => {
-            // Handle section time up logic
-            const isLastSectionLocal = activeSectionIndex >= (attempt?.sections.length || 1) - 1;
-            if (isLastSectionLocal) {
-                setTimerRunning(false);
-                toast.info("Time is up for the last module. Submitting your GMAT test...");
+            const isLastSection =
+                activeSectionIndex >= (attempt?.sections.length || 1) - 1;
+
+            setTimerRunning(false);
+            setSectionTimedOut(true);
+
+            if (isLastSection) {
+                toast.info("Time is up. Submitting your GMAT test...");
                 submitTestAttempt(true);
             } else {
-                setTimerRunning(false);
-                toast.info("Time is up for this module. Moving to the next module review.");
-                setCurrentScreen("review");
+                toast.info("Time is up. Moving to the next section.");
+                setActiveSectionIndex(prev => prev + 1);
+                setActiveQuestionIndex(0);
+                setCurrentScreen("section_instructions");
             }
         }, [activeSectionIndex, attempt, submitTestAttempt]),
 
@@ -959,6 +1006,55 @@ export default function GmatTestAttemptPage() {
         currentScreen,
         isCompleted
     });
+
+
+    useEffect(() => {
+        if (!pauseActive) return;
+
+        const interval = setInterval(() => {
+            setPauseSecondsLeft(prev => {
+                if (prev <= 1) {
+                    clearInterval(interval);
+                    handleResumeExam(true); // auto resume
+                    return 0;
+                }
+                return prev - 1;
+            });
+        }, 1000);
+
+        return () => clearInterval(interval);
+    }, [pauseActive]);
+
+
+    const handlePauseExam = async () => {
+        if (!attempt || isCompleted) return;
+
+        // stop section timer
+        setTimerRunning(false);
+
+        await saveCurrentQuestionProgress({
+            silent: true,
+            phase: "in_section",
+        });
+
+        setPauseSecondsLeft(PAUSE_LIMIT_SECONDS);
+        setPauseActive(true);
+        setCurrentScreen("pause");
+    };
+
+    const handleResumeExam = async (auto = false) => {
+        setPauseActive(false);
+
+        // resume section timer
+        setTimerRunning(true);
+
+        setCurrentScreen("question");
+
+        if (auto) {
+            toast.info("Pause limit reached. Exam resumed automatically.");
+        }
+    };
+
 
     // ===================
     // Loading / error states
@@ -993,11 +1089,9 @@ export default function GmatTestAttemptPage() {
     }
 
     const renderBreak = () => (
-        <div className="w-full flex flex-col">
+        <div className="w-full flex flex-col mt-6">
             {/* Main Content Area */}
-            <div className={`w-full max-w-7xl mx-auto bg-white dark:bg-slate-900 p-6 border-t-4 border-blue-600 dark:border-blue-500 flex-grow`}>
-                <h1 className="text-xl font-bold text-center mb-6 text-slate-800 dark:text-slate-100">Optional 10-Minute Break</h1>
-
+            <div className={`w-full max-w-8xl mx-auto bg-white dark:bg-slate-900 p-6 border-t-4 border-blue-600 dark:border-blue-500 flex-grow`}>
                 <div className="text-base leading-relaxed text-slate-800 dark:text-slate-200 space-y-4">
                     <p className="font-bold">
                         You may now take a short break before beginning your next module.
@@ -1019,15 +1113,15 @@ export default function GmatTestAttemptPage() {
                 </div>
             </div>
 
-            <div className="fixed bottom-0 left-0 right-0 z-50 border-t border-slate-200 dark:border-slate-700 bg-white/95 dark:bg-slate-900/95 backdrop-blur supports-backdrop-blur:bg-white/60">
-                <div className="mx-auto max-w-7xl px-4 py-4">
+            <div className="fixed bottom-0 left-0 right-0 z-50  px-4 border-slate-200 dark:border-slate-700 bg-[#0a8cbd] dark:bg-slate-900/95 backdrop-blur supports-backdrop-blur:bg-white/60">
+                <div className="mx-auto max-w-8xl px-4 py-2">
                     <div className="flex flex-wrap items-center justify-between gap-4">
                         {/* Left Actions */}
                         <div className="flex flex-wrap items-center gap-3">
                             <Button
-                                variant="outline"
+                                variant=""
                                 size="sm"
-                                className="flex items-center gap-2 rounded-xl border-2 border-slate-300 dark:border-slate-600 px-4 py-2 text-sm font-semibold text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-800"
+                                className="flex items-center gap-2 rounded-xl dark:border-slate-600 px-4 py-2 font-semibold text-white dark:text-slate-200 hover:outline dark:hover:bg-slate-800"
                                 onClick={() => {
                                     // Skip break immediately
                                     setCurrentScreen("section_instructions");
@@ -1041,24 +1135,27 @@ export default function GmatTestAttemptPage() {
                         <div className="flex items-center gap-3">
                             {!breakStarted ? (
                                 <Button
+                                    variant=""
                                     size="sm"
-                                    className="flex items-center gap-2 rounded-xl hover:text-green-600 border-2 border-slate-300 dark:border-slate-600 px-5 py-2 text-sm font-semibold text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-800"
+                                    className="flex items-center gap-2 rounded-xl dark:border-slate-600 px-4 py-2 font-semibold text-white dark:text-slate-200 hover:outline dark:hover:bg-slate-800"
                                     onClick={() => setBreakStarted(true)}
                                 >
                                     Start Break
                                 </Button>
                             ) : (
                                 <Button
+                                    variant=""
                                     size="sm"
-                                    className="flex items-center gap-2 rounded-xl border-2 border-slate-300 hover:text-red-600 dark:border-slate-600 px-5 py-2 text-sm font-semibold text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-800"
+                                    className="flex items-center gap-2 rounded-xl dark:border-slate-600 px-4 py-2 font-semibold text-white dark:text-slate-200 hover:outline dark:hover:bg-slate-800"
                                     onClick={() => {
                                         setBreakStarted(false);
                                         setCurrentScreen("section_instructions");
                                     }}
                                 >
-                                    End Break Now
+                                    Next →
                                 </Button>
                             )}
+
                         </div>
                     </div>
                 </div>
@@ -1071,12 +1168,12 @@ export default function GmatTestAttemptPage() {
         const sectionName = getSectionTypeBadge();
 
         return (
-            <div className="w-full flex flex-col">
+            <div className="w-full flex flex-col mt-6">
                 {/* Main Content Area */}
-                <div className={`w-full max-w-7xl mx-auto bg-white dark:bg-slate-900 p-6 border-t-4 border-blue-600 dark:border-blue-500 flex-grow`}>
-                    <h1 className="text-xl font-bold text-center mb-6 text-slate-800 dark:text-slate-100">Review Center</h1>
+                <div className={`w-full max-w-8xl mx-auto bg-white dark:bg-slate-900 p-6 border-t-4 border-blue-600 dark:border-blue-500 flex-grow`}>
+                    <h1 className="text-xl font-bold text-center mb-6 text-slate-800 dark:text-slate-100">Review Answers</h1>
 
-                    <div className="text-base leading-relaxed text-slate-800 dark:text-slate-200 space-y-4">
+                    <div className="text-base leading-relaxed text-slate-800 dark:text-slate-200 space-y-2">
                         <p className="font-bold">
                             Review and Edit Answers for {sectionName} Section
                         </p>
@@ -1092,23 +1189,20 @@ export default function GmatTestAttemptPage() {
                         </p>
 
 
-                        <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
+                        <div className="grid grid-cols-2 md:grid-cols-5 mt-4 max-w-4xl mx-auto gap-2">
                             {currentSection.questions
                                 .map((q) => {
                                     const isAnsweredLocal = q.isAnswered;
                                     const isBookmarked = q.markedForReview;
-
-
                                     return (
                                         <div
                                             key={q.order}
                                             onClick={() => {
                                                 if (!sectionTimedOut) {
-
                                                     handleReviewQuestionClick(q.order - 1)
                                                 }
                                             }}
-                                            className={`group flex items-center justify-between p-3 rounded-xl border-2 cursor-pointer transition-all duration-200 ${isBookmarked
+                                            className={`group flex items-center justify-between p-2 rounded-xl border-2 cursor-pointer transition-all duration-200 ${isBookmarked
                                                 ? "border-purple-300 dark:border-purple-500 bg-purple-50 dark:bg-purple-500/20"
                                                 : isAnsweredLocal
                                                     ? "border-emerald-200 dark:border-emerald-500/30 bg-emerald-50 dark:bg-emerald-500/10"
@@ -1117,7 +1211,7 @@ export default function GmatTestAttemptPage() {
                                         >
                                             <div className="flex items-center gap-3">
                                                 <div
-                                                    className={`flex h-8 w-8 items-center justify-center rounded-full text-sm font-bold ${isBookmarked
+                                                    className={`flex h-6 w-6 items-center justify-center rounded-full text-xs font-bold ${isBookmarked
                                                         ? "bg-purple-500 text-white"
                                                         : isAnsweredLocal
                                                             ? "bg-emerald-500 text-white"
@@ -1127,12 +1221,9 @@ export default function GmatTestAttemptPage() {
                                                     {q.order}
                                                 </div>
                                                 <div>
-                                                    <div className="font-medium text-slate-800 dark:text-slate-100 text-sm">
-                                                        Question {q.order}
-                                                    </div>
                                                     <div className="flex items-center gap-2 ">
                                                         {isAnsweredLocal && (
-                                                            <span className="inline-flex items-center gap-1 text-xs text-emerald-600 dark:text-emerald-400">
+                                                            <span className="inline-flex items-center gap-1 text-sm text-emerald-600 dark:text-emerald-400">
                                                                 <CheckCircle2 className="h-3 w-3" />
                                                                 Answered
                                                             </span>
@@ -1140,7 +1231,6 @@ export default function GmatTestAttemptPage() {
                                                         {isBookmarked && (
                                                             <span className="inline-flex items-center gap-1 text-xs text-purple-600 dark:text-purple-400">
                                                                 <Flag className="h-3 w-3" />
-                                                                Bookmarked
                                                             </span>
                                                         )}
                                                     </div>
@@ -1156,15 +1246,15 @@ export default function GmatTestAttemptPage() {
                     </div>
                 </div>
 
-                <div className="fixed bottom-0 left-0 right-0 z-50 border-t border-slate-200 dark:border-slate-700 bg-white/95 dark:bg-slate-900/95 backdrop-blur supports-backdrop-blur:bg-white/60">
-                    <div className="mx-auto max-w-7xl px-4 py-4">
+                <div className="fixed bottom-0 left-0 right-0 z-50  px-4 border-slate-200 dark:border-slate-700 bg-[#0a8cbd] dark:bg-slate-900/95 backdrop-blur supports-backdrop-blur:bg-white/60">
+                    <div className="mx-auto max-w-8xl px-4 py-2">
                         <div className="flex flex-wrap items-center justify-between gap-4">
                             {/* Left Actions */}
                             <div className="flex flex-wrap items-center gap-3">
                                 <Button
-                                    variant="outline"
+                                    variant=""
                                     size="sm"
-                                    className="flex items-center gap-2 rounded-xl border-2 border-slate-300 dark:border-slate-600 px-4 py-2 text-sm font-semibold text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-800"
+                                    className="flex items-center gap-2 rounded-xl dark:border-slate-600 px-4 py-2 font-semibold text-white dark:text-slate-200 hover:outline dark:hover:bg-slate-800"
                                     onClick={() => null}
                                     disabled={true}
                                 >
@@ -1176,11 +1266,15 @@ export default function GmatTestAttemptPage() {
                             {/* Right Navigation */}
                             <div className="flex items-center gap-3">
                                 <Button
+                                    variant=""
                                     size="sm"
-                                    className="flex items-center gap-2 rounded-xl border-2 border-slate-300 dark:border-slate-600 px-5 py-2 text-sm font-semibold text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-800"
+                                    className="flex items-center gap-2 rounded-xl dark:border-slate-600 px-4 py-2 font-semibold text-white dark:text-slate-200 hover:outline dark:hover:bg-slate-800"
                                     onClick={exitReview}
                                 >
-                                    {isLastSection ? "Submit GMAT Test" : "End Section Review"}
+                                    {isLastSection ? "Submit Text" : "Next"}
+
+                                    {isLastSection ? <Save className="h-4 w-4" /> : <ChevronRight className="h-4 w-4" />}
+
                                 </Button>
                             </div>
                         </div>
@@ -1189,6 +1283,31 @@ export default function GmatTestAttemptPage() {
             </div>
         );
     };
+
+    const renderPauseScreen = () => (
+        <div className="h-[calc(60vh-56px)] flex flex-col bg-white dark:bg-slate-900 mt-18">
+
+            {/* Content */}
+            <div className="flex-1 flex items-center justify-center text-center px-6">
+                <div className="max-w-4xl">
+                    <p className="text-lg mb-6">
+                        You have paused your practice exam. Click the{" "}
+                        <strong>Resume Exam</strong> button below to continue.
+                    </p>
+
+                    <p className="text-base text-slate-600 mb-8">
+                        Please note: the pause button is intended for short pauses or breaks.
+                        If you expect to be away for more than 20 minutes, we suggest you save
+                        your exam for later. Otherwise, your exam will automatically resume.
+                    </p>
+
+                    <div className="text-2xl font-mono font-bold text-red-600 mb-8">
+                        Pause time remaining: {formatTime(pauseSecondsLeft)}
+                    </div>
+                </div>
+            </div>
+        </div>
+    );
 
 
     const showQuestionTopMeta =
@@ -1203,6 +1322,21 @@ export default function GmatTestAttemptPage() {
 
     return (
         <>
+            <GmatHelpModal
+                open={showHelp}
+                onClose={() => setShowHelp(false)}
+            />
+
+            <GmatWhiteboardModal
+                open={openBoard}
+                onClose={() => setOpenBoard(false)}
+            />
+
+            <GmatCalculatorModal
+                open={openCalc}
+                onClose={() => setOpenCalc(false)}
+            />
+
             {showAnswerRequiredModal && (
                 <div className="fixed inset-0 z-60 flex items-center justify-center bg-black/60 dark:bg-black/80 backdrop-blur-[1px] p-4">
                     <div className="rounded-2xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 p-8 text-center shadow-2xl shadow-black/10 dark:shadow-black/40 w-full max-w-md mx-auto">
@@ -1245,41 +1379,45 @@ export default function GmatTestAttemptPage() {
 
             <div className="relative min-h-screen bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-50">
                 {/* Fixed Top bar (shared) */}
-                <div className="fixed top-0 left-0 right-0 z-50 border-b border-slate-200 dark:border-slate-700 bg-white/95 dark:bg-slate-900/95 backdrop-blur supports-backdrop-blur:bg-white/60">
-                    <div className="mx-auto flex max-w-7xl items-center justify-between gap-4 px-4 py-2.5">
+                <div className="fixed top-0 left-0 mb-0 right-0 z-50 border-b border-slate-200 dark:border-slate-700 bg-[#3c3737] dark:bg-slate-900/95 backdrop-blur supports-backdrop-blur:bg-white/60">
+                    <div className="mx-auto flex max-w-8xl items-center justify-between gap-4 px-4 py-2">
                         <div className="flex items-center gap-3">
                             <div>
-                                <p className="text-xs uppercase tracking-widest text-slate-500 dark:text-slate-400 font-semibold">
-                                    {attempt.exam?.name || "GMAT EXAM"}
+                                <p className="py-2 text-base uppercase text-white dark:text-slate-400 font-semibold">
+                                    {testTitle || "GMAT EXAM"}
                                 </p>
-                                <h1 className="text-sm font-bold text-slate-800 dark:text-slate-100">
+                                {/* {currentScreen !== "introduction" && <h1 className="text-sm font-bold text-slate-800 dark:text-slate-100">
                                     {testTitle}
-                                </h1>
+                                </h1>} */}
                             </div>
                         </div>
 
-                        <div className="flex items-center gap-3">
-                            {showQuestionTopMeta && (
-                                <div className="hidden flex-col text-sm text-slate-700 dark:text-slate-200 sm:flex">
-                                    <span>
-                                        Question {currentQuestion!.order} of{" "}
-                                        {totalQuestionsForCurrentSection}
+                        <div className="flex flex-col items-end ">
+                            {showTimerOnHeader && (
+                                <div className="flex items-center gap-2">
+                                    <Clock className="h-4 w-4 text-[#FFD400]" />
+                                    <span className="text-[#FFD400] font-semibold">
+                                        Time Remaining:
+                                    </span>
+                                    <span className="font-mono font-bold text-[#FFD400] tracking-wider">
+                                        {showTimerOnHeader}
                                     </span>
                                 </div>
                             )}
+                            {showQuestionTopMeta && (
+                                <div className="hidden flex text-sm text-slate-700 dark:text-slate-200 sm:flex gap-4">
+                                    <button onClick={toggleMarkForReview}>
+                                        {currentQuestion?.markedForReview ? <BookmarkCheckIcon className="text-[#FFD400] h-5 w-5" /> : <BookmarkIcon className="text-[#E0E0E0] h-5 w-5" />}
+                                    </button>
 
-                            {showTimerOnHeader && (
-                                <div className="flex items-center gap-3 px-4 py-2">
-                                    <Clock className="h-5 w-5 text-emerald-500 dark:text-emerald-400" />
-                                    <div className="flex flex-row">
-                                        <span className="font-mono font-bold text-slate-800 dark:text-slate-100">
-                                            {showTimerOnHeader}
-                                        </span>
+                                    <div className="flex gap-2 text-[#E0E0E0] font-medium">
+                                        <FileStack className="h-5 w-5" />
+                                        {currentQuestion!.order} of {totalQuestionsForCurrentSection}
                                     </div>
                                 </div>
                             )}
 
-                            <Button
+                            {/* {currentScreen !== "introduction" && <Button
                                 variant="outline"
                                 size="sm"
                                 className="hidden items-center gap-2 rounded-lg border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 px-4 py-1 text-sm text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-700 sm:flex"
@@ -1287,10 +1425,24 @@ export default function GmatTestAttemptPage() {
                             >
                                 <LogOut className="h-4 w-4" />
                                 Exit
-                            </Button>
+                            </Button>} */}
                         </div>
                     </div>
+                    <div className="h-8 mt-0 bg-[#0a8cbd] flex gap-3 items-center justify-start">
+                        {currentScreen == "question" && <span className="px-4 text-base font-semibold  capitalize tracking-wider text-white dark:text-indigo-300">
+                            {getSectionTypeBadge()}
+                        </span>}
+                        {currentScreen == "question" && <button onClick={() => setOpenBoard(true)}>
+                            <NotebookPenIcon className="h-6 w-6 text-white" />
+                        </button>}
+                        {currentScreen == "question" && getSectionTypeBadge() == "Data Insights" && <button onClick={() => setOpenCalc(true)}>
+                            <CalculatorIcon className="h-6 w-6 text-white" />
+                        </button>}
+
+                    </div>
                 </div>
+
+
 
                 {/* Scrollable main area (between header & footer) */}
                 <div className="pt-14 pb-16">
@@ -1342,6 +1494,7 @@ export default function GmatTestAttemptPage() {
                             </div>
                         )}
 
+                    {currentScreen == "pause" && renderPauseScreen()}
 
                     {
                         currentScreen === "section_instructions" &&
@@ -1362,14 +1515,9 @@ export default function GmatTestAttemptPage() {
                     {currentScreen === "question" &&
                         currentSection &&
                         currentQuestion && (
-                            <div className="mx-auto max-w-7xl px-2 pb-4">
+                            <div className="mx-auto max-w-8xl px-4 pb-4 mt-10">
                                 <div className="bg-white dark:bg-slate-900/80 py-4">
-                                    <div className="flex flex-wrap items-center justify-between gap-2 dark:bg-black/30 px-1 pb-2 text-sm ">
-                                        <div className="flex flex-wrap items-center gap-3">
-                                            <span className="rounded-full bg-indigo-500/20 px-3 py-1.5 text-xs font-bold uppercase tracking-wider text-indigo-700 dark:text-indigo-300">
-                                                {getSectionTypeBadge()}
-                                            </span>
-                                        </div>
+                                    {/* <div className="flex flex-wrap items-center justify-between gap-2 dark:bg-black/30 px-1 pb-2 text-sm ">
                                         <div className="flex items-center gap-4 text-xs text-slate-600 dark:text-slate-400">
                                             <span className="font-medium">
                                                 <Clock className="inline-block h-4 w-4 mr-1.5 text-emerald-500 dark:text-emerald-400" />
@@ -1382,7 +1530,7 @@ export default function GmatTestAttemptPage() {
                                                 </span>
                                             )}
                                         </div>
-                                    </div>
+                                    </div> */}
                                     <QuestionBody
                                         qDoc={qDoc}
                                         currentQuestion={currentQuestion}
@@ -1398,13 +1546,61 @@ export default function GmatTestAttemptPage() {
                 </div>
 
                 {/* Fixed Bottom Navigation (question only) */}
-                {currentScreen === "question" && currentQuestion && (
-                    <div className="fixed bottom-0 left-0 right-0 z-50 border-t border-slate-200 dark:border-slate-700 bg-white/95 dark:bg-slate-900/95 backdrop-blur supports-backdrop-blur:bg-white/60">
-                        <div className="mx-auto max-w-7xl px-4 py-4">
+                {(currentScreen === "question" || currentScreen == "pause") && currentQuestion && (
+                    <div className="fixed bottom-0 left-0 right-0 z-50  px-4 border-slate-200 dark:border-slate-700 bg-[#0a8cbd] dark:bg-slate-900/95 backdrop-blur supports-backdrop-blur:bg-white/60">
+                        <div className="mx-auto max-w-8xl px-4 py-2">
                             <div className="flex flex-wrap items-center justify-between gap-4">
                                 {/* Left Actions */}
                                 <div className="flex flex-wrap items-center gap-3">
                                     <Button
+                                        variant=""
+                                        size="sm"
+                                        className="flex items-center gap-2 rounded-xl dark:border-slate-600 px-4 py-2 font-semibold text-white dark:text-slate-200 hover:outline dark:hover:bg-slate-800" onClick={() => setShowHelp(true)}
+                                    >
+
+                                        <HelpCircle className="h-4 w-4" />
+                                        Help
+                                    </Button>
+                                    <Button
+                                        variant=""
+                                        size="sm"
+                                        onClick={handlePauseExam}
+                                        disabled={savingProgress || isCompleted || currentScreen == "pause"}
+                                        className="flex items-center gap-2 rounded-xl dark:border-slate-600 px-4 py-2 font-semibold text-white dark:text-slate-200 hover:outline dark:hover:bg-slate-800"
+                                    >
+
+                                        <Pause className="h-4 w-4" />
+                                        Pause
+                                    </Button>
+
+                                    <Button
+                                        variant=""
+                                        size="sm"
+                                        onClick={() =>
+                                            saveCurrentQuestionProgress({
+                                                silent: false,
+                                                phase: "in_section",
+                                            })
+                                        }
+                                        disabled={savingProgress || isCompleted}
+                                        isLoading={savingProgress}
+                                        className="flex items-center gap-2 rounded-xl dark:border-slate-600 px-4 py-2 font-semibold text-white dark:text-slate-200 hover:outline dark:hover:bg-slate-800"
+                                    >
+                                        <DownloadIcon className="h-4 w-4" />
+                                        Save for Later
+                                    </Button>
+
+                                    {currentScreen == "pause" && <Button
+                                        variant=""
+                                        size="sm"
+                                        onClick={() => handleResumeExam(false)}
+                                        className="flex items-center gap-2 rounded-xl dark:border-slate-600 px-4 py-2 font-semibold text-white dark:text-slate-200 hover:outline dark:hover:bg-slate-800"
+                                    >
+
+                                        <ForwardIcon className="h-4 w-4" />
+                                        Resume Exam
+                                    </Button>}
+                                    {/* <Button
                                         variant="outline"
                                         size="sm"
                                         className={`flex items-center gap-2 rounded-xl border-2 px-4 py-2 text-sm font-semibold ${currentQuestion.markedForReview
@@ -1418,43 +1614,28 @@ export default function GmatTestAttemptPage() {
                                         {currentQuestion.markedForReview
                                             ? "Unmark Review"
                                             : "Mark for Review"}
-                                    </Button>
-                                    <Button
-                                        variant="outline"
-                                        size="sm"
-                                        className="flex items-center gap-2 rounded-xl border-2 border-slate-300 dark:border-slate-600 px-4 py-2 text-sm font-semibold text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-800"
-                                        onClick={() =>
-                                            saveCurrentQuestionProgress({
-                                                silent: false,
-                                                phase: "in_section",
-                                            })
-                                        }
-                                        disabled={savingProgress || isCompleted}
-                                        isLoading={savingProgress}
-                                    >
-                                        <Save className="h-4 w-4" />
-                                        Save Progress
-                                    </Button>
+                                    </Button> */}
+
                                 </div>
 
                                 {/* Right Navigation */}
                                 <div className="flex items-center gap-3">
                                     {isInReviewMode ? (
                                         <Button
-                                            variant="outline"
+                                            variant=""
                                             size="sm"
-                                            className="flex items-center gap-2 rounded-xl border-2 border-slate-300 dark:border-slate-600 px-5 py-2 text-sm font-semibold text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-800"
+                                            className="flex items-center gap-2 rounded-xl dark:border-slate-600 px-4 py-2 text-base font-semibold text-white dark:text-slate-200 hover:outline dark:hover:bg-slate-800"
                                             onClick={handleBackToReview}
                                         >
                                             Back to Review
                                         </Button>
                                     ) : (
                                         <Button
-                                            variant="outline"
+                                            variant=""
                                             size="sm"
-                                            className="flex items-center gap-2 rounded-xl border-2 border-slate-300 dark:border-slate-600 px-5 py-2 text-sm font-semibold text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-800"
+                                            className="flex items-center gap-2 rounded-xl dark:border-slate-600 px-4 py-2 text-base font-semibold text-white dark:text-slate-200 hover:outline dark:hover:bg-slate-800"
                                             onClick={goNextQuestion}
-                                            disabled={isNextDisabled}
+                                            disabled={isNextDisabled || currentScreen == "pause"}
                                         >
                                             Next
                                             <ChevronRight className="h-5 w-5" />

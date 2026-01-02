@@ -948,12 +948,12 @@ const SpeakingTestSection: React.FC<SpeakingTestSectionProps> = ({
       const formData = new FormData();
       formData.append('file', zipBlob, `speaking_test_${question.title.replace(/\s+/g, '_')}.zip`);
       
-      const response = await api.post('/upload/audio', formData, {
+      const response = await api.post('/upload/iletsupload', formData, {
         headers: {
           'Content-Type': 'multipart/form-data',
           'Authorization': `Bearer ${localStorage.getItem('token')}`
         },
-        timeout: 300000,
+        timeout: 30000,
         onUploadProgress: (e) => {
           if (e.total) {
             const pct = Math.round((e.loaded * 100) / e.total);

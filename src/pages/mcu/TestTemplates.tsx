@@ -924,7 +924,7 @@ export default function TestTemplateManagementPage() {
                                         variant="outline"
                                         size="sm"
                                         className="absolute -top-1 right-1 !p-0 h-6 w-6 rounded-full text-xs text-red-600 hover:text-red-700"
-                                        onClick={() => { if (t.exam?.name.toLowerCase().includes("gmat")) { navigate(`/gmat/tests/${t._id}`, { replace: true }) } else if (t.exam?.name.toLowerCase().includes("pte")) { navigate(`/pte/tests/${t._id}`, { replace: true }) } else if (t.exam?.name.toLowerCase().includes("gre")) { navigate(`/gre/tests/${t._id}`, { replace: true }) } else navigate(`/mcu/tests/${t._id}`, { replace: true }) }}
+                                        onClick={() => { if (t.exam?.name.toLowerCase().includes("gmat")) { navigate(`/gmat/tests/${t._id}`, { replace: true }) } else if (t.exam?.name.toLowerCase().includes("pte")) { navigate(`/pte/tests/${t._id}`, { replace: true }) } else if (t.exam?.name.toLowerCase().includes("gre")) { navigate(`/gre/tests/${t._id}`, { replace: true }) } else navigate(`/mcq/tests/${t._id}`, { replace: true }) }}
                                     >
                                         <Play className="h-3 w-3" />
                                     </Button>

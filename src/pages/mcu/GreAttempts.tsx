@@ -696,6 +696,7 @@ export default function GRETestAttemptPage() {
           {currentScreen === "results" && attempt && (
             <GRETestResults
               attempt={attempt}
+              submitting={submitting}
               navigateBack={() => navigate(-1)}
               onTakeAnotherTest={() => navigate("/gmat/practice")}
             />

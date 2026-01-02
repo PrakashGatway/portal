@@ -111,7 +111,6 @@ export default function App() {
                 <Route path="/all_transactions" element={<AdminTransactionsPage />} />
                 {/* <Route path="/tests" element={<ContentManagement type="Tests" />} /> */}
                 <Route path="/study-materials" element={<ContentManagement type="StudyMaterials" />} />
-
                 <Route path="/test/exams" element={<ExamManagement />} />
                 <Route path="/test/sections" element={<SectionManagement />} />
                 <Route path="/tests" element={<TestSeriesManagement />} />
@@ -120,6 +119,7 @@ export default function App() {
 
                 <Route path="/mcq/questions" element={<QuestionManagementPage />} />
                 <Route path="/mcq/tests" element={<TestTemplateManagementPage />} />
+
               </Route>
 
               <Route element={<ProtectedRoute roles={[ROLES.COUNSEL, ROLES.ADMIN, ROLES.MANAGER]} />}>

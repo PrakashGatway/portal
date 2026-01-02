@@ -60,11 +60,11 @@ export const TableAnalysisSection: React.FC<TableAnalysisSectionProps> = ({
   }, [table, sortBy, sortDirection]);
 
   return (
-    <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+    <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 px-2">
       <div className="space-y-4">
         {qDoc.stimulus && (
-          <div className="rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-900/60 p-4 text-base leading-relaxed text-slate-700 dark:text-slate-300">
-            <div className="prose prose-sm dark:prose-invert max-w-none"
+          <div className="text-lg text-justify">
+            <div className=""
               dangerouslySetInnerHTML={{ __html: qDoc?.stimulus }} />
           </div>
         )}
@@ -132,11 +132,11 @@ export const TableAnalysisSection: React.FC<TableAnalysisSectionProps> = ({
       {/* Right Panel - Question Text and Statements Table */}
       <div className="space-y-2">
         {qDoc?.questionText && (
-          <div className="text-base text-slate-600 dark:text-slate-400" dangerouslySetInnerHTML={{ __html: qDoc?.questionText }} />
+          <div className="text-lg" dangerouslySetInnerHTML={{ __html: qDoc?.questionText }} />
         )}
 
         {statements.length > 0 && (
-          <div className="rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 overflow-hidden shadow-sm">
+          <div className="rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 overflow-hidden">
             <table className="">
               <thead>
                 <tr className="bg-slate-100 dark:bg-slate-800/80">
@@ -253,17 +253,17 @@ export const MultiSourceComponent: React.FC<MultiSourceComponentProps> = ({
   }
 
   return (
-    <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+    <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 px-2">
       <div className="space-y-2">
         {tabs.length > 0 && (
-          <div className="rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 overflow-hidden">
+          <div className=" bg-white dark:bg-slate-800 overflow-hidden">
             {/* Tab Navigation */}
             <div className="flex border-b border-slate-200 dark:border-slate-700">
               {tabs.map((tab: any) => (
                 <button
                   key={tab.id}
                   onClick={() => setActiveTabId(tab.id)}
-                  className={`px-4 py-2 text-sm font-medium transition-colors ${activeTabId === tab.id
+                  className={`px-4 py-2 text-base font-medium transition-colors ${activeTabId === tab.id
                     ? "bg-yellow-500 text-white border-b-2 border-yellow-600"
                     : "text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700"
                     }`}
@@ -274,14 +274,14 @@ export const MultiSourceComponent: React.FC<MultiSourceComponentProps> = ({
             </div>
 
             {/* Tab Content */}
-            <div className="p-4 overflow-auto">
+            <div className="py-2 overflow-auto">
               {tabs.map((tab: any) => (
                 <div
                   key={tab.id}
                   className={`${activeTabId === tab.id ? 'block' : 'hidden'
                     }`}
                 >
-                  <div className="text-base max-h-[420px] leading-relaxed text-slate-700 dark:text-slate-300"
+                  <div className="text-base max-h-[420px]"
                     dangerouslySetInnerHTML={{ __html: tab.contentHtml }} />
                 </div>
               ))}
@@ -293,7 +293,7 @@ export const MultiSourceComponent: React.FC<MultiSourceComponentProps> = ({
       {/* Right Panel - Statements */}
       <div className="space-y-2">
         {qDoc?.questionText && (
-          <div className="text-base text-slate-600 dark:text-slate-400" dangerouslySetInnerHTML={{ __html: qDoc?.questionText }} />
+          <div className="text-lg" dangerouslySetInnerHTML={{ __html: qDoc?.questionText }} />
         )}
 
         {statements.length > 0 && (
@@ -378,7 +378,7 @@ export const MultiSourceComponent: React.FC<MultiSourceComponentProps> = ({
 };
 
 
-import { Save } from 'lucide-react';
+import { DownloadIcon, HelpCircle, Pause, Save, StepBack, StepForward } from 'lucide-react';
 import Button from '../../components/ui/button/Button';
 
 export const IntroScreen = ({
@@ -402,6 +402,20 @@ export const IntroScreen = ({
           </p>
           <p>
             The GMAT™ exam is owned by the Graduate Management Admission Council (GMAC), including the copyrights for all GMAT questions in the test and prep materials.
+          </p>
+        </>
+      ),
+    },
+
+    {
+      title: "GMAT Exam Nondisclosure Agreement and General Terms of Use",
+      content: (
+        <>
+          <p className="mb-4">
+            Before beginning the GMAT™ exam, you will be presented with Exam Check-In Confirmation, Candidate Name Confirmation, and Welcome Screens. You will be required to read and accept the GMAT™ exam Nondisclosure Agreement and General Terms of Use. If you do not agree with these terms, your exam will be canceled, and you will forfeit your entire test fee.
+          </p>
+          <p>
+            Click <span className="bg-blue-600 text-white px-2 py-1 rounded font-bold dark:bg-blue-700">Next →</span> to continue.
           </p>
         </>
       ),
@@ -434,19 +448,6 @@ export const IntroScreen = ({
           </p>
           <p className="mb-4">
             The browser back button will not work during practice exams. Use the Save for Later option to navigate out of the exam.
-          </p>
-          <p>
-            Click <span className="bg-blue-600 text-white px-2 py-1 rounded font-bold dark:bg-blue-700">Next →</span> to continue.
-          </p>
-        </>
-      ),
-    },
-    {
-      title: "GMAT Exam Nondisclosure Agreement and General Terms of Use",
-      content: (
-        <>
-          <p className="mb-4">
-            Before beginning the GMAT™ exam, you will be presented with Exam Check-In Confirmation, Candidate Name Confirmation, and Welcome Screens. You will be required to read and accept the GMAT™ exam Nondisclosure Agreement and General Terms of Use. If you do not agree with these terms, your exam will be canceled, and you will forfeit your entire test fee.
           </p>
           <p>
             Click <span className="bg-blue-600 text-white px-2 py-1 rounded font-bold dark:bg-blue-700">Next →</span> to continue.
@@ -509,63 +510,394 @@ export const IntroScreen = ({
         </>
       ),
     },
+    {
+      title: "GMAT™ Exam Questions – Instructions",
+      content: (
+        <>
+          <p className="mb-4">
+            You must select an answer to <strong>each question</strong> before moving on to the next question — <span className="font-semibold">no skipping is allowed</span>.
+          </p>
+
+          <p className="mb-4">
+            You may <span className="inline-flex items-center bg-gray-700 text-white px-2 py-0.5 rounded">🔖 Bookmark</span> questions as you move through the section to mark them for review after you complete all the questions in that section.
+          </p>
+
+          <p className="mb-4">
+            Please note that in some sections of the GMAT™ exam, certain parts of a question may remain the same across multiple questions.
+            <span className="block mt-1 text-sm text-gray-600 dark:text-gray-400">
+              (For example: visual graphics or text passages.)
+            </span>
+          </p>
+
+          <p className="mb-4">
+            If you do <strong>not finish all the questions</strong> in the allotted time for a section, your score will reflect a <span className="text-red-600 font-semibold">penalty</span> for not completing the section.
+          </p>
+
+          <p className="mb-6">
+            When you are ready, click{" "}
+            <span className="inline-flex items-center bg-blue-600 text-white px-3 py-1 rounded font-bold dark:bg-blue-700">
+              Next →
+            </span>{" "}
+            to continue.
+          </p>
+        </>
+      ),
+    },
+    {
+      title: "Question Review & Edit",
+      content: (
+        <>
+          <p className="mb-4">
+            At the end of each section, you can review as many questions as you would like and can edit up to{" "}
+            <span className="font-semibold">three (3) answers</span>,{" "}
+            <span className="font-semibold">within the section&apos;s allotted time</span>.
+          </p>
+
+          <p className="mb-4">
+            When answering a question, you can bookmark it by clicking the{" "}
+            <span className="inline-flex items-center bg-gray-700 text-white px-2 py-0.5 rounded">
+              🔖
+            </span>{" "}
+            icon. When a question is bookmarked, the icon will be filled:{" "}
+            <span className="inline-flex items-center bg-gray-700 text-white px-2 py-0.5 rounded">
+              📌
+            </span>.
+            Clicking the icon again will remove the bookmark.
+          </p>
+
+          <p className="mb-4">
+            Bookmarking questions during the exam can make the{" "}
+            <span className="font-semibold">Question Review &amp; Edit</span> process more efficient.
+          </p>
+
+          <p className="mb-4">
+            Once you have answered all questions in a section, you will proceed to the{" "}
+            <span className="font-semibold">Question Review &amp; Edit</span> screen for that section, where you can review and edit your answers.
+          </p>
+
+          <p className="mb-4 text-red-600 font-semibold">
+            If there is no time remaining in the section, you will not proceed to the Question Review &amp; Edit screen, and you will automatically be moved to your optional break or the next section (if you have already taken your optional break).
+          </p>
+
+          <p className="mb-4">
+            The Question Review &amp; Edit screen includes a numbered list of section questions and indicates questions you bookmarked.
+            You can click on <span className="font-semibold">any question number</span> to review that question.
+          </p>
+
+          <p className="mb-6">
+            When your review is complete, or if you do not wish to review or edit any items in a section, click{" "}
+            <span className="inline-flex items-center bg-blue-600 text-white px-3 py-1 rounded font-bold dark:bg-blue-700">
+              End Section Review →
+            </span>{" "}
+            to proceed.
+          </p>
+
+          <hr className="my-6" />
+
+          <p className="mb-4 font-semibold">
+            Editing an Answer
+          </p>
+
+          <p className="mb-4">
+            You can review any question (regardless of bookmark status) and edit up to{" "}
+            <span className="font-semibold">three (3) answers</span> in the section before the section time expires.
+            The section time and number of remaining answer edits are shown in the upper right-hand corner.
+          </p>
+
+          <p className="mb-4">
+            If you edit an answer and click{" "}
+            <span className="inline-flex items-center bg-blue-600 text-white px-3 py-1 rounded font-bold dark:bg-blue-700">
+              Confirm Answer
+            </span>, you will be prompted to confirm your answer change before proceeding.
+          </p>
+
+          <div className="border border-gray-300 rounded p-4 mb-6 bg-gray-50 dark:bg-gray-800">
+            <p className="mb-2 font-semibold flex items-center gap-2">
+              ⚠️ Answer Edit Confirmation
+            </p>
+            <p className="mb-3">
+              Do you want to change your answer to this question?
+            </p>
+            <div className="flex flex-wrap gap-3">
+              <span className="bg-blue-600 text-white px-3 py-1 rounded font-semibold dark:bg-blue-700">
+                Yes, Change Answer
+              </span>
+              <span className="bg-gray-600 text-white px-3 py-1 rounded font-semibold dark:bg-gray-700">
+                No, Keep Original Answer
+              </span>
+            </div>
+            <p className="mt-3 text-sm text-gray-600 dark:text-gray-400">
+              Remaining Answer Edits: 3
+            </p>
+          </div>
+
+          <p className="mb-4">
+            If time expires while you are in the process of reviewing and/or editing questions, you will automatically be moved to your optional break or the next section of the exam.
+          </p>
+
+          <p>
+            Click{" "}
+            <span className="inline-flex items-center bg-blue-600 text-white px-3 py-1 rounded font-bold dark:bg-blue-700">
+              Next →
+            </span>{" "}
+            to continue.
+          </p>
+        </>
+      ),
+    },
+    {
+      title: "Timing and Optional Breaks",
+      content: (
+        <>
+          <p className="mb-4">
+            You will have <span className="font-semibold">one (1) optional break</span>, which you may take after the first section <span className="font-semibold">OR</span> after the second section.
+            If you take your break after the first section, you will <span className="font-semibold">not</span> have the option to take another break after the second section.
+          </p>
+
+          <p className="mb-4 font-semibold">
+            Please note: the breaks in the GMAT™ Official Practice Exams are <span className="underline">not timed</span>.
+            However, they <span className="underline">will be timed</span> in the GMAT™ Exam.
+          </p>
+
+          <ul className="list-disc pl-6 mb-6 space-y-2">
+            <li>
+              You can take up to <span className="font-semibold">10 minutes</span> for your break.
+              If you have a break-related accommodation, you may be approved for an additional 10-minute break.
+            </li>
+            <li>
+              Your <span className="font-semibold">camera must remain on</span> during the entire break.
+            </li>
+            <li>
+              The break time includes the time required to <span className="font-semibold">re-check into the exam</span>.
+              Please keep this in mind as you plan your break.
+            </li>
+            <li>
+              If you exceed the allotted time, the <span className="font-semibold">extra time will be deducted</span> from the next exam section.
+            </li>
+            <li>
+              If you are taking an online exam and using an approved physical erasable whiteboard, it must be completely erased and shown to the camera before you leave for break, and you must leave the whiteboard at your workstation during the break.
+            </li>
+          </ul>
+
+          <p className="mb-4 font-semibold">
+            As a reminder:
+          </p>
+
+          <p className="mb-6">
+            Your break time includes the time to re-check in with the Test Administrator.
+            If you exceed the allotted break time, the extra time will be deducted from the next section.
+            During your break, you are <span className="font-semibold text-red-600">NOT allowed</span> to change any settings on the computer you are using or access any electronic devices, including cell phones and smartwatches.
+          </p>
+
+          <p>
+            Click{" "}
+            <span className="inline-flex items-center bg-blue-600 text-white px-3 py-1 rounded font-bold dark:bg-blue-700">
+              Next →
+            </span>{" "}
+            to continue.
+          </p>
+        </>
+      ),
+    },
+    {
+      title: "Testing Rules",
+      content: (
+        <>
+          <p className="mb-4">
+            Disruptive behavior will <span className="font-semibold">not be permitted</span>.
+            The Test Administrator will determine what constitutes disruptive behavior.
+            The Test Administrator is authorized to dismiss you from the test session for disruptive behavior and to notify{" "}
+            <span className="font-semibold">GMAC</span> and its delivery partners of the action taken.
+          </p>
+
+          <p className="mb-4">
+            During this exam, you will have access to an{" "}
+            <span className="font-semibold">online whiteboard</span> to work through equations, use for scratch work, and take notes.
+            If you are taking an online exam, use of an approved{" "}
+            <span className="font-semibold">physical erasable whiteboard</span> is permitted.
+          </p>
+
+          <p className="mb-4">
+            The physical erasable whiteboard must be{" "}
+            <span className="font-semibold">completely erased</span> at the start and end of your exam and before your optional break.
+          </p>
+
+          <p className="mb-4">
+            If at any time during the exam you need assistance, or if there is a problem with your computer or workstation,
+            <span className="font-semibold"> raise your hand</span> or start a{" "}
+            <span className="font-semibold">chat with the Test Administrator</span>.
+          </p>
+
+          <p>
+            Click{" "}
+            <span className="inline-flex items-center bg-blue-600 text-white px-3 py-1 rounded font-bold dark:bg-blue-700">
+              Next →
+            </span>{" "}
+            to continue.
+          </p>
+        </>
+      ),
+    },
+    {
+      title: "Confidential and Proprietary Materials",
+      content: (
+        <>
+          <p className="mb-4">
+            All questions contained in the{" "}
+            <span className="font-semibold">GMAT™ exam</span> are the{" "}
+            <span className="font-semibold">confidential and proprietary materials</span> of the{" "}
+            <span className="font-semibold">Graduate Management Admission Council (GMAC)</span>.
+          </p>
+
+          <p className="mb-4 font-semibold italic">
+            The penalties for cheating on the GMAT™ exam are severe.
+          </p>
+
+          <p className="mb-4">
+            Hiring someone to take the test for you, taking the test for someone else, memorizing test questions,
+            and sharing answers with others are all considered{" "}
+            <span className="font-semibold">cheating</span>.
+          </p>
+
+          <p className="mb-6">
+            Penalties may include{" "}
+            <span className="font-semibold">cancellation of your test scores</span>,{" "}
+            <span className="font-semibold">ban on future testing</span>,{" "}
+            <span className="font-semibold">school notification</span>, and{" "}
+            <span className="font-semibold">possible legal prosecution</span>.
+          </p>
+
+          <p>
+            Click{" "}
+            <span className="inline-flex items-center bg-blue-600 text-white px-3 py-1 rounded font-bold dark:bg-blue-700">
+              Next →
+            </span>{" "}
+            to continue.
+          </p>
+        </>
+      ),
+    },
+    {
+      title: "Use of a Physical Whiteboard",
+      content: (
+        <>
+          <p className="mb-4">
+            If you are taking the <span className="font-semibold">GMAT™ exam online</span>, you may use an approved,
+            <span className="font-semibold"> physical erasable whiteboard</span> during this session.
+            If you are using an approved whiteboard, you must{" "}
+            <span className="font-semibold">completely erase the whiteboard</span> at the start and end of your exam
+            and before your optional break if you choose to take one.
+          </p>
+
+          <p className="mb-4">
+            If you are taking an online exam, you will also be required to{" "}
+            <span className="font-semibold">
+              show your blank physical whiteboard to the camera
+            </span>{" "}
+            at each of these points, as directed by the on-screen prompts.
+          </p>
+
+          <p className="mb-4">
+            Failure to comply could result in your{" "}
+            <span className="font-semibold">exam being terminated</span>, your{" "}
+            <span className="font-semibold">score being canceled</span>, and/or{" "}
+            <span className="font-semibold">other consequences</span>.
+          </p>
+
+          <p className="mb-6 text-red-600 font-semibold">
+            If you are using a physical whiteboard, please show the front and back of your
+            blank physical erasable whiteboard now.
+          </p>
+
+          <p>
+            Click{" "}
+            <span className="inline-flex items-center bg-blue-600 text-white px-3 py-1 rounded font-bold dark:bg-blue-700">
+              Next →
+            </span>{" "}
+            to continue.
+          </p>
+        </>
+      ),
+    }
   ];
 
-  const isLastPage = introPage === 5;
+  const isLastPage = introPage === 11;
 
   const currentPage = introPages[introPage - 1];
 
   return (
-    <div className="w-full flex flex-col">
+    <div className="w-full flex flex-col mt-8">
       {/* Main Content Area */}
-      <div className={`w-full max-w-7xl mx-auto bg-white dark:bg-slate-900 p-6 border-t-4 border-blue-600 dark:border-blue-500 flex-grow`}>
+      <div className={`w-full max-w-8xl mx-auto bg-white dark:bg-slate-900 p-6 dark:border-blue-500 flex-grow`}>
         <h1 className="text-xl font-bold text-center mb-6 text-slate-800 dark:text-slate-100">
           {currentPage.title}
         </h1>
-        <div className="text-base leading-relaxed text-slate-800 dark:text-slate-200 space-y-4">
+        <div className="text-lg leading-relaxed text-slate-900 dark:text-slate-200 space-y-4">
           {currentPage.content}
         </div>
       </div>
 
       {/* Fixed Footer */}
-      <div className="fixed bottom-0 left-0 right-0 z-50 border-t border-slate-200 dark:border-slate-700 bg-white/95 dark:bg-slate-900/95 backdrop-blur supports-backdrop-blur:bg-white/60">
-        <div className="mx-auto max-w-7xl px-4 py-4">
+      <div className="fixed bottom-0 left-0 right-0 z-50  px-4 border-slate-200 dark:border-slate-700 bg-[#0a8cbd] dark:bg-slate-900/95 backdrop-blur supports-backdrop-blur:bg-white/60">
+        <div className="mx-auto max-w-8xl px-4 py-2">
           <div className="flex flex-wrap items-center justify-between gap-4">
             {/* Left Actions */}
-            <div className="flex flex-wrap items-center gap-3">
+            <div className="flex flex-wrap items-center gap-2">
               <Button
-                variant="outline"
+                variant=""
                 size="sm"
-                className="flex items-center gap-2 rounded-xl border-2 border-slate-300 dark:border-slate-600 px-4 py-2 text-sm font-semibold text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-800"
                 disabled={true}
+                className="flex items-center gap-2 rounded-xl dark:border-slate-600 px-4 py-2 font-semibold text-white dark:text-slate-200 hover:outline dark:hover:bg-slate-800"
               >
-                <Save className="h-4 w-4" />
-                Save Progress
+                <HelpCircle className="h-4 w-4" />
+                Help
+              </Button>
+              <Button
+                variant=""
+                size="sm"
+                disabled={true}
+                className="flex items-center gap-2 rounded-xl dark:border-slate-600 px-4 py-2 font-semibold text-white dark:text-slate-200 hover:outline dark:hover:bg-slate-800"
+              >
+                <Pause className="h-4 w-4" />
+                Pause
+              </Button>
+
+              <Button
+                variant=""
+                size="sm"
+                disabled={true}
+                className="flex items-center gap-2 rounded-xl dark:border-slate-600 px-4 py-2 font-semibold text-white dark:text-slate-200 hover:outline dark:hover:bg-slate-800"
+              >
+                <DownloadIcon className="h-4 w-4" />
+                Save for Later
               </Button>
             </div>
 
+
             {/* Right Navigation */}
-            <div className="flex items-center gap-3">
+            <div className="flex items-center gap-2">
               <div className="flex gap-2">
                 {introPage > 1 && (
                   <button
-                    className="flex items-center gap-2 rounded-xl border-2 border-slate-300 dark:border-slate-600 px-5 py-2 text-sm font-semibold text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-800"
+                    className="flex items-center gap-2 rounded-xl dark:border-slate-600 px-4 py-2 font-semibold text-white dark:text-slate-200 hover:outline dark:hover:bg-slate-800"
                     onClick={() => setIntroPage(prev => Math.max(1, prev - 1))}
                   >
+                    <StepBack className="h-4 w-4" />
                     Previous
                   </button>
                 )}
                 <button
-                  className="flex items-center gap-2 rounded-xl border-2 border-slate-300 dark:border-slate-600 px-5 py-2 text-sm font-semibold text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-800"
+                  className="flex items-center gap-2 rounded-xl dark:border-slate-600 px-4 py-2 text-base font-semibold text-white dark:text-slate-200 hover:outline dark:hover:bg-slate-800"
                   onClick={() => {
                     if (isLastPage) {
                       onContinue();
                     } else {
-                      setIntroPage(prev => Math.min(5, prev + 1));
+                      setIntroPage(prev => Math.min(11, prev + 1));
                     }
                   }}
                 >
-                  {isLastPage ? "Continue to Section Order" : "Next →"}
+                  {isLastPage ? "Continue" : "Next"}
+                  <StepForward className="h-4 w-4" />
                 </button>
               </div>
             </div>
@@ -604,14 +936,14 @@ export const SelectOrderScreen: React.FC<SelectOrderScreenProps> = ({
   onStartTest
 }) => {
   return (
-    <div className="w-full flex flex-col">
+    <div className="w-full flex flex-col mt-8 p-6">
       {/* Main Content Area */}
-      <div className={`w-full max-w-7xl mx-auto bg-white dark:bg-slate-900 p-6 border-t-4 border-blue-600 dark:border-blue-500 flex-grow`}>
-        <h1 className="text-xl font-bold text-center mb-6 text-slate-800 dark:text-slate-100">
+      <div className={`w-full max-w-8xl mx-auto bg-white dark:bg-slate-900 dark:border-blue-500 flex-grow`}>
+        <h1 className="text-xl font-bold text-center mb-4 text-slate-900 dark:text-slate-100">
           Select Section Order
         </h1>
 
-        <div className="text-base leading-relaxed text-slate-800 dark:text-slate-200 space-y-4">
+        <div className="text-base leading-relaxed text-slate-800 dark:text-slate-200 space-y-2">
           <p className="font-bold">
             Select the order in which the exam sections are to be administered.
           </p>
@@ -626,7 +958,7 @@ export const SelectOrderScreen: React.FC<SelectOrderScreenProps> = ({
           </p>
 
           {/* Grid for 6 options */}
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mt-6">
+          <div className="grid grid-cols-1 md:grid-cols-3 max-w-4xl mx-auto gap-2 mt-3">
             {moduleSequenceOptions.map((seq, idx) => (
               <div
                 key={seq.index}
@@ -638,7 +970,7 @@ export const SelectOrderScreen: React.FC<SelectOrderScreenProps> = ({
                   name="sectionOrder"
                   checked={selectedSequenceIndex === seq.index}
                   onChange={() => setSelectedSequenceIndex(seq.index)}
-                  className="h-4 w-4 text-blue-600 border-slate-300 dark:border-slate-600 focus:ring-blue-500 dark:focus:ring-blue-400 dark:bg-slate-700"
+                  className="h-4 w-4 text-blue-600 border-slate-300 dark:border-slate-600 focus:ring-blue-500 dark:focus:ring-blue-400 dark:bg-slate-700 mt-1"
                 />
                 <label
                   htmlFor={`sequence-${idx}`}
@@ -647,7 +979,7 @@ export const SelectOrderScreen: React.FC<SelectOrderScreenProps> = ({
                   {seq.labels.map((item, labelIdx) => (
                     <div
                       key={labelIdx}
-                      className="text-sm font-medium text-slate-800 dark:text-slate-100"
+                      className="text-base font-medium text-slate-900 dark:text-slate-100"
                     >
                       {item.name}
                     </div>
@@ -657,36 +989,49 @@ export const SelectOrderScreen: React.FC<SelectOrderScreenProps> = ({
             ))}
           </div>
 
-          <p className="mt-6">
+          <p className="mt-2">
             Click the <span className="bg-blue-600 text-white px-2 py-1 rounded font-bold dark:bg-blue-700">Next →</span> button to start the exam. You will begin the GMAT™ exam on the next screen.
           </p>
         </div>
       </div>
 
-      <div className="fixed bottom-0 left-0 right-0 z-50 border-t border-slate-200 dark:border-slate-700 bg-white/95 dark:bg-slate-900/95 backdrop-blur supports-backdrop-blur:bg-white/60">
-        <div className="mx-auto max-w-7xl px-4 py-4">
+
+
+      <div className="fixed bottom-0 left-0 right-0 z-50 px-4 dark:border-slate-700 bg-[#0a8cbd] dark:bg-slate-900/95 backdrop-blur supports-backdrop-blur:bg-white/60">
+        <div className="mx-auto max-w-8xl px-4 py-2">
           <div className="flex flex-wrap items-center justify-between gap-4">
-            {/* Left Actions */}
             <div className="flex flex-wrap items-center gap-3">
               <Button
-                variant="outline"
+                variant=""
                 size="sm"
-                className="flex items-center gap-2 rounded-xl border-2 border-slate-300 dark:border-slate-600 px-4 py-2 text-sm font-semibold text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-800"
                 disabled={true}
+                className="flex items-center gap-2 rounded-xl dark:border-slate-600 px-4 py-2 font-semibold text-white dark:text-slate-200 hover:outline dark:hover:bg-slate-800"
               >
-                <Save className="h-4 w-4" />
-                Save
+                <Pause className="h-4 w-4" />
+                Pause
+              </Button>
+
+              <Button
+                variant=""
+                size="sm"
+                disabled={true}
+                className="flex items-center gap-2 rounded-xl dark:border-slate-600 px-4 py-2 font-semibold text-white dark:text-slate-200 hover:outline dark:hover:bg-slate-800"
+              >
+                <DownloadIcon className="h-4 w-4" />
+                Save for Later
               </Button>
             </div>
 
             <div className="flex items-center gap-3">
               <Button
+                variant=""
                 size="sm"
-                className="flex items-center gap-2 rounded-xl border-2 border-slate-300 dark:border-slate-600 px-5 py-2 text-sm font-semibold text-slate-700 dark:text-slate-200 hover:bg-slate-50 hover:text-slate-900 dark:hover:bg-slate-800"
+                className="flex items-center gap-2 rounded-xl dark:border-slate-600 px-4 py-2 text-base font-semibold text-white dark:text-slate-200 hover:outline dark:hover:bg-slate-800"
                 onClick={onStartTest}
                 disabled={selectedSequenceIndex === null}
               >
-                Start GMAT Test
+                Next
+                <StepForward className="h-4 w-4" />
               </Button>
             </div>
           </div>
@@ -837,9 +1182,9 @@ export const SectionInstructionsScreen: React.FC<SectionInstructionsScreenProps>
   };
 
   return (
-    <div className="w-full flex flex-col">
+    <div className="w-full flex flex-col mt-6">
       {/* Main Content Area */}
-      <div className={`w-full max-w-7xl mx-auto bg-white dark:bg-slate-900 p-6 border-t-4 border-blue-600 dark:border-blue-500 flex-grow`}>
+      <div className={`w-full max-w-8xl mx-auto bg-white dark:bg-slate-900 p-6 border-t-4 border-blue-600 dark:border-blue-500 flex-grow`}>
         <h1 className="text-xl font-bold text-center mb-6 text-slate-800 dark:text-slate-100">
           {sectionName} Instructions
         </h1>
@@ -849,19 +1194,38 @@ export const SectionInstructionsScreen: React.FC<SectionInstructionsScreenProps>
         </div>
       </div>
 
-      <div className="fixed bottom-0 left-0 right-0 z-50 border-t border-slate-200 dark:border-slate-700 bg-white/95 dark:bg-slate-900/95 backdrop-blur supports-backdrop-blur:bg-white/60">
-        <div className="mx-auto max-w-7xl px-4 py-4">
+      <div className="fixed bottom-0 left-0 right-0 z-50 px-4 border-slate-200 dark:border-slate-700 bg-[#0a8cbd] dark:bg-slate-900/95 backdrop-blur supports-backdrop-blur:bg-white/60">
+        <div className="mx-auto max-w-8xl px-4 py-2">
           <div className="flex flex-wrap items-center justify-between gap-4">
             {/* Left Actions */}
             <div className="flex flex-wrap items-center gap-3">
               <Button
-                variant="outline"
+                variant=""
                 size="sm"
-                className="flex items-center gap-2 rounded-xl border-2 border-slate-300 dark:border-slate-600 px-4 py-2 text-sm font-semibold text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-800"
                 disabled={true}
+                className="flex items-center gap-2 rounded-xl dark:border-slate-600 px-4 py-2 font-semibold text-white dark:text-slate-200 hover:outline dark:hover:bg-slate-800"
               >
-                <Save className="h-4 w-4" />
-                Save
+                <HelpCircle className="h-4 w-4" />
+                Help
+              </Button>
+              <Button
+                variant=""
+                size="sm"
+                disabled={true}
+                className="flex items-center gap-2 rounded-xl dark:border-slate-600 px-4 py-2 font-semibold text-white dark:text-slate-200 hover:outline dark:hover:bg-slate-800"
+              >
+                <Pause className="h-4 w-4" />
+                Pause
+              </Button>
+
+              <Button
+                variant=""
+                size="sm"
+                disabled={true}
+                className="flex items-center gap-2 rounded-xl dark:border-slate-600 px-4 py-2 font-semibold text-white dark:text-slate-200 hover:outline dark:hover:bg-slate-800"
+              >
+                <DownloadIcon className="h-4 w-4" />
+                Save for Later
               </Button>
             </div>
 
@@ -869,10 +1233,11 @@ export const SectionInstructionsScreen: React.FC<SectionInstructionsScreenProps>
             <div className="flex items-center gap-3">
               <div className="flex gap-2">
                 <button
-                  className="flex items-center gap-2 rounded-xl border-2 border-slate-300 dark:border-slate-600 px-5 py-2 text-sm font-semibold text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-800"
+                  className="flex items-center gap-2 rounded-xl dark:border-slate-600 px-4 py-2 text-base font-semibold text-white dark:text-slate-200 hover:outline dark:hover:bg-slate-800"
                   onClick={onNext}
                 >
-                  Next →
+                  Next
+                  <StepForward className="h-4 w-4" />
                 </button>
               </div>
             </div>
@@ -945,27 +1310,27 @@ const QuestionBody: React.FC<QuestionBodyProps> = ({
     const questionHtml = qDoc.questionText || "";
 
     return (
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 p-4">
         {/* Left: Passage */}
-        <div className="max-h-[460px] overflow-auto rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-900/60 p-2 text- leading-relaxed text-slate-700 dark:text-slate-300">
-          <div className="prose prose-sm dark:prose-invert max-w-none rounded-lg">
+        <div className="max-h-[460px] overflow-auto">
+          <div className="text-lg text-justify">
             {passage}
           </div>
         </div>
 
         {/* Right: Question + options */}
-        <div>
+        <div className='border-l-2'>
           {questionHtml && (
-            <div className="mb-2 rounded-xl bg-slate-50 dark:bg-slate-900/60 p-4">
+            <div className="mb-2 pl-3">
               <div
-                className="text font-semibold leading-relaxed text-slate-800 dark:text-slate-100"
+                className="text-lg text-justify"
                 dangerouslySetInnerHTML={{ __html: questionHtml }}
               />
             </div>
           )}
 
           {isMCQ && (
-            <div className="space-y-2">
+            <div className="space-y-1">
               {qDoc.options!.map((opt, idx) => {
                 const selected =
                   currentQuestion.answerOptionIndexes.includes(
@@ -979,23 +1344,21 @@ const QuestionBody: React.FC<QuestionBodyProps> = ({
                     key={idx}
                     onClick={() => onOptionClick(idx)}
                     disabled={isCompleted}
-                    className={`flex w-full items-start gap-4 rounded-2xl border-1 px-4 py-2 text-left transition-all duration-200 ${selected
-                      ? "border-indigo-200 bg-indigo-100 dark:bg-indigo-500/20"
-                      : "border-slate-100 dark:border-slate-700 bg-white dark:bg-slate-800 hover:border-indigo-300 dark:hover:border-indigo-400"
-                      } ${isCompleted
+                    className={`flex w-full items-center gap-4 px-4 py-1 text-left transition-all duration-200 
+                    } ${isCompleted
                         ? "cursor-not-allowed opacity-80"
                         : "cursor-pointer"
                       }`}
                   >
                     <div
-                      className={`flex h-6 w-6 flex-shrink-0 items-center justify-center rounded-full border-2  text-xs font-bold transition-all ${selected
-                        ? "border-indigo-500 bg-indigo-500 text-white shadow-sm"
+                      className={`flex h-4 w-4 flex-shrink-0 items-center justify-center rounded-full  border-2 font-semibold text-[13px] transition-all ${selected
+                        ? "border-gray-600 border-3 bg-[#0a8cbd] text-white shadow-sm"
                         : "border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-700 text-slate-600 dark:text-slate-400"
                         }`}
                     >
-                      {label}
+                      {/* {label} */}
                     </div>
-                    <div className="flex-1 text-base font-medium text-slate-700 dark:text-slate-200">
+                    <div className="flex-1 text-lg text-slate-900 dark:text-slate-200">
                       {opt.text}
                     </div>
                   </button>
@@ -1018,14 +1381,14 @@ const QuestionBody: React.FC<QuestionBodyProps> = ({
       const options = di.twoPart?.options || [];
 
       return (
-        <div className="space-y-4">
+        <div className="space-y-2 px-4">
 
           {qDoc.questionText && (
-            <div className="rounded-xl bg-slate-50 dark:bg-slate-900/60 p-4 text-base text-slate-700 dark:text-slate-300" dangerouslySetInnerHTML={{ __html: qDoc?.questionText }} />
+            <div className="text-lg text-slate-800 dark:text-slate-300" dangerouslySetInnerHTML={{ __html: qDoc?.questionText }} />
           )}
 
           <div className="overflow-x-auto">
-            <table className=" border-collapse border border-slate-200 dark:border-slate-700 rounded-lg overflow-hidden">
+            <table className="border border-slate-200 dark:border-slate-700 rounded-lg overflow-hidden">
               <thead>
                 <tr className="bg-slate-100 dark:bg-slate-800">
                   {columns.map((col: any) => (
@@ -1041,11 +1404,11 @@ const QuestionBody: React.FC<QuestionBodyProps> = ({
                   </th>
                 </tr>
               </thead>
-              <tbody>
+              <tbody >
                 {options.map((option: any, optionIndex: number) => (
                   <tr
                     key={option.id}
-                    className={`border-t border-slate-200 dark:border-slate-700 ${optionIndex % 2 === 0 ? 'bg-white dark:bg-slate-900' : 'bg-slate-50 dark:bg-slate-800/50'}`}
+                    className={`border-t border-slate-200 dark:border-slate-700`}
                   >
                     {columns.map((col: any, colIndex: number) => {
                       const currentAnswer =
@@ -1113,7 +1476,7 @@ const QuestionBody: React.FC<QuestionBodyProps> = ({
               return (
                 <select
                   key={`dropdown-${dropdownNumber}-${index}`}
-                  className="mx-1 rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-900 px-2 py-1 text-xs text-slate-800 dark:text-slate-100 font-medium"
+                  className="mx-1 rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-900 px-2 py-1 text-base text-slate-800 dark:text-slate-100 font-medium"
                   disabled={isCompleted}
                   value={currentIndex >= 0 ? currentIndex : ""}
                   onChange={(e) =>
@@ -1143,13 +1506,13 @@ const QuestionBody: React.FC<QuestionBodyProps> = ({
       };
 
       return (
-        <div className="space-y-2">
+        <div className="space-y-2 px-4">
           {qDoc.questionText && (
-            <div className="rounded-xl bg-slate-50 dark:bg-slate-900/60 p-4 text-base text-slate-700 dark:text-slate-300" dangerouslySetInnerHTML={{ __html: qDoc?.questionText }} />
+            <div className="text-base" dangerouslySetInnerHTML={{ __html: qDoc?.questionText }} />
           )}
 
           {prompt && (
-            <div className="rounded-xl bg-slate-50 dark:bg-slate-900/60 p-4 text-base text-slate-700 dark:text-slate-300">
+            <div className="text-base">
               {processPrompt(prompt)}
             </div>
           )}
@@ -1187,21 +1550,21 @@ const QuestionBody: React.FC<QuestionBodyProps> = ({
     return (
       <>
         {qDoc.stimulus && (
-          <div className="mb-2 max-h-60 overflow-auto rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-900/60 p-4 text-base leading-relaxed text-slate-700 dark:text-slate-300">
-            <div className="prose prose-sm dark:prose-invert max-w-none"
+          <div className="">
+            <div className="mt-2 text-lg"
               dangerouslySetInnerHTML={{ __html: qDoc?.stimulus }} />
           </div>
         )}
 
-        <div className="mb-2 rounded-xl bg-slate-50 dark:bg-slate-900/60 p-4">
+        <div className="py-2 mb-3 mt-2">
           <div
-            className="text-base font-semibold leading-relaxed text-slate-800 dark:text-slate-100"
+            className="text-lg"
             dangerouslySetInnerHTML={{ __html: qDoc.questionText }}
           />
         </div>
 
         <div className="space-y-1 ml-1">
-          <div className="space-y-2">
+          <div className="space-y-1">
             {qDoc.options!.map((opt, idx) => {
               const selected =
                 currentQuestion.answerOptionIndexes.includes(idx);
@@ -1213,23 +1576,21 @@ const QuestionBody: React.FC<QuestionBodyProps> = ({
                   key={idx}
                   onClick={() => onOptionClick(idx)}
                   disabled={isCompleted}
-                  className={`flex w-full items-start gap-4 rounded-2xl border-1 px-4 py-2 text-left transition-all duration-200 ${selected
-                    ? "border-indigo-200 bg-indigo-100 dark:bg-indigo-500/20"
-                    : "border-slate-100 dark:border-slate-700 bg-white dark:bg-slate-800 hover:border-indigo-300 dark:hover:border-indigo-400"
+                  className={`flex w-full items-center gap-4 px-4 py-1 text-left transition-all duration-200 
                     } ${isCompleted
                       ? "cursor-not-allowed opacity-80"
                       : "cursor-pointer"
                     }`}
                 >
                   <div
-                    className={`flex h-6 w-6 flex-shrink-0 items-center justify-center rounded-full  border-2 text-xs font-bold transition-all ${selected
-                      ? "border-indigo-500 bg-indigo-500 text-white shadow-sm"
-                      : "border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-700 text-slate-600 dark:text-slate-400"
+                    className={`flex h-4 w-4 flex-shrink-0 items-center justify-center rounded-full  border-2 font-semibold text-[13px] transition-all ${selected
+                      ? "border-gray-600 border-3 bg-[#0a8cbd] text-white shadow-sm"
+                      : "border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-700 text-slate-900 dark:text-slate-400"
                       }`}
                   >
-                    {label}
+                    {/* {label} */}
                   </div>
-                  <div className="flex-1 text-base font-medium text-slate-700 dark:text-slate-200">
+                  <div className="flex-1 text-lg text-slate-900 dark:text-slate-200">
                     {opt.text}
                   </div>
                 </button>

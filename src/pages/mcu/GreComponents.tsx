@@ -1074,18 +1074,18 @@ export const SectionReview: React.FC<SectionReviewProps> = React.memo(
                             setCurrentScreen("question");
                           }}
                           className={`group flex flex-col items-center justify-center gap-1 p-2 rounded-xl border transition-colors ${isBookmarked
-                              ? "border-purple-300 bg-purple-50 dark:bg-purple-500/10"
-                              : isAnsweredLocal
-                                ? "border-emerald-200 bg-emerald-50"
-                                : "border-slate-200 bg-white dark:bg-slate-900 hover:border-indigo-300"
+                            ? "border-purple-300 bg-purple-50 dark:bg-purple-500/10"
+                            : isAnsweredLocal
+                              ? "border-emerald-200 bg-emerald-50"
+                              : "border-slate-200 bg-white dark:bg-slate-900 hover:border-indigo-300"
                             }`}
                         >
                           <div
                             className={`h-8 w-8 rounded-full flex items-center justify-center font-semibold ${isBookmarked
-                                ? "bg-purple-500 text-white"
-                                : isAnsweredLocal
-                                  ? "bg-emerald-500 text-white"
-                                  : "bg-slate-200 text-slate-700"
+                              ? "bg-purple-500 text-white"
+                              : isAnsweredLocal
+                                ? "bg-emerald-500 text-white"
+                                : "bg-slate-200 text-slate-700"
                               }`}
                           >
                             {q.order || idx + 1}
@@ -1317,8 +1317,24 @@ interface GRETestResultsProps {
 }
 
 export const GRETestResults: React.FC<GRETestResultsProps> = React.memo(
-  ({ attempt, navigateBack, onTakeAnotherTest }) => {
+  ({ attempt, navigateBack, onTakeAnotherTest, submitting }:any) => {
     const overall = attempt.overallStats;
+
+
+    if (submitting) {
+      return (
+        <div className="min-h-[60vh] flex flex-col items-center justify-center gap-4">
+          <div className="h-12 w-12 rounded-full border-4 border-slate-200 border-t-indigo-600 animate-spin" />
+          <h3 className="text-lg font-semibold text-slate-700 dark:text-slate-200">
+            Calculating your GRE Score
+          </h3>
+          <p className="text-sm text-slate-500 dark:text-slate-400 text-center max-w-md">
+            Please wait while we analyze your responses and generate your
+            results.
+          </p>
+        </div>
+      );
+    }
 
     const getQuestionStatus = (q: any, qd?: any | null) => {
       if (!q.isAnswered) return "skipped";
@@ -1504,10 +1520,10 @@ export const GRETestResults: React.FC<GRETestResultsProps> = React.memo(
                           <td className="py-3 px-4 align-middle">
                             <div className="flex items-center">
                               <div className={`h-8 w-8 rounded-lg flex items-center justify-center ${status === "correct"
-                                  ? "bg-emerald-100 dark:bg-emerald-900/30 text-emerald-600 dark:text-emerald-400"
-                                  : status === "incorrect"
-                                    ? "bg-red-100 dark:bg-red-900/30 text-red-600 dark:text-red-400"
-                                    : "bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400"
+                                ? "bg-emerald-100 dark:bg-emerald-900/30 text-emerald-600 dark:text-emerald-400"
+                                : status === "incorrect"
+                                  ? "bg-red-100 dark:bg-red-900/30 text-red-600 dark:text-red-400"
+                                  : "bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400"
                                 }`}>
                                 <span className="font-bold">{q.order || qIdx + 1}</span>
                               </div>
@@ -1521,10 +1537,10 @@ export const GRETestResults: React.FC<GRETestResultsProps> = React.memo(
                           </td>
                           <td className="py-3 px-4 align-middle">
                             <div className={`font-medium ${status === "correct"
-                                ? "text-emerald-700 dark:text-emerald-300"
-                                : status === "incorrect"
-                                  ? "text-red-700 dark:text-red-300"
-                                  : "text-slate-700 dark:text-slate-300"
+                              ? "text-emerald-700 dark:text-emerald-300"
+                              : status === "incorrect"
+                                ? "text-red-700 dark:text-red-300"
+                                : "text-slate-700 dark:text-slate-300"
                               }`}>
                               {userLabel}
                             </div>

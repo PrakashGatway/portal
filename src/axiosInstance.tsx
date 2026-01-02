@@ -1,8 +1,8 @@
 import axios from 'axios';
 
 const api = axios.create({
-  baseURL: 'https://uat.gatewayabroadeducations.com/api/v1',
-  // baseURL: 'https://m8j3lq9z-5000.inc1.devtunnels.ms/api/v1',
+  // baseURL: 'https://uat.gatewayabroadeducations.com/api/v1',
+  baseURL: 'https://m8j3lq9z-5000.inc1.devtunnels.ms/api/v1',
   // baseURL: 'http://localhost:5000/api/v1',
   withCredentials: true,
   headers: {
@@ -43,5 +43,7 @@ api.interceptors.response.use(
 );
 
 export const ImageBaseUrl = "https://uat.gatewayabroadeducations.com/uploads"
+export const audioBaseUrl = "https://uat.gatewayabroadeducations.com/"
+
 
 export default api;
