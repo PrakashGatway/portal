@@ -797,6 +797,7 @@ interface PTEFillSelectProps {
   currentAnswer: string;
   isCompleted: boolean;
   onAnswerChange: (answer: string) => void;
+  typeSpecificOptions?: string[];
 }
 
 export const PTEFillSelect: React.FC<PTEFillSelectProps> = memo(
@@ -806,16 +807,35 @@ export const PTEFillSelect: React.FC<PTEFillSelectProps> = memo(
     currentAnswer,
     isCompleted,
     onAnswerChange,
+  typeSpecificOptions,
+    
   }) => {
     const initializedRef = useRef(false);
 
     /* ========== OPTIONS ========== */
-    const options = useMemo(() => {
+  
+    const options = useCallback(
+  (index) => {
+    console.log(index);
+
+    if (typeSpecificOptions && typeSpecificOptions.length > 0) {
+      return typeSpecificOptions[index - 1]
+        ?.split(",")
+        .map((o) => o.trim())
+        .filter(Boolean);
+    }
+
+    if (optionsText) {
       return optionsText
         .split(",")
         .map((o) => o.trim())
         .filter(Boolean);
-    }, [optionsText]);
+    }
+
+    return [];
+  },
+  [typeSpecificOptions, optionsText]
+);
 
     /* ========== ANSWERS STATE ========== */
     const [answers, setAnswers] = useState<Record<string, string>>({});
@@ -880,8 +900,8 @@ export const PTEFillSelect: React.FC<PTEFillSelectProps> = memo(
             className="mx-1 px-2 py-1 border rounded-md bg-white dark:bg-slate-800 border-slate-400 dark:border-slate-600 text-sm"
           >
             <option value="">---</option>
-            {options.map((opt) => (
-              <option key={opt} value={opt}>
+             {options(key).map((opt, idx) => (
+              <option key={`${key}-${idx}`} value={opt}>
                 {opt}
               </option>
             ))}

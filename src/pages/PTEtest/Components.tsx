@@ -1,10 +1,22 @@
-import React, { useEffect, useRef, useState, useCallback, useMemo, use } from "react";
+import React, { useEffect, useRef, useState, useCallback, useMemo, use, } from "react";
+import * as Recharts from "recharts";
+
 import {
   AlertTriangle,
   BookOpen,
   Edit3,
   BarChart3,
-  Headphones
+  Headphones,
+  BarChart,
+  Bar,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip,
+  ResponsiveContainer,
+  PieChart,
+  Pie,
+  Cell,
 
 } from "lucide-react";
 import SpeakingQuestion, { RecordingOnlyComponent, TTSPlayer } from "./SpeakingQuestion";
@@ -64,6 +76,43 @@ const QuestionRenderer: any = React.memo(
     const [showRecordFirstPopup, setShowRecordFirstPopup] = useState(false);
     const [showConfirmNextPopup, setShowConfirmNextPopup] = useState(false);
     const [isRecordingInProgress, setIsRecordingInProgress] = useState(false);
+
+
+
+
+    //     const navigate = useNavigate()
+    //     const refreshHandledRef = useRef(false)
+
+    //  useEffect(() => {
+    //   const handleBeforeUnload = (e: BeforeUnloadEvent) => {
+
+
+    //     sessionStorage.setItem("pte_refresh", "true");
+
+    //     e.preventDefault();
+    //     e.returnValue = ""; // native browser popup
+    //   };
+
+    //   window.addEventListener("beforeunload", handleBeforeUnload);
+    //   return () => window.removeEventListener("beforeunload", handleBeforeUnload);
+    // }, []);
+
+
+    // useEffect(() => {
+    //   if (refreshHandledRef.current) return;
+
+    //   refreshHandledRef.current = true;
+
+    //   const wasRefreshed = sessionStorage.getItem("pte_refresh");
+
+    //   if (wasRefreshed) {
+    //     sessionStorage.removeItem("pte_refresh");
+    //     navigate("/dashboard", { replace: true });
+    //   }
+    // }, [navigate]);
+
+
+
 
 
     const handleRecordingComplete = useCallback(async (audioBlob: Blob) => {
@@ -431,15 +480,13 @@ mx-auto">
 
               {/* {renderQuestionText()} */}
               <TTSPlayer
-                key={qDoc._id}
+                key={`player-${qDoc._id}`}
                 audioUrl={qDoc.typeSpecific?.audio
                   ? audioBaseUrl + qDoc.typeSpecific.audio
                   : undefined}
-                text={qDoc?.questionText || "Describe the image shown."}
-                delayBeforePlay={3000} // 1 second
+                text={qDoc.questionText}   // 🔁 fallback
+                delayBeforePlay={3000}
                 onPlaybackEnd={onTTSFinished}
-                rate={0.8}
-                pitch={0.8}
               />
               <textarea
                 value={currentQuestion.answerText || ""}
@@ -459,6 +506,7 @@ mx-auto">
               <PTEFillSelect
                 key={qDoc._id} // 🔥 VERY IMPORTANT
                 questionHTML={qDoc.questionText || ""}
+                typeSpecificOptions={qDoc?.typeSpecific?.options}
                 optionsText={qDoc?.typeSpecific?.listeningText || ""}
                 currentAnswer={currentQuestion.answerText || ""}
                 isCompleted={isCompleted}
@@ -801,6 +849,7 @@ mx-auto">
 
     return (
       <>
+
         <div className="flex items-center justify-between py-[6px] bg-white-300">
         </div>
         <div className="flex items-center justify-between py-4 bg-[#0080a3] ">
@@ -906,7 +955,7 @@ mx-auto">
                   )}
 
                   <button
-                    className="p-1.5 bg-blue-800 text-slate-100 font-semibold border-slate-200 rounded-full px-4"
+                    className="p-1.5 bg-[#027291] text-slate-100 font-semibold border-slate-200 rounded-full px-4"
                     disabled={isNextDisabled}
                     onClick={async () => {
                       const isSpeakingQuestion = [
@@ -1066,6 +1115,7 @@ export const SectionInstructions: React.FC<SectionInstructionsProps> = React.mem
 
 import { Eye, ArrowLeft, CheckCircle2 } from "lucide-react";
 import api, { audioBaseUrl } from "../../axiosInstance";
+import { useNavigate } from "react-router";
 
 interface SectionReviewProps {
   currentSection: any;
@@ -1192,7 +1242,7 @@ export const SectionReview: React.FC<SectionReviewProps> = React.memo(
           <div className="mx-auto max-w-7xl px-4 py-3">
             <div className="flex flex-wrap items-center justify-between gap-3">
               <div className="flex text-lg text-slate-900 dark:text-slate-100 flex-wrap gap-2">
-                SAT TEST
+                PTE TEST
               </div>
 
               <div className="flex gap-2">
@@ -1215,6 +1265,22 @@ export const SectionReview: React.FC<SectionReviewProps> = React.memo(
 );
 
 
+
+const scale10to90 = (correct: number, total: number): number => {
+  if (!total || total <= 0) return 10;
+  return Math.round(10 + (correct / total) * 80);
+};
+
+const normalizeSectionName = (name: string) => {
+  const n = name.toLowerCase();
+  if (n.includes("listening")) return "listening";
+  if (n.includes("reading")) return "reading";
+  if (n.includes("speaking")) return "speakingWriting";
+  return null;
+};
+
+
+
 interface GRETestResultsProps {
   attempt: any;
   navigateBack: () => void;
@@ -1224,6 +1290,102 @@ interface GRETestResultsProps {
 export const GRETestResults: React.FC<GRETestResultsProps> = React.memo(
   ({ attempt, navigateBack, onTakeAnotherTest }) => {
     const overall = attempt.overallStats;
+
+
+
+    // ================= PTE CALCULATION =================
+    const sectionStats = {
+      listening: { correct: 0, total: 0 },
+      reading: { correct: 0, total: 0 },
+      speakingWriting: { correct: 0, total: 0 },
+    };
+
+    attempt.sections.forEach(section => {
+      const key = normalizeSectionName(section.name);
+      if (!key) return;
+
+      section.questions.forEach(q => {
+        sectionStats[key].total += 1;
+        if (q.isCorrect === true) {
+          sectionStats[key].correct += 1;
+        }
+      });
+    });
+
+    const pteScores = {
+      listening: scale10to90(
+        sectionStats.listening.correct,
+        sectionStats.listening.total
+      ),
+      reading: scale10to90(
+        sectionStats.reading.correct,
+        sectionStats.reading.total
+      ),
+      speakingWriting: scale10to90(
+        sectionStats.speakingWriting.correct,
+        sectionStats.speakingWriting.total
+      ),
+    };
+
+    const overallPTE = Math.round(
+      (pteScores.listening +
+        pteScores.reading +
+        pteScores.speakingWriting) / 3
+    );
+
+    // ================= RECHARTS DATA =================
+    const chartData = [
+      {
+        name: "Listening",
+        score: pteScores.listening,
+        accuracy: sectionStats.listening.total
+          ? Math.round(
+            (sectionStats.listening.correct /
+              sectionStats.listening.total) * 100
+          )
+          : 0,
+      },
+      {
+        name: "Reading",
+        score: pteScores.reading,
+        accuracy: sectionStats.reading.total
+          ? Math.round(
+            (sectionStats.reading.correct /
+              sectionStats.reading.total) * 100
+          )
+          : 0,
+      },
+      {
+        name: "Speaking & Writing",
+        score: pteScores.speakingWriting,
+        accuracy: sectionStats.speakingWriting.total
+          ? Math.round(
+            (sectionStats.speakingWriting.correct /
+              sectionStats.speakingWriting.total) * 100
+          )
+          : 0,
+      },
+    ];
+
+    const skillsBreakdownData = [
+      {
+        name: "Listening",
+        score: pteScores.listening,
+      },
+      {
+        name: "Reading",
+        score: pteScores.reading,
+      },
+      {
+        name: "Speaking & Writing",
+        score: pteScores.speakingWriting,
+      },
+    ];
+
+
+
+
+
 
     // ✅ State for active tab
     const [activeTab, setActiveTab] = useState('');
@@ -1506,6 +1668,15 @@ export const GRETestResults: React.FC<GRETestResultsProps> = React.memo(
 
     if (!attempt) return null;
 
+
+    const radius = 40;
+    const circumference = 2 * Math.PI * radius;
+
+    // overallPTE is already calculated by you
+    const dashOffset =
+      circumference - (overallPTE / 90) * circumference;
+
+
     return (
       <div className="max-w-7xl mx-auto p-4 md:p-6 space-y-6">
         {/* Header */}
@@ -1543,6 +1714,119 @@ export const GRETestResults: React.FC<GRETestResultsProps> = React.memo(
 
 
         </div>
+
+
+        {/* ================= PTE RESULT ANALYSIS ================= */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+
+          {/* Chart 1: PTE Score */}
+          <div className="bg-white dark:bg-slate-900 rounded-xl border p-4">
+            <h3 className="font-semibold mb-3">PTE Score (10–90)</h3>
+            <Recharts.ResponsiveContainer width="100%" height={260}>
+              <Recharts.BarChart data={chartData}>
+                <Recharts.CartesianGrid strokeDasharray="3 3" />
+                <Recharts.XAxis dataKey="name" />
+                <Recharts.YAxis domain={[10, 90]} />
+                <Recharts.Tooltip />
+                <Recharts.Bar dataKey="score" fill="#3b82f6" radius={[6, 6, 0, 0]} />
+              </Recharts.BarChart>
+            </Recharts.ResponsiveContainer>
+
+          </div>
+
+          {/* Chart 2: Accuracy */}
+          <div className="bg-white dark:bg-slate-900 rounded-xl border p-4">
+            <h3 className="font-semibold mb-3">Accuracy %</h3>
+            <Recharts.ResponsiveContainer width="100%" height={260}>
+              <Recharts.BarChart data={chartData}>
+                <Recharts.CartesianGrid strokeDasharray="3 3" />
+                <Recharts.XAxis dataKey="name" />
+                <Recharts.YAxis domain={[0, 100]} />
+                <Recharts.Tooltip formatter={(v) => `${v}%`} />
+                <Recharts.Bar dataKey="accuracy" fill="#22c55e" radius={[6, 6, 0, 0]} />
+              </Recharts.BarChart>
+            </Recharts.ResponsiveContainer>
+
+          </div>
+
+          {/* Chart 3: Contribution */}
+          <div className="bg-white dark:bg-slate-900 rounded-xl border p-4">
+            <h3 className="font-semibold mb-3">Contribution to Overall</h3>
+            <Recharts.ResponsiveContainer width="100%" height={260}>
+              <Recharts.PieChart>
+                <Recharts.Pie
+                  data={chartData}
+                  dataKey="score"
+                  nameKey="name"
+                  cx="50%"
+                  cy="50%"
+                  outerRadius={90}
+                  label
+                >
+                  {chartData.map((_, i) => (
+                    <Recharts.Cell
+                      key={i}
+                      fill={["#3b82f6", "#f59e0b", "#10b981"][i]}
+                    />
+                  ))}
+                </Recharts.Pie>
+                <Recharts.Tooltip />
+              </Recharts.PieChart>
+            </Recharts.ResponsiveContainer>
+
+          </div>
+
+        </div>
+
+
+
+        <div className="bg-white rounded-xl border p-6 mt-8">
+          <h3 className="font-semibold mb-4 text-lg">
+            Skills Breakdown
+          </h3>
+
+          <Recharts.ResponsiveContainer width="100%" height={120}>
+            <Recharts.BarChart
+              data={skillsBreakdownData}
+              layout="vertical"
+              margin={{ left: 30, right: 30 }}
+            >
+              <Recharts.XAxis
+                type="number"
+                domain={[0, 90]}
+                tick={{ fontSize: 12 }}
+              />
+              <Recharts.YAxis
+                type="category"
+                dataKey="name"
+                tick={{ fontSize: 13 }}
+              />
+              <Recharts.Tooltip />
+              <Recharts.Bar
+                dataKey="score"
+                radius={[0, 6, 6, 0]}
+                isAnimationActive
+              >
+                {skillsBreakdownData.map((entry, index) => (
+                  <Recharts.Cell
+                    key={index}
+                    fill={
+                      entry.name === "Listening"
+                        ? "#22c1c3"
+                        : entry.name === "Reading"
+                          ? "#f59e0b"
+                          : "#3b82f6"
+                    }
+                  />
+                ))}
+              </Recharts.Bar>
+            </Recharts.BarChart>
+          </Recharts.ResponsiveContainer>
+        </div>
+
+
+
+
 
         {/* Overall Stats */}
         {overall && (
@@ -1682,8 +1966,8 @@ export const GRETestResults: React.FC<GRETestResultsProps> = React.memo(
                       className="h-full rounded-full bg-gradient-to-r from-emerald-400 to-emerald-600 transition-all duration-700 ease-out"
                       style={{
                         width: `${overall.totalAttempted > 0
-                            ? (overall.totalCorrect / overall.totalAttempted) * 100
-                            : 0
+                          ? (overall.totalCorrect / overall.totalAttempted) * 100
+                          : 0
                           }%`
                       }}
                     />
@@ -1716,47 +2000,54 @@ export const GRETestResults: React.FC<GRETestResultsProps> = React.memo(
               <div className="flex items-center justify-center">
                 <div className="relative h-44 w-44">
 
-                  {/* Center content */}
-                  <div className="absolute inset-0 flex items-center justify-center">
-                    <div className="text-center">
-                      <div className="text-4xl font-bold text-indigo-600 dark:text-indigo-400">
-                        {overall.rawScore}
-                      </div>
-                      <div className="text-xs uppercase tracking-wide text-slate-500 dark:text-slate-400">
-                        Raw Score
-                      </div>
+                 
+
+
+                  {/* SVG Ring */}
+                  <div className="relative h-40 w-40">
+                    <svg className="h-full w-full -rotate-90" viewBox="0 0 100 100">
+                      {/* Background */}
+                      <circle
+                        cx="50"
+                        cy="50"
+                        r="40"
+                        fill="none"
+                        stroke="#e5e7eb"
+                        strokeWidth="8"
+                        className="dark:stroke-slate-700"
+                      />
+
+                      {/* Progress */}
+                      <circle
+                        cx="50"
+                        cy="50"
+                        r="40"
+                        fill="none"
+                        stroke="url(#scoreGradient)"
+                        strokeWidth="8"
+                        strokeLinecap="round"
+                        strokeDasharray={circumference}
+                        strokeDashoffset={dashOffset}
+                        style={{ transition: "stroke-dashoffset 0.6s ease" }}
+                      />
+
+                      <defs>
+                        <linearGradient id="scoreGradient" x1="0%" y1="0%" x2="100%" y2="0%">
+                          <stop offset="0%" stopColor="#6366f1" />
+                          <stop offset="100%" stopColor="#8b5cf6" />
+                        </linearGradient>
+                      </defs>
+                    </svg>
+
+                    {/* Center text */}
+                    <div className="absolute inset-0 flex flex-col items-center justify-center">
+                      <span className="text-4xl font-bold text-indigo-600 dark:text-indigo-400">
+                        {overallPTE}
+                      </span>
+                      <span className="text-xs text-gray-500">Overall Score</span>
                     </div>
                   </div>
 
-                  {/* SVG Ring */}
-                  <svg className="h-full w-full -rotate-90" viewBox="0 0 100 100">
-                    <circle
-                      cx="50"
-                      cy="50"
-                      r="40"
-                      fill="none"
-                      stroke="#e5e7eb"
-                      strokeWidth="8"
-                      className="dark:stroke-slate-700"
-                    />
-                    <circle
-                      cx="50"
-                      cy="50"
-                      r="40"
-                      fill="none"
-                      stroke="url(#scoreGradient)"
-                      strokeWidth="8"
-                      strokeLinecap="round"
-                      strokeDasharray={`${(overall.rawScore / overall.totalQuestions) * 251.2
-                        } 251.2`}
-                    />
-                    <defs>
-                      <linearGradient id="scoreGradient" x1="0%" y1="0%" x2="100%" y2="0%">
-                        <stop offset="0%" stopColor="#6366f1" />
-                        <stop offset="100%" stopColor="#8b5cf6" />
-                      </linearGradient>
-                    </defs>
-                  </svg>
                 </div>
               </div>
 

@@ -164,14 +164,14 @@ export const GRETestHead: React.FC<GRETestHeaderProps> = React.memo(
                                  currentScreen === "question" && 
                                  !timerHidden && 
                                  timerSecondsLeft > 0 ? (
-                                    <div className="flex flex-col items-end">
-                                        <div className="flex items-center bg-slate-800/10 dark:bg-slate-800/30 px-3 py-1.5 rounded-lg">
+                                    <div className="flex justify-between items-end">
+                                        <div className="flex items-center  rounded-lg">
                                             <Clock className="w-5 h-5 mr-1.5 text-slate-800 font-bold dark:text-slate-400" />
                                             <span className={`tabular-nums font-medium ${timeWarning ? 'text-red-600 dark:text-red-400' : 'text-slate-800 dark:text-slate-300'}`}>
                                                 {formatTime(timerSecondsLeft)}
                                             </span>
                                         </div>
-                                        <div className="flex items-center mt-1">
+                                        <div className="flex items-center ml-3">
                                             <AlertCircle className="w-4 h-4 mr-1.5 text-slate-800 dark:text-slate-400"/>
                                             <span className="text-sm text-slate-800 dark:text-slate-300">
                                                 Q{questionNumber} of {currentSection?.questions?.length}

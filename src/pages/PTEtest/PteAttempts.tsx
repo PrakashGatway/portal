@@ -725,7 +725,7 @@ const [currentScreen, setCurrentScreen] = useState('intro');
             <SectionInstructions
               currentSection={currentSection}
               activeSectionIndex={activeSectionIndex}
-              setCurrentScreen={(screen) => setCurrentScreen(screen)}
+              setCurrentScreen={(screen) => memoizedSetCurrentScreen(screen)}
             />
           )}
           {currentScreen === "question" && currentSection && currentQuestion && (
