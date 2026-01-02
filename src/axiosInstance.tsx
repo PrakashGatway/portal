@@ -1,8 +1,8 @@
 import axios from 'axios';
 
 const api = axios.create({
-  // baseURL: 'https://uat.gatewayabroadeducations.com/api/v1',
-  baseURL: 'https://m8j3lq9z-5000.inc1.devtunnels.ms/api/v1',
+  baseURL: 'https://uat.gatewayabroadeducations.com/api/v1',
+  // baseURL: 'https://m8j3lq9z-5000.inc1.devtunnels.ms/api/v1',
   // baseURL: 'http://localhost:5000/api/v1',
   withCredentials: true,
   headers: {

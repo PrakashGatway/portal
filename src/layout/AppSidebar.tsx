@@ -431,7 +431,7 @@ const AppSidebar: React.FC = () => {
         <Link to="/" className="flex items-center transform hover:scale-105 transition-transform duration-200">
           {isExpanded || isHovered || isMobileOpen ? (
             <img
-              src="/images/logo.png"
+              src="https://www.gatewayabroadeducations.com/images/logo.svg"
               alt="Logo"
               width={160}
               height={30}
