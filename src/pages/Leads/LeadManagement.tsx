@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, use } from "react";
 import moment from "moment";
 import { useModal } from "../../hooks/useModal";
 import { Modal } from "../../components/ui/modal";
@@ -8,19 +8,26 @@ import Label from "../../components/form/Label";
 import Select from "../../components/form/Select";
 import { toast } from "react-toastify";
 import api from "../../axiosInstance";
-import { Eye, Pencil, Trash2, Upload, User } from "lucide-react";
+import { Eye, Filter, MessageSquare, Pencil, Phone, Target, Trash2, Upload, User, X } from "lucide-react";
 import TextArea from "../../components/form/input/TextArea";
 import { useAuth } from "../../context/UserContext";
 import ExcelUpload from "./ExcelUpload";
+import Tabs from "./tabs";
 
 const LeadStatuses = [
-    "new",
-    "contacted",
-    "interested",
-    "notInterested",
-    "enrolled",
-    "rejected",
-    "inactive",
+    'new',
+    'notReachable',
+    'followup',
+    'viewed',
+    'contacted',
+    'interested',
+    'notInterested',
+    'enrolled',
+    'rejected',
+    'junk',
+    'visitDone',
+    'visitSchedule',
+    'inactive'
 ];
 
 
@@ -43,12 +50,51 @@ export default function LeadManagement() {
     const [isDeleteModalOpen, setDeleteModalOpen] = useState(false);
     const [allCounselors, setAllCounselors] = useState([]);
     const { user } = useAuth();
+    const [activeTab, setActiveTab] = useState("all");
+
 
     const [selectedLeads, setSelectedLeads] = useState(new Set()); // Track selected lead IDs
+    const [showAppliedFilters, setShowAppliedFilters] = useState(false);
+    const [leadStats, setLeadStats] = useState({
+        calls: 0,
+        messages: 0
+    });
+    const [stats, setStats] = useState([]) as any;
     const [selectAll, setSelectAll] = useState(false); // Track "select all" checkbox state
 
     const [showExcelUpload, setShowExcelUpload] = useState(false);
 
+    const getCounselorName = (counselorId) => {
+        if (!counselorId) return "—";
+        const counselor = allCounselors.find(c => c._id === counselorId);
+        return counselor ? (counselor.name || counselor.email) : "Unknown";
+    };
+
+    const formatDateRangeDisplay = () => {
+        if (!filters.dateRange) return "—";
+        const [start, end] = filters.dateRange.split('_');
+        const startDate = moment(start).format("MMM D, YYYY");
+        const endDate = moment(end).format("MMM D, YYYY");
+        return `${startDate} to ${endDate}`;
+    };
+
+    const resetFilters = () => {
+        setFilters({
+            page: 1,
+            limit: 10,
+            sortBy: "-createdAt",
+            status: "",
+            source: "",
+            assignedCounselor: "",
+            coursePreference: "",
+            countryOfResidence: "",
+            dateRange: "",
+            search: "",
+        });
+        setDateRangeStart("");
+        setDateRangeEnd(today);
+        setShowAppliedFilters(false);
+    };
     const toggleLeadSelection = (leadId) => {
         const newSelectedLeads = new Set(selectedLeads);
         if (newSelectedLeads.has(leadId)) {
@@ -90,7 +136,7 @@ export default function LeadManagement() {
 
         const confirmMessage = `Are you sure you want to delete ${selectedLeads.size} selected lead(s)? This action cannot be undone.`;
         if (!window.confirm(confirmMessage)) {
-            return; 
+            return;
         }
 
         try {
@@ -228,6 +274,21 @@ export default function LeadManagement() {
             setLoading(false);
         }
     };
+
+    const fetchStats = async () => {
+        try {
+            const response = await api.get("/leads/stats");
+            setStats(response.data?.stats || []);
+        } catch (error) {
+            toast.error(error?.message || "Failed to fetch leads");
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    useEffect(() => {
+        fetchStats();
+    }, [])
 
     useEffect(() => {
         let pollInterval = null;
@@ -480,6 +541,20 @@ export default function LeadManagement() {
         }
     };
 
+
+    const getAppliedFiltersCount = () => {
+        let count = 0;
+        if (filters.search) count++;
+        if (filters.status) count++;
+        if (filters.source) count++;
+        if (filters.assignedCounselor) count++;
+        if (filters.coursePreference) count++;
+        if (filters.countryOfResidence) count++;
+        if (filters.dateRange) count++;
+        return count;
+    };
+    const appliedFiltersCount = getAppliedFiltersCount();
+
     const getStatusColor = (status) => {
         const colors = {
             new: "bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200",
@@ -501,23 +576,22 @@ export default function LeadManagement() {
 
     return (
         <div className="w-full overflow-x-auto">
-            {/* Header Card */}
-            <div className="p-4 border border-gray-200 rounded-2xl dark:border-gray-800 lg:p-4 mb-3 bg-white dark:border-gray-700 dark:bg-gray-800 dark:text-gray-400">
-                <div className="flex flex-col gap-5 xl:flex-row xl:items-center xl:justify-between">
-                    <div className="flex flex-col items-center w-full gap-6 xl:flex-row">
-                        <div className="w-16 h-16 overflow-hidden border border-gray-200 rounded-full dark:border-gray-800 flex items-center justify-center bg-indigo-50">
-                            <User className="text-indigo-600 h-8 w-8" />
+            <div className="p-2 px-3 border border-gray-200 rounded-2xl dark:border-gray-800 mb-2 bg-white dark:border-gray-700 dark:bg-gray-800 dark:text-gray-400">
+                <div className="flex flex-col gap-5 md:flex-row md:items-center md:justify-between">
+                    <div className="flex flex-col items-center w-full gap-4 md:flex-row">
+                        <div className="w-10 h-10 overflow-hidden border border-gray-200 rounded-full dark:border-gray-800 flex items-center justify-center bg-indigo-50">
+                            <User className="text-indigo-600 h-5 w-5" />
                         </div>
                         <div className="order-3 xl:order-2">
-                            <h4 className="mb-1 text-lg font-semibold text-center text-gray-800 dark:text-white/90 xl:text-left">
-                                Lead Management
+                            <h4 className="text-lg font-semibold text-center text-gray-800 dark:text-white/90 md:text-left">
+                                Leads
                             </h4>
-                            <div className="flex flex-col items-center gap-1 text-center xl:flex-row xl:gap-3 xl:text-left">
+                            <div className="flex flex-col items-center gap-1 text-center md:flex-row md:gap-3 md:text-left">
                                 <p className="text-sm text-gray-500 dark:text-gray-400">
                                     Manage prospective students
                                 </p>
-                                <div className="hidden h-3.5 w-px bg-gray-300 dark:bg-gray-700 xl:block"></div>
-                                <p className="text-sm text-gray-500 dark:text-gray-400">{total} leads</p>
+                                <div className="hidden h-3.5 w-px bg-gray-300 dark:bg-gray-700 md:block"></div>
+                                <p className="text-sm text-gray-500 dark:text-gray-400">{total && total} leads</p>
                             </div>
                         </div>
                     </div>
@@ -525,7 +599,7 @@ export default function LeadManagement() {
 
                         <button
                             onClick={openCreateModal}
-                            className="flex w-full items-center justify-center gap-2 rounded-full border border-gray-300 bg-white px-4 py-3 text-sm font-medium text-gray-700 shadow-theme-xs hover:bg-gray-50 hover:text-gray-800 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-400 dark:hover:bg-white/[0.03] dark:hover:text-gray-200 lg:inline-flex lg:w-auto"
+                            className="flex w-full items-center justify-center gap-2 rounded-full border border-gray-300 bg-white px-3 py-2 text-sm font-medium text-gray-700 shadow-theme-xs hover:bg-gray-50 hover:text-gray-800 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-400 dark:hover:bg-white/[0.03] dark:hover:text-gray-200 lg:inline-flex lg:w-auto"
                         >
                             <svg
                                 className="fill-current"
@@ -544,7 +618,7 @@ export default function LeadManagement() {
                         </button>
                         <button
                             onClick={() => setShowExcelUpload(true)}
-                            className="flex w-full items-center justify-center gap-2 rounded-full border border-indigo-600 bg-indigo-600 px-4 py-3 text-sm font-medium text-white shadow-theme-xs hover:bg-indigo-700 hover:text-white lg:inline-flex lg:w-auto"
+                            className="flex w-full items-center justify-center gap-2 rounded-full border border-indigo-600 bg-indigo-600 px-3 py-2 text-sm font-medium text-white shadow-theme-xs hover:bg-indigo-700 hover:text-white lg:inline-flex lg:w-auto"
                         >
                             <Upload className="h-4 w-4" />
                             Upload Excel
@@ -563,24 +637,32 @@ export default function LeadManagement() {
                     onClose={() => setShowExcelUpload(false)}
                 />
             </Modal>
-            {/* Filters */}
-            <div className="min-h-[70vh] overflow-x-auto rounded-2xl border border-gray-200 bg-white px-4 py-4 dark:border-gray-800 dark:bg-white/[0.03] xl:px-4 xl:py-4">
-                <div className="mb-6 grid grid-cols-1 gap-4 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-6">
-                    <div>
-                        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                            Search (Name, Email, Phone)
-                        </label>
-                        <input
-                            type="text"
-                            name="search"
-                            value={filters.search}
-                            onChange={handleFilterChange}
-                            placeholder="Search leads..."
-                            className="w-full rounded-md border border-gray-300 bg-white py-2 px-3 text-sm focus:border-indigo-500 focus:outline-none focus:ring-indigo-500 dark:border-gray-600 dark:bg-gray-800 dark:text-white"
-                        />
-                    </div>
 
-                    <div>
+            <Tabs
+                tabs={stats}
+                activeTab={filters.status}
+                onChange={(tabId) => handleFilterChange({ target: { name: "status", value: tabId } })}
+            />
+
+            {/* Filters */}
+            <div className="flex justify-center duration-300 ease-in-out w-full gap-1">
+                <div className="min-h-[70vh] overflow-x-auto duration-500 ease-in-out rounded-2xl border border-gray-200 bg-white px-4 py-4 dark:border-gray-800 dark:bg-white/[0.03] xl:px-4 xl:py-4">
+                    <div className="mb-6 grid grid-cols-1 gap-4 sm:grid-cols-2 md:grid-cols-5">
+                        <div>
+                            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                                Search Leads
+                            </label>
+                            <input
+                                type="text"
+                                name="search"
+                                value={filters.search}
+                                onChange={handleFilterChange}
+                                placeholder="Search leads..."
+                                className="w-full rounded-md border border-gray-300 bg-white py-2 px-3 text-sm focus:border-indigo-500 focus:outline-none focus:ring-indigo-500 dark:border-gray-600 dark:bg-gray-800 dark:text-white"
+                            />
+                        </div>
+
+                        {/* <div>
                         <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                             Status
                         </label>
@@ -597,51 +679,51 @@ export default function LeadManagement() {
                                 </option>
                             ))}
                         </select>
-                    </div>
+                    </div> */}
 
-                    {user.role && user.role !== "counselor" && (
-                        <>
-                            <div>
-                                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                                    Source
-                                </label>
-                                <select
-                                    name="source"
-                                    value={filters.source}
-                                    onChange={handleFilterChange}
-                                    className="w-full rounded-md border border-gray-300 bg-white py-2 px-3 text-sm focus:border-indigo-500 focus:outline-none focus:ring-indigo-500 dark:border-gray-600 dark:bg-gray-800 dark:text-white"
-                                >
-                                    <option value="">All Sources</option>
-                                    {LeadSources.map((s) => (
-                                        <option key={s} value={s}>
-                                            {s.replace(/_/g, " ").replace(/\b\w/g, (l) => l.toUpperCase())}
-                                        </option>
-                                    ))}
-                                </select>
-                            </div>
+                        {user.role && user.role !== "counselor" && (
+                            <>
+                                <div>
+                                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                                        Source
+                                    </label>
+                                    <select
+                                        name="source"
+                                        value={filters.source}
+                                        onChange={handleFilterChange}
+                                        className="w-full rounded-md border border-gray-300 bg-white py-2 px-3 text-sm focus:border-indigo-500 focus:outline-none focus:ring-indigo-500 dark:border-gray-600 dark:bg-gray-800 dark:text-white"
+                                    >
+                                        <option value="">All Sources</option>
+                                        {LeadSources.map((s) => (
+                                            <option key={s} value={s}>
+                                                {s.replace(/_/g, " ").replace(/\b\w/g, (l) => l.toUpperCase())}
+                                            </option>
+                                        ))}
+                                    </select>
+                                </div>
 
-                            <div>
-                                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                                    Counselor
-                                </label>
-                                <select
-                                    name="assignedCounselor"
-                                    value={filters.assignedCounselor}
-                                    onChange={handleFilterChange}
-                                    className="w-full rounded-md border border-gray-300 bg-white py-2 px-3 text-sm focus:border-indigo-500 focus:outline-none focus:ring-indigo-500 dark:border-gray-600 dark:bg-gray-800 dark:text-white"
-                                >
-                                    <option value="">All Counselors</option>
-                                    {allCounselors.map((c) => (
-                                        <option key={c._id} value={c._id}>
-                                            {c.name || c.email}
-                                        </option>
-                                    ))}
-                                </select>
-                            </div>
-                        </>
-                    )}
+                                <div>
+                                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                                        Counselor
+                                    </label>
+                                    <select
+                                        name="assignedCounselor"
+                                        value={filters.assignedCounselor}
+                                        onChange={handleFilterChange}
+                                        className="w-full rounded-md border border-gray-300 bg-white py-2 px-3 text-sm focus:border-indigo-500 focus:outline-none focus:ring-indigo-500 dark:border-gray-600 dark:bg-gray-800 dark:text-white"
+                                    >
+                                        <option value="">All Counselors</option>
+                                        {allCounselors.map((c) => (
+                                            <option key={c._id} value={c._id}>
+                                                {c.name || c.email}
+                                            </option>
+                                        ))}
+                                    </select>
+                                </div>
+                            </>
+                        )}
 
-                    <div>
+                        {/* <div>
                         <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                             Course Preference
                         </label>
@@ -653,9 +735,9 @@ export default function LeadManagement() {
                             placeholder="e.g. MBA, Computer Science"
                             className="w-full rounded-md border border-gray-300 bg-white py-2 px-3 text-sm focus:border-indigo-500 focus:outline-none focus:ring-indigo-500 dark:border-gray-600 dark:bg-gray-800 dark:text-white"
                         />
-                    </div>
+                    </div> */}
 
-                    <div>
+                        {/* <div>
                         <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                             Country of Residence
                         </label>
@@ -667,546 +749,411 @@ export default function LeadManagement() {
                             placeholder="e.g. India, Nigeria"
                             className="w-full rounded-md border border-gray-300 bg-white py-2 px-3 text-sm focus:border-indigo-500 focus:outline-none focus:ring-indigo-500 dark:border-gray-600 dark:bg-gray-800 dark:text-white"
                         />
-                    </div>
+                    </div> */}
 
-                    {/* Date Range */}
-                    <div>
-                        <label className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                            Date Range (Start - End)
-                        </label>
-                        <div className="flex gap-2">
-                            <input
-                                type="date"
-                                name="dateRangeStart"
-                                value={dateRangeStart}
-                                onChange={(e) => handleDateRangeChange("start", e.target.value)}
-                                className=" rounded-md border border-gray-300 bg-white py-2 px-2 text-sm focus:border-indigo-500 focus:outline-none focus:ring-indigo-500 dark:border-gray-600 dark:bg-gray-800 dark:text-white"
-                            />
+                        {/* Date Range */}
+                        <div>
+                            <label className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                                Date Range (Start)
+                            </label>
+                            <div className="">
+                                <input
+                                    type="date"
+                                    name="dateRangeStart"
+                                    value={dateRangeStart}
+                                    onChange={(e) => handleDateRangeChange("start", e.target.value)}
+                                    className="w-full rounded-md border border-gray-300 bg-white py-2 px-2 text-sm focus:border-indigo-500 focus:outline-none focus:ring-indigo-500 dark:border-gray-600 dark:bg-gray-800 dark:text-white"
+                                />
+
+                            </div>
+                        </div>
+                        <div>
+                            <label className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                                Date Range (End)
+                            </label>
                             <input
                                 type="date"
                                 name="dateRangeEnd"
                                 value={dateRangeEnd}
                                 onChange={(e) => handleDateRangeChange("end", e.target.value)}
-                                className=" rounded-md border border-gray-300 bg-white py-2 px-2 text-sm focus:border-indigo-500 focus:outline-none focus:ring-indigo-500 dark:border-gray-600 dark:bg-gray-800 dark:text-white"
+                                className="w-full rounded-md border border-gray-300 bg-white py-2 px-2 text-sm focus:border-indigo-500 focus:outline-none focus:ring-indigo-500 dark:border-gray-600 dark:bg-gray-800 dark:text-white"
                             />
                         </div>
                     </div>
-                </div>
-                {total > 0 && (
-                    <div className="">
-                        <div className="flex items-center justify-between space-x-4 mb-2">
-                            <div className="flex items-center space-x-2">
-                                <label className="text-sm font-medium text-gray-700 dark:text-gray-300">
-                                    Limit:
-                                </label>
-                                <select
-                                    name="limit"
-                                    value={filters.limit}
-                                    onChange={handleFilterChange}
-                                    className="rounded-md border border-gray-300 bg-white py-1 px-2 text-sm focus:border-indigo-500 focus:outline-none focus:ring-indigo-500 dark:border-gray-600 dark:bg-gray-800 dark:text-white"
-                                >
-                                    <option value="5">5</option>
-                                    <option value="10">10</option>
-                                    <option value="20">20</option>
-                                    <option value="50">50</option>
-                                </select>
-                            </div>
-                            <div className="flex gap-2">
-
-                            <button
-                                onClick={() =>
-                                    setFilters({
-                                        page: 1,
-                                        limit: 10,
-                                        sortBy: "-createdAt",
-                                        status: "",
-                                        source: "",
-                                        assignedCounselor: "",
-                                        coursePreference: "",
-                                        countryOfResidence: "",
-                                        dateRange: "",
-                                        search: "",
-                                    })
-                                }
-                                className=" rounded-md border border-gray-300 bg-white px-3 py-2 text-sm font-medium text-gray-700 shadow-sm hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 dark:border-gray-600 dark:bg-gray-800 dark:text-white dark:hover:bg-gray-700"
-                            >
-                                Reset Filters
-                            </button>
-                            {selectedLeads.size > 0 && (
-                                <div className="flex items-center justify-between rounded-lg bg-indigo-50 dark:bg-indigo-900/20 ps-2 sticky top-0 z-10">
-                                    <span className="text-sm font-medium text-indigo-800 dark:text-indigo-200">
-                                        {selectedLeads.size} lead{selectedLeads.size > 1 ? 's' : ''} 
-                                    </span>
-                                    <button
-                                        onClick={handleBulkDelete}
-                                        className="rounded bg-red-600 px-3 py-2 rounded-lg text-sm text-white hover:bg-red-700"
+                    {total > 0 && (
+                        <div className="">
+                            <div className="flex items-center justify-between space-x-4 mb-2">
+                                <div className="flex items-center space-x-2">
+                                    <label className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                                        Limit:
+                                    </label>
+                                    <select
+                                        name="limit"
+                                        value={filters.limit}
+                                        onChange={handleFilterChange}
+                                        className="rounded-md border border-gray-300 bg-white py-1 px-2 text-sm focus:border-indigo-500 focus:outline-none focus:ring-indigo-500 dark:border-gray-600 dark:bg-gray-800 dark:text-white"
                                     >
-                                        Delete Selected
+                                        <option value="5">5</option>
+                                        <option value="10">10</option>
+                                        <option value="20">20</option>
+                                        <option value="50">50</option>
+                                    </select>
+                                </div>
+                                <div className="flex gap-2 ">
+
+                                    <button
+                                        onClick={() =>
+                                            setFilters({
+                                                page: 1,
+                                                limit: 10,
+                                                sortBy: "-createdAt",
+                                                status: "",
+                                                source: "",
+                                                assignedCounselor: "",
+                                                coursePreference: "",
+                                                countryOfResidence: "",
+                                                dateRange: "",
+                                                search: "",
+                                            })
+                                        }
+                                        className=" rounded-md border border-gray-300 bg-white px-3 py-2 text-sm font-medium text-gray-700 shadow-sm hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 dark:border-gray-600 dark:bg-gray-800 dark:text-white dark:hover:bg-gray-700"
+                                    >
+                                        Reset Filters
+                                    </button>
+                                    {selectedLeads.size > 0 && (
+                                        <div className="flex items-center justify-between rounded-lg bg-indigo-50 dark:bg-indigo-900/20 ps-2 sticky top-0 z-10">
+                                            <span className="text-sm font-medium text-indigo-800 dark:text-indigo-200">
+                                                {selectedLeads.size} lead{selectedLeads.size > 1 ? 's' : ''}
+                                            </span>
+                                            <button
+                                                onClick={handleBulkDelete}
+                                                className="rounded bg-red-600 px-3 py-2 rounded-lg text-sm text-white hover:bg-red-700"
+                                            >
+                                                Delete Selected
+                                            </button>
+                                        </div>
+                                    )}
+                                    <button
+                                        onClick={() => setShowAppliedFilters(!showAppliedFilters)}
+                                        className="flex items-center gap-2 px-3 py-2 rounded-md border border-gray-300 bg-white text-gray-700 hover:bg-gray-50 dark:border-gray-600 dark:bg-gray-800 dark:text-white dark:hover:bg-gray-700"
+                                    >
+                                        <Filter className="h-4 w-4" />
+                                        Filters {appliedFiltersCount > 0 && `(${appliedFiltersCount})`}
                                     </button>
                                 </div>
-                            )}
+
+
                             </div>
-
                         </div>
-                    </div>
-                )}
-
-                <div className="overflow-x-auto rounded-lg border border-gray-200 dark:border-gray-700">
-                    {loading ? (
-                        <div className="flex h-64 items-center justify-center">
-                            <div className="h-8 w-8 animate-spin rounded-full border-4 border-indigo-500 border-t-transparent"></div>
-                        </div>
-                    ) : (
-                        <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
-                            <thead className="bg-gray-50 dark:bg-gray-800">
-                                <tr>
-                                    <th className="px-2 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500 dark:text-gray-300 w-12">
-                                        <input
-                                            type="checkbox"
-                                            checked={selectAll}
-                                            onChange={toggleSelectAll}
-                                            className="rounded h-[14px] w-[14px] border-gray-300 text-indigo-600 focus:ring-indigo-500 dark:border-gray-600 dark:bg-gray-700 dark:ring-offset-gray-800"
-                                        />
-                                    </th>
-                                    <th className="px-2 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500 dark:text-gray-300">
-                                        Name
-                                    </th>
-                                    <th className="px-2 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500 dark:text-gray-300">
-                                        Contact
-                                    </th>
-                                    <th className="px-2 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500 dark:text-gray-300">
-                                        Course
-                                    </th>
-                                    <th className="px-2 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500 dark:text-gray-300">
-                                        Intake
-                                    </th>
-                                    <th className="px-2 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500 dark:text-gray-300">
-                                        Counselor
-                                    </th>
-                                    <th className="px-2 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500 dark:text-gray-300">
-                                        Status
-                                    </th>
-                                    <th className="px-2 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500 dark:text-gray-300">
-                                        {user?.role == "counselor" ? "Date" : "Source"}
-                                    </th>
-                                    <th className="px-2 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500 dark:text-gray-300">
-                                        Actions
-                                    </th>
-                                </tr>
-                            </thead>
-                            <tbody className="divide-y divide-gray-200 bg-white dark:divide-gray-700 dark:bg-gray-800">
-                                {leads.length > 0 ? (
-                                    leads.map((lead) => (
-                                        <tr
-                                            key={lead._id}
-                                            className="hover:bg-gray-50 dark:hover:bg-gray-700"
-                                        >
-                                            <td className="whitespace-nowrap px-2 py-3">
-                                                <input
-                                                    type="checkbox"
-                                                    checked={selectedLeads.has(lead._id)}
-                                                    onChange={() => toggleLeadSelection(lead._id)}
-                                                    className="rounded h-[14px] w-[14px] border-gray-300 text-indigo-600 focus:ring-indigo-500 dark:border-gray-600 dark:bg-gray-700 dark:ring-offset-gray-800"
-                                                />
-                                            </td>
-                                            <td className="whitespace-nowrap px-2 py-3 text-sm font-medium capitalize text-gray-900 dark:text-white">
-                                                {lead?.fullName || "—"}
-                                            </td>
-                                            <td className="whitespace-nowrap px-2 py-2 text-sm text-gray-500 dark:text-gray-300">
-                                                Email:{lead.email || "—"} <br />
-                                            </td>
-                                            <td className="whitespace-nowrap px-2 py-3 text-sm text-gray-500 dark:text-gray-300">
-                                                {lead.coursePreference}
-                                            </td>
-                                            <td className="whitespace-nowrap px-2 py-3 text-sm text-gray-500 dark:text-gray-300">
-                                                {lead.intendedIntake
-                                                    ? moment(lead.intendedIntake).format("MMM YYYY")
-                                                    : "—"}
-                                            </td>
-                                            <td className="whitespace-nowrap px-2 py-3 text-sm text-gray-500 dark:text-gray-300">
-                                                {lead.assignedCounselor?.name ||
-                                                    lead.assignedCounselor?.email ||
-                                                    "Unassigned"}
-                                            </td>
-                                            <td className="whitespace-nowrap px-2 py-3">
-                                                <span
-                                                    className={`inline-flex rounded-full px-2 text-xs font-semibold ${getStatusColor(
-                                                        lead.status
-                                                    )}`}
-                                                >
-                                                    {lead.status.charAt(0).toUpperCase() +
-                                                        lead.status.slice(1)}
-                                                </span>
-                                            </td>
-                                            <td className="whitespace-nowrap px-2 py-2 text-sm text-gray-500 dark:text-gray-300 capitalize">
-                                                {lead?.createdAt &&
-                                                    moment(lead.createdAt).format("MMM D, YYYY h:mm A")}
-                                                <br />
-                                                {user?.role !== "counselor" &&
-                                                    lead.source.replace(/_/g, " ")}
-                                            </td>
-                                            <td className="whitespace-nowrap px-2 py-3 text-sm font-medium">
-                                                <div className="flex space-x-2">
-                                                    <button
-                                                        onClick={() => viewLeadDetails(lead)}
-                                                        className="p-1 rounded-lg text-indigo-600 hover:text-indigo-900 dark:text-indigo-400 dark:hover:text-indigo-300"
+                    )}
+                    <div className="overflow-x-auto rounded-lg border border-gray-200 dark:border-gray-700">
+                        {loading ? (
+                            <div className="flex h-64 items-center justify-center">
+                                <div className="h-8 w-8 animate-spin rounded-full border-4 border-indigo-500 border-t-transparent"></div>
+                            </div>
+                        ) : (
+                            <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
+                                <thead className="bg-gray-50 dark:bg-gray-800">
+                                    <tr>
+                                        <th className="px-2 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500 dark:text-gray-300 w-12">
+                                            <input
+                                                type="checkbox"
+                                                checked={selectAll}
+                                                onChange={toggleSelectAll}
+                                                className="rounded h-[14px] w-[14px] border-gray-300 text-indigo-600 focus:ring-indigo-500 dark:border-gray-600 dark:bg-gray-700 dark:ring-offset-gray-800"
+                                            />
+                                        </th>
+                                        <th className="px-2 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500 dark:text-gray-300">
+                                            Name
+                                        </th>
+                                        <th className="px-2 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500 dark:text-gray-300">
+                                            Contact
+                                        </th>
+                                        <th className="px-2 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500 dark:text-gray-300">
+                                            Course
+                                        </th>
+                                        <th className="px-2 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500 dark:text-gray-300">
+                                            Counselor
+                                        </th>
+                                        <th className="px-2 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500 dark:text-gray-300">
+                                            Status
+                                        </th>
+                                        <th className="px-2 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500 dark:text-gray-300">
+                                            {user?.role == "counselor" ? "Date" : "Source"}
+                                        </th>
+                                        <th className="px-2 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500 dark:text-gray-300">
+                                            Actions
+                                        </th>
+                                    </tr>
+                                </thead>
+                                <tbody className="divide-y divide-gray-200 bg-white dark:divide-gray-700 dark:bg-gray-800">
+                                    {leads.length > 0 ? (
+                                        leads.map((lead) => (
+                                            <tr
+                                                key={lead._id}
+                                                className="hover:bg-gray-50 dark:hover:bg-gray-700"
+                                            >
+                                                <td className="whitespace-nowrap px-2 py-3">
+                                                    <input
+                                                        type="checkbox"
+                                                        checked={selectedLeads.has(lead._id)}
+                                                        onChange={() => toggleLeadSelection(lead._id)}
+                                                        className="rounded h-[14px] w-[14px] border-gray-300 text-indigo-600 focus:ring-indigo-500 dark:border-gray-600 dark:bg-gray-700 dark:ring-offset-gray-800"
+                                                    />
+                                                </td>
+                                                <td className="whitespace-nowrap px-2 py-3 text-sm font-medium capitalize text-gray-900 dark:text-white">
+                                                    {lead?.fullName || "—"}
+                                                </td>
+                                                <td className="whitespace-nowrap px-2 py-2 text-sm text-gray-500 dark:text-gray-300">
+                                                    Email:{lead.email || "—"} <br />
+                                                </td>
+                                                <td className="whitespace-nowrap px-2 py-3 text-sm text-gray-500 dark:text-gray-300">
+                                                    {lead.coursePreference}
+                                                </td>
+                                                {/* <td className="whitespace-nowrap px-2 py-3 text-sm text-gray-500 dark:text-gray-300">
+                                                    {lead.intendedIntake
+                                                        ? moment(lead.intendedIntake).format("MMM YYYY")
+                                                        : "—"}
+                                                </td> */}
+                                                <td className="whitespace-nowrap px-2 py-3 text-sm text-gray-500 dark:text-gray-300">
+                                                    {lead.assignedCounselor?.name ||
+                                                        lead.assignedCounselor?.email ||
+                                                        "Unassigned"}
+                                                </td>
+                                                <td className="whitespace-nowrap px-2 py-3">
+                                                    <span
+                                                        className={`inline-flex rounded-full px-2 text-xs font-semibold ${getStatusColor(
+                                                            lead.status
+                                                        )}`}
                                                     >
-                                                        <Eye className="h-5 w-5" />
-                                                    </button>
-                                                    <button
-                                                        onClick={() => openEditModal(lead)}
-                                                        className="p-1 rounded-lg text-blue-600 hover:text-blue-900 dark:text-blue-400 dark:hover:text-blue-300"
-                                                    >
-                                                        <Pencil className="h-5 w-5" />
-                                                    </button>
-                                                    {user.role == "admin" && (
+                                                        {lead.status.charAt(0).toUpperCase() +
+                                                            lead.status.slice(1)}
+                                                    </span>
+                                                </td>
+                                                <td className="whitespace-nowrap px-2 py-2 text-sm text-gray-500 dark:text-gray-300 capitalize">
+                                                    {lead?.createdAt &&
+                                                        moment(lead.createdAt).format("MMM D, YYYY h:mm A")}
+                                                    <br />
+                                                    {user?.role !== "counselor" &&
+                                                        lead.source.replace(/_/g, " ")}
+                                                </td>
+                                                <td className="whitespace-nowrap px-2 py-3 text-sm font-medium">
+                                                    <div className="flex space-x-2">
                                                         <button
-                                                            onClick={() => {
-                                                                setSelectedLead(lead);
-                                                                setDeleteModalOpen(true);
-                                                            }}
-                                                            className="p-1 rounded-lg text-red-600 hover:text-red-900 dark:text-red-400 dark:hover:text-red-300"
+                                                            onClick={() => viewLeadDetails(lead)}
+                                                            className="p-1 rounded-lg text-indigo-600 hover:text-indigo-900 dark:text-indigo-400 dark:hover:text-indigo-300"
                                                         >
-                                                            <Trash2 className="h-5 w-5" />
+                                                            <Eye className="h-5 w-5" />
                                                         </button>
-                                                    )}
-                                                </div>
+                                                        <button
+                                                            onClick={() => openEditModal(lead)}
+                                                            className="p-1 rounded-lg text-blue-600 hover:text-blue-900 dark:text-blue-400 dark:hover:text-blue-300"
+                                                        >
+                                                            <Pencil className="h-5 w-5" />
+                                                        </button>
+                                                        {user.role == "admin" && (
+                                                            <button
+                                                                onClick={() => {
+                                                                    setSelectedLead(lead);
+                                                                    setDeleteModalOpen(true);
+                                                                }}
+                                                                className="p-1 rounded-lg text-red-600 hover:text-red-900 dark:text-red-400 dark:hover:text-red-300"
+                                                            >
+                                                                <Trash2 className="h-5 w-5" />
+                                                            </button>
+                                                        )}
+                                                    </div>
+                                                </td>
+                                            </tr>
+                                        ))
+                                    ) : (
+                                        <tr>
+                                            <td
+                                                colSpan={9}
+                                                className="px-2 py-4 text-center text-sm text-gray-500 dark:text-gray-300"
+                                            >
+                                                No leads found
                                             </td>
                                         </tr>
-                                    ))
-                                ) : (
-                                    <tr>
-                                        <td
-                                            colSpan={9}
-                                            className="px-2 py-4 text-center text-sm text-gray-500 dark:text-gray-300"
-                                        >
-                                            No leads found
-                                        </td>
-                                    </tr>
-                                )}
-                            </tbody>
-                        </table>
-                    )}
-                </div>
-
-                {/* Pagination */}
-                {total > 0 && (
-                    <div className="mt-4 flex flex-col items-center justify-between space-y-4 sm:flex-row sm:space-y-0">
-                        <div className="text-sm text-gray-500 dark:text-gray-300">
-                            Showing <span className="font-medium">{(filters.page - 1) * filters.limit + 1}</span> to{" "}
-                            <span className="font-medium">{Math.min(filters.page * filters.limit, total)}</span> of{" "}
-                            <span className="font-medium">{total}</span> results
-                        </div>
-                        <div className="flex space-x-2">
-                            <button
-                                onClick={() => handlePageChange(filters.page - 1)}
-                                disabled={filters.page === 1}
-                                className={`rounded-md border px-3 py-1 text-sm ${filters.page === 1
-                                    ? "cursor-not-allowed bg-gray-100 text-gray-400 dark:bg-gray-700 dark:text-gray-500"
-                                    : "border-gray-300 bg-white text-gray-700 hover:bg-gray-50 dark:border-gray-600 dark:bg-gray-800 dark:text-white dark:hover:bg-gray-700"
-                                    }`}
-                            >
-                                Previous
-                            </button>
-                            {Array.from({ length: Math.ceil(total / filters.limit) }, (_, i) => i + 1)
-                                .slice(Math.max(0, filters.page - 3), Math.min(Math.ceil(total / filters.limit), filters.page + 2))
-                                .map((pageNum) => (
-                                    <button
-                                        key={pageNum}
-                                        onClick={() => handlePageChange(pageNum)}
-                                        className={`rounded-md border px-3 py-1 text-sm ${filters.page === pageNum
-                                            ? "border-indigo-500 bg-indigo-500 text-white"
-                                            : "border-gray-300 bg-white text-gray-700 hover:bg-gray-50 dark:border-gray-600 dark:bg-gray-800 dark:text-white dark:hover:bg-gray-700"
-                                            }`}
-                                    >
-                                        {pageNum}
-                                    </button>
-                                ))}
-                            <button
-                                onClick={() => handlePageChange(filters.page + 1)}
-                                disabled={filters.page * filters.limit >= total}
-                                className={`rounded-md border px-3 py-1 text-sm ${filters.page * filters.limit >= total
-                                    ? "cursor-not-allowed bg-gray-100 text-gray-400 dark:bg-gray-700 dark:text-gray-500"
-                                    : "border-gray-300 bg-white text-gray-700 hover:bg-gray-50 dark:border-gray-600 dark:bg-gray-800 dark:text-white dark:hover:bg-gray-700"
-                                    }`}
-                            >
-                                Next
-                            </button>
-                        </div>
+                                    )}
+                                </tbody>
+                            </table>
+                        )}
                     </div>
-                )}
-            </div>
-
-            {/* View Modal */}
-            <Modal isOpen={isOpen} onClose={closeModal} className="max-w-[700px] m-4">
-                <div className=" relative w-full max-w-[700px] rounded-3xl bg-white p-4 dark:bg-gray-900 lg:p-11">
-                    <div className="px-2 pr-14">
-                        <h4 className="mb-2 text-2xl font-semibold text-gray-800 dark:text-white/90">Lead Details</h4>
-                        <p className="mb-6 text-sm text-gray-500 dark:text-gray-400 lg:mb-7">
-                            Detailed information about this lead
-                        </p>
-                    </div>
-                    {selectedLead && (
-                        <div className="space-y-6 px-2 max-h-[60vh] overflow-y-auto no-scrollbar">
-                            <div className="grid grid-cols-1 gap-3 md:grid-cols-3">
-                                <div>
-                                    <p className="text-sm text-gray-500">Full Name</p>
-                                    <p className="text-sm font-medium text-gray-800 capitalize dark:text-white">{selectedLead.fullName}</p>
-                                </div>
-                                <div>
-                                    <p className="text-sm text-gray-500">Email</p>
-                                    <p className="text-sm font-medium text-gray-800 dark:text-white">{selectedLead.email}</p>
-                                </div>
-                                <div>
-                                    <p className="text-sm text-gray-500">Country</p>
-                                    <p className="text-sm font-medium text-gray-800 dark:text-white">{selectedLead.countryOfResidence || "—"}</p>
-                                </div>
-                                <div>
-                                    <p className="text-sm text-gray-500">Phone</p>
-                                    <p className="text-sm font-medium text-gray-800 dark:text-white">{selectedLead.phone || "—"} </p>
-                                </div>
-                                <div>
-                                    <p className="text-sm text-gray-500">City</p>
-                                    <p className="text-sm font-medium text-gray-800 dark:text-white">{selectedLead.city || "—"}</p>
-                                </div>
-                                <div>
-                                    <p className="text-sm text-gray-500">Course Preference</p>
-                                    <p className="text-sm font-medium text-gray-800 dark:text-white">{selectedLead.coursePreference}</p>
-                                </div>
-                                <div>
-                                    <p className="text-sm text-gray-500">Intended Intake</p>
-                                    <p className="text-sm font-medium text-gray-800 dark:text-white">
-                                        {selectedLead.intendedIntake
-                                            ? moment(selectedLead.intendedIntake).format("MMM D, YYYY")
-                                            : "—"}
-                                    </p>
-                                </div>
-                                <div>
-                                    <p className="text-sm text-gray-500">Status</p>
-                                    <span className={`inline-block rounded-full px-2 py-0.5 text-xs font-semibold ${getStatusColor(selectedLead.status)}`}>
-                                        {selectedLead.status.charAt(0).toUpperCase() + selectedLead.status.slice(1)}
-                                    </span>
-                                </div>
-                                {user.role && user.role === "admin" && <div>
-                                    <p className="text-sm text-gray-500">Source</p>
-                                    <p className="text-sm font-medium text-gray-800 dark:text-white capitalize">
-                                        {selectedLead.source.replace(/_/g, " ")}
-                                    </p>
-                                </div>}
-                                {user.role && user.role === "admin" && <div className="md:col-span-1">
-                                    <p className="text-sm text-gray-500">Assigned Counselor</p>
-                                    <p className="text-sm font-medium text-gray-800 dark:text-white">
-                                        {selectedLead.assignedCounselor?.name || selectedLead.assignedCounselor?.email || "Unassigned"}
-                                    </p>
-                                </div>}
-                                <div className="col-span-3">
-                                    <p className="text-sm text-gray-500">Extra Details</p>
-                                    <div className="mt-1 text-sm text-gray-800 dark:text-white font-medium">
-                                        {selectedLead.extraDetails && typeof selectedLead.extraDetails === "object" ? (
-                                            Object.entries(selectedLead.extraDetails).map(([key, value]) => (
-                                                <div key={key} className="flex items-start mb-1">
-                                                    <span className="font-medium text-gray-600 mr-1 dark:text-gray-400">
-                                                        {key.replace(/_/g, ' ').replace(/\?/g, '').replace(/\b\w/g, c => c.toUpperCase())}:
-                                                    </span>
-                                                    <span className="text-sm text-gray-800 dark:text-white font-medium">{String(value)}</span>
-                                                </div>
-                                            ))
-                                        ) : (
-                                            <span>{selectedLead.extraDetails || "N/A"}</span>
-                                        )}
-                                    </div>
-                                </div>
+                    {total > 0 && (
+                        <div className="mt-4 flex flex-col items-center justify-between space-y-4 sm:flex-row sm:space-y-0">
+                            <div className="text-sm text-gray-500 dark:text-gray-300">
+                                Showing <span className="font-medium">{(filters.page - 1) * filters.limit + 1}</span> to{" "}
+                                <span className="font-medium">{Math.min(filters.page * filters.limit, total)}</span> of{" "}
+                                <span className="font-medium">{total}</span> results
                             </div>
-
-                            {selectedLead.notes && selectedLead.notes.length > 0 && (
-                                <div>
-                                    <h6 className="mb-3 text-base font-medium text-gray-800 dark:text-white/90">Notes</h6>
-                                    <div className="space-y-3">
-                                        {selectedLead.notes.map((note, i) => (
-                                            <div key={i} className="border-l-4 border-indigo-500 pl-3 py-1">
-                                                <p className="text-sm text-gray-800 dark:text-white">{note.text}</p>
-                                                <p className="text-xs text-gray-500">
-                                                    by {note.createdBy === user._id ? "You" : note.createdBy == selectedLead.assignedCounselor?._id ? "Counselor" : "Admin"} •{" "}
-                                                    {moment(note.createdAt).format("MMM D, YYYY h:mm A")}
-                                                </p>
-                                            </div>
-                                        ))}
-                                    </div>
-                                </div>
-                            )}
-
-                            <div className="mt-2">
-                                <Label>Add Note</Label>
-                                <TextArea
-                                    value={newNote}
-                                    onChange={setNewNote}
-                                    className="w-full rounded-md border border-gray-300 p-2 text-sm"
-                                    placeholder="Type your note here..."
-                                />
+                            <div className="flex space-x-2">
                                 <button
-                                    onClick={handleAddNote}
-                                    className="mt-2 rounded bg-indigo-600 px-3 py-2 text-sm text-white hover:bg-indigo-700"
-                                    disabled={!newNote.trim()}
+                                    onClick={() => handlePageChange(filters.page - 1)}
+                                    disabled={filters.page === 1}
+                                    className={`rounded-md border px-3 py-1 text-sm ${filters.page === 1
+                                        ? "cursor-not-allowed bg-gray-100 text-gray-400 dark:bg-gray-700 dark:text-gray-500"
+                                        : "border-gray-300 bg-white text-gray-700 hover:bg-gray-50 dark:border-gray-600 dark:bg-gray-800 dark:text-white dark:hover:bg-gray-700"
+                                        }`}
                                 >
-                                    Add Note
+                                    Previous
+                                </button>
+                                {Array.from({ length: Math.ceil(total / filters.limit) }, (_, i) => i + 1)
+                                    .slice(Math.max(0, filters.page - 3), Math.min(Math.ceil(total / filters.limit), filters.page + 2))
+                                    .map((pageNum) => (
+                                        <button
+                                            key={pageNum}
+                                            onClick={() => handlePageChange(pageNum)}
+                                            className={`rounded-md border px-3 py-1 text-sm ${filters.page === pageNum
+                                                ? "border-indigo-500 bg-indigo-500 text-white"
+                                                : "border-gray-300 bg-white text-gray-700 hover:bg-gray-50 dark:border-gray-600 dark:bg-gray-800 dark:text-white dark:hover:bg-gray-700"
+                                                }`}
+                                        >
+                                            {pageNum}
+                                        </button>
+                                    ))}
+                                <button
+                                    onClick={() => handlePageChange(filters.page + 1)}
+                                    disabled={filters.page * filters.limit >= total}
+                                    className={`rounded-md border px-3 py-1 text-sm ${filters.page * filters.limit >= total
+                                        ? "cursor-not-allowed bg-gray-100 text-gray-400 dark:bg-gray-700 dark:text-gray-500"
+                                        : "border-gray-300 bg-white text-gray-700 hover:bg-gray-50 dark:border-gray-600 dark:bg-gray-800 dark:text-white dark:hover:bg-gray-700"
+                                        }`}
+                                >
+                                    Next
                                 </button>
                             </div>
                         </div>
                     )}
-                    <div className="flex items-center gap-3 px-2 mt-6 lg:justify-end">
-                        <Button size="sm" variant="outline" onClick={closeModal}>
-                            Close
-                        </Button>
-                    </div>
                 </div>
-            </Modal>
+                {showAppliedFilters ? (
+                    <div className={`z-50 duration-300 ease-in-out h-full bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 ${showAppliedFilters ? "w-100" : "w-0"}`}>
+                        <div className="p-2">
+                            <div className="flex items-center justify-between mb-4">
+                                <h3 className="text-lg font-semibold text-gray-800 dark:text-white">Applied Filters</h3>
+                                <button
+                                    onClick={() => setShowAppliedFilters(false)}
+                                    className="text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-300"
+                                >
+                                    <X className="h-5 w-5" />
+                                </button>
+                            </div>
 
-            {/* Create/Edit Modal */}
-            <Modal isOpen={editModalOpen} onClose={() => setEditModalOpen(false)} className="max-w-[700px] m-4">
-                <div className="no-scrollbar relative w-full max-w-[700px] overflow-y-auto rounded-3xl bg-white p-4 dark:bg-gray-900 lg:p-11">
-                    <div className="px-2 pr-14">
-                        <h4 className="mb-2 text-2xl font-semibold text-gray-800 dark:text-white/90">
-                            {selectedLead ? "Edit Lead" : "Add New Lead"}
-                        </h4>
-                        <p className="mb-6 text-sm text-gray-500 dark:text-gray-400 lg:mb-7">
-                            {selectedLead ? "Update lead information" : "Enter new lead details"}
-                        </p>
-                    </div>
-                    <form
-                        onSubmit={(e) => {
-                            e.preventDefault();
-                            selectedLead ? handleSaveLead() : handleCreateLead();
-                        }}
-                        className="px-2"
-                    >
-                        <div className="space-y-4">
-                            <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-                                <div>
-                                    <Label>Full Name *</Label>
-                                    <Input
-                                        type="text"
-                                        name="fullName"
-                                        value={formData.fullName}
-                                        onChange={handleChange}
-                                        placeholder="e.g. John Doe"
-                                    />
-                                    {errors.fullName && <p className="mt-1 text-sm text-red-600">{errors.fullName}</p>}
+                            {/* Activity Stats Section */}
+                            <div className="mb-6 p-3 bg-gray-50 dark:bg-gray-900 rounded-lg">
+                                <h4 className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-3">Lead Activity</h4>
+                                <div className="space-y-2">
+                                    <div className="flex items-center justify-between">
+                                        <div className="flex items-center gap-2">
+                                            <Phone className="h-4 w-4 text-green-600" />
+                                            <span className="text-sm text-gray-600 dark:text-gray-400">Calls</span>
+                                        </div>
+                                        <span className="font-medium text-gray-800 dark:text-white">{leadStats.calls}</span>
+                                    </div>
+                                    <div className="flex items-center justify-between">
+                                        <div className="flex items-center gap-2">
+                                            <MessageSquare className="h-4 w-4 text-blue-600" />
+                                            <span className="text-sm text-gray-600 dark:text-gray-400">Messages</span>
+                                        </div>
+                                        <span className="font-medium text-gray-800 dark:text-white">{leadStats.messages}</span>
+                                    </div>
                                 </div>
+                            </div>
+
+                            <div className="space-y-4">
                                 <div>
-                                    <Label>Email *</Label>
-                                    <Input
-                                        type="email"
-                                        name="email"
-                                        value={formData.email}
-                                        onChange={handleChange}
-                                        placeholder="john@example.com"
-                                    />
-                                    {errors.email && <p className="mt-1 text-sm text-red-600">{errors.email}</p>}
-                                </div>
-                                <div>
-                                    <Label>Phone</Label>
-                                    <Input
-                                        type="text"
-                                        name="phone"
-                                        value={formData.phone}
-                                        onChange={handleChange}
-                                        placeholder="+91 98765 43210"
-                                    />
-                                </div>
-                                <div>
-                                    <Label>Country of Residence</Label>
-                                    <Input
-                                        type="text"
-                                        name="countryOfResidence"
-                                        value={formData.countryOfResidence}
-                                        onChange={handleChange}
-                                        placeholder="e.g. India"
-                                    />
-                                </div>
-                                <div>
-                                    <Label>Course Preference *</Label>
-                                    <Input
-                                        type="text"
-                                        name="coursePreference"
-                                        value={formData.coursePreference}
-                                        onChange={handleChange}
-                                        placeholder="e.g. MBA, Data Science"
-                                    />
-                                    {errors.coursePreference && (
-                                        <p className="mt-1 text-sm text-red-600">{errors.coursePreference}</p>
+                                    <h4 className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                                        Lead Details ({appliedFiltersCount})
+                                    </h4>
+
+                                    {filters.search && (
+                                        <div className="mb-3">
+                                            <p className="text-xs text-gray-500 dark:text-gray-400">SEARCH</p>
+                                            <p className="text-sm font-medium text-gray-800 dark:text-white">{filters.search}</p>
+                                        </div>
+                                    )}
+
+                                    {filters.status && (
+                                        <div className="mb-3">
+                                            <p className="text-xs text-gray-500 dark:text-gray-400">STATUS</p>
+                                            <p className="text-sm font-medium text-gray-800 dark:text-white capitalize">{filters.status}</p>
+                                        </div>
+                                    )}
+
+                                    {filters.source && (
+                                        <div className="mb-3">
+                                            <p className="text-xs text-gray-500 dark:text-gray-400">SOURCE</p>
+                                            <p className="text-sm font-medium text-gray-800 dark:text-white capitalize">
+                                                {filters.source.replace(/_/g, ' ')}
+                                            </p>
+                                        </div>
+                                    )}
+
+                                    {filters.assignedCounselor && (
+                                        <div className="mb-3">
+                                            <p className="text-xs text-gray-500 dark:text-gray-400">COUNSELOR REFERRED TO</p>
+                                            <p className="text-sm font-medium text-gray-800 dark:text-white">
+                                                {getCounselorName(filters.assignedCounselor)}
+                                            </p>
+                                        </div>
+                                    )}
+
+                                    {filters.coursePreference && (
+                                        <div className="mb-3">
+                                            <p className="text-xs text-gray-500 dark:text-gray-400">COURSE PREFERENCE</p>
+                                            <p className="text-sm font-medium text-gray-800 dark:text-white">{filters.coursePreference}</p>
+                                        </div>
+                                    )}
+
+                                    {filters.countryOfResidence && (
+                                        <div className="mb-3">
+                                            <p className="text-xs text-gray-500 dark:text-gray-400">COUNTRY OF RESIDENCE</p>
+                                            <p className="text-sm font-medium text-gray-800 dark:text-white">{filters.countryOfResidence}</p>
+                                        </div>
+                                    )}
+
+                                    {filters.dateRange && (
+                                        <div className="mb-3">
+                                            <p className="text-xs text-gray-500 dark:text-gray-400">DATE FILTERS (1)</p>
+                                            <p className="text-sm font-medium text-gray-800 dark:text-white">
+                                                FROM ADDED ON
+                                            </p>
+                                            <p className="text-sm text-gray-800 dark:text-white mt-1">
+                                                {formatDateRangeDisplay()}
+                                            </p>
+                                        </div>
+                                    )}
+
+                                    {appliedFiltersCount === 0 && (
+                                        <p className="text-sm text-gray-500 dark:text-gray-400 text-center py-4">
+                                            No filters applied
+                                        </p>
                                     )}
                                 </div>
-                                <div>
-                                    <Label>Intended Intake</Label>
-                                    <Input
-                                        type="date"
-                                        name="intendedIntake"
-                                        value={formData.intendedIntake}
-                                        onChange={handleChange}
-                                    />
-                                    {errors.intendedIntake && (
-                                        <p className="mt-1 text-sm text-red-600">{errors.intendedIntake}</p>
-                                    )}
-                                </div>
-                                <div>
-                                    <Label>Status *</Label>
-                                    <Select
-                                        name="status"
-                                        defaultValue={formData.status}
-                                        options={LeadStatuses.map((s) => ({
-                                            value: s,
-                                            label: s.charAt(0).toUpperCase() + s.slice(1)
-                                        }))}
-                                        onChange={(value) => setFormData((prev) => ({ ...prev, status: value }))}
-                                    />
-                                </div>
-                                {user.role && user.role === "admin" && <div>
-                                    <Label>Source *</Label>
-                                    <Select
-                                        name="source"
-                                        defaultValue={formData.source}
-                                        options={LeadSources.map((s) => ({
-                                            value: s,
-                                            label: s.replace(/_/g, " ").replace(/\b\w/g, (l) => l.toUpperCase())
-                                        }))}
-                                        onChange={(value) => setFormData((prev) => ({ ...prev, source: value }))}
-                                    />
-                                    {errors.source && <p className="mt-1 text-sm text-red-600">{errors.source}</p>}
-                                </div>}
-                                {user.role && user.role === "admin" && <div className="md:col-span-2">
-                                    <Label>Assigned Counselor</Label>
-                                    <Select
-                                        name="assignedCounselor"
-                                        defaultValue={formData.assignedCounselor}
-                                        options={allCounselors.map((c) => ({
-                                            value: c._id,
-                                            label: c.name || c.email
-                                        }))}
-                                        onChange={(value) => setFormData((prev) => ({ ...prev, assignedCounselor: value }))}
-                                    />
-                                </div>}
+                            </div>
+
+                            <div className="mt-6 pt-4 border-t border-gray-200 dark:border-gray-700">
+                                <button
+                                    onClick={resetFilters}
+                                    className="w-full rounded-md bg-gray-100 dark:bg-gray-700 px-3 py-2 text-sm font-medium text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600"
+                                >
+                                    Clear All Filters
+                                </button>
                             </div>
                         </div>
-                        <div className="flex items-center gap-3 px-2 mt-6 lg:justify-end">
-                            <button
-                                type="button"
-                                onClick={() => setEditModalOpen(false)}
-                                className="rounded-md border border-gray-300 bg-transparent px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-100 dark:border-gray-600 dark:text-gray-300 dark:hover:bg-gray-700"
-                            >
-                                Cancel
-                            </button>
-                            <button
-                                type="submit"
-                                className="rounded-md bg-indigo-600 px-4 py-2 text-sm font-medium text-white hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500"
-                            >
-                                {selectedLead ? "Save Changes" : "Create Lead"}
-                            </button>
-                        </div>
-                    </form>
-                </div>
-            </Modal>
 
-            {/* Delete Modal */}
+                        {showAppliedFilters && (
+                            <div
+                                className="fixed inset-0 z-40 bg-black bg-opacity-50 lg:hidden"
+                                onClick={() => setShowAppliedFilters(false)}
+                            />
+                        )}
+                    </div>) : ""}
+            </div>
+            <LeadModal isOpen={isOpen} closeModal={closeModal} selectedLead={selectedLead} handleAddNote={handleAddNote} newNote={newNote} setNewNote={setNewNote} user={user} getStatusColor={getStatusColor} />
+
+            <CreateLeadForm editModalOpen={editModalOpen} setEditModalOpen={setEditModalOpen} selectedLead={selectedLead} handleCreateLead={handleCreateLead} handleSaveLead={handleSaveLead} formData={formData} setFormData={setFormData} handleChange={handleChange} errors={errors} setErrors={setErrors} user={user} allCounselors={allCounselors} />
+
             <Modal isOpen={isDeleteModalOpen} onClose={() => setDeleteModalOpen(false)} className="max-w-lg">
                 {selectedLead && (
                     <div className="no-scrollbar relative w-full overflow-y-auto rounded-3xl bg-white p-4 dark:bg-gray-900 lg:p-6">
@@ -1239,6 +1186,282 @@ export default function LeadManagement() {
                     </div>
                 )}
             </Modal>
+
         </div>
     );
+}
+
+function LeadModal({ isOpen, closeModal, selectedLead, handleAddNote, newNote, setNewNote, user, getStatusColor }: any) {
+    return (
+        <Modal isOpen={isOpen} onClose={closeModal} className="max-w-[700px] m-4">
+            <div className=" relative w-full max-w-[700px] rounded-3xl bg-white p-4 dark:bg-gray-900 lg:p-11">
+                <div className="px-2 pr-14">
+                    <h4 className="mb-2 text-2xl font-semibold text-gray-800 dark:text-white/90">Lead Details</h4>
+                    <p className="mb-6 text-sm text-gray-500 dark:text-gray-400 lg:mb-7">
+                        Detailed information about this lead
+                    </p>
+                </div>
+                {selectedLead && (
+                    <div className="space-y-6 px-2 max-h-[60vh] overflow-y-auto no-scrollbar">
+                        <div className="grid grid-cols-1 gap-3 md:grid-cols-3">
+                            <div>
+                                <p className="text-sm text-gray-500">Full Name</p>
+                                <p className="text-sm font-medium text-gray-800 capitalize dark:text-white">{selectedLead.fullName}</p>
+                            </div>
+                            <div>
+                                <p className="text-sm text-gray-500">Email</p>
+                                <p className="text-sm font-medium text-gray-800 dark:text-white">{selectedLead.email}</p>
+                            </div>
+                            <div>
+                                <p className="text-sm text-gray-500">Country</p>
+                                <p className="text-sm font-medium text-gray-800 dark:text-white">{selectedLead.countryOfResidence || "—"}</p>
+                            </div>
+                            <div>
+                                <p className="text-sm text-gray-500">Phone</p>
+                                <p className="text-sm font-medium text-gray-800 dark:text-white">{selectedLead.phone || "—"} </p>
+                            </div>
+                            <div>
+                                <p className="text-sm text-gray-500">City</p>
+                                <p className="text-sm font-medium text-gray-800 dark:text-white">{selectedLead.city || "—"}</p>
+                            </div>
+                            <div>
+                                <p className="text-sm text-gray-500">Course Preference</p>
+                                <p className="text-sm font-medium text-gray-800 dark:text-white">{selectedLead.coursePreference}</p>
+                            </div>
+                            <div>
+                                <p className="text-sm text-gray-500">Intended Intake</p>
+                                <p className="text-sm font-medium text-gray-800 dark:text-white">
+                                    {selectedLead.intendedIntake
+                                        ? moment(selectedLead.intendedIntake).format("MMM D, YYYY")
+                                        : "—"}
+                                </p>
+                            </div>
+                            <div>
+                                <p className="text-sm text-gray-500">Status</p>
+                                <span className={`inline-block rounded-full px-2 py-0.5 text-xs font-semibold ${getStatusColor(selectedLead.status)}`}>
+                                    {selectedLead.status.charAt(0).toUpperCase() + selectedLead.status.slice(1)}
+                                </span>
+                            </div>
+                            {user.role && user.role === "admin" && <div>
+                                <p className="text-sm text-gray-500">Source</p>
+                                <p className="text-sm font-medium text-gray-800 dark:text-white capitalize">
+                                    {selectedLead.source.replace(/_/g, " ")}
+                                </p>
+                            </div>}
+                            {user.role && user.role === "admin" && <div className="md:col-span-1">
+                                <p className="text-sm text-gray-500">Assigned Counselor</p>
+                                <p className="text-sm font-medium text-gray-800 dark:text-white">
+                                    {selectedLead.assignedCounselor?.name || selectedLead.assignedCounselor?.email || "Unassigned"}
+                                </p>
+                            </div>}
+                            <div className="col-span-3">
+                                <p className="text-sm text-gray-500">Extra Details</p>
+                                <div className="mt-1 text-sm text-gray-800 dark:text-white font-medium">
+                                    {selectedLead.extraDetails && typeof selectedLead.extraDetails === "object" ? (
+                                        Object.entries(selectedLead.extraDetails).map(([key, value]) => (
+                                            <div key={key} className="flex items-start mb-1">
+                                                <span className="font-medium text-gray-600 mr-1 dark:text-gray-400">
+                                                    {key.replace(/_/g, ' ').replace(/\?/g, '').replace(/\b\w/g, c => c.toUpperCase())}:
+                                                </span>
+                                                <span className="text-sm text-gray-800 dark:text-white font-medium">{String(value)}</span>
+                                            </div>
+                                        ))
+                                    ) : (
+                                        <span>{selectedLead.extraDetails || "N/A"}</span>
+                                    )}
+                                </div>
+                            </div>
+                        </div>
+
+                        {selectedLead.notes && selectedLead.notes.length > 0 && (
+                            <div>
+                                <h6 className="mb-3 text-base font-medium text-gray-800 dark:text-white/90">Notes</h6>
+                                <div className="space-y-3">
+                                    {selectedLead.notes.map((note, i) => (
+                                        <div key={i} className="border-l-4 border-indigo-500 pl-3 py-1">
+                                            <p className="text-sm text-gray-800 dark:text-white">{note.text}</p>
+                                            <p className="text-xs text-gray-500">
+                                                by {note.createdBy === user._id ? "You" : note.createdBy == selectedLead.assignedCounselor?._id ? "Counselor" : "Admin"} •{" "}
+                                                {moment(note.createdAt).format("MMM D, YYYY h:mm A")}
+                                            </p>
+                                        </div>
+                                    ))}
+                                </div>
+                            </div>
+                        )}
+                        <div className="mt-2">
+                            <Label>Add Note</Label>
+                            <TextArea
+                                value={newNote}
+                                onChange={setNewNote}
+                                className="w-full rounded-md border border-gray-300 p-2 text-sm"
+                                placeholder="Type your note here..."
+                            />
+                            <button
+                                onClick={handleAddNote}
+                                className="mt-2 rounded bg-indigo-600 px-3 py-2 text-sm text-white hover:bg-indigo-700"
+                                disabled={!newNote.trim()}
+                            >
+                                Add Note
+                            </button>
+                        </div>
+                    </div>
+                )}
+                <div className="flex items-center gap-3 px-2 mt-6 lg:justify-end">
+                    <Button size="sm" variant="outline" onClick={closeModal}>
+                        Close
+                    </Button>
+                </div>
+            </div>
+        </Modal>
+    )
+}
+
+
+function CreateLeadForm({ editModalOpen, setEditModalOpen, selectedLead, handleCreateLead, handleSaveLead, formData, setFormData, handleChange, errors, setErrors, user, allCounselors }: any) {
+    return (
+        <Modal isOpen={editModalOpen} onClose={() => setEditModalOpen(false)} className="max-w-[700px] m-4">
+            <div className="no-scrollbar relative w-full max-w-[700px] overflow-y-auto rounded-3xl bg-white p-4 dark:bg-gray-900 lg:p-11">
+                <div className="px-2 pr-14">
+                    <h4 className="mb-2 text-2xl font-semibold text-gray-800 dark:text-white/90">
+                        {selectedLead ? "Edit Lead" : "Add New Lead"}
+                    </h4>
+                    <p className="mb-6 text-sm text-gray-500 dark:text-gray-400 lg:mb-7">
+                        {selectedLead ? "Update lead information" : "Enter new lead details"}
+                    </p>
+                </div>
+                <form
+                    onSubmit={(e) => {
+                        e.preventDefault();
+                        selectedLead ? handleSaveLead() : handleCreateLead();
+                    }}
+                    className="px-2"
+                >
+                    <div className="space-y-4">
+                        <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+                            <div>
+                                <Label>Full Name *</Label>
+                                <Input
+                                    type="text"
+                                    name="fullName"
+                                    value={formData.fullName}
+                                    onChange={handleChange}
+                                    placeholder="e.g. John Doe"
+                                />
+                                {errors.fullName && <p className="mt-1 text-sm text-red-600">{errors.fullName}</p>}
+                            </div>
+                            <div>
+                                <Label>Email *</Label>
+                                <Input
+                                    type="email"
+                                    name="email"
+                                    value={formData.email}
+                                    onChange={handleChange}
+                                    placeholder="john@example.com"
+                                />
+                                {errors.email && <p className="mt-1 text-sm text-red-600">{errors.email}</p>}
+                            </div>
+                            <div>
+                                <Label>Phone</Label>
+                                <Input
+                                    type="text"
+                                    name="phone"
+                                    value={formData.phone}
+                                    onChange={handleChange}
+                                    placeholder="+91 98765 43210"
+                                />
+                            </div>
+                            <div>
+                                <Label>Country of Residence</Label>
+                                <Input
+                                    type="text"
+                                    name="countryOfResidence"
+                                    value={formData.countryOfResidence}
+                                    onChange={handleChange}
+                                    placeholder="e.g. India"
+                                />
+                            </div>
+                            <div>
+                                <Label>Course Preference *</Label>
+                                <Input
+                                    type="text"
+                                    name="coursePreference"
+                                    value={formData.coursePreference}
+                                    onChange={handleChange}
+                                    placeholder="e.g. MBA, Data Science"
+                                />
+                                {errors.coursePreference && (
+                                    <p className="mt-1 text-sm text-red-600">{errors.coursePreference}</p>
+                                )}
+                            </div>
+                            <div>
+                                <Label>Intended Intake</Label>
+                                <Input
+                                    type="date"
+                                    name="intendedIntake"
+                                    value={formData.intendedIntake}
+                                    onChange={handleChange}
+                                />
+                                {errors.intendedIntake && (
+                                    <p className="mt-1 text-sm text-red-600">{errors.intendedIntake}</p>
+                                )}
+                            </div>
+                            <div>
+                                <Label>Status *</Label>
+                                <Select
+                                    name="status"
+                                    defaultValue={formData.status}
+                                    options={LeadStatuses.map((s) => ({
+                                        value: s,
+                                        label: s.charAt(0).toUpperCase() + s.slice(1)
+                                    }))}
+                                    onChange={(value) => setFormData((prev) => ({ ...prev, status: value }))}
+                                />
+                            </div>
+                            {user.role && user.role === "admin" && <div>
+                                <Label>Source *</Label>
+                                <Select
+                                    name="source"
+                                    defaultValue={formData.source}
+                                    options={LeadSources.map((s) => ({
+                                        value: s,
+                                        label: s.replace(/_/g, " ").replace(/\b\w/g, (l) => l.toUpperCase())
+                                    }))}
+                                    onChange={(value) => setFormData((prev) => ({ ...prev, source: value }))}
+                                />
+                                {errors.source && <p className="mt-1 text-sm text-red-600">{errors.source}</p>}
+                            </div>}
+                            {user.role && user.role === "admin" && <div className="md:col-span-2">
+                                <Label>Assigned Counselor</Label>
+                                <Select
+                                    name="assignedCounselor"
+                                    defaultValue={formData.assignedCounselor}
+                                    options={allCounselors.map((c) => ({
+                                        value: c._id,
+                                        label: c.name || c.email
+                                    }))}
+                                    onChange={(value) => setFormData((prev) => ({ ...prev, assignedCounselor: value }))}
+                                />
+                            </div>}
+                        </div>
+                    </div>
+                    <div className="flex items-center gap-3 px-2 mt-6 lg:justify-end">
+                        <button
+                            type="button"
+                            onClick={() => setEditModalOpen(false)}
+                            className="rounded-md border border-gray-300 bg-transparent px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-100 dark:border-gray-600 dark:text-gray-300 dark:hover:bg-gray-700"
+                        >
+                            Cancel
+                        </button>
+                        <button
+                            type="submit"
+                            className="rounded-md bg-indigo-600 px-4 py-2 text-sm font-medium text-white hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                        >
+                            {selectedLead ? "Save Changes" : "Create Lead"}
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </Modal>
+    )
 }

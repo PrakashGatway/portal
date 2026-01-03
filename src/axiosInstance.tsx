@@ -27,7 +27,6 @@ api.interceptors.response.use(
   (response) => response,
   (error) => {
     if (error.response) {
-      // Handle different status codes
       if (error.response.status === 401) {
         // localStorage.removeItem('accessToken');
         // localStorage.removeItem('refreshToken');
