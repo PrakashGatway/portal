@@ -32,12 +32,16 @@ const LeadStatuses = [
 
 
 const LeadSources = [
-    "googleAds",
-    "website",
-    "education_fair",
-    "referral",
-    "social_media",
-    "partner",
+    'googleAds',
+    'website',
+    'education_fair',
+    'referral',
+    'metaAds',
+    'social_media',
+    'partner',
+    'facebook',
+    "excel",
+    "other"
 ];
 
 export default function LeadManagement() {
@@ -50,7 +54,6 @@ export default function LeadManagement() {
     const [isDeleteModalOpen, setDeleteModalOpen] = useState(false);
     const [allCounselors, setAllCounselors] = useState([]);
     const { user } = useAuth();
-    const [activeTab, setActiveTab] = useState("all");
 
 
     const [selectedLeads, setSelectedLeads] = useState(new Set()); // Track selected lead IDs
@@ -224,7 +227,7 @@ export default function LeadManagement() {
     // ]);
 
     useEffect(() => {
-        if (user?.role === "admin") {
+        if (user?.role != "counselor") {
             fetchCounselors();
         }
     }, [user?.role]);
@@ -277,7 +280,7 @@ export default function LeadManagement() {
 
     const fetchStats = async () => {
         try {
-            const response = await api.get("/leads/stats");
+            const response = await api.get(`/leads/stats?source=${filters.source}&assignedCounselor=${filters.assignedCounselor}&dateRange=${filters.dateRange}&search=${filters.search}`);
             setStats(response.data?.stats || []);
         } catch (error) {
             toast.error(error?.message || "Failed to fetch leads");
@@ -288,7 +291,7 @@ export default function LeadManagement() {
 
     useEffect(() => {
         fetchStats();
-    }, [])
+    }, [filters.source, filters.assignedCounselor, filters.dateRange, filters.search]);
 
     useEffect(() => {
         let pollInterval = null;
@@ -1027,7 +1030,7 @@ export default function LeadManagement() {
                     )}
                 </div>
                 {showAppliedFilters ? (
-                    <div className={`z-50 duration-300 ease-in-out h-full bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 ${showAppliedFilters ? "w-100" : "w-0"}`}>
+                    <div className={`duration-300 ease-in-out h-full bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 ${showAppliedFilters ? "w-100" : "w-0"}`}>
                         <div className="p-2">
                             <div className="flex items-center justify-between mb-4">
                                 <h3 className="text-lg font-semibold text-gray-800 dark:text-white">Applied Filters</h3>
@@ -1040,7 +1043,7 @@ export default function LeadManagement() {
                             </div>
 
                             {/* Activity Stats Section */}
-                            <div className="mb-6 p-3 bg-gray-50 dark:bg-gray-900 rounded-lg">
+                            {/* <div className="mb-6 p-3 bg-gray-50 dark:bg-gray-900 rounded-lg">
                                 <h4 className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-3">Lead Activity</h4>
                                 <div className="space-y-2">
                                     <div className="flex items-center justify-between">
@@ -1058,7 +1061,7 @@ export default function LeadManagement() {
                                         <span className="font-medium text-gray-800 dark:text-white">{leadStats.messages}</span>
                                     </div>
                                 </div>
-                            </div>
+                            </div> */}
 
                             <div className="space-y-4">
                                 <div>
