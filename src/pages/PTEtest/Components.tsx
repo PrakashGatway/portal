@@ -416,7 +416,7 @@ mx-auto">
                   audioUrl={qDoc.typeSpecific?.audio
                     ? audioBaseUrl + qDoc.typeSpecific.audio
                     : undefined}
-                  text={qDoc.questionText}   // 🔁 fallback
+                  text={qDoc.questionText}   
                   delayBeforePlay={3000}
                   onPlaybackEnd={onTTSFinished}
                 />
@@ -442,7 +442,7 @@ mx-auto">
                   audioUrl={qDoc.typeSpecific?.audio
                     ? audioBaseUrl + qDoc.typeSpecific.audio
                     : undefined}
-                  text={qDoc.questionText}   // 🔁 fallback
+                  text={qDoc.questionText}   
                   delayBeforePlay={3000}
                   onPlaybackEnd={onTTSFinished}
                 />
@@ -868,12 +868,7 @@ mx-auto">
                   <div className="font-semibold text-lg text-slate-800 dark:text-slate-100">
                     Question
                   </div>
-                  <button
-                    onClick={() => onReviewSection("section_review")}
-                    className="text-sm font-semibold px-3 py-1 rounded-full bg-blue-800 text-white dark:bg-blue-500"
-                  >
-                    Review Section
-                  </button>
+                  
                 </div>
 
                 <div className="flex flex-wrap gap-3 text-sm mb-4 text-slate-700 dark:text-slate-300">
@@ -990,7 +985,7 @@ mx-auto">
                       setCrossedOptions([]);
                     }}
                   >
-                    {isLastQuestionInCurrentSection ? "Review Section" : "Next"}
+                    {isLastQuestionInCurrentSection ? "Next Section" : "Next"}
                   </button>
                 </div>
               </div>
@@ -1043,10 +1038,11 @@ interface SectionInstructionsProps {
   } | null;
   activeSectionIndex: number;
   setCurrentScreen: (screen: "question") => void;
+  saveCurrentQuestionProgress: (opts?: { silent?: boolean }) => Promise<void>; 
 }
 
 export const SectionInstructions: React.FC<SectionInstructionsProps> = React.memo(
-  ({ currentSection, activeSectionIndex, setCurrentScreen }) => {
+  ({ currentSection, activeSectionIndex, setCurrentScreen ,saveCurrentQuestionProgress}) => {
     if (!currentSection) return null;
 
     const sectionName =
@@ -1057,6 +1053,17 @@ export const SectionInstructions: React.FC<SectionInstructionsProps> = React.mem
     const timedText = sectionDuration
       ? `${sectionDuration} minutes`
       : "Untimed (no countdown)";
+
+
+      const handleStartSection = async () => {
+      await saveCurrentQuestionProgress({
+        silent: true,
+        phase: "in_section",
+        metaSectionIndex: activeSectionIndex,
+        metaQuestionIndex: 0, 
+      });
+      setCurrentScreen("question");
+    };
 
     return (
       <div className="max-w-7xl mx-auto p-6">
@@ -1098,9 +1105,7 @@ export const SectionInstructions: React.FC<SectionInstructionsProps> = React.mem
                 <Button
                   size="sm"
                   className="flex items-center gap-2 rounded-xl border-2 border-slate-300 dark:border-slate-600 px-5 py-2 text-sm font-semibold text-slate-700 dark:text-slate-200 hover:bg-slate-50 hover:text-slate-900 dark:hover:bg-slate-800"
-                  onClick={() => {
-                    setCurrentScreen("question");
-                  }}
+                  onClick={handleStartSection}
                 >
                   Start Section
                 </Button>
@@ -1252,7 +1257,9 @@ export const SectionReview: React.FC<SectionReviewProps> = React.memo(
                   className="p-1.5 bg-blue-800 text-slate-100 font-semibold border-slate-200 rounded-full px-4"
                   onClick={handleFinishSectionReview}
                   disabled={submitting}
+                  
                 >
+                  
                   {isLastSection ? "Submit" : "Next"}
                 </button>
               </div>

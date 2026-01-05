@@ -705,7 +705,7 @@ export const PteIntroScreen: React.FC<IntroScreenProps> = React.memo(
                                         swForceStop();
 
                                         if (isLast) {
-                                            setCurrentScreen("question");
+                                           setCurrentScreen("section_instructions");
                                         } else {
                                             setIntroPage((p) => p + 1);
                                         }

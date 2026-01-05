@@ -24,14 +24,14 @@ interface QuestionDoc {
   questionText: string;
   questionType: string;
   difficulty?: string;
-  stimulus?: string; // for reading comp passage, etc.
+  stimulus?: string; 
   options?: {
     label?: string;
     text: string;
   }[];
   marks?: number;
   negativeMarks?: number;
-  correctOptionIndex?: number | null; // used for review screen
+  correctOptionIndex?: number | null;
   dataInsights?: any;
 }
 
@@ -52,7 +52,7 @@ interface AttemptSection {
   sectionConfigId?: string | null;
   sectionRef?: string | null;
   name?: string;
-  durationMinutes?: number; // if missing => untimed section
+  durationMinutes?: number; 
   startedAt?: string;
   endedAt?: string;
   status: "not_started" | "in_progress" | "completed";
@@ -74,7 +74,7 @@ interface OverallStats {
   rawScore: number;
 }
 
-// We still send gmatPhase since your backend already expects it in save-progress
+
 type AttemptPhase = "section_instructions" | "in_section" | "review";
 
 interface GmatMetaLike {
@@ -105,7 +105,7 @@ interface TestAttempt {
   completedAt?: string;
   sections: AttemptSection[];
   overallStats?: OverallStats;
-  gmatMeta?: GmatMetaLike; // reused to resume position if backend uses it
+  gmatMeta?: GmatMetaLike; 
 }
 
 interface StartAttemptResponse {
@@ -191,13 +191,13 @@ const [currentScreen, setCurrentScreen] = useState('intro');
     [isCompleted, submitting]
   );
 
-  // Memoize sectionQuestions - FIXED: This hook must be called unconditionally
+  
   const sectionQuestions = useMemo(() =>
     currentSection?.questions || [],
     [currentSection?.questions]
   );
 
-  // Memoize startAttempt callback
+  
   const startAttempt = useCallback(
     async () => {
       if (!testTemplateId) {
@@ -315,7 +315,7 @@ const [currentScreen, setCurrentScreen] = useState('intro');
     );
   }, [attempt, currentSection, currentScreen, isCompleted]);
 
-  // Timer countdown effect
+  
   useEffect(() => {
     if (!attempt) return;
     if (!timerRunning) return;
@@ -358,7 +358,7 @@ const [currentScreen, setCurrentScreen] = useState('intro');
     currentSection,
   ]);
 
-  // Timer expiration effect
+  
   useEffect(() => {
     if (!attempt || !currentSection) return;
     if (!currentSection.durationMinutes) return;
@@ -516,15 +516,24 @@ const [currentScreen, setCurrentScreen] = useState('intro');
 
     await saveCurrentQuestionProgress({
       silent: true,
-      phase: "review",
+      phase: "section_instructions",
       metaSectionIndex: activeSectionIndex,
       metaQuestionIndex: activeQuestionIndex,
     });
 
+    if (isLastSection) {
+      submitTestAttempt();
+      setCurrentScreen("results");
+      return;
+    }
+
+        const nextIndex = activeSectionIndex + 1;
+    setActiveSectionIndex(nextIndex);
+    setActiveQuestionIndex(0);
     toast.info(
       "You've reached the end of this section. Review your answers before moving on."
     );
-    setCurrentScreen("section_review");
+    setCurrentScreen("section_instructions");
   }, [attempt, currentSection, currentQuestion, activeQuestionIndex, goToQuestion, saveCurrentQuestionProgress, activeSectionIndex]);
 
   const handleFinishSectionReview = useCallback(async () => {
@@ -546,7 +555,7 @@ const [currentScreen, setCurrentScreen] = useState('intro');
     const nextIndex = activeSectionIndex + 1;
     setActiveSectionIndex(nextIndex);
     setActiveQuestionIndex(0);
-    setCurrentScreen("question");
+    setCurrentScreen("section_instructions");
   }, [attempt, currentSection, saveCurrentQuestionProgress, activeSectionIndex, activeQuestionIndex, isLastSection]);
 
   const submitTestAttempt = useCallback(async () => {
@@ -625,7 +634,7 @@ const [currentScreen, setCurrentScreen] = useState('intro');
 
         Object.assign(q, patch);
 
-        resolve(); // resolve AFTER state set
+        resolve(); 
         return clone;
       });
     });
@@ -708,7 +717,7 @@ const [currentScreen, setCurrentScreen] = useState('intro');
           navigateBack={memoizedNavigateBack}
         />
 
-        {/* Scrollable main area between header & footer */}
+      
         <div className="pt-14 pb-14">
 
           {currentScreen === "intro" && (
@@ -726,6 +735,7 @@ const [currentScreen, setCurrentScreen] = useState('intro');
               currentSection={currentSection}
               activeSectionIndex={activeSectionIndex}
               setCurrentScreen={(screen) => memoizedSetCurrentScreen(screen)}
+              saveCurrentQuestionProgress={saveCurrentQuestionProgress}
             />
           )}
           {currentScreen === "question" && currentSection && currentQuestion && (
@@ -750,23 +760,7 @@ const [currentScreen, setCurrentScreen] = useState('intro');
               goNextQuestion={goNextQuestion}
             />
           )}
-          {currentScreen === "section_review" && attempt && currentSection && (
-            <SectionReview
-              currentSection={currentSection}
-              attempt={attempt}
-              activeQuestionIndex={activeQuestionIndex}
-              isLastSection={isLastSection}
-              submitting={submitting}
-              showingReviewScreen={showingReviewScreen}
-              filter={filter}
-              setFilter={memoizedSetFilter}
-              setShowingReviewScreen={memoizedSetShowingReviewScreen}
-              setActiveQuestionIndex={memoizedSetActiveQuestionIndex}
-              setCurrentScreen={memoizedSetCurrentScreen}
-              saveCurrentQuestionProgress={saveCurrentQuestionProgress}
-              handleFinishSectionReview={handleFinishSectionReview}
-            />
-          )}
+         
           {currentScreen === "results" && attempt && (
             <GRETestResults
               attempt={attempt}

@@ -941,7 +941,7 @@ const SpeakingTestSection: React.FC<SpeakingTestSectionProps> = ({
       
       files['metadata.json'] = new TextEncoder().encode(JSON.stringify(metadata, null, 2));
       
-      setRecordingStatus("Creating ZIP file...");
+    
       const zipped = zipSync(files, { level: 6, mtime: new Date() });
       const zipBlob = new Blob([zipped], { type: 'application/zip' });
       

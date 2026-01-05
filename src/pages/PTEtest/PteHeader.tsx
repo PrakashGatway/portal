@@ -84,7 +84,7 @@ export const GRETestHead: React.FC<GRETestHeaderProps> = React.memo(
             }
         };
 
-        // Instructions screen में अलग UI
+       
         if (currentScreen === "instructions") {
             return (
                 <>
