@@ -485,35 +485,41 @@ export default function LeadManagement() {
     };
 
     const handleBulkAssign = async () => {
-  if (!bulkCounselor) {
-    toast.warn("Please select a counselor");
-    return;
-  }
+        if (!bulkCounselor) {
+            toast.warn("Please select a counselor");
+            return;
+        }
 
-  if (selectedLeads.size === 0) {
-    toast.warn("No leads selected");
-    return;
-  }
+        if (selectedLeads.size === 0) {
+            toast.warn("No leads selected");
+            return;
+        }
 
-  try {
-    setBulkAssignLoading(true);
+        try {
+            setBulkAssignLoading(true);
+            const confirmed = window.confirm("Are you sure you want to assign this counselor to the selected leads?");
 
-    await api.put("/leads/bulk/assign", {
-      counselorId: bulkCounselor,
-      leadIds: Array.from(selectedLeads),
-    });
+            if (!confirmed) {
+                setBulkAssignLoading(false);
+                return;
+            }
 
-    toast.success("Counselor assigned successfully");
-    setSelectedLeads(new Set());
-    setSelectAll(false);
-    setBulkCounselor("");
-    fetchLeads();
-  } catch (error) {
-    toast.error(error.response?.data?.message || "Failed to assign counselor");
-  } finally {
-    setBulkAssignLoading(false);
-  }
-};
+            await api.put("/leads/bulk/assign", {
+                counselorId: bulkCounselor,
+                leadIds: Array.from(selectedLeads),
+            });
+
+            toast.success("Counselor assigned successfully");
+            setSelectedLeads(new Set());
+            setSelectAll(false);
+            setBulkCounselor("");
+            fetchLeads();
+        } catch (error) {
+            toast.error(error.message || "Failed to assign counselor");
+        } finally {
+            setBulkAssignLoading(false);
+        }
+    };
 
 
     const handleCreateLead = async () => {
