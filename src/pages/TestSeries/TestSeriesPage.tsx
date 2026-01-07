@@ -110,13 +110,11 @@ const DEFAULT_TEST_TYPE_OPTIONS = [
 ];
 
 const STATUS_OPTIONS = [
-  { value: "all", label: "All Status" },
   { value: "active", label: "Active Only" },
   { value: "inactive", label: "Inactive Only" },
 ];
 
 const PUBLISH_OPTIONS = [
-  { value: "all", label: "All" },
   { value: "published", label: "Published" },
   { value: "draft", label: "Draft" },
 ];
@@ -197,7 +195,7 @@ export default function TestSeriesManagementPage() {
   // Fetch data functions
   const fetchExams = async () => {
     try {
-      const res = await api.get("/test/exams", { params: { isActive: true, limit: 200, category:filters.categoryId} });
+      const res = await api.get("/test/exams", { params: { isActive: true, limit: 200, category: watchCategory || filters.categoryId, method: "true" } });
       if (res.data?.success) {
         setExams(res.data.data || res.data?.data?.data || []);
       } else {
@@ -283,14 +281,21 @@ export default function TestSeriesManagementPage() {
   };
 
   useEffect(() => {
-    fetchExams();
-  }, [filters.categoryId]);
+    if (filters.categoryId || watchCategory) {
+      fetchExams();
+    }
+  }, [filters.categoryId, watchCategory]);
 
   // Initial data fetch
   useEffect(() => {
     fetchCategories();
-    fetchAvailableTests();
   }, []);
+
+  useEffect(() => {
+    if (watchExam) {
+      fetchAvailableTests();
+    }
+  }, [])
 
   // Fetch series when filters change
   useEffect(() => {
@@ -873,7 +878,7 @@ export default function TestSeriesManagementPage() {
             >
               <div className="flex items-center justify-between border-b border-gray-200 px-4 py-3 dark:border-gray-800">
                 <div>
-                  <p className="flex items-center gap-2 text-sm font-semibold text-gray-900 dark:text-gray-100">
+                  <p className="flex items-center gap-2 text-lg font-semibold text-gray-900 dark:text-gray-100">
                     {editingId ? "Edit Test Series" : "Create Test Series"}
                     <Package className="h-3 w-3 text-gray-400" />
                   </p>
@@ -926,11 +931,23 @@ export default function TestSeriesManagementPage() {
 
                     <div className="grid gap-3 sm:grid-cols-2">
                       <div>
+                        <Label>Category *</Label>
+                        <Select
+                          defaultValue={watchCategory || ""}
+                          options={[
+                            ...categories.map((c) => ({ value: c._id, label: c.name })),
+                          ]}
+                          onChange={(value: string) => setValue("category", value)}
+                        />
+                        {errors.category && (
+                          <p className="mt-1 text-xs text-red-500">Category is required</p>
+                        )}
+                      </div>
+                      <div>
                         <Label>Exam *</Label>
                         <Select
-                          defaultValue={watchExam}
+                          defaultValue={watchExam || ""}
                           options={[
-                            { value: "", label: "Select exam" },
                             ...exams.map((e) => ({ value: e._id, label: e.name })),
                           ]}
                           onChange={(value: string) => setValue("exam", value)}
@@ -940,20 +957,7 @@ export default function TestSeriesManagementPage() {
                         )}
                       </div>
 
-                      <div>
-                        <Label>Category *</Label>
-                        <Select
-                          defaultValue={watchCategory}
-                          options={[
-                            { value: "", label: "Select category" },
-                            ...categories.map((c) => ({ value: c._id, label: c.name })),
-                          ]}
-                          onChange={(value: string) => setValue("category", value)}
-                        />
-                        {errors.category && (
-                          <p className="mt-1 text-xs text-red-500">Category is required</p>
-                        )}
-                      </div>
+
                     </div>
 
                     <div>

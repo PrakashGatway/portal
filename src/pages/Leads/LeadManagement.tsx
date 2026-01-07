@@ -440,7 +440,7 @@ export default function LeadManagement() {
             phone: lead.phone || "",
             countryOfResidence: lead.countryOfResidence || "",
             intendedIntake: lead.intendedIntake
-                ? moment(lead.intendedIntake).format("YYYY-MM-DD")
+                ? lead.intendedIntake
                 : null,
             coursePreference: lead.coursePreference || "",
             status: lead.status || "new",
@@ -462,9 +462,7 @@ export default function LeadManagement() {
             newErrors.coursePreference = "Course preference is required";
         }
         if (!formData.source) newErrors.source = "Source is required";
-        if (formData.intendedIntake && new Date(formData.intendedIntake) <= new Date()) {
-            newErrors.intendedIntake = "Intake must be in the future";
-        }
+
         setErrors(newErrors);
         return Object.keys(newErrors).length === 0;
     };
@@ -1235,7 +1233,7 @@ function LeadModal({ isOpen, closeModal, selectedLead, handleAddNote, newNote, s
                                 <p className="text-sm text-gray-500">Intended Intake</p>
                                 <p className="text-sm font-medium text-gray-800 dark:text-white">
                                     {selectedLead.intendedIntake
-                                        ? moment(selectedLead.intendedIntake).format("MMM D, YYYY")
+                                        ? selectedLead.intendedIntake
                                         : "—"}
                                 </p>
                             </div>
@@ -1400,7 +1398,7 @@ function CreateLeadForm({ editModalOpen, setEditModalOpen, selectedLead, handleC
                             <div>
                                 <Label>Intended Intake</Label>
                                 <Input
-                                    type="date"
+                                    type="text"
                                     name="intendedIntake"
                                     value={formData.intendedIntake}
                                     onChange={handleChange}
