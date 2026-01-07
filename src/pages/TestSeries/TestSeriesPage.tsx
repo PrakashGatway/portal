@@ -192,7 +192,6 @@ export default function TestSeriesManagementPage() {
   const watchIsActive = watch("isActive");
   const watchIsPublished = watch("isPublished");
 
-  // Fetch data functions
   const fetchExams = async () => {
     try {
       const res = await api.get("/test/exams", { params: { isActive: true, limit: 200, category: watchCategory || filters.categoryId, method: "true" } });
@@ -223,7 +222,7 @@ export default function TestSeriesManagementPage() {
 
   const fetchAvailableTests = async () => {
     try {
-      const res = await api.get("/mcu/test", { params: { isActive: true, limit: 200 } });
+      const res = await api.get("/mcu/test", { params: { isActive: true, limit: 200 ,examId: watchExam } });
       if (res.data?.success) {
         setAvailableTests(res.data.data || res.data?.data?.data || []);
       } else {
@@ -246,10 +245,10 @@ export default function TestSeriesManagementPage() {
       };
 
       if (debouncedSearch) params.search = debouncedSearch;
-      if (filters.examId !== "all") params.examId = filters.examId;
-      if (filters.categoryId !== "all") params.categoryId = filters.categoryId;
-      if (filters.status !== "all") params.isActive = filters.status === "active";
-      if (filters.publishStatus !== "all") params.isPublished = filters.publishStatus === "published";
+      if (filters.examId) params.examId = filters.examId;
+      if (filters.categoryId) params.categoryId = filters.categoryId;
+      if (filters.status) params.isActive = filters.status === "active";
+      if (filters.publishStatus) params.isPublished = filters.publishStatus === "published";
 
       const res = await api.get("/mcu/series/admin", { params });
 
@@ -295,7 +294,7 @@ export default function TestSeriesManagementPage() {
     if (watchExam) {
       fetchAvailableTests();
     }
-  }, [])
+  }, [watchExam])
 
   // Fetch series when filters change
   useEffect(() => {
@@ -685,13 +684,13 @@ export default function TestSeriesManagementPage() {
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: -10 }}
               transition={{ duration: 0.2 }}
-              className="group rounded-2xl border border-gray-200 bg-white p-4 shadow-sm transition hover:-translate-y-0.5 hover:shadow-md dark:border-gray-800 dark:bg-gray-900"
+              className="group rounded-2xl border border-gray-200 bg-white p-4 transition hover:-translate-y-0.5 hover:shadow-md dark:border-gray-800 dark:bg-gray-900"
             >
-              <div className="space-y-3">
+              <div className="space-y-2">
                 {/* Header */}
                 <div className="flex items-start justify-between">
                   <div className="flex-1">
-                    <h3 className="text-base font-semibold text-gray-900 dark:text-gray-100">
+                    <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100">
                       {series.title}
                     </h3>
                     {series.description && (
@@ -702,7 +701,7 @@ export default function TestSeriesManagementPage() {
                   </div>
 
                   {/* Status badges */}
-                  <div className="flex flex-col gap-1">
+                  <div className="flex flex-row gap-1">
                     {series.isPublished ? (
                       <span className="inline-flex items-center gap-1 rounded-full bg-green-50 px-2 py-0.5 text-xs text-green-700 dark:bg-green-900/40 dark:text-green-300">
                         <Globe className="h-3 w-3" />

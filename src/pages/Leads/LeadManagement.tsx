@@ -54,6 +54,8 @@ export default function LeadManagement() {
     const [isDeleteModalOpen, setDeleteModalOpen] = useState(false);
     const [allCounselors, setAllCounselors] = useState([]);
     const { user } = useAuth();
+    const [bulkCounselor, setBulkCounselor] = useState("");
+    const [bulkAssignLoading, setBulkAssignLoading] = useState(false);
 
 
     const [selectedLeads, setSelectedLeads] = useState(new Set()); // Track selected lead IDs
@@ -482,6 +484,38 @@ export default function LeadManagement() {
         }
     };
 
+    const handleBulkAssign = async () => {
+  if (!bulkCounselor) {
+    toast.warn("Please select a counselor");
+    return;
+  }
+
+  if (selectedLeads.size === 0) {
+    toast.warn("No leads selected");
+    return;
+  }
+
+  try {
+    setBulkAssignLoading(true);
+
+    await api.put("/leads/bulk/assign", {
+      counselorId: bulkCounselor,
+      leadIds: Array.from(selectedLeads),
+    });
+
+    toast.success("Counselor assigned successfully");
+    setSelectedLeads(new Set());
+    setSelectAll(false);
+    setBulkCounselor("");
+    fetchLeads();
+  } catch (error) {
+    toast.error(error.response?.data?.message || "Failed to assign counselor");
+  } finally {
+    setBulkAssignLoading(false);
+  }
+};
+
+
     const handleCreateLead = async () => {
         if (!validateForm()) return;
         try {
@@ -822,18 +856,42 @@ export default function LeadManagement() {
                                         Reset Filters
                                     </button>
                                     {selectedLeads.size > 0 && (
-                                        <div className="flex items-center justify-between rounded-lg bg-indigo-50 dark:bg-indigo-900/20 ps-2 sticky top-0 z-10">
+                                        <div className="flex items-center gap-2 rounded-lg bg-indigo-50 dark:bg-indigo-900/20 ps-2 sticky top-0 z-10">
                                             <span className="text-sm font-medium text-indigo-800 dark:text-indigo-200">
-                                                {selectedLeads.size} lead{selectedLeads.size > 1 ? 's' : ''}
+                                                {selectedLeads.size} lead{selectedLeads.size > 1 ? "s" : ""}
                                             </span>
+
+                                            {/* Counselor Select */}
+                                            <select
+                                                value={bulkCounselor}
+                                                onChange={(e) => setBulkCounselor(e.target.value)}
+                                                className="rounded-md border border-gray-300 bg-white px-2 py-1 text-sm dark:bg-gray-800 dark:border-gray-600"
+                                            >
+                                                <option value="">Assign Counselor</option>
+                                                {allCounselors.map((c) => (
+                                                    <option key={c._id} value={c._id}>
+                                                        {c.name || c.email}
+                                                    </option>
+                                                ))}
+                                            </select>
+
+                                            <button
+                                                onClick={handleBulkAssign}
+                                                disabled={!bulkCounselor || bulkAssignLoading}
+                                                className="rounded bg-indigo-600 px-3 py-2 text-sm text-white hover:bg-indigo-700 disabled:opacity-50"
+                                            >
+                                                Assign
+                                            </button>
+
                                             <button
                                                 onClick={handleBulkDelete}
-                                                className="rounded bg-red-600 px-3 py-2 rounded-lg text-sm text-white hover:bg-red-700"
+                                                className="rounded bg-red-600 px-3 py-2 text-sm text-white hover:bg-red-700"
                                             >
-                                                Delete Selected
+                                                Delete
                                             </button>
                                         </div>
                                     )}
+
                                     <button
                                         onClick={() => setShowAppliedFilters(!showAppliedFilters)}
                                         className="flex items-center gap-2 px-3 py-2 rounded-md border border-gray-300 bg-white text-gray-700 hover:bg-gray-50 dark:border-gray-600 dark:bg-gray-800 dark:text-white dark:hover:bg-gray-700"
