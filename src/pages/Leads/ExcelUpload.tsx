@@ -39,6 +39,9 @@ export default function ExcelUpload({
     const [mappingStats, setMappingStats] = useState({ mapped: 0, total: 0 });
     const [uploading, setUploading] = useState(false);
     const [uploadProgress, setUploadProgress] = useState(0);
+    const [extraFieldConsent, setExtraFieldConsent] = useState({});
+
+
 
     // Calculate mapping stats whenever columnMapping changes
     useEffect(() => {
@@ -50,6 +53,11 @@ export default function ExcelUpload({
             });
         }
     }, [columnMapping, excelHeaders]);
+
+    const unmappedColumns = excelHeaders.filter(
+        col => !columnMapping[col]
+    );
+
 
     const handleFileUpload = (file) => {
         if (!file) return;
@@ -119,50 +127,60 @@ export default function ExcelUpload({
         reader.readAsArrayBuffer(file);
     };
 
-    const buildLeadsFromMapping = () => {
-        const usedFields = Object.values(columnMapping).filter(Boolean);
+const buildLeadsFromMapping = () => {
+    const usedFields = Object.values(columnMapping).filter(Boolean);
 
-        // Prevent duplicate mapping
-        const duplicates = usedFields.filter(
-            (v, i) => usedFields.indexOf(v) !== i
-        );
-        if (duplicates.length) {
-            toast.error("Each Lead field can be mapped only once");
-            return null;
-        }
+    const duplicates = usedFields.filter(
+        (v, i) => usedFields.indexOf(v) !== i
+    );
+    if (duplicates.length) {
+        toast.error("Each Lead field can be mapped only once");
+        return null;
+    }
 
-        const leads = excelRows.map((row, index) => {
-            const lead = {};
+    const leads = excelRows.map((row) => {
+        const lead = {};
+        const extraDetails = {};
 
-            Object.entries(columnMapping).forEach(([excelCol, leadField]) => {
-                if (!leadField) return;
+        Object.entries(row).forEach(([excelCol, rawValue]) => {
+            const mappedField = columnMapping[excelCol];
+            const consent = extraFieldConsent[excelCol];
+            let value = rawValue;
 
-                let value = row[excelCol];
+            if (value === null || value === undefined || value === "") return;
 
-                if (leadField === "intendedIntake" && value) {
-                    // Try to parse date
+            if (mappedField) {
+                if (mappedField === "intendedIntake") {
                     const date = new Date(value);
                     if (!isNaN(date.getTime())) {
-                        value = date.toISOString().split('T')[0];
+                        value = date.toISOString().split("T")[0];
                     }
                 }
-
-                lead[leadField] = String(value).trim();
-            });
-
-            // Defaults
-            lead.status = lead.status || "new";
-            lead.source = "excel";
-
-            return lead;
+                lead[mappedField] = String(value).trim();
+            } 
+            else if (consent === true) {
+                extraDetails[excelCol] = String(value).trim();
+            }
         });
 
-        return leads;
-    };
+        if (Object.keys(extraDetails).length > 0) {
+            lead.extraDetails = extraDetails;
+        }
+
+        lead.status = lead.status || "new";
+        lead.source = lead.source || "excel";
+
+        return lead;
+    });
+
+    return leads;
+};
+
 
     const handleUpload = async () => {
         const leads = buildLeadsFromMapping();
         if (!leads) return;
+        console.log(leads);
 
         if (!leads.length) {
             toast.warn("No leads to upload");
@@ -333,45 +351,94 @@ export default function ExcelUpload({
                     </div>
 
                     <div className="grid grid-cols-1 lg:grid-cols-2 gap-3 max-h-96 overflow-y-auto p-1">
-                        {excelHeaders.map((col) => (
-                            <div key={col} className="flex items-center gap-3 p-3 rounded-lg border border-gray-200 dark:border-gray-700 hover:border-indigo-300 dark:hover:border-indigo-700 transition-colors">
-                                <div className="flex-1 min-w-0">
-                                    <div className="flex items-center gap-2 mb-1">
-                                        <p className="text-sm font-medium text-gray-800 dark:text-white truncate">
-                                            {col}
-                                        </p>
-                                        {columnMapping[col] && LEAD_FIELD_OPTIONS.find(f => f.value === columnMapping[col])?.required && (
-                                            <span className="text-xs text-red-500 font-bold">*</span>
-                                        )}
+                        {excelHeaders.map((col) => {
+                            const isMapped = Boolean(columnMapping[col]);
+
+                            return (
+                                <div
+                                    key={col}
+                                    className="p-3 rounded-lg border border-gray-200 dark:border-gray-700 space-y-2"
+                                >
+                                    {/* Column header */}
+                                    <div className="flex items-center gap-3">
+                                        <div className="flex-1 min-w-0">
+                                            <p className="text-sm font-medium truncate">{col}</p>
+                                            <p className="text-xs text-gray-500 truncate">
+                                                Sample: {excelRows[0]?.[col]?.toString().slice(0, 30) || "Empty"}
+                                            </p>
+                                        </div>
+
+                                        <select
+                                            value={columnMapping[col] || ""}
+                                            onChange={(e) => {
+                                                const value = e.target.value;
+                                                setColumnMapping((prev) => ({
+                                                    ...prev,
+                                                    [col]: value,
+                                                }));
+
+                                                // Reset extra detail choice if mapped
+                                                if (value) {
+                                                    setExtraFieldConsent((prev) => {
+                                                        const copy = { ...prev };
+                                                        delete copy[col];
+                                                        return copy;
+                                                    });
+                                                }
+                                            }}
+                                            className="w-48 rounded-md border px-3 py-2 text-sm"
+                                        >
+                                            <option value="">— Not Mapped —</option>
+                                            {LEAD_FIELD_OPTIONS.map((f) => (
+                                                <option key={f.value} value={f.value}>
+                                                    {f.label} {f.required && "*"}
+                                                </option>
+                                            ))}
+                                        </select>
                                     </div>
-                                    <p className="text-xs text-gray-500 dark:text-gray-400 truncate">
-                                        Sample: {excelRows[0]?.[col]?.toString().slice(0, 30) || 'Empty'}
-                                    </p>
+
+                                    {/* Extra Detail Question */}
+                                    {!isMapped && (
+                                        <div className="ml-2 pl-2 border-l border-gray-300 dark:border-gray-600">
+                                            <p className="text-xs text-gray-600 dark:text-gray-400 mb-1">
+                                                Store this field in <b>Extra Details</b>?
+                                            </p>
+
+                                            <div className="flex gap-4 text-sm">
+                                                <label className="flex items-center gap-1 cursor-pointer">
+                                                    <input
+                                                        type="radio"
+                                                        checked={extraFieldConsent[col] === true}
+                                                        onChange={() =>
+                                                            setExtraFieldConsent((prev) => ({
+                                                                ...prev,
+                                                                [col]: true,
+                                                            }))
+                                                        }
+                                                    />
+                                                    Yes
+                                                </label>
+
+                                                <label className="flex items-center gap-1 cursor-pointer">
+                                                    <input
+                                                        type="radio"
+                                                        checked={extraFieldConsent[col] === false}
+                                                        onChange={() =>
+                                                            setExtraFieldConsent((prev) => ({
+                                                                ...prev,
+                                                                [col]: false,
+                                                            }))
+                                                        }
+                                                    />
+                                                    No
+                                                </label>
+                                            </div>
+                                        </div>
+                                    )}
                                 </div>
-                                <div className="w-48">
-                                    <select
-                                        value={columnMapping[col] || ""}
-                                        onChange={(e) =>
-                                            setColumnMapping((prev) => ({
-                                                ...prev,
-                                                [col]: e.target.value,
-                                            }))
-                                        }
-                                        className="w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500 dark:border-gray-600 dark:bg-gray-800 dark:text-white"
-                                    >
-                                        <option value="">— Not Mapped —</option>
-                                        {LEAD_FIELD_OPTIONS.map((f) => (
-                                            <option key={f.value} value={f.value}>
-                                                {f.label} {f.required && '*'}
-                                            </option>
-                                        ))}
-                                    </select>
-                                </div>
-                                {columnMapping[col] && (
-                                    <Check className="h-5 w-5 text-green-500 flex-shrink-0" />
-                                )}
-                            </div>
-                        ))}
+                            );
+                        })}
+
                     </div>
 
                     <div className="flex items-center justify-between pt-4 border-t dark:border-gray-700">

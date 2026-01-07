@@ -138,11 +138,11 @@ export default function FeaturedCourseSlider({
 
   const discountPercent =
     currentCourse?.pricing?.earlyBird?.discount > 0 &&
-    new Date() < new Date(currentCourse?.pricing?.earlyBird?.deadline)
+      new Date() < new Date(currentCourse?.pricing?.earlyBird?.deadline)
       ? currentCourse?.pricing?.earlyBird?.discount
       : currentCourse?.pricing?.discount > 0
-      ? currentCourse?.pricing?.discount
-      : 0;
+        ? currentCourse?.pricing?.discount
+        : 0;
 
   const isEarlyBirdActive =
     currentCourse?.pricing?.earlyBird?.discount > 0 &&
@@ -182,7 +182,6 @@ export default function FeaturedCourseSlider({
           )}
         </div>
 
-        {/* Slider Card - FIXED HEIGHT 350PX */}
         <div
           className="relative overflow-hidden rounded-2xl border border-2 shadow-lg"
           style={{ borderColor: primaryColor, height: "320px" }}
@@ -202,7 +201,7 @@ export default function FeaturedCourseSlider({
                 {/* Badges & Title */}
                 <div>
                   <div className="flex flex-wrap gap-2 mb-2">
-                    {currentCourse.featured && (
+                    {currentCourse?.featured && (
                       <span
                         className="text-[11px] font-bold px-2.5 py-1 rounded-full text-white"
                         style={{ backgroundColor: secondaryColor }}
@@ -210,17 +209,16 @@ export default function FeaturedCourseSlider({
                         FEATURED
                       </span>
                     )}
-                    {currentCourse.level && (
+                    {currentCourse?.level && (
                       <span
-                        className={`text-[11px] font-bold px-2.5 py-1 rounded-full text-white ${
-                          currentCourse.level === "beginner"
+                        className={`text-[11px] font-bold px-2.5 py-1 rounded-full text-white ${currentCourse?.level === "beginner"
                             ? "bg-green-500"
-                            : currentCourse.level === "intermediate"
-                            ? "bg-blue-500"
-                            : "bg-purple-500"
-                        }`}
+                            : currentCourse?.level === "intermediate"
+                              ? "bg-blue-500"
+                              : "bg-purple-500"
+                          }`}
                       >
-                        {currentCourse.level.toUpperCase()}
+                        {currentCourse?.level.toUpperCase()}
                       </span>
                     )}
                     {discountPercent > 0 && (
@@ -242,10 +240,10 @@ export default function FeaturedCourseSlider({
                   </div>
 
                   <h3 className="text-2xl font-bold text-gray-900 dark:text-white mb-1">
-                    {currentCourse.title}
+                    {currentCourse?.title}
                   </h3>
                   <p className="text-base text-gray-600 dark:text-gray-300 mb-2 italic">
-                    {currentCourse.shortDescription || currentCourse.subtitle}
+                    {currentCourse?.shortDescription || currentCourse?.subtitle}
                   </p>
 
                   {/* Tags - Brand Styled */}
@@ -265,13 +263,13 @@ export default function FeaturedCourseSlider({
                   {/* Schedule */}
                   <div className="flex items-center text-sm text-gray-600 dark:text-gray-400 mb-3">
                     <Calendar className="h-4 w-4 mr-1.5" style={{ color: primaryColor }} />
-                    <span>Starts: {formatDate(currentCourse.schedule?.startDate || "")}</span>
-                    {currentCourse.status === "upcoming" && (
+                    <span>Starts: {formatDate(currentCourse?.schedule?.startDate || "")}</span>
+                    {currentCourse?.status === "upcoming" && (
                       <span
                         className="ml-2 text-[11px] font-medium px-2 py-0.5 rounded-full"
                         style={{ backgroundColor: `${primaryColor}30`, color: "#000" }}
                       >
-                        {getDaysRemaining(currentCourse.schedule?.startDate || "")} days left
+                        {getDaysRemaining(currentCourse?.schedule?.startDate || "")} days left
                       </span>
                     )}
                   </div>
@@ -282,7 +280,7 @@ export default function FeaturedCourseSlider({
                       className="text-[11px] font-medium mb-3 px-2.5 py-1.5 rounded-lg inline-block"
                       style={{ backgroundColor: `${primaryColor}20`, color: "#000" }}
                     >
-                      🕒 Early bird ends {formatDate(currentCourse.pricing.earlyBird?.deadline || "")}
+                      🕒 Early bird ends {formatDate(currentCourse?.pricing.earlyBird?.deadline || "")}
                     </div>
                   )}
                 </div>
@@ -291,10 +289,10 @@ export default function FeaturedCourseSlider({
                   {/* Stats Cards */}
                   <div className="grid grid-cols-4 gap-2 mb-4">
                     {[
-                      { icon: Users, label: "Students", value: currentCourse.studentsEnrolled?.toLocaleString() || "200", color: primaryColor },
-                      { icon: TrendingUp, label: "Language", value: currentCourse.language || "English", color: secondaryColor },
-                      { icon: Clock, label: "Duration", value: currentCourse.duration || "N/A", color: primaryColor },
-                      { icon: BookOpen, label: "Instructors", value: (currentCourse.instructors?.length || currentCourse.instructorNames?.length || 1).toString(), color: secondaryColor },
+                      { icon: Users, label: "Students", value: currentCourse?.studentsEnrolled?.toLocaleString() || "200", color: primaryColor },
+                      { icon: TrendingUp, label: "Language", value: currentCourse?.language || "English", color: secondaryColor },
+                      { icon: Clock, label: "Duration", value: currentCourse?.duration || "N/A", color: primaryColor },
+                      { icon: BookOpen, label: "Instructors", value: (currentCourse?.instructors?.length || currentCourse?.instructorNames?.length || 1).toString(), color: secondaryColor },
                     ].map((item, i) => (
                       <div
                         key={i}
@@ -318,11 +316,11 @@ export default function FeaturedCourseSlider({
                   <div className="flex flex-wrap items-center justify-between gap-2">
                     <div className="flex items-baseline gap-2">
                       <span className="text-2xl font-bold text-gray-900 dark:text-white">
-                        {formatPrice(finalPrice, currentCourse.pricing.currency)}
+                        {formatPrice(finalPrice, currentCourse?.pricing.currency)}
                       </span>
                       {discountPercent > 0 && (
                         <span className="text-lg text-gray-500 line-through dark:text-gray-400">
-                          {formatPrice(originalPrice, currentCourse.pricing.currency)}
+                          {formatPrice(originalPrice, currentCourse?.pricing.currency)}
                         </span>
                       )}
                       {discountPercent > 0 && (
@@ -358,11 +356,11 @@ export default function FeaturedCourseSlider({
                 <div className="absolute inset-0 overflow-hidden">
                   <img
                     src={
-                      currentCourse.thumbnail?.url
-                        ? `${ImageBaseUrl}/${currentCourse.thumbnail.url}`
+                      currentCourse?.thumbnail?.url
+                        ? `${ImageBaseUrl}/${currentCourse?.thumbnail.url}`
                         : "https://www.gatewayabroadeducations.com/images/logo.svg"
                     }
-                    alt={currentCourse.title}
+                    alt={currentCourse?.title}
                     className="w-full h-full object-cover rounded-2xl"
                     loading="lazy"
                   />

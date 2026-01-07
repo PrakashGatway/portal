@@ -53,6 +53,7 @@ import GmatTestAttemptPage from "./pages/mcu/GmatTest";
 import GreTestAttemptPage from "./pages/mcu/GreAttempts";
 import GmatTestAnalysisPage from "./pages/mcu/GmatAnaysis";
 import PteExamPage from "./pages/PTEtest/PteAttempts";
+import TestSeriesManagementPage from "./pages/TestSeries/TestSeriesPage";
 
 // Define roles
 export const ROLES = {
@@ -95,7 +96,8 @@ export default function App() {
               <Route path="/class/:contentId/:courseId" element={<VideoPlayerPage />} />
               <Route path="/support" element={<SupportPage />} />
 
-              <Route path="/mocks" element={<MockTestsPage />} />
+              <Route path="/test-series" element={<MockTestsPage />} />
+
               <Route path="/mock-tests" element={<MockTest />} />
               {/* <Route path="/test/:testId" element={<TestQuestionPage/>} /> */}
               <Route path="/events" element={<EventCalendar />} />
@@ -116,9 +118,10 @@ export default function App() {
                 <Route path="/tests" element={<TestSeriesManagement />} />
                 <Route path="/test/questions" element={<QuestionManagement />} />
                 <Route path="/test/packages" element={<PackageManagement />} />
-
                 <Route path="/mcq/questions" element={<QuestionManagementPage />} />
                 <Route path="/mcq/tests" element={<TestTemplateManagementPage />} />
+                <Route path="/mcq/test-series" element={<TestSeriesManagementPage />} />
+
 
               </Route>
 

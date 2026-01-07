@@ -128,26 +128,40 @@ const navItemsUser: NavItem[] = [
     name: "Batches",
     path: "/course",
   },
-  
   {
     emoji: "🧪",
-    name: "Practice Tests",
-    path: "/tests",
+    name: "Mock Tests",
+    path: "/mock-tests",
   },
   {
-    emoji: "🗓️",
-    name: "Calendar",
-    path: "/events",
+    emoji: "📝",
+    name: "Practice Tests",
+    path: "/pratice-tests",
+  },
+  {
+    emoji: "📚",
+    name: "Tests Series",
+    path: "/test-series",
+  },
+  {
+    emoji: "📖",
+    name: "Study Material",
+    path: "/study-material"
   },
   {
     emoji: "🎓",
     name: "My Courses",
     path: "/my-courses",
   },
+    {
+    emoji: "🎉",
+    name: "Free Quiz",
+    path: "/Quiz",
+  },
   {
-    emoji: "📖",
-    name: "Resources",
-    path: "/study-material"
+    emoji: "🗓️",
+    name: "Calendar",
+    path: "/events",
   },
 ];
 
@@ -210,13 +224,23 @@ const othersItems: NavItem[] = [
   },
   {
     emoji: "💸",
-    name: "My orders",
+    name: "Orders History",
     path: "/transactions"
   },
   {
     emoji: "🎫",
     name: "Support",
     path: "/support"
+  },
+  {
+    emoji: "🔒",
+    name: "Our Selections",
+    path: "/selections"
+  },
+  {
+    emoji: "🔒",
+    name: "Privacy Policy",
+    path: "/privacy-policy"
   }
 ];
 
@@ -295,7 +319,7 @@ const AppSidebar: React.FC = () => {
             {nav.subItems ? (
               <button
                 onClick={() => handleSubmenuToggle(index, menuType)}
-                className={`w-full flex items-center gap-3 px-3 py-3 rounded-xl transition-all duration-300 ease-in-out
+                className={`w-full flex items-center gap-3 px-3 py-2 rounded-xl transition-all duration-300 ease-in-out
                   ${isSubmenuOpen || hasActiveSubItem
                     ? "bg-yellow-50 dark:bg-yellow-900/10 text-black dark:text-yellow-300 shadow-sm"
                     : "text-gray-700 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-800"
@@ -321,7 +345,7 @@ const AppSidebar: React.FC = () => {
             ) : nav.path ? (
               <Link
                 to={nav.path}
-                className={`w-full flex items-center gap-3 px-3 py-3 rounded-xl transition-all duration-300
+                className={`w-full flex items-center gap-3 px-3 py-2 rounded-xl transition-all duration-300
                   ${isActive(nav.path)
                     ? "bg-yellow-50 dark:bg-yellow-900/10 text-black dark:text-yellow-300 shadow-sm"
                     : "text-gray-700 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-800"
@@ -370,11 +394,10 @@ const AppSidebar: React.FC = () => {
                         <div className="flex gap-1">
                           {subItem.new && (
                             <span
-                              className={`px-2 py-0.5 text-xs rounded-full font-medium ${
-                                isActive(subItem.path)
-                                  ? "bg-yellow-500 text-black"
-                                  : "bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400"
-                              }`}
+                              className={`px-2 py-0.5 text-xs rounded-full font-medium ${isActive(subItem.path)
+                                ? "bg-yellow-500 text-black"
+                                : "bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400"
+                                }`}
                             >
                               New
                             </span>
@@ -427,7 +450,7 @@ const AppSidebar: React.FC = () => {
       onMouseLeave={() => setIsHovered(false)}
     >
       {/* Logo */}
-      <div className={`py-5 flex transition-all ${!isExpanded && !isHovered ? "justify-center" : "justify-start"}`}>
+      <div className={`py-5 flex transition-all ${!isExpanded && !isHovered ? "justify-start" : "justify-start"}`}>
         <Link to="/" className="flex items-center transform hover:scale-105 transition-transform duration-200">
           {isExpanded || isHovered || isMobileOpen ? (
             <img
@@ -452,14 +475,14 @@ const AppSidebar: React.FC = () => {
         <nav className="mb-6 flex-1">
           <div className="flex flex-col gap-6">
             <div>
-              <h2 className={`mb-3 text-xs uppercase text-gray-500 dark:text-gray-400 font-medium tracking-wider ${!isExpanded && !isHovered ? "text-center" : "pl-3"}`}>
+              <h2 className={`mb-3 text-xs uppercase text-gray-500 dark:text-gray-400 font-medium tracking-wider ${!isExpanded && !isHovered ? "pl-3" : "pl-3"}`}>
                 {isExpanded || isHovered || isMobileOpen ? "Menu" : "🔍"}
               </h2>
               {renderMenuItems(getMenuItems("main"), "main")}
             </div>
 
             <div>
-              <h2 className={`mb-3 text-xs uppercase text-gray-500 dark:text-gray-400 font-medium tracking-wider ${!isExpanded && !isHovered ? "text-center" : "pl-3"}`}>
+              <h2 className={`mb-3 text-xs uppercase text-gray-500 dark:text-gray-400 font-medium tracking-wider ${!isExpanded && !isHovered ? "pl-3" : "pl-3"}`}>
                 {isExpanded || isHovered || isMobileOpen
                   ? user?.role === "teacher" ? "Account" : "Others"
                   : "⚙️"
