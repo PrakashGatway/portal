@@ -6,7 +6,7 @@ export default function DynamicIcon({
     color = "currentColor",
     className = "",
 }) {
-    const Icon = LucideIcons[name];
+    const Icon =                                                                                                                                                                                                                                                         LucideIcons[name]; 
 
     const FallbackIcon = LucideIcons.HelpCircle;
 

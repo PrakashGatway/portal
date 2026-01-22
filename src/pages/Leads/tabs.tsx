@@ -7,13 +7,6 @@ export interface TabItem {
   icon?: LucideIcon;
 }
 
-interface TabsProps {
-  tabs: TabItem[];
-  activeTab: string;
-  onChange: (tabId: string) => void;
-  className?: string;
-}
-
 export default function Tabs({
   tabs,
   activeTab,

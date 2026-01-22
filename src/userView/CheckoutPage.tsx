@@ -20,7 +20,7 @@ import {
     ArrowLeft
 } from "lucide-react";
 import api, { ImageBaseUrl } from "../axiosInstance";
-import { useParams, useNavigate } from "react-router";
+import { useParams, useNavigate, useLocation } from "react-router";
 import { useAuth } from "../context/UserContext";
 
 // --- Types ---
@@ -56,6 +56,9 @@ interface Course {
 export default function CheckoutPage() {
     const { slug } = useParams<{ slug: string }>();
     const navigate = useNavigate();
+    const location = useLocation();
+
+    const isTestSeries = location.state?.testSeries ?? false;
     const { wallet: userWallet, loading: walletLoading } = useAuth();
 
     // --- State ---
@@ -81,19 +84,20 @@ export default function CheckoutPage() {
         const fetchCourse = async () => {
             try {
                 setLoading('initial');
-                const response = await api.get(`/courses/${slug}`);
+
+                const response = isTestSeries ? await api.get(`/mcu/series/${slug}`) : await api.get(`/courses/${slug}`);
                 const courseData = response.data.data;
-                
-                if (courseData.instructors && Array.isArray(courseData.instructors)) {
-                    courseData.instructorNames = courseData.instructors.map((instructor: any) => 
+
+                if (!isTestSeries && courseData.instructors && Array.isArray(courseData.instructors)) {
+                    courseData.instructorNames = courseData.instructors.map((instructor: any) =>
                         instructor.name || instructor.username || 'Teacher'
                     );
                 }
-                
+
                 setCourse(courseData);
             } catch (err: any) {
                 console.error("Failed to fetch course:", err);
-                setError(err.response?.data?.message || "Failed to load course details.");
+                setError(err?.message || "Failed to load course details.");
             } finally {
                 setLoading('none');
             }
@@ -105,7 +109,7 @@ export default function CheckoutPage() {
     // --- Check if Early Bird is Active ---
     const isEarlyBirdActive = () => {
         if (!course?.pricing.earlyBird) return false;
-        
+
         const now = new Date();
         const deadline = new Date(course.pricing.earlyBird.deadline);
         return now <= deadline;
@@ -114,7 +118,7 @@ export default function CheckoutPage() {
     // --- Calculate Effective Price ---
     const calculateEffectivePrice = () => {
         if (!course) return { basePrice: 0, discountAmount: 0, finalPrice: 0 };
-        
+
         const originalPrice = course.pricing.originalAmount || course.pricing.amount;
         let effectivePrice = originalPrice;
         let totalDiscount = 0;
@@ -167,7 +171,7 @@ export default function CheckoutPage() {
                 // }
 
                 console.log(finalDiscountAmount)
-                
+
                 setPromoDiscountAmount(finalDiscountAmount);
                 setPromoApplied(true);
                 setPromoMessage(message || "Promo code applied!");
@@ -221,7 +225,7 @@ export default function CheckoutPage() {
     };
 
     const currency = course?.pricing.currency || userWallet?.currency || "INR";
-    
+
     const {
         basePrice: effectiveBasePrice,
         discountAmount: courseDiscountAmount
@@ -232,7 +236,7 @@ export default function CheckoutPage() {
     const promoDiscount = promoApplied ? promoDiscountAmount : 0;
 
     const maxWalletUsage = effectiveBasePrice * 0.1;
-    const actualWalletUsage = useWalletBalance ? 
+    const actualWalletUsage = useWalletBalance ?
         Math.min(userWallet?.balance || 0, maxWalletUsage) : 0;
 
     const priceAfterPromo = Math.max(0, effectiveBasePrice - promoDiscount);
@@ -290,7 +294,7 @@ export default function CheckoutPage() {
 
     return (
         <div className="min-h-screen bg-gradient-to-br from-gray-50 to-blue-50 dark:from-gray-900 dark:to-blue-900/20 transition-all duration-500">
-              <header className="sticky top-0 z-10 bg-white dark:bg-gray-800 shadow-sm border-b border-gray-200 dark:border-gray-700">
+            <header className="sticky top-0 z-10 bg-white dark:bg-gray-800 shadow-sm border-b border-gray-200 dark:border-gray-700">
                 <div className="max-w-7xl mx-auto px-4 py-4 flex items-center justify-between">
                     <button
                         onClick={() => navigate(-1)}
@@ -306,7 +310,7 @@ export default function CheckoutPage() {
             <div className="max-w-6xl mx-auto p-6">
                 <div className="grid lg:grid-cols-3 gap-4 mx-auto">
                     {/* Course Details */}
-                    <div className="lg:col-span-2 space-y-2">
+                    {isTestSeries ? <div className="lg:col-span-2 space-y-2">
                         <motion.div
                             initial={{ opacity: 0, x: -20 }}
                             animate={{ opacity: 1, x: 0 }}
@@ -378,7 +382,7 @@ export default function CheckoutPage() {
                                                 {course.mode?.charAt(0).toUpperCase() + course.mode?.slice(1) || "Online"}
                                             </div>
                                         </div>
-                                        
+
                                         {/* Discount Badges */}
                                         <div className="flex flex-wrap gap-2 mb-4">
                                             {earlyBirdActive && course.pricing.earlyBird && (
@@ -402,7 +406,103 @@ export default function CheckoutPage() {
                                 </div>
                             </div>
                         </motion.div>
-                    </div>
+                    </div> : <div className="lg:col-span-2 space-y-2">
+                        <motion.div
+                            initial={{ opacity: 0, x: -20 }}
+                            animate={{ opacity: 1, x: 0 }}
+                            transition={{ delay: 0.3 }}
+                            className="bg-white dark:bg-gray-800 rounded-lg shadow-lg border border-gray-100 dark:border-gray-800 overflow-hidden"
+                        >
+                            <div className="p-6">
+                                <div className="flex items-center justify-between mb-3">
+                                    <h2 className="text-xl font-bold text-gray-900 dark:text-white flex items-center">
+                                        <BookOpen className="w-6 h-6 mr-3 text-blue-500" />
+                                        Course Details
+                                    </h2>
+                                    <div className="flex items-center space-x-2 text-sm text-gray-500 dark:text-gray-400">
+                                        <Star className="w-4 h-4 text-yellow-400 fill-current" />
+                                        <span>{course.rating || 4.5}</span>
+                                        <span>•</span>
+                                        <Users className="w-4 h-4" />
+                                        <span>{(course.studentsEnrolled || 0).toLocaleString()} students</span>
+                                    </div>
+                                </div>
+
+                                <div className="flex flex-col lg:flex-row gap-6">
+                                    <div className="relative">
+                                        <img
+                                            src={course.thumbnail?.url ? `${ImageBaseUrl}/${course.thumbnail.url}` : "/placeholder-course.jpg"}
+                                            alt={course.title}
+                                            className="w-full lg:w-44 h-28 object-cover rounded-xl"
+                                            onError={(e) => { (e.target as HTMLImageElement).src = "/placeholder-course.jpg"; }}
+                                        />
+                                        {course.mode === 'free' && (
+                                            <div className="absolute top-4 left-4 bg-gradient-to-r from-green-500 to-emerald-500 text-white px-3 py-1 rounded-full text-sm font-semibold">
+                                                Free
+                                            </div>
+                                        )}
+                                        {earlyBirdActive && (
+                                            <div className="absolute top-4 left-4 bg-gradient-to-r from-orange-500 to-red-500 text-white px-3 py-1 rounded-full text-sm font-semibold animate-pulse">
+                                                Early Bird!
+                                            </div>
+                                        )}
+                                        {course.featured && !earlyBirdActive && (
+                                            <div className="absolute top-4 left-4 bg-gradient-to-r from-blue-500 to-purple-500 text-white px-3 py-1 rounded-full text-sm font-semibold">
+                                                Bestseller
+                                            </div>
+                                        )}
+                                    </div>
+
+                                    <div className="flex-1">
+                                        <h3 className="text-xl font-bold text-gray-900 dark:text-white leading-tight">
+                                            {course.title}
+                                        </h3>
+                                        <p className="text-gray-600 text-sm dark:text-gray-300 mb-1">
+                                            {course.shortDescription || course.description}
+                                        </p>
+                                        <div className="grid grid-cols-3 gap-1 mb-2">
+                                            <div className="flex items-center text-sm text-gray-600 dark:text-gray-400">
+                                                <Clock className="w-4 h-4 mr-2 text-blue-500" />
+                                                {course.duration || "Self-paced"}
+                                            </div>
+                                            <div className="flex items-center text-sm text-gray-600 dark:text-gray-400">
+                                                <Award className="w-4 h-4 mr-2 text-green-500" />
+                                                {course.level?.charAt(0).toUpperCase() + course.level?.slice(1) || "All Levels"}
+                                            </div>
+                                            <div className="flex items-center text-sm text-gray-600 dark:text-gray-400">
+                                                <Shield className="w-4 h-4 mr-2 text-purple-500" />
+                                                {course.categoryInfo?.name || "Category"}
+                                            </div>
+                                            <div className="flex items-center text-sm text-gray-600 dark:text-gray-400">
+                                                <UserRoundSearch className="w-4 h-4 mr-2 text-orange-500" />
+                                                {course.mode?.charAt(0).toUpperCase() + course.mode?.slice(1) || "Online"}
+                                            </div>
+                                        </div>
+
+                                        {/* Discount Badges */}
+                                        <div className="flex flex-wrap gap-2 mb-4">
+                                            {earlyBirdActive && course.pricing.earlyBird && (
+                                                <span className="bg-orange-50 dark:bg-orange-900/30 text-orange-600 dark:text-orange-400 px-3 py-1 rounded-full text-sm font-semibold">
+                                                    🎁 Early Bird: {course.pricing.earlyBird.discount}% OFF
+                                                </span>
+                                            )}
+                                            {course.pricing.discount && course.pricing.discount > 0 && (
+                                                <span className="bg-green-50 dark:bg-green-900/30 text-green-600 dark:text-green-400 px-3 py-1 rounded-full text-sm">
+                                                    🔥 {course.pricing.discount}% OFF
+                                                </span>
+                                            )}
+                                            {/* <span className="bg-blue-50 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 px-3 py-1 rounded-full text-sm">
+                                                Lifetime Access
+                                            </span>
+                                            <span className="bg-green-50 dark:bg-green-900/30 text-green-600 dark:text-green-400 px-3 py-1 rounded-full text-sm">
+                                                Certificate
+                                            </span> */}
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </motion.div>
+                    </div>}
                     <div className="lg:col-span-1">
                         <motion.div
                             initial={{ opacity: 0, y: 20 }}
@@ -451,10 +551,10 @@ export default function CheckoutPage() {
                                         {earlyBirdActive && course.pricing.earlyBird && (
                                             <div className="flex justify-between items-center text-sm">
                                                 <span className="text-gray-600 dark:text-gray-400">
-                                                    Early Bird Discount ({course.pricing.earlyBird.discount-course.pricing.discount}%)
+                                                    Early Bird Discount ({course.pricing.earlyBird.discount - course.pricing.discount}%)
                                                 </span>
                                                 <span className="text-orange-600 dark:text-orange-400">
-                                                    -{formatPrice((originalPrice * (course.pricing.earlyBird.discount-course.pricing.discount)) / 100)}
+                                                    -{formatPrice((originalPrice * (course.pricing.earlyBird.discount - course.pricing.discount)) / 100)}
                                                 </span>
                                             </div>
                                         )}

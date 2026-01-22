@@ -19,7 +19,7 @@ import ContentManagement from "./pages/Content/Contents";
 import CategorySelectionPage from "./pages/Category/CategorySelection";
 import CourseListingPage from "./pages/CourseList/CourseUsers";
 import VideoPlayerPage from "./pages/Player/Player";
-import MockTestsPage from "./userView/MocktestPage";
+import MockTestsPage from "./userView/TestSeries";
 import EventCalendar from "./userView/Events";
 import CourseDetailPage from "./userView/CourseDetails";
 import CheckoutPage from "./userView/CheckoutPage";
@@ -54,6 +54,7 @@ import GreTestAttemptPage from "./pages/mcu/GreAttempts";
 import GmatTestAnalysisPage from "./pages/mcu/GmatAnaysis";
 import PteExamPage from "./pages/PTEtest/PteAttempts";
 import TestSeriesManagementPage from "./pages/TestSeries/TestSeriesPage";
+import TestSeriesDetailPage from "./usercomponent/TestSeriesDetail";
 
 // Define roles
 export const ROLES = {
@@ -97,6 +98,8 @@ export default function App() {
               <Route path="/support" element={<SupportPage />} />
 
               <Route path="/test-series" element={<MockTestsPage />} />
+              <Route path="/test-series/:slug" element={<TestSeriesDetailPage />} />
+
 
               <Route path="/mock-tests" element={<MockTest />} />
               {/* <Route path="/test/:testId" element={<TestQuestionPage/>} /> */}

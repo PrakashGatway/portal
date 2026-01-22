@@ -15,7 +15,7 @@ import { ContentThumbnailDropzone } from "./CotentThumbnail";
 import DynamicIcon from "../../components/DynamicIcon";
 
 export default function ContentManagement({ type }: any) {
-    const [contents, setContents] = useState([]);
+    const [contents, setContents] = useState([]) as any;
     const [loading, setLoading] = useState(true);
     const [total, setTotal] = useState(0);
     const [hasMore, setHasMore] = useState(true);

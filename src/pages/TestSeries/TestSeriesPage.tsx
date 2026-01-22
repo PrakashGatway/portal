@@ -1,6 +1,6 @@
 // TestSeriesManagementPage.tsx
 import { useEffect, useState } from "react";
-import { useForm, useFieldArray } from "react-hook-form";
+import { useForm, useFieldArray, set } from "react-hook-form";
 import {
   BookOpen,
   ChevronLeft,
@@ -23,14 +23,17 @@ import {
   Calendar,
   Check,
   X as XIcon,
+  ActivitySquare,
 } from "lucide-react";
 import Button from "../../components/ui/button/Button";
 import Input from "../../components/form/input/InputField";
 import Label from "../../components/form/Label";
 import Select from "../../components/form/Select";
 import { toast } from "react-toastify";
-import api from "../../axiosInstance";
+import api, { ImageBaseUrl } from "../../axiosInstance";
 import { motion, AnimatePresence } from "framer-motion";
+import { ContentThumbnailDropzone } from "../Content/CotentThumbnail";
+import RichTextEditor from "../../components/TextEditor";
 
 interface Exam {
   _id: string;
@@ -130,8 +133,8 @@ export default function TestSeriesManagementPage() {
   // State
   const [exams, setExams] = useState<Exam[]>([]);
   const [categories, setCategories] = useState<Category[]>([]);
-  const [availableTests, setAvailableTests] = useState<TestTemplate[]>([]);
-  const [seriesList, setSeriesList] = useState<TestSeries[]>([]);
+  const [availableTests, setAvailableTests] = useState<any[]>([]);
+  const [seriesList, setSeriesList] = useState<any[]>([]);
 
   const [filters, setFilters] = useState({
     search: "",
@@ -149,7 +152,7 @@ export default function TestSeriesManagementPage() {
   const [totalSeries, setTotalSeries] = useState(0);
 
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+  const [error, setError] = useState<any | null>(null);
   const [sideOpen, setSideOpen] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [formLoading, setFormLoading] = useState(false);
@@ -164,7 +167,7 @@ export default function TestSeriesManagementPage() {
     watch,
     control,
     formState: { errors },
-  } = useForm<TestSeriesFormValues>({
+  } = useForm<any>({
     defaultValues: {
       title: "",
       description: "",
@@ -191,6 +194,7 @@ export default function TestSeriesManagementPage() {
   const watchPricingIsFree = watch("pricingIsFree");
   const watchIsActive = watch("isActive");
   const watchIsPublished = watch("isPublished");
+
 
   const fetchExams = async () => {
     try {
@@ -222,7 +226,7 @@ export default function TestSeriesManagementPage() {
 
   const fetchAvailableTests = async () => {
     try {
-      const res = await api.get("/mcu/test", { params: { isActive: true, limit: 200 ,examId: watchExam } });
+      const res = await api.get("/mcu/test", { params: { isActive: true, limit: 200, examId: watchExam } });
       if (res.data?.success) {
         setAvailableTests(res.data.data || res.data?.data?.data || []);
       } else {
@@ -245,8 +249,8 @@ export default function TestSeriesManagementPage() {
       };
 
       if (debouncedSearch) params.search = debouncedSearch;
-      if (filters.examId) params.examId = filters.examId;
-      if (filters.categoryId) params.categoryId = filters.categoryId;
+      if (filters.examId) params.exam = filters.examId;
+      if (filters.categoryId) params.category = filters.categoryId;
       if (filters.status) params.isActive = filters.status === "active";
       if (filters.publishStatus) params.isPublished = filters.publishStatus === "published";
 
@@ -359,12 +363,16 @@ export default function TestSeriesManagementPage() {
         throw new Error("Failed to load test series");
       }
 
-      const series: TestSeries = res.data.data;
+      const series: any = res.data.data;
       reset({
         title: series.title,
         description: series.description || "",
-        exam: series.exam?._id || "",
         category: series.category?._id || "",
+        exam: series.exam || "",
+        slug: series.slug || "",
+        overview: series.overview || "",
+        thumbnailPic: series.thumbnailPic || "",
+        thumbnailFile: null,
         defaultTestType: series.defaultTestType,
         tests: series.tests || [],
         pricingIsFree: series.pricing?.isFree || false,
@@ -387,6 +395,7 @@ export default function TestSeriesManagementPage() {
   const closeDrawer = () => {
     if (saving) return;
     setSideOpen(false);
+    reset();
     setEditingId(null);
   };
 
@@ -394,12 +403,32 @@ export default function TestSeriesManagementPage() {
   const formatDate = (iso?: string) =>
     iso ? new Date(iso).toLocaleDateString("en-IN") : "";
 
+  const uploadThumbnail = async (file: File): Promise<string> => {
+    const formData = new FormData();
+    formData.append("file", file);
+    try {
+      const res = await api.post("/upload/image", formData, {
+        headers: {
+          "Content-Type": "multipart/form-data",
+        },
+      });
+      return res.data.url;
+    } catch (error) {
+      throw new Error("Thumbnail upload failed :" + error.message);
+    }
+  };
+
+
   // Handle form submission
-  const onSubmit = async (values: TestSeriesFormValues) => {
+  const onSubmit = async (values: any) => {
     try {
       // Validation
       if (!values.title.trim()) {
         toast.error("Title is required");
+        return;
+      }
+      if (!values.slug?.trim()) {
+        toast.error("Slug is required");
         return;
       }
       if (!values.exam) {
@@ -421,12 +450,21 @@ export default function TestSeriesManagementPage() {
 
       setSaving(true);
 
+      let thumbnailPic = values.thumbnailPic || "";
+
+      if (values.thumbnailFile instanceof File) {
+        thumbnailPic = await uploadThumbnail(values.thumbnailFile);
+      }
+
       // Prepare payload
       const payload: any = {
         title: values.title,
         description: values.description || "",
         exam: values.exam,
+        overview: values.overview,
         category: values.category,
+        slug: values.slug.trim(),
+        thumbnailPic, // ✅ saved image path
         defaultTestType: values.defaultTestType,
         tests: values.tests,
         pricing: {
@@ -594,6 +632,8 @@ export default function TestSeriesManagementPage() {
                 onChange={(value: string) => {
                   setFilters(prev => ({ ...prev, categoryId: value }));
                   setPage(1);
+                  setFilters(prev => ({ ...prev, examId: "" }));
+                  setValue("category", "");
                 }}
               />
             </div>
@@ -644,7 +684,7 @@ export default function TestSeriesManagementPage() {
             </div>
           </div>
 
-          <div className="mt-1 flex items-center justify-between text-xs text-gray-500 dark:text-gray-400">
+          <div className="mt-1 flex items-center justify-between text-sm text-gray-500 dark:text-gray-400">
             <div>
               Showing page <span className="font-semibold">{page}</span> of{" "}
               <span className="font-semibold">{totalPages}</span> •{" "}
@@ -654,7 +694,7 @@ export default function TestSeriesManagementPage() {
         </div>
 
         {/* Series List */}
-        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+        <div className="grid gap-2 md:grid-cols-2 lg:grid-cols-3">
           {loading && (
             <div className="col-span-full rounded-2xl border border-gray-200 bg-white p-6 text-center text-sm text-gray-500 shadow-sm dark:border-gray-800 dark:bg-gray-900">
               <div className="mb-2 flex items-center justify-center gap-2">
@@ -690,11 +730,11 @@ export default function TestSeriesManagementPage() {
                 {/* Header */}
                 <div className="flex items-start justify-between">
                   <div className="flex-1">
-                    <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100">
+                    <h3 className="text-base uppercase font-medium text-gray-900 dark:text-gray-100">
                       {series.title}
                     </h3>
                     {series.description && (
-                      <p className="mt-1 text-xs text-gray-500 line-clamp-2 dark:text-gray-400">
+                      <p className="mt-1 text-sm text-gray-500 line-clamp-2 dark:text-gray-400">
                         {series.description}
                       </p>
                     )}
@@ -703,24 +743,24 @@ export default function TestSeriesManagementPage() {
                   {/* Status badges */}
                   <div className="flex flex-row gap-1">
                     {series.isPublished ? (
-                      <span className="inline-flex items-center gap-1 rounded-full bg-green-50 px-2 py-0.5 text-xs text-green-700 dark:bg-green-900/40 dark:text-green-300">
+                      <span className="inline-flex items-center gap-1 rounded-full bg-green-50 px-2 py-0.5 text-sm text-green-700 dark:bg-green-900/40 dark:text-green-300">
                         <Globe className="h-3 w-3" />
                         Published
                       </span>
                     ) : (
-                      <span className="inline-flex items-center gap-1 rounded-full bg-gray-50 px-2 py-0.5 text-xs text-gray-700 dark:bg-gray-800 dark:text-gray-300">
+                      <span className="inline-flex items-center gap-1 rounded-full bg-gray-50 px-2 py-0.5 text-sm text-gray-700 dark:bg-gray-800 dark:text-gray-300">
                         <Lock className="h-3 w-3" />
                         Draft
                       </span>
                     )}
 
                     {series.isActive ? (
-                      <span className="inline-flex items-center gap-1 rounded-full bg-blue-50 px-2 py-0.5 text-xs text-blue-700 dark:bg-blue-900/40 dark:text-blue-300">
+                      <span className="inline-flex items-center gap-1 rounded-full bg-blue-50 px-2 py-0.5 text-sm text-blue-700 dark:bg-blue-900/40 dark:text-blue-300">
                         <Check className="h-3 w-3" />
                         Active
                       </span>
                     ) : (
-                      <span className="inline-flex items-center gap-1 rounded-full bg-red-50 px-2 py-0.5 text-xs text-red-700 dark:bg-red-900/40 dark:text-red-300">
+                      <span className="inline-flex items-center gap-1 rounded-full bg-red-50 px-2 py-0.5 text-sm text-red-700 dark:bg-red-900/40 dark:text-red-300">
                         <XIcon className="h-3 w-3" />
                         Inactive
                       </span>
@@ -730,66 +770,59 @@ export default function TestSeriesManagementPage() {
 
                 {/* Details */}
                 <div className="flex flex-wrap items-center gap-2">
-                  <span className="rounded-full bg-gray-100 px-2 py-0.5 text-xs text-gray-700 dark:bg-gray-800 dark:text-gray-200">
+                  <span className="rounded-full bg-gray-100 px-2 py-0.5 text-sm text-gray-700 dark:bg-gray-800 dark:text-gray-200">
                     {series.exam?.name || "Unknown exam"}
                   </span>
 
-                  <span className="rounded-full bg-gray-100 px-2 py-0.5 text-xs text-gray-700 dark:bg-gray-800 dark:text-gray-200">
-                    {series.category?.name || "Unknown category"}
-                  </span>
-
-                  <span className="rounded-full bg-purple-50 px-2 py-0.5 text-xs text-purple-700 dark:bg-purple-900/40 dark:text-purple-300">
+                  <span className="rounded-full bg-purple-50 px-2 py-0.5 text-sm text-purple-700 dark:bg-purple-900/40 dark:text-purple-300">
                     <Package className="mr-1 inline h-3 w-3" />
                     {series.totalTests || 0} Tests
                   </span>
 
-                  <span className="rounded-full bg-emerald-50 px-2 py-0.5 text-xs text-emerald-700 dark:bg-emerald-900/40 dark:text-emerald-300">
+                  <span className="rounded-full bg-emerald-50 px-2 py-0.5 text-sm text-emerald-700 dark:bg-emerald-900/40 dark:text-emerald-300">
                     <IndianRupee className="mr-1 inline h-3 w-3" />
                     {priceLabel(series)}
                   </span>
                 </div>
 
                 {/* Test Types */}
-                <div className="text-xs text-gray-600 dark:text-gray-400">
+                <div className="text-sm text-gray-600 dark:text-gray-400">
                   <span className="font-medium">Type:</span>{" "}
                   {DEFAULT_TEST_TYPE_OPTIONS.find(t => t.value === series.defaultTestType)?.label || series.defaultTestType}
                 </div>
 
                 {/* Created Date */}
                 {series.createdAt && (
-                  <div className="flex items-center gap-1 text-xs text-gray-500 dark:text-gray-400">
+                  <div className="flex items-center gap-1 text-sm text-gray-500 dark:text-gray-400">
                     <Calendar className="h-3 w-3" />
                     Created: {formatDate(series.createdAt)}
                   </div>
                 )}
 
                 {/* Actions */}
-                <div className="flex items-center gap-2 pt-2">
+                <div className="flex items-center justify-start gap-1 pt-2">
                   <Button
                     variant="outline"
                     size="sm"
-                    className="flex-1 rounded-xl px-2 py-1 text-xs"
+                    className="flex rounded-xl px-2 py-1 text-sm"
                     onClick={() => openEditDrawer(series._id)}
                   >
-                    <Edit3 className="mr-1 h-3 w-3" />
-                    Edit
+                    <Edit3 className="h-5 w-4" />
                   </Button>
 
                   <Button
                     variant="outline"
                     size="sm"
-                    className="rounded-xl px-2 py-1 text-xs"
+                    className="rounded-xl px-2 py-1 text-sm"
                     onClick={() => togglePublish(series)}
                   >
                     {series.isPublished ? (
                       <>
-                        <EyeOff className="mr-1 h-3 w-3" />
-                        Unpublish
+                        <EyeOff className="h-5 w-4" />
                       </>
                     ) : (
                       <>
-                        <Eye className="mr-1 h-3 w-3" />
-                        Publish
+                        <Eye className="h-5 w-4" />
                       </>
                     )}
                   </Button>
@@ -797,19 +830,21 @@ export default function TestSeriesManagementPage() {
                   <Button
                     variant="outline"
                     size="sm"
-                    className="rounded-xl px-2 py-1 text-xs"
+                    className="rounded-xl px-2 py-1 text-sm"
                     onClick={() => toggleActive(series)}
-                  >
-                    {series.isActive ? "Deactivate" : "Activate"}
+                  ><span title={series.isActive ? "Deactivate" : "Activate"}>
+                      {series.isActive ? <Check className="h-5 w-4" /> : <XIcon className="h-5 w-4" />}
+                    </span>
                   </Button>
 
                   <Button
                     variant="outline"
                     size="sm"
-                    className="rounded-xl px-2 py-1 text-xs text-red-600 hover:text-red-700"
+                    className="rounded-xl px-2 py-1 text-sm text-red-600 hover:text-red-700"
                     onClick={() => handleDelete(series)}
                   >
-                    <Trash2 className="h-3 w-3" />
+                    <Trash2 className="h-5 w-4" />
+
                   </Button>
                 </div>
               </div>
@@ -881,7 +916,7 @@ export default function TestSeriesManagementPage() {
                     {editingId ? "Edit Test Series" : "Create Test Series"}
                     <Package className="h-3 w-3 text-gray-400" />
                   </p>
-                  <p className="text-xs text-gray-500 dark:text-gray-400">
+                  <p className="text-sm text-gray-500 dark:text-gray-400">
                     Configure test bundle with multiple tests.
                   </p>
                 </div>
@@ -927,7 +962,48 @@ export default function TestSeriesManagementPage() {
                         rows={3}
                       />
                     </div>
+                    <div>
+                      <Label>Overview</Label>
+                      <RichTextEditor
+                        initialValue={watch("overview")}
+                        onChange={(value: string) => setValue("overview", value)}
+                        header={false}
+                      />
+                      {/* <textarea
+                        className="w-full rounded-xl border border-gray-200 bg-white px-3 py-2 text-sm text-gray-900 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100"
+                        placeholder="Describe this test series bundle..."
+                        value={watch("description")}
+                        onChange={(e) => setValue("description", e.target.value)}
+                        rows={3}
+                      /> */}
+                    </div>
 
+                    <div>
+                      <Label>Slug *</Label>
+                      <Input
+                        type="text"
+                        placeholder="slug"
+                        value={watch("slug")}
+                        onChange={(e) => setValue("slug", e.target.value)}
+                        error={!!errors.slug}
+                        hint={errors.slug?.message}
+                      />
+                    </div>
+
+                    <div>
+                      <Label>Thumbnail Image URL</Label>
+                      <ContentThumbnailDropzone
+                        value={watch("thumbnailPic") ? { url: watch("thumbnailPic") } : null}
+                        onChange={(file: File) => {
+                          setValue("thumbnailFile", file);
+                        }}
+                        onRemove={() => {
+                          setValue("thumbnailFile", null);
+                          setValue("thumbnailPic", "");
+                        }}
+                        error={errors?.thumbnailFile?.message}
+                      />
+                    </div>
                     <div className="grid gap-3 sm:grid-cols-2">
                       <div>
                         <Label>Category *</Label>
@@ -936,10 +1012,10 @@ export default function TestSeriesManagementPage() {
                           options={[
                             ...categories.map((c) => ({ value: c._id, label: c.name })),
                           ]}
-                          onChange={(value: string) => setValue("category", value)}
+                          onChange={(value: string) => { setValue("category", value); setValue("exam", "") }}
                         />
                         {errors.category && (
-                          <p className="mt-1 text-xs text-red-500">Category is required</p>
+                          <p className="mt-1 text-sm text-red-500">Category is required</p>
                         )}
                       </div>
                       <div>
@@ -952,7 +1028,7 @@ export default function TestSeriesManagementPage() {
                           onChange={(value: string) => setValue("exam", value)}
                         />
                         {errors.exam && (
-                          <p className="mt-1 text-xs text-red-500">Exam is required</p>
+                          <p className="mt-1 text-sm text-red-500">Exam is required</p>
                         )}
                       </div>
 
@@ -980,20 +1056,20 @@ export default function TestSeriesManagementPage() {
                         variant="outline"
                         size="sm"
                         onClick={() => setTestModalOpen(true)}
-                        className="text-xs"
+                        className="text-sm"
                       >
                         <Plus className="mr-1 h-3 w-3" />
                         Add Test
                       </Button>
                     </div>
 
-                    {watchTests.length === 0 ? (
-                      <p className="text-xs text-gray-500 dark:text-gray-400">
+                    {watchTests?.length === 0 ? (
+                      <p className="text-sm text-gray-500 dark:text-gray-400">
                         No tests added yet. Click "Add Test" to select from available tests.
                       </p>
                     ) : (
                       <div className="space-y-2">
-                        {watchTests.map((testItem, index) => {
+                        {watchTests?.map((testItem, index) => {
                           const testDetails = getTestDetails(testItem.test);
                           return (
                             <div
@@ -1007,14 +1083,14 @@ export default function TestSeriesManagementPage() {
                                       {testItem.label || testDetails?.title || "Unknown Test"}
                                     </h4>
                                     {testDetails?.pricing?.isFree && (
-                                      <span className="rounded-full bg-green-50 px-2 py-0.5 text-xs text-green-700 dark:bg-green-900/40 dark:text-green-300">
+                                      <span className="rounded-full bg-green-50 px-2 py-0.5 text-sm text-green-700 dark:bg-green-900/40 dark:text-green-300">
                                         Free
                                       </span>
                                     )}
                                   </div>
 
                                   {testDetails && (
-                                    <div className="mt-1 flex flex-wrap items-center gap-2 text-xs text-gray-500 dark:text-gray-400">
+                                    <div className="mt-1 flex flex-wrap items-center gap-2 text-sm text-gray-500 dark:text-gray-400">
                                       <span>{testDetails.testType}</span>
                                       {testDetails.totalQuestions && (
                                         <span>• {testDetails.totalQuestions} Q</span>
@@ -1036,7 +1112,7 @@ export default function TestSeriesManagementPage() {
                               </div>
 
                               <div className="mt-3 grid gap-2 sm:grid-cols-3">
-                                <label className="flex items-center gap-2 text-xs">
+                                <label className="flex items-center gap-2 text-sm">
                                   <input
                                     type="checkbox"
                                     checked={testItem.isMandatory}
@@ -1049,7 +1125,7 @@ export default function TestSeriesManagementPage() {
                                 </label>
 
                                 <div>
-                                  <Label className="text-xs">Label</Label>
+                                  <Label className="text-sm">Label</Label>
                                   <Input
                                     type="text"
                                     size="sm"
@@ -1062,7 +1138,7 @@ export default function TestSeriesManagementPage() {
                                 </div>
 
                                 <div>
-                                  <Label className="text-xs">Access Days</Label>
+                                  <Label className="text-sm">Access Days</Label>
                                   <Input
                                     type="number"
                                     size="sm"
@@ -1082,8 +1158,8 @@ export default function TestSeriesManagementPage() {
                       </div>
                     )}
 
-                    <div className="text-xs text-gray-500 dark:text-gray-400">
-                      Total: {watchTests.length} test{watchTests.length !== 1 ? 's' : ''}
+                    <div className="text-sm text-gray-500 dark:text-gray-400">
+                      Total: {watchTests?.length} test{watchTests?.length !== 1 ? 's' : ''}
                     </div>
                   </div>
 
@@ -1158,10 +1234,11 @@ export default function TestSeriesManagementPage() {
                   </div>
 
                   {/* Actions */}
-                  <div className="sticky bottom-0 mt-2 flex justify-end gap-2 border-t border-gray-200 bg-white py-3 dark:border-gray-800 dark:bg-gray-900">
+                  <div className="sticky inset-x-0 bottom-0 mt-2 flex justify-end gap-2 border-t border-gray-200 bg-white py-2 dark:border-gray-800 dark:bg-gray-900">
                     <Button
                       variant="outline"
                       type="button"
+                      className="py-1.5"
                       onClick={closeDrawer}
                       disabled={saving}
                     >
@@ -1201,7 +1278,7 @@ export default function TestSeriesManagementPage() {
                   <p className="text-sm font-semibold text-gray-900 dark:text-gray-100">
                     Select Tests for Series
                   </p>
-                  <p className="text-xs text-gray-500 dark:text-gray-400">
+                  <p className="text-sm text-gray-500 dark:text-gray-400">
                     Choose from available tests to add to this series
                   </p>
                 </div>
@@ -1246,13 +1323,13 @@ export default function TestSeriesManagementPage() {
                                 {test.title}
                               </h4>
                               {test.pricing?.isFree && (
-                                <span className="rounded-full bg-green-50 px-2 py-0.5 text-xs text-green-700 dark:bg-green-900/40 dark:text-green-300">
+                                <span className="rounded-full bg-green-50 px-2 py-0.5 text-sm text-green-700 dark:bg-green-900/40 dark:text-green-300">
                                   Free
                                 </span>
                               )}
                             </div>
 
-                            <div className="mt-1 flex flex-wrap items-center gap-2 text-xs text-gray-500 dark:text-gray-400">
+                            <div className="mt-1 flex flex-wrap items-center gap-2 text-sm text-gray-500 dark:text-gray-400">
                               <span className="rounded-full bg-gray-100 px-2 py-0.5 dark:bg-gray-800">
                                 {test.testType}
                               </span>
@@ -1270,7 +1347,7 @@ export default function TestSeriesManagementPage() {
                             </div>
 
                             {test.description && (
-                              <p className="mt-1 text-xs text-gray-500 line-clamp-1 dark:text-gray-400">
+                              <p className="mt-1 text-sm text-gray-500 line-clamp-1 dark:text-gray-400">
                                 {test.description}
                               </p>
                             )}

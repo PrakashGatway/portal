@@ -331,7 +331,7 @@ layer(base);
 }
 .apexcharts-tooltip-text-y-value {
   @apply !font-medium;
-}
+}       
 
 .apexcharts-gridline {
   @apply !stroke-gray-100 dark:!stroke-gray-800;

@@ -831,7 +831,7 @@ export default function TestTemplateManagementPage() {
                             <Select
                                 defaultValue={filters.testType}
                                 options={[
-                                    { value: "all", label: "All Types" },
+                                    { value: "all", label: "All" },
                                     ...TEST_TYPE_OPTIONS,
                                 ]}
                                 onChange={(value: string) => {
@@ -844,7 +844,7 @@ export default function TestTemplateManagementPage() {
                             <Select
                                 defaultValue={filters.difficultyLabel}
                                 options={[
-                                    { value: "all", label: "All Difficulty" },
+                                    { value: "all", label: "All" },
                                     ...DIFFICULTY_LABEL_OPTIONS,
                                 ]}
                                 onChange={(value: string) => {
@@ -857,9 +857,9 @@ export default function TestTemplateManagementPage() {
                             <Select
                                 defaultValue={filters.isFree}
                                 options={[
-                                    { value: "all", label: "All Pricing" },
-                                    { value: "true", label: "Free Only" },
-                                    { value: "false", label: "Paid Only" },
+                                    { value: "all", label: "All" },
+                                    { value: "true", label: "Free" },
+                                    { value: "false", label: "Paid" },
                                 ]}
                                 onChange={(value: string) => {
                                     setFilters((prev) => ({ ...prev, isFree: value }));
@@ -1519,7 +1519,7 @@ export default function TestTemplateManagementPage() {
                                                 </div>
                                             </div>
                                             {/* Series selection */}
-                                            <div>
+                                            {/* <div>
                                                 <Label>Assign to Series</Label>
                                                 {seriesList.length === 0 ? (
                                                     <p className="text-xs text-gray-500 dark:text-gray-400">
@@ -1560,7 +1560,7 @@ export default function TestTemplateManagementPage() {
                                                         })}
                                                     </div>
                                                 )}
-                                            </div>
+                                            </div> */}
                                         </div>
                                         {/* Actions */}
                                         <div className="sticky bottom-0 mt-2 flex justify-end gap-2 border-t border-gray-200 bg-white py-3 dark:border-gray-800 dark:bg-gray-900">

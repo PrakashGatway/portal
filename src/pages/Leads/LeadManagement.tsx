@@ -8,11 +8,13 @@ import Label from "../../components/form/Label";
 import Select from "../../components/form/Select";
 import { toast } from "react-toastify";
 import api from "../../axiosInstance";
-import { Eye, Filter, MessageSquare, Pencil, Phone, Target, Trash2, Upload, User, X } from "lucide-react";
+import { Activity, Eye, Filter, MessageCircleCode, MessageSquare, Pencil, Phone, PhoneCall, PhoneCallIcon, PhoneMissed, PhoneMissedIcon, PhoneOutgoingIcon, Target, Trash2, Upload, User, X } from "lucide-react";
 import TextArea from "../../components/form/input/TextArea";
 import { useAuth } from "../../context/UserContext";
 import ExcelUpload from "./ExcelUpload";
 import Tabs from "./tabs";
+import Swal from 'sweetalert2'
+import ActivityLogsModal from "./ActivityLogs";
 
 const LeadStatuses = [
     'new',
@@ -56,6 +58,8 @@ export default function LeadManagement() {
     const { user } = useAuth();
     const [bulkCounselor, setBulkCounselor] = useState("");
     const [bulkAssignLoading, setBulkAssignLoading] = useState(false);
+    const [activityModalOpen, setActivityModalOpen] = useState(false);
+    const [selectedLeadForActivity, setSelectedLeadForActivity] = useState(null);
 
 
     const [selectedLeads, setSelectedLeads] = useState(new Set()); // Track selected lead IDs
@@ -413,7 +417,6 @@ export default function LeadManagement() {
             });
         }
     };
-
     const handlePageChange = (newPage) => {
         setFilters((prev) => ({
             ...prev,
@@ -433,6 +436,59 @@ export default function LeadManagement() {
             }
         }
     };
+
+    const clickToCall = async (id) => {
+        // Ask number first
+        const inputNumber = window.prompt(
+            "Enter the phone number to initiate the call from:",
+            user?.phoneNumber || ""
+        );
+
+        const phoneRegex = /^\d{10,13}$/;
+        const masterNumber =
+            inputNumber && phoneRegex.test(inputNumber)
+                ? inputNumber
+                : user?.phoneNumber;
+
+        if (!masterNumber) {
+            Swal.fire("Error", "No valid phone number available.", "error");
+            return;
+        }
+
+        try {
+            Swal.fire({
+                title: "Calling...",
+                text: "Please wait while we initiate the call",
+                allowOutsideClick: false,
+                allowEscapeKey: false,
+                didOpen: () => {
+                    Swal.showLoading();
+                },
+            });
+
+            const res = await api.get(
+                `/leads/call/${id}?masterNumber=${encodeURIComponent(masterNumber)}`
+            );
+
+            Swal.close();
+
+            Swal.fire({
+                title: res.data?.status === "success" ? "Success" : "Error",
+                text: res.data?.message || "Call response received",
+                icon: res.data?.status === "success" ? "success" : "error",
+            });
+        } catch (err) {
+            Swal.close();
+            Swal.fire(
+                "Error",
+                err.message || "Failed to initiate call",
+                "error"
+            );
+        }
+    };
+
+
+
 
     const openEditModal = (lead) => {
         setSelectedLead(lead);
@@ -637,6 +693,7 @@ export default function LeadManagement() {
                         </div>
                     </div>
                     <div className="flex w-full flex-col gap-3 sm:flex-row sm:items-center sm:justify-end xl:gap-4">
+
 
                         <button
                             onClick={openCreateModal}
@@ -935,7 +992,7 @@ export default function LeadManagement() {
                                             Contact
                                         </th>
                                         <th className="px-2 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500 dark:text-gray-300">
-                                            Course
+                                            Call Actions
                                         </th>
                                         <th className="px-2 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500 dark:text-gray-300">
                                             Counselor
@@ -970,10 +1027,38 @@ export default function LeadManagement() {
                                                     {lead?.fullName || "—"}
                                                 </td>
                                                 <td className="whitespace-nowrap px-2 py-2 text-sm text-gray-500 dark:text-gray-300">
-                                                    Email:{lead.email || "—"} <br />
+                                                    Email:{lead?.email || "—"} <br />
                                                 </td>
-                                                <td className="whitespace-nowrap px-2 py-3 text-sm text-gray-500 dark:text-gray-300">
-                                                    {lead.coursePreference}
+                                                <td className="whitespace-nowrap px-2 py-2 text-sm text-gray-500 dark:text-gray-300">
+                                                    <div className="flex gap-1">
+                                                        {user?.role !== "counselor" && <button
+                                                            onClick={() => {
+                                                                setSelectedLeadForActivity(lead);
+                                                                setActivityModalOpen(true);
+                                                            }}
+                                                            className="p-1 rounded-lg text-purple-600 hover:text-purple-900 dark:text-purple-400 dark:hover:text-purple-300"
+                                                        >
+                                                            <Activity className="h-5 w-5" />
+                                                        </button>}
+                                                        <button
+                                                            onClick={() => clickToCall(lead?._id)}
+                                                            className="px-2 py-1 rounded-full flex gap-2 items-center justify-center border text-orange-600 hover:text-indigo-900 dark:text-indigo-400 dark:hover:text-indigo-300"
+                                                        >
+                                                            <PhoneCall className="h-4 w-4" />
+                                                        </button>
+                                                        <div
+                                                            className="px-2 py-1 rounded-full flex gap-2 items-center justify-center border text-orange-600 hover:text-indigo-900 dark:text-indigo-400 dark:hover:text-indigo-300"
+                                                        >
+                                                            <PhoneOutgoingIcon className="h-4 w-4" />
+                                                            <p className="text-base font-medium">{lead?.callStats?.[0]?.answeredCalls || 0}</p>
+                                                        </div>
+                                                        <div
+                                                            className="px-2 py-1 rounded-full flex gap-2 items-center justify-center border text-orange-600 hover:text-indigo-900 dark:text-indigo-400 dark:hover:text-indigo-300"
+                                                        >
+                                                            <PhoneMissedIcon className="h-4 w-4" />
+                                                            <p className="text-base font-medium">{lead?.callStats?.[0]?.notConnectedCalls || 0}</p>
+                                                        </div>
+                                                    </div>
                                                 </td>
                                                 {/* <td className="whitespace-nowrap px-2 py-3 text-sm text-gray-500 dark:text-gray-300">
                                                     {lead.intendedIntake
@@ -981,26 +1066,26 @@ export default function LeadManagement() {
                                                         : "—"}
                                                 </td> */}
                                                 <td className="whitespace-nowrap px-2 py-3 text-sm text-gray-500 dark:text-gray-300">
-                                                    {lead.assignedCounselor?.name ||
-                                                        lead.assignedCounselor?.email ||
+                                                    {lead?.assignedCounselor?.name ||
+                                                        lead?.assignedCounselor?.email ||
                                                         "Unassigned"}
                                                 </td>
                                                 <td className="whitespace-nowrap px-2 py-3">
                                                     <span
                                                         className={`inline-flex rounded-full px-2 text-xs font-semibold ${getStatusColor(
-                                                            lead.status
+                                                            lead?.status
                                                         )}`}
                                                     >
-                                                        {lead.status.charAt(0).toUpperCase() +
-                                                            lead.status.slice(1)}
+                                                        {lead?.status.charAt(0).toUpperCase() +
+                                                            lead?.status.slice(1)}
                                                     </span>
                                                 </td>
                                                 <td className="whitespace-nowrap px-2 py-2 text-sm text-gray-500 dark:text-gray-300 capitalize">
                                                     {lead?.createdAt &&
-                                                        moment(lead.createdAt).format("MMM D, YYYY h:mm A")}
+                                                        moment(lead?.createdAt).format("MMM D, YYYY h:mm A")}
                                                     <br />
                                                     {user?.role !== "counselor" &&
-                                                        lead.source.replace(/_/g, " ")}
+                                                        lead?.source.replace(/_/g, " ")}
                                                 </td>
                                                 <td className="whitespace-nowrap px-2 py-3 text-sm font-medium">
                                                     <div className="flex space-x-2">
@@ -1251,7 +1336,12 @@ export default function LeadManagement() {
                     </div>
                 )}
             </Modal>
-
+            <ActivityLogsModal
+                isOpen={activityModalOpen}
+                onClose={() => setActivityModalOpen(false)}
+                leadId={selectedLeadForActivity?.phone10}
+                leadName={selectedLeadForActivity?.fullName}
+            />
         </div>
     );
 }
