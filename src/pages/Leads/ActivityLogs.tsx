@@ -1,9 +1,6 @@
-'use client';
-
 import { useState, useEffect, useRef, useCallback } from "react";
 import moment from "moment";
 import { Modal } from "../../components/ui/modal";
-import Select from "../../components/form/Select";
 import { toast } from "react-toastify";
 import api from "../../axiosInstance";
 import {
@@ -21,7 +18,12 @@ import {
     ChevronUp,
     Search,
     Download,
-    RefreshCw
+    RefreshCw,
+    PhoneCall,
+    PhoneForwarded,
+    Ban,
+    XCircle,
+    AlertTriangle,
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 
@@ -67,6 +69,49 @@ const ActivityLogsModal = ({ leadId, leadName, isOpen, onClose }) => {
         { value: "7", label: "Canceled" }
     ];
 
+    const CALL_STATUS_MAP = {
+        3: "Both Answered",
+        4: "Student Ans. - Counselor Unans.",
+        5: "Student. Ans",
+        6: "Student. Unans - Counselor Ans.",
+        7: "Counselor Unanswered",
+        8: "Student. Unans.",
+        9: "Both Unanswered",
+        10: "Counselor Ans.",
+        11: "Rejected Call",
+        12: "Skipped",
+        13: "Counselor Failed",
+        14: "Student. Failed - Counselor Ans.",
+        15: "Student. Failed",
+        16: "Student. Ans - Counselor Failed",
+        17: "Counselor Busy",
+        18: "Student. Ans - Counselor Not Found",
+        19: "Student. Unans - Counselor Busy",
+        21: "Student. Hangup",
+    };
+
+    const CALL_STATUS_ICON = {
+        3: { icon: PhoneCall, color: "text-green-600" },              // Both Answered
+        4: { icon: PhoneIncoming, color: "text-yellow-500" },         // Cust. Ans. - Agent Unans.
+        5: { icon: PhoneIncoming, color: "text-green-600" },          // Cust. Ans
+        6: { icon: PhoneOutgoing, color: "text-yellow-500" },         // Cust. Unans - Agent Ans.
+        7: { icon: PhoneMissed, color: "text-red-500" },               // Agent Unanswered
+        8: { icon: PhoneMissed, color: "text-red-500" },               // Cust. Unans.
+        9: { icon: PhoneOff, color: "text-red-600" },                  // Both Unanswered
+        10: { icon: PhoneOutgoing, color: "text-green-600" },          // Agent Ans.
+        11: { icon: Ban, color: "text-red-600" },                       // Rejected Call
+        12: { icon: PhoneForwarded, color: "text-gray-500" },           // Skipped
+        13: { icon: XCircle, color: "text-red-600" },                   // Agent Failed
+        14: { icon: AlertTriangle, color: "text-orange-500" },          // Cust. Failed - Agent Ans.
+        15: { icon: XCircle, color: "text-red-600" },                   // Cust. Failed
+        16: { icon: AlertTriangle, color: "text-orange-500" },          // Cust. Ans - Agent Failed
+        17: { icon: PhoneOff, color: "text-yellow-600" },               // Agent Busy
+        18: { icon: PhoneOff, color: "text-orange-600" },               // Cust. Ans - Agent Not Found
+        19: { icon: PhoneMissed, color: "text-yellow-600" },            // Cust. Unans - Agent Busy
+        21: { icon: PhoneOff, color: "text-gray-600" },                 // Cust. Hangup
+    };
+
+
     const durationOptions = [
         { value: "0-30", label: "0-30 seconds" },
         { value: "30-60", label: "30-60 seconds" },
@@ -84,7 +129,7 @@ const ActivityLogsModal = ({ leadId, leadName, isOpen, onClose }) => {
             const params = {
                 page: currentPage,
                 limit: 20,
-                phone:leadId,
+                phone: leadId,
                 ...filters
             };
 
@@ -243,32 +288,6 @@ const ActivityLogsModal = ({ leadId, leadName, isOpen, onClose }) => {
         }
     }, [isOpen, filters]);
 
-    const exportToCSV = () => {
-        // Simple CSV export implementation
-        const headers = ["Date", "Time", "Type", "Status", "Duration", "From", "To", "Recording"];
-        const csvData = activities.map(activity => [
-            moment(activity.createdAt).format("YYYY-MM-DD"),
-            moment(activity.createdAt).format("HH:mm:ss"),
-            getCallIcon(activity).icon === PhoneOutgoing ? "Outgoing" : "Incoming",
-            getStatusText(activity.status),
-            `${activity.duration || 0}s`,
-            activity.masterCallNumber || "",
-            activity.phone || "",
-            activity.recordingData ? "Available" : "No"
-        ]);
-
-        const csvContent = [
-            headers.join(","),
-            ...csvData.map(row => row.join(","))
-        ].join("\n");
-
-        const blob = new Blob([csvContent], { type: "text/csv" });
-        const url = window.URL.createObjectURL(blob);
-        const a = document.createElement("a");
-        a.href = url;
-        a.download = `activity-logs-${leadName || "lead"}-${moment().format("YYYY-MM-DD")}.csv`;
-        a.click();
-    };
 
     // Group activities by date
     const groupedActivities = activities.reduce((acc, activity) => {
@@ -280,329 +299,331 @@ const ActivityLogsModal = ({ leadId, leadName, isOpen, onClose }) => {
         return acc;
     }, {});
 
-    const sortedDates = Object.keys(groupedActivities).sort((a, b) => 
+    const sortedDates = Object.keys(groupedActivities).sort((a, b) =>
         moment(b, "DD MMM YY").diff(moment(a, "DD MMM YY"))
     );
 
     return (
-        <Modal isOpen={isOpen} onClose={onClose} className="max-w-full h-screen m-0">
-            <div className="flex h-full bg-white dark:bg-gray-900">
-                {/* Left Sidebar - Timeline */}
-                <div className="w-48 border-r border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800 flex flex-col overflow-y-auto">
-                    {/* Header with close button */}
-                    <div className="sticky top-0 p-4 border-b border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800 flex items-center justify-between">
-                        <div>
-                            <h3 className="text-sm font-semibold text-gray-800 dark:text-white">Student</h3>
-                            {leadName && <p className="text-xs text-gray-600 dark:text-gray-400 mt-1">{leadName}</p>}
-                        </div>
-                        <button
-                            onClick={onClose}
-                            className="p-1 text-gray-500 hover:bg-gray-200 dark:hover:bg-gray-700 rounded"
+        <Modal isOpen={isOpen} onClose={onClose} showCloseButton={false} className="max-w-[95vw] w-full">
+            <div className="relative w-full h-full min-h-[90vh] rounded-3xl dark:bg-gray-900 max-h-[93vh] overflow-hidden no-scrollbar">
+                <div className="sticky z-99 -top-0 left-0 duration-300 ease-in-out right-0 bg-white shadow p-3 px-6 border-gray-400 dark:border-gray-700 dark:bg-gray-800 flex items-center justify-between">
+                    <div className="flex justify-center items-center gap-2">
+                        <h3 className="text-xl font-semibold text-gray-800 dark:text-white">Student :</h3>
+                        {leadName && <p className="text-lg font-medium uppercase text-gray-600 dark:text-gray-400 mt-1">{leadName}</p>}
+                    </div>
+                    <button
+                        onClick={onClose}
+                        className="z-9 flex h-9.5 w-9.5 items-center justify-center rounded-full bg-gray-100 text-gray-400 transition-colors hover:bg-gray-200 hover:text-gray-700 dark:bg-gray-800 dark:text-gray-400 dark:hover:bg-gray-700 dark:hover:text-white sm:right-6 sm:top-6 sm:h-11 sm:w-11"
+                    >
+                        <svg
+                            width="24"
+                            height="24"
+                            viewBox="0 0 24 24"
+                            fill="none"
+                            xmlns="http://www.w3.org/2000/svg"
                         >
-                            <X className="w-4 h-4" />
-                        </button>
-                    </div>
-
-                    {/* Date Range Selector */}
-                    <div className="p-4 border-b border-gray-200 dark:border-gray-700">
-                        <div className="flex items-center gap-2 mb-3">
-                            <Calendar className="w-4 h-4 text-gray-600 dark:text-gray-400" />
-                            <input
-                                type="date"
-                                value={dateRangeStart}
-                                onChange={(e) => handleDateChange("start", e.target.value)}
-                                className="flex-1 text-xs px-2 py-1 border border-gray-300 rounded bg-white dark:bg-gray-700 dark:border-gray-600 dark:text-white"
+                            <path
+                                fillRule="evenodd"
+                                clipRule="evenodd"
+                                d="M6.04289 16.5413C5.65237 16.9318 5.65237 17.565 6.04289 17.9555C6.43342 18.346 7.06658 18.346 7.45711 17.9555L11.9987 13.4139L16.5408 17.956C16.9313 18.3466 17.5645 18.3466 17.955 17.956C18.3455 17.5655 18.3455 16.9323 17.955 16.5418L13.4129 11.9997L17.955 7.4576C18.3455 7.06707 18.3455 6.43391 17.955 6.04338C17.5645 5.65286 16.9313 5.65286 16.5408 6.04338L11.9987 10.5855L7.45711 6.0439C7.06658 5.65338 6.43342 5.65338 6.04289 6.0439C5.65237 6.43442 5.65237 7.06759 6.04289 7.45811L10.5845 11.9997L6.04289 16.5413Z"
+                                fill="currentColor"
                             />
-                        </div>
-                        <div className="flex items-center gap-2">
-                            <span className="text-xs text-gray-500">to</span>
-                            <input
-                                type="date"
-                                value={dateRangeEnd}
-                                onChange={(e) => handleDateChange("end", e.target.value)}
-                                className="flex-1 text-xs px-2 py-1 border border-gray-300 rounded bg-white dark:bg-gray-700 dark:border-gray-600 dark:text-white"
-                            />
-                        </div>
-                    </div>
-
-                    {/* Refresh button */}
-                    <div className="p-3 border-b border-gray-200 dark:border-gray-700">
-                        <button
-                            onClick={() => fetchActivities(true)}
-                            className="w-full flex items-center justify-center gap-2 px-3 py-2 text-sm bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded hover:bg-gray-100 dark:hover:bg-gray-600 text-gray-700 dark:text-gray-300"
-                        >
-                            <RefreshCw className="w-4 h-4" />
-                        </button>
-                    </div>
-
-                    {/* Timeline */}
-                    <div className="flex-1 overflow-y-auto">
-                        {sortedDates.map((date) => (
-                            <div key={date} className="p-3 border-b border-gray-200 dark:border-gray-700">
-                                <p className="text-xs font-semibold text-gray-700 dark:text-gray-300 mb-2">{date}</p>
-                                <div className="space-y-2">
-                                    {groupedActivities[date].map((activity) => {
-                                        const CallIcon = getCallIcon(activity).icon;
-                                        const iconColor = getCallIcon(activity).color;
-                                        return (
-                                            <div
-                                                key={activity._id}
-                                                className="flex items-center gap-2 p-2 rounded hover:bg-gray-200 dark:hover:bg-gray-700 cursor-pointer transition-colors"
-                                                onClick={() => toggleExpand(activity._id)}
-                                            >
-                                                <CallIcon className={`w-4 h-4 ${iconColor}`} />
-                                                <div className="flex-1 min-w-0">
-                                                    <p className="text-xs font-medium text-gray-700 dark:text-gray-300 truncate">
-                                                        {moment(activity.createdAt).format("HH:mm")}
-                                                    </p>
-                                                    <p className="text-xs text-gray-500 dark:text-gray-400 truncate">
-                                                        {activity.extraDetails?.hungupby === 1 ? "Abandoned" : 
-                                                         activity.status === "6" ? "Missed" :
-                                                         getStatusText(activity.status)}
-                                                    </p>
-                                                </div>
-                                            </div>
-                                        );
-                                    })}
-                                </div>
-                            </div>
-                        ))}
-                    </div>
+                        </svg>
+                    </button>
                 </div>
-
-                {/* Right Panel - Main Content */}
-                <div className="flex-1 flex flex-col">
-                    {/* Top Header */}
-                    <div className="flex items-center justify-between p-4 border-b border-gray-200 dark:border-gray-700">
-                        <div>
-                            <h2 className="text-lg font-semibold text-gray-800 dark:text-white">Activity Logs</h2>
-                        </div>
-                        <div className="flex items-center gap-3">
-                            <button
-                                onClick={exportToCSV}
-                                className="flex items-center gap-2 px-3 py-2 text-sm text-gray-700 bg-white border border-gray-300 rounded hover:bg-gray-50 dark:bg-gray-800 dark:border-gray-600 dark:text-gray-300 dark:hover:bg-gray-700"
-                            >
-                                <Download className="w-4 h-4" />
-                            </button>
-                        </div>
-                    </div>
-
-                    {/* Filter Tags and Actions */}
-                    <div className="p-4 border-b border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800">
-                        <div className="flex flex-wrap items-center gap-2 mb-3">
-                            {filters.callType && (
-                                <span className="inline-flex items-center gap-1 px-3 py-1 text-xs font-medium text-gray-700 dark:text-gray-300 bg-gray-200 dark:bg-gray-700 rounded-full">
-                                    Call Type: {callTypes.find(t => t.value === filters.callType)?.label}
-                                    <button onClick={() => setFilters(prev => ({ ...prev, callType: "" }))} className="ml-1 text-gray-500 hover:text-gray-700">×</button>
-                                </span>
-                            )}
-                            {filters.status && (
-                                <span className="inline-flex items-center gap-1 px-3 py-1 text-xs font-medium text-gray-700 dark:text-gray-300 bg-gray-200 dark:bg-gray-700 rounded-full">
-                                    Status: {statusOptions.find(s => s.value === filters.status)?.label}
-                                    <button onClick={() => setFilters(prev => ({ ...prev, status: "" }))} className="ml-1 text-gray-500 hover:text-gray-700">×</button>
-                                </span>
-                            )}
-                            {filters.duration && (
-                                <span className="inline-flex items-center gap-1 px-3 py-1 text-xs font-medium text-gray-700 dark:text-gray-300 bg-gray-200 dark:bg-gray-700 rounded-full">
-                                    Duration: {durationOptions.find(d => d.value === filters.duration)?.label}
-                                    <button onClick={() => setFilters(prev => ({ ...prev, duration: "" }))} className="ml-1 text-gray-500 hover:text-gray-700">×</button>
-                                </span>
-                            )}
-                            {Object.values(filters).some(f => f) && (
+                <div className="flex h-full ">
+                    <div className="w-[50%] border-r-2 border-gray-300 dark:border-gray-700 flex flex-col h-full">
+                        <div className=" sticky z-99 p-3 top-0 left-0 right-0 px-6 flex items-center gap-2 justify-start">
+                            <div className="flex items-center gap-2">
+                                <Calendar className="w-5 h-5 text-gray-600 dark:text-gray-400" />
+                                <input
+                                    type="date"
+                                    value={dateRangeStart}
+                                    onChange={(e) => handleDateChange("start", e.target.value)}
+                                    className="flex-1 text-sm px-2 py-1 border border-gray-300 rounded bg-white dark:bg-gray-700 dark:border-gray-600 dark:text-white"
+                                />
+                            </div>
+                            <div className="flex items-center gap-2">
+                                <span className="text-sm text-gray-600">to</span>
+                                <input
+                                    type="date"
+                                    value={dateRangeEnd}
+                                    onChange={(e) => handleDateChange("end", e.target.value)}
+                                    className="flex-1 text-sm px-2 py-1 border border-gray-300 rounded bg-white dark:bg-gray-700 dark:border-gray-600 dark:text-white"
+                                />
+                            </div>
+                            <div className="ml-3">
                                 <button
-                                    onClick={resetFilters}
-                                    className="text-xs text-blue-600 hover:text-blue-700 dark:text-blue-400 dark:hover:text-blue-300 font-medium"
+                                    onClick={() => fetchActivities(true)}
+                                    className="w-full flex items-center justify-center gap-2 p-1.5 text-sm bg-white dark:bg-gray-700  dark:border-gray-600 rounded hover:bg-gray-100 dark:hover:bg-gray-600 text-gray-700 dark:text-gray-300"
                                 >
-                                    Clear all
+                                    <RefreshCw className="text-orange-600 w-5 h-5" />
                                 </button>
-                            )}
+                            </div>
                         </div>
 
-                        {/* Quick Filters */}
-                        <div className="flex items-center gap-2 mb-3">
-                            <div className="text-xs text-gray-600 dark:text-gray-400">Show:</div>
-                            <button
-                                onClick={() => setFilters(prev => ({ ...prev, callType: prev.callType === "incoming" ? "" : "incoming" }))}
-                                className={`px-2 py-1 text-xs rounded ${filters.callType === "incoming" ? "bg-blue-100 text-blue-700 dark:bg-blue-900 dark:text-blue-200" : "bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300"}`}
-                            >
-                                Incoming
-                            </button>
-                            <button
-                                onClick={() => setFilters(prev => ({ ...prev, callType: prev.callType === "outgoing" ? "" : "outgoing" }))}
-                                className={`px-2 py-1 text-xs rounded ${filters.callType === "outgoing" ? "bg-blue-100 text-blue-700 dark:bg-blue-900 dark:text-blue-200" : "bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300"}`}
-                            >
-                                Outgoing
-                            </button>
-                            <button
-                                onClick={() => setFilters(prev => ({ ...prev, callType: prev.callType === "missed" ? "" : "missed" }))}
-                                className={`px-2 py-1 text-xs rounded ${filters.callType === "missed" ? "bg-blue-100 text-blue-700 dark:bg-blue-900 dark:text-blue-200" : "bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300"}`}
-                            >
-                                Missed
-                            </button>
-                        </div>
+                        <div className="overflow-y-auto max-h-[calc(93vh-150px)] p-3">
+                            {sortedDates.map((date) => (
+                                <div key={date} className="p-3 border-b border-gray-200 dark:border-gray-700">
+                                    <p className="text-xs font-semibold text-gray-700 dark:text-gray-300 mb-2">{date}</p>
+                                    <div className="space-y-2 ">
+                                        {groupedActivities[date].map((activity, index) => {
+                                            const CallIcon = CALL_STATUS_ICON[activity.status].icon;
+                                            const iconColor = CALL_STATUS_ICON[activity.status].color;
+                                            const isLast = index === groupedActivities[date].length - 1;
 
-                        {/* Search */}
-                        <div className="relative">
-                            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
-                            <input
-                                type="text"
-                                name="search"
-                                value={filters.search}
-                                onChange={handleFilterChange}
-                                placeholder="Search activities..."
-                                className="w-full pl-10 pr-3 py-2 text-sm border border-gray-300 rounded bg-white dark:bg-gray-700 dark:border-gray-600 dark:text-white focus:ring-2 focus:ring-blue-500"
-                            />
+                                            return (
+                                                <div
+                                                    key={activity._id}
+                                                    className="relative flex items-center pl-3"
+                                                    onClick={() => toggleExpand(activity._id)}
+                                                >
+                                                    {/* Icon */}
+                                                    <div className="relative z-10 flex items-center justify-center border-2 shadow-lg p-2 bg-white dark:bg-gray-800 rounded-full">
+                                                        <CallIcon className={`w-5 h-5 ${iconColor}`} />
+                                                    </div>
+                                                    <div className="flex-1 min-w-0 p-2 rounded hover:bg-gray-200 dark:hover:bg-gray-700 cursor-pointer transition-colors">
+                                                        <p className="text-xs font-medium text-gray-700 dark:text-gray-300 truncate">
+                                                            {moment(activity.ivrSTime).format("hh:mm A")} - {moment(activity.ivrETime).format("hh:mm A")}
+
+                                                        </p>
+                                                        <p className="text-sm text-gray-600 dark:text-gray-400 truncate">
+                                                            {CALL_STATUS_MAP[activity.status] || "Unknown Status"}
+                                                        </p>
+                                                    </div>
+                                                    {!isLast && (
+                                                        <span className="absolute z-9 left-[30px] h-10 top-10 bottom-0  w-[3px] bg-gray-400 dark:bg-gray-600" />
+                                                    )}
+                                                </div>
+                                            );
+                                        })}
+
+
+                                    </div>
+                                </div>
+                            ))}
                         </div>
                     </div>
 
-                    {/* Activity Feed - Vertical Timeline */}
-                    <div className="flex-1 overflow-y-auto p-6">
-                        <div className="relative">
-                            {/* Vertical Timeline Line */}
-                            <div className="absolute left-6 top-0 bottom-0 w-1 bg-gradient-to-b from-blue-300 to-gray-300 dark:from-blue-600 dark:to-gray-600"></div>
+                    <div className="flex-1 flex flex-col">
+                        <div className="p-3 px-6">
+                            <div className="flex flex-wrap items-center gap-2 mb-2">
+                                {filters.callType && (
+                                    <span className="inline-flex items-center gap-1 px-3 py-1 text-sm font-medium text-gray-700 dark:text-gray-300 bg-gray-200 dark:bg-gray-700 rounded-full">
+                                        Call Type: {callTypes.find(t => t.value === filters.callType)?.label}
+                                        <button onClick={() => setFilters(prev => ({ ...prev, callType: "" }))} className="ml-1 text-gray-500 hover:text-gray-700">×</button>
+                                    </span>
+                                )}
+                                {filters.status && (
+                                    <span className="inline-flex items-center gap-1 px-3 py-1 text-sm font-medium text-gray-700 dark:text-gray-300 bg-gray-200 dark:bg-gray-700 rounded-full">
+                                        Status: {statusOptions.find(s => s.value === filters.status)?.label}
+                                        <button onClick={() => setFilters(prev => ({ ...prev, status: "" }))} className="ml-1 text-gray-500 hover:text-gray-700">×</button>
+                                    </span>
+                                )}
+                                {filters.duration && (
+                                    <span className="inline-flex items-center gap-1 px-3 py-1 text-sm font-medium text-gray-700 dark:text-gray-300 bg-gray-200 dark:bg-gray-700 rounded-full">
+                                        Duration: {durationOptions.find(d => d.value === filters.duration)?.label}
+                                        <button onClick={() => setFilters(prev => ({ ...prev, duration: "" }))} className="ml-1 text-gray-500 hover:text-gray-700">×</button>
+                                    </span>
+                                )}
+                                {Object.values(filters).some(f => f) && (
+                                    <button
+                                        onClick={resetFilters}
+                                        className="text-sm text-blue-600 hover:text-blue-700 dark:text-blue-400 dark:hover:text-blue-300 font-medium"
+                                    >
+                                        Clear all
+                                    </button>
+                                )}
+                            </div>
 
-                            <div className="space-y-6">
-                                {activities.map((activity, index) => {
-                                    const CallIcon = getCallIcon(activity).icon;
-                                    const iconColor = getCallIcon(activity).color;
-                                    const isExpanded = expandedActivities.has(activity._id);
-                                    const isLast = index === activities.length - 1;
+                            {/* Quick Filters */}
+                            <div className="flex items-center gap-2">
+                                {/* <div className="text-sm text-gray-600 dark:text-gray-400">Show:</div> */}
+                                <button
+                                    onClick={() => setFilters(prev => ({ ...prev, callType: prev.callType === "incoming" ? "" : "incoming" }))}
+                                    className={`px-2 py-1 text-sm rounded ${filters.callType === "incoming" ? "bg-blue-100 text-blue-700 dark:bg-blue-900 dark:text-blue-200" : "bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300"}`}
+                                >
+                                    Incoming
+                                </button>
+                                <button
+                                    onClick={() => setFilters(prev => ({ ...prev, callType: prev.callType === "outgoing" ? "" : "outgoing" }))}
+                                    className={`px-2 py-1 text-sm rounded ${filters.callType === "outgoing" ? "bg-blue-100 text-blue-700 dark:bg-blue-900 dark:text-blue-200" : "bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300"}`}
+                                >
+                                    Outgoing
+                                </button>
+                                <button
+                                    onClick={() => setFilters(prev => ({ ...prev, callType: prev.callType === "missed" ? "" : "missed" }))}
+                                    className={`px-2 py-1 text-sm rounded ${filters.callType === "missed" ? "bg-blue-100 text-blue-700 dark:bg-blue-900 dark:text-blue-200" : "bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300"}`}
+                                >
+                                    Missed
+                                </button>
+                            </div>
+                        </div>
 
-                                    // Determine activity title
-                                    let activityTitle = "Activity";
-                                    if (activity.extraDetails?.hungupby === 1) {
-                                        activityTitle = "Abandoned";
-                                    } else if (activity.status === "6") {
-                                        activityTitle = "Missed Call";
-                                    } else if (activity.callType === "outgoing") {
-                                        activityTitle = "Outgoing Call";
-                                    } else if (activity.callType === "incoming") {
-                                        activityTitle = "Incoming Call";
-                                    }
+                        {/* Activity Feed - Vertical Timeline */}
+                        <div className="overflow-y-auto max-h-[calc(93vh-190px)] p-3">
+                            <div className="relative">
+                                {/* Vertical Timeline Line */}
+                                <div className="absolute left-4 top-5 bottom-0 w-0.5 bg-gradient-to-b from-blue-400 to-gray-100 dark:from-blue-600 dark:to-gray-600"></div>
 
-                                    return (
-                                        <motion.div
-                                            key={activity._id}
-                                            ref={isLast ? lastActivityRef : null}
-                                            initial={{ opacity: 0, x: 20 }}
-                                            animate={{ opacity: 1, x: 0 }}
-                                            transition={{ duration: 0.3 }}
-                                            className="relative pl-24"
-                                        >
-                                            {/* Timeline Circle Badge */}
-                                            <div className="absolute left-0 top-2 w-14 h-14 flex items-center justify-center">
-                                                <div className="absolute inset-0 bg-white dark:bg-gray-900 rounded-full border-4 border-gray-100 dark:border-gray-800"></div>
-                                                <div className={`relative z-10 p-3 rounded-full ${iconColor} bg-opacity-20 flex items-center justify-center`}>
-                                                    <CallIcon className="w-6 h-6" />
-                                                </div>
-                                            </div>
+                                <div className="space-y-1">
+                                    {activities.map((activity, index) => {
+                                        const CallIcon = CALL_STATUS_ICON[activity.status].icon;
+                                        const iconColor = CALL_STATUS_ICON[activity.status].color;
+                                        const isExpanded = expandedActivities.has(activity._id);
+                                        const isLast = index === activities.length - 1;
 
-                                            {/* Activity Card */}
-                                            <div
-                                                className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 overflow-hidden cursor-pointer hover:shadow-md transition-shadow"
-                                                onClick={() => toggleExpand(activity._id)}
+                                        // Determine activity title
+                                        let activityTitle = CALL_STATUS_MAP[activity.status] || "Unknown Status";
+
+                                        return (
+                                            <motion.div
+                                                key={activity._id}
+                                                ref={isLast ? lastActivityRef : null}
+                                                initial={{ opacity: 0, x: 20 }}
+                                                animate={{ opacity: 1, x: 0 }}
+                                                transition={{ duration: 0.3 }}
+                                                className="relative pl-10"
                                             >
-                                                {/* Activity Header */}
-                                                <div className="p-4">
-                                                    <div className="flex items-start justify-between">
-                                                        <div className="flex-1">
-                                                            <div className="flex items-center gap-2 mb-2">
-                                                                <span className="font-semibold text-gray-900 dark:text-white">
-                                                                    {activityTitle}
-                                                                </span>
-                                                                <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium ${getStatusColor(activity.status)}`}>
-                                                                    {getStatusText(activity.status)}
-                                                                </span>
-                                                            </div>
-                                                            <div className="text-sm text-gray-600 dark:text-gray-400 space-y-1">
-                                                                <div>{moment(activity.createdAt).format("MMM DD, YYYY")}</div>
-                                                                {activity.masterCallNumber && (
-                                                                    <div className="flex items-center gap-1">
-                                                                        <User className="w-3 h-3" />
-                                                                        {activity.masterCallNumber}
-                                                                    </div>
-                                                                )}
-                                                            </div>
-                                                        </div>
-                                                        <div className="flex items-center gap-2 ml-4">
-                                                            <span className="text-sm font-medium text-gray-900 dark:text-white">
-                                                                {moment(activity.createdAt).format("HH:mm")}
-                                                            </span>
-                                                            {isExpanded ? (
-                                                                <ChevronUp className="w-5 h-5 text-gray-400" />
-                                                            ) : (
-                                                                <ChevronDown className="w-5 h-5 text-gray-400" />
-                                                            )}
-                                                        </div>
+                                                {/* Timeline Circle Badge */}
+                                                <div className="absolute left-0 top-0.5 p-0.5 flex items-center justify-center">
+                                                    <div className="absolute inset-0 bg-white dark:bg-gray-900 rounded-full border-4 border-gray-100 dark:border-gray-800"></div>
+                                                    <div className={`relative z-10 p-2 rounded-full ${iconColor} bg-opacity-20 flex items-center justify-center`}>
+                                                        <CallIcon className="w-4 h-4" />
                                                     </div>
                                                 </div>
 
-                                                {/* Expanded Details */}
-                                                <AnimatePresence>
-                                                    {isExpanded && (
-                                                        <motion.div
-                                                            initial={{ height: 0, opacity: 0 }}
-                                                            animate={{ height: "auto", opacity: 1 }}
-                                                            exit={{ height: 0, opacity: 0 }}
-                                                            transition={{ duration: 0.3 }}
-                                                        >
-                                                            <div className="px-4 pb-4 border-t border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-700/50">
-                                                                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pt-4 text-sm">
+                                                {/* Activity Card */}
+                                                <div
+                                                    className="bg-gray-100 rounded-lg"
+                                                >
+                                                    <div className="p-2.5 space-y-1">
+                                                        <div className="flex items-start justify-between">
+                                                            <div className="flex-1">
+                                                                <div className="flex items-center gap-2">
+                                                                    <span className="font-semibold text-gray-700 text-sm dark:text-white">
+                                                                        {activityTitle}
+                                                                    </span>
+                                                                    <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium ${getStatusColor(activity.status)}`}>
+                                                                        {getStatusText(activity.status)}
+                                                                    </span>
+                                                                </div>
+                                                            </div>
+
+                                                            <div className="flex items-center gap-2 ml-4">
+                                                                <span className="text-sm font-medium text-gray-900 dark:text-white">
+                                                                    {moment(activity.ivrSTime).format("MMM DD, YYYY hh:mm A")}
+                                                                </span>
+                                                            </div>
+                                                        </div>
+                                                        <div className="flex gap-2 text-sm">
+                                                            <span className="text-gray-600 dark:text-gray-400">Call Duration:</span>
+                                                            <span className="font-medium text-gray-900 dark:text-white">{activity.duration || 0}s</span>
+                                                        </div>
+                                                        <div className="flex gap-2 text-sm">
+                                                            <span className="text-gray-600 dark:text-gray-400">Call Hangup by :</span>
+                                                            <span className="font-medium text-gray-900 dark:text-white">{activity?.extraDetails?.HangupBySourceDetected == 1 ? "Counselor" : "Student"}</span>
+                                                        </div>
+                                                        {(() => {
+                                                            let recordingData = [];
+
+                                                            try {
+                                                                recordingData =
+                                                                    typeof activity?.recordingData === "string"
+                                                                        ? JSON.parse(activity.recordingData)
+                                                                        : activity?.recordingData || [];
+                                                            } catch (err) {
+                                                                console.error("Invalid recordingData JSON", err);
+                                                                recordingData = [];
+                                                            }
+
+                                                            return (
+                                                                recordingData.length > 0 && (
                                                                     <div>
-                                                                        <p className="font-medium text-gray-900 dark:text-white mb-3">Call Details</p>
-                                                                        <div className="space-y-2">
-                                                                            <div className="flex justify-between">
-                                                                                <span className="text-gray-600 dark:text-gray-400">From:</span>
-                                                                                <span className="font-medium text-gray-900 dark:text-white">{activity.masterCallNumber || "N/A"}</span>
-                                                                            </div>
-                                                                            <div className="flex justify-between">
-                                                                                <span className="text-gray-600 dark:text-gray-400">To:</span>
-                                                                                <span className="font-medium text-gray-900 dark:text-white">{activity.phone || "N/A"}</span>
-                                                                            </div>
-                                                                            <div className="flex justify-between">
-                                                                                <span className="text-gray-600 dark:text-gray-400">Duration:</span>
-                                                                                <span className="font-medium text-gray-900 dark:text-white">{activity.duration || 0}s</span>
+                                                                        <audio
+                                                                            controls
+                                                                            className="w-full"
+                                                                            preload="none"
+                                                                            controlsList="nodownload noplaybackrate"
+                                                                        >
+                                                                            <source
+                                                                                src={`https://w.digiskyweb.com/v2/recording/direct/28882897${recordingData[0]?.file}`}
+                                                                                type="audio/mpeg"
+                                                                            />
+                                                                            Your browser does not support the audio element.
+                                                                        </audio>
+                                                                    </div>
+                                                                )
+                                                            );
+                                                        })()}
+
+                                                    </div>
+                                                    {/* <AnimatePresence>
+                                                        {isExpanded && (
+                                                            <motion.div
+                                                                initial={{ height: 0, opacity: 0 }}
+                                                                animate={{ height: "auto", opacity: 1 }}
+                                                                exit={{ height: 0, opacity: 0 }}
+                                                                transition={{ duration: 0.3 }}
+                                                            >
+                                                                <div className="px-4 pb-4 border-t border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-700/50">
+                                                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pt-4 text-sm">
+                                                                        <div>
+                                                                            <p className="font-medium text-gray-900 dark:text-white mb-3">Call Details</p>
+                                                                            <div className="space-y-2">
+                                                                                <div className="flex justify-between">
+                                                                                    <span className="text-gray-600 dark:text-gray-400">From:</span>
+                                                                                    <span className="font-medium text-gray-900 dark:text-white">{activity.masterCallNumber || "N/A"}</span>
+                                                                                </div>
+                                                                                <div className="flex justify-between">
+                                                                                    <span className="text-gray-600 dark:text-gray-400">To:</span>
+                                                                                    <span className="font-medium text-gray-900 dark:text-white">{activity.phone || "N/A"}</span>
+                                                                                </div>
+                                                                                <div className="flex justify-between">
+                                                                                    <span className="text-gray-600 dark:text-gray-400">Duration:</span>
+                                                                                    <span className="font-medium text-gray-900 dark:text-white">{activity.duration || 0}s</span>
+                                                                                </div>
                                                                             </div>
                                                                         </div>
-                                                                    </div>
-                                                                    <div>
-                                                                        <p className="font-medium text-gray-900 dark:text-white mb-3">Additional Info</p>
-                                                                        <div className="space-y-2">
-                                                                            {activity.extraDetails && Object.entries(activity.extraDetails).slice(0, 4).map(([key, value]) => (
-                                                                                <div key={key} className="flex justify-between">
-                                                                                    <span className="text-gray-600 dark:text-gray-400 capitalize">{key}:</span>
-                                                                                    <span className="font-medium text-gray-900 dark:text-white">{String(value)}</span>
-                                                                                </div>
-                                                                            ))}
+                                                                        <div>
+                                                                            <p className="font-medium text-gray-900 dark:text-white mb-3">Additional Info</p>
+                                                                            <div className="space-y-2">
+                                                                                {activity.extraDetails && Object.entries(activity.extraDetails).slice(0, 4).map(([key, value]) => (
+                                                                                    <div key={key} className="flex justify-between">
+                                                                                        <span className="text-gray-600 dark:text-gray-400 capitalize">{key}:</span>
+                                                                                        <span className="font-medium text-gray-900 dark:text-white">{String(value)}</span>
+                                                                                    </div>
+                                                                                ))}
+                                                                            </div>
                                                                         </div>
                                                                     </div>
                                                                 </div>
-                                                            </div>
-                                                        </motion.div>
-                                                    )}
-                                                </AnimatePresence>
-                                            </div>
-                                        </motion.div>
-                                    );
-                                })}
+                                                            </motion.div>
+                                                        )}
+                                                    </AnimatePresence> */}
+                                                </div>
+                                            </motion.div>
+                                        );
+                                    })}
 
-                                {loading && (
-                                    <div className="flex justify-center py-8">
-                                        <div className="w-8 h-8 border-4 border-blue-500 border-t-transparent rounded-full animate-spin"></div>
-                                    </div>
-                                )}
+                                    {loading && (
+                                        <div className="flex justify-center py-8">
+                                            <div className="w-8 h-8 border-4 border-blue-500 border-t-transparent rounded-full animate-spin"></div>
+                                        </div>
+                                    )}
 
-                                {!loading && activities.length === 0 && (
-                                    <div className="text-center py-12">
-                                        <Phone className="w-12 h-12 mx-auto text-gray-400 mb-4" />
-                                        <h3 className="text-lg font-medium text-gray-900 dark:text-white mb-2">
-                                            No activity found
-                                        </h3>
-                                        <p className="text-gray-500 dark:text-gray-400">
-                                            No calls or activities match your current filters.
-                                        </p>
-                                    </div>
-                                )}
+                                    {!loading && activities.length === 0 && (
+                                        <div className="text-center py-12">
+                                            <Phone className="w-12 h-12 mx-auto text-gray-400 mb-4" />
+                                            <h3 className="text-lg font-medium text-gray-900 dark:text-white mb-2">
+                                                No activity found
+                                            </h3>
+                                            <p className="text-gray-500 dark:text-gray-400">
+                                                No calls or activities match your current filters.
+                                            </p>
+                                        </div>
+                                    )}
+                                </div>
                             </div>
                         </div>
                     </div>
