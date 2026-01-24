@@ -1031,7 +1031,7 @@ export default function LeadManagement() {
                                                 </td>
                                                 <td className="whitespace-nowrap px-2 py-2 text-sm text-gray-500 dark:text-gray-300">
                                                     <div className="flex gap-1">
-                                                        {user?.role !== "counselor" && <button
+                                                        <button
                                                             onClick={() => {
                                                                 setSelectedLeadForActivity(lead);
                                                                 setActivityModalOpen(true);
@@ -1039,7 +1039,7 @@ export default function LeadManagement() {
                                                             className="p-1 rounded-lg text-purple-600 hover:text-purple-900 dark:text-purple-400 dark:hover:text-purple-300"
                                                         >
                                                             <Activity className="h-5 w-5" />
-                                                        </button>}
+                                                        </button>
                                                         <button
                                                             onClick={() => clickToCall(lead?._id)}
                                                             className="px-2 py-1 rounded-full flex gap-2 items-center justify-center border text-orange-600 hover:text-indigo-900 dark:text-indigo-400 dark:hover:text-indigo-300"
