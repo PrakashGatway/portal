@@ -30,6 +30,7 @@ import {
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useAuth } from "../../context/UserContext";
+import { set } from "react-hook-form";
 
 const ActivityLogsModal = ({ leadId, leadName, isOpen, onClose }) => {
     const [activities, setActivities] = useState([]);
@@ -420,7 +421,7 @@ const ActivityLogsModal = ({ leadId, leadName, isOpen, onClose }) => {
                         {leadName && <p className="text-lg font-medium uppercase text-gray-600 dark:text-gray-400 mt-1">{leadName}</p>}
                     </div>
                     <button
-                        onClick={onClose}
+                        onClick={() => { onClose(); setShowNotesForm(false); }}
                         className="z-9 flex h-9.5 w-9.5 items-center justify-center rounded-full bg-gray-100 text-gray-400 transition-colors hover:bg-gray-200 hover:text-gray-700 dark:bg-gray-800 dark:text-gray-400 dark:hover:bg-gray-700 dark:hover:text-white sm:right-6 sm:top-6 sm:h-11 sm:w-11"
                     >
                         <svg
@@ -440,7 +441,6 @@ const ActivityLogsModal = ({ leadId, leadName, isOpen, onClose }) => {
                     </button>
                 </div>
                 <div className="flex h-full ">
-                    {/* Left Panel - Activity List */}
                     <div className="w-[50%] border-r-2 border-gray-300 dark:border-gray-700 flex flex-col h-full">
                         <div className=" sticky z-99 p-3 top-0 left-0 right-0 px-6 flex items-center gap-2 justify-start">
                             <div className="flex items-center gap-2">
@@ -812,25 +812,40 @@ const ActivityLogsModal = ({ leadId, leadName, isOpen, onClose }) => {
                                                                             {activityTitle}
                                                                         </span>
                                                                         <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium ${getStatusColor(activity.status)}`}>
-                                                                            {getStatusText(activity.status)}
+                                                                            {getStatusText(activity?.status)}
+                                                                        </span>
+                                                                        <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium ${getStatusColor(activity.status)}`}>
+                                                                            {activity?.extraDetails?.cType == "IBD" ? "Incoming" : "Outgoing"}
                                                                         </span>
                                                                     </div>
                                                                 </div>
 
                                                                 <div className="flex items-center gap-2 ml-4">
                                                                     <span className="text-sm font-medium text-gray-900 dark:text-white">
-                                                                        {moment(activity.ivrSTime).format("MMM DD, YYYY hh:mm A")}
+                                                                        {moment(activity?.ivrSTime).format("MMM DD, YYYY hh:mm A")}
                                                                     </span>
                                                                 </div>
                                                             </div>
-                                                            <div className="flex gap-2 text-sm">
+                                                            <div className="flex flex-wrap gap-2 text-sm">
                                                                 <span className="text-gray-600 dark:text-gray-400">Call Duration:</span>
-                                                                <span className="font-medium text-gray-900 dark:text-white">{activity.duration || 0}s</span>
-                                                            </div>
-                                                            <div className="flex gap-2 text-sm">
-                                                                <span className="text-gray-600 dark:text-gray-400">Call Hangup by :</span>
+                                                                <span className="font-medium text-gray-900 dark:text-white">{activity?.duration || 0}s</span>
+                                                                <span className="text-gray-600 dark:text-gray-400 ml-6">Call Hangup by :</span>
                                                                 <span className="font-medium text-gray-900 dark:text-white">{activity?.extraDetails?.HangupBySourceDetected == 1 ? "Counselor" : "Student"}</span>
                                                             </div>
+                                                            <div className="flex flex-wrap gap-2 text-sm">
+                                                                {activity?.extraDetails?.callType && <>
+                                                                    <span className="text-gray-600 dark:text-gray-400">Call Type :</span>
+                                                                    <span className="font-medium text-gray-900 dark:text-white">{activity?.extraDetails?.callType}</span>
+                                                                </>}
+                                                                {activity?.extraDetails?.callPurpose && <>
+                                                                    <span className="text-gray-600 dark:text-gray-400 ml-6">Call Purpose :</span>
+                                                                    <span className="font-medium text-gray-900 dark:text-white">{activity?.extraDetails?.callPurpose}</span>
+                                                                </>}
+                                                            </div>
+                                                            {activity?.extraDetails?.notes && <div className="flex gap-2 text-sm">
+                                                                <span className="text-gray-600 dark:text-gray-400">Notes :</span>
+                                                                <span className="font-medium text-gray-900 dark:text-white">{activity?.extraDetails?.notes}</span>
+                                                            </div>}
                                                             {(() => {
                                                                 let recordingData = [];
                                                                 try {

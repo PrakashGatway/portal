@@ -64,10 +64,7 @@ export default function LeadManagement() {
 
     const [selectedLeads, setSelectedLeads] = useState(new Set()); // Track selected lead IDs
     const [showAppliedFilters, setShowAppliedFilters] = useState(false);
-    const [leadStats, setLeadStats] = useState({
-        calls: 0,
-        messages: 0
-    });
+
     const [stats, setStats] = useState([]) as any;
     const [selectAll, setSelectAll] = useState(false); // Track "select all" checkbox state
 
