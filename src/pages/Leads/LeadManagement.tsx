@@ -16,6 +16,7 @@ import Tabs from "./tabs";
 import Swal from 'sweetalert2'
 import ActivityLogsModal from "./ActivityLogs";
 import IncomingCallsModal from "./IncomingCall";
+import { set } from "react-hook-form";
 
 const LeadStatuses = [
     'new',
@@ -61,7 +62,8 @@ export default function LeadManagement() {
     const [bulkAssignLoading, setBulkAssignLoading] = useState(false);
     const [activityModalOpen, setActivityModalOpen] = useState(false);
     const [selectedLeadForActivity, setSelectedLeadForActivity] = useState(null);
-
+    const [isCallModalOpen, setCallModalOpen] = useState(false);
+    const [customNumber, setCustomNumber] = useState("")
 
     const [selectedLeads, setSelectedLeads] = useState(new Set()); // Track selected lead IDs
     const [showAppliedFilters, setShowAppliedFilters] = useState(false);
@@ -435,13 +437,22 @@ export default function LeadManagement() {
         }
     };
 
-    const clickToCall = async (id) => {
-        // Ask number first
-        const inputNumber = window.prompt(
-            "Enter the phone number to initiate the call from:",
-            user?.phoneNumber || ""
-        );
-
+    const clickToCall = async (lead) => {
+        setSelectedLead(lead);
+        setCallModalOpen(true);
+    }
+    // Ask number first
+    const callNow = async (customNumber) => { 
+        let inputNumber = "";
+        if(customNumber){
+            inputNumber = customNumber;
+        }else{
+            if (!user.phoneNumber){
+                Swal.fire("Error", "Your phone number is not set in profile.", "error");
+                return;
+            }
+            inputNumber = user?.phoneNumber || inputNumber;
+        }
         const phoneRegex = /^\d{10,13}$/;
         const masterNumber =
             inputNumber && phoneRegex.test(inputNumber)
@@ -450,6 +461,10 @@ export default function LeadManagement() {
 
         if (!masterNumber) {
             Swal.fire("Error", "No valid phone number available.", "error");
+            return;
+        }
+        if (!selectedLead) {
+            Swal.fire("Error", "No lead selected for calling.", "error");
             return;
         }
 
@@ -465,7 +480,7 @@ export default function LeadManagement() {
             });
 
             const res = await api.get(
-                `/leads/call/${id}?masterNumber=${encodeURIComponent(masterNumber)}`
+                `/leads/call/${selectedLead._id}?masterNumber=${encodeURIComponent(masterNumber)}`
             );
 
             Swal.close();
@@ -691,7 +706,7 @@ export default function LeadManagement() {
                         </div>
                     </div>
                     <div className="flex w-full flex-col gap-3 sm:flex-row sm:items-center sm:justify-end xl:gap-4">
-                         <button
+                        <button
                             onClick={() => setShowIncomingCalls(true)}
                             className="flex w-full items-center justify-center gap-2 rounded-full border border-indigo-600 bg-indigo-600 px-3 py-2 text-sm font-medium text-white shadow-theme-xs hover:bg-indigo-700 hover:text-white lg:inline-flex lg:w-auto"
                         >
@@ -1050,7 +1065,7 @@ export default function LeadManagement() {
                                                             <Activity className="h-5 w-5" />
                                                         </button>
                                                         <button
-                                                            onClick={() => clickToCall(lead?._id)}
+                                                            onClick={() => clickToCall(lead)}
                                                             className="px-2 py-1 rounded-full flex gap-2 items-center justify-center border text-orange-600 hover:text-indigo-900 dark:text-indigo-400 dark:hover:text-indigo-300"
                                                         >
                                                             <PhoneCall className="h-4 w-4" />
@@ -1345,13 +1360,78 @@ export default function LeadManagement() {
                     </div>
                 )}
             </Modal>
+
+            <Modal isOpen={isCallModalOpen} onClose={() => setCallModalOpen(false)} className="max-w-xl">
+                {selectedLead && (
+                    <div className="no-scrollbar relative w-full overflow-y-auto rounded-3xl bg-white p-4 dark:bg-gray-900 lg:p-6">
+                        <div className="px-2 pr-14">
+                            <h4 className="mb-2 text-2xl font-semibold text-gray-800 dark:text-white/90">Confirm Call</h4>
+                            <p className="mb-2 text-base text-gray-500 dark:text-gray-400">
+                                Are you sure you want to Call on this lead <strong>{selectedLead.fullName}</strong> ?
+                            </p>
+                        </div>
+                        <div className="p-2">
+                            <label htmlFor="customNumber" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                                Or enter a custom number:
+                            </label>
+                            <div className="flex gap-2 mb-1">
+                                <input
+                                    id="customNumber"
+                                    type="tel"
+                                    placeholder="Enter phone number"
+                                    className="flex-1 rounded-md border border-gray-300 bg-white px-3 py-2 text-sm focus:border-indigo-500 focus:outline-none focus:ring-indigo-500 dark:border-gray-600 dark:bg-gray-800 dark:text-white"
+                                    onChange={(e) => {
+                                        setCustomNumber(e.target.value);
+                                    }}
+                                />
+                                <Button
+                                    size="sm"
+                                    variant="primary"
+                                    onClick={() => {
+                                        callNow(customNumber);
+                                        setCallModalOpen(false);
+                                    }}
+                                    className="whitespace-nowrap"
+                                >
+                                    <PhoneCall className="h-4 w-4 mr-1" />
+                                    Call
+                                </Button>
+                            </div>
+                        </div>
+                        <div className="">
+                            <div className="rounded-md border border-red-50 p-2 dark:bg-red-900/20">
+                                <div className="flex">
+                                    <div className="ml-3">
+                                        <h3 className="text-base font-medium text-red-800 dark:text-red-200">Warning</h3>
+                                        <div className="mt-2 text-sm text-red-700 dark:text-red-300">
+                                            <p>By this action you can call on this lead. before continuing, please ensure that the phone number by that you are calling is ready to receive calls.</p>
+                                        </div>
+                                    </div>
+                                    <div>
+                                        <img className="h-30 w-70 object-contain" src="https://cdn-icons-gif.flaticon.com/17576/17576940.gif" alt="" />
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div className="flex items-center gap-3 px-2 mt-6 lg:justify-end">
+                            <Button size="sm" variant="primary" onClick={() => {callNow(); setCallModalOpen(false)}}>
+                                Call Now
+                            </Button>
+                            <Button size="sm" variant="outline" onClick={() => setCallModalOpen(false)}>
+                                Cancel
+                            </Button>
+                        </div>
+                    </div>
+                )
+                }
+            </Modal >
             <ActivityLogsModal
                 isOpen={activityModalOpen}
                 onClose={() => setActivityModalOpen(false)}
                 leadId={selectedLeadForActivity?.phone10}
                 leadName={selectedLeadForActivity?.fullName}
             />
-        </div>
+        </div >
     );
 }
 
