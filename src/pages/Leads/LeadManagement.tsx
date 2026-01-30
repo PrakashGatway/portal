@@ -8,13 +8,14 @@ import Label from "../../components/form/Label";
 import Select from "../../components/form/Select";
 import { toast } from "react-toastify";
 import api from "../../axiosInstance";
-import { Activity, Eye, Filter, MessageCircleCode, MessageSquare, Pencil, Phone, PhoneCall, PhoneCallIcon, PhoneMissed, PhoneMissedIcon, PhoneOutgoingIcon, Target, Trash2, Upload, User, X } from "lucide-react";
+import { Activity, Eye, Filter, MessageCircleCode, MessageSquare, Pencil, Phone, PhoneCall, PhoneCallIcon, PhoneIncomingIcon, PhoneMissed, PhoneMissedIcon, PhoneOutgoingIcon, Target, Trash2, Upload, User, X } from "lucide-react";
 import TextArea from "../../components/form/input/TextArea";
 import { useAuth } from "../../context/UserContext";
 import ExcelUpload from "./ExcelUpload";
 import Tabs from "./tabs";
 import Swal from 'sweetalert2'
 import ActivityLogsModal from "./ActivityLogs";
+import IncomingCallsModal from "./IncomingCall";
 
 const LeadStatuses = [
     'new',
@@ -67,7 +68,7 @@ export default function LeadManagement() {
 
     const [stats, setStats] = useState([]) as any;
     const [selectAll, setSelectAll] = useState(false); // Track "select all" checkbox state
-
+    const [showIncomingCalls, setShowIncomingCalls] = useState(false);
     const [showExcelUpload, setShowExcelUpload] = useState(false);
 
     const getCounselorName = (counselorId) => {
@@ -690,7 +691,13 @@ export default function LeadManagement() {
                         </div>
                     </div>
                     <div className="flex w-full flex-col gap-3 sm:flex-row sm:items-center sm:justify-end xl:gap-4">
-
+                         <button
+                            onClick={() => setShowIncomingCalls(true)}
+                            className="flex w-full items-center justify-center gap-2 rounded-full border border-indigo-600 bg-indigo-600 px-3 py-2 text-sm font-medium text-white shadow-theme-xs hover:bg-indigo-700 hover:text-white lg:inline-flex lg:w-auto"
+                        >
+                            <PhoneIncomingIcon className="h-4 w-4" />
+                            Incoming Calls
+                        </button>
 
                         <button
                             onClick={openCreateModal}
@@ -721,7 +728,12 @@ export default function LeadManagement() {
                     </div>
                 </div>
             </div>
-
+            <IncomingCallsModal
+                isOpen={showIncomingCalls}
+                onClose={() => setShowIncomingCalls(false)}
+                setSelectedLeadForActivity={setSelectedLeadForActivity}
+                setActivityModalOpen={setActivityModalOpen}
+            />
             <Modal
                 isOpen={showExcelUpload}
                 onClose={() => setShowExcelUpload(false)}
