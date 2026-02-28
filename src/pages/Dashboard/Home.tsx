@@ -164,7 +164,7 @@ const EducationAnalytics = () => {
     );
   };
 
-  if (user.role == "counselor" || user?.role == "manager") {
+  if (user.role == "counselor" || user?.role == "manager" || user.role == "leader") {
     return (<LeadManagement />)
   }
 

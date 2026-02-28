@@ -140,7 +140,7 @@ const AppHeader: React.FC = () => {
                         <NotificationDropdown />
 
                         {/* Referral Reward Wallet Dropdown */}
-                        {user.role != "counselor" && user.role != "teacher" && <div className="relative">
+                        {user.role != "counselor" && user.role != "teacher" && user.role != "leader" && user.role != "manager" && <div className="relative">
                             <motion.button
                                 whileHover={{ scale: 1.02 }}
                                 whileTap={{ scale: 0.98 }}
@@ -285,7 +285,7 @@ const AppHeader: React.FC = () => {
 
 
                         {/* Category Button */}
-                        {user.role != 'counselor' && <>
+                        {user.role != 'counselor' && user.role != 'manager' && user.role != 'leader' && user.role != 'teacher' && <>
                             <motion.button
                                 whileHover={{ scale: 1.02 }}
                                 whileTap={{ scale: 0.98 }}
@@ -314,7 +314,7 @@ const AppHeader: React.FC = () => {
                     </div>
 
                     {/* User Dropdown */}
-                    {user.role != 'counselor' && <UserDropdown user={user} logout={logout} />}
+                    {user.role != 'counselor' && user.role != 'manager' && user.role != 'leader' && <UserDropdown user={user} logout={logout} />}
 
                 </div>
             </div>

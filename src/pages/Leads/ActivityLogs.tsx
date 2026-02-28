@@ -30,7 +30,6 @@ import {
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useAuth } from "../../context/UserContext";
-import { set } from "react-hook-form";
 
 const ActivityLogsModal = ({ leadId, leadName, isOpen, onClose }) => {
     const [activities, setActivities] = useState([]);
@@ -87,6 +86,8 @@ const ActivityLogsModal = ({ leadId, leadName, isOpen, onClose }) => {
     ];
 
     const CALL_STATUS_MAP = {
+        "Answer": "Answered",
+        "Missed": "Missed",
         3: "Both Answered",
         4: "Student Ans. - Counselor Unans.",
         5: "Student. Ans",
@@ -108,6 +109,9 @@ const ActivityLogsModal = ({ leadId, leadName, isOpen, onClose }) => {
     };
 
     const CALL_STATUS_ICON = {
+
+        "Answer": { icon: PhoneCall, color: "text-green-600" },
+        "Missed": { icon: PhoneMissed, color: "text-red-600" },
         3: { icon: PhoneCall, color: "text-green-600" },
         4: { icon: PhoneIncoming, color: "text-yellow-500" },
         5: { icon: PhoneIncoming, color: "text-green-600" },
@@ -154,18 +158,6 @@ const ActivityLogsModal = ({ leadId, leadName, isOpen, onClose }) => {
         { value: "feedback", label: "Feedback" }
     ];
 
-    const ratings = [
-        { value: "1", label: "⭐", text: "Poor" },
-        { value: "2", label: "⭐⭐", text: "Fair" },
-        { value: "3", label: "⭐⭐⭐", text: "Good" },
-        { value: "4", label: "⭐⭐⭐⭐", text: "Very Good" },
-        { value: "5", label: "⭐⭐⭐⭐⭐", text: "Excellent" }
-    ];
-
-    const tagOptions = [
-        "Interested", "Not Interested", "Callback", "Urgent",
-        "Technical Issue", "Payment", "Documentation", "Training"
-    ];
 
     const fetchActivities = useCallback(async (reset = false) => {
         if (loading) return;
@@ -242,15 +234,6 @@ const ActivityLogsModal = ({ leadId, leadName, isOpen, onClose }) => {
     const handleNotesFormChange = (e) => {
         const { name, value } = e.target;
         setNotesForm(prev => ({ ...prev, [name]: value }));
-    };
-
-    const handleTagToggle = (tag) => {
-        setNotesForm(prev => {
-            const newTags = prev.tags.includes(tag)
-                ? prev.tags.filter(t => t !== tag)
-                : [...prev.tags, tag];
-            return { ...prev, tags: newTags };
-        });
     };
 
     const handleSubmitNotes = async () => {
@@ -477,8 +460,8 @@ const ActivityLogsModal = ({ leadId, leadName, isOpen, onClose }) => {
                                     <p className="text-xs font-semibold text-gray-700 dark:text-gray-300 mb-2">{date}</p>
                                     <div className="space-y-2 ">
                                         {groupedActivities[date].map((activity, index) => {
-                                            const CallIcon = CALL_STATUS_ICON[activity.status].icon;
-                                            const iconColor = CALL_STATUS_ICON[activity.status].color;
+                                            const CallIcon = CALL_STATUS_ICON[activity.status]?.icon || PhoneCall;
+                                            const iconColor = CALL_STATUS_ICON[activity.status]?.color || "text-gray-600";
                                             const isLast = index === groupedActivities[date].length - 1;
 
                                             return (
@@ -496,7 +479,9 @@ const ActivityLogsModal = ({ leadId, leadName, isOpen, onClose }) => {
                                                             {moment(activity.ivrSTime).format("hh:mm A")} - {moment(activity.ivrETime).format("hh:mm A")}
                                                         </p>
                                                             <p className="text-sm text-gray-600 dark:text-gray-400 truncate">
-                                                                {CALL_STATUS_MAP[activity.status] || "Unknown Status"}
+                                                                {!isNaN(activity.status)
+                                                                    ? CALL_STATUS_MAP[Number(activity.status)] || "Unknown Status"
+                                                                    : activity.status}
                                                             </p>
                                                         </div>
                                                         <div className="-mt-1.5">
@@ -781,11 +766,12 @@ const ActivityLogsModal = ({ leadId, leadName, isOpen, onClose }) => {
 
                                     <div className="space-y-1">
                                         {activities.map((activity, index) => {
-                                            const CallIcon = CALL_STATUS_ICON[activity.status].icon;
-                                            const iconColor = CALL_STATUS_ICON[activity.status].color;
-                                            const isExpanded = expandedActivities.has(activity._id);
+                                            const CallIcon = CALL_STATUS_ICON[activity.status].icon || PhoneCall;
+                                            const iconColor = CALL_STATUS_ICON[activity.status].color || "text-gray-600";
                                             const isLast = index === activities.length - 1;
-                                            let activityTitle = CALL_STATUS_MAP[activity.status] || "Unknown Status";
+                                            let activityTitle = !isNaN(activity.status)
+                                                ? CALL_STATUS_MAP[Number(activity.status)] || "Unknown Status"
+                                                : activity.status || "Unknown Status";
 
                                             return (
                                                 <motion.div
@@ -812,7 +798,9 @@ const ActivityLogsModal = ({ leadId, leadName, isOpen, onClose }) => {
                                                                             {activityTitle}
                                                                         </span>
                                                                         <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium ${getStatusColor(activity.status)}`}>
-                                                                            {getStatusText(activity?.status)}
+                                                                            {!isNaN(activity.status)
+                                                                                ? CALL_STATUS_MAP[Number(activity.status)] || "Unknown Status"
+                                                                                : activity.status}
                                                                         </span>
                                                                         <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium ${getStatusColor(activity.status)}`}>
                                                                             {activity?.extraDetails?.cType == "IBD" ? "Incoming" : "Outgoing"}
@@ -847,19 +835,25 @@ const ActivityLogsModal = ({ leadId, leadName, isOpen, onClose }) => {
                                                                 <span className="font-medium text-gray-900 dark:text-white">{activity?.extraDetails?.notes}</span>
                                                             </div>}
                                                             {(() => {
-                                                                let recordingData = [];
+                                                                let recordingData = null;
+
                                                                 try {
-                                                                    recordingData =
-                                                                        typeof activity?.recordingData === "string"
-                                                                            ? JSON.parse(activity.recordingData)
-                                                                            : activity?.recordingData || [];
+                                                                    if (typeof activity?.recordingData === "string") {
+                                                                        if (activity.recordingData.startsWith("http")) {
+                                                                            recordingData = activity.recordingData;
+                                                                        } else {
+                                                                            recordingData = JSON.parse(activity.recordingData);
+                                                                        }
+                                                                    } else {
+                                                                        recordingData = activity?.recordingData || null;
+                                                                    }
                                                                 } catch (err) {
                                                                     console.error("Invalid recordingData JSON", err);
-                                                                    recordingData = [];
+                                                                    recordingData = null;
                                                                 }
 
                                                                 return (
-                                                                    recordingData.length > 0 && (
+                                                                    recordingData && (
                                                                         <div>
                                                                             <audio
                                                                                 controls
@@ -868,7 +862,11 @@ const ActivityLogsModal = ({ leadId, leadName, isOpen, onClose }) => {
                                                                                 controlsList="nodownload noplaybackrate"
                                                                             >
                                                                                 <source
-                                                                                    src={`https://w.digiskyweb.com/v2/recording/direct/28882897${recordingData[0]?.file}`}
+                                                                                    src={
+                                                                                        typeof recordingData === "string"
+                                                                                            ? recordingData
+                                                                                            : `https://w.digiskyweb.com/v2/recording/direct/28882897${recordingData[0]?.file}`
+                                                                                    }
                                                                                     type="audio/mpeg"
                                                                                 />
                                                                                 Your browser does not support the audio element.

@@ -44,8 +44,12 @@ const IncomingCallsModal = ({ leadPhone, leadName, isOpen, onClose,setSelectedLe
   // Call status mapping
   const callStatusMap = {
     "3": { text: "Answered", color: "text-green-600", bgColor: "bg-green-100 dark:bg-green-900/30", icon: PhoneCall },
+    "Answer": { text: "Answered", color: "text-green-600", bgColor: "bg-green-100 dark:bg-green-900/30", icon: PhoneCall },
+
     "4": { text: "Busy", color: "text-orange-600", bgColor: "bg-orange-100 dark:bg-orange-900/30", icon: PhoneOff },
     "5": { text: "No Answer", color: "text-yellow-600", bgColor: "bg-yellow-100 dark:bg-yellow-900/30", icon: PhoneMissed },
+    "Missed": { text: "No Answer", color: "text-yellow-600", bgColor: "bg-yellow-100 dark:bg-yellow-900/30", icon: PhoneMissed },
+
     "6": { text: "Rejected", color: "text-red-600", bgColor: "bg-red-100 dark:bg-red-900/30", icon: XCircle },
     "7": { text: "Failed", color: "text-red-700", bgColor: "bg-red-50 dark:bg-red-900/20", icon: AlertTriangle },
   };
@@ -154,40 +158,6 @@ const IncomingCallsModal = ({ leadPhone, leadName, isOpen, onClose,setSelectedLe
     }
   };
 
-  // Download recording
-  const handleDownloadRecording = async (call) => {
-    if (!call.recordingData?.[0]?.file) {
-      toast.warning("No recording available");
-      return;
-    }
-
-    try {
-      const recordingUrl = `https://w.digiskyweb.com/v2/recording/direct/28882897${call.recordingData[0].file}`;
-      const response = await fetch(recordingUrl);
-      const blob = await response.blob();
-      const url = window.URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = `recording-${call.phone}-${moment(call.ivrSTime).format('YYYY-MM-DD-HH-mm')}.mp3`;
-      document.body.appendChild(a);
-      a.click();
-      window.URL.revokeObjectURL(url);
-      document.body.removeChild(a);
-      toast.success("Recording downloaded");
-    } catch (error) {
-      console.error("Download failed:", error);
-      toast.error("Failed to download recording");
-    }
-  };
-
-  // Toggle expanded details
-  const toggleDetails = (callId) => {
-    setExpandedDetails(prev => ({
-      ...prev,
-      [callId]: !prev[callId]
-    }));
-  };
-
   // Group calls by date
   const groupedCalls = calls.reduce((acc, call) => {
     const date = moment(call.ivrSTime).format("DD MMM YYYY");
@@ -291,9 +261,8 @@ const IncomingCallsModal = ({ leadPhone, leadName, isOpen, onClose,setSelectedLe
                     <div className="space-y-2">
                       {groupedCalls[date].map((call, callIndex) => {
                         const status = getCallStatus(call.status);
-                        const StatusIcon = status.icon;
+                        const StatusIcon = status?.icon || PhoneIncoming;
                         const isSelected = selectedCall?._id === call._id;
-                        const isExpanded = expandedDetails[call._id];
 
                         return (
                           <motion.div
@@ -430,9 +399,9 @@ const IncomingCallsModal = ({ leadPhone, leadName, isOpen, onClose,setSelectedLe
                     </div>
                     
                     <div className="flex items-center gap-2">
-                      <div className={`px-3 py-1 rounded-full ${getCallStatus(selectedCall.status).bgColor}`}>
-                        <span className={`text-sm font-medium ${getCallStatus(selectedCall.status).color}`}>
-                          {getCallStatus(selectedCall.status).text}
+                      <div className={`px-3 py-1 rounded-full ${getCallStatus(selectedCall.status)?.bgColor}`}>
+                        <span className={`text-sm font-medium ${getCallStatus(selectedCall.status)?.color}`}>
+                          {getCallStatus(selectedCall.status)?.text}
                         </span>
                       </div>
                     </div>
@@ -450,19 +419,19 @@ const IncomingCallsModal = ({ leadPhone, leadName, isOpen, onClose,setSelectedLe
                         <div className="flex justify-between">
                           <span className="text-gray-600 dark:text-gray-400">Phone Number</span>
                           <span className="font-medium text-gray-900 dark:text-white">
-                            {selectedCall.phone}
+                            {selectedCall?.phone}
                           </span>
                         </div>
                         <div className="flex justify-between">
                           <span className="text-gray-600 dark:text-gray-400">Start Time</span>
                           <span className="font-medium text-gray-900 dark:text-white">
-                            {moment(selectedCall.ivrSTime).format("h:mm:ss A")}
+                            {moment(selectedCall?.ivrSTime).format("h:mm:ss A")}
                           </span>
                         </div>
                         <div className="flex justify-between">
                           <span className="text-gray-600 dark:text-gray-400">Duration</span>
                           <span className="font-medium text-gray-900 dark:text-white">
-                            {formatDuration(selectedCall.duration)}
+                            {formatDuration(selectedCall?.duration)}
                           </span>
                         </div>
                         <div className="flex justify-between">

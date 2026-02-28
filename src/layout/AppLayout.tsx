@@ -18,7 +18,7 @@ const LayoutContent: React.FC = () => {
           } ${isMobileOpen ? "ml-0" : ""}`}
       >
         <AppHeader />
-        <div className="p-2 sm:p-4 mx-auto bg-[#FFFAF7] max-w-(--breakpoint-2xl) md:p-3">
+        <div className="p-2 sm:p-4 mx-auto bg-[#FFFAF7] dark:bg-gray-900 max-w-(--breakpoint-2xl) md:p-3">
           <Outlet />
         </div>
       </div>
