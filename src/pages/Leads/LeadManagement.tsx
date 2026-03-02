@@ -71,6 +71,28 @@ export default function LeadManagement() {
     const [selectAll, setSelectAll] = useState(false); // Track "select all" checkbox state
     const [showIncomingCalls, setShowIncomingCalls] = useState(false);
     const [showExcelUpload, setShowExcelUpload] = useState(false);
+    const [filters, setFilters] = useState({
+        page: 1,
+        limit: 10,
+        sortBy: "-createdAt",
+        status: "",
+        source: "",
+        assignedCounselor: "",
+        coursePreference: "",
+        countryOfResidence: "",
+        dateRange: "",
+        search: "",
+    });
+    const [debouncedSearch, setDebouncedSearch] = useState("");
+
+    useEffect(() => {
+        const timer = setTimeout(() => {
+            if (filters.search.length === 0 || filters.search.length >= 3) {
+                setDebouncedSearch(filters.search);
+            }
+        }, 500);
+        return () => clearTimeout(timer);
+    }, [filters.search]);
 
     const getCounselorName = (counselorId) => {
         if (!counselorId) return "—";
@@ -170,20 +192,7 @@ export default function LeadManagement() {
     };
 
 
-    const [filters, setFilters] = useState({
-        page: 1,
-        limit: 10,
-        sortBy: "-createdAt",
-        status: "",
-        source: "",
-        assignedCounselor: "",
-        coursePreference: "",
-        countryOfResidence: "",
-        // server-facing date param (format YYYY-MM-DD_YYYY-MM-DD)
-        dateRange: "",
-        // UI search input
-        search: "",
-    });
+
 
     const today = moment().format("YYYY-MM-DD");
     // local date inputs for the picker UI
@@ -296,7 +305,7 @@ export default function LeadManagement() {
 
     useEffect(() => {
         fetchStats();
-    }, [filters.source, filters.assignedCounselor, filters.dateRange, filters.search]);
+    }, [filters.source, filters.assignedCounselor, filters.dateRange, debouncedSearch]);
 
     useEffect(() => {
         let pollInterval = null;
@@ -357,7 +366,18 @@ export default function LeadManagement() {
             window.removeEventListener('online', handleOnline);
             window.removeEventListener('offline', handleOffline);
         };
-    }, [filters]); // Re-run if filters change
+    }, [
+        filters.page,
+        filters.limit,
+        filters.sortBy,
+        filters.status,
+        filters.source,
+        filters.assignedCounselor,
+        filters.coursePreference,
+        filters.countryOfResidence,
+        filters.dateRange,
+        debouncedSearch
+    ]); // Re-run if filters change
 
 
     const fetchCounselors = async () => {
@@ -540,7 +560,12 @@ export default function LeadManagement() {
     const handleSaveLead = async () => {
         if (!validateForm()) return;
         try {
+
             const payload = { ...formData };
+            if (user.role != "admin") {
+                delete payload.email;
+                delete payload.phone;
+            }
             if (!payload.assignedCounselor) delete payload.assignedCounselor;
 
             await api.put(`/leads/${selectedLead._id}`, payload);
@@ -1595,27 +1620,30 @@ function CreateLeadForm({ editModalOpen, setEditModalOpen, selectedLead, handleC
                                 />
                                 {errors.fullName && <p className="mt-1 text-sm text-red-600">{errors.fullName}</p>}
                             </div>
-                            <div>
-                                <Label>Email *</Label>
-                                <Input
-                                    type="email"
-                                    name="email"
-                                    value={formData.email}
-                                    onChange={handleChange}
-                                    placeholder="john@example.com"
-                                />
-                                {errors.email && <p className="mt-1 text-sm text-red-600">{errors.email}</p>}
-                            </div>
-                            <div>
-                                <Label>Phone</Label>
-                                <Input
-                                    type="text"
-                                    name="phone"
-                                    value={formData.phone}
-                                    onChange={handleChange}
-                                    placeholder="+91 98765 43210"
-                                />
-                            </div>
+                            {user.role != "counselor" && <>
+                                <div>
+                                    <Label>Email *</Label>
+                                    <Input
+                                        type="email"
+                                        name="email"
+                                        value={formData.email}
+                                        onChange={handleChange}
+                                        placeholder="john@example.com"
+                                    />
+                                    {errors.email && <p className="mt-1 text-sm text-red-600">{errors.email}</p>}
+                                </div>
+
+                                <div>
+                                    <Label>Phone</Label>
+                                    <Input
+                                        type="text"
+                                        name="phone"
+                                        value={formData.phone}
+                                        onChange={handleChange}
+                                        placeholder="+91 98765 43210"
+                                    />
+                                </div>
+                            </>}
                             <div>
                                 <Label>Country of Residence</Label>
                                 <Input
@@ -1660,7 +1688,7 @@ function CreateLeadForm({ editModalOpen, setEditModalOpen, selectedLead, handleC
                                         value: s,
                                         label: s.charAt(0).toUpperCase() + s.slice(1)
                                     }))}
-                                    onChange={(value) => setFormData((prev) => ({ ...prev, status: value }))}
+                                    onChange={(value) => setFormData((prev: any) => ({ ...prev, status: value }))}
                                 />
                             </div>
                             {user.role && user.role === "admin" && <div>
