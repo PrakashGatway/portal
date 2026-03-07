@@ -577,7 +577,7 @@ export default function LeadManagement() {
         }
     };
 
-    const handleBulkAssign = async () => {
+    const handleBulkAssign = async (withNew) => {
         if (!bulkCounselor) {
             toast.warn("Please select a counselor");
             return;
@@ -600,6 +600,7 @@ export default function LeadManagement() {
             await api.put("/leads/bulk/assign", {
                 counselorId: bulkCounselor,
                 leadIds: Array.from(selectedLeads),
+                withNew,
             });
 
             toast.success("Counselor assigned successfully");
@@ -989,11 +990,19 @@ export default function LeadManagement() {
                                             </select>
 
                                             <button
-                                                onClick={handleBulkAssign}
+                                                onClick={() => handleBulkAssign(false)}
                                                 disabled={!bulkCounselor || bulkAssignLoading}
                                                 className="rounded bg-indigo-600 px-3 py-2 text-sm text-white hover:bg-indigo-700 disabled:opacity-50"
                                             >
                                                 Assign
+                                            </button>
+                                            <button
+                                                onClick={() => handleBulkAssign(true)}
+                                                disabled={!bulkCounselor || bulkAssignLoading}
+                                                className="rounded bg-violet-900 px-3 h-[85%] text-sm text-white hover:bg-indigo-700 disabled:opacity-50"
+                                            >
+                                                Assign<span className="block text-[8px] m-0 p-0">
+                                                (With New Tag)</span>
                                             </button>
 
                                             <button
