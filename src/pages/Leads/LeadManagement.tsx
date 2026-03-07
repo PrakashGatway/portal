@@ -1002,7 +1002,7 @@ export default function LeadManagement() {
                                                 className="rounded bg-violet-900 px-3 h-[85%] text-sm text-white hover:bg-indigo-700 disabled:opacity-50"
                                             >
                                                 Assign<span className="block text-[8px] m-0 p-0">
-                                                (With New Tag)</span>
+                                                    (With New Tag)</span>
                                             </button>
 
                                             <button
@@ -1058,6 +1058,9 @@ export default function LeadManagement() {
                                         </th>
                                         <th className="px-2 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500 dark:text-gray-300">
                                             Status
+                                        </th>
+                                        <th className="px-2 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500 dark:text-gray-300">
+                                            S. Status
                                         </th>
                                         <th className="px-2 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500 dark:text-gray-300">
                                             {user?.role == "counselor" ? "Date" : "Source"}
@@ -1131,13 +1134,24 @@ export default function LeadManagement() {
                                                 </td>
                                                 <td className="whitespace-nowrap px-2 py-3">
                                                     <span
-                                                        className={`inline-flex rounded-full px-2 text-xs font-semibold ${getStatusColor(
+                                                        className={`inline-flex rounded-full px-2 border-2 border-gray-600 text-xs font-semibold ${getStatusColor(
                                                             lead?.status
                                                         )}`}
                                                     >
                                                         {lead?.status.charAt(0).toUpperCase() +
                                                             lead?.status.slice(1)}
                                                     </span>
+
+                                                </td>
+                                                <td className="whitespace-nowrap px-2 py-3">
+                                                    {lead.secondaryStatus ? <span
+                                                        className={`inline-flex rounded-full px-2 border-2 border-amber-500 text-xs font-semibold ${getStatusColor(
+                                                            lead?.secondaryStatus
+                                                        )}`}
+                                                    >
+                                                        {lead?.secondaryStatus.charAt(0).toUpperCase() +
+                                                            lead?.secondaryStatus.slice(1)}
+                                                    </span> : "__"}
                                                 </td>
                                                 <td className="whitespace-nowrap px-2 py-2 text-sm text-gray-500 dark:text-gray-300 capitalize">
                                                     {lead?.createdAt &&
