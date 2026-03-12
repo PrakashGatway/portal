@@ -1079,8 +1079,8 @@ export default function LeadManagement() {
                                         <th className="px-2 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500 dark:text-gray-300">
                                             Status
                                         </th>
-                                        <th className="px-2 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500 dark:text-gray-300">
-                                            S. Status
+                                        <th className="px-2 py-3 text-left text-xs font-medium uppercase text-gray-500 dark:text-gray-300">
+                                            S.Status
                                         </th>
                                         <th className="px-2 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500 dark:text-gray-300">
                                             {user?.role == "counselor" ? "Date" : "Source"}
@@ -1158,8 +1158,9 @@ export default function LeadManagement() {
                                                             lead?.status
                                                         )}`}
                                                     >
-                                                        {lead?.status.charAt(0).toUpperCase() +
-                                                            lead?.status.slice(1)}
+                                                        {/* {lead?.status.charAt(0).toUpperCase() +
+                                                            lead?.status.slice(1)} */}
+                                                            {LeadStatus[lead?.status] ? LeadStatus[lead?.status] : lead?.status}
                                                     </span>
 
                                                 </td>
@@ -1169,8 +1170,10 @@ export default function LeadManagement() {
                                                             lead?.secondaryStatus
                                                         )}`}
                                                     >
-                                                        {lead?.secondaryStatus.charAt(0).toUpperCase() +
-                                                            lead?.secondaryStatus.slice(1)}
+                                                        {/* {lead?.secondaryStatus.charAt(0).toUpperCase() +
+                                                            lead?.secondaryStatus.slice(1)} */}
+                                                            {LeadStatus[lead?.status] ? LeadStatus[lead?.status] : lead?.status}
+
                                                     </span> : "__"}
                                                 </td>
                                                 <td className="whitespace-nowrap px-2 py-2 text-sm text-gray-500 dark:text-gray-300 capitalize">
