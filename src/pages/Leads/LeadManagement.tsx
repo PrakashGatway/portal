@@ -1172,7 +1172,7 @@ export default function LeadManagement() {
                                                     >
                                                         {/* {lead?.secondaryStatus.charAt(0).toUpperCase() +
                                                             lead?.secondaryStatus.slice(1)} */}
-                                                            {LeadStatus[lead?.status] ? LeadStatus[lead?.status] : lead?.status}
+                                                            {LeadStatus[lead?.secondaryStatus] ? LeadStatus[lead?.secondaryStatus] : lead?.secondaryStatus}
 
                                                     </span> : "__"}
                                                 </td>
