@@ -4,6 +4,7 @@ import { useAuth } from '../../context/UserContext';
 import PageMeta from "../../components/common/PageMeta";
 import api from '../../axiosInstance';
 import LeadManagement from '../Leads/LeadManagement';
+import CallAnalytics from './CallAnalysis';
 
 const EducationAnalytics = () => {
   const { user } = useAuth();
@@ -163,29 +164,21 @@ const EducationAnalytics = () => {
       </div>
     );
   };
+  if(user?.role == "manager" || user.role == "leader"){
+    return (<CallAnalytics />)
+  }
 
-  if (user.role == "counselor" || user?.role == "manager" || user.role == "leader") {
+  if (user.role == "counselor" ) {
     return (<LeadManagement />)
   }
 
   return (
     <div className="max-w-full px-4 sm:px-3 lg:px-3">
+      {user.role == "admin" && <CallAnalytics />}
       <PageMeta
         title="Learning Analytics Dashboard"
         description="Comprehensive view of your learning progress and activities"
       />
-
-      {/* Header */}
-      <div className="mb-8">
-        <h1 className="text-2xl font-bold text-gray-900 dark:text-white">
-          {user.role === 'Admin' ? 'Platform Analytics' :
-            user.role === 'Teacher' ? 'Teaching Dashboard' : 'Learning Progress'}
-        </h1>
-        <p className="mt-2 text-sm text-gray-600 dark:text-gray-400">
-          {user.role === 'Admin' ? 'Overview of platform-wide metrics and performance' :
-            user.role === 'Teacher' ? 'Track your courses and student engagement' : 'Monitor your learning activities and progress'}
-        </p>
-      </div>
 
       {/* Time Range Selector */}
       <div className="flex justify-between items-center mb-6">

@@ -62,7 +62,8 @@ export const ROLES = {
   USER: 'user',
   EDITOR: 'editor',
   COUNSEL: 'counselor',
-  MANAGER: "manager"
+  MANAGER: "manager",
+  LEADER: "leader",
 };
 
 export default function App() {
@@ -100,7 +101,6 @@ export default function App() {
               <Route path="/test-series" element={<MockTestsPage />} />
               <Route path="/test-series/:slug" element={<TestSeriesDetailPage />} />
 
-
               <Route path="/mock-tests" element={<MockTest />} />
               {/* <Route path="/test/:testId" element={<TestQuestionPage/>} /> */}
               <Route path="/events" element={<EventCalendar />} />
@@ -124,11 +124,9 @@ export default function App() {
                 <Route path="/mcq/questions" element={<QuestionManagementPage />} />
                 <Route path="/mcq/tests" element={<TestTemplateManagementPage />} />
                 <Route path="/mcq/test-series" element={<TestSeriesManagementPage />} />
-
-
               </Route>
 
-              <Route element={<ProtectedRoute roles={[ROLES.COUNSEL, ROLES.ADMIN, ROLES.MANAGER]} />}>
+              <Route element={<ProtectedRoute roles={[ROLES.COUNSEL, ROLES.ADMIN, ROLES.MANAGER, ROLES.LEADER]} />}>
                 <Route path="/leads" element={<LeadManagement />} />
               </Route>
 

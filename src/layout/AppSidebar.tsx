@@ -153,7 +153,7 @@ const navItemsUser: NavItem[] = [
     name: "My Courses",
     path: "/my-courses",
   },
-    {
+  {
     emoji: "🎉",
     name: "Free Quiz",
     path: "/Quiz",
@@ -170,6 +170,19 @@ const navItemsCoun: NavItem[] = [
     emoji: "📊",
     name: "Dashboard",
     path: "/",
+  },
+];
+
+const navItemsMan: NavItem[] = [
+  {
+    emoji: "📊",
+    name: "Dashboard",
+    path: "/",
+  },
+  {
+    emoji: "🚀",
+    name: "Leads",
+    path: "/leads",
   },
 ];
 
@@ -275,7 +288,7 @@ const AppSidebar: React.FC = () => {
     ["main", "others"].forEach((menuType) => {
       const items = menuType === "main"
         ? (user?.role === "admin" ? navItems : user?.role === "teacher" ? navItemsTeacher : navItemsUser)
-        : (user?.role === "teacher" || user?.role === "counselor"  ? teacherOthersItems : othersItems);
+        : (user?.role === "teacher" || user?.role === "counselor" ? teacherOthersItems : othersItems);
 
       items.forEach((nav, index) => {
         if (nav.subItems) {
@@ -423,7 +436,8 @@ const AppSidebar: React.FC = () => {
   const getMenuItems = (menuType: "main" | "others") => {
     if (menuType === "main") {
       if (user?.role === "admin") return navItems;
-      if (user?.role === "counselor" || user?.role === "manager" || user?.role === "leader") return navItemsCoun;
+      if (user?.role === "counselor" ) return navItemsCoun;
+      if (user?.role === "manager" || user?.role === "leader") return navItemsMan;
       if (user?.role === "teacher") return navItemsTeacher;
       return navItemsUser;
     } else {

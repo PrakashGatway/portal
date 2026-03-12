@@ -17,21 +17,41 @@ import Swal from 'sweetalert2'
 import ActivityLogsModal from "./ActivityLogs";
 import IncomingCallsModal from "./IncomingCall";
 
-const LeadStatuses = [
-    'new',
-    'notReachable',
-    'followup',
-    'viewed',
-    'contacted',
-    'interested',
-    'notInterested',
-    'enrolled',
-    'rejected',
-    'junk',
-    'visitDone',
-    'visitSchedule',
-    'inactive'
-];
+// const LeadStatuses = [
+//     'new',
+//     'notReachable',
+//     'followup',
+//     'viewed',
+//     'contacted',
+//     'interested',
+//     'notInterested',
+//     'enrolled',
+//     'rejected',
+//     'junk',
+//     'visitDone',
+//     'visitSchedule',
+//     'inactive'
+// ];
+
+export const LeadStatus = {
+    'new': "Untouched",
+    'notReachable': "Not Reachable",
+    'followup': "Followup",
+    'viewed': "Viewed",
+    'contacted': "Contacted",
+    'futureLeads': "Future Leads",
+    'interested': "Interested",
+    'notInterested': "Not Interested",
+    'vcBooked': "VC Booked",
+    'vcConducted': "VC Conducted",
+    'enrolled': "Enrolled",
+    'rejected': "Canceled",
+    'junk': "Junk",
+    'closed': "Closed",
+    'visitDone': 'Visit Done',
+    'visitSchedule': "Visit Schedule",
+    'reenquired': "Re-enquired",
+};
 
 
 const LeadSources = [
@@ -1707,9 +1727,9 @@ function CreateLeadForm({ editModalOpen, setEditModalOpen, selectedLead, handleC
                                 <Select
                                     name="status"
                                     defaultValue={formData.status}
-                                    options={LeadStatuses.map((s) => ({
-                                        value: s,
-                                        label: s.charAt(0).toUpperCase() + s.slice(1)
+                                    options={Object.entries(LeadStatus).map(([value, label]) => ({
+                                        value,
+                                        label
                                     }))}
                                     onChange={(value) => setFormData((prev: any) => ({ ...prev, status: value }))}
                                 />

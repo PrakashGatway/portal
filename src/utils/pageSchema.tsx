@@ -95,9 +95,25 @@ export const PAGE_TYPES_SCHEMA = {
         type: "hero",
         label: "Hero Section",
         fields: [
-          { name: "university", type: "text", label: "University", required: false },
-          { name: "students", type: "text", label: "Students", required: false },
-          { name: "cities", type: "text", label: "Cities", required: false }
+          {
+            name: "points",
+            type: "array",
+            label: "Points",
+            itemFields: [
+              { name: "content", type: "text", label: "Quote" },
+            ],
+          },
+          {
+            name: "stats",
+            type: "array",
+            label: "Stats",
+            itemFields: [
+              { name: "value", type: "text", label: "Value" },
+              { name: "content", type: "text", label: "Quote" },
+            ],
+          },
+          { name: "title", type: "text", label: "form Title" },
+          { name: "subtitle", type: "text", label: "form Sub Title", required: false }
         ],
       },
       {

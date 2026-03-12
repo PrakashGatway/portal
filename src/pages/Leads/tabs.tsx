@@ -1,5 +1,6 @@
 import { motion, LayoutGroup } from "framer-motion";
 import { File, LucideIcon } from "lucide-react";
+import { LeadStatus } from "./LeadManagement";
 
 export interface TabItem {
   id: string;
@@ -28,10 +29,10 @@ export default function Tabs({
                 key={tab.status}
                 layout
                 onClick={() => onChange(tab.status == "all" ? "" : tab.status)}
-                className={`relative py-1.5 px-3 font-medium text-base flex capitalize items-center rounded-lg transition-all duration-200
+                className={`relative py-1.5 px-3 font-medium text-[15px] flex capitalize items-center rounded-lg transition-all duration-200
                   ${isActive
                     ? "bg-green-600 shadow-md dark:bg-gray-900 text-white dark:text-white-400"
-                    : "text-gray-800 hover:text-gray-900 dark:text-gray-400 dark:hover:text-gray-300"
+                    : "text-gray-800 bg-gray-100 hover:text-gray-900 dark:text-gray-400 dark:hover:text-gray-300"
                   }`}
                 whileHover={{ y: -1 }}
                 whileTap={{ y: 0 }}
@@ -45,7 +46,7 @@ export default function Tabs({
                 )}
 
                 {/* {Icon && <File className="h-4 w-4 mr-2" />} */}
-                {tab.status} ({tab.count})
+                {LeadStatus[tab.status] ? LeadStatus[tab.status] : tab.status} ({tab.count})
               </motion.button>
             );
           })}
