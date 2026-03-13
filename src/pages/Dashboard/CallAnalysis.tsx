@@ -281,7 +281,7 @@ const CallAnalytics = () => {
         <div className="flex justify-center items-center h-[70vh]">
           <img src="https://eccdatacenter.ae/CentralAttendance/Images/loader.gif" alt="loader" className='h-60 max-w-full w-60 ' />
         </div>
-      ) : (
+      ) : analytics.length > 0 ? (
         <>
           {/* Summary Stats Cards */}
           <div className='grid grid-cols-1 md:grid-cols-2 gap-6 mb-4'>
@@ -472,8 +472,12 @@ const CallAnalytics = () => {
               height={280}
             />
           </div>
-        </>
-      )}
+        </>) : (
+        <div className="flex justify-center items-center h-[70vh]">
+          <img src="https://assets-v2.lottiefiles.com/a/0e30b444-117c-11ee-9b0d-0fd3804d46cd/hIe8Ns0ZnU.png" alt="loader" className='h-60 max-w-full w-60 ' />
+        </div>
+      )
+      }
     </div>
   );
 };
