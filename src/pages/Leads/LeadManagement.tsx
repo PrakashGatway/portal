@@ -16,6 +16,7 @@ import Tabs from "./tabs";
 import Swal from 'sweetalert2'
 import ActivityLogsModal from "./ActivityLogs";
 import IncomingCallsModal from "./IncomingCall";
+import { useSearchParams } from "react-router";
 
 // const LeadStatuses = [
 //     'new',
@@ -38,7 +39,6 @@ export const LeadStatus = {
     'notReachable': "Not Reachable",
     'followup': "Followup",
     'viewed': "Viewed",
-    'contacted': "Contacted",
     'futureLeads': "Future Leads",
     'interested': "Interested",
     'notInterested': "Not Interested",
@@ -69,6 +69,8 @@ const LeadSources = [
 ];
 
 export default function LeadManagement() {
+    const [searchParams] = useSearchParams();
+
     const [leads, setLeads] = useState([]);
     const [loading, setLoading] = useState(true);
     const [total, setTotal] = useState(0);
@@ -120,6 +122,17 @@ export default function LeadManagement() {
         const counselor = allCounselors.find(c => c._id === counselorId);
         return counselor ? (counselor.name || counselor.email) : "Unknown";
     };
+
+    useEffect(() => {
+        const status = searchParams.get("status");
+        const counselor = searchParams.get("user");
+
+        setFilters((prev) => ({
+            ...prev,
+            status: status || "",
+            assignedCounselor: counselor || ""
+        }));
+    }, [searchParams]);
 
     const formatDateRangeDisplay = () => {
         if (!filters.dateRange) return "—";
@@ -1161,7 +1174,7 @@ export default function LeadManagement() {
                                                     >
                                                         {/* {lead?.status.charAt(0).toUpperCase() +
                                                             lead?.status.slice(1)} */}
-                                                            {LeadStatus[lead?.status] ? LeadStatus[lead?.status] : lead?.status}
+                                                        {LeadStatus[lead?.status] ? LeadStatus[lead?.status] : lead?.status}
                                                     </span>
 
                                                 </td>
@@ -1173,7 +1186,7 @@ export default function LeadManagement() {
                                                     >
                                                         {/* {lead?.secondaryStatus.charAt(0).toUpperCase() +
                                                             lead?.secondaryStatus.slice(1)} */}
-                                                            {LeadStatus[lead?.secondaryStatus] ? LeadStatus[lead?.secondaryStatus] : lead?.secondaryStatus}
+                                                        {LeadStatus[lead?.secondaryStatus] ? LeadStatus[lead?.secondaryStatus] : lead?.secondaryStatus}
 
                                                     </span> : "__"}
                                                 </td>
