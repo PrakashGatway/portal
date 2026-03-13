@@ -51,6 +51,7 @@ export const LeadStatus = {
     'visitDone': 'Visit Done',
     'visitSchedule': "Visit Schedule",
     'reenquired': "Re-enquired",
+    'inactive': "Inactive",
 };
 
 
