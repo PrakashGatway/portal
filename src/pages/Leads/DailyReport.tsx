@@ -752,9 +752,9 @@ export default function DailyReport() {
             </div>
 
             {/* Call Details Modal */}
-            <Modal isOpen={callDetailModal} onClose={() => setCallDetailModal(false)} className="max-w-2xl">
+            <Modal isOpen={callDetailModal} onClose={() => setCallDetailModal(false)} className="max-w-2xl overflow-hidden">
                 {selectedCall && (
-                    <div className="no-scrollbar relative w-full overflow-y-auto rounded-3xl bg-white p-6 dark:bg-gray-900">
+                    <div className="max-h-[80vh] relative w-full overflow-y-auto rounded-3xl bg-white p-6 dark:bg-gray-900">
                         <div className="flex items-center justify-between mb-5 pb-3 border-b border-gray-200 dark:border-gray-700">
                             <h3 className="text-xl font-semibold text-gray-800 dark:text-white">Call Details</h3>
                             <button
