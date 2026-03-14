@@ -52,6 +52,7 @@ export const LeadStatus = {
     'visitSchedule': "Visit Schedule",
     'reenquired': "Re-enquired",
     'inactive': "Inactive",
+    'langBarrier': "Language Barrier",
 };
 
 
@@ -577,15 +578,15 @@ export default function LeadManagement() {
     const validateForm = () => {
         const newErrors = {};
         if (!formData.fullName?.trim()) newErrors.fullName = "Full name is required";
-        if (!formData.email?.trim()) {
-            newErrors.email = "Email is required";
-        } else if (!/\S+@\S+\.\S+/.test(formData.email)) {
-            newErrors.email = "Invalid email";
-        }
-        if (!formData.coursePreference?.trim()) {
-            newErrors.coursePreference = "Course preference is required";
-        }
-        if (!formData.source) newErrors.source = "Source is required";
+        // if (!formData.email?.trim()) {
+        //     newErrors.email = "Email is required";
+        // } else if (!/\S+@\S+\.\S+/.test(formData.email)) {
+        //     newErrors.email = "Invalid email";
+        // }
+        // if (!formData.coursePreference?.trim()) {
+        //     newErrors.coursePreference = "Course preference is required";
+        // }
+        // if (!formData.source) newErrors.source = "Source is required";
 
         setErrors(newErrors);
         return Object.keys(newErrors).length === 0;

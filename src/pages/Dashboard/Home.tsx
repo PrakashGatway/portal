@@ -1,16 +1,19 @@
 import { useState, useEffect } from 'react';
 import Chart from 'react-apexcharts';
 import { useAuth } from '../../context/UserContext';
-import PageMeta from "../../components/common/PageMeta";
 import api from '../../axiosInstance';
 import LeadManagement from '../Leads/LeadManagement';
 import CallAnalytics from './CallAnalysis';
+import FormAssignmentModal from '../Leads/Assignment';
 
 const EducationAnalytics = () => {
   const { user } = useAuth();
   const [loading, setLoading] = useState(true);
   const [analytics, setAnalytics] = useState(null);
   const [timeRange, setTimeRange] = useState('7d');
+  const [formAssignmentModal, setFormAssignmentModal] = useState(false);
+  const [counselors, setAllCounselors] = useState([]);
+
 
   const fetchAnalytics = async () => {
     try {
@@ -26,6 +29,22 @@ const EducationAnalytics = () => {
       setLoading(false);
     }
   };
+
+  const fetchCounselors = async () => {
+    try {
+      const res = await api.get("/users?role=counselor");
+
+      setAllCounselors(res.data?.users || []);
+    } catch (error) {
+      console.error("Failed to fetch counselors:", error);
+    }
+  };
+
+  useEffect(() => {
+    if (user?.role != "counselor") {
+      fetchCounselors();
+    }
+  }, [user?.role]);
 
   useEffect(() => {
     fetchAnalytics();
@@ -164,24 +183,32 @@ const EducationAnalytics = () => {
       </div>
     );
   };
-  if(user?.role == "manager" || user.role == "leader"){
+  if (user?.role == "manager" || user.role == "leader") {
     return (<CallAnalytics />)
   }
 
-  if (user.role == "counselor" ) {
+  if (user.role == "counselor") {
     return (<LeadManagement />)
   }
 
   return (
     <div className="max-w-full px-4 sm:px-3 lg:px-3">
+
       {user.role == "admin" && <CallAnalytics />}
-      <PageMeta
-        title="Learning Analytics Dashboard"
-        description="Comprehensive view of your learning progress and activities"
+      {user.role == "admin" && <button
+        onClick={() => setFormAssignmentModal(true)}
+        className="flex items-center gap-2 rounded-full border border-indigo-600 bg-indigo-600 px-3 py-2 text-sm text-white"
+      >
+        Form Assignment
+      </button>}
+      <FormAssignmentModal
+        isOpen={formAssignmentModal}
+        onClose={() => setFormAssignmentModal(false)}
+        counselors={counselors && counselors}
       />
 
       {/* Time Range Selector */}
-      <div className="flex justify-between items-center mb-6">
+      <div className="flex justify-between items-center mb-6 mt-12">
         <h2 className="text-lg font-semibold text-gray-900 dark:text-white">
           {timeRange === '7d' ? 'Weekly' :
             timeRange === '30d' ? 'Monthly' : 'Quarterly'} Overview
