@@ -143,6 +143,91 @@ export const PAGE_TYPES_SCHEMA = {
         ],
       },
       {
+        type: "BestUniversities",
+        label: "Best Universities",
+        fields: [
+          { name: "title", type: "text", label: "Section Title" },
+          { name: "subTittle", type: "text", label: "Section Sub Title" },
+          {
+            name: "Cards",
+            type: "array",
+            label: "Cards",
+            itemFields: [
+              { name: "name", type: "text", label: "Label" },
+              { name: "qsRank", type: "text", label: "Qsrank" },
+              { name: "description", type: "text", label: "Description" },
+              { name: "location", type: "text", label: "Location" },
+              { name: "Courses", type: "array", label: "Courses", itemType: "text" },
+              { name: "year", type: "text", label: "Year" },
+              { name: "icon", type: "text", label: "Icon" },
+              { name: "button", type: "text", label: "Button" },
+            ],
+          },
+        ],
+      },
+      {
+        type: "CostofStudying",
+        label: "Cost of Studying",
+        fields: [
+          { name: "title", type: "text", label: "Section Title" },
+          { name: "subTitle", type: "text", label: "Section subTitle" },
+          {
+            name: "Table",
+            type: "array",
+            label: "Table",
+            itemFields: [
+               {
+               name:"iconitem",label : "Icom Item",
+              },
+              {
+                name : "tableTitle" , type : "array", label : "Table Title",
+                itemFields : [
+                  {name : "tabletitle",type : "text" , label : "Table Title"}
+                ]
+              },
+              {
+                fields:[
+                  
+                   {name: "tablerow", type: "text", label: "Table Row"},
+                { name: "rowname",label : "row name", type : "array", itemFields:
+                  [
+                    { name: "rowname", type: "text", label: "Program Row Name" }
+                  ]}
+
+                ]
+               
+              },
+
+              {
+                name: "tablecolumn1", type: "array", label: "Program Column",
+                itemFields:
+                  [
+                    { name: "programname", type: "text", label: "Table Column 1" }
+                  ]
+              },
+              {
+                name: "tablecolumn2", type: "array", label: "Table Column 2",
+                itemFields:
+                  [
+                    { name: "annualtution", type: "text", label: "Annual Tution" }
+                  ]
+              },
+              {
+                name: "tablecolumn3", type: "array", label: "Table Column 3",
+                itemFields:
+                  [
+                    { name: "inr", type: "text", label: "inr" }
+                  ]
+              }
+            ]
+
+
+          }
+        ]
+
+
+      },
+      {
         type: "slider",
         label: "Slider Card",
         fields: [
