@@ -50,6 +50,10 @@ const CallAnalytics = () => {
 
       const response = await api.get('/leads/reports', { params });
       const statusResponse = await api.get('/leads/reports/status', { params });
+      const Callstatus = await api.get('/leads/reports/calls', { params });
+
+      console.log(Callstatus.data)
+
       setStatusWise(statusResponse.data?.data || []);
       const data = response.data.data;
       setAnalytics(data);
@@ -409,8 +413,8 @@ const CallAnalytics = () => {
                             <div className="text-base font-medium text-gray-900 dark:text-white">
                               {counselorName}
                             </div>
-                            <button onClick={()=>navigate(`/leads?user=${counselorData.counselorId}&status=${currentStatus || 'new'}`)}>
-                              <SquareArrowOutUpRight size={20}  className='ml-2 text-green-700'/>
+                            <button onClick={() => navigate(`/leads?user=${counselorData.counselorId}&status=${currentStatus || 'new'}`)}>
+                              <SquareArrowOutUpRight size={20} className='ml-2 text-green-700' />
                             </button>
 
                           </div>

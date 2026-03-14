@@ -17,6 +17,11 @@ const navItems: NavItem[] = [
     name: "Dashboard",
     path: "/",
   },
+      {
+    emoji: "📝",
+    name: "Call Reports",
+    path: "/lead-report",
+  },
   {
     emoji: "📝",
     name: "Mock Tests",
@@ -178,6 +183,11 @@ const navItemsMan: NavItem[] = [
     emoji: "📊",
     name: "Dashboard",
     path: "/",
+  },
+    {
+    emoji: "📝",
+    name: "Call Reports",
+    path: "/lead-report",
   },
   {
     emoji: "🚀",

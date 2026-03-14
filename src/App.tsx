@@ -55,6 +55,7 @@ import GmatTestAnalysisPage from "./pages/mcu/GmatAnaysis";
 import PteExamPage from "./pages/PTEtest/PteAttempts";
 import TestSeriesManagementPage from "./pages/TestSeries/TestSeriesPage";
 import TestSeriesDetailPage from "./usercomponent/TestSeriesDetail";
+import DailyReport from "./pages/Leads/DailyReport";
 
 // Define roles
 export const ROLES = {
@@ -128,6 +129,7 @@ export default function App() {
 
               <Route element={<ProtectedRoute roles={[ROLES.COUNSEL, ROLES.ADMIN, ROLES.MANAGER, ROLES.LEADER]} />}>
                 <Route path="/leads" element={<LeadManagement />} />
+                 <Route path="/lead-report" element={<DailyReport />} /> 
               </Route>
 
               <Route path="*" element={<ComingSoon />} />
