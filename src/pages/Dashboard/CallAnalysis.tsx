@@ -5,15 +5,22 @@ import PageMeta from "../../components/common/PageMeta";
 import api from '../../axiosInstance';
 import DatePicker from 'react-datepicker';
 import "react-datepicker/dist/react-datepicker.css";
+import { LeadStatus } from '../Leads/LeadManagement';
+import { SquareArrowOutUpRight } from 'lucide-react';
+import { useNavigate } from 'react-router';
 
 const CallAnalytics = () => {
   const { user } = useAuth();
   const [loading, setLoading] = useState(true);
+  const navigate = useNavigate();
   const [analytics, setAnalytics] = useState([]);
   const [counselors, setCounselors] = useState([]);
   const [selectedCounselor, setSelectedCounselor] = useState('all');
   const [days, setDays] = useState(7);
-
+  const [statusWise, setStatusWise] = useState([]);
+  // const [selectedStatus, setSelectedStatus] = useState(null);
+  const [counselorStatusSelections, setCounselorStatusSelections] = useState({});
+  const [selectedStatusFilter, setSelectedStatusFilter] = useState(null);
   // Date range state
   const [dateRange, setDateRange] = useState({
     startDate: new Date(new Date().setDate(new Date().getDate() - 7)),
@@ -42,6 +49,8 @@ const CallAnalytics = () => {
       };
 
       const response = await api.get('/leads/reports', { params });
+      const statusResponse = await api.get('/leads/reports/status', { params });
+      setStatusWise(statusResponse.data?.data || []);
       const data = response.data.data;
       setAnalytics(data);
       setCounselors(response.data.counselors);
@@ -276,6 +285,252 @@ const CallAnalytics = () => {
           </div>
         </div>
       </div>
+      {/* Status-wise Leads Table with Dropdown */}
+      {statusWise.length > 0 && (
+        <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 overflow-hidden mb-6">
+          <div className="px-6 py-4 bg-gradient-to-r from-indigo-50 to-purple-50 dark:from-gray-700 dark:to-gray-800 border-b border-gray-200 dark:border-gray-700">
+            <div className="flex items-center justify-between">
+              <div>
+                <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
+                  Status-wise Lead Analysis
+                </h3>
+              </div>
+              <div className="flex items-center gap-2">
+                <span className="px-3 py-1 bg-indigo-100 dark:bg-indigo-900/30 text-indigo-700 dark:text-indigo-300 rounded-full text-sm font-medium">
+                  {statusWise.length} Records
+                </span>
+              </div>
+            </div>
+          </div>
+
+          {/* Status Filter Bar */}
+          <div className="px-6 py-2 bg-gray-50 dark:bg-gray-900 border-b dark:border-gray-700">
+            <div className="flex items-center gap-3 flex-wrap">
+              <span className="text-sm font-medium text-gray-700 dark:text-gray-300">Filter by Status:</span>
+              {Object.entries(LeadStatus).map(([value, label]) => (
+                <button
+                  key={status}
+                  onClick={() => {
+                    setSelectedStatusFilter(value === 'all' ? null : value);
+                    setCounselorStatusSelections({});
+                  }}
+                  className={`px-3 py-1 text-xs font-medium rounded-full transition-colors ${(selectedStatusFilter === null && value === 'all') || selectedStatusFilter === value
+                    ? 'bg-indigo-600 text-white'
+                    : 'bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-300 dark:hover:bg-gray-600'
+                    }`}
+                >
+                  {value === 'all' ? 'All' : label}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          <div className="overflow-x-auto">
+            <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
+              <thead className="bg-gray-50 dark:bg-gray-900">
+                <tr>
+                  <th className="px-6 py-4 text-left text-xs font-semibold text-gray-600 dark:text-gray-300 uppercase tracking-wider">
+                    <div className="flex items-center gap-1">
+                      Counselor
+                    </div>
+                  </th>
+                  <th className="px-6 py-4 text-left text-xs font-semibold text-gray-600 dark:text-gray-300 uppercase tracking-wider">
+                    <div className="flex items-center gap-1">
+                      Status
+                    </div>
+                  </th>
+                  <th className="px-6 py-4 text-right text-xs font-semibold text-gray-600 dark:text-gray-300 uppercase tracking-wider">
+                    <div className="flex items-center justify-end gap-1">
+                      Leads
+                    </div>
+                  </th>
+                  <th className="px-6 py-4 text-right text-xs font-semibold text-gray-600 dark:text-gray-300 uppercase tracking-wider">
+                    <div className="flex items-center justify-end gap-1">
+                      Total Calls
+                    </div>
+                  </th>
+                  <th className="px-6 py-4 text-right text-xs font-semibold text-gray-600 dark:text-gray-300 uppercase tracking-wider">
+                    <div className="flex items-center justify-end gap-1">
+                      Connected
+                    </div>
+                  </th>
+                  <th className="px-6 py-4 text-right text-xs font-semibold text-gray-600 dark:text-gray-300 uppercase tracking-wider">
+                    <div className="flex items-center justify-end gap-1">
+                      Missed
+                    </div>
+                  </th>
+                  <th className="px-6 py-4 text-right text-xs font-semibold text-gray-600 dark:text-gray-300 uppercase tracking-wider">
+                    <div className="flex items-center justify-end gap-1">
+                      Duration
+                    </div>
+                  </th>
+                  <th className="px-6 py-4 text-center text-xs font-semibold text-gray-600 dark:text-gray-300 uppercase tracking-wider">
+                    Call Type
+                  </th>
+                </tr>
+              </thead>
+              <tbody className="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
+                {Object.entries(
+                  statusWise.reduce((acc, item) => {
+                    if (!acc[item.counselorName]) {
+                      acc[item.counselorName] = {
+                        counselorId: item._id.counselor,
+                        statuses: {},
+                        allStatuses: []
+                      };
+                    }
+                    acc[item.counselorName].statuses[item.status] = item;
+                    acc[item.counselorName].allStatuses.push(item);
+                    return acc;
+                  }, {})
+                ).map(([counselorName, counselorData]) => {
+                  // Get unique statuses for this counselor
+                  const availableStatuses = counselorData.allStatuses.map(s => s.status);
+
+                  // Determine which status to show - use counselor-specific selection
+                  const currentStatus = selectedStatusFilter && availableStatuses.includes(selectedStatusFilter)
+                    ? selectedStatusFilter
+                    : (counselorStatusSelections[counselorName] || counselorData.allStatuses[0]?.status || 'new');
+
+                  const currentData = counselorData.statuses[currentStatus];
+
+                  if (selectedStatusFilter && !availableStatuses.includes(selectedStatusFilter)) {
+                    return null; // Skip counselors that don't have the selected status
+                  }
+                  return (
+                    <tr
+                      key={counselorName}
+                      className="hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors group"
+                    >
+                      <td className="px-6 py-3 whitespace-nowrap">
+                        <div className="flex items-center">
+
+                          <div className="ml-3 flex">
+                            <div className="text-base font-medium text-gray-900 dark:text-white">
+                              {counselorName}
+                            </div>
+                            <button onClick={()=>navigate(`/leads?user=${counselorData.counselorId}&status=${currentStatus || 'new'}`)}>
+                              <SquareArrowOutUpRight size={20}  className='ml-2 text-green-700'/>
+                            </button>
+
+                          </div>
+                        </div>
+                      </td>
+                      <td className="px-6 py-3 whitespace-nowrap">
+                        <div className="relative">
+                          <select
+                            value={currentStatus}
+                            onChange={(e) => {
+                              // Update only this counselor's selection
+                              setCounselorStatusSelections({
+                                ...counselorStatusSelections,
+                                [counselorName]: e.target.value
+                              });
+                              setSelectedStatusFilter(null); // Clear filter when manually selecting
+                            }}
+                            className=" bg-transparent pl-3 pr-2 py-1.5 text-xs font-medium rounded-lg border border-gray-300 dark:border-gray-600 focus:outline-none focus:ring-2 focus:ring-indigo-500 dark:bg-gray-700 dark:text-white cursor-pointer"
+                          >
+                            {counselorData.allStatuses.map(status => (
+                              <option key={status.status} value={status.status}>
+                                {LeadStatus[status.status] || status.status} ({status.leadCount} leads)
+                              </option>
+                            ))}
+                          </select>
+                        </div>
+                      </td>
+                      <td className="px-6 py-3 whitespace-nowrap text-right">
+                        <span className="text-xl font-bold text-gray-900 dark:text-white">
+                          {currentData?.leadCount || 0}
+                        </span>
+                      </td>
+                      <td className="px-6 py-3 whitespace-nowrap text-right">
+                        <div className="text-lg font-semibold text-gray-900 dark:text-white">
+                          {currentData?.totalCalls || 0}
+                        </div>
+                      </td>
+                      <td className="px-6 py-3 whitespace-nowrap text-right">
+                        <div className="flex items-center justify-end gap-2">
+                          <span className="text-lg font-semibold text-green-600 dark:text-green-400">
+                            {currentData?.connectedCalls || 0}
+                          </span>
+                        </div>
+                      </td>
+                      <td className="px-6 py-3 whitespace-nowrap text-right">
+                        <span className="text-lg font-semibold text-red-600 dark:text-red-400">
+                          {currentData?.missedCalls || 0}
+                        </span>
+                      </td>
+                      <td className="px-6 py-3 whitespace-nowrap text-right">
+                        <div className="text-sm font-medium text-gray-900 dark:text-white">
+                          {currentData?.totalDuration > 0 ? `${Math.round(currentData.totalDuration / 60)}m` : '-'}
+                        </div>
+                        <div className="text-xs text-gray-500 dark:text-gray-400">
+                          {currentData?.avgDuration > 0 ? `${Math.round(currentData.avgDuration)}s avg` : ''}
+                        </div>
+                      </td>
+                      <td className="px-6 py-3 whitespace-nowrap">
+                        <div className="flex items-center justify-center gap-3">
+                          <div className="flex items-center gap-1">
+                            <span className="text-sm text-gray-600 dark:text-gray-400">Out:</span>
+                            <span className="text-sm font-medium text-indigo-600 dark:text-indigo-400">
+                              {currentData?.outboundCalls || 0}
+                            </span>
+                          </div>
+                          <div className="flex items-center gap-1">
+                            <span className="text-sm text-gray-600 dark:text-gray-400">In:</span>
+                            <span className="text-sm font-medium text-emerald-600 dark:text-emerald-400">
+                              {currentData?.inboundCalls || 0}
+                            </span>
+                          </div>
+                        </div>
+                      </td>
+                    </tr>
+                  );
+                }).filter(Boolean)} {/* Remove null entries */}
+              </tbody>
+            </table>
+
+            {/* No Data Message */}
+            {/* No Data Message */}
+            {selectedStatusFilter &&
+              Object.entries(
+                statusWise.reduce((acc, item) => {
+                  if (!acc[item.counselorName]) {
+                    acc[item.counselorName] = {
+                      counselorId: item._id.counselor,
+                      statuses: {},
+                      allStatuses: []
+                    };
+                  }
+                  acc[item.counselorName].statuses[item.status] = item;
+                  acc[item.counselorName].allStatuses.push(item);
+                  return acc;
+                }, {})
+              ).filter(([counselorName, counselorData]) => {
+                return !counselorData.statuses[selectedStatusFilter];
+              }).length === Object.entries(
+                statusWise.reduce((acc, item) => {
+                  if (!acc[item.counselorName]) {
+                    acc[item.counselorName] = {
+                      counselorId: item._id.counselor,
+                      statuses: {},
+                      allStatuses: []
+                    };
+                  }
+                  acc[item.counselorName].statuses[item.status] = item;
+                  acc[item.counselorName].allStatuses.push(item);
+                  return acc;
+                }, {})
+              ).length && (
+                <div className="text-center py-8 text-gray-500 dark:text-gray-400">
+                  <p>No counselors found with status "{selectedStatusFilter}"</p>
+                </div>
+              )
+            }
+          </div>
+        </div>
+      )}
+
 
       {loading ? (
         <div className="flex justify-center items-center h-[70vh]">
