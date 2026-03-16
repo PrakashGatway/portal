@@ -867,7 +867,7 @@ export default function LeadManagement() {
 
                         {user.role && user.role !== "counselor" && (
                             <>
-                                <div>
+                                {(user.role === "admin" || user.role === "manager") && <div>
                                     <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                                         Source
                                     </label>
@@ -884,7 +884,7 @@ export default function LeadManagement() {
                                             </option>
                                         ))}
                                     </select>
-                                </div>
+                                </div>}
 
                                 <div>
                                     <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">

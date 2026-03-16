@@ -11,6 +11,10 @@ type AuthContextType = {
   error: string | null;
   fetchUserProfile: () => Promise<void>;
 };
+import { io } from "socket.io-client";
+import { toast } from 'react-toastify';
+
+
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
@@ -37,6 +41,37 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     };
     initializeAuth();
   }, []);
+
+  useEffect(() => {
+    if (!user) return;
+
+    const allowedRoles = ["admin", "leader", "counselor"];
+
+    if (!allowedRoles.includes(user.role)) return;
+
+    const socket = io("http://localhost:5001/lead-notifications", {
+      auth: {
+        token: localStorage.getItem("accessToken"),
+      }
+    });
+
+    socket.on("connect", () => {
+      console.log("Lead socket connected");
+    });
+
+    socket.on("leadAssigned", (lead) => {
+      const audio = new Audio("/notify.mp3");
+      audio.play();
+      toast.success(`New Lead Assigned: ${lead.name}`, {
+        position: "top-center"
+      });
+    });
+
+    return () => {
+      socket.disconnect();
+    };
+
+  }, [user]);
 
   const fetchUserProfile = async () => {
     try {
