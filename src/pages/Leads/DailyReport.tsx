@@ -66,7 +66,7 @@ export default function DailyReport() {
     // Fetch report when date or filters change
     useEffect(() => {
         fetchDailyReport();
-    }, [selectedDate, filters.counselorId, filters.page, filters.limit]);
+    }, [selectedDate, filters.counselorId, filters.page, filters.limit,filters.status]);
 
     const fetchCounselors = async () => {
         try {
@@ -218,8 +218,8 @@ export default function DailyReport() {
         const statusClasses = {
             Answer: "bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300",
             Missed: "bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-300",
-            Busy: "bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-300",
-            Failed: "bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-300"
+            // Busy: "bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-300",
+            // Failed: "bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-300"
         };
 
         const statusIcons = {
@@ -305,12 +305,12 @@ export default function DailyReport() {
             <div className="p-2 px-3 border border-gray-200 rounded-2xl dark:border-gray-800 mb-2 bg-white dark:bg-gray-800 dark:text-gray-400">
                 <div className="flex flex-col gap-5 md:flex-row md:items-center md:justify-between">
                     <div className="flex flex-col items-center w-full gap-4 md:flex-row">
-                       
+
                         <div className="order-3 xl:order-2">
                             <h4 className="text-lg font-semibold text-center text-gray-800 dark:text-white/90 md:text-left">
-                               Daily Call Report
+                                Daily Call Report
                             </h4>
-                            
+
                         </div>
                     </div>
 
@@ -439,49 +439,39 @@ export default function DailyReport() {
                 </div>
             </div>
 
-            {/* Counselor Stats */}
-            {/* {counselorStats.length > 0 && (
-        <div className="mb-4 bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-4 shadow-sm">
-          <h5 className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-3 flex items-center gap-2">
-            <BarChart3 className="h-4 w-4" />
-            Counselor Performance
-          </h5>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3">
-            {counselorStats.map((stat, index) => (
-              <div key={index} className="p-3 bg-gray-50 dark:bg-gray-700/50 rounded-lg border border-gray-100 dark:border-gray-600">
-                <p className="text-sm font-medium text-gray-800 dark:text-white truncate">{stat.counselorName}</p>
-                <div className="mt-2 flex items-center gap-3 text-xs">
-                  <span className="text-green-600 dark:text-green-400">{stat.answered} Ans</span>
-                  <span className="text-red-600 dark:text-red-400">{stat.missed} Miss</span>
-                  <span className="text-blue-600 dark:text-blue-400">{stat.total} Total</span>
-                </div>
-                <div className="mt-1 text-xs text-gray-500 dark:text-gray-400">
-                  Duration: {formatDuration(stat.totalDuration)}
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
-      )} */}
-
             {/* Main Content */}
             <div className="flex justify-center duration-300 ease-in-out w-full gap-1">
                 <div className="min-h-[70vh] overflow-x-auto duration-500 ease-in-out rounded-2xl border border-gray-200 bg-white px-4 py-4 dark:border-gray-800 dark:bg-gray-800 xl:px-4 xl:py-4 w-full">
 
                     {/* Filters Bar */}
-                    <div className="mb-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                    <div className="mb-4 flex flex-col sm:flex-row sm:items-center gap-3">
                         <div>
                             <label className="block text-xs font-medium text-gray-500 dark:text-gray-400 mb-1">Counselor</label>
                             <select
                                 name="counselorId"
                                 value={filters.counselorId}
                                 onChange={handleFilterChange}
-                                className="w-full rounded-md border border-gray-300 bg-white py-2 px-3 text-sm focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500 dark:border-gray-600 dark:bg-gray-700 dark:text-white"
+                                className="w-full rounded-md border border-gray-300 bg-white py-2 px-4 text-sm focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500 dark:border-gray-600 dark:bg-gray-700 dark:text-white"
                             >
                                 <option value="">All Counselors</option>
                                 {allCounselors.map(c => (
                                     <option key={c._id} value={c._id}>{c.name || c.email}</option>
                                 ))}
+                            </select>
+                        </div>
+                        <div>
+                            <label className="block text-xs font-medium text-gray-500 dark:text-gray-400 mb-1">Status</label>
+                            <select
+                                name="status"
+                                value={filters.status}
+                                onChange={handleFilterChange}
+                                className="w-full rounded-md border border-gray-300 bg-white py-2 px-4 text-sm focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500 dark:border-gray-600 dark:bg-gray-700 dark:text-white"
+                            >
+                                <option value="">All Statuses</option>
+                                <option value="Answer">Answered</option>
+                                <option value="Missed">Missed</option>
+                                <option value="Busy">Busy</option>
+                                <option value="Failed">Failed</option>
                             </select>
                         </div>
                         {/* <div className="flex items-center gap-2 flex-wrap">
@@ -552,21 +542,7 @@ export default function DailyReport() {
                                         <option value="Out">Outbound</option>
                                     </select>
                                 </div>
-                                <div>
-                                    <label className="block text-xs font-medium text-gray-500 dark:text-gray-400 mb-1">Status</label>
-                                    <select
-                                        name="status"
-                                        value={filters.status}
-                                        onChange={handleFilterChange}
-                                        className="w-full rounded-md border border-gray-300 bg-white py-2 px-3 text-sm focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500 dark:border-gray-600 dark:bg-gray-700 dark:text-white"
-                                    >
-                                        <option value="">All Statuses</option>
-                                        <option value="Answer">Answered</option>
-                                        <option value="Missed">Missed</option>
-                                        <option value="Busy">Busy</option>
-                                        <option value="Failed">Failed</option>
-                                    </select>
-                                </div>
+
                             </div>
                         </div>
                     )}
@@ -584,7 +560,7 @@ export default function DailyReport() {
                                         <th className="px-3 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500 dark:text-gray-300">Time</th>
                                         <th className="px-3 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500 dark:text-gray-300">Type</th>
                                         <th className="px-3 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500 dark:text-gray-300">Status</th>
-                                        <th className="px-3 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500 dark:text-gray-300">Duration</th>
+                                        <th className="px-3 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500 dark:text-gray-300">IVR Duration</th>
                                         <th className="px-3 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500 dark:text-gray-300">Phone</th>
                                         <th className="px-3 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500 dark:text-gray-300">Lead</th>
                                         <th className="px-3 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500 dark:text-gray-300">Counselor</th>
@@ -613,7 +589,7 @@ export default function DailyReport() {
                                                 {getStatusBadge(call.status)}
                                             </td>
                                             <td className="whitespace-nowrap px-3 py-3 text-sm text-gray-700 dark:text-gray-300 font-mono">
-                                                {call.status== "Answer" ? formatDuration(call.duration) : "-"}
+                                                { formatDuration(call.duration)}
                                             </td>
                                             <td className="whitespace-nowrap px-3 py-3 text-sm text-gray-700 dark:text-gray-300">
                                                 {call.phone || '—'}
@@ -624,9 +600,9 @@ export default function DailyReport() {
                                                         {getLeadName(call.lead)}
                                                     </div>
                                                     {call.lead?.status && (
-                                                        <div className="text-xs text-gray-500 dark:text-gray-400 capitalize">
+                                                        <span className="text-sm text-gray-500 p-0 rounded-full px-3 border-2 border-gray-600 shadow dark:text-gray-400 capitalize">
                                                             {call.lead.status}
-                                                        </div>
+                                                        </span>
                                                     )}
                                                 </div>
                                             </td>
@@ -659,7 +635,7 @@ export default function DailyReport() {
                                                                 Your browser does not support audio.
                                                             </audio>
                                                         )}
-                                                        
+
                                                     </div>
                                                 ) : (
                                                     <span className="text-xs text-gray-400 dark:text-gray-500">No recording</span>
@@ -697,8 +673,8 @@ export default function DailyReport() {
                                     onClick={() => handlePageChange(pagination.page - 1)}
                                     disabled={pagination.page === 1}
                                     className={`px-3 py-1.5 rounded-md border text-sm font-medium transition-colors ${pagination.page === 1
-                                            ? "bg-gray-100 text-gray-400 cursor-not-allowed dark:bg-gray-700 dark:text-gray-500"
-                                            : "border-gray-300 bg-white text-gray-700 hover:bg-gray-50 dark:border-gray-600 dark:bg-gray-700 dark:text-white dark:hover:bg-gray-600"
+                                        ? "bg-gray-100 text-gray-400 cursor-not-allowed dark:bg-gray-700 dark:text-gray-500"
+                                        : "border-gray-300 bg-white text-gray-700 hover:bg-gray-50 dark:border-gray-600 dark:bg-gray-700 dark:text-white dark:hover:bg-gray-600"
                                         }`}
                                 >
                                     Previous
@@ -726,8 +702,8 @@ export default function DailyReport() {
                                                 key={pageNum}
                                                 onClick={() => handlePageChange(pageNum)}
                                                 className={`px-3 py-1.5 rounded-md border text-sm font-medium transition-colors ${pagination.page === pageNum
-                                                        ? "bg-indigo-600 border-indigo-600 text-white"
-                                                        : "border-gray-300 bg-white text-gray-700 hover:bg-gray-50 dark:border-gray-600 dark:bg-gray-700 dark:text-white dark:hover:bg-gray-600"
+                                                    ? "bg-indigo-600 border-indigo-600 text-white"
+                                                    : "border-gray-300 bg-white text-gray-700 hover:bg-gray-50 dark:border-gray-600 dark:bg-gray-700 dark:text-white dark:hover:bg-gray-600"
                                                     }`}
                                             >
                                                 {pageNum}
@@ -739,8 +715,8 @@ export default function DailyReport() {
                                     onClick={() => handlePageChange(pagination.page + 1)}
                                     disabled={pagination.page === pagination.totalPages}
                                     className={`px-3 py-1.5 rounded-md border text-sm font-medium transition-colors ${pagination.page === pagination.totalPages
-                                            ? "bg-gray-100 text-gray-400 cursor-not-allowed dark:bg-gray-700 dark:text-gray-500"
-                                            : "border-gray-300 bg-white text-gray-700 hover:bg-gray-50 dark:border-gray-600 dark:bg-gray-700 dark:text-white dark:hover:bg-gray-600"
+                                        ? "bg-gray-100 text-gray-400 cursor-not-allowed dark:bg-gray-700 dark:text-gray-500"
+                                        : "border-gray-300 bg-white text-gray-700 hover:bg-gray-50 dark:border-gray-600 dark:bg-gray-700 dark:text-white dark:hover:bg-gray-600"
                                         }`}
                                 >
                                     Next
@@ -887,16 +863,7 @@ export default function DailyReport() {
                             <Button size="sm" variant="outline" onClick={() => setCallDetailModal(false)}>
                                 Close
                             </Button>
-                            {selectedCall.recordingData && (
-                                <a
-                                    href={selectedCall.recordingData}
-                                    download={`recording-${selectedCall.masterCallNumber || selectedCall._id}.mp3`}
-                                    className="inline-flex items-center px-4 py-2 bg-indigo-600 text-white text-sm font-medium rounded-lg hover:bg-indigo-700 transition-colors"
-                                >
-                                    <Download className="h-4 w-4 mr-2" />
-                                    Download Recording
-                                </a>
-                            )}
+
                         </div>
                     </div>
                 )}

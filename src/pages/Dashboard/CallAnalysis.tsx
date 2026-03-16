@@ -16,14 +16,14 @@ const CallAnalytics = () => {
   const [analytics, setAnalytics] = useState([]);
   const [counselors, setCounselors] = useState([]);
   const [selectedCounselor, setSelectedCounselor] = useState('all');
-  const [days, setDays] = useState(7);
+  const [days, setDays] = useState(1);
   const [statusWise, setStatusWise] = useState([]);
   // const [selectedStatus, setSelectedStatus] = useState(null);
   const [counselorStatusSelections, setCounselorStatusSelections] = useState({});
   const [selectedStatusFilter, setSelectedStatusFilter] = useState(null);
   // Date range state
   const [dateRange, setDateRange] = useState({
-    startDate: new Date(new Date().setDate(new Date().getDate() - 7)),
+    startDate: new Date(new Date().setDate(new Date().getDate() - 1)),
     endDate: new Date()
   });
 
@@ -48,11 +48,12 @@ const CallAnalytics = () => {
         ...(selectedCounselor !== 'all' && { counselorId: selectedCounselor })
       };
 
-      const response = await api.get('/leads/reports', { params });
-      const statusResponse = await api.get('/leads/reports/status', { params });
-      const Callstatus = await api.get('/leads/reports/calls', { params });
+      // const response = await api.get('/leads/reports', { params });
+      // const statusResponse = await api.get('/leads/reports/status', { params });
+      // const Callstatus = await api.get('/leads/reports/calls', { params });
+      const [response, statusResponse] = await Promise.all([api.get('/leads/reports', { params }), api.get('/leads/reports/status', { params })])
 
-      console.log(Callstatus.data)
+      // console.log(Callstatus.data)
 
       setStatusWise(statusResponse.data?.data || []);
       const data = response.data.data;
@@ -102,9 +103,7 @@ const CallAnalytics = () => {
   const rangeOptions = [
     { value: '12h', label: 'Today', days: 0 },
     { value: '24h', label: 'Last 24 Hours', days: 1 },
-    { value: '7d', label: 'Last 7 Days', days: 7 },
-    // { value: '30d', label: 'Last 30 Days', days: 30 },
-    // { value: '90d', label: 'Last 90 Days', days: 90 },
+    // { value: '7d', label: 'Last 7 Days', days: 7 }
   ];
 
   const handleQuickRange = (days) => {
@@ -390,13 +389,32 @@ const CallAnalytics = () => {
                 ).map(([counselorName, counselorData]) => {
                   // Get unique statuses for this counselor
                   const availableStatuses = counselorData.allStatuses.map(s => s.status);
+                  const currentStatus =
+                    selectedStatusFilter && availableStatuses.includes(selectedStatusFilter)
+                      ? selectedStatusFilter
+                      : (counselorStatusSelections[counselorName] || "all");
 
-                  // Determine which status to show - use counselor-specific selection
-                  const currentStatus = selectedStatusFilter && availableStatuses.includes(selectedStatusFilter)
-                    ? selectedStatusFilter
-                    : (counselorStatusSelections[counselorName] || counselorData.allStatuses[0]?.status || 'new');
 
-                  const currentData = counselorData.statuses[currentStatus];
+                  let currentData;
+
+                  if (currentStatus === "all") {
+                    const all = counselorData.allStatuses;
+
+                    currentData = {
+                      leadCount: all.reduce((sum, s) => sum + (s.leadCount || 0), 0),
+                      totalCalls: all.reduce((sum, s) => sum + (s.totalCalls || 0), 0),
+                      connectedCalls: all.reduce((sum, s) => sum + (s.connectedCalls || 0), 0),
+                      missedCalls: all.reduce((sum, s) => sum + (s.missedCalls || 0), 0),
+                      outboundCalls: all.reduce((sum, s) => sum + (s.outboundCalls || 0), 0),
+                      inboundCalls: all.reduce((sum, s) => sum + (s.inboundCalls || 0), 0),
+                      totalDuration: all.reduce((sum, s) => sum + (s.totalDuration || 0), 0),
+                      avgDuration:
+                        all.reduce((sum, s) => sum + (s.avgDuration || 0), 0) / all.length
+                    };
+                  } else {
+                    currentData = counselorData.statuses[currentStatus];
+                  }
+
 
                   if (selectedStatusFilter && !availableStatuses.includes(selectedStatusFilter)) {
                     return null; // Skip counselors that don't have the selected status
@@ -432,9 +450,13 @@ const CallAnalytics = () => {
                               });
                               setSelectedStatusFilter(null); // Clear filter when manually selecting
                             }}
-                            className=" bg-transparent pl-3 pr-2 py-1.5 text-xs font-medium rounded-lg border border-gray-300 dark:border-gray-600 focus:outline-none focus:ring-2 focus:ring-indigo-500 dark:bg-gray-700 dark:text-white cursor-pointer"
+                            className=" bg-transparent pl-3 pr-2 py-1.5 text-sm font-medium rounded-lg border border-gray-300 dark:border-gray-600 focus:outline-none focus:ring-2 focus:ring-indigo-500 dark:bg-gray-700 dark:text-white cursor-pointer"
                           >
+                            <option key={"all"} value={"all"}>
+                              All ({counselorData.allStatuses.reduce((acc, status) => acc + status.leadCount, 0)} leads)
+                            </option>
                             {counselorData.allStatuses.map(status => (
+
                               <option key={status.status} value={status.status}>
                                 {LeadStatus[status.status] || status.status} ({status.leadCount} leads)
                               </option>
@@ -444,6 +466,7 @@ const CallAnalytics = () => {
                       </td>
                       <td className="px-6 py-3 whitespace-nowrap text-right">
                         <span className="text-xl font-bold text-gray-900 dark:text-white">
+
                           {currentData?.leadCount || 0}
                         </span>
                       </td>

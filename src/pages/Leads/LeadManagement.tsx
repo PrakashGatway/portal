@@ -1195,7 +1195,7 @@ export default function LeadManagement() {
                                                     {lead?.createdAt &&
                                                         moment(lead?.createdAt).format("MMM D, YYYY h:mm A")}
                                                     <br />
-                                                    {user?.role !== "counselor" &&
+                                                    {(user?.role == "admin" || user?.role == "manager" ) &&
                                                         lead?.source.replace(/_/g, " ")}
                                                 </td>
                                                 <td className="whitespace-nowrap px-2 py-3 text-sm font-medium">
