@@ -61,8 +61,10 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 
     if (!allowedRoles.includes(user.role)) return;
 
+    console.log(getCookie("auth_token"))
+
     const socket = io("https://uat.gatewayabroadeducations.com/lead-notifications", {
-      withCredentials: true,
+      // withCredentials: true,
       auth: {
         token: getCookie("auth_token") || localStorage.getItem("accessToken"),
       }
