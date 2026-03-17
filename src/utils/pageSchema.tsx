@@ -53,25 +53,6 @@ export const PAGE_TYPES_SCHEMA = {
         ],
       },
       {
-        type: "roadmap",
-        label: "Road-map",
-        fields: [
-          { name: "title", type: "text", label: "Section Title" },
-          { name: "subTittle", type: "text", label: "Section Sub Title" },
-          {
-            name: "steps",
-            type: "array",
-            label: "Steps",
-            itemFields: [
-              { name: "name", type: "text", label: "Label" },
-              { name: "content", type: "textarea", label: "Quote" },
-              { name: "Points", type: "textarea", label: "Points" },
-              { name: "icon", type: "text", label: "Icon" }
-            ],
-          },
-        ],
-      },
-      {
         type: "content",
         label: "Content",
         fields: [
@@ -314,25 +295,6 @@ export const PAGE_TYPES_SCHEMA = {
             ]
           },
         ]
-      },
-        {
-        type: "roadmap",
-        label: "Road-map",
-        fields: [
-          { name: "title", type: "text", label: "Section Title" },
-          { name: "subTittle", type: "text", label: "Section Sub Title" },
-          {
-            name: "steps",
-            type: "array",
-            label: "Steps",
-            itemFields: [
-              { name: "name", type: "text", label: "Label" },
-              { name: "content", type: "textarea", label: "Quote" },
-              { name: "Points", type: "textarea", label: "Points" },
-              { name: "icon", type: "text", label: "Icon" }
-            ],
-          },
-        ],
       },
       {
         type: "slider",
