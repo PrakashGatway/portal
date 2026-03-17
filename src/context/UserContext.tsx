@@ -12,7 +12,8 @@ type AuthContextType = {
   fetchUserProfile: () => Promise<void>;
 };
 import { io } from "socket.io-client";
-import { toast } from 'react-toastify';
+// import { toast } from 'react-toastify';
+import { toast } from "sonner";
 
 
 
@@ -25,6 +26,10 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const [loading, setLoading] = useState(true);
   const navigate = useNavigate();
   const location = useLocation();
+    const [notifications, setNotifications] = useState(() => {
+    return JSON.parse(localStorage.getItem("notifications") || "[]");
+  });
+
 
   useEffect(() => {
     const initializeAuth = async () => {
@@ -49,7 +54,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 
     if (!allowedRoles.includes(user.role)) return;
 
-    const socket = io("http://localhost:5001/lead-notifications", {
+    const socket = io("https://uat.gatewayabroadeducations.com/lead-notifications", {
       auth: {
         token: localStorage.getItem("accessToken"),
       }
@@ -60,10 +65,57 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     });
 
     socket.on("leadAssigned", (lead) => {
-      const audio = new Audio("/notify.mp3");
-      audio.play();
-      toast.success(`New Lead Assigned: ${lead.name}`, {
-        position: "top-center"
+
+      if (isSoundEnabled()) {
+        const audio = new Audio("/notify.mp3");
+        audio.play();
+      }
+
+      saveNotification(lead);
+
+      setNotifications((prevNotifications) => {
+        const newNotification = {
+          id: lead.leadId,
+          name: lead.name,
+          message: lead.message || "lead notification",
+          time: new Date(lead.createdAt).toISOString(),
+        };
+        return [newNotification, ...prevNotifications].slice(0, 10);
+      });
+
+      toast.custom((t) => (
+        <div className="flex items-start gap-3 bg-white dark:bg-gray-900 shadow-xl  rounded-xl p-3 px-4 w-[420px] max-w-full border border-gray-300 dark:border-gray-700 animate-in slide-in-from-top">
+
+          <div className="w-10 h-10 rounded-full bg-gray-700 flex items-center justify-center text-white font-bold">
+            {lead.name.charAt(0).toUpperCase()}
+          </div>
+
+          <div className="flex-1">
+            <p className="text-sm font-semibold text-gray-900 dark:text-white">
+              New Lead
+            </p>
+            <p className="text-xs text-gray-500">
+              {lead.name} just got assigned to you
+            </p>
+          </div>
+          <div>
+            <button
+              onClick={() => {toast.dismiss(t); navigate(`/leads`)}}
+              className="mt-2 text-sm font-semibold text-blue-600 hover:underline"
+            >
+              View
+            </button>
+          </div>
+
+          <button
+            onClick={() => toast.dismiss(t)}
+            className="text-gray-600 hover:text-gray-600 text-sm"
+          >
+            ✕
+          </button>
+        </div>
+      ), {
+        duration: 2000,
       });
     });
 
@@ -72,6 +124,30 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     };
 
   }, [user]);
+
+  const isSoundEnabled = () => {
+    return localStorage.getItem("notify_sound") !== "false"; // default ON
+  };
+
+  const toggleSound = () => {
+    const current = localStorage.getItem("notify_sound");
+    localStorage.setItem("notify_sound", current === "false" ? "true" : "false");
+  };
+
+  const saveNotification = (lead) => {
+    const existing = JSON.parse(localStorage.getItem("notifications") || "[]");
+
+    const newNotification = {
+      id: lead.leadId,
+      name: lead.name,
+      message: `${lead.name} just got assigned to you`,
+      time: new Date(lead.createdAt).toISOString()
+    };
+
+    const updated = [newNotification, ...existing].slice(0, 10); // keep only 10
+
+    localStorage.setItem("notifications", JSON.stringify(updated));
+  };
 
   const fetchUserProfile = async () => {
     try {
@@ -111,6 +187,10 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     logout,
     loading,
     fetchUserProfile,
+    toggleSound,
+    notifications,
+    setNotifications,
+    isSoundEnabled
   };
 
   return (

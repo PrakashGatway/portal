@@ -16,14 +16,19 @@ import {
     Coins,
     Percent,
     Info,
-    ShoppingCart
+    ShoppingCart,
+    SpeakerIcon,
+    Volume2,
+    VolumeOff
 } from "lucide-react";
+import { set } from "date-fns";
 
 const AppHeader: React.FC = () => {
     const [isApplicationMenuOpen, setApplicationMenuOpen] = useState(false);
     const [isWalletDropdownOpen, setIsWalletDropdownOpen] = useState(false);
-    const { user, logout, wallet } = useAuth() as any;
+    const { user, logout, wallet, toggleSound, isSoundEnabled } = useAuth() as any;
     let navigate = useNavigate();
+    const [isMuted, setIsMuted] = useState(isSoundEnabled);
 
     const { isMobileOpen, toggleSidebar, toggleMobileSidebar } = useSidebar();
 
@@ -135,7 +140,12 @@ const AppHeader: React.FC = () => {
                     <div className="flex items-center gap-2 2xsm:gap-2">
                         {/* Theme Toggle */}
                         <ThemeToggleButton />
-
+                        <button
+                            className="relative flex items-center justify-center text-gray-500 transition-colors bg-white border border-gray-200 rounded-full dropdown-toggle hover:text-gray-700 h-10 w-10 hover:bg-gray-100 dark:border-gray-800 dark:bg-gray-900 dark:text-gray-400 dark:hover:bg-gray-800 dark:hover:text-white"
+                            onClick={() => {toggleSound();setIsMuted(!isMuted)}}
+                        >
+                            {!isMuted ? <VolumeOff className="h-6 w-6" /> : <Volume2 className="h-6 w-6" />}
+                        </button>
                         {/* Notification Dropdown */}
                         <NotificationDropdown />
 
@@ -283,8 +293,6 @@ const AppHeader: React.FC = () => {
                             </AnimatePresence>
                         </div>}
 
-
-                        {/* Category Button */}
                         {user.role != 'counselor' && user.role != 'manager' && user.role != 'leader' && user.role != 'teacher' && <>
                             <motion.button
                                 whileHover={{ scale: 1.02 }}
