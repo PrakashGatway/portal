@@ -26,7 +26,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const [loading, setLoading] = useState(true);
   const navigate = useNavigate();
   const location = useLocation();
-    const [notifications, setNotifications] = useState(() => {
+  const [notifications, setNotifications] = useState(() => {
     return JSON.parse(localStorage.getItem("notifications") || "[]");
   });
 
@@ -47,6 +47,13 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     initializeAuth();
   }, []);
 
+  const getCookie = (name) => {
+    return document.cookie
+      .split("; ")
+      .find(row => row.startsWith(name + "="))
+      ?.split("=")[1];
+  };
+
   useEffect(() => {
     if (!user) return;
 
@@ -55,8 +62,9 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     if (!allowedRoles.includes(user.role)) return;
 
     const socket = io("https://uat.gatewayabroadeducations.com/lead-notifications", {
+      withCredentials: true,
       auth: {
-        token: localStorage.getItem("accessToken"),
+        token: getCookie("auth_token") || localStorage.getItem("accessToken"),
       }
     });
 
@@ -100,7 +108,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
           </div>
           <div>
             <button
-              onClick={() => {toast.dismiss(t); navigate(`/leads`)}}
+              onClick={() => { toast.dismiss(t); navigate(`/leads`) }}
               className="mt-2 text-sm font-semibold text-blue-600 hover:underline"
             >
               View
