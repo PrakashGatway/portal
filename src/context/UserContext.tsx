@@ -63,8 +63,8 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 
     console.log(getCookie("auth_token"))
 
-    const socket = io("https://uat.gatewayabroadeducations.com/lead-notifications", {
-      withCredentials: true,
+    const socket = io("http://localhost:5001/lead-notifications", {
+      // withCredentials: true,
       auth: {
         token: getCookie("auth_token") || localStorage.getItem("accessToken"),
       }
@@ -105,7 +105,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
               New Lead
             </p>
             <p className="text-xs text-gray-500">
-              {lead.name} just got assigned to you
+              {lead.message || "lead notification"}
             </p>
           </div>
           <div>
@@ -125,7 +125,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
           </button>
         </div>
       ), {
-        duration: 2000,
+        duration: 3000,
       });
     });
 

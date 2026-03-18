@@ -310,9 +310,9 @@ const CallAnalytics = () => {
           <div className="px-6 py-2 bg-gray-50 dark:bg-gray-900 border-b dark:border-gray-700">
             <div className="flex items-center gap-3 flex-wrap">
               <span className="text-sm font-medium text-gray-700 dark:text-gray-300">Filter by Status:</span>
-              {Object.entries(LeadStatus).map(([value, label]) => (
+              {Object.entries(LeadStatus).map(([value, label],index) => (
                 <button
-                  key={status}
+                  key={index}
                   onClick={() => {
                     setSelectedStatusFilter(value === 'all' ? null : value);
                     setCounselorStatusSelections({});
@@ -386,7 +386,7 @@ const CallAnalytics = () => {
                     acc[item.counselorName].allStatuses.push(item);
                     return acc;
                   }, {})
-                ).map(([counselorName, counselorData]) => {
+                ).map(([counselorName, counselorData],index) => {
                   // Get unique statuses for this counselor
                   const availableStatuses = counselorData.allStatuses.map(s => s.status);
                   const currentStatus =
@@ -421,7 +421,7 @@ const CallAnalytics = () => {
                   }
                   return (
                     <tr
-                      key={counselorName}
+                      key={index}
                       className="hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors group"
                     >
                       <td className="px-6 py-3 whitespace-nowrap">
