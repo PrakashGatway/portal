@@ -63,8 +63,8 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 
     console.log(getCookie("auth_token"))
 
-    const socket = io("http://localhost:5001/lead-notifications", {
-      // withCredentials: true,
+    const socket = io("https://uat.gatewayabroadeducations.com/lead-notifications", {
+      withCredentials: true,
       auth: {
         token: getCookie("auth_token") || localStorage.getItem("accessToken"),
       }
