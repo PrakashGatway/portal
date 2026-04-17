@@ -56,6 +56,7 @@ import PteExamPage from "./pages/PTEtest/PteAttempts";
 import TestSeriesManagementPage from "./pages/TestSeries/TestSeriesPage";
 import TestSeriesDetailPage from "./usercomponent/TestSeriesDetail";
 import DailyReport from "./pages/Leads/DailyReport";
+import { Toaster } from "sonner";
 
 // Define roles
 export const ROLES = {
@@ -75,6 +76,7 @@ export default function App() {
         <ToastContainer
           style={{ zIndex: 999999 }}
         />
+        <Toaster position="top-center" richColors closeButton />
         <ScrollToTop />
         <Routes>
           {/* <Route element={<AuthRoute />}>

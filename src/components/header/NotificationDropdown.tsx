@@ -1,11 +1,16 @@
 import { useState } from "react";
 import { Dropdown } from "../ui/dropdown/Dropdown";
 // import { DropdownItem } from "../ui/dropdown/DropdownItem";
-import { Link } from "react-router";
+import { Link, useNavigate } from "react-router";
+import { useAuth } from "../../context/UserContext";
+import { SpeakerIcon, X } from "lucide-react";
 
 export default function NotificationDropdown() {
   const [isOpen, setIsOpen] = useState(false);
   const [notifying, setNotifying] = useState(true);
+  const { notifications, setNotifications, toggleSound } = useAuth() as any;
+
+  const navigate = useNavigate();
 
   function toggleDropdown() {
     setIsOpen(!isOpen);
@@ -21,17 +26,12 @@ export default function NotificationDropdown() {
   };
   return (
     <div className="relative">
+
+
       <button
         className="relative flex items-center justify-center text-gray-500 transition-colors bg-white border border-gray-200 rounded-full dropdown-toggle hover:text-gray-700 h-10 w-10 hover:bg-gray-100 dark:border-gray-800 dark:bg-gray-900 dark:text-gray-400 dark:hover:bg-gray-800 dark:hover:text-white"
         onClick={handleClick}
       >
-        <span
-          className={`absolute right-0 top-0.5 z-10 h-2 w-2 rounded-full bg-orange-400 ${
-            !notifying ? "hidden" : "flex"
-          }`}
-        >
-          <span className="absolute inline-flex w-full h-full bg-orange-400 rounded-full opacity-75 animate-ping"></span>
-        </span>
         <svg
           className="fill-current"
           width="18"
@@ -50,7 +50,7 @@ export default function NotificationDropdown() {
       <Dropdown
         isOpen={isOpen}
         onClose={closeDropdown}
-        className="absolute -right-[240px] mt-[17px] flex h-auto w-[300px] flex-col rounded-2xl border border-gray-200 bg-white p-3 shadow-theme-lg dark:border-gray-800 dark:bg-gray-dark sm:w-[300px] lg:right-0"
+        className="absolute -right-[240px] mt-[10px] flex h-auto w-[300px] flex-col rounded-2xl border border-gray-200 bg-white p-3 shadow-theme-lg dark:border-gray-800 dark:bg-gray-dark sm:w-[350px] lg:right-0"
       >
         <div className="flex items-center justify-between pb-3 mb-3 border-b border-gray-100 dark:border-gray-700">
           <h5 className="text-lg font-semibold text-gray-800 dark:text-gray-200">
@@ -76,16 +76,53 @@ export default function NotificationDropdown() {
             </svg>
           </button>
         </div>
-        <ul className="flex flex-col h-auto overflow-y-auto custom-scrollbar">
-          <p>No notifications available.</p>
-        </ul>
-        <Link
-          to="/"
-          className="block px-4 py-2 mt-3 text-sm font-medium text-center text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-100 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-400 dark:hover:bg-gray-700"
-        >
-          View All Notifications
-        </Link>
-      </Dropdown>
-    </div>
+        <div className="max-h-[350px] overflow-y-auto">
+          {notifications.length > 0 ? (
+            <div className="space-y-1">
+              {notifications.map((notification, index) => (
+                <div
+                  key={index}
+                  className="flex items-start gap-3 p-3 rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 shadow-sm hover:shadow-md transition"
+                >
+                  <div onClick={() => {
+                    navigate(`/leads`); closeDropdown();
+                    const updated = notifications.filter((n) => n.id !== notification.id);
+                    setNotifications(updated);
+                    localStorage.setItem("notifications", JSON.stringify(updated));
+                  }} className="flex-1 flex gap-3">
+                    <div className="w-9 h-9 rounded-full bg-gray-700 flex items-center justify-center text-white text-sm font-semibold">
+                      {notification.name?.charAt(0) || "L"}
+                    </div>
+                    <div className="flex-1">
+                      <p className="text-sm font-medium text-gray-900 dark:text-white">
+                        {notification.name}
+                      </p>
+                      <p className="text-xs text-gray-500">
+                        {notification.message}
+                      </p>
+                      <p className="text-[10px] text-gray-400 mt-1">
+                        {new Date(notification.time).toLocaleString()}
+                      </p>
+                    </div>
+                  </div>
+                  <button onClick={() => {
+                    const updated = notifications.filter((n) => n.id !== notification.id);
+                    setNotifications(updated);
+                    localStorage.setItem("notifications", JSON.stringify(updated));
+                  }} className="hover:bg-gray-100 rounded-full p-1">
+                    <X className="h-5 w-5 text-gray-500" />
+                  </button>
+                </div>
+              ))}
+            </div>
+          ) : (
+            <div className="text-center py-6 text-gray-500 text-sm">
+              🔔 No notifications available
+            </div>
+          )}
+
+        </div>
+      </Dropdown >
+    </div >
   );
 }

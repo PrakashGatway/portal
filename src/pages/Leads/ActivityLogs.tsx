@@ -766,11 +766,11 @@ const ActivityLogsModal = ({ leadId, leadName, isOpen, onClose }) => {
 
                                     <div className="space-y-1">
                                         {activities.map((activity, index) => {
-                                            const CallIcon = CALL_STATUS_ICON[activity.status].icon || PhoneCall;
-                                            const iconColor = CALL_STATUS_ICON[activity.status].color || "text-gray-600";
-                                            const isLast = index === activities.length - 1;
-                                            let activityTitle = !isNaN(activity.status)
-                                                ? CALL_STATUS_MAP[Number(activity.status)] || "Unknown Status"
+                                            const CallIcon = CALL_STATUS_ICON[activity?.status]?.icon || PhoneCall;
+                                            const iconColor = CALL_STATUS_ICON[activity?.status]?.color || "text-gray-600";
+                                            const isLast = index === activities?.length - 1;
+                                            let activityTitle = !isNaN(activity?.status)
+                                                ? CALL_STATUS_MAP[Number(activity?.status)] || "Unknown Status"
                                                 : activity.status || "Unknown Status";
 
                                             return (

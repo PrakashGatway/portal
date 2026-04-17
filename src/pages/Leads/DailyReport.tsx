@@ -569,9 +569,9 @@ export default function DailyReport() {
                                     </tr>
                                 </thead>
                                 <tbody className="divide-y divide-gray-200 bg-white dark:bg-gray-800">
-                                    {calls.map((call) => (
+                                    {calls.map((call,index) => (
                                         <tr
-                                            key={call._id || call.masterCallNumber}
+                                            key={index || call.masterCallNumber}
                                             className="hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors"
                                         >
                                             <td className="whitespace-nowrap px-3 py-3 text-sm text-gray-900 dark:text-white">

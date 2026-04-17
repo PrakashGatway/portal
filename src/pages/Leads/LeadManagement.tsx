@@ -53,6 +53,9 @@ export const LeadStatus = {
     'reenquired': "Re-enquired",
     'inactive': "Inactive",
     'langBarrier': "Language Barrier",
+    'callback': "Callback",
+    'enquiry': "Enquiry",
+
 };
 
 
