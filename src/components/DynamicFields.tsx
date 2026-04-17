@@ -159,19 +159,26 @@ export const DynamicFormFields = ({ formData, setFormData, pageType }) => {
 };
 
 // Nested: DynamicField Component
+// Nested: DynamicField Component
 const DynamicField = ({ field, value, onChange }) => {
   const { name, type, label, required, itemFields } = field;
 
   const handleChange = (e) => {
-    onChange(name, type == "editor" ? e : e.target.value);
+    onChange(name, type === "editor" ? e : e.target.value);
   };
 
+  // --- ARRAY TYPE HANDLING ---
   if (type === "array") {
     const [items, setItems] = useState(value || []);
 
     const addItem = () => {
       const newItem = {};
-      itemFields.forEach((f) => (newItem[f.name] = ""));
+      itemFields.forEach((f) => {
+        // Initialize based on field type
+        if (f.type === "array") newItem[f.name] = [];
+        else if (f.type === "editor" || f.type === "textarea") newItem[f.name] = "";
+        else newItem[f.name] = "";
+      });
       const newItems = [...items, newItem];
       setItems(newItems);
       onChange(name, newItems);
@@ -195,34 +202,118 @@ const DynamicField = ({ field, value, onChange }) => {
         <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
           {label} {required && <span className="text-red-500">*</span>}
         </label>
+        
         {items.length === 0 ? (
           <p className="text-sm text-gray-500 italic">No items added.</p>
         ) : (
-          <div className="space-y-3">
+          <div className="space-y-4">
             {items.map((item, idx) => (
-              <div key={idx} className="p-3 border rounded bg-white dark:bg-gray-700 space-y-2">
-                {itemFields.map((subField) => (
-                  <div key={subField.name}>
-                    <label className="text-xs text-gray-500">{subField.label}</label>
-                    <input
-                      type={subField.type === "number" ? "number" : "text"}
-                      value={item[subField.name] || ""}
-                      onChange={(e) => updateItem(idx, subField.name, e.target.value)}
-                      className="w-full rounded border border-gray-300 py-1.5 px-2 text-sm focus:border-indigo-500 dark:border-gray-600 dark:bg-gray-800 dark:text-white"
-                    />
-                  </div>
-                ))}
-                <Button
-                  size="sm"
-                  onClick={(e) => { e.preventDefault(); removeItem(idx) }}
-                  className="text-xs text-red-600 hover:text-red-800"
-                >
-                  Remove
-                </Button>
+              <div key={idx} className="p-4 border rounded bg-white dark:bg-gray-700 space-y-3 shadow-sm">
+                <div className="flex justify-between items-center border-b pb-2 mb-2 dark:border-gray-600">
+                  <span className="text-xs font-bold text-gray-500 uppercase">Item #{idx + 1}</span>
+                  <Button
+                    size="sm"
+                    onClick={(e) => { e.preventDefault(); removeItem(idx) }}
+                    className="text-xs text-red-600 hover:text-red-800"
+                  >
+                    Remove
+                  </Button>
+                </div>
+
+                {/* Render sub-fields based on their type */}
+             {itemFields.map((subField) => (
+  <div key={subField.name} className="mb-2">
+    <label className="block text-xs font-medium text-gray-500 dark:text-gray-400 mb-1">
+      {subField.label}
+    </label>
+
+    {/* Editor Type */}
+    {subField.type === "editor" ? (
+      <TinyMceEditor
+        initialValue={item[subField.name] || ""}
+        onChange={(content) => updateItem(idx, subField.name, content)}
+      />
+    ) 
+    /* File Type */
+    : subField.type === "file" ? (
+      <div className="space-y-2">
+        <input
+          type="file"
+          accept={subField.accept || "*/*"}
+          multiple={subField.multiple || false}
+          onChange={(e) => {
+            const files = e.target.files;
+            if (files && files.length > 0) {
+              // Handle single or multiple files
+              const fileData = subField.multiple 
+                ? Array.from(files) 
+                : files[0];
+              updateItem(idx, subField.name, fileData);
+            }
+          }}
+          className="w-full text-sm text-gray-500 dark:text-gray-400
+            file:mr-4 file:py-2 file:px-4
+            file:rounded-md file:border-0
+            file:text-sm file:font-semibold
+            file:bg-indigo-50 file:text-indigo-700
+            hover:file:bg-indigo-100
+            dark:file:bg-gray-700 dark:file:text-gray-200
+            dark:hover:file:bg-gray-600"
+        />
+        {/* Show selected file name(s) */}
+        {item[subField.name] && (
+          <div className="text-xs text-gray-600 dark:text-gray-300">
+            {Array.isArray(item[subField.name]) 
+              ? `${item[subField.name].length} file(s) selected`
+              : `Selected: ${item[subField.name].name}`
+            }
+          </div>
+        )}
+      </div>
+    )
+    /* Textarea Type */
+    : subField.type === "textarea" ? (
+      <textarea
+        value={item[subField.name] || ""}
+        onChange={(e) => updateItem(idx, subField.name, e.target.value)}
+        rows="3"
+        className="w-full rounded-md border border-gray-300 py-2 px-3 focus:border-indigo-500 dark:border-gray-600 dark:bg-gray-800 dark:text-white"
+      />
+    )
+    /* Number Type */
+    : subField.type === "number" ? (
+      <input
+        type="number"
+        value={item[subField.name] || ""}
+        onChange={(e) => updateItem(idx, subField.name, e.target.value)}
+        className="w-full rounded-md border border-gray-300 py-2 px-3 focus:border-indigo-500 dark:border-gray-600 dark:bg-gray-800 dark:text-white"
+      />
+    )
+    /* Date Type */
+    : subField.type === "date" ? (
+      <input
+        type="date"
+        value={item[subField.name] || ""}
+        onChange={(e) => updateItem(idx, subField.name, e.target.value)}
+        className="w-full rounded-md border border-gray-300 py-2 px-3 focus:border-indigo-500 dark:border-gray-600 dark:bg-gray-800 dark:text-white"
+      />
+    )
+    /* Default: Text Input */
+    : (
+      <input
+        type="text"
+        value={item[subField.name] || ""}
+        onChange={(e) => updateItem(idx, subField.name, e.target.value)}
+        className="w-full rounded-md border border-gray-300 py-2 px-3 focus:border-indigo-500 dark:border-gray-600 dark:bg-gray-800 dark:text-white"
+      />
+    )}
+  </div>
+))}
               </div>
             ))}
           </div>
         )}
+        
         <Button
           size="sm"
           onClick={(e) => { e.preventDefault(); addItem() }}
@@ -233,6 +324,8 @@ const DynamicField = ({ field, value, onChange }) => {
       </div>
     );
   }
+
+  // --- ROOT LEVEL FIELD TYPES (unchanged) ---
 
   if (type === "textarea") {
     return (
@@ -295,25 +388,24 @@ const DynamicField = ({ field, value, onChange }) => {
       </div>
     );
   }
+
   if (type === "file") {
     const [isUploading, setIsUploading] = useState(false);
-    const [preview, setPreview] = useState('')
+    const [preview, setPreview] = useState('');
 
     const handleFileChange = async (e) => {
       const file = e.target.files?.[0];
       if (!file) return;
 
       setIsUploading(true);
-
       const previewUrl = URL.createObjectURL(file);
-      setPreview(previewUrl)
+      setPreview(previewUrl);
+      
       try {
         const formData = new FormData();
         formData.append('image', file);
         const { data } = await api.post('/upload/single', formData, {
-          headers: {
-            'Content-Type': 'multipart/form-data',
-          }
+          headers: { 'Content-Type': 'multipart/form-data' }
         });
         onChange(name, data?.file?.filename);
       } catch (err) {
@@ -334,11 +426,7 @@ const DynamicField = ({ field, value, onChange }) => {
           {label}
         </label>
 
-        <div
-          className="flex flex-col sm:flex-row items-start sm:items-center gap-3"
-          style={{ flexWrap: 'wrap' }}
-        >
-          {/* Hidden File Input */}
+        <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3" style={{ flexWrap: 'wrap' }}>
           <input
             id={`file-upload-${name}`}
             type="file"
@@ -346,72 +434,30 @@ const DynamicField = ({ field, value, onChange }) => {
             onChange={handleFileChange}
             className="hidden"
           />
-
-          {/* Upload Button */}
           <button
             type="button"
             onClick={triggerFileInput}
             disabled={isUploading}
-            className={`
-            flex items-center justify-center
-            px-5 py-2.5
-            rounded-lg font-medium text-sm
-            transition-all duration-200
-            focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500
-            ${isUploading
+            className={`flex items-center justify-center px-5 py-2.5 rounded-lg font-medium text-sm transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 ${
+              isUploading
                 ? 'bg-gray-300 dark:bg-gray-700 text-gray-500 dark:text-gray-400 cursor-not-allowed'
                 : 'bg-indigo-600 hover:bg-indigo-700 text-white shadow-md hover:shadow-lg transform hover:-translate-y-0.5'
-              }
-          `}
+            }`}
           >
-            {isUploading ? (
-              <>
-                <svg
-                  className="animate-spin -ml-1 mr-2 h-4 w-4 text-white"
-                  xmlns="http://www.w3.org/2000/svg"
-                  fill="none"
-                  viewBox="0 0 24 24"
-                >
-                  <circle
-                    className="opacity-25"
-                    cx="12"
-                    cy="12"
-                    r="10"
-                    stroke="currentColor"
-                    strokeWidth="4"
-                  ></circle>
-                  <path
-                    className="opacity-75"
-                    fill="currentColor"
-                    d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"
-                  ></path>
-                </svg>
-                Uploading...
-              </>
-            ) : (
-              <>
-                📎 Upload Image
-              </>
-            )}
+            {isUploading ? 'Uploading...' : '📎 Upload Image'}
           </button>
-
-          {/* File Name Display */}
           {value && (
             <span className="text-sm text-gray-600 dark:text-gray-400 max-w-xs truncate">
               {typeof value === 'string' && !value.startsWith('blob:')
-                ? value.split('/').pop() // Show filename
+                ? value.split('/').pop()
                 : 'Selected: Image ready to upload'}
             </span>
           )}
         </div>
 
-        {/* Image Preview */}
         {preview && (
           <div className="mt-3">
-            <div
-              className="inline-block p-1 bg-gray-100 dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700"
-              style={{ maxWidth: '180px' }}
-            >
+            <div className="inline-block p-1 bg-gray-100 dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700" style={{ maxWidth: '180px' }}>
               <img
                 src={preview}
                 alt="Preview"
@@ -425,6 +471,7 @@ const DynamicField = ({ field, value, onChange }) => {
     );
   }
 
+  // Default: Text Input
   return (
     <div>
       <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">

@@ -318,10 +318,179 @@ export const PAGE_TYPES_SCHEMA = {
         type: "hero",
         label: "Hero Section",
         fields: [
-          { name: "university", type: "text", label: "University", required: false },
-          { name: "students", type: "text", label: "Students", required: false },
-          { name: "cities", type: "text", label: "Cities", required: false }
+          { name: "title", type: "text", label: "Title", required: false },
+          { name: "subtitle", type: "editor", label: "Subtitle", required: false },
+          { name: "stats", type: "array", label: "Stats", itemFields: [
+            { name: "value", type: "text", label: "Value" },
+            { name: "content", type: "text", label: "Quote" },
+          ] },
         ],
+      },
+      {
+        type : "about-section",
+        label : "About Section",
+        fields : [
+          {name : "label",type : "text",label : "Label"},
+          {name : "title",type : "text",label : "Title"},
+          {name : "subtitle",type : "editor",label : "Subtitle"},
+          {name : "btn1",type : "text",label : "Button 1 Text"},
+          {name : "btn2",type : "text",label : "Button 2 Text"},
+          {name : "service",type : "array",label : "Services",itemFields : [
+            {name : "icon",type : "text",label : "Icon"},
+            {name : "title",type : "text",label : "Title"},
+            {name : "description",type : "editor",label : "Description"},
+          ]
+          },
+          {
+            name : "howwehelp",type : "array",label : "How We Help",itemFields : [
+              {name : "tag",type : "text",label : "Tag"},
+              {name : "description",type : "editor",label : "Description"},
+            ]
+          }
+        ]
+
+      },
+      {
+        type : "StudyDestinations",
+        label : "Study Destinations",
+        fields : [  
+          {name : "label",type : "text",label : "Label"},
+          {name : "title",type : "text",label : "Section Title"},
+          {name : "subTitle",type : "editor",label : "Section Sub Title"},
+          {name : "destinations",type : "array",label : "Destinations",itemFields : [
+            {name : "name",type : "text",label : "Destination Name"},
+            {name : "subtitle",type : "editor",label : "Destination Sub Title"},
+            {name : "slug",type : "text",label : "Destination Slug"},
+            {name : "image",type : "file",label : "Destination Image"},
+          ]}
+        ]
+
+      },
+      {
+        type : "testprepsection",
+        label : "Test Prep Section",
+        fields : [
+          {name : "label",type : "text",label : "Label"},
+          {name : "title",type : "text",label : "Section Title"},
+          {name : "subTitle",type : "editor",label : "Section Sub Title"},
+          {name : "testprepcourses",type : "array",label : "Test Prep Courses",itemFields : [
+            {name : "coursetitle",type : "text",label : "Course Title"},
+            {name : "coursesubtitle",type : "editor",label : "Course Sub Title"},
+            {name : "slug",type : "text",label : "Course Slug"},
+            {name: "btntext", type: "text", label: "Button Text" },
+          ]}
+        ]
+      },
+      {
+        type : "studyabroadcounsultants",
+        label : "Study Abroad Consultants",
+        fields : [
+          {name : "label",type : "text",label : "Label"},
+          {name : "title",type : "text",label : "Section Title"},
+          {name : "subTitle",type : "editor",label : "Section Sub Title"},
+          {name : "abroadconsulting",type : "array",label : "Abroad Consulting",itemFields : [
+            {name : "label",type : "text",label : "Label"},
+            {name : "content",type : "editor",label : "Content"},
+            {name : "buttontext",type : "text",label : "Button Text"},
+           
+           ]
+          },
+          {
+            name : "testprepcourses",type : "array",label : "Test Prep Courses",itemFields : [
+              {name : "content",type : "editor",label : "Content"}, 
+              {name : "buttontext",type : "text",label : "Button Text"},
+            ]
+          }
+        ]
+
+
+      },
+      {
+        type : "whychooseus",
+        label : "Why Choose Us",
+        fields : [
+          {name : "label",type : "text",label : "Label"},
+          {name : "title",type : "text",label : "Section Title"},
+          {name : "subTitle",type : "editor",label : "Section Sub Title"},
+          {name : "cards",type : "array",label : "Cards",itemFields : [
+            {name : "icon",type : "text",label : "Icon"},
+            {name : "title",type : "text",label : "Title"},
+            {name : "description",type : "editor",label : "Description"},
+          ]}
+        ]
+      },
+      {
+        type : "6stepprocess",
+        label : "6 Step Process",
+        fields : [
+          {name : "label",type : "text",label : "Label"},
+          {name : "title",type : "text",label : "Section Title"},
+          {name : "subTitle",type : "editor",label : "Section Sub Title"},
+          {name : "processsteps",type : "array",label : "Process Steps",itemFields : [
+            {name : "icon",type : "text",label : "Icon"},
+            {name : "title",type : "text",label : "Title"},
+            {name : "description",type : "editor",label : "Description"},
+          ]}
+        ]
+      },
+      {
+        type : "scoreachievements",
+        label : "Score Achievements",
+        fields : [
+          {name : "label",type : "text",label : "Label"},
+          {name : "title",type : "text",label : "Section Title"},
+          {name : "subTitle",type : "editor",label : "Section Sub Title"},
+        ]
+      },
+      {
+        type : "testimonials",
+        label : "Testimonials",
+        fields : [
+          {name : "label",type : "text",label : "Label"},
+          {name : "title",type : "text",label : "Section Title"},
+          {name : "subTitle",type : "editor",label : "Section Sub Title"},
+        ]
+
+      },
+      {
+        type : "citysection",
+        label : "City Section",
+        fields : [
+          {name : "label",type : "text",label : "Label"},
+          {name : "title",type : "text",label : "Section Title"},
+          {name : "subTitle",type : "editor",label : "Section Sub Title"},
+          {name : "cities",type : "array",label : "Cities",itemFields : [
+            {name : "icon",type : "text",label : "City Icon"},
+            {name : "name",type : "text",label : "City Name"},
+            {name : "slug",type : "text",label : "City Slug"},
+            {name : "description",type : "editor",label : "City Description"},
+          ]},
+          {name : "sectiondescription",type : "editor",label : "Section Description"},
+        ]
+      },
+      {
+        type : "ctasection",
+        label : "CTA Section",
+        fields : [
+          {name : "title",type : "text",label : "Section Title"},
+          {name : "subTitle",type : "editor",label : "Section Sub Title"},
+          {name : "button1text",type : "text",label : "Button 1 Text"},
+          {name : "button2text",type : "text",label : "Button 2 Text"},
+          {name : "features",type : "array",label : "Features",itemFields : [
+            {name : "featuretitle",type : "text",label : "Feature Title"},
+          ]
+        }
+        ]
+
+      },
+      {
+        type : "faqsection",
+        label : "FAQ Section",
+        fields : [
+          {name : "label",type : "text",label : "Label"},
+          {name : "title",type : "text",label : "Section Title"},
+        ]
+
       },
       {
         type: "form-section",
