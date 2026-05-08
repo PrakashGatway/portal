@@ -8,12 +8,31 @@ export const PAGE_TYPES_SCHEMA = {
     ],
     sections: [
       {
-        type: "StudyDestinations",
-        label: "Study Destinations",
-        fields: [
-          { name: "title", type: "text", label: "Section Title" },
-          { name: "subTittle", type: "text", label: "Section Sub Title" }
-        ],
+        type : "statssection",
+        label : "Stats Section",
+        fields : [
+          {
+            name : "icon",type : "text",label : "Icon"},
+           { name : "title", type : "text", label : "title"},
+           { name : "title", type : "editor", label : "subtile"},
+        ]
+
+      },
+      {
+        type : "StudyDestinations",
+        label : "Study Destinations",
+        fields : [  
+          {name : "label",type : "text",label : "Label"},
+          {name : "title",type : "text",label : "Section Title"},
+          {name : "subTitle",type : "editor",label : "Section Sub Title"},
+          {name : "destinations",type : "array",label : "Destinations",itemFields : [
+            {name : "name",type : "text",label : "Destination Name"},
+            {name : "subtitle",type : "editor",label : "Destination Sub Title"},
+            {name : "slug",type : "text",label : "Destination Slug"},
+            {name : "image",type : "file",label : "Destination Image"},
+          ]}
+        ]
+
       },
       {
         type: "AcademicPrograms",
@@ -34,23 +53,68 @@ export const PAGE_TYPES_SCHEMA = {
           // },
         ],
       },
+     {
+        type : "whychooseus",
+        label : "Why Choose Us",
+        fields : [
+          {name : "label",type : "text",label : "Label"},
+          {name : "title",type : "text",label : "Section Title"},
+          {name : "subTitle",type : "editor",label : "Section Sub Title"},
+          {name : "cards",type : "array",label : "Cards",itemFields : [
+            {name : "icon",type : "text",label : "Icon"},
+            {name : "title",type : "text",label : "Title"},
+            {name : "description",type : "editor",label : "Description"},
+          ]}
+        ]
+      },
       {
-        type: "WhyChooseUs",
-        label: "Why Choose Us",
+        type  : "servicesection",
+        label : "Service section",
         fields: [
+          { name: "label", type: "text", label: "Section Label" },
           { name: "title", type: "text", label: "Section Title" },
-          { name: "subTittle", type: "text", label: "Section Sub Title" },
-          {
+          { name: "subtitle", type: "editor", label: "Section Subtitle" },
+           {
             name: "Cards",
             type: "array",
             label: "Cards",
             itemFields: [
-              { name: "name", type: "text", label: "Label" },
               { name: "icon", type: "text", label: "Icon" },
-              { name: "content", type: "textarea", label: "Quote" },
+              { name: "title", type: "text", label: "Title" },
+              { name: "subtitle", type: "editor", label: "Subtitle" },
+              {name : "btn",type: "text",label : "btn"}
             ],
           },
-        ],
+        ]
+      },
+        {
+        type : "citysection",
+        label : "City Section",
+        fields : [
+          {name : "label",type : "text",label : "Label"},
+          {name : "title",type : "text",label : "Section Title"},
+          {name : "subTitle",type : "editor",label : "Section Sub Title"},
+          {name : "cities",type : "array",label : "Cities",itemFields : [
+            {name : "icon",type : "text",label : "City Icon"},
+            {name : "name",type : "text",label : "City Name"},
+            {name : "slug",type : "text",label : "City Slug"},
+            {name : "description",type : "editor",label : "City Description"},
+          ]},
+          {name : "sectiondescription",type : "editor",label : "Section Description"},
+        ]
+      },
+       {
+        type : "ctasection",
+        label : "CTA Section",
+        fields : [
+          {name : "title",type : "text",label : "Section Title"},
+          {name : "subTitle",type : "editor",label : "Section Sub Title"},
+          {name : "features",type : "array",label : "Features",itemFields : [
+            {name : "featuretitle",type : "text",label : "Feature Title"},
+          ]
+        }
+        ]
+
       },
       {
         type: "content",
@@ -58,6 +122,7 @@ export const PAGE_TYPES_SCHEMA = {
         fields: [
           { name: "title", type: "text", label: "Section Title" },
           { name: "content", type: "editor", label: "Section content" },
+         
         ],
       },
     ],
@@ -474,8 +539,6 @@ export const PAGE_TYPES_SCHEMA = {
         fields : [
           {name : "title",type : "text",label : "Section Title"},
           {name : "subTitle",type : "editor",label : "Section Sub Title"},
-          {name : "button1text",type : "text",label : "Button 1 Text"},
-          {name : "button2text",type : "text",label : "Button 2 Text"},
           {name : "features",type : "array",label : "Features",itemFields : [
             {name : "featuretitle",type : "text",label : "Feature Title"},
           ]

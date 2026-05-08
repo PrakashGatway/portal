@@ -3,7 +3,7 @@ import { useState, useEffect } from "react";
 import { PAGE_TYPES_SCHEMA } from "../utils/pageSchema";
 import Button from "./ui/button/Button";
 import TinyMceEditor from "./TextEditor";
-import api from "../axiosInstance";
+import api, { ImageBaseUrl } from "../axiosInstance";
 import { toast } from "react-toastify";
 import { Plus, X, ChevronRight, Image as ImageIcon } from "lucide-react";
 
@@ -379,86 +379,101 @@ const FileUploader = ({ value, onChange, accept, compact }) => {
     const [preview, setPreview] = useState('');
 
     // Cleanup blob URLs on unmount or value change (safety fix only)
-    useEffect(() => {
-        return () => {
-            if (preview && preview.startsWith('blob:')) {
-                URL.revokeObjectURL(preview);
-            }
-        };
-    }, [preview]);
-
-    // Update preview when value changes (logic unchanged, added null safety)
-    useEffect(() => {
-        // Clean up previous blob URL
+    // Cleanup blob URLs on unmount only
+useEffect(() => {
+    return () => {
         if (preview && preview.startsWith('blob:')) {
             URL.revokeObjectURL(preview);
         }
+    };
+}, []); // Empty dependency = run only on mount/unmount
 
-        // Safety check: ensure value is valid before processing
-        if (!value) {
-            setPreview('');
-            return;
-        }
+    // Update preview when value changes (logic unchanged, added null safety)
+    useEffect(() => {
+    // Clean up previous blob URL only if it's a blob URL
+    if (preview && preview.startsWith('blob:')) {
+        URL.revokeObjectURL(preview);
+    }
 
-        if (typeof value === 'string') {
-            const imageUrl = value.startsWith('http') || value.startsWith('/') 
-                ? value 
-                : '';
-            setPreview(imageUrl);
+    if (!value) {
+        setPreview('');
+        return;
+    }
+
+    if (typeof value === 'string') {
+        let imageUrl = value;
+        
+        // If it's already a full URL or absolute path, use as-is
+        if (value.startsWith('http') || value.startsWith('/')) {
+            imageUrl = value;
+        } 
+        // If it's a relative path/filename, prepend your API base URL or public path
+        else {
+           
         }
-        // Note: We don't handle File objects here because our logic uploads immediately
-        // and only stores the string filename/URL in state
-    }, [value]);
+        
+        setPreview(imageUrl);
+    }
+    // Note: We don't handle File objects here because our logic uploads immediately
+}, [value]); // Removed `preview` from dependency to avoid circular updates
 
     const handleFileChange = async (e) => {
-      // Safety check
-      if (!e?.target?.files) return;
-      
-      const file = e.target.files[0];
-      if (!file) return;
+    if (!e?.target?.files) return;
+    
+    const file = e.target.files[0];
+    if (!file) return;
 
-      setIsUploading(true);
-      
-      let objectUrl = null;
-      try {
+    setIsUploading(true);
+    
+    let objectUrl = null;
+    try {
         // Create immediate preview for better UX
         objectUrl = URL.createObjectURL(file);
-        setPreview(objectUrl);
+        setPreview(objectUrl); // Show blob URL immediately
 
-        // Upload to server (logic unchanged)
+        // Upload to server
         const formData = new FormData();
         formData.append('image', file);
         
         const { data } = await api.post('/upload/single', formData, {
-          headers: { 'Content-Type': 'multipart/form-data' }
+            headers: { 'Content-Type': 'multipart/form-data' }
         });
 
-        const filePath = data?.file?.filename || data?.url; 
+        const filePath = data?.file?.filename; 
         
         if (filePath) {
-            onChange(filePath);
+            // Revoke the blob URL since we're switching to server URL
+            if (objectUrl) {
+                URL.revokeObjectURL(objectUrl);
+                objectUrl = null;
+            }
+            onChange(filePath); // This will trigger the useEffect above to set proper preview
         } else {
             throw new Error("Invalid response from server");
         }
 
-      } catch (err) {
+        setPreview(filePath); // Ensure preview is updated to server URL
+        toast.success("File uploaded successfully");
+
+    } catch (err) {
         console.error('Upload error:', err);
         
-        // Revert preview on error
+        // Revert preview on error - but only if we still have the blob URL
         if (objectUrl) {
-            URL.revokeObjectURL(objectUrl);
+            setPreview(objectUrl);
+        } else {
+            setPreview(value || '');
         }
-        setPreview(value || '');
         toast.error(`Upload failed: ${err.message || 'Unknown error'}`);
         
-      } finally {
+    } finally {
         setIsUploading(false);
-        // Reset input so same file can be selected again
         if (e.target) {
             e.target.value = '';
         }
-      }
-    };
+        // Don't revoke objectUrl here - it's handled in success/error branches
+    }
+};
 
     const sizeClass = compact ? 'h-20' : 'h-28';
 
@@ -488,13 +503,13 @@ const FileUploader = ({ value, onChange, accept, compact }) => {
             ) : preview ? (
                 <>
                     <img 
-                        src={preview} 
+                        src={`${ImageBaseUrl}/${preview}`} 
                         alt="Preview" 
                         className="w-full h-full object-cover rounded-lg"
-                        onError={() => {
-                            // Fallback if image fails to load
-                            setPreview('');
-                        }}
+                        // onError={() => {
+                        //     // Fallback if image fails to load
+                        //     setPreview('');
+                        // }}
                     />
                     <div className="absolute inset-0 bg-black/30 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
                         <span className="text-white text-[10px] font-medium bg-black/40 px-2 py-1 rounded">Change</span>
