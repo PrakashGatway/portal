@@ -416,6 +416,20 @@ export const PAGE_TYPES_SCHEMA = {
         ],
       },
       {
+        type : "Testimonial-image",
+        label : "Testinomial Image",
+        fields: [
+          {
+            name : "aboutimage",type : "array",label : "Student Image",itemFields : [
+              {name : "image",type : "file",label : "Image"},
+           
+            ]
+          }
+        ]
+
+
+      },
+      {
         type : "about-section",
         label : "About Section",
         fields : [
@@ -435,7 +449,8 @@ export const PAGE_TYPES_SCHEMA = {
               {name : "tag",type : "text",label : "Tag"},
               {name : "description",type : "editor",label : "Description"},
             ]
-          }
+          },
+          
         ]
 
       },
