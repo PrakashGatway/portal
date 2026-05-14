@@ -116,6 +116,30 @@ export const PAGE_TYPES_SCHEMA = {
         ]
 
       },
+       {
+        type: "BestUniversities",
+        label: "Best Universities",
+        fields: [
+          { name: "title", type: "text", label: "Section Title" },
+          { name: "subTittle", type: "text", label: "Section Sub Title" },
+          {
+            name: "Cards",
+            type: "array",
+            label: "Cards",
+            itemFields: [
+              { name: "name", type: "text", label: "Label" },
+              { name: "qsRank", type: "text", label: "Qsrank" },
+              { name: "description", type: "text", label: "Description" },
+              { name: "location", type: "text", label: "Location" },
+              { name: "Courses", type: "array", label: "Courses", itemType: "text" },
+              { name: "year", type: "text", label: "Year" },
+              { name: "icon", type: "text", label: "Icon" },
+              {name : "slug",type: "text", label : "Slug"}
+            
+            ],
+          },
+        ],
+      },
       {
         type: "content",
         label: "Content",
@@ -462,6 +486,7 @@ export const PAGE_TYPES_SCHEMA = {
           },
           {
             name : "testprepcourses",type : "array",label : "Test Prep Courses",itemFields : [
+            {name : "label",type : "text",label : "Label"},
               {name : "content",type : "editor",label : "Content"}, 
               {name : "buttontext",type : "text",label : "Button Text"},
             ]
