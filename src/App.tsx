@@ -57,6 +57,7 @@ import TestSeriesManagementPage from "./pages/TestSeries/TestSeriesPage";
 import TestSeriesDetailPage from "./usercomponent/TestSeriesDetail";
 import DailyReport from "./pages/Leads/DailyReport";
 import { Toaster } from "sonner";
+import MockTests from "./tests/mcqtest";
 
 // Define roles
 export const ROLES = {
@@ -101,7 +102,14 @@ export default function App() {
               <Route path="/class/:contentId/:courseId" element={<VideoPlayerPage />} />
               <Route path="/support" element={<SupportPage />} />
 
+
               <Route path="/test-series" element={<MockTestsPage />} />
+              <Route path="/tests" element={<MockTests testType="full_length" />} />
+              <Route path="/practice-tests" element={<MockTests testType="sectional" />} />
+              <Route path="/quiz" element={<MockTests testType="quiz" />} />
+
+
+
               <Route path="/test-series/:slug" element={<TestSeriesDetailPage />} />
 
               <Route path="/mock-tests" element={<MockTest />} />
@@ -131,7 +139,7 @@ export default function App() {
 
               <Route element={<ProtectedRoute roles={[ROLES.COUNSEL, ROLES.ADMIN, ROLES.MANAGER, ROLES.LEADER]} />}>
                 <Route path="/leads" element={<LeadManagement />} />
-                 <Route path="/lead-report" element={<DailyReport />} /> 
+                <Route path="/lead-report" element={<DailyReport />} />
               </Route>
 
               <Route path="*" element={<ComingSoon />} />

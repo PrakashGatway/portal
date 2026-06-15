@@ -21,7 +21,6 @@ import {
     Volume2,
     VolumeOff
 } from "lucide-react";
-import { set } from "date-fns";
 
 const AppHeader: React.FC = () => {
     const [isApplicationMenuOpen, setApplicationMenuOpen] = useState(false);
@@ -83,7 +82,7 @@ const AppHeader: React.FC = () => {
     };
 
     return (
-        <header className="sticky top-0 flex w-full bg-white/80 dark:bg-gray-900/80 backdrop-blur-xl border-b border-gray-200/50 dark:border-gray-800/50 z-50 shadow-sm">
+        <header className="sticky top-0 flex w-full bg-white/90 dark:bg-gray-900/80 backdrop-blur-xl z-50 shadow">
             <div className="flex flex-col items-center justify-between grow lg:flex-row lg:px-6">
                 {/* Mobile Header Section */}
                 <div className="flex items-center justify-between w-full gap-2 px-4 py-3 border-b border-gray-200 dark:border-gray-800 sm:gap-4 lg:justify-normal lg:border-b-0 lg:px-0 lg:py-3">
@@ -140,12 +139,12 @@ const AppHeader: React.FC = () => {
                     <div className="flex items-center gap-2 2xsm:gap-2">
                         {/* Theme Toggle */}
                         <ThemeToggleButton />
-                        <button
+                        {/* <button
                             className="relative flex items-center justify-center text-gray-500 transition-colors bg-white border border-gray-200 rounded-full dropdown-toggle hover:text-gray-700 h-10 w-10 hover:bg-gray-100 dark:border-gray-800 dark:bg-gray-900 dark:text-gray-400 dark:hover:bg-gray-800 dark:hover:text-white"
                             onClick={() => {toggleSound();setIsMuted(!isMuted)}}
                         >
                             {!isMuted ? <VolumeOff className="h-6 w-6" /> : <Volume2 className="h-6 w-6" />}
-                        </button>
+                        </button> */}
                         {/* Notification Dropdown */}
                         <NotificationDropdown />
 
@@ -155,18 +154,11 @@ const AppHeader: React.FC = () => {
                                 whileHover={{ scale: 1.02 }}
                                 whileTap={{ scale: 0.98 }}
                                 onClick={toggleWalletDropdown}
-                                className="flex items-center gap-2 px-3 py-2 bg-gradient-to-r from-purple-50 to-pink-50 dark:from-purple-900/20 dark:to-pink-900/20 border border-purple-200 dark:border-purple-800 rounded-xl hover:shadow-md transition-all duration-200 group"
+                                className="flex items-center gap-2 px-3 py-2 bg-[#FF6B35]/10 dark:from-purple-900/20 dark:to-pink-900/20 border border-[#FF6B35]/30 dark:border-purple-800 rounded-xl hover:shadow-md transition-all duration-200 group"
                             >
                                 <div className="flex items-center gap-2">
-                                    <div className="relative">
-                                        <Gift className="h-4 w-4 text-purple-600 dark:text-purple-400" />
-                                        <motion.div
-                                            initial={{ scale: 0 }}
-                                            animate={{ scale: 1 }}
-                                            className="absolute -top-1 -right-1 w-2 h-2 bg-green-500 rounded-full"
-                                        />
-                                    </div>
-                                    <span className="text-sm font-semibold text-purple-700 dark:text-purple-300">
+                                    
+                                    <span className="text-sm font-semibold">
                                         {formatCurrency(wallet?.balance)}
                                     </span>
                                 </div>
@@ -184,7 +176,6 @@ const AppHeader: React.FC = () => {
                                         {/* Wallet Header */}
                                         <div className="flex items-center justify-between mb-4">
                                             <h3 className="font-semibold text-gray-900 dark:text-white flex items-center gap-2">
-                                                <Gift className="h-4 w-4 text-purple-500" />
                                                 Referral Rewards
                                             </h3>
                                             <div className="flex items-center gap-1 px-2 py-1 bg-purple-100 dark:bg-purple-900/30 rounded-lg">
@@ -192,8 +183,6 @@ const AppHeader: React.FC = () => {
                                                 <span className="text-xs font-medium text-purple-700 dark:text-purple-300">Max 10%</span>
                                             </div>
                                         </div>
-
-                                        {/* Usage Info */}
                                         <div className="bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800 rounded-lg p-3 mb-4">
                                             <div className="flex items-start gap-2">
                                                 <Info className="h-4 w-4 text-yellow-600 dark:text-yellow-400 mt-0.5 flex-shrink-0" />
@@ -210,34 +199,12 @@ const AppHeader: React.FC = () => {
 
                                         {/* Balance Overview */}
                                         <div className="space-y-3 mb-4">
-                                            <div className="flex justify-between items-center p-3 bg-gradient-to-r from-purple-500 to-pink-500 rounded-xl text-white">
+                                            <div className="flex justify-between items-center p-3 bg-gradient-to-r from-[#FF6B35] to-[#FF6B35]/80 rounded-xl text-white">
                                                 <div>
                                                     <span className="text-sm font-medium">Available Rewards</span>
                                                     <div className="text-xs opacity-90">Max 10% per course</div>
                                                 </div>
                                                 <span className="text-lg font-bold">{formatCurrency(wallet?.balance)}</span>
-                                            </div>
-
-                                            <div className="grid grid-cols-2 gap-2">
-                                                <div className="bg-green-50 dark:bg-green-900/20 rounded-lg p-3">
-                                                    <div className="flex items-center gap-2 mb-1">
-                                                        <Zap className="h-3 w-3 text-green-500" />
-                                                        <span className="text-xs text-green-600 dark:text-green-400">Available</span>
-                                                    </div>
-                                                    <div className="text-sm font-semibold text-green-700 dark:text-green-300">
-                                                        {formatCurrency(availableForUse)}
-                                                    </div>
-                                                </div>
-
-                                                <div className="bg-blue-50 dark:bg-blue-900/20 rounded-lg p-3">
-                                                    <div className="flex items-center gap-2 mb-1">
-                                                        <Crown className="h-3 w-3 text-blue-500" />
-                                                        <span className="text-xs text-blue-600 dark:text-blue-400">Total Earned</span>
-                                                    </div>
-                                                    <div className="text-sm font-semibold text-blue-700 dark:text-blue-300">
-                                                        {formatCurrency(totalEarned)}
-                                                    </div>
-                                                </div>
                                             </div>
                                         </div>
 
@@ -261,7 +228,7 @@ const AppHeader: React.FC = () => {
                                                     whileHover={{ scale: 1.02 }}
                                                     whileTap={{ scale: 0.98 }}
                                                     onClick={() => navigate('/course')}
-                                                    className="flex items-center justify-center gap-2 p-2 text-xs bg-purple-500 text-white rounded-lg hover:bg-purple-600 transition-colors font-medium"
+                                                    className="flex items-center justify-center gap-2 p-2 text-xs bg-[#FF6B35] text-white rounded-lg hover:bg-[#FF6B35]/90 transition-colors font-medium"
                                                 >
                                                     <ShoppingCart className="h-3 w-3" />
                                                     Browse Courses
@@ -300,9 +267,7 @@ const AppHeader: React.FC = () => {
                                 onClick={() => navigate("/course/category")}
                                 className={`
                                 inline-flex items-center justify-center
-                                px-4 py-2
-                                bg-gradient-to-r from-blue-50 to-purple-50 dark:from-blue-900/20 dark:to-purple-900/20
-                                text-blue-700 dark:text-blue-300
+                                px-4 py-2 bg-[#FF6B35]/10 dark:from-purple-900/20 dark:to-pink-900/20 border border-[#FF6B35]/30
                                 font-medium text-sm
                                 rounded-xl
                                 border border-blue-200 dark:border-blue-800
@@ -316,7 +281,6 @@ const AppHeader: React.FC = () => {
                                     className="h-4 w-4 mr-2"
                                 />
                                 {user.subCategory?.name || user.category?.name}
-                                <Sparkles className="h-3 w-3 ml-1 text-yellow-500" />
                             </motion.button>
                         </>}
                     </div>

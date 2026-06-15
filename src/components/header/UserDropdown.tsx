@@ -67,7 +67,7 @@ export default function UserDropdown({ user, logout }: any) {
             >
                 {/* User Avatar */}
                 <div className="relative">
-                    <div className="w-9 h-9 rounded-full bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center text-white font-semibold text-sm">
+                    <div className="w-9 h-9 rounded-full bg-[#F6673C] flex items-center justify-center text-white font-semibold text-sm">
                         {user?.avatar ? (
                             <img
                                 src={user.avatar}
@@ -95,13 +95,13 @@ export default function UserDropdown({ user, logout }: any) {
                         animate={{ opacity: 1, y: 0, scale: 1 }}
                         exit={{ opacity: 0, y: 10, scale: 0.95 }}
                         transition={{ duration: 0.2, ease: "easeOut" }}
-                        className="absolute right-0 top-full mt-2 w-80 z-50"
+                        className="absolute right-0 top-full mt-2 w-78 z-50"
                     >
                         <div className="bg-white dark:bg-gray-800 rounded-2xl border border-gray-200 dark:border-gray-700 shadow-xl overflow-hidden">
                             {/* User Header Section */}
                             <div className="p-6 py-4 bg-gradient-to-r from-blue-50 to-purple-50 dark:from-blue-900/20 dark:to-purple-900/20 border-b border-gray-200 dark:border-gray-700">
-                                <div className="flex items-center gap-3">
-                                    <div className="w-12 h-12 rounded-full bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center text-white font-semibold text-lg">
+                                <div className="flex items-center gap-2">
+                                    <div className="w-10 h-10 rounded-full bg-[#F6673C] flex items-center justify-center text-white font-semibold text-lg">
                                         {user?.avatar ? (
                                             <img
                                                 src={user.avatar}
@@ -124,15 +124,15 @@ export default function UserDropdown({ user, logout }: any) {
                             </div>
 
                             <div className="p-2">
-                                <nav className="space-y-1">
+                                <nav className="">
                                     <DropdownItem
                                         onItemClick={closeDropdown}
                                         tag="a"
                                         to="/profile"
-                                        className="flex items-center gap-3 px-3 py-3 rounded-xl text-gray-700 dark:text-gray-300 hover:bg-blue-50 dark:hover:bg-blue-900/20 hover:text-blue-600 dark:hover:text-blue-400 transition-all duration-200 group"
+                                        className="flex items-center gap-3 px-3 py-2 rounded-xl text-gray-700 dark:text-gray-300 hover:bg-blue-50 dark:hover:bg-blue-900/20 hover:text-blue-600 dark:hover:text-blue-400 transition-all duration-200 group"
                                     >
-                                        <div className="p-2 bg-blue-100 dark:bg-blue-900/30 rounded-lg">
-                                            <User className="w-4 h-4 text-blue-600 dark:text-blue-400" />
+                                        <div className="p-2.5 bg-[#F6673C]/20 dark:bg-blue-900/30 rounded-full">
+                                            <User className="w-4 h-4 text-gray-600 dark:text-blue-400" />
                                         </div>
                                         <div>
                                             <div className="font-medium">Profile</div>
@@ -144,9 +144,9 @@ export default function UserDropdown({ user, logout }: any) {
                                         onItemClick={closeDropdown}
                                         tag="a"
                                         to="/settings"
-                                        className="flex items-center gap-3 px-3 py-3 rounded-xl text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700/50 hover:text-gray-900 dark:hover:text-white transition-all duration-200 group"
+                                        className="flex items-center gap-3 px-3 py-2 rounded-xl text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700/50 hover:text-gray-900 dark:hover:text-white transition-all duration-200 group"
                                     >
-                                        <div className="p-2 bg-gray-100 dark:bg-gray-700 rounded-lg">
+                                        <div className="p-2.5 bg-[#F6673C]/20 dark:bg-gray-700 rounded-full">
                                             <Settings className="w-4 h-4 text-gray-600 dark:text-gray-400" />
                                         </div>
                                         <div>
@@ -159,9 +159,9 @@ export default function UserDropdown({ user, logout }: any) {
                                         onItemClick={closeDropdown}
                                         tag="a"
                                         to="/billing"
-                                        className="flex items-center gap-3 px-3 py-3 rounded-xl text-gray-700 dark:text-gray-300 hover:bg-green-50 dark:hover:bg-green-900/20 hover:text-green-600 dark:hover:text-green-400 transition-all duration-200 group"
+                                        className="flex items-center gap-3 px-3 py-2 rounded-xl text-gray-700 dark:text-gray-300 hover:bg-green-50 dark:hover:bg-green-900/20 hover:text-green-600 dark:hover:text-green-400 transition-all duration-200 group"
                                     >
-                                        <div className="p-2 bg-green-100 dark:bg-green-900/30 rounded-lg">
+                                        <div className="p-2.5 bg-[#F6673C]/20 dark:bg-green-900/30 rounded-full">
                                             <CreditCard className="w-4 h-4 text-green-600 dark:text-green-400" />
                                         </div>
                                         <div>
@@ -173,9 +173,9 @@ export default function UserDropdown({ user, logout }: any) {
                                         onItemClick={closeDropdown}
                                         tag="a"
                                         to="/support"
-                                        className="flex items-center gap-3 px-3 py-3 rounded-xl text-gray-700 dark:text-gray-300 hover:bg-purple-50 dark:hover:bg-purple-900/20 hover:text-purple-600 dark:hover:text-purple-400 transition-all duration-200 group"
+                                        className="flex items-center gap-3 px-3 py-2.5 rounded-xl text-gray-700 dark:text-gray-300 hover:bg-purple-50 dark:hover:bg-purple-900/20 hover:text-purple-600 dark:hover:text-purple-400 transition-all duration-200 group"
                                     >
-                                        <div className="p-2 bg-purple-100 dark:bg-purple-900/30 rounded-lg">
+                                        <div className="p-2.5 bg-[#F6673C]/20 dark:bg-purple-900/30 rounded-full">
                                             <HelpCircle className="w-4 h-4 text-purple-600 dark:text-purple-400" />
                                         </div>
                                         <div>

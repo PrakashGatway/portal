@@ -48,29 +48,31 @@ const CourseCard = ({ course, primaryColor = "#daff02", secondaryColor = "#fe572
 
     return (
         <div
-            className="bg-white dark:bg-gray-800 rounded-2xl overflow-hidden shadow-sm transition-all duration-300 transform hover:-translate-y-1 flex flex-col h-full"
+            className="bg-white dark:bg-gray-800 overflow-hidden shadow-sm transition-all duration-300 transform hover:-translate-y-1 flex flex-col h-full"
             style={{
-                border: `2px solid ${primaryColor}`,
-                boxShadow: `0 4px 12px rgba(0,0,0,0.08), 0 0 0 4px ${primaryColor}10`,
+                border: `1px solid #ff6b3573`,
+                // boxShadow: `0 4px 12px rgba(0,0,0,0.08), 0 0 0 4px ${primaryColor}10`,
                 transition: 'all 0.3s ease'
             }}
         >
             {/* Thumbnail */}
             <div className="relative overflow-hidden">
                 <img
-                    src={!course.thumbnail?.url
-                        ? 'https://www.gatewayabroadeducations.com/images/logo.svg'
-                        : `${ImageBaseUrl}/${course.thumbnail.url}`
+                    src={
+                        !course.thumbnail?.url
+                            ? "https://www.gatewayabroadeducations.com/images/logo.svg"
+                            : `${ImageBaseUrl}/${course.thumbnail.url}`
                     }
                     alt={course.title}
                     className="w-full h-48 object-cover transition-transform duration-500 group-hover:scale-105"
-                    onError={() => setImageError(true)}
+                    onError={(e) => {
+                        e.currentTarget.src =
+                            "https://foundr.com/wp-content/uploads/2023/04/How-to-create-an-online-course.jpg";
+                    }}
                 />
 
-                {/* Overlay */}
                 {/* <div className="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent pointer-events-none"></div> */}
 
-                {/* Badges */}
                 <div className="absolute bottom-3 left-3 flex flex-wrap gap-2 z-10">
                     {course.featured && (
                         <span
@@ -92,11 +94,10 @@ const CourseCard = ({ course, primaryColor = "#daff02", secondaryColor = "#fe572
 
                 {/* Level indicator */}
                 <div className="absolute top-3 right-3 z-10">
-                    <span className={`px-2.5 py-1 rounded-full text-xs font-bold text-white ${
-                        course.level === 'beginner' ? 'bg-green-500' :
+                    <span className={`px-2.5 py-1 rounded-full text-xs font-bold text-white ${course.level === 'beginner' ? 'bg-green-500' :
                         course.level === 'intermediate' ? 'bg-blue-500' :
-                        'bg-purple-500'
-                    }`}>
+                            'bg-purple-500'
+                        }`}>
                         {course.level.toUpperCase()}
                     </span>
                 </div>
@@ -106,14 +107,12 @@ const CourseCard = ({ course, primaryColor = "#daff02", secondaryColor = "#fe572
             <div className="p-4 flex flex-col flex-grow">
                 <div className="flex justify-between items-start">
                     <div className="flex-1 min-w-0">
-                        <h3 className="text-lg font-bold capitalize text-gray-800 dark:text-white line-clamp-2 leading-tight">
+                        <h3 className="text-base font-bold capitalize text-gray-800 dark:text-white line-clamp-2 leading-tight">
                             {course.title} ({course.code})
                         </h3>
-                        <p className="text-sm text-gray-600 dark:text-gray-300 line-clamp-2 mt-1">
-                            {course.shortDescription || course.subtitle}
-                        </p>
+
                     </div>
-                    <div className="text-right ml-3 flex-shrink-0 whitespace-nowrap">
+                    <div className="text-right flex-shrink-0 whitespace-nowrap">
                         <div className="flex items-center">
                             <Star className="h-4 w-4 text-yellow-400 fill-current" />
                             <span className="ml-1 text-sm font-medium text-gray-900 dark:text-white">
@@ -125,6 +124,9 @@ const CourseCard = ({ course, primaryColor = "#daff02", secondaryColor = "#fe572
                         </div>
                     </div>
                 </div>
+                <p className="text-sm text-gray-600 font-medium dark:text-gray-300 line-clamp-2 mt-1">
+                    {course.shortDescription || course.subtitle}
+                </p>
 
                 {/* Schedule Info */}
                 {/* <div className="mt-3 flex items-center text-xs text-gray-600 dark:text-gray-400">
@@ -159,7 +161,6 @@ const CourseCard = ({ course, primaryColor = "#daff02", secondaryColor = "#fe572
                     </div>
                 </div> */}
 
-                {/* Pricing & CTA */}
                 <div className="mt-2 flex flex-col space-y-3 pt-2 border-t border-gray-100 dark:border-gray-700">
                     <div className="flex items-baseline justify-between">
                         <div className="flex items-baseline space-x-2">
@@ -191,9 +192,9 @@ const CourseCard = ({ course, primaryColor = "#daff02", secondaryColor = "#fe572
                     <div className="flex space-x-2">
                         <button
                             onClick={() => navigate(`/course/${course.slug}`)}
-                            className="flex-1 py-2 px-3 rounded-lg font-medium text-sm transition-all"
+                            className="flex-1 py-2 px-3 hover:scale-105 border border-[#FF6B35] rounded-lg font-medium text-sm transition-all"
                             style={{
-                                backgroundColor: primaryColor,
+                                backgroundColor: 'white',
                                 color: '#000',
                                 fontWeight: 600
                             }}
@@ -201,9 +202,9 @@ const CourseCard = ({ course, primaryColor = "#daff02", secondaryColor = "#fe572
                             Explore
                         </button>
                         <button
-                            className="flex-1 py-2 px-3 rounded-lg font-medium text-sm text-white transition-all"
+                            className="flex-1 py-2 px-3 hover:scale-105 rounded-lg font-medium text-sm text-white transition-all"
                             style={{
-                                backgroundColor: secondaryColor,
+                                backgroundColor: "#FF6B35",
                                 fontWeight: 600
                             }}
                         >

@@ -440,15 +440,22 @@ const CourseSteppedForm = ({ course = null, onSave, onCancel, categories, users 
 
     // Corrected function to handle nested changes from Select components
     const handleNestedChange = (fieldName, value) => {
-        setFormData(prev => ({
-            ...prev,
-            [fieldName]: value
-        }));
+        const keys = fieldName.split(".");
 
-        // Clear error for this field
-        if (errors[fieldName]) {
-            setErrors(prev => ({ ...prev, [fieldName]: '' }));
-        }
+        setFormData(prev => {
+            const updated = { ...prev };
+
+            let current = updated;
+
+            for (let i = 0; i < keys.length - 1; i++) {
+                current[keys[i]] = { ...current[keys[i]] };
+                current = current[keys[i]];
+            }
+
+            current[keys[keys.length - 1]] = value;
+
+            return updated;
+        });
     };
 
     // Handle MultiSelect changes
@@ -583,11 +590,10 @@ const CourseSteppedForm = ({ course = null, onSave, onCancel, categories, users 
                 await api.put(`/courses/${course._id}`, payload);
                 toast.success("Course updated successfully");
             } else {
-                // Create new course
                 await api.post("/courses", payload);
                 toast.success("Course created successfully");
             }
-            onSave(); // Notify parent component
+            onSave();
         } catch (error) {
             console.error("Error saving course:", error);
             toast.error(error.response?.data?.message || error.message || "Failed to save course");

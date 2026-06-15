@@ -14,11 +14,11 @@ const LayoutContent: React.FC = () => {
         <Backdrop />
       </div>
       <div
-        className={`flex-1 transition-all duration-300 ease-in-out ${(isExpanded || isHovered) ? "lg:ml-[260px]" : "lg:ml-[80px]"
+        className={`flex-1 transition-all duration-300 ease-in-out ${(isExpanded || isHovered) ? "lg:ml-[240px]" : "lg:ml-[80px]"
           } ${isMobileOpen ? "ml-0" : ""}`}
       >
         <AppHeader />
-        <div className="p-2 sm:p-4 mx-auto bg-[#FFFAF7] dark:bg-gray-900 max-w-(--breakpoint-2xl) md:p-3">
+        <div className="p-2 sm:p-6 mx-auto bg-[#F8F9FA] dark:bg-gray-900 max-w-(--breakpoint-2xl) md:p-6">
           <Outlet />
         </div>
       </div>

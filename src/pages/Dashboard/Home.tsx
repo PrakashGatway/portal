@@ -193,20 +193,6 @@ const EducationAnalytics = () => {
 
   return (
     <div className="max-w-full px-4 sm:px-3 lg:px-3">
-
-      {user.role == "admin" && <CallAnalytics />}
-      {user.role == "admin" && <button
-        onClick={() => setFormAssignmentModal(true)}
-        className="flex items-center gap-2 rounded-full border border-indigo-600 bg-indigo-600 px-3 py-2 text-sm text-white"
-      >
-        Form Assignment
-      </button>}
-      <FormAssignmentModal
-        isOpen={formAssignmentModal}
-        onClose={() => setFormAssignmentModal(false)}
-        counselors={counselors && counselors}
-      />
-
       {/* Time Range Selector */}
       <div className="flex justify-between items-center mb-6 mt-12">
         <h2 className="text-lg font-semibold text-gray-900 dark:text-white">

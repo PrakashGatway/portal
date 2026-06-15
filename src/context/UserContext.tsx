@@ -54,86 +54,86 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       ?.split("=")[1];
   };
 
-  useEffect(() => {
-    if (!user) return;
+  // useEffect(() => {
+  //   if (!user) return;
 
-    const allowedRoles = ["admin", "leader", "counselor"];
+  //   const allowedRoles = ["admin", "leader", "counselor"];
 
-    if (!allowedRoles.includes(user.role)) return;
+  //   if (!allowedRoles.includes(user.role)) return;
 
-    console.log(getCookie("auth_token"))
+  //   console.log(getCookie("auth_token"))
 
-    const socket = io("https://uat.gatewayabroadeducations.com/lead-notifications", {
-      withCredentials: true,
-      auth: {
-        token: getCookie("auth_token") || localStorage.getItem("accessToken"),
-      }
-    });
+  //   const socket = io("https://uat.gatewayabroadeducations.com/lead-notifications", {
+  //     withCredentials: true,
+  //     auth: {
+  //       token: getCookie("auth_token") || localStorage.getItem("accessToken"),
+  //     }
+  //   });
 
-    socket.on("connect", () => {
-      console.log("Lead socket connected");
-    });
+  //   socket.on("connect", () => {
+  //     console.log("Lead socket connected");
+  //   });
 
-    socket.on("leadAssigned", (lead) => {
+  //   socket.on("leadAssigned", (lead) => {
 
-      if (isSoundEnabled()) {
-        const audio = new Audio("/notify.mp3");
-        audio.play();
-      }
+  //     if (isSoundEnabled()) {
+  //       const audio = new Audio("/notify.mp3");
+  //       audio.play();
+  //     }
 
-      saveNotification(lead);
+  //     saveNotification(lead);
 
-      setNotifications((prevNotifications) => {
-        const newNotification = {
-          id: lead.leadId,
-          name: lead.name,
-          message: lead.message || "lead notification",
-          time: new Date(lead.createdAt).toISOString(),
-        };
-        return [newNotification, ...prevNotifications].slice(0, 10);
-      });
+  //     setNotifications((prevNotifications) => {
+  //       const newNotification = {
+  //         id: lead.leadId,
+  //         name: lead.name,
+  //         message: lead.message || "lead notification",
+  //         time: new Date(lead.createdAt).toISOString(),
+  //       };
+  //       return [newNotification, ...prevNotifications].slice(0, 10);
+  //     });
 
-      toast.custom((t) => (
-        <div className="flex items-start gap-3 bg-white dark:bg-gray-900 shadow-xl  rounded-xl p-3 px-4 w-[420px] max-w-full border border-gray-300 dark:border-gray-700 animate-in slide-in-from-top">
+  //     toast.custom((t) => (
+  //       <div className="flex items-start gap-3 bg-white dark:bg-gray-900 shadow-xl  rounded-xl p-3 px-4 w-[420px] max-w-full border border-gray-300 dark:border-gray-700 animate-in slide-in-from-top">
 
-          <div className="w-10 h-10 rounded-full bg-gray-700 flex items-center justify-center text-white font-bold">
-            {lead.name.charAt(0).toUpperCase()}
-          </div>
+  //         <div className="w-10 h-10 rounded-full bg-gray-700 flex items-center justify-center text-white font-bold">
+  //           {lead.name.charAt(0).toUpperCase()}
+  //         </div>
 
-          <div className="flex-1">
-            <p className="text-sm font-semibold text-gray-900 dark:text-white">
-              New Lead
-            </p>
-            <p className="text-xs text-gray-500">
-              {lead.message || "lead notification"}
-            </p>
-          </div>
-          <div>
-            <button
-              onClick={() => { toast.dismiss(t); navigate(`/leads`) }}
-              className="mt-2 text-sm font-semibold text-blue-600 hover:underline"
-            >
-              View
-            </button>
-          </div>
+  //         <div className="flex-1">
+  //           <p className="text-sm font-semibold text-gray-900 dark:text-white">
+  //             New Lead
+  //           </p>
+  //           <p className="text-xs text-gray-500">
+  //             {lead.message || "lead notification"}
+  //           </p>
+  //         </div>
+  //         <div>
+  //           <button
+  //             onClick={() => { toast.dismiss(t); navigate(`/leads`) }}
+  //             className="mt-2 text-sm font-semibold text-blue-600 hover:underline"
+  //           >
+  //             View
+  //           </button>
+  //         </div>
 
-          <button
-            onClick={() => toast.dismiss(t)}
-            className="text-gray-600 hover:text-gray-600 text-sm"
-          >
-            ✕
-          </button>
-        </div>
-      ), {
-        duration: 3000,
-      });
-    });
+  //         <button
+  //           onClick={() => toast.dismiss(t)}
+  //           className="text-gray-600 hover:text-gray-600 text-sm"
+  //         >
+  //           ✕
+  //         </button>
+  //       </div>
+  //     ), {
+  //       duration: 3000,
+  //     });
+  //   });
 
-    return () => {
-      socket.disconnect();
-    };
+  //   return () => {
+  //     socket.disconnect();
+  //   };
 
-  }, [user]);
+  // }, [user]);
 
   const isSoundEnabled = () => {
     return localStorage.getItem("notify_sound") !== "false"; // default ON

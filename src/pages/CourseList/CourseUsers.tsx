@@ -4,6 +4,7 @@ import ImageSlider from "./ImageSlider"
 import CourseList from "./CourseList"
 import FeaturedCourseSlider from "./FeaturedCourse"
 import api from "../../axiosInstance"
+import { useAuth } from "../../context/UserContext"
 
 // Define types for better type safety
 type Course = {
@@ -62,6 +63,18 @@ type FilterState = {
   limit: number
 }
 
+// Color Palette
+const COLORS = {
+  primaryDark: "#3F3F3F",    // Sidebar, headings, icons, charts, borders
+  accentOrange: "#F6673C",   // Buttons, active menu, highlights, progress bars, stats growth
+  cardBg: "#FFFFFF",         // Cards
+  pageBg: "#F8F9FA",         // Page Background
+  border: "#ECECEC",         // Borders
+  mainText: "#2D2D2D",       // Main Text
+  secondaryText: "#676868",  // Secondary text
+  lightOrange: "#FFF3EF",    // Light orange tint for backgrounds
+}
+
 const heroImages: HeroImage[] = [
   {
     id: "1",
@@ -112,6 +125,7 @@ export default function CourseListingPage() {
   const [isLoading, setIsLoading] = useState(true)
   const [isSearchLoading, setIsSearchLoading] = useState(false)
   const [featuredCourses, setFeaturedCourses] = useState<Course[]>([])
+  const { user } = useAuth() as any
   const [filters, setFilters] = useState<FilterState>({
     category: "",
     subcategory: "",
@@ -142,7 +156,7 @@ export default function CourseListingPage() {
           delete params[key]
         }
       })
-      const response = await api.get("/courses", { params })
+      const response = await api.get(`/courses?category=${user?.category?._id}`, { params })
       const courses: Course[] = response.data?.data || []
       const total = response.data?.total || 0
 
@@ -188,8 +202,11 @@ export default function CourseListingPage() {
   }
 
   return (
-    <div className="min-h-[84vh] max-w-6xl mx-auto text-foreground ">
-      <section className="pb-6 pt-3">
+    <div
+      className="min-h-[84vh] dark:bg-gray-900 text-[#2D2D2D] dark:text-white max-w-7xl mx-auto"
+    >
+      {/* Search Section */}
+      {/* <section className="pb-6 pt-3">
         <div className="max-w-4xl mx-auto">
           <FullWidthSearch
             onSearch={handleSearch}
@@ -198,17 +215,38 @@ export default function CourseListingPage() {
             isLoading={isSearchLoading}
           />
         </div>
+      </section> */}
+
+      {/* Hero Slider */}
+      <section className="max-w-7xl mx-auto pb-4 px-3">
+        <ImageSlider
+          images={heroImages}
+          autoPlay={true}
+          interval={8000}
+          height="h-40 md:h-[250px]"
+          primaryColor={COLORS.accentOrange}
+          secondaryColor={COLORS.primaryDark}
+        />
       </section>
 
-      <section className="max-w-7xl mx-auto pb-4 px-3">
-        <ImageSlider 
-          images={heroImages} 
-          autoPlay={true} 
-          interval={8000} 
-          height="h-40 md:h-[250px]" 
-          primaryColor="#daff02"
-          secondaryColor="#fe572a"
-        />
+      {/* Page Title */}
+      <section className="max-w-7xl mx-auto px-4 pb-1 pt-2">
+        <div className="flex items-center justify-between">
+          <div>
+            <h1
+              className="text-xl font-bold tracking-tight"
+              style={{ color: COLORS.mainText }}
+            >
+              {searchQuery ? `Results for "${searchQuery}"` : "Explore Courses"}
+            </h1>
+            <p
+              className="text-sm"
+              style={{ color: COLORS.secondaryText }}
+            >
+              {totalCourses} courses available
+            </p>
+          </div>
+        </div>
       </section>
 
       <CourseList
@@ -220,21 +258,9 @@ export default function CourseListingPage() {
         onFilterChange={handleFilterChange}
         onSortChange={handleSortChange}
         currentFilters={filters}
-        primaryColor="#daff02"
-        secondaryColor="#fe572a"
+        primaryColor={COLORS.accentOrange}
+        secondaryColor={COLORS.primaryDark}
       />
-
-      
-     {featuredCourses.length > 0 && (
-        <FeaturedCourseSlider
-          courses={featuredCourses}
-          title="Featured Courses"
-          autoPlay={true}
-          interval={5000}
-          primaryColor="#daff02"
-          secondaryColor="#fe572a"
-        />
-      )} 
     </div>
   )
 }
