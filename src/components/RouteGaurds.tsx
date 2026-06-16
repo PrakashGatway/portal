@@ -9,7 +9,14 @@ export const ProtectedRoute = ({ roles }: any) => {
   if (loading) return <FullScreenLoader />;
 
   if (!user) {
-    window.location.href = "https://www.gatewayabroadeducations.com";
+    const hostParts = window.location.hostname.split('.');
+
+    if (hostParts.length > 2) {
+      hostParts.shift(); // remove first subdomain (e.g., "portal")
+    }
+
+    window.location.href =
+      `${window.location.protocol}//${hostParts.join('.')}`;
     return null
   }
 
