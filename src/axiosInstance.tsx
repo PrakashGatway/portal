@@ -33,7 +33,13 @@ api.interceptors.response.use(
         // sessionStorage.removeItem('accessToken');
         // sessionStorage.removeItem('refreshToken');
         delete api.defaults.headers.common['Authorization'];
-        window.location.href = "https://www.gatewayabroadeducations.com";
+
+        const hostParts = window.location.hostname.split('.');
+        if (hostParts.length > 2) {
+          hostParts.shift();
+        }
+        window.location.href = `${window.location.protocol}//${hostParts.join('.')}`;
+
       }
       return Promise.reject(error.response.data);
     }

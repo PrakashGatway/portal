@@ -187,6 +187,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     setUser(null);
     setToken(null);
     delete api.defaults.headers.common['Authorization'];
+    
     const hostParts = window.location.hostname.split('.');
 
     if (hostParts.length > 2) {
