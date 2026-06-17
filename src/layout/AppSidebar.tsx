@@ -213,7 +213,7 @@ const navItemsUser: NavItem[] = [
     name: "Free Quiz",
     path: "/Quiz",
   },
-    {
+  {
     icon: Gift,
     name: "Offers",
     path: "/offers"
@@ -249,6 +249,7 @@ const navItemsMan: NavItem[] = [
     name: "Dashboard",
     path: "/",
   },
+
   {
     icon: PhoneCall,
     name: "Call Reports",
@@ -268,6 +269,15 @@ const navItemsTeacher: NavItem[] = [
     path: "/",
   },
   {
+    icon: Database,
+    name: "Mcq Bank",
+    subItems: [
+      { name: "Questions", path: "/mcq/questions", icon: CircleHelp },
+      { name: "Tests", path: "/mcq/tests", icon: TestTube },
+      { name: "Test Series", path: "/mcq/test-series", icon: Scroll }
+    ]
+  },
+  {
     icon: GraduationCap,
     name: "My Courses",
     subItems: [
@@ -278,7 +288,7 @@ const navItemsTeacher: NavItem[] = [
   },
   {
     icon: Folder,
-    name: "Content Management",
+    name: "Content",
     subItems: [
       { name: "Upload Content", path: "/teacher/upload", icon: Upload },
       { name: "Manage Content", path: "/teacher/content", icon: Database }

@@ -4,14 +4,12 @@ import { useAuth } from '../../context/UserContext';
 import api from '../../axiosInstance';
 import LeadManagement from '../Leads/LeadManagement';
 import CallAnalytics from './CallAnalysis';
-import FormAssignmentModal from '../Leads/Assignment';
 
 const EducationAnalytics = () => {
   const { user } = useAuth();
   const [loading, setLoading] = useState(true);
   const [analytics, setAnalytics] = useState(null);
   const [timeRange, setTimeRange] = useState('7d');
-  const [formAssignmentModal, setFormAssignmentModal] = useState(false);
   const [counselors, setAllCounselors] = useState([]);
 
 
@@ -183,9 +181,9 @@ const EducationAnalytics = () => {
       </div>
     );
   };
-  if (user?.role == "manager" || user.role == "leader") {
-    return (<CallAnalytics />)
-  }
+  // if (user?.role == "manager" || user.role == "leader") {
+  //   return (<CallAnalytics />)
+  // }
 
   if (user.role == "counselor") {
     return (<LeadManagement />)
