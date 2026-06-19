@@ -2027,7 +2027,7 @@ export default function QuestionManagementPage() {
             <Button
               onClick={openCreateDrawer}
               size="sm"
-              className="flex items-center gap-1 rounded-2xl font-medium bg-orange-600  transition-all hover:scale-105 hover:bg-white/90 hover: px-3 !py-2.5"
+              className="flex items-center gap-1 rounded-2xl font-medium bg-orange-600  transition-all hover:scale-105 px-3 !py-2.5"
             >
               <Plus className="h-4 w-4" />
               New Question
@@ -2288,8 +2288,6 @@ export default function QuestionManagementPage() {
                           dangerouslySetInnerHTML={{ __html: q.stimulus }}
                         />
                       )}
-
-                      {/* Question Text */}
                       <div
                         className="text-sm font-medium text-gray-900 line-clamp-1 dark:text-gray-100"
                         dangerouslySetInnerHTML={{ __html: q.questionText }}
@@ -2299,24 +2297,24 @@ export default function QuestionManagementPage() {
                     {/* Action Buttons */}
                     <div className="flex flex-col items-center gap-2 lg:flex-shrink-0">
                       <div className="flex items-center gap-2 lg:flex-shrink-0">
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        className="rounded-2xl px-4 py-2 text-xs border-gray-200 hover:border-blue-500 hover:bg-blue-50 hover:text-blue-600 dark:border-gray-700 dark:hover:border-blue-500 dark:hover:bg-blue-500/10"
-                        onClick={() => openEditDrawer(q)}
-                      >
-                        <Edit3 className="mr-1.5 h-3.5 w-3.5" />
-                        Edit
-                      </Button>
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        className="rounded-2xl px-4 py-2 text-xs border-gray-200 text-rose-600 hover:border-rose-500 hover:bg-rose-50 hover:text-rose-700 dark:border-gray-700 dark:hover:border-rose-500 dark:hover:bg-rose-500/10"
-                        onClick={() => handleDelete(q)}
-                      >
-                        <Trash2 className="mr-1.5 h-3.5 w-3.5" />
-                        Delete
-                      </Button>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          className="rounded-2xl px-4 py-2 text-xs border-gray-200 hover:border-blue-500 hover:bg-blue-50 hover:text-blue-600 dark:border-gray-700 dark:hover:border-blue-500 dark:hover:bg-blue-500/10"
+                          onClick={() => openEditDrawer(q)}
+                        >
+                          <Edit3 className="mr-1.5 h-3.5 w-3.5" />
+                          Edit
+                        </Button>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          className="rounded-2xl px-4 py-2 text-xs border-gray-200 text-rose-600 hover:border-rose-500 hover:bg-rose-50 hover:text-rose-700 dark:border-gray-700 dark:hover:border-rose-500 dark:hover:bg-rose-500/10"
+                          onClick={() => handleDelete(q)}
+                        >
+                          <Trash2 className="mr-1.5 h-3.5 w-3.5" />
+                          Delete
+                        </Button>
                       </div>
                       <div className="flex flex-wrap items-center gap-4 text-xs text-gray-500 dark:text-gray-400">
                         {q.createdAt && (
@@ -2491,7 +2489,7 @@ export default function QuestionManagementPage() {
                       <div>
                         <Label className="text-sm font-medium text-gray-700 dark:text-gray-300">Stimulus / Passage</Label>
                         <RichTextEditor
-                          header={false}
+                          header={true}
                           initialValue={watchStimulus}
                           onChange={(html) => setValue("stimulus", html)}
                         />
@@ -2510,7 +2508,7 @@ export default function QuestionManagementPage() {
                           />
                         ) : (
                           <RichTextEditor
-                            header={false}
+                            header={true}
                             initialValue={watchQuestionText}
                             onChange={(html) => setValue("questionText", html)}
                           />
@@ -2631,14 +2629,20 @@ export default function QuestionManagementPage() {
                                   {String.fromCharCode(65 + index)}
                                 </div>
                                 <div className="flex-1 space-y-1">
-                                  <Input
+                                  {/* <Input
                                     type="text"
                                     placeholder={`Option ${String.fromCharCode(65 + index)}`}
                                     value={watch(`options.${index}.text`)}
                                     onChange={(e) => setValue(`options.${index}.text`, e.target.value)}
                                     className="rounded-xl border-gray-200 dark:border-gray-700"
+                                  /> */}
+                                  <RichTextEditor
+                                    header={true}
+                                    initialValue={watch(`options.${index}.text`)}
+                                    onChange={(html) => setValue(`options.${index}.text`, html)}
                                   />
                                   <label className="inline-flex items-center gap-2 text-xs text-gray-600 dark:text-gray-300">
+
                                     <input
                                       type="checkbox"
                                       className="h-3.5 w-3.5 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
@@ -2664,13 +2668,18 @@ export default function QuestionManagementPage() {
                       ) : (
                         <div>
                           <Label className="text-sm font-medium text-gray-700 dark:text-gray-300">Correct Answer</Label>
-                          <Input
+                          <RichTextEditor
+                            header={true}
+                            initialValue={watchCorrectAnswerText}
+                            onChange={(html) => setValue("correctAnswerText", html)}
+                          />
+                          {/* <Input
                             type="text"
                             placeholder="Enter the correct answer"
                             value={watchCorrectAnswerText}
                             onChange={(e) => setValue("correctAnswerText", e.target.value)}
                             className="mt-1 rounded-2xl border-gray-200 dark:border-gray-700"
-                          />
+                          /> */}
                         </div>
                       )}
 
@@ -2817,13 +2826,18 @@ export default function QuestionManagementPage() {
                       {/* Explanation & Source */}
                       <div>
                         <Label className="text-sm font-medium text-gray-700 dark:text-gray-300">Explanation</Label>
-                        <Input
+                        <RichTextEditor
+                          header={true}
+                          initialValue={watchExplanation}
+                          onChange={(html) => setValue("explanation", html)}
+                        />
+                        {/* <Input
                           type="text"
                           placeholder="Explain why this answer is correct"
                           value={watchExplanation}
                           onChange={(e) => setValue("explanation", e.target.value)}
                           className="mt-1 rounded-2xl border-gray-200 dark:border-gray-700"
-                        />
+                        /> */}
                       </div>
                       <div>
                         <Label className="text-sm font-medium text-gray-700 dark:text-gray-300">Source</Label>
@@ -2857,9 +2871,7 @@ export default function QuestionManagementPage() {
                         {editingQuestion ? "Save Changes" : "Create Question"}
                       </Button>
                     </div>
-
                   </form>
-
                 </motion.div>
               </motion.div>
             )}

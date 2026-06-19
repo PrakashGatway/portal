@@ -13,7 +13,7 @@ const RichTextEditor = ({ initialValue = '', onChange, disabled = false, header 
 
     const initConfig = useMemo(() => {
         return {
-            height: header ? 600 : 300,
+            height: header ? 500 : 300,
             width: '100%',
             zindex: 9999999,
             placeholder: 'Start typing your content here...',
@@ -32,20 +32,65 @@ const RichTextEditor = ({ initialValue = '', onChange, disabled = false, header 
 
             // ✅ Plugins (all essential ones)
             plugins: [
-                'advlist', 'autolink', 'lists', 'link', 'image', 'charmap', 'preview',
-                'anchor', 'searchreplace', 'visualblocks', 'code', 'fullscreen',
-                'insertdatetime', 'media', 'table', 'wordcount', 'help',
-                'emoticons', 'hr', 'pagebreak', 'nonbreaking', 'quickbars',
-                'save', 'directionality', 'visualchars', 'paste'
+                'advlist',
+                'anchor',
+                'autolink',
+                'autosave',
+                'charmap',
+                'code',
+                'codesample',
+                'directionality',
+                'emoticons',
+                'fullscreen',
+                'help',
+                'image',
+                'insertdatetime',
+                'link',
+                'lists',
+                'media',
+                'nonbreaking',
+                'pagebreak',
+                'preview',
+                'quickbars',
+                'save',
+                'searchreplace',
+                'table',
+                'visualblocks',
+                'visualchars',
+                'wordcount',
+                'hr',
+                'paste'
             ],
+
             toolbar: header ? `
-        undo redo | cut copy paste | selectall | save | print | code | fullscreen | help |
-        bold italic underline strikethrough | superscript subscript |
-        alignleft aligncenter alignright alignjustify | outdent indent |
-        bullist numlist | table | link image media | formatpainter removeformat |
-        forecolor backcolor | emoticons | hr pagebreak
+        undo redo restoredraft |
+newdocument preview print |
+cut copy paste pastetext selectall |
+searchreplace |
+blocks |
+fontfamily fontsize |
+bold italic underline strikethrough |
+superscript subscript |
+forecolor backcolor |
+removeformat |
+alignleft aligncenter alignright alignjustify |
+outdent indent |
+bullist numlist |
+blockquote |
+ltr rtl |
+link unlink anchor |
+image media |
+table tableprops cellprops rowprops |
+charmap emoticons |
+insertdatetime |
+hr pagebreak nonbreaking |
+visualblocks visualchars |
+codesample |
+fullscreen |
+code |
+help
       ` : `undo redo | cut copy paste | selectall | save | print | code | fullscreen|bold italic underline | table`,
-            toolbar_mode: 'wrap',
+            toolbar_mode: 'sliding',
             skin: isDarkMode ? 'oxide-dark' : 'oxide',
             content_css: isDarkMode ? 'dark' : 'default',
             branding: false,
