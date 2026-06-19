@@ -1314,7 +1314,10 @@ const QuestionBody: React.FC<QuestionBodyProps> = ({
         {/* Left: Passage */}
         <div className="max-h-[460px] overflow-auto">
           <div className="text-lg text-justify">
-            {passage}
+            <div
+              className="text-lg text-justify"
+              dangerouslySetInnerHTML={{ __html: passage }}
+            />
           </div>
         </div>
 
@@ -1359,7 +1362,9 @@ const QuestionBody: React.FC<QuestionBodyProps> = ({
                       {/* {label} */}
                     </div>
                     <div className="flex-1 text-lg text-slate-900 dark:text-slate-200">
-                      {opt.text}
+                      <div
+                        dangerouslySetInnerHTML={{ __html: opt.text }}
+                      />
                     </div>
                   </button>
                 );
@@ -1591,7 +1596,9 @@ const QuestionBody: React.FC<QuestionBodyProps> = ({
                     {/* {label} */}
                   </div>
                   <div className="flex-1 text-lg text-slate-900 dark:text-slate-200">
-                    {opt.text}
+                    <div
+                        dangerouslySetInnerHTML={{ __html: opt.text }}
+                      />
                   </div>
                 </button>
               );

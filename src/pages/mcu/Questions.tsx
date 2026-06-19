@@ -1409,6 +1409,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { GMATDataInsightsBlock } from "./DiBlock";
 import RichTextEditor from "../../components/TextEditor";
 import AudioUploadComponent from "./AudioUpload";
+import { useSearchParams } from "react-router";
 
 interface Exam {
   _id: string;
@@ -1534,10 +1535,18 @@ export default function QuestionManagementPage() {
   const [questions, setQuestions] = useState<Question[]>([]);
   const [exams, setExams] = useState<Exam[]>([]);
   const [sections, setSections] = useState<Section[]>([]);
+  const [sections1, setSections1] = useState<Section[]>([]);
+
+
+  const [searchParams, setSearchParams] = useSearchParams();
+
+  const examId = searchParams.get("exam") || "";
+  const sectionId = searchParams.get("section") || "";
+
   const [filters, setFilters] = useState({
     search: "",
-    examId: "all",
-    sectionId: "all",
+    examId: searchParams.get("exam") || "all",
+    sectionId: searchParams.get("section") || "all",
     questionType: "all",
     difficulty: "all",
   });
@@ -1624,7 +1633,7 @@ export default function QuestionManagementPage() {
       let sectionsData = exams.find((e) => e._id === watchExam)?.sections || [];
       setSections(sectionsData);
       setValue("section", "");
-      setFilters((prev) => ({ ...prev, sectionId: "all" }));
+      // setFilters((prev) => ({ ...prev, sectionId: "all" }));
     } else {
       setSections([]);
     }
@@ -1673,7 +1682,27 @@ export default function QuestionManagementPage() {
   };
 
   useEffect(() => {
-    fetchQuestions();
+    if (examId) {
+      let sectionsData = exams.find((e) => e._id === examId)?.sections || [];
+      setSections1(sectionsData)
+    }
+  }, [examId, exams]);
+
+  useEffect(() => {
+    const params: any = {};
+    if (filters.examId !== "all") {
+      params.exam = filters.examId;
+    }
+    if (filters.sectionId !== "all") {
+      params.section = filters.sectionId;
+    }
+    setSearchParams(params);
+  }, [filters, setSearchParams]);
+
+  useEffect(() => {
+    if(examId){
+      fetchQuestions();
+    }
   }, [page, limit, debouncedSearch, filters.examId, filters.sectionId, filters.questionType, filters.difficulty]);
 
   const handleSearchChange = (value: string) => {
@@ -2001,6 +2030,145 @@ export default function QuestionManagementPage() {
     }
   };
 
+  if (!examId) return (
+    <>
+      <div className="relative min-h-[80vh]  dark:from-gray-950 dark:via-gray-900 dark:to-blue-950/20">
+        <div>
+          <div className="flex items-center gap-3">
+            <div>
+              <h1 className="text-xl font-semibold sm:text-2xl flex items-center gap-2">
+                Question Management
+                <span className="rounded-full bg-black/20 px-3 py-0.5 text-xs font-medium ">
+                  {totalQuestions}
+                </span>
+              </h1>
+              <p className="text-sm">
+                Create, edit and filter questions for GMAT, GRE, SAT, and PTE
+              </p>
+            </div>
+          </div>
+        </div>
+        <div className="mt-6">
+          <div className="mb-6">
+            <h3 className="font-semibold text-lg border-2 bg-gray-100 p-2">Select an Exam</h3>
+
+          </div>
+          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-2">
+            {exams.map((exam) => (
+              <div
+                key={exam._id}
+                onClick={() => {
+                  let sectionsData = exams.find((e) => e._id === exam._id)?.sections || [];
+                  setSections1(sectionsData);
+
+                  setFilters((prev) => ({
+                    ...prev,
+                    examId: exam._id,
+                    sectionId: "all",
+                    questionType: "all",
+                  }));
+                  setPage(1);
+                }}
+                className={`cursor-pointer p-2 px-4 hover:outline-1 hover:bg-gray-200 outline-gray-300 rounded-2xl `}
+              >
+                <div className="flex flex-col ">
+                  <img className="w-full px-3 h-full" alt="svgImg" src="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciICB2aWV3Qm94PSIwIDAgNDggNDgiIHdpZHRoPSI0OHB4IiBoZWlnaHQ9IjQ4cHgiPjxsaW5lYXJHcmFkaWVudCBpZD0iV1FFZnZvUUFjcFFnUWd5alFRNEhxYSIgeDE9IjI0IiB4Mj0iMjQiIHkxPSI2LjcwOCIgeTI9IjE0Ljk3NyIgZ3JhZGllbnRVbml0cz0idXNlclNwYWNlT25Vc2UiPjxzdG9wIG9mZnNldD0iMCIgc3RvcC1jb2xvcj0iI2ViYTYwMCIvPjxzdG9wIG9mZnNldD0iMSIgc3RvcC1jb2xvcj0iI2MyODIwMCIvPjwvbGluZWFyR3JhZGllbnQ+PHBhdGggZmlsbD0idXJsKCNXUUVmdm9RQWNwUWdRZ3lqUVE0SHFhKSIgZD0iTTI0LjQxNCwxMC40MTRsLTIuNTM2LTIuNTM2QzIxLjMxNiw3LjMxNiwyMC41NTMsNywxOS43NTcsN0w1LDdDMy44OTUsNywzLDcuODk1LDMsOWwwLDMwCWMwLDEuMTA1LDAuODk1LDIsMiwybDM4LDBjMS4xMDUsMCwyLTAuODk1LDItMlYxM2MwLTEuMTA1LTAuODk1LTItMi0ybC0xNy4xNzIsMEMyNS4yOTgsMTEsMjQuNzg5LDEwLjc4OSwyNC40MTQsMTAuNDE0eiIvPjxsaW5lYXJHcmFkaWVudCBpZD0iV1FFZnZvUUFjcFFnUWd5alFRNEhxYiIgeDE9IjI0IiB4Mj0iMjQiIHkxPSIxMC44NTQiIHkyPSI0MC45ODMiIGdyYWRpZW50VW5pdHM9InVzZXJTcGFjZU9uVXNlIj48c3RvcCBvZmZzZXQ9IjAiIHN0b3AtY29sb3I9IiNmZmQ4NjkiLz48c3RvcCBvZmZzZXQ9IjEiIHN0b3AtY29sb3I9IiNmZWM1MmIiLz48L2xpbmVhckdyYWRpZW50PjxwYXRoIGZpbGw9InVybCgjV1FFZnZvUUFjcFFnUWd5alFRNEhxYikiIGQ9Ik0yMS41ODYsMTQuNDE0bDMuMjY4LTMuMjY4QzI0Ljk0NywxMS4wNTMsMjUuMDc0LDExLDI1LjIwNywxMUg0M2MxLjEwNSwwLDIsMC44OTUsMiwydjI2CWMwLDEuMTA1LTAuODk1LDItMiwySDVjLTEuMTA1LDAtMi0wLjg5NS0yLTJWMTUuNUMzLDE1LjIyNCwzLjIyNCwxNSwzLjUsMTVoMTYuNjcyQzIwLjcwMiwxNSwyMS4yMTEsMTQuNzg5LDIxLjU4NiwxNC40MTR6Ii8+PC9zdmc+" />
+
+                  <div className="flex-1 min-w-0">
+                    <h3 className="truncate text-sm font-medium text-gray-900">
+                      {exam.name}
+                    </h3>
+
+                    <p className="text-xs text-gray-500">
+                      {exam.sections?.length || 0} Sections
+                    </p>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+
+      </div>
+    </>
+  )
+
+  if (examId && !sectionId) {
+    return (
+      <div className="relative min-h-[80vh]">
+        {/* Header */}
+        <div>
+          <h1 className="text-xl font-semibold sm:text-2xl flex items-center gap-2">
+            Question Management
+          </h1>
+
+          <div className="mt-2 flex items-center gap-2 text-sm">
+            <button
+              onClick={() => {
+                setFilters(prev => ({
+                  ...prev,
+                  examId: "all",
+                  sectionId: "all",
+                  questionType: "all",
+                }));
+
+                setSearchParams({});
+              }}
+            >
+              Exams
+            </button>
+
+            <span>/</span>
+
+
+          </div>
+        </div>
+
+        <div className="mt-6">
+          <div className="mb-6">
+            <h3 className="font-semibold text-lg border-2 bg-gray-100 p-2">
+              Select a Section
+            </h3>
+          </div>
+
+          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-2">
+            {sections1.map((section) => (
+              <div
+                key={section._id}
+                onClick={() => {
+                  setFilters(prev => ({
+                    ...prev,
+                    sectionId: section._id,
+                  }));
+
+                  setSearchParams({
+                    exam: examId,
+                    section: section._id,
+                  });
+                }}
+                className="cursor-pointer p-2 px-4 hover:outline hover:bg-gray-200 outline-gray-300 rounded-2xl transition"
+              >
+                <div className="flex flex-col">
+                  <img className="w-full px-3 h-full" alt="svgImg" src="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciICB2aWV3Qm94PSIwIDAgNDggNDgiIHdpZHRoPSI0OHB4IiBoZWlnaHQ9IjQ4cHgiPjxsaW5lYXJHcmFkaWVudCBpZD0iV1FFZnZvUUFjcFFnUWd5alFRNEhxYSIgeDE9IjI0IiB4Mj0iMjQiIHkxPSI2LjcwOCIgeTI9IjE0Ljk3NyIgZ3JhZGllbnRVbml0cz0idXNlclNwYWNlT25Vc2UiPjxzdG9wIG9mZnNldD0iMCIgc3RvcC1jb2xvcj0iI2ViYTYwMCIvPjxzdG9wIG9mZnNldD0iMSIgc3RvcC1jb2xvcj0iI2MyODIwMCIvPjwvbGluZWFyR3JhZGllbnQ+PHBhdGggZmlsbD0idXJsKCNXUUVmdm9RQWNwUWdRZ3lqUVE0SHFhKSIgZD0iTTI0LjQxNCwxMC40MTRsLTIuNTM2LTIuNTM2QzIxLjMxNiw3LjMxNiwyMC41NTMsNywxOS43NTcsN0w1LDdDMy44OTUsNywzLDcuODk1LDMsOWwwLDMwCWMwLDEuMTA1LDAuODk1LDIsMiwybDM4LDBjMS4xMDUsMCwyLTAuODk1LDItMlYxM2MwLTEuMTA1LTAuODk1LTItMi0ybC0xNy4xNzIsMEMyNS4yOTgsMTEsMjQuNzg5LDEwLjc4OSwyNC40MTQsMTAuNDE0eiIvPjxsaW5lYXJHcmFkaWVudCBpZD0iV1FFZnZvUUFjcFFnUWd5alFRNEhxYiIgeDE9IjI0IiB4Mj0iMjQiIHkxPSIxMC44NTQiIHkyPSI0MC45ODMiIGdyYWRpZW50VW5pdHM9InVzZXJTcGFjZU9uVXNlIj48c3RvcCBvZmZzZXQ9IjAiIHN0b3AtY29sb3I9IiNmZmQ4NjkiLz48c3RvcCBvZmZzZXQ9IjEiIHN0b3AtY29sb3I9IiNmZWM1MmIiLz48L2xpbmVhckdyYWRpZW50PjxwYXRoIGZpbGw9InVybCgjV1FFZnZvUUFjcFFnUWd5alFRNEhxYikiIGQ9Ik0yMS41ODYsMTQuNDE0bDMuMjY4LTMuMjY4QzI0Ljk0NywxMS4wNTMsMjUuMDc0LDExLDI1LjIwNywxMUg0M2MxLjEwNSwwLDIsMC44OTUsMiwydjI2CWMwLDEuMTA1LTAuODk1LDItMiwySDVjLTEuMTA1LDAtMi0wLjg5NS0yLTJWMTUuNUMzLDE1LjIyNCwzLjIyNCwxNSwzLjUsMTVoMTYuNjcyQzIwLjcwMiwxNSwyMS4yMTEsMTQuNzg5LDIxLjU4NiwxNC40MTR6Ii8+PC9zdmc+" />
+                  <div className="flex-1 min-w-0">
+                    <h3 className="truncate text-sm font-medium text-gray-900">
+                      {section.name}
+                    </h3>
+
+                    <p className="text-xs text-gray-500">
+                      Click to open
+                    </p>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+
   return (
     <>
       <div className="relative min-h-screen  dark:from-gray-950 dark:via-gray-900 dark:to-blue-950/20">
@@ -2075,7 +2243,6 @@ export default function QuestionManagementPage() {
                 <div>
                   <Select
                     options={[
-                      { value: "all", label: "All Exams" },
                       ...exams.map((e) => ({ value: e._id, label: e.name })),
                     ]}
                     defaultValue={filters.examId}
@@ -2091,8 +2258,7 @@ export default function QuestionManagementPage() {
                 <div>
                   <Select
                     options={[
-                      { value: "all", label: loadingSections ? "Loading..." : "All Sections" },
-                      ...sections.map((s) => ({ value: s._id, label: s.name })),
+                      ...sections1.map((s) => ({ value: s._id, label: s.name })),
                     ]}
                     defaultValue={filters.sectionId}
                     onChange={(value: string) => {

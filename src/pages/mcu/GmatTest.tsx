@@ -35,7 +35,6 @@ import FullScreenLoader from "../../components/fullScreeLoader";
 import { useGmatTimers } from "./SectionTimer";
 import QuestionBody, { IntroScreen, SectionInstructionsScreen, SelectOrderScreen } from "./QuestionComponent";
 import GmatHelpModal, { GmatCalculatorModal, GmatWhiteboardModal } from "./GmatHelp";
-import { get } from "react-hook-form";
 
 interface QuestionDoc {
     _id: string;

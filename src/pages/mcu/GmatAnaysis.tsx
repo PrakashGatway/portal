@@ -618,7 +618,15 @@ const GmatTestAnalysisPage: React.FC = () => {
               <Button
                 size="sm"
                 onClick={() =>
-                  navigate(`/student/gmat-test/${attempt.testTemplate._id}`)
+                  navigate(`/tests`)
+                }
+              >
+                Retake Test
+              </Button>
+              <Button
+                size="sm"
+                onClick={() =>
+                  navigate(`/tests`)
                 }
               >
                 Retake Similar Test
