@@ -2405,7 +2405,7 @@ export default function QuestionManagementPage() {
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0, y: -20 }}
                 transition={{ duration: 0.3, ease: "easeOut" }}
-                className="group relative overflow-hidden border border-gray-200/50 bg-white/80  backdrop-blur-sm transition-all hover: hover:-translate-y-1 dark:border-gray-800/50 dark:bg-gray-900/80"
+                className="group relative overflow-hidden border border-gray-200 bg-white  backdrop-blur-sm transition-all hover: hover:-translate-y-1 dark:border-gray-800/50 dark:bg-gray-900/80"
               >
                 <div className="absolute inset-0 bg-gradient-to-r from-blue-600/0 via-indigo-600/0 to-purple-600/0 transition-all duration-500 group-hover:from-blue-600/5 group-hover:via-indigo-600/5 group-hover:to-purple-600/5"></div>
 

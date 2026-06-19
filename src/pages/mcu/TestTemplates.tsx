@@ -178,7 +178,7 @@ export default function TestTemplateManagementPage() {
     const [debouncedSearch, setDebouncedSearch] = useState("");
     const [searchTimeout, setSearchTimeout] = useState<NodeJS.Timeout | null>(null);
     const [page, setPage] = useState(1);
-    const [limit, setLimit] = useState(10); // State for limit
+    const [limit, setLimit] = useState(12); // State for limit
     const [totalPages, setTotalPages] = useState(1);
     const [totalTests, setTotalTests] = useState(0);
     const [loading, setLoading] = useState(true);
