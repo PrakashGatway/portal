@@ -19,7 +19,12 @@ import {
     Eye,
     EyeOff,
     Bell,
-    Info
+    Info,
+    ChevronRight,
+    Zap,
+    MessageCircle,
+    Banknote,
+    Link2
 } from "lucide-react";
 import Button from "../components/ui/button/Button";
 import { useAuth } from "../context/UserContext";
@@ -189,29 +194,43 @@ export default function ReferAndEarnPage() {
         },
     ];
 
+
     const referralSteps = [
         {
             step: 1,
-            icon: Share2,
-            title: "Share Your Link",
-            description: "Send your unique referral link or code to friends",
-            color: "from-blue-500 to-blue-600",
+            title: "STEP-1",
+            badgeColor: "#FF5B2E",
+            image:
+                "https://png.pngtree.com/png-clipart/20250425/original/pngtree-d-isolated-render-of-a-chain-link-icon-with-modern-and-png-image_20809111.png",
+            description: "Share the app link\nwith your friends",
         },
         {
             step: 2,
-            icon: UserPlus,
-            title: "Friend Signs Up",
-            description: "They sign up using your link or enter your code",
-            color: "from-green-500 to-green-600",
+            title: "STEP-2",
+            badgeColor: "#666666",
+            image:
+                "https://cdn-icons-png.flaticon.com/512/11488/11488571.png",
+            description: "Friends sign up using\nyour unique Referral\ncode",
         },
         {
             step: 3,
-            icon: Gift,
-            title: "You Get ₹50 Credit",
-            description: "Instant ₹50 added to your wallet per friend!",
-            color: "from-purple-500 to-purple-600",
+            title: "STEP-3",
+            badgeColor: "#FF5B2E",
+            image:
+                "https://static.vecteezy.com/system/resources/previews/016/327/497/non_2x/gift-box-3d-icon-render-illustration-png.png",
+            description:
+                "Earn points when\nfriend signs up, and\nextra points on\ncourse purchase!",
+        },
+        {
+            step: 4,
+            title: "STEP-4",
+            badgeColor: "#666666",
+            image:
+                "https://cdn3d.iconscout.com/3d/premium/thumb/money-3d-icon-png-download-10033543.png",
+            description: "Your Friend gets 100\npoints on Sign up",
         },
     ];
+
 
     const tabs = [
         { id: "refer", label: "Refer Friends", icon: Share2 },
@@ -275,162 +294,279 @@ export default function ReferAndEarnPage() {
                         className="space-y-6"
                     >
                         {activeTab === "refer" && (
-                            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                                <div className="lg:col-span-2 space-y-6">
+                            <>
+                                <div className="lg:h-130 max-w-3xl mx-auto  bg-gray-200/30 p-4 md:p-2 border-2 border-[#E8A38C] rounded-[30px] relative overflow-hidden">
+                                    <div className="mx-auto max-w-2xl">
+                                        {/* Main Container */}
+                                        <div className="rounded-3xl lg:p-6 md:py-2 md:pt-4 ">
+                                            {/* Header */}
+                                            <h1 className="lg:text-center lg:text-3xl md:text-4xl font-bold border-b border-gray-700 w-80 mx-auto">
+                                                <span className="text-[#4A4A4A]">Refer and </span>
+                                                <span className="text-[#FF6B4A]">Earn</span>
+                                            </h1>
+                                        </div>
+                                        <div className="lg:mb-10 w-full lg:w-150 mx-auto">
+                                            {/* Invite Section */}
+                                            <div className="mt-8 rounded-t-[30px] bg-gradient-to-br from-[#FFF0EC] to-[#FFE8E1] border border-[#F5D5CC] p-6 md:p-8 ">
+                                                {/* Invite Text */}
+                                                <p className="text-left text-lg md:text-xl text-[#666666] font-medium mb-3">
+                                                    Invite your friends
+                                                </p>
+
+                                                {/* Earn Amount */}
+                                                <h2 className="text-left text-xl md:text-4xl font-bold text-[#FF6B4A] lg:mb-6">
+                                                    Earn ₹250* Per Share
+                                                </h2>
+
+
+                                            </div>
+                                            {/* Rewards Bar */}
+                                            <div className="rounded-b-[30px] bg-[#3D3D3D] p-5 md:p-6 flex items-center justify-between">
+                                                <div className="flex items-center gap-4">
+                                                    <div className="relative">
+                                                        <div className="lg:w-14 lg:h-14 rounded-full w-8 h-8 bg-gradient-to-br from-[#FFD700] to-[#FFA500] flex items-center justify-center shadow-lg">
+                                                            <div className="lg:text-2xl font-bold text-white">₹</div>
+                                                        </div>
+                                                    </div>
+                                                    <div>
+                                                        <p className="text-white font-semibold text-sm md:text-lg">My rewards</p>
+                                                        <p className="text-[#CCCCCC] text-sm md:text-base">1 Point = ₹1</p>
+                                                    </div>
+                                                </div>
+
+                                                {/* Rewards Display with Arrow */}
+                                                <div className="flex items-center gap-3">
+                                                    <div className="px-2 py-1 md:px-6 md:py-3 rounded-lg border-2 border-[#FF6B4A] lg:min-w-[80px] text-center">
+                                                        <p className="text-[#FF6B4A] text-2xl md:text-3xl font-bold">₹{wallet?.totalEarned || 0}</p>
+                                                    </div>
+                                                   
+                                                </div>
+                                            </div>
+
+
+
+
+
+                                        </div>
+                                    </div>
+                                </div>
+                                {/* Referral Journey Section */}
+                                <div className="relative w-full max-w-2xl mx-auto lg:-mt-20">
+                                    <div className="bg-white rounded-[28px] shadow-[0_12px_20px_rgba(0,0,0,0.08)] px-6 lg:px-10 py-8">
+
+                                        {/* Desktop Dashed Line */}
+                                        <svg
+                                            className="hidden lg:block absolute top-[58px] left-[110px] right-[110px] w-[calc(100%-220px)] h-12"
+                                            viewBox="0 0 900 80"
+                                            preserveAspectRatio="none"
+                                        >
+                                            <path
+                                                d="M0 40
+           C120 70 180 10 300 40
+           C420 70 480 10 600 40
+           C720 70 780 10 900 40"
+                                                stroke="#7d7d7d"
+                                                strokeWidth="2"
+                                                strokeDasharray="10 12"
+                                                fill="none"
+                                            />
+                                        </svg>
+
+                                        <div className="relative z-10 grid grid-cols-1 lg:grid-cols-4 gap-8 lg:gap-0">
+
+                                            {/* Step 1 */}
+                                            <div className="relative flex lg:flex-col items-center lg:items-center gap-4">
+                                                <div className="absolute left-8 top-16 bottom-[-35px] border-l-2 border-dashed border-gray-300 lg:hidden"></div>
+
+                                                <img
+                                                    src="https://png.pngtree.com/png-vector/20250217/ourmid/pngtree-red-megaphone-3d-icon-speaker-png-image_15469706.png"
+                                                    className="w-16 h-16 object-contain shrink-0"
+                                                />
+
+                                                <div className="text-left lg:text-center">
+                                                    <p className="font-semibold text-gray-700 lg:text-lg">
+                                                        Share Link
+                                                    </p>
+
+                                                    <p className="text-sm text-gray-500">
+                                                        Share with your friends
+                                                    </p>
+                                                </div>
+                                            </div>
+
+                                            {/* Step 2 */}
+                                            <div className="relative flex lg:flex-col items-center lg:items-center gap-4">
+                                                <div className="absolute left-8 top-16 bottom-[-35px] border-l-2 border-dashed border-gray-300 lg:hidden"></div>
+
+                                                <img
+                                                    src="https://static.vecteezy.com/system/resources/previews/059/023/139/non_2x/3d-render-of-yellow-abstract-user-icon-minimalist-avatar-for-website-free-png.png"
+                                                    className="w-12 h-12 object-contain shrink-0"
+                                                />
+
+                                                <div className="text-left lg:text-center">
+                                                    <p className="mt-1 lg:text-[17px] font-medium text-[#555]">
+                                                        Each Share
+                                                    </p>
+
+                                                    <h3 className="text-[22px] font-bold text-[#555]">
+                                                        ₹250
+                                                    </h3>
+                                                </div>
+                                            </div>
+
+                                            {/* Step 3 */}
+                                            <div className="relative flex lg:flex-col items-center lg:items-center gap-4">
+                                                <div className="absolute left-8 top-16 bottom-[-35px] border-l-2 border-dashed border-gray-300 lg:hidden"></div>
+
+                                                <img
+                                                    src="https://static.vecteezy.com/system/resources/previews/059/023/139/non_2x/3d-render-of-yellow-abstract-user-icon-minimalist-avatar-for-website-free-png.png"
+                                                    className="w-12 h-12 object-contain shrink-0"
+                                                />
+
+                                                <div className="text-left lg:text-center">
+                                                    <p className="mt-1 lg:text-[17px] font-medium text-[#555]">
+                                                        10 Shares
+                                                    </p>
+
+                                                    <div className="flex items-center gap-1 lg:justify-center">
+                                                        <span className="text-yellow-400 text-xl">🌟</span>
+
+                                                        <h3 className="text-[22px] font-bold text-[#ff6b3d]">
+                                                            ₹3600
+                                                        </h3>
+                                                    </div>
+                                                </div>
+                                            </div>
+
+                                            {/* Step 4 */}
+                                            <div className="relative flex lg:flex-col items-center lg:items-center gap-4">
+
+                                                <img
+                                                    src="https://static.vecteezy.com/system/resources/thumbnails/049/025/475/small_2x/cartoon-mountain-with-trees-and-grass-png.png"
+                                                    className="w-16 h-16 object-contain shrink-0"
+                                                />
+
+                                                <div className="text-left lg:text-center">
+                                                    <p className="lg:text-[15px] leading-5 text-[#555] font-medium">
+                                                        Refer More & Earn
+                                                        <br />
+                                                        More
+                                                    </p>
+                                                </div>
+                                            </div>
+
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div className="grid grid-cols-1 lg:grid-cols-1 gap-6 overflow-hidden">
+
                                     <motion.div
                                         whileHover={{ y: -2 }}
-                                        className="bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm rounded-2xl border border-gray-200/50 dark:border-gray-700/50 shadow-lg overflow-hidden"
+                                        className=" lg:p-8 lg:w-xl mx-auto"
                                     >
-                                        <div className="p-6">
-                                            <div className="flex items-center justify-between mb-6">
-                                                <h3 className="text-xl font-semibold text-gray-900 dark:text-white">
-                                                    Your Referral Link & Code
-                                                </h3>
-                                                <motion.div className="flex items-center space-x-2">
-                                                    <button
-                                                        onClick={() => setShowBalance(!showBalance)}
-                                                        className="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg"
-                                                        aria-label={showBalance ? "Hide balance" : "Show balance"}
-                                                    >
-                                                        {showBalance ? (
-                                                            <EyeOff className="h-4 w-4 text-gray-600 dark:text-gray-400" />
-                                                        ) : (
-                                                            <Eye className="h-4 w-4 text-gray-600 dark:text-gray-400" />
-                                                        )}
-                                                    </button>
-                                                </motion.div>
-                                            </div>
+                                        {/* Heading */}
+                                        <h2 className="text-center text-xl font-bold text-[#5A5A5A]">
+                                            Share Your Referral Code
+                                        </h2>
 
-                                            {/* Full Link Section */}
-                                            <div className="bg-gradient-to-r from-blue-500 to-purple-600 rounded-xl p-6 mb-6 shadow-lg space-y-6">
-                                                {/* Full Link */}
-                                                <div>
-                                                    <div className="text-blue-100 text-sm font-medium mb-2">
-                                                        SHARE THIS LINK
-                                                    </div>
-                                                    <div className="font-mono flex justify-between text-lg sm:text-xl font-bold text-white break-all">
-                                                        <p>{shareLink}</p>
-                                                        <motion.button
-                                                            whileHover={{ scale: 1.05 }}
-                                                            whileTap={{ scale: 0.95 }}
-                                                            onClick={copyToClipboard}
-                                                            className="bg-white/20 hover:bg-white/30 text-white px-2 py-2 rounded-lg font-semibold flex items-center space-x-2"
-                                                        >
-                                                            {copied ? (
-                                                                <>
-                                                                    <CheckCircle className="h-4 w-4" />
-                                                                    {/* <span>Copied!</span> */}
-                                                                </>
-                                                            ) : (
-                                                                <>
-                                                                    <Copy className="h-4 w-4" />
-                                                                    {/* <span>Copy</span> */}
-                                                                </>
-                                                            )}
-                                                        </motion.button>
-                                                    </div>
+                                        {/* Referral Box */}
+                                        <div className="mt-8 border-2 border-dashed border-[#8A8A8A] rounded-[22px] px-6 py-2 flex items-center justify-between">
 
-                                                </div>
+                                            {/* Referral Code */}
+                                            <h3 className="text-[#FF6436] lg:text-[22px] font-extrabold tracking-wide">
+                                                {referralCode || "------"}
+                                            </h3>
 
-                                                {/* Referral Code */}
-                                                <div className="pt-4 border-t border-white/20">
-                                                    <div className="text-blue-100 text-sm font-medium mb-2">
-                                                        OR SHARE JUST YOUR CODE
-                                                    </div>
-                                                    <div className="font-mono flex justify-between text-lg font-bold text-white">
-                                                        <p>{referralCode || "—"} </p>
-                                                        <motion.button
-                                                            whileHover={{ scale: 1.05 }}
-                                                            whileTap={{ scale: 0.95 }}
-                                                            onClick={copyReferralCode}
-                                                            className="bg-white/20 hover:bg-white/30 text-white px-2 py-2 rounded-lg font-semibold items-center space-x-2"
-                                                        >
-                                                            {codeCopied ? (
-                                                                <>
-                                                                    <CheckCircle className="h-4 w-4" />
-                                                                    {/* <span>Copied!</span> */}
-                                                                </>
-                                                            ) : (
-                                                                <>
-                                                                    <Copy className="h-4 w-4" />
-                                                                    {/* <span>Copy</span> */}
-                                                                </>
-                                                            )}
-                                                        </motion.button>
-                                                    </div>
+                                            {/* Icons */}
+                                            <div className="flex items-center gap-8">
 
-                                                </div>
-                                            </div>
-
-                                            {/* Info Banner */}
-                                            <div className="mb-6 p-4 bg-blue-50 dark:bg-blue-900/20 rounded-lg flex items-start space-x-3 text-sm text-blue-700 dark:text-blue-300">
-                                                <Info className="h-5 w-5 mt-0.5 flex-shrink-0" />
-                                                <span>
-                                                    You earn <strong>₹50 credit</strong> for every friend who signs up using your link or code.
-                                                    Credits can be used for <strong>up to 10% off</strong> on any course purchase.
-                                                    No limits — refer unlimited friends!
-                                                </span>
-                                            </div>
-
-                                            {/* Share Buttons */}
-                                            <div>
-                                                <h4 className="font-semibold text-gray-900 dark:text-white mb-3">
-                                                    Share via
-                                                </h4>
-                                                <div className="grid grid-cols-2 sm:grid-cols-5 gap-3">
-                                                    {shareOptions.map((option) => (
-                                                        <ShareButton
-                                                            key={option.platform}
-                                                            icon={option.icon}
-                                                            label={option.label}
-                                                            color={option.color}
-                                                            onClick={option.onClick}
+                                                {/* Copy */}
+                                                <button
+                                                    onClick={copyReferralCode}
+                                                    className="transition hover:scale-110"
+                                                >
+                                                    {codeCopied ? (
+                                                        <CheckCircle
+                                                            size={22}
+                                                            className="text-green-500"
                                                         />
-                                                    ))}
-                                                </div>
+                                                    ) : (
+                                                        <Copy
+                                                            size={22}
+                                                            className="text-[#444]"
+                                                        />
+                                                    )}
+                                                </button>
+
+                                                {/* Gmail Share */}
+
+                                                <button
+                                                    onClick={() =>
+                                                        window.open(
+                                                            `https://mail.google.com/mail/?view=cm&body=${encodeURIComponent(
+                                                                shareLink
+                                                            )}`
+                                                        )
+                                                    }
+                                                    className="transition hover:scale-110"
+                                                >
+                                                    <Mail
+                                                        size={22}
+                                                        className="text-[#EA4335]"
+                                                    />
+                                                </button>
+
                                             </div>
+
                                         </div>
+
+                                        {/* WhatsApp */}
+
+                                        <div className="flex justify-center mt-8">
+
+                                            <button
+                                                onClick={
+                                                    shareOptions.find(
+                                                        (item) => item.platform === "whatsapp"
+                                                    )?.onClick
+                                                }
+                                                className="
+      flex
+      items-center
+      gap-4
+      bg-[#25D366]
+      hover:bg-[#22C45A]
+      rounded-2xl
+      px-10
+      h-[52px]
+      shadow-lg
+      transition
+      "
+                                            >
+                                                <MessageCircle
+                                                    size={22}
+                                                    fill="white"
+                                                    className="text-white"
+                                                />
+
+                                                <span className="text-white text-sm font-semibold lg:text-[16px]">
+                                                    Refer Via WhatsApp
+                                                </span>
+                                            </button>
+
+                                        </div>
+
+
+
                                     </motion.div>
+
+
                                 </div>
 
-                                {/* Earnings Summary */}
-                                <div className="space-y-6">
-                                    <motion.div
-                                        whileHover={{ y: -2 }}
-                                        className="bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm rounded-2xl border border-gray-200/50 dark:border-gray-700/50 shadow-lg p-6 h-full"
-                                    >
-                                        <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4 flex items-center">
-                                            <Award className="h-5 w-5 mr-2 text-amber-500" />
-                                            Earnings Summary
-                                        </h3>
-                                        <div className="space-y-4">
-                                            <div className="flex justify-between items-center p-3 bg-gradient-to-r from-green-50 to-green-100 dark:from-green-900/20 dark:to-green-800/20 rounded-lg">
-                                                <span className="text-sm font-medium text-gray-600 dark:text-gray-400">
-                                                    Available
-                                                </span>
-                                                <span className="text-lg font-bold text-green-600 dark:text-green-400">
-                                                    {showBalance ? `₹${wallet?.balance || 0}` : "••••"}
-                                                </span>
-                                            </div>
-                                            <div className="flex justify-between items-center p-3 bg-gradient-to-r from-blue-50 to-blue-100 dark:from-blue-900/20 dark:to-blue-800/20 rounded-lg">
-                                                <span className="text-sm font-medium text-gray-600 dark:text-gray-400">
-                                                    Total Earned
-                                                </span>
-                                                <span className="text-lg font-bold text-blue-600 dark:text-blue-400">
-                                                    ₹{wallet?.totalEarned || 0}
-                                                </span>
-                                            </div>
-                                        </div>
-                                        <div className="mt-4 text-xs text-gray-500 dark:text-gray-400 text-center">
-                                            Credits apply automatically at checkout (max 10% off).
-                                        </div>
-                                        <Button className="w-full mt-4 bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700 text-white py-3 rounded-xl font-semibold">
-                                            <CreditCard className="h-4 w-4 mr-2" />
-                                            Use Credits
-                                        </Button>
-                                    </motion.div>
-                                </div>
-                            </div>
+
+
+                            </>
                         )}
 
                         {activeTab === "history" && (
@@ -497,43 +633,57 @@ export default function ReferAndEarnPage() {
                     {/* How It Works */}
                     <motion.div
                         whileHover={{ y: -2 }}
-                        className="bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm mt-6 rounded-2xl border border-gray-200/50 dark:border-gray-700/50 shadow-lg p-8"
+                        className="mt-0  p-4  max-w-5xl mx-auto"
                     >
-                        <h3 className="text-2xl font-bold text-center text-gray-900 dark:text-white mb-8">
-                            How Refer & Earn Works
-                        </h3>
-                        <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-                            {referralSteps.map((step) => {
-                                const IconComponent = step.icon;
-                                return (
-                                    <motion.div
-                                        key={step.step}
-                                        whileHover={{ scale: 1.05 }}
-                                        className="text-center"
-                                    >
+                        <h2 className="text-center text-xl font-bold text-[#555] mb-12">
+                            How it Works
+                        </h2>
+
+                        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
+
+                            {referralSteps.map((step) => (
+
+                                <motion.div
+                                    whileHover={{ y: -6 }}
+                                    key={step.step}
+                                    className="flex flex-col items-center"
+                                >
+
+                                    {/* Card */}
+
+                                    <div className="relative w-50 h-[175px] rounded-[22px] bg-[#F5F5F5] shadow-sm flex items-center justify-center">
+
+                                        {/* Step Badge */}
+
                                         <div
-                                            className={`bg-gradient-to-r ${step.color} w-16 h-16 rounded-2xl flex items-center justify-center mx-auto mb-4 shadow-lg`}
+                                            className="absolute top-0 left-1/2 -translate-x-1/2 px-4 py-2 rounded-b-2xl text-white font-bold text-xs"
+                                            style={{ background: step.badgeColor }}
                                         >
-                                            <IconComponent className="h-8 w-8 text-white" />
+                                            STEP-{step.step}
                                         </div>
-                                        <div className="text-xl font-bold text-gray-900 dark:text-white mb-2">
-                                            Step {step.step}
-                                        </div>
-                                        <div className="font-semibold text-gray-700 dark:text-gray-300 mb-2">
-                                            {step.title}
-                                        </div>
-                                        <div className="text-gray-600 dark:text-gray-400">
-                                            {step.description}
-                                        </div>
-                                    </motion.div>
-                                );
-                            })}
+
+                                        {/* Icon */}
+
+                                        <img
+                                            src={step.image}
+                                            alt=""
+                                            className="w-24 h-24 object-contain"
+                                        />
+
+                                    </div>
+
+                                    {/* Text */}
+
+                                    <p className="lg:mt-7 mt-2 text-center text-sm lg:text-[18px] font-medium text-[#555] whitespace-pre-line">
+                                        {step.description}
+                                    </p>
+
+                                </motion.div>
+
+                            ))}
+
                         </div>
-                        <div className="mt-10 p-4 bg-blue-50 dark:bg-blue-900/20 rounded-xl text-center">
-                            <p className="text-blue-700 dark:text-blue-300">
-                                <strong>₹50 per friend • No limits • 10% max discount per purchase</strong>
-                            </p>
-                        </div>
+
                     </motion.div>
                 </AnimatePresence>
             </div>

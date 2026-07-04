@@ -5,6 +5,7 @@ import CourseList from "./CourseList"
 import FeaturedCourseSlider from "./FeaturedCourse"
 import api from "../../axiosInstance"
 import { useAuth } from "../../context/UserContext"
+import { Loader } from "../../components/fullScreeLoader"
 
 // Define types for better type safety
 type Course = {
@@ -176,10 +177,21 @@ export default function CourseListingPage() {
   }
 
   // Initial fetch
-  useEffect(() => {
-    fetchCourses()
-  }, [])
+useEffect(() => {
+  const getCourses = async () => {
+    setIsLoading(true);
 
+    try {
+      await fetchCourses();
+    } catch (error) {
+      console.error(error);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  getCourses();
+}, []);
   const handleSearch = (query: string) => {
     setSearchQuery(query)
     setIsSearchLoading(true)
@@ -200,6 +212,12 @@ export default function CourseListingPage() {
   const handleSortChange = (sortValue: string) => {
     handleFilterChange({ sort: sortValue })
   }
+
+  if (isLoading) {
+        return <div className='h-screen'>
+            <Loader />
+        </div>
+    }
 
   return (
     <div

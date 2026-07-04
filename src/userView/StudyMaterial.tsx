@@ -241,7 +241,7 @@ const StudyMaterialPage = () => {
               placeholder="Search materials, courses, or tags..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full pl-12 pr-4 py-4 text-sm border border-gray-300 dark:border-gray-600 rounded-full bg-white dark:bg-gray-800 text-gray-900 dark:text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent shadow-sm"
+              className="w-full pl-12 pr-4 py-4 text-sm border border-orange-500 dark:border-gray-600 rounded-full bg-white dark:bg-gray-800 text-gray-900 dark:text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent shadow-sm"
             />
             {searchQuery && (
               <button
@@ -267,8 +267,8 @@ const StudyMaterialPage = () => {
               key={tab.id}
               onClick={() => setActiveTab(tab.id)}
               className={`px-6 py-2 rounded-full font-medium transition-all duration-200 ${activeTab === tab.id
-                ? 'bg-blue-500 text-white shadow-lg'
-                : 'bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 shadow-sm'
+                ? 'bg-orange-500 text-white shadow-lg'
+                : 'bg-orange-400/10 dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-orange-500 hover:text-white dark:hover:bg-gray-700 shadow-sm'
                 }`}
             >
               {tab.label} ({tab.count})
@@ -300,33 +300,40 @@ const StudyMaterialPage = () => {
           >
             <AnimatePresence>
               {filteredMaterials.map(material => (
-                <motion.div
-                  key={material._id}
-                  layout
-                  initial={{ opacity: 0, scale: 0.8 }}
-                  animate={{ opacity: 1, scale: 1 }}
-                  // exit={{ opacity: 0, scale: 0.8 }}
-                  whileHover={{ y: -5 }}
-                  onClick={() => setSelectedMaterial(material)}
-                  className="bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-200 dark:border-gray-700 hover:shadow-lg hover:border-blue-200 dark:hover:border-blue-800/50 cursor-pointer transition-all duration-300 overflow-hidden group"
+                <div
+                  className="rounded-2xl p-[2px]"
+                  style={{
+                    background:
+                      "linear-gradient(405deg, #ff5a2f 0%, #ff6b35 18%, #ffe4da 35%, #ffffff 55%, #ececec 82%, #cfcfcf 100%)",
+                  }}
                 >
-                  {/* File Icon */}
-                  <div className="p-6 flex flex-col items-center">
-                    <div className="bg-gray-100 dark:bg-gray-700 rounded-2xl mb-3 group-hover:bg-gray-200 dark:group-hover:bg-gray-600 transition-colors">
-                      {getIcon(material.materialType)}
-                    </div>
-                    <h4 className="font-semibold text-gray-900 text-sm dark:text-white text-center line-clamp-2">
-                      {material.title}
-                    </h4>
-                    {/* <div className={`px-3 py-1 rounded-full text-xs font-medium mb-1 ${getTypeColor(material.materialType)}`}>
+                  <motion.div
+                    key={material._id}
+                    layout
+                    initial={{ opacity: 0, scale: 0.8 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    // exit={{ opacity: 0, scale: 0.8 }}
+
+                    onClick={() => setSelectedMaterial(material)}
+                    className="bg-white dark:bg-gray-800 rounded-2xl shadow-sm  dark:border-gray-700  dark:hover:border-blue-800/50 cursor-pointer transition-all duration-300 overflow-hidden group"
+                  >
+                    {/* File Icon */}
+                    <div className="p-6 flex flex-col items-center">
+                      <div className="dark:bg-gray-700 rounded-2xl mb-3 dark:group-hover:bg-gray-600 transition-colors">
+                        {getIcon(material.materialType)}
+                      </div>
+                      <h4 className="font-semibold text-gray-900 text-sm dark:text-white text-center line-clamp-2">
+                        {material.title}
+                      </h4>
+                      {/* <div className={`px-3 py-1 rounded-full text-xs font-medium mb-1 ${getTypeColor(material.materialType)}`}>
                       {material.materialType.charAt(0).toUpperCase() + material.materialType.slice(1)}
                     </div> */}
-                  </div>
+                    </div>
 
-                  {/* File Details */}
-                  <div className="px-6 pb-2">
-                    {/* <div className="space-y-3"> */}
-                    {/* <div className="flex items-center justify-between text-sm text-gray-500 dark:text-gray-400">
+                    {/* File Details */}
+                    <div className="px-6 pb-2">
+                      {/* <div className="space-y-3"> */}
+                      {/* <div className="flex items-center justify-between text-sm text-gray-500 dark:text-gray-400">
                         <span className="flex items-center">
                           <Eye className="h-4 w-4 mr-1.5" />
                           {material.content?.downloadCount || 0} views
@@ -336,21 +343,21 @@ const StudyMaterialPage = () => {
                           {formatDate(material.publishedAt)}
                         </span>
                       </div> */}
-                    {/* <div className="flex items-center justify-between text-sm text-gray-500 dark:text-gray-400">
+                      {/* <div className="flex items-center justify-between text-sm text-gray-500 dark:text-gray-400">
                         <span className="truncate">{material.course.title}</span>
                         <span>{formatFileSize(material.file?.size || 0)}</span>
                       </div> */}
-                    {/* </div> */}
+                      {/* </div> */}
 
-                    {/* View Button */}
-                    {/* <div className="p-3">
+                      {/* View Button */}
+                      {/* <div className="p-3">
                       <div className="flex items-center justify-center text-blue-600 dark:text-blue-400 font-medium group-hover:text-blue-700 dark:group-hover:text-blue-300">
                         <Eye className="h-4 w-4 mr-2" />
                         View
                       </div>
                     </div> */}
-                  </div>
-                </motion.div>
+                    </div>
+                  </motion.div></div>
               ))}
             </AnimatePresence>
           </motion.div>

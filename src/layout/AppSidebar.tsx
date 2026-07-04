@@ -418,13 +418,13 @@ const AppSidebar: React.FC = () => {
                 {(isExpanded || isHovered || isMobileOpen) ? (
                   <>
                     <Icon className="w-5 h-5 stroke-[1.6px] flex-shrink-0" />
-                    <span className=" flex-1 text-left"> {nav.name} </span>
+                    <span className=" flex-1 text-left  "> {nav.name} </span>
                     <ChevronDown
                       className={`w-4 h-4 flex-shrink-0 transition-transform ${isSubmenuOpen ? "rotate-180" : ""}`}
                     />
                   </>
                 ) : (
-                  <Icon className="w-6 h-6 mx-auto stroke-[1.6px] flex-shrink-0" />
+                  <Icon className="w-6 h-6 mx-auto stroke-[1.6px] flex-shrink-0 " />
                 )}
               </button>
             ) : nav.path ? (
@@ -443,11 +443,26 @@ const AppSidebar: React.FC = () => {
               >
                 {(isExpanded || isHovered || isMobileOpen) ? (
                   <>
-                    <Icon className="w-5 h-5 stroke-[1.6px] flex-shrink-0" />
-                    <span className=""> {nav.name} </span>
+                    <Icon
+  className={`w-5 h-5 stroke-[1.6px] flex-shrink-0 ${isExpanded ? "text-white" : null } ${
+    isActive(nav.path)
+      ? "text-white"
+      : "text-orange-500"
+  }`}
+/>
+
+<span
+  className={`${
+    isActive(nav.path)
+      ? "text-white"
+      : "text-black"
+  }`}
+>
+  {nav.name}
+</span>
                   </>
                 ) : (
-                  <Icon className="w-6 mx-auto h-6 stroke-[1.6px] flex-shrink-0" />
+                  <Icon className={`w-6 mx-auto h-6 stroke-[1.6px] flex-shrink-0  text-orange-500 ${isHovered ? "text-white" : null} `} />
                 )}
               </Link>
             ) : null}
@@ -522,7 +537,7 @@ const AppSidebar: React.FC = () => {
   };
 
   const primaryColor = "#FF7147";   // Accent Orange
-  const sidebarBg = "#3F3F3F";       // Primary Dark
+  const sidebarBg = "white";       // Primary Dark
 
   return (
     <aside
@@ -543,14 +558,14 @@ const AppSidebar: React.FC = () => {
         <Link to="/" className="flex items-center transform hover:scale-105 transition-transform duration-200">
           {isExpanded || isHovered || isMobileOpen ? (
             <img
-              src="https://www.ooshasprep.com/home/logo.png"
+              src="/ooshas-logo.png"
               alt="Logo"
               width={120}
               height={20}
             />
           ) : (
             <img
-              src="https://ooshasglobal.com/images/fevi-icon.png"
+              src="/ooshas-logo.png"
               alt="Logo"
               className="scale-160"
               width={120}
@@ -563,16 +578,16 @@ const AppSidebar: React.FC = () => {
       {/* Navigation */}
       <div className="flex px-3 py-2 flex-col flex-1 overflow-y-auto no-scrollbar">
         <nav className="mb-6 flex-1">
-          <div className="flex flex-col gap-6">
+          <div className="flex flex-col gap-6 ">
             <div>
-              <h2 className={`mb-3 text-xs uppercase text-gray-400 font-semibold tracking-wider ${!isExpanded && !isHovered ? "pl-3" : "pl-3"}`}>
+              <h2 className={`mb-3 text-xs uppercase text-black font-semibold tracking-wider ${!isExpanded && !isHovered ? "pl-3" : "pl-3"}`}>
                 {isExpanded || isHovered || isMobileOpen ? "Menu" : ""}
               </h2>
               {renderMenuItems(getMenuItems("main"), "main")}
             </div>
 
             <div>
-              <h2 className={`mb-3 text-xs uppercase text-gray-400 font-semibold tracking-wider ${!isExpanded && !isHovered ? "pl-3" : "pl-3"}`}>
+              <h2 className={`mb-3 text-xs uppercase text-black font-semibold tracking-wider ${!isExpanded && !isHovered ? "pl-3" : "pl-3"}`}>
                 {isExpanded || isHovered || isMobileOpen
                   ? user?.role === "teacher" ? "Account" : "Others"
                   : ""
@@ -585,7 +600,7 @@ const AppSidebar: React.FC = () => {
         {/* User Profile */}
         {(isExpanded || isHovered || isMobileOpen) && user && (
           <div className="p-0.5 rounded-xl bg-gradient-to-r from-orange-500/20 to-orange-600/20 border border-orange-500/30">
-            <div className="flex items-center gap-1 p-3 px-1 rounded-xl bg-white/5">
+            <div className="flex items-center gap-3 p-3 px-1 rounded-xl bg-white/5">
               <div
                 className="w-10 h-10 rounded-full flex items-center justify-center text-white font-bold shadow-md"
                 style={{ backgroundColor: primaryColor }}
@@ -596,9 +611,7 @@ const AppSidebar: React.FC = () => {
                 <p className="text-sm font-semibold text-white truncate">
                   {user.name || "User"}
                 </p>
-                <p className="text-xs text-gray-400">
-                  {user.email}
-                </p>
+              
               </div>
             </div>
           </div>

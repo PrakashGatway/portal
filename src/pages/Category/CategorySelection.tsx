@@ -35,6 +35,7 @@ const CategorySelectionPage = () => {
 
     const updateUserCategory = async ({ category, subCategory }: any) => {
         try {
+            setLoading(true);
             await api.put("/auth/categories", {
                 ...(category !== undefined && { category }),
                 ...(subCategory !== undefined && { subCategory }),
@@ -42,6 +43,8 @@ const CategorySelectionPage = () => {
             await fetchUserProfile()
         } catch (error: any) {
             toast.error('Failed to update categories');
+        } finally{
+            setLoading(false)
         }
     };
 

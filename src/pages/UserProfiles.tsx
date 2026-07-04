@@ -29,15 +29,16 @@ const ProfilePicture = ({
   const profilePicUrl =
     formData.profilePic &&
     `https://res.cloudinary.com/dd5s7qpsc/image/upload/${formData.profilePic}` ||
-    "https://img.freepik.com/free-vector/blue-circle-with-white-user_78370-4707.jpg?semt=ais_hybrid&w=740";
+    "https://static.vecteezy.com/system/resources/thumbnails/022/014/184/small/user-icon-member-login-isolated-vector.jpg";
 
   return (
     <div className="relative group">
-      <div className="relative w-24 h-24 overflow-hidden border-4 border-white rounded-full shadow-lg dark:border-gray-800">
+     <div className=" rounded-full h-24 w-24 bg-orange-500">
+       <div className="relative p-2  w-24 h-24 overflow-hidden  rounded-full dark:border-gray-800 ">
         <img
           src={profilePicUrl}
           alt={formData.fullName || "Profile"}
-          className="object-cover w-full h-full"
+          className="object-cover w-full h-full rounded-full border border-white "
           onError={(e) => {
             (e.target as HTMLImageElement).src =
               "https://img.freepik.com/free-vector/blue-circle-with-white-user_78370-4707.jpg?semt=ais_hybrid&w=740";
@@ -68,6 +69,7 @@ const ProfilePicture = ({
           </div>
         )}
       </div>
+     </div>
       {editable && (
         <div className="absolute bottom-0 right-0">
           <button
@@ -116,20 +118,21 @@ const ViewMode = ({
 }) => (
   <div className="space-y-1">
     {/* Profile Header */}
-    <div className="p-5 border border-gray-200 rounded-2xl dark:border-gray-800 lg:p-6">
+    <div className="rounded-2xl bg-gradient-to-b from-gray-300 to-orange-500 p-[2px]">
+      <div className="p-5 border border-gray-200 bg-gray-100 rounded-2xl dark:border-gray-800 lg:p-6">
       <div className="flex flex-col gap-5 md:flex-row md:items-center md:justify-between">
         <div className="flex flex-col items-center gap-4 md:flex-row">
           <ProfilePicture formData={formData} editable={false} isUploading={false} triggerFileInput={() => { }} handleProfilePictureUpload={() => { }} fileInputRef={{ current: null } as any} />
           <div className="text-center md:text-left">
-            <h4 className="text-lg font-semibold text-gray-800 dark:text-white/90">
+            <h4 className="text-lg font-semibold text-orange-500 dark:text-white/90">
               {formData.fullName || "N/A"}
             </h4>
             <p className="text-sm text-gray-500 dark:text-gray-400">
-              {formData.profile?.bio || "No bio available"}
+              {formData.profile?.bio || " International Education Advisor"}
             </p>
-            <p className="text-sm text-gray-500 dark:text-gray-400">
-              {formData.address?.city}, {formData.address?.country}
-            </p>
+            {formData.address?.city || formData.address?.country &&  <p className="text-sm text-gray-500 dark:text-gray-400">
+              {formData.address?.city},{formData.address?.country}
+            </p>}
             {user.role === "teacher" && formData.education[0]?.degree && (
               <p className="mt-1 text-sm text-gray-600 dark:text-gray-300">
                 {formData.education[0].degree} from {formData.education[0].institution}
@@ -137,60 +140,61 @@ const ViewMode = ({
             )}
           </div>
         </div>
-        <div className="flex flex-wrap justify-center gap-2 md:justify-end">
+        <div className="flex flex-wrap justify-center gap-2 md:justify-end ">
           <a
             href={`mailto:${formData.email}`}
-            className="flex items-center justify-center w-10 h-10 rounded-full bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700"
+            className="flex items-center justify-center w-10 h-10 rounded-full border border-black bg-white dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700"
             aria-label="Email"
           >
-            <svg className="w-5 h-5 text-gray-600 dark:text-gray-300" fill="currentColor" viewBox="0 0 24 24">
+            <svg className="w-5 h-5  text-orange-600 dark:text-gray-300" fill="currentColor" viewBox="0 0 24 24">
               <path d="M20 4H4c-1.1 0-1.99.9-1.99 2L2 18c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 4l-8 5-8-5V6l8 5 8-5v2z" />
             </svg>
           </a>
           {formData.mobileNumber && (
             <a
               href={`tel:${formData.mobileNumber}`}
-              className="flex items-center justify-center w-10 h-10 rounded-full bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700"
+              className="flex items-center justify-center w-10 h-10 rounded-full bg-white dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700 border border-black"
               aria-label="Phone"
             >
-              <svg className="w-5 h-5 text-gray-600 dark:text-gray-300" fill="currentColor" viewBox="0 0 24 24">
+              <svg className="w-5 h-5 text-orange-600 dark:text-gray-300" fill="currentColor" viewBox="0 0 24 24">
                 <path d="M6.62 10.79c1.44 2.83 3.76 5.14 6.59 6.59l2.2-2.2c.27-.27.67-.36 1.02-.24 1.12.37 2.33.57 3.57.57.55 0 1 .45 1 1V20c0 .55-.45 1-1 1-9.39 0-17-7.61-17-17 0-.55.45-1 1-1h3.5c.55 0 1 .45 1 1 0 1.25.2 2.45.57 3.57.11.35.03.74-.25 1.02l-2.2 2.2z" />
               </svg>
             </a>
           )}
           <button
             onClick={() => setIsEditing(true)}
-            className="flex items-center justify-center w-10 h-10 rounded-full bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700"
+            className="flex items-center justify-center w-10 h-10 rounded-full bg-white dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700 border border-black"
             aria-label="Edit"
           >
-            <svg className="w-5 h-5 text-gray-600 dark:text-gray-300" fill="currentColor" viewBox="0 0 24 24">
+            <svg className="w-5 h-5 text-orange-600 dark:text-gray-300" fill="currentColor" viewBox="0 0 24 24">
               <path d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25zM20.71 7.04c.39-.39.39-1.02 0-1.41l-2.34-2.34c-.39-.39-1.02-.39-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83z" />
             </svg>
           </button>
         </div>
       </div>
     </div>
+    </div>
 
     {/* Personal Information */}
-    <div className="p-5 border border-gray-200 rounded-2xl dark:border-gray-800 lg:p-6">
-      <h4 className="mb-4 text-lg font-semibold text-gray-800 dark:text-white/90">
+    <div className="p-5  rounded-2xl dark:border-gray-800 lg:p-6 bg-orange-200/20">
+      <h4 className="mb-4 text-xl font-bold text-gray-500 dark:text-white/90">
         Personal Information
       </h4>
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
         <div>
-          <p className="text-xs text-gray-500 dark:text-gray-400">Full Name</p>
+          <p className="text-xs text-orange-500 dark:text-gray-400">Full Name</p>
           <p className="font-medium text-gray-800 dark:text-white/90">{formData.fullName || "N/A"}</p>
         </div>
         <div>
-          <p className="text-xs text-gray-500 dark:text-gray-400">Email</p>
+          <p className="text-xs text-orange-500 dark:text-gray-400">Email</p>
           <p className="font-medium text-gray-800 dark:text-white/90">{formData.email || "N/A"}</p>
         </div>
         <div>
-          <p className="text-xs text-gray-500 dark:text-gray-400">Phone</p>
+          <p className="text-xs text-orange-500 dark:text-gray-400">Phone</p>
           <p className="font-medium text-gray-800 dark:text-white/90">{formData.mobileNumber || "N/A"}</p>
         </div>
         <div>
-          <p className="text-xs text-gray-500 dark:text-gray-400">Date of Birth</p>
+          <p className="text-xs text-orange-500 dark:text-gray-400">Date of Birth</p>
           <p className="font-medium text-gray-800 dark:text-white/90">
             {formData.profile?.dateOfBirth
               ? new Date(formData.profile.dateOfBirth).toLocaleDateString()
@@ -198,13 +202,13 @@ const ViewMode = ({
           </p>
         </div>
         <div>
-          <p className="text-xs text-gray-500 dark:text-gray-400">Gender</p>
+          <p className="text-xs text-orange-500 dark:text-gray-400">Gender</p>
           <p className="font-medium text-gray-800 dark:text-white/90">
             {formData.profile?.gender || "N/A"}
           </p>
         </div>
         <div className="sm:col-span-2">
-          <p className="text-xs text-gray-500 dark:text-gray-400">Bio</p>
+          <p className="text-xs text-orange-500 dark:text-gray-400">Bio</p>
           <p className="font-medium text-gray-800 dark:text-white/90">
             {formData.profile?.bio || "N/A"}
           </p>
@@ -213,37 +217,37 @@ const ViewMode = ({
     </div>
 
     {/* Address */}
-    <div className="p-5 border border-gray-200 rounded-2xl dark:border-gray-800 lg:p-6">
-      <h4 className="mb-4 text-lg font-semibold text-gray-800 dark:text-white/90">
+    <div className="p-5  rounded-2xl dark:border-gray-800 lg:p-6 bg-orange-200/20">
+      <h4 className="mb-4 text-xl font-bold text-gray-500 dark:text-white/90">
         Address
       </h4>
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
         <div>
-          <p className="text-xs text-gray-500 dark:text-gray-400">Street</p>
+          <p className="text-xs text-orange-500 dark:text-gray-400">Street</p>
           <p className="font-medium text-gray-800 dark:text-white/90">
             {formData.address?.street || "N/A"}
           </p>
         </div>
         <div>
-          <p className="text-xs text-gray-500 dark:text-gray-400">City</p>
+          <p className="text-xs text-orange-500 dark:text-gray-400">City</p>
           <p className="font-medium text-gray-800 dark:text-white/90">
             {formData.address?.city || "N/A"}
           </p>
         </div>
         <div>
-          <p className="text-xs text-gray-500 dark:text-gray-400">State</p>
+          <p className="text-xs text-orange-500 dark:text-gray-400">State</p>
           <p className="font-medium text-gray-800 dark:text-white/90">
             {formData.address?.state || "N/A"}
           </p>
         </div>
         <div>
-          <p className="text-xs text-gray-500 dark:text-gray-400">Postal Code</p>
+          <p className="text-xs text-orange-500 dark:text-gray-400">Postal Code</p>
           <p className="font-medium text-gray-800 dark:text-white/90">
             {formData.address?.zipCode || "N/A"}
           </p>
         </div>
         <div className="sm:col-span-2">
-          <p className="text-xs text-gray-500 dark:text-gray-400">Country</p>
+          <p className="text-xs text-orange-500 dark:text-gray-400">Country</p>
           <p className="font-medium text-gray-800 dark:text-white/90">
             {formData.address?.country || "N/A"}
           </p>
@@ -1045,7 +1049,7 @@ export default function UserProfile() {
         title="Profile Dashboard"
         description="User profile dashboard with personal information, address, and settings."
       />
-      <div className="rounded-2xl border border-gray-200 bg-white p-5 dark:border-gray-800 dark:bg-white/[0.03] lg:p-6">
+      <div className=" p-5 dark:border-gray-800 dark:bg-white/[0.03] lg:p-6">
        
         {isEditing ? (
           <EditMode

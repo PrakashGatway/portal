@@ -17,7 +17,8 @@ import {
     Calendar,
     Filter,
     ArrowUpDown,
-    Loader
+    Loader,
+    HelpCircle
 } from "lucide-react";
 import Button from "../components/ui/button/Button";
 import api from "../axiosInstance";
@@ -100,7 +101,7 @@ const Badge = ({
 };
 
 const Card = ({ children, className = "" }: { children: React.ReactNode; className?: string }) => (
-    <div className={`rounded-2xl border bg-white shadow-sm transition-all duration-300 hover:shadow-xl dark:bg-gray-800 dark:border-gray-700 overflow-hidden ${className}`}>
+    <div className={`rounded-2xl border bg-white shadow-sm transition-all duration-300 hover:shadow-xl dark:bg-gray-800 dark:border-gray-700  ${className}`}>
         {children}
     </div>
 );
@@ -164,180 +165,145 @@ const PromoCard = React.memo(({
     const isEndingSoon = !isExpired && new Date(promo.validUntil) < new Date(Date.now() + 24 * 60 * 60 * 1000);
 
     return (
-        <Card 
-            className={`relative overflow-hidden transition-all duration-500 hover:scale-[1.01] ${
-                promo.isFeatured ? 'ring-2 ring-amber-400 dark:ring-amber-500 shadow-xl' : ''
-            } ${isExpired ? 'opacity-70 grayscale' : ''}`}
-            onMouseEnter={() => setIsHovered(true)}
-            onMouseLeave={() => setIsHovered(false)}
-        >
-            {/* Animated Background */}
-            {promo.isFeatured && (
-                <div className="absolute inset-0 bg-gradient-to-br from-amber-400/5 to-orange-500/5" />
+        <div
+  className="rounded-2xl p-[1px] h-full "
+  style={{
+    background: `
+      linear-gradient(
+        -360deg,
+        #2f2f2f 0%,
+        #4b4b4b 28%,
+        #7d7d7d 45%,
+        rgba(255,255,255,0.7) 85%,
+        rgba(255,255,255,0.95) 95%,
+        rgba(255,255,255,1) 100%
+      )
+    `,
+  }}
+>
+        <Card
+  className={`relative pb-10 h-full       ${isExpired ? 'opacity-70 grayscale' : ''}`}
+  onMouseEnter={() => setIsHovered(true)}
+  onMouseLeave={() => setIsHovered(false)}
+>
+  {/* Expired Overlay */}
+  {isExpired && (
+    <div className="absolute inset-0 bg-gray-900/60 flex items-center justify-center z-20 backdrop-blur-sm rounded-2xl">
+      <Badge variant="danger" className="text-lg py-3 px-6 animate-pulse">
+        Expired
+      </Badge>
+    </div>
+  )}
+
+  {/* Discount Badge - Top Left Overlapping */}
+  <div className="absolute -top-2 -left-2 z-10"> 
+    <div className="relative">
+      {/* Main Red Badge */}
+      <div className="bg-gradient-to-br from-red-500 to-orange-500 text-white px-6 py-3 rounded-xl shadow-lg transform -rotate-4 min-w-[140px] text-center">
+        <div className="text-3xl font-extrabold leading-none">
+          {promo.discountType === 'percentage' ? `${promo.discountValue}%` : `₹${promo.discountValue}`}
+        </div>
+        <div className="text-sm font-semibold tracking-wide">OFF</div>
+      </div>
+      {/* Max Discount Pill */}
+      {promo.maxDiscount > 0 && (
+        <div className="absolute -bottom-3 left-1/2 transform -translate-x-1/2 bg-gray-700 text-white text-xs font-medium px-3 py-1 rounded-full whitespace-nowrap shadow-md -rotate-4 ">
+          Up to ₹{promo.maxDiscount}
+        </div>
+      )}
+    </div>
+  </div>
+
+  <CardContent className="p-6 pt-24 ">
+    <div className="flex flex-col gap-5">
+      {/* Title */}
+      <div>
+        <h3 className="font-extrabold text-lg lg:text-3xl leading-tight text-orange-500 dark:text-orange-400 mb-3">
+          {promo.title}
+        </h3>
+
+        {/* Description */}
+        <p className="text-gray-600 dark:text-gray-300 text-sm leading-relaxed mb-4 line-clamp-3">
+          {promo.description}
+        </p>
+      </div>
+
+      {/* Timer */}
+      <div className="flex items-center text-sm text-gray-700 dark:text-gray-300 font-medium">
+        <Clock className="h-4 w-4 mr-2 text-gray-500" />
+        {getTimeRemaining(promo.validUntil)}
+      </div>
+
+      {/* Terms & Conditions */}
+      {promo.terms?.length > 0 && (
+        <div>
+          <button
+            onClick={() => setIsExpanded(!isExpanded)}
+            className="flex items-center text-sm text-red-500 dark:text-red-400 hover:text-red-600 dark:hover:text-red-300 transition-colors duration-200 font-medium"
+          >
+            <HelpCircle className="h-4 w-4 mr-1.5" />
+            Terms & Conditions
+            <ChevronDown
+              className={`h-4 w-4 ml-1 transition-transform duration-300 ${
+                isExpanded ? 'rotate-180' : ''
+              }`}
+            />
+          </button>
+
+          {isExpanded && (
+            <ul className="mt-3 space-y-2 text-sm text-gray-600 dark:text-gray-400 animate-in fade-in duration-300">
+              {promo.terms.map((term, index) => (
+                <li
+                  key={index}
+                  className="flex items-start bg-gray-50 dark:bg-gray-700/50 rounded-lg p-3"
+                >
+                  <div className="w-1.5 h-1.5 bg-red-500 rounded-full mt-1.5 mr-3 flex-shrink-0" />
+                  <span className="leading-relaxed">{term}</span>
+                </li>
+              ))}
+            </ul>
+          )}
+        </div>
+      )}
+
+    
+    </div>
+  </CardContent>
+
+    {/* Promo Code Box - Bottom */}
+      <div className="lg:absolute lg:-bottom-15 lg:left-15 bg-red-50 dark:bg-red-900/20 rounded-3xl p-4 mx-2 lg:mx-0 mt-2 z-10">
+        <div className="text-xs text-red-500 dark:text-red-400 font-bold uppercase tracking-wider mb-3">
+          PROMO CODE
+        </div>
+        <div className="flex items-center gap-2">
+          <code className="font-mono font-bold text-sm text-gray-900 dark:text-white tracking-wider bg-white dark:bg-gray-800 px-4 py-2.5 rounded-lg flex-1 min-w-0 truncate shadow-sm">
+            {promo.code}
+          </code>
+          <Button
+            onClick={() => onCopy(promo.code)}
+            disabled={isExpired}
+            variant="outline"
+            size="sm"
+            className={`min-w-[90px] h-11 font-semibold transition-all duration-300 transform hover:scale-105 bg-white text-sm dark:bg-gray-800 border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-700 ${
+              isExpired ? 'opacity-50 cursor-not-allowed hover:scale-100' : ''
+            }`}
+          >
+            {copiedCode === promo.code ? (
+              <>
+                <CheckCircle className="h-4 w-4 mr-1.5 text-green-500" />
+                <span className="text-green-600">Copied!</span>
+              </>
+            ) : (
+              <>
+                <Copy className="h-4 w-4 mr-1.5" />
+                Copy
+              </>
             )}
-            
-            {/* Expired Overlay */}
-            {isExpired && (
-                <div className="absolute inset-0 bg-gray-900/60 flex items-center justify-center z-20 backdrop-blur-sm rounded-2xl">
-                    <Badge variant="danger" className="text-lg py-3 px-6 animate-pulse">
-                        Expired
-                    </Badge>
-                </div>
-            )}
-
-            {/* Status Badges */}
-            <div className="absolute top-4 right-4 z-10 space-y-2">
-                {promo.isFeatured && (
-                    <Badge variant="premium" className="animate-bounce shadow-lg">
-                        <Sparkles className="h-3 w-3 mr-1" />
-                        Featured
-                    </Badge>
-                )}
-                {!isExpired && isEndingSoon && (
-                    <Badge variant="warning" className="animate-pulse">
-                        <Zap className="h-3 w-3 mr-1" />
-                        Ending Soon
-                    </Badge>
-                )}
-            </div>
-
-            <CardContent className="p-6">
-                <div className="flex flex-col lg:flex-row gap-4">
-                    {/* Left Section - Discount Tag */}
-                    <div className="lg:w-40 flex-shrink-0">
-                        <DiscountTag 
-                            discountType={promo.discountType}
-                            discountValue={promo.discountValue}
-                            maxDiscount={promo.maxDiscount}
-                        />
-                    </div>
-
-                    {/* Middle Section - Content */}
-                    <div className="flex-1 min-w-0">
-                        <div className="mb-4">
-                            <div className="flex items-start justify-between mb-3">
-                                <div className="flex-1 min-w-0">
-                                    <h3 className="font-bold text-gray-900 dark:text-white text-2xl leading-tight mb-2 line-clamp-2">
-                                        {promo.title}
-                                    </h3>
-                                    <p className="text-gray-600 dark:text-gray-300 text-sm leading-relaxed mb-1 line-clamp-2">
-                                        {promo.description}
-                                    </p>
-                                </div>
-                            </div>
-
-                            {/* Stats Grid */}
-                            <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-2">
-                                <div className="flex items-center text-sm text-gray-600 dark:text-gray-400">
-                                    <Clock className="h-4 w-4 mr-2 text-blue-500" />
-                                    {getTimeRemaining(promo.validUntil)}
-                                </div>
-                                {/* <div className="flex items-center text-sm text-gray-600 dark:text-gray-400">
-                                    <Users className="h-4 w-4 mr-2 text-green-500" />
-                                    {promo.usedCount} used
-                                </div> */}
-                                {promo.minPurchase > 0 && (
-                                    <div className="flex items-center text-sm text-gray-600 dark:text-gray-400">
-                                        <Tag className="h-4 w-4 mr-2 text-purple-500" />
-                                        Min. ₹{promo.minPurchase}
-                                    </div>
-                                )}
-                                {(promo.courses?.length > 0 || promo.categories?.length > 0) && (
-                                    <div className="flex items-center text-sm text-gray-600 dark:text-gray-400">
-                                        <Calendar className="h-4 w-4 mr-2 text-orange-500" />
-                                        {promo.courses?.length > 0 ? `${promo.courses.length} course(s)` : 
-                                         promo.categories?.length > 0 ? `${promo.categories.length} category(s)` : ''}
-                                    </div>
-                                )}
-                            </div>
-
-                            {/* Usage Progress */}
-                            {/* <ProgressBar used={promo.usedCount} total={promo.usageLimit} /> */}
-
-                            {/* Terms and Conditions */}
-                            {promo.terms?.length > 0 && (
-                                <div className="mt-4">
-                                    <button
-                                        onClick={() => setIsExpanded(!isExpanded)}
-                                        className="flex items-center text-sm text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300 transition-colors duration-200 font-medium"
-                                    >
-                                        Terms & Conditions
-                                        <ChevronDown className={`h-4 w-4 ml-2 transition-transform duration-300 ${isExpanded ? 'rotate-180' : ''}`} />
-                                    </button>
-
-                                    {isExpanded && (
-                                        <ul className="mt-3 space-y-2 text-sm text-gray-600 dark:text-gray-400 animate-in fade-in duration-300">
-                                            {promo.terms.map((term, index) => (
-                                                <li key={index} className="flex items-start bg-gray-50 dark:bg-gray-700/50 rounded-lg p-3">
-                                                    <div className="w-1.5 h-1.5 bg-blue-500 rounded-full mt-1.5 mr-3 flex-shrink-0" />
-                                                    <span className="leading-relaxed">{term}</span>
-                                                </li>
-                                            ))}
-                                        </ul>
-                                    )}
-                                </div>
-                            )}
-                        </div>
-                    </div>
-
-                    {/* Right Section - Code and Actions */}
-                    <div className="lg:w-80 flex flex-col gap-4">
-                        {/* Code Box */}
-                        <div className="bg-gradient-to-r from-gray-50 to-blue-50 dark:from-gray-700 dark:to-blue-900/20 rounded-xl p-4 border border-blue-100 dark:border-blue-800/50">
-                            <div className="space-y-3">
-                                <div className="text-xs text-gray-500 dark:text-gray-400 font-medium">PROMO CODE</div>
-                                <div className="flex items-center justify-between gap-1">
-                                    <code className="font-mono font-bold text-xl text-gray-900 w-full dark:text-white tracking-wider bg-white dark:bg-gray-800 px-3 py-1 rounded-lg">
-                                        {promo.code}
-                                    </code>
-                                    <Button
-                                        onClick={() => onCopy(promo.code)}
-                                        disabled={isExpired}
-                                        variant={copiedCode === promo.code ? "default" : "outline"}
-                                        size="sm"
-                                        className={`min-w-[80px] transition-all duration-300 transform hover:scale-105 ${
-                                            copiedCode === promo.code
-                                                ? 'bg-green-500 hover:bg-green-600 border-green-500 shadow-lg'
-                                                : 'border-blue-500 text-blue-600 dark:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-900/20'
-                                        } ${isExpired ? 'opacity-50 cursor-not-allowed hover:scale-100' : ''}`}
-                                    >
-                                        {copiedCode === promo.code ? (
-                                            <>
-                                                <CheckCircle className="h-4 w-4 mr-1.5" />
-                                                Copied!
-                                            </>
-                                        ) : (
-                                            <>
-                                                <Copy className="h-4 w-4 mr-1.5" />
-                                                Copy
-                                            </>
-                                        )}
-                                    </Button>
-                                </div>
-                            </div>
-                        </div>
-
-                        {/* Action Buttons */}
-                        {/* <div className="flex gap-3">
-                            <Button
-                                size="lg"
-                                className="flex-1 bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700 text-white font-semibold shadow-lg transform hover:scale-105 transition-all duration-300 disabled:opacity-50 disabled:scale-100 disabled:cursor-not-allowed"
-                                disabled={isExpired}
-                            >
-                                {isExpired ? 'Expired' : 'Apply Code'}
-                            </Button>
-                            <Button 
-                                variant="outline" 
-                                size="lg"
-                                className="px-4 border-gray-300 dark:border-gray-600 hover:border-gray-400 dark:hover:border-gray-500 transform hover:scale-105 transition-all duration-300"
-                            >
-                                <Share2 className="h-5 w-5" />
-                            </Button>
-                        </div> */}
-                    </div>
-                </div>
-            </CardContent>
-        </Card>
+          </Button>
+        </div>
+      </div>
+</Card>
+</div>
     );
 });
 
@@ -388,11 +354,11 @@ export default function OffersPage() {
     const observerTarget = useRef<HTMLDivElement>(null);
 
     const types = [
-        { id: "all", name: "All Offers", icon: Gift, color: "gray" },
-        { id: "featured", name: "Featured", icon: Crown, color: "amber" },
-        { id: "new", name: "New Arrivals", icon: Star, color: "blue" },
-        { id: "popular", name: "Most Popular", icon: TrendingUp, color: "green" },
-        { id: "ending", name: "Ending Soon", icon: Clock, color: "red" },
+        { id: "all", name: "All Offers", icon: Gift, color: "orange" },
+        { id: "featured", name: "Featured", icon: Crown, color: "orange" },
+        { id: "new", name: "New Arrivals", icon: Star, color: "orange" },
+        { id: "popular", name: "Most Popular", icon: TrendingUp, color: "orange" },
+        { id: "ending", name: "Ending Soon", icon: Clock, color: "orange" },
     ];
 
     const sortOptions = [
@@ -490,7 +456,7 @@ export default function OffersPage() {
         <div className="min-h-screen bg-gradient-to-br from-gray-50 via-blue-50/30 to-purple-50/30 dark:from-gray-900 dark:via-blue-900/10 dark:to-purple-900/10 transition-colors duration-500">
             <div className="max-w-7xl mx-auto p-2">
                 {/* Search and Filters */}
-                <div className="bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm rounded-2xl shadow border border-gray-200 dark:border-gray-700 p-6 mb-2 animate-in slide-in-from-top duration-500">
+                <div className="bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm rounded-2xl shadow border border-orange-500 dark:border-gray-700 p-6 mb-2 animate-in slide-in-from-top duration-500">
                     <div className="flex flex-col lg:flex-row gap-3">
                         {/* Search */}
                         <div className="flex-1">
@@ -501,7 +467,7 @@ export default function OffersPage() {
                                     placeholder="Search offers, courses, or codes..."
                                     value={searchTerm}
                                     onChange={(e) => setSearchTerm(e.target.value)}
-                                    className="w-full pl-12 pr-4 py-3 border border-gray-200 dark:border-gray-700 rounded-xl bg-white dark:bg-gray-800 text-gray-900 dark:text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-base shadow-inner transition-all duration-300"
+                                    className="w-full pl-12 pr-4 py-3 border border-orange-500 dark:border-gray-700 rounded-xl bg-white dark:bg-gray-800 text-gray-900 dark:text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-base shadow-inner transition-all duration-300"
                                 />
                             </div>
                         </div>
@@ -514,7 +480,7 @@ export default function OffersPage() {
                             <select
                                 value={sortBy}
                                 onChange={(e) => setSortBy(e.target.value)}
-                                className="pl-10 pr-8 py-3 border border-gray-200 dark:border-gray-700 rounded-xl bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500 text-base appearance-none shadow-inner transition-all duration-300 cursor-pointer"
+                                className="pl-10 pr-8 py-3 border border-orange-500 dark:border-gray-700 rounded-xl bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500 text-base appearance-none shadow-inner transition-all duration-300 cursor-pointer"
                             >
                                 {sortOptions.map(option => (
                                     <option key={option.id} value={option.id}>{option.name}</option>
@@ -552,7 +518,7 @@ export default function OffersPage() {
 
                 {/* Promo Codes Grid */}
                 {!loading && (
-                    <div className="space-y-2 mb-4">
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 p-4 ">
                         {promoCodes
                             .slice(0, visibleCount)
                             .map((promo, index) => (
