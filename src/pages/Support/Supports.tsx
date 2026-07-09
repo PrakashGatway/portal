@@ -210,9 +210,9 @@ export default function SupportPage() {
                     <div className="flex flex-col items-center w-full gap-6 xl:flex-row">
                         <motion.div
                             whileHover={{ scale: 1.05 }}
-                            className="w-16 h-16 overflow-hidden border border-gray-200 rounded-full dark:border-gray-800 flex items-center justify-center bg-blue-50 dark:bg-blue-900/20"
+                            className="w-16 h-16 overflow-hidden border border-gray-200 rounded-full dark:border-gray-800 flex items-center justify-center bg-orange-50 dark:bg-blue-900/20"
                         >
-                            <MessageSquare className="h-8 w-8 text-blue-600 dark:text-blue-400" />
+                            <MessageSquare className="h-8 w-8 text-orange-600 dark:text-blue-400" />
                         </motion.div>
                         <div className="order-3 xl:order-2">
                             <h4 className="mb-2 text-lg font-semibold text-center text-gray-800 dark:text-white/90 xl:text-left">
@@ -469,7 +469,7 @@ export default function SupportPage() {
                                             >
                                                 Cancel
                                             </Button>
-                                            <Button onClick={handleCreateTicket}>
+                                            <Button className="bg-orange-500 hover:bg-orange-400" onClick={handleCreateTicket}>
                                                 Create Ticket
                                             </Button>
                                         </motion.div>
@@ -641,7 +641,7 @@ export default function SupportPage() {
                             )}
                         </motion.div>
                     </AnimatePresence>
-                    <TextToSpeechSimple/>
+                   
                 </div>
             </div>
         </div>

@@ -386,7 +386,8 @@ const EditMode = ({
 }:any) => (
   <div className="space-y-2">
     {/* Profile Header */}
-    <div className="p-5 border border-gray-200 rounded-2xl dark:border-gray-800 lg:p-6">
+    <div className="rounded-2xl bg-gradient-to-b from-gray-300 to-orange-500 p-[2px]">
+    <div className="p-5 border border-gray-200 bg-gray-100 rounded-2xl dark:border-gray-800 lg:p-6">
       <div className="flex flex-col items-center gap-5 md:flex-row">
         <ProfilePicture
           editable={true}
@@ -403,7 +404,7 @@ const EditMode = ({
           <div className="flex flex-wrap justify-center gap-2">
             <button
               onClick={triggerFileInput}
-              className="px-3 py-1 text-sm text-blue-600 bg-blue-100 rounded-md hover:bg-blue-200 dark:bg-blue-900/30 dark:text-blue-300"
+              className="px-3 py-1 text-sm text-orange-600 bg-orange-100 rounded-md hover:bg-blue-200 dark:bg-blue-900/30 dark:text-blue-300"
             >
               Change Photo
             </button>
@@ -423,9 +424,10 @@ const EditMode = ({
         </div>
       </div>
     </div>
+    </div>
 
     {/* Personal Information */}
-    <div className="p-5 border border-gray-200 rounded-2xl dark:border-gray-800 lg:p-6">
+    <div className="p-5 bg-orange-200/20 rounded-2xl dark:border-gray-800 lg:p-6">
       <h4 className="mb-4 text-lg font-semibold text-gray-800 dark:text-white/90">
         Personal Information
       </h4>
@@ -499,7 +501,7 @@ const EditMode = ({
     </div>
 
     {/* Address */}
-    <div className="p-5 border border-gray-200 rounded-2xl dark:border-gray-800 lg:p-6">
+    <div className="p-5 bg-orange-200/20 rounded-2xl dark:border-gray-800 lg:p-6">
       <h4 className="mb-4 text-lg font-semibold text-gray-800 dark:text-white/90">
         Address
       </h4>
@@ -788,6 +790,7 @@ const EditMode = ({
         onClick={handleSave}
         isLoading={isLoading}
         disabled={isLoading || isUploading}
+        className="bg-orange-500"
       >
         {isLoading ? "Saving..." : "Save Changes"}
       </Button>

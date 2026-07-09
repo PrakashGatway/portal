@@ -58,6 +58,7 @@ import TestSeriesDetailPage from "./usercomponent/TestSeriesDetail";
 import DailyReport from "./pages/Leads/DailyReport";
 import { Toaster } from "sonner";
 import MockTests from "./tests/mcqtest";
+import JobSelectionsWall from "./userView/Selection";
 
 // Define roles
 export const ROLES = {
@@ -102,6 +103,7 @@ export default function App() {
               <Route path="/study-material" element={<StudyMaterialPage />} />
               <Route path="/class/:contentId/:courseId" element={<VideoPlayerPage />} />
               <Route path="/support" element={<SupportPage />} />
+              <Route path="/our-selection" element = {<JobSelectionsWall/>} />
 
 
               <Route path="/test-series" element={<MockTestsPage />} />

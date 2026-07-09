@@ -307,39 +307,52 @@ const PromoCard = React.memo(({
     );
 });
 
-const LoadingSkeleton = () => (
-    <div className="space-y-6">
-        {[...Array(3)].map((_, i) => (
-            <Card key={i} className="animate-pulse">
-                <CardContent className="p-6">
-                    <div className="flex flex-col lg:flex-row gap-6">
-                        <div className="lg:w-32">
-                            <div className="h-24 bg-gray-200 dark:bg-gray-700 rounded-xl"></div>
-                        </div>
-                        <div className="flex-1 space-y-4">
-                            <div className="h-6 bg-gray-200 dark:bg-gray-700 rounded w-3/4"></div>
-                            <div className="h-4 bg-gray-200 dark:bg-gray-700 rounded w-full"></div>
-                            <div className="h-4 bg-gray-200 dark:bg-gray-700 rounded w-2/3"></div>
-                            <div className="grid grid-cols-4 gap-4">
-                                {[...Array(4)].map((_, j) => (
-                                    <div key={j} className="h-4 bg-gray-200 dark:bg-gray-700 rounded"></div>
-                                ))}
-                            </div>
-                        </div>
-                        <div className="lg:w-80 space-y-4">
-                            <div className="h-20 bg-gray-200 dark:bg-gray-700 rounded-xl"></div>
-                            <div className="flex gap-3">
-                                <div className="h-12 bg-gray-200 dark:bg-gray-700 rounded-lg flex-1"></div>
-                                <div className="h-12 bg-gray-200 dark:bg-gray-700 rounded-lg w-12"></div>
-                            </div>
-                        </div>
-                    </div>
-                </CardContent>
-            </Card>
-        ))}
-    </div>
-);
+const LoadingSkeleton = () => {
+  return (
+    <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
+      {[...Array(6)].map((_, i) => (
+        <Card
+          key={i}
+          className="overflow-hidden rounded-3xl border shadow-sm animate-pulse"
+        >
+          <CardContent className="p-6 space-y-5">
+            {/* Discount Badge */}
+            <div className="h-20 w-36 rounded-2xl bg-gray-200 dark:bg-gray-700"></div>
 
+            {/* Title */}
+            <div className="space-y-3">
+              <div className="h-7 w-3/4 rounded bg-gray-200 dark:bg-gray-700"></div>
+              <div className="h-7 w-2/3 rounded bg-gray-200 dark:bg-gray-700"></div>
+            </div>
+
+            {/* Description */}
+            <div className="space-y-2">
+              <div className="h-4 rounded bg-gray-200 dark:bg-gray-700"></div>
+              <div className="h-4 w-5/6 rounded bg-gray-200 dark:bg-gray-700"></div>
+              <div className="h-4 w-2/3 rounded bg-gray-200 dark:bg-gray-700"></div>
+            </div>
+
+            {/* Timer */}
+            <div className="h-5 w-32 rounded bg-gray-200 dark:bg-gray-700"></div>
+
+            {/* Terms */}
+            <div className="h-5 w-40 rounded bg-gray-200 dark:bg-gray-700"></div>
+
+            {/* Promo Code */}
+            <div className="rounded-2xl bg-gray-100 dark:bg-gray-800 p-4 space-y-3">
+              <div className="h-4 w-24 rounded bg-gray-200 dark:bg-gray-700"></div>
+
+              <div className="flex gap-3">
+                <div className="flex-1 h-11 rounded-lg bg-gray-200 dark:bg-gray-700"></div>
+                <div className="w-24 h-11 rounded-lg bg-gray-200 dark:bg-gray-700"></div>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      ))}
+    </div>
+  );
+};
 export default function OffersPage() {
     const [promoCodes, setPromoCodes] = useState<PromoCode[]>([]);
     const [loading, setLoading] = useState(true);
