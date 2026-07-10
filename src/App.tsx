@@ -105,7 +105,6 @@ export default function App() {
               <Route path="/support" element={<SupportPage />} />
               <Route path="/our-selection" element = {<JobSelectionsWall/>} />
 
-
               <Route path="/test-series" element={<MockTestsPage />} />
               <Route path="/tests" element={<MockTests testType="full_length" />} />
               <Route path="/practice-tests" element={<MockTests testType="sectional" />} />

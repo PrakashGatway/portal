@@ -43,6 +43,7 @@ import Button from "../../components/ui/button/Button";
 
 const QuestionRenderer: any = React.memo(
   ({
+    mode,
     qDoc,
     currentQuestion,
     isCompleted,
@@ -76,9 +77,6 @@ const QuestionRenderer: any = React.memo(
     const [showRecordFirstPopup, setShowRecordFirstPopup] = useState(false);
     const [showConfirmNextPopup, setShowConfirmNextPopup] = useState(false);
     const [isRecordingInProgress, setIsRecordingInProgress] = useState(false);
-
-
-
 
     //     const navigate = useNavigate()
     //     const refreshHandledRef = useRef(false)
@@ -928,7 +926,7 @@ mx-auto">
 
 
           {/* BOTTOM BAR */}
-          <div className="fixed bottom-0 left-0 right-0 z-40  dark:border-slate-700 bg-[#bfbbbc]  backdrop-blur">
+        {!mode &&  <div className="fixed bottom-0 left-0 right-0 z-40  dark:border-slate-700 bg-[#bfbbbc]  backdrop-blur">
             <div className="mx-auto max-w-7xl px-4 py-3 ">
               <div className="grid grid-cols-2 items-center gap-3">
                 <div className="flex text-lg text-slate-900 dark:text-slate-100 flex-wrap gap-2">
@@ -990,7 +988,7 @@ mx-auto">
                 </div>
               </div>
             </div>
-          </div>
+          </div>}
         </div>
 
         {/* Return statement ke andar, sabse last mein */}
@@ -1029,6 +1027,8 @@ mx-auto">
 );
 
 export default QuestionRenderer;
+export { QuestionRenderer as PteQuestionPreviewRenderer };
+
 
 interface SectionInstructionsProps {
   currentSection: {

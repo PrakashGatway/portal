@@ -24,7 +24,7 @@ interface QuestionDoc {
   questionText: string;
   questionType: string;
   difficulty?: string;
-  stimulus?: string; 
+  stimulus?: string;
   options?: {
     label?: string;
     text: string;
@@ -52,7 +52,7 @@ interface AttemptSection {
   sectionConfigId?: string | null;
   sectionRef?: string | null;
   name?: string;
-  durationMinutes?: number; 
+  durationMinutes?: number;
   startedAt?: string;
   endedAt?: string;
   status: "not_started" | "in_progress" | "completed";
@@ -105,7 +105,7 @@ interface TestAttempt {
   completedAt?: string;
   sections: AttemptSection[];
   overallStats?: OverallStats;
-  gmatMeta?: GmatMetaLike; 
+  gmatMeta?: GmatMetaLike;
 }
 
 interface StartAttemptResponse {
@@ -143,7 +143,7 @@ export default function PteExamPage() {
   const isCompleted = attempt?.status === "completed";
 
   const [introPage, setIntroPage] = useState(1);
-const [currentScreen, setCurrentScreen] = useState('intro');
+  const [currentScreen, setCurrentScreen] = useState('intro');
 
   // Memoize derived values - MOVE ALL HOOKS TO TOP LEVEL
   const testTitle = useMemo(() =>
@@ -191,13 +191,13 @@ const [currentScreen, setCurrentScreen] = useState('intro');
     [isCompleted, submitting]
   );
 
-  
+
   const sectionQuestions = useMemo(() =>
     currentSection?.questions || [],
     [currentSection?.questions]
   );
 
-  
+
   const startAttempt = useCallback(
     async () => {
       if (!testTemplateId) {
@@ -315,7 +315,7 @@ const [currentScreen, setCurrentScreen] = useState('intro');
     );
   }, [attempt, currentSection, currentScreen, isCompleted]);
 
-  
+
   useEffect(() => {
     if (!attempt) return;
     if (!timerRunning) return;
@@ -358,7 +358,7 @@ const [currentScreen, setCurrentScreen] = useState('intro');
     currentSection,
   ]);
 
-  
+
   useEffect(() => {
     if (!attempt || !currentSection) return;
     if (!currentSection.durationMinutes) return;
@@ -390,7 +390,6 @@ const [currentScreen, setCurrentScreen] = useState('intro');
     }) => {
       if (!attempt || !currentSection || !currentQuestion) return;
       if (attempt.status !== "in_progress") return;
-      console.log("dsfdsfddddddddddddddddddddddd", currentQuestion?.answerText)
       const silent = opts?.silent ?? true;
       try {
         setSavingProgress(!silent);
@@ -527,7 +526,7 @@ const [currentScreen, setCurrentScreen] = useState('intro');
       return;
     }
 
-        const nextIndex = activeSectionIndex + 1;
+    const nextIndex = activeSectionIndex + 1;
     setActiveSectionIndex(nextIndex);
     setActiveQuestionIndex(0);
     toast.info(
@@ -634,7 +633,7 @@ const [currentScreen, setCurrentScreen] = useState('intro');
 
         Object.assign(q, patch);
 
-        resolve(); 
+        resolve();
         return clone;
       });
     });
@@ -717,7 +716,7 @@ const [currentScreen, setCurrentScreen] = useState('intro');
           navigateBack={memoizedNavigateBack}
         />
 
-      
+
         <div className="pt-14 pb-14">
 
           {currentScreen === "intro" && (
@@ -728,7 +727,7 @@ const [currentScreen, setCurrentScreen] = useState('intro');
             />
           )}
 
-          
+
 
           {currentScreen === "section_instructions" && currentSection && (
             <SectionInstructions
@@ -760,7 +759,7 @@ const [currentScreen, setCurrentScreen] = useState('intro');
               goNextQuestion={goNextQuestion}
             />
           )}
-         
+
           {currentScreen === "results" && attempt && (
             <GRETestResults
               attempt={attempt}

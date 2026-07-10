@@ -1248,41 +1248,8 @@ export const SectionInstructionsScreen: React.FC<SectionInstructionsScreenProps>
   );
 };
 
-
-// components/gmat/QuestionBody.tsx
-
-interface QuestionBodyProps {
-  qDoc: {
-    _id: string;
-    questionText: string;
-    questionType: string;
-    difficulty?: string;
-    stimulus?: string;
-    options?: {
-      label?: string;
-      text: string;
-    }[];
-    marks?: number;
-    negativeMarks?: number;
-    dataInsights?: any;
-  } | null;
-  currentQuestion: {
-    answerOptionIndexes: number[];
-    answerText?: string;
-    isAnswered: boolean;
-    order: number;
-    markedForReview: boolean;
-    timeSpentSeconds: number;
-    questionDoc?: any;
-  } | null;
-  isCompleted: boolean;
-  onOptionClick: (optionIndex: number) => void;
-  onTextAnswerChange: (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => void;
-  getDiAnswers: () => any;
-  updateDiAnswers: (updater: (prev: any) => any) => void;
-}
-
-const QuestionBody: React.FC<QuestionBodyProps> = ({
+const QuestionBody= ({
+  mode,
   qDoc,
   currentQuestion,
   isCompleted,
@@ -1290,7 +1257,7 @@ const QuestionBody: React.FC<QuestionBodyProps> = ({
   onTextAnswerChange,
   getDiAnswers,
   updateDiAnswers
-}) => {
+}:any) => {
   if (!qDoc || !currentQuestion) return null;
 
   const isMCQ =

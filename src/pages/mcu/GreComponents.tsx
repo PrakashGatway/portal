@@ -2,25 +2,9 @@ import React, { useMemo } from "react";
 import { Flag, Save } from "lucide-react";
 import Button from "../../components/ui/button/Button";
 
-interface QuestionRendererProps {
-  qDoc: any | null;
-  currentQuestion: any; // Ideally typed via AttemptQuestion
-  isCompleted: boolean;
-  handleOptionClick: (idx: number) => void;
-  handleTextAnswerChange: (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => void;
-  toggleMarkForReview: () => void;
-  updateCurrentQuestion: (patch: Partial<any>) => void; // Replace `any` with AttemptQuestion if typed
-  saveCurrentQuestionProgress: (opts?: { silent?: boolean }) => Promise<void>;
-  activeQuestionIndex: number;
-  sectionTotal: number;
-  isLastQuestionInCurrentSection: boolean;
-  isNextDisabled: boolean;
-  goToQuestion: (idx: number) => Promise<void>;
-  goNextQuestion: () => Promise<void>;
-}
-
-const QuestionRenderer: React.FC<QuestionRendererProps> = React.memo(
+const QuestionRenderer = React.memo(
   ({
+    mode,
     qDoc,
     currentQuestion,
     isCompleted,
@@ -35,10 +19,9 @@ const QuestionRenderer: React.FC<QuestionRendererProps> = React.memo(
     isNextDisabled,
     goToQuestion,
     goNextQuestion,
-  }) => {
+  }:any) => {
     const questionNumber = currentQuestion.order || activeQuestionIndex + 1;
 
-    // 👇 Render only the question content (no footer controls)
     const renderQuestionContent = useMemo(() => {
       if (!qDoc || !currentQuestion) return null;
 
@@ -588,7 +571,7 @@ const QuestionRenderer: React.FC<QuestionRendererProps> = React.memo(
         <div className="bg-white dark:bg-slate-900">{renderQuestionContent}</div>
 
         {/* Fixed bottom controls */}
-        <div className="fixed bottom-0 left-0 right-0 z-50 border-t border-slate-200 dark:border-slate-700 bg-white/95 dark:bg-slate-900/95 backdrop-blur supports-backdrop-blur:bg-white/60">
+       {!mode && <div className="fixed bottom-0 left-0 right-0 z-50 border-t border-slate-200 dark:border-slate-700 bg-white/95 dark:bg-slate-900/95 backdrop-blur supports-backdrop-blur:bg-white/60">
           <div className="mx-auto max-w-7xl px-4 py-4">
             <div className="flex flex-wrap items-center justify-between gap-4">
               <div className="flex flex-wrap items-center gap-3">
@@ -631,14 +614,14 @@ const QuestionRenderer: React.FC<QuestionRendererProps> = React.memo(
               </div>
             </div>
           </div>
-        </div>
+        </div> }
       </div>
     );
   }
 );
 
-export default QuestionRenderer;
-
+export default QuestionRenderer; 
+export { QuestionRenderer as QuestionPreviewRenderer };
 
 interface IntroScreenProps {
   introPage: number;
@@ -815,7 +798,6 @@ export const IntroScreen: React.FC<IntroScreenProps> = React.memo(
     );
   }
 );
-
 
 interface SectionInstructionsProps {
   currentSection: {
@@ -1317,7 +1299,7 @@ interface GRETestResultsProps {
 }
 
 export const GRETestResults: React.FC<GRETestResultsProps> = React.memo(
-  ({ attempt, navigateBack, onTakeAnotherTest, submitting }:any) => {
+  ({ attempt, navigateBack, onTakeAnotherTest, submitting }: any) => {
     const overall = attempt.overallStats;
 
 

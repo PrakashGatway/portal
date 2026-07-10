@@ -6,6 +6,7 @@ import FeaturedCourseSlider from "./FeaturedCourse"
 import api from "../../axiosInstance"
 import { useAuth } from "../../context/UserContext"
 import { Loader } from "../../components/fullScreeLoader"
+import { SkeletonCard } from "../Dashboard/userDashboard"
 
 // Define types for better type safety
 type Course = {
@@ -177,21 +178,21 @@ export default function CourseListingPage() {
   }
 
   // Initial fetch
-useEffect(() => {
-  const getCourses = async () => {
-    setIsLoading(true);
+  useEffect(() => {
+    const getCourses = async () => {
+      setIsLoading(true);
 
-    try {
-      await fetchCourses();
-    } catch (error) {
-      console.error(error);
-    } finally {
-      setIsLoading(false);
-    }
-  };
+      try {
+        await fetchCourses();
+      } catch (error) {
+        console.error(error);
+      } finally {
+        setIsLoading(false);
+      }
+    };
 
-  getCourses();
-}, []);
+    getCourses();
+  }, []);
   const handleSearch = (query: string) => {
     setSearchQuery(query)
     setIsSearchLoading(true)
@@ -214,10 +215,30 @@ useEffect(() => {
   }
 
   if (isLoading) {
-        return <div className='h-screen'>
-            <Loader />
+    return <div className="min-h-screen bg-[#f8f9fa] dark:bg-gray-900">
+      <div className="p-4 space-y-6">
+        <div className="flex flex-col gap-3">
+          <SkeletonCard className="w-full h-50" />
+          <SkeletonCard className="w-50 h-12" />
+          <SkeletonCard className="w-full h-12" />
         </div>
-    }
+        <div className="flex gap-2">
+          <SkeletonCard className="w-30 h-10" />
+          <SkeletonCard className="w-30 h-10" />
+          <SkeletonCard className="w-30 h-10" />
+          <SkeletonCard className="w-30 h-10" />
+          <SkeletonCard className="w-30 h-10" />
+          <SkeletonCard className="w-30 h-10" />
+          <SkeletonCard className="w-30 h-10" />
+        </div>
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          <SkeletonCard className="h-64 lg:col-span-1" />
+          <SkeletonCard className="h-64 lg:col-span-1" />
+          <SkeletonCard className="h-64 lg:col-span-1" />
+        </div>
+      </div>
+    </div>
+  }
 
   return (
     <div

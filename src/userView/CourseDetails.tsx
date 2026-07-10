@@ -28,6 +28,7 @@ import Button from "../components/ui/button/Button"
 import api, { ImageBaseUrl } from "../axiosInstance"
 import { useNavigate, useParams } from "react-router"
 import { motion, LayoutGroup } from "framer-motion"
+import { SkeletonCard } from "../pages/Dashboard/userDashboard"
 
 
 interface Instructor {
@@ -136,7 +137,7 @@ const Badge = ({
 }
 
 const Card = ({ children, className = "" }: { children: React.ReactNode; className?: string }) => (
-    <div className={`rounded-lg border bg-gray-200 shadow-sm ${className}`}>{children}</div>
+    <div className={`border bg-white ${className}`}>{children}</div>
 )
 
 const CardContent = ({ children, className = "" }: { children: React.ReactNode; className?: string }) => (
@@ -184,7 +185,7 @@ export default function CourseDetailPage() {
     const [curriculum, setCurriculum] = useState<{ _id: string; title: string; items: any[] }[]>([]);
     const [curriculumLoading, setCurriculumLoading] = useState(false);
     const curriculumRef = useRef(false); // to ensure fetch only once
-    
+
 
     const navigate = useNavigate()
 
@@ -273,14 +274,39 @@ export default function CourseDetailPage() {
         : originalPrice
 
     if (loading) {
-        return (
-            <div className="min-h-screen flex items-center justify-center dark:bg-gray-900">
-                <div className="text-center">
-                    <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500 mx-auto"></div>
-                    <p className="mt-4 text-gray-600 dark:text-gray-400">Loading course details...</p>
+        return <div className="min-h-screen bg-[#f8f9fa] dark:bg-gray-900">
+            <div className="p-4 space-y-6">
+                <div className="flex justify-between gap-3">
+                    <div className="flex flex-col gap-3 w-[65%]">
+                        <div className="flex gap-2">
+                            <SkeletonCard className="w-30 h-10" />
+                            <SkeletonCard className="w-30 h-10" />
+                            <SkeletonCard className="w-30 h-10" />
+                            <SkeletonCard className="w-30 h-10" />
+                        </div>
+                        <SkeletonCard className="w-full h-20" />
+                        <SkeletonCard className="w-full h-50" />
+                    </div>
+                    <div className="flex flex-col gap-3 w-[33%]">
+                        <SkeletonCard className="w-full h-full" />
+                        <SkeletonCard className="w-full h-20" />
+                        <SkeletonCard className="w-full h-20" />
+                    </div>
+                </div>
+                <div className="flex gap-2">
+                    <SkeletonCard className="w-30 h-10" />
+                    <SkeletonCard className="w-30 h-10" />
+                    <SkeletonCard className="w-30 h-10" />
+                    <SkeletonCard className="w-30 h-10" />
+                    <SkeletonCard className="w-30 h-10" />
+                </div>
+                <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                    <SkeletonCard className="h-64 lg:col-span-1" />
+                    <SkeletonCard className="h-64 lg:col-span-1" />
+                    <SkeletonCard className="h-64 lg:col-span-1" />
                 </div>
             </div>
-        )
+        </div>
     }
 
     if (!course) {
@@ -301,55 +327,50 @@ export default function CourseDetailPage() {
         <div className="min-h-screen dark:bg-gray-900 transition-colors duration-300">
             <motion.div
                 ref={courseHeaderRef}
-                initial={{ opacity: 0, y: -20 }}
-                animate={{ opacity: 1, y: 0 }}
                 className="relative overflow-hidden bg-gradient-to-r from-primary/10 via-primary/5 to-accent/10"
             >
                 <div className="absolute inset-0 bg-grid-pattern opacity-5"></div>
-                <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-6">
+                <div className="relative max-w-7xl mx-auto px-4">
                     <div className="grid grid-cols-1 lg:grid-cols-6 gap-8 items-start">
                         {/* Left: Course Info */}
                         <div className="lg:col-span-4 space-y-4">
-                            <div className="flex flex-wrap items-center gap-3 mb-6">
+                            <div className="flex flex-wrap items-center gap-3 mb-2">
                                 <Badge variant="outline" className="bg-primary/10 text-blue-700 border-primary/20 px-4 py-1.5">
-                                    <Sparkles className="mr-1.5 h-3.5 w-3.5" />
                                     {course.categoryInfo?.name}
                                 </Badge>
                                 {course.level && (
                                     <Badge variant="outline" className="border-accent/30 text-blue-700 px-4 py-1.5">
-                                        <Target className="mr-1.5 h-3.5 w-3.5" />
                                         {course.level.charAt(0).toUpperCase() + course.level.slice(1)}
                                     </Badge>
                                 )}
                                 {course.featured && (
                                     <Badge className="bg-gradient-to-r from-yellow-400 to-orange-500 text-white border-0 px-4 py-1.5">
-                                        <Award className="mr-1.5 h-3.5 w-3.5" />
                                         Featured
                                     </Badge>
                                 )}
                             </div>
 
-                            <div className="space-y-3">
-                                <h1 className="text-3xl lg:text-4xl font-bold text-gray-900 dark:text-white leading-tight text-balance">
+                            <div className="space-y-2">
+                                <h1 className="text-3xl font-semibold text-gray-800 dark:text-white leading-tight text-balance">
                                     {course.title}
                                 </h1>
-                                <p className="text-lg text-gray-600 dark:text-gray-400 leading-relaxed text-pretty max-w-3xl">
+                                <p className="text-base font-medium text-gray-600 dark:text-gray-400 leading-relaxed text-pretty max-w-3xl">
                                     {course.shortDescription}
                                 </p>
-                                <p className="text-lg text-gray-600 dark:text-gray-400 leading-relaxed text-pretty max-w-3xl">
+                                <p className="text-base font-medium text-gray-600 dark:text-gray-400 leading-relaxed text-pretty max-w-3xl">
                                     {course.description}
                                 </p>
                             </div>
 
                             {/* Course Stats */}
-                            <div className="flex flex-wrap items-center gap-6 pt-3">
+                            <div className="flex flex-wrap items-center gap-6">
                                 <div className="flex items-center gap-2">
                                     <div className="flex items-center">
                                         {[...Array(5)].map((_, i) => (
                                             <Star
                                                 key={i}
                                                 className={`h-5 w-5 ${i < Math.floor(course.rating || 5)
-                                                    ? "text-yellow-400 fill-current"
+                                                    ? "text-yellow-600 fill-current"
                                                     : "text-gray-300 dark:text-gray-600"
                                                     }`}
                                             />
@@ -372,38 +393,34 @@ export default function CourseDetailPage() {
 
                             {/* Course Details Grid */}
                             <div className="grid grid-cols-2 md:grid-cols-4 gap-4 pt-4">
-                                <Card className="border border-gray-200 dark:border-gray-700 bg-white/50 dark:bg-gray-800/50 backdrop-blur-sm">
+                                <Card className="border border-gray-200 dark:border-gray-700 dark:bg-gray-800/50">
                                     <CardContent className="text-center p-4">
-                                        <Calendar className="h-6 w-6 text-blue-700 mx-auto mb-2" />
-                                        <p className="text-sm font-medium text-gray-900 dark:text-white">Start Date</p>
-                                        <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                                        <p className="text-lg font-medium text-gray-800 dark:text-white">Start Date</p>
+                                        <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">
                                             {formatDate(course.schedule?.startDate || "")}
                                         </p>
                                     </CardContent>
                                 </Card>
-                                <Card className="border border-gray-200 dark:border-gray-700 bg-white/50 dark:bg-gray-800/50 backdrop-blur-sm">
+                                <Card className="border border-gray-200 dark:border-gray-700  dark:bg-gray-800/50">
                                     <CardContent className="p-4 text-center">
-                                        <MapPin className="h-6 w-6 text-blue-700 mx-auto mb-2" />
-                                        <p className="text-sm font-medium text-gray-900 dark:text-white">Mode</p>
-                                        <p className="text-xs text-gray-500 dark:text-gray-400 mt-1 capitalize">
+                                        <p className="text-lg font-medium text-gray-800 dark:text-white">Mode</p>
+                                        <p className="text-sm text-gray-600 dark:text-gray-400 mt-1 capitalize">
                                             {course.mode}
                                         </p>
                                     </CardContent>
                                 </Card>
-                                <Card className="border border-gray-200 dark:border-gray-700 bg-white/50 dark:bg-gray-800/50 backdrop-blur-sm">
+                                <Card className="border border-gray-200 dark:border-gray-700  dark:bg-gray-800/50 backdrop-blur-sm">
                                     <CardContent className="p-4 text-center">
-                                        <Globe className="h-6 w-6 text-blue-700 mx-auto mb-2" />
-                                        <p className="text-sm font-medium text-gray-900 dark:text-white">Language</p>
-                                        <p className="text-xs text-gray-500 dark:text-gray-400 mt-1 capitalize">
+                                        <p className="text-lg font-medium text-gray-800 dark:text-white">Language</p>
+                                        <p className="text-sm text-gray-600 dark:text-gray-400 mt-1 capitalize">
                                             {course.language}
                                         </p>
                                     </CardContent>
                                 </Card>
-                                <Card className="border border-gray-200 dark:border-gray-700 bg-white/50 dark:bg-gray-800/50 backdrop-blur-sm">
+                                <Card className="border border-gray-200 dark:border-gray-700  dark:bg-gray-800/50 backdrop-blur-sm">
                                     <CardContent className="p-4 text-center">
-                                        <BookOpen className="h-6 w-6 text-blue-700 mx-auto mb-2" />
-                                        <p className="text-sm font-medium text-gray-900 dark:text-white">Validity</p>
-                                        <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                                        <p className="text-lg font-medium text-gray-800 dark:text-white">Validity</p>
+                                        <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">
                                             2 year
                                         </p>
                                     </CardContent>
@@ -418,103 +435,109 @@ export default function CourseDetailPage() {
                             transition={{ delay: 0.2 }}
                             className="lg:col-span-2"
                         >
-                            <Card className="backdrop-blur-xl shadow-lg mb-2 border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800">
-                                <CardContent className="p-0">
-                                    <div className="relative aspect-video bg-gray-900 rounded-t-lg overflow-hidden">
-                                        {course?.preview?.url ? (() => {
-                                            const url = course.preview.url;
-                                            let embedUrl = '';
+                            <motion.div
+                                initial={{ opacity: 0, x: 20 }}
+                                animate={{ opacity: 1, x: 0 }}
+                                transition={{ delay: 0.3 }}
+                                className="sticky top-20 lg:-mt-30 overflow-hidden sm:p-5"
+                            >
+                                <div className="p-[1.5px] rounded-2xl overflow-hidden w-full bg-gradient-to-b from-[#686868]/0 via-[#686868]/60 to-[#686868]">
+                                    <div className="relative rounded-2xl h-full bg-white p-1 overflow-hidden">
+                                        <div className="absolute top-0 left-0 w-full h-[40%] bg-gradient-to-b from-[#ADADAC] to-[#ADADAC]/0" />
+                                        <div style={{ borderRadius: "15px 15px 0px 0px" }} className="relative overflow-hidden h-[170px]">
+                                            <div className="relative aspect-video bg-gray-900 rounded-t-lg overflow-hidden">
+                                                {course?.preview?.url ? (() => {
+                                                    const url = course.preview.url;
+                                                    let embedUrl = '';
 
-                                            // YouTube
-                                            if (url.includes('youtube.com') || url.includes('youtu.be')) {
-                                                const regExp = /^.*(youtu\.be\/|v\/|u\/\w\/|embed\/|watch\?v=|&v=)([^#&?]*).*/;
-                                                const match = url.match(regExp);
-                                                const videoId = match?.[2]?.length === 11 ? match[2] : null;
-                                                if (videoId) {
-                                                    embedUrl = `https://www.youtube.com/embed/${videoId}?autoplay=0&mute=0&rel=0&controls=1`;
-                                                }
-                                            }
-                                            // Vimeo
-                                            else if (url.includes('vimeo.com')) {
-                                                const regExp = /vimeo\.com\/(?:.*\/)?(\d+)/;
-                                                const match = url.match(regExp);
-                                                const videoId = match?.[1];
-                                                if (videoId) {
-                                                    embedUrl = `https://player.vimeo.com/video/${videoId}?autoplay=0&muted=0&controls=1`;
-                                                }
-                                            }
+                                                    // YouTube
+                                                    if (url.includes('youtube.com') || url.includes('youtu.be')) {
+                                                        const regExp = /^.*(youtu\.be\/|v\/|u\/\w\/|embed\/|watch\?v=|&v=)([^#&?]*).*/;
+                                                        const match = url.match(regExp);
+                                                        const videoId = match?.[2]?.length === 11 ? match[2] : null;
+                                                        if (videoId) {
+                                                            embedUrl = `https://www.youtube.com/embed/${videoId}?autoplay=0&mute=0&rel=0&controls=1`;
+                                                        }
+                                                    }
+                                                    // Vimeo
+                                                    else if (url.includes('vimeo.com')) {
+                                                        const regExp = /vimeo\.com\/(?:.*\/)?(\d+)/;
+                                                        const match = url.match(regExp);
+                                                        const videoId = match?.[1];
+                                                        if (videoId) {
+                                                            embedUrl = `https://player.vimeo.com/video/${videoId}?autoplay=0&muted=0&controls=1`;
+                                                        }
+                                                    }
 
-                                            if (embedUrl) {
-                                                return (
-                                                    <iframe
-                                                        src={embedUrl}
-                                                        title="Course Preview"
-                                                        className="w-full h-full absolute inset-0"
-                                                        frameBorder="0"
-                                                        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                                                        allowFullScreen
-                                                    />
-                                                );
-                                            }
+                                                    if (embedUrl) {
+                                                        return (
+                                                            <iframe
+                                                                src={embedUrl}
+                                                                title="Course Preview"
+                                                                className="w-full h-full absolute inset-0"
+                                                                frameBorder="0"
+                                                                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                                                                allowFullScreen
+                                                            />
+                                                        );
+                                                    }
 
-                                            return (
-                                                <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-slate-100 to-slate-200 dark:from-slate-800 dark:to-slate-900">
-                                                    <div className="text-center">
-                                                        <PlayCircle className="h-16 w-16 text-primary/60 mx-auto mb-3" />
-                                                        <p className="text-sm text-gray-600 dark:text-gray-400">Invalid video URL</p>
+                                                    return (
+                                                        <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-slate-100 to-slate-200 dark:from-slate-800 dark:to-slate-900">
+                                                            <div className="text-center">
+                                                                <Play className="h-16 w-16 text-gray-500 border-gray-300 mx-auto border mb-3 p-3 rounded-full" />
+                                                                <p className="text-sm text-gray-600 font-medium dark:text-gray-400">Invalid video URL</p>
+                                                            </div>
+                                                        </div>
+                                                    );
+                                                })() : (
+                                                    <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-slate-100 to-slate-200 dark:from-slate-800 dark:to-slate-900">
+                                                        <div className="text-center">
+                                                            <Play className="h-16 w-16 text-gray-500 border-gray-300 mx-auto border mb-3 p-3 rounded-full" />
+                                                            <p className="text-sm text-gray-600 font-medium dark:text-gray-400">No preview available</p>
+                                                        </div>
                                                     </div>
-                                                </div>
-                                            );
-                                        })() : (
-                                            <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-slate-100 to-slate-200 dark:from-slate-800 dark:to-slate-900">
-                                                <div className="text-center">
-                                                    <PlayCircle className="h-16 w-16 text-primary/60 mx-auto mb-3" />
-                                                    <p className="text-sm text-gray-600 dark:text-gray-400">No preview available</p>
-                                                </div>
-                                            </div>
-                                        )}
-                                    </div>
-
-                                    <div className="p-6 space-y-6">
-                                        {/* Pricing */}
-                                        <div className="text-center space-y-3">
-                                            <div className="space-y-2">
-                                                <div className="text-3xl font-bold text-gray-900 dark:text-white">
-                                                    {formatPrice(finalPrice, course.pricing.currency)}
-                                                </div>
-                                                {discountPercent > 0 && (
-                                                    <div className="flex items-center justify-center gap-3">
-                                                        <span className="text-lg text-gray-500 dark:text-gray-400 line-through">
-                                                            {formatPrice(originalPrice, course.pricing.currency)}
-                                                        </span>
-                                                        <Badge className="bg-destructive text-destructive-foreground">
-                                                            {discountPercent}% OFF
-                                                        </Badge>
-                                                    </div>
-                                                )}
-                                                {isEarlyBirdActive && (
-                                                    <Badge className="bg-gradient-to-r from-amber-400 to-orange-500 text-white">
-                                                        <Zap className="mr-1 h-3 w-3" />
-                                                        Early Bird: {getDaysRemaining(course.pricing.earlyBird!.deadline)} days left
-                                                    </Badge>
                                                 )}
                                             </div>
                                         </div>
 
-                                        {/* Action Buttons */}
-                                        <div className="space-y-3">
-                                            <Button
-                                                size="lg"
-                                                onClick={()=>navigate(`/checkout/${slug}`)}
-                                                className="w-full bg-primary hover:bg-primary/90 text-primary-foreground font-semibold py-3"
-                                            >
-                                                <PlayCircle className="mr-2 h-5 w-5" />
+                                        <div className="py-2 px-1 space-y-1 cursor-pointer">
+                                            <h3 className="text-lg font-medium capitalize text-gray-900">
+                                                {course.title}
+                                            </h3>
+
+                                            {discountPercent > 0 && (
+                                                <div className="flex items-center my-2 gap-3">
+                                                    <span className="text-2xl text-gray-500 dark:text-gray-400 line-through">
+                                                        {formatPrice(originalPrice, course.pricing.currency)}
+                                                    </span>
+                                                    <p className="text-lg font-semibold text-green-600 dark:text-green-400">
+                                                        {discountPercent}% OFF
+                                                    </p>
+                                                </div>
+                                            )}
+                                            {isEarlyBirdActive && (
+                                                <Badge className="bg-gradient-to-r from-amber-400 to-orange-500 text-white">
+                                                    <Zap className="mr-1 h-3 w-3" />
+                                                    Early Bird: {getDaysRemaining(course.pricing.earlyBird!.deadline)} days left
+                                                </Badge>
+                                            )}
+
+                                        </div>
+
+                                        {/* FOOTER */}
+                                        <div className="flex items-start">
+                                            <div style={{ borderRadius: "0px 0px 12px 15px" }} className="flex-1 f bg-[#FF6A3D] text-center text-white text-3xl font-bold px-4 py-2">
+                                                {formatPrice(finalPrice, course.pricing.currency)}
+                                            </div>
+                                            <button onClick={() => navigate(`/checkout/${slug}`)} style={{ borderRadius: "0px 0px 15px 0px" }} onClick={() => { series?.pricing?.isFree ? "" : navigate(`/checkout/${series?.slug}`, { state: { testSeries: true } }) }} className="flex-1 bg-[#3B3B3B] text-white font-medium py-2 bg-gradient-to-b from-[#545454] via-[#ffffff]/30 to-[#545454] hover:bg-black transition">
                                                 Enroll Now
-                                            </Button>
+                                            </button>
                                         </div>
                                     </div>
-                                </CardContent>
-                            </Card>
+                                </div>
+                            </motion.div>
+
                         </motion.div>
                     </div>
                 </div>
@@ -885,7 +908,7 @@ export default function CourseDetailPage() {
                             <div className="space-y-3">
                                 <Button
                                     size="sm"
-                                    onClick={()=>navigate(`/checkout/${slug}`)}
+                                    onClick={() => navigate(`/checkout/${slug}`)}
                                     className="w-full bg-blue-600 hover:bg-blue-700 text-white font-medium"
                                 >
                                     Enroll Now

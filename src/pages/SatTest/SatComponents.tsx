@@ -13,6 +13,7 @@ import Button from "../../components/ui/button/Button";
 
 const QuestionRenderer: any = React.memo(
   ({
+    mode,
     qDoc,
     currentQuestion,
     isCompleted,
@@ -79,7 +80,6 @@ const QuestionRenderer: any = React.memo(
     const isMCQ = Array.isArray(qDoc.options) && qDoc.options.length > 0;
     const type = qDoc.questionType || "";
 
-    // Toggle cross for a specific option
     const toggleCrossOption = (index: number) => {
       setCrossedOptions((prev) =>
         prev.includes(index)
@@ -88,7 +88,6 @@ const QuestionRenderer: any = React.memo(
       );
     };
 
-    // Wrap parent's handleOptionClick so selecting an option will un-cross it
     const onOptionClick = (index: number) => {
       if (isCompleted) return;
       setCrossedOptions((prev) => prev.filter((i) => i !== index));
@@ -101,9 +100,6 @@ const QuestionRenderer: any = React.memo(
 
     return (
       <div className="max-w-7xl mx-auto p-4 space-y-4">
-        <div className="flex items-center justify-between py-3 -mt-4 bg-slate-600 rounded-3xl dark:bg-slate-800">
-          {/* Top bar can be used later if needed */}
-        </div>
 
         {isMCQ && type == "sat_reading_writing" ? (
           <div ref={containerRef} className="flex gap-3">
@@ -467,7 +463,7 @@ const QuestionRenderer: any = React.memo(
         </div>
 
         {/* BOTTOM BAR */}
-        <div className="fixed bottom-0 left-0 right-0 z-40 border-t-3 border-dashed border-slate-900 dark:border-slate-700 bg-slate-300 dark:bg-slate-900/90 backdrop-blur">
+       {!mode && <div className="fixed bottom-0 left-0 right-0 z-40 border-t-3 border-dashed border-slate-900 dark:border-slate-700 bg-slate-300 dark:bg-slate-900/90 backdrop-blur">
           <div className="mx-auto max-w-7xl px-4 py-3">
             <div className="grid grid-cols-3 items-center gap-3">
               <div className="flex text-lg text-slate-900 dark:text-slate-100 flex-wrap gap-2">
@@ -514,7 +510,7 @@ const QuestionRenderer: any = React.memo(
               </div>
             </div>
           </div>
-        </div>
+        </div>}
       </div>
     );
   }

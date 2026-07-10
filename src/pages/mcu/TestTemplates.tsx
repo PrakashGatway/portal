@@ -1041,7 +1041,7 @@ export default function TestTemplateManagementPage() {
                         >
                             {/* Backdrop */}
                             <motion.div
-                                className="absolute inset-0 bg-black/40 backdrop-blur-sm"
+                                className="absolute inset-0 bg-black/40 backdrop-blur-[1px]"
                                 onClick={saving ? undefined : closeDrawer}
                                 initial={{ opacity: 0 }}
                                 animate={{ opacity: 1 }}
@@ -1050,7 +1050,7 @@ export default function TestTemplateManagementPage() {
                             />
                             {/* Panel */}
                             <motion.div
-                                className="relative ml-auto flex h-full w-full max-w-2xl flex-col border-l border-gray-200 bg-white shadow-xl dark:border-gray-800 dark:bg-gray-900"
+                                className="relative ml-auto flex h-full w-full max-w-3xl rounded-3xl flex-col border border-gray-100 bg-white shadow-xl dark:border-gray-800 p-1 dark:bg-gray-900"
                                 initial={{ x: "100%" }}
                                 animate={{ x: 0 }}
                                 exit={{ x: "100%" }}
@@ -1058,7 +1058,7 @@ export default function TestTemplateManagementPage() {
                             >
                                 <div className="flex items-center justify-between border-b border-gray-200 px-4 py-3 dark:border-gray-800">
                                     <div>
-                                        <p className="flex items-center gap-2 text-sm font-semibold text-gray-900 dark:text-gray-100">
+                                        <p className="flex items-center gap-2 text-base font-semibold text-gray-900 dark:text-gray-100">
                                             {editingId ? "Edit Test Template" : "Create Test Template"}
                                             <Filter className="h-3 w-3 text-gray-400" />
                                         </p>
@@ -1587,25 +1587,25 @@ export default function TestTemplateManagementPage() {
                 <div className="fixed inset-0 z-50 flex items-center justify-center">
                     {/* backdrop */}
                     <div
-                        className="absolute inset-0 bg-black/40 backdrop-blur-sm"
+                        className="absolute inset-0 bg-black/30 backdrop-blur-sm"
                         onClick={closeQuestionModal}
                     />
                     {/* card */}
-                    <div className="relative z-10 w-full max-w-2xl rounded-2xl border border-gray-200 bg-white p-4 shadow-xl dark:border-gray-800 dark:bg-gray-900">
+                    <div className="relative z-10 w-full max-w-5xl rounded-2xl border border-gray-200 bg-white p-4 shadow-xl dark:border-gray-800 dark:bg-gray-900">
                         <div className="mb-3 flex items-center justify-between">
                             <div>
-                                <p className="text-sm font-semibold text-gray-900 dark:text-gray-100">
+                                <p className="text-base font-semibold text-gray-900 dark:text-gray-100">
                                     Select Questions for Section
                                 </p>
-                                <p className="text-[11px] text-gray-500 dark:text-gray-400">
+                                <p className="text-[12px] text-gray-500 dark:text-gray-400">
                                     Only questions from this exam & section are shown.
                                 </p>
                             </div>
                             <button
                                 onClick={closeQuestionModal}
-                                className="rounded-full p-1 text-gray-500 hover:bg-gray-100 dark:text-gray-400 dark:hover:bg-gray-800"
+                                className="rounded-full p-2 text-gray-500 hover:bg-gray-100 dark:text-gray-400 dark:hover:bg-gray-800"
                             >
-                                <X className="h-4 w-4" />
+                                <X className="h-5 w-5" />
                             </button>
                         </div>
 
@@ -1641,8 +1641,8 @@ export default function TestTemplateManagementPage() {
                             <label className="flex items-center gap-2 text-gray-700 dark:text-gray-200">
                                 <input
                                     type="checkbox"
+                                    
                                     checked={allQuestionsSelected}
-                                    // You can manually mimic indeterminate, or just ignore it:
                                     onChange={handleToggleSelectAllQuestions}
                                 />
                                 <span>
@@ -1659,7 +1659,7 @@ export default function TestTemplateManagementPage() {
                         </div>
 
                         {/* List */}
-                        <div className="max-h-72 overflow-y-auto rounded-xl border border-gray-200 dark:border-gray-800">
+                        <div className="max-h-[60vh] overflow-y-auto rounded-xl border border-gray-200 dark:border-gray-800">
                             {questionModalLoading ? (
                                 <div className="flex items-center justify-center py-8 text-xs text-gray-500 dark:text-gray-400">
                                     <Loader2 className="mr-2 h-4 w-4 animate-spin" />
@@ -1686,9 +1686,8 @@ export default function TestTemplateManagementPage() {
                                                     className="mt-1 h-3 w-3"
                                                 />
                                                 <div className="flex-1">
-                                                    <p className="font-medium text-gray-900 dark:text-gray-100">
-                                                        {q.questionText}
-                                                    </p>
+                                                    <span className="font-medium text-gray-900 dark:text-gray-100" dangerouslySetInnerHTML={{ __html: q.questionText }} />
+
                                                     <p className="mt-0.5 text-[10px] text-gray-500 dark:text-gray-400">
                                                         {q.questionType} • {q.difficulty}
                                                     </p>
