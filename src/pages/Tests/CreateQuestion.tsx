@@ -173,13 +173,6 @@ export default function QuestionForm({
   });
   const [errors, setErrors] = useState({});
   const [allSections, setAllSections] = useState([]);
-  const [isDarkMode, setIsDarkMode] = useState(() => {
-    if (typeof window !== 'undefined') {
-      return localStorage.getItem('darkMode') === 'true' ||
-        window.matchMedia('(prefers-color-scheme: dark)').matches;
-    }
-    return false;
-  });
 
   // Fetch exams/sections
   useEffect(() => {
@@ -202,17 +195,6 @@ export default function QuestionForm({
     };
     fetchRelated();
   }, [initialExamId, initialData, initialSectionId]);
-
-  // Toggle dark mode
-  useEffect(() => {
-    if (isDarkMode) {
-      document.documentElement.classList.add('dark');
-      localStorage.setItem('darkMode', 'true');
-    } else {
-      document.documentElement.classList.remove('dark');
-      localStorage.setItem('darkMode', 'false');
-    }
-  }, [isDarkMode]);
 
   // ======================
   // HANDLERS
@@ -439,7 +421,6 @@ export default function QuestionForm({
       case 1:
         return (
           <div className="space-y-2">
-            {/* Question Group Toggle */}
             <div className="p-4 bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-blue-900/30 dark:to-indigo-900/30 rounded-2xl border border-blue-100 dark:border-blue-800/50">
               <div className="flex items-start gap-4">
                 <input

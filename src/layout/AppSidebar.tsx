@@ -98,7 +98,7 @@ const navItems: NavItem[] = [
       { name: "Exams", path: "/test/exams", icon: FileCheck },
       { name: "Sections", path: "/test/sections", icon: Layers },
       { name: "Questions", path: "/test/questions", icon: HelpCircle },
-      { name: "Tests", path: "/tests", icon: ScrollText },
+      { name: "Tests", path: "/test-manage", icon: ScrollText },
       { name: "Packages", path: "/test/packages", icon: ShoppingBag }
     ]
   },

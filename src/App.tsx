@@ -131,7 +131,7 @@ export default function App() {
                 <Route path="/study-materials" element={<ContentManagement type="StudyMaterials" />} />
                 <Route path="/test/exams" element={<ExamManagement />} />
                 <Route path="/test/sections" element={<SectionManagement />} />
-                <Route path="/tests" element={<TestSeriesManagement />} />
+                <Route path="/test-manage" element={<TestSeriesManagement />} />
                 <Route path="/test/questions" element={<QuestionManagement />} />
                 <Route path="/test/packages" element={<PackageManagement />} />
               </Route>
