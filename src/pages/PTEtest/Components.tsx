@@ -50,18 +50,14 @@ const QuestionRenderer: any = React.memo(
     handleOptionClick,
     handleTextAnswerChange,
     toggleMarkForReview,
-    saveCurrentQuestionProgress,
-    updateCurrentQuestionAsync,
     activeQuestionIndex,
     updateCurrentQuestion,
-    sectionTotal,
     isLastQuestionInCurrentSection,
     isNextDisabled,
     goToQuestion,
+    isLastSection,
     goNextQuestion,
-    sectionQuestions,
-    onReviewSection,
-    onShowInstructions,
+    sectionQuestions
   }: any) => {
     const questionNumber = currentQuestion.order || activeQuestionIndex + 1;
     const containerRef = useRef<HTMLDivElement | null>(null);
@@ -76,15 +72,12 @@ const QuestionRenderer: any = React.memo(
 
     const [showRecordFirstPopup, setShowRecordFirstPopup] = useState(false);
     const [showConfirmNextPopup, setShowConfirmNextPopup] = useState(false);
-    const [isRecordingInProgress, setIsRecordingInProgress] = useState(false);
 
     //     const navigate = useNavigate()
     //     const refreshHandledRef = useRef(false)
 
     //  useEffect(() => {
     //   const handleBeforeUnload = (e: BeforeUnloadEvent) => {
-
-
     //     sessionStorage.setItem("pte_refresh", "true");
 
     //     e.preventDefault();
@@ -108,10 +101,6 @@ const QuestionRenderer: any = React.memo(
     //     navigate("/dashboard", { replace: true });
     //   }
     // }, [navigate]);
-
-
-
-
 
     const handleRecordingComplete = useCallback(async (audioBlob: Blob) => {
       setRecordedAudio(audioBlob);
@@ -414,7 +403,7 @@ mx-auto">
                   audioUrl={qDoc.typeSpecific?.audio
                     ? audioBaseUrl + qDoc.typeSpecific.audio
                     : undefined}
-                  text={qDoc.questionText}   
+                  text={qDoc.questionText}
                   delayBeforePlay={3000}
                   onPlaybackEnd={onTTSFinished}
                 />
@@ -440,7 +429,7 @@ mx-auto">
                   audioUrl={qDoc.typeSpecific?.audio
                     ? audioBaseUrl + qDoc.typeSpecific.audio
                     : undefined}
-                  text={qDoc.questionText}   
+                  text={qDoc.questionText}
                   delayBeforePlay={3000}
                   onPlaybackEnd={onTTSFinished}
                 />
@@ -460,7 +449,7 @@ mx-auto">
             <div className="bg-white rounded dark:bg-slate-900 p-2 min-h-[65vh] overflow-y-auto">
               {renderPassage()}
               {renderQuestionText()}
-              <textarea
+              <WritingEditor
                 value={currentQuestion.answerText || ""}
                 onChange={handleTextAnswerChange}
                 rows={8}
@@ -486,7 +475,7 @@ mx-auto">
                 delayBeforePlay={3000}
                 onPlaybackEnd={onTTSFinished}
               />
-              <textarea
+              <WritingEditor
                 value={currentQuestion.answerText || ""}
                 onChange={handleTextAnswerChange}
                 rows={4}
@@ -767,7 +756,7 @@ mx-auto">
                 pitch={0.8}
               />}
               {/* {renderQuestionText()} */}
-              <textarea
+              <WritingEditor
                 value={currentQuestion.answerText || ""}
                 onChange={handleTextAnswerChange}
                 rows={6}
@@ -830,7 +819,7 @@ mx-auto">
                 {renderHeader()}
                 {renderQuestionText()}
                 <div className="space-y-3 mt-4">
-                  <textarea
+                  <WritingEditor
                     value={currentQuestion.answerText || ""}
                     onChange={handleTextAnswerChange}
                     rows={2}
@@ -866,7 +855,7 @@ mx-auto">
                   <div className="font-semibold text-lg text-slate-800 dark:text-slate-100">
                     Question
                   </div>
-                  
+
                 </div>
 
                 <div className="flex flex-wrap gap-3 text-sm mb-4 text-slate-700 dark:text-slate-300">
@@ -926,7 +915,7 @@ mx-auto">
 
 
           {/* BOTTOM BAR */}
-        {!mode &&  <div className="fixed bottom-0 left-0 right-0 z-40  dark:border-slate-700 bg-[#bfbbbc]  backdrop-blur">
+          {!mode && <div className="fixed bottom-0 left-0 right-0 z-40  dark:border-slate-700 bg-[#bfbbbc]  backdrop-blur">
             <div className="mx-auto max-w-7xl px-4 py-3 ">
               <div className="grid grid-cols-2 items-center gap-3">
                 <div className="flex text-lg text-slate-900 dark:text-slate-100 flex-wrap gap-2">
@@ -983,7 +972,11 @@ mx-auto">
                       setCrossedOptions([]);
                     }}
                   >
-                    {isLastQuestionInCurrentSection ? "Next Section" : "Next"}
+                    {isLastQuestionInCurrentSection
+                      ? isLastSection
+                        ? "Submit"
+                        : "Next Section"
+                      : "Next"}
                   </button>
                 </div>
               </div>
@@ -1038,11 +1031,11 @@ interface SectionInstructionsProps {
   } | null;
   activeSectionIndex: number;
   setCurrentScreen: (screen: "question") => void;
-  saveCurrentQuestionProgress: (opts?: { silent?: boolean }) => Promise<void>; 
+  saveCurrentQuestionProgress: (opts?: { silent?: boolean }) => Promise<void>;
 }
 
 export const SectionInstructions: React.FC<SectionInstructionsProps> = React.memo(
-  ({ currentSection, activeSectionIndex, setCurrentScreen ,saveCurrentQuestionProgress}) => {
+  ({ currentSection, activeSectionIndex, setCurrentScreen, saveCurrentQuestionProgress }) => {
     if (!currentSection) return null;
 
     const sectionName =
@@ -1055,12 +1048,12 @@ export const SectionInstructions: React.FC<SectionInstructionsProps> = React.mem
       : "Untimed (no countdown)";
 
 
-      const handleStartSection = async () => {
+    const handleStartSection = async () => {
       await saveCurrentQuestionProgress({
         silent: true,
         phase: "in_section",
         metaSectionIndex: activeSectionIndex,
-        metaQuestionIndex: 0, 
+        metaQuestionIndex: 0,
       });
       setCurrentScreen("question");
     };
@@ -1121,6 +1114,7 @@ export const SectionInstructions: React.FC<SectionInstructionsProps> = React.mem
 import { Eye, ArrowLeft, CheckCircle2 } from "lucide-react";
 import api, { audioBaseUrl } from "../../axiosInstance";
 import { useNavigate } from "react-router";
+import WritingEditor from "../Tests/WritingEditor";
 
 interface SectionReviewProps {
   currentSection: any;
@@ -1257,9 +1251,9 @@ export const SectionReview: React.FC<SectionReviewProps> = React.memo(
                   className="p-1.5 bg-blue-800 text-slate-100 font-semibold border-slate-200 rounded-full px-4"
                   onClick={handleFinishSectionReview}
                   disabled={submitting}
-                  
+
                 >
-                  
+
                   {isLastSection ? "Submit" : "Next"}
                 </button>
               </div>
@@ -2007,7 +2001,7 @@ export const GRETestResults: React.FC<GRETestResultsProps> = React.memo(
               <div className="flex items-center justify-center">
                 <div className="relative h-44 w-44">
 
-                 
+
 
 
                   {/* SVG Ring */}

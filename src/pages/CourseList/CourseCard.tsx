@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Star, Clock, Users, TrendingUp, Calendar, MapPin, BookOpen } from 'lucide-react';
+import { Star, Clock, Users, TrendingUp, Calendar, MapPin, BookOpen, Languages } from 'lucide-react';
 import { ImageBaseUrl } from '../../axiosInstance';
 import { useNavigate } from 'react-router';
 
@@ -47,171 +47,123 @@ const CourseCard = ({ course, primaryColor = "#daff02", secondaryColor = "#fe572
         : originalPrice;
 
     return (
-        <div
-            className="bg-white dark:bg-gray-800 overflow-hidden shadow-sm transition-all duration-300 transform hover:-translate-y-1 flex flex-col h-full"
-            style={{
-                border: `1px solid #ff6b3573`,
-                // boxShadow: `0 4px 12px rgba(0,0,0,0.08), 0 0 0 4px ${primaryColor}10`,
-                transition: 'all 0.3s ease'
-            }}
-        >
-            {/* Thumbnail */}
-            <div className="relative overflow-hidden">
-                <img
-                    src={
-                        !course.thumbnail?.url
-                            ? "https://www.gatewayabroadeducations.com/images/logo.svg"
-                            : `${ImageBaseUrl}/${course.thumbnail.url}`
-                    }
-                    alt={course.title}
-                    className="w-full h-48 object-cover transition-transform duration-500 group-hover:scale-105"
-                    onError={(e) => {
-                        e.currentTarget.src =
-                            "https://foundr.com/wp-content/uploads/2023/04/How-to-create-an-online-course.jpg";
-                    }}
-                />
+        <div className="p-[1.5px] rounded-2xl overflow-hidden w-full bg-gradient-to-b from-[#686868]/0 via-[#686868]/60 to-[#686868]">
+            <div className="relative rounded-2xl h-full bg-white p-1.5 overflow-hidden">
 
-                {/* <div className="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent pointer-events-none"></div> */}
+                {/* Top Highlight */}
+                <div className="absolute top-0 left-0 w-full h-[40%] bg-gradient-to-b from-[#ADADAC] to-[#ADADAC]/0" />
 
-                <div className="absolute bottom-3 left-3 flex flex-wrap gap-2 z-10">
-                    {course.featured && (
-                        <span
-                            className="text-white px-2.5 py-1 rounded-full text-xs font-bold shadow-md whitespace-nowrap"
-                            style={{ backgroundColor: secondaryColor }}
-                        >
-                            FEATURED
-                        </span>
-                    )}
-                    {discountPercent > 0 && (
-                        <span
-                            className="text-white px-2.5 py-1 rounded-full text-xs font-bold shadow-md whitespace-nowrap"
-                            style={{ backgroundColor: secondaryColor }}
-                        >
-                            {discountPercent}% OFF {isEarlyBirdActive && '(Early Bird)'}
-                        </span>
-                    )}
-                </div>
-
-                {/* Level indicator */}
-                <div className="absolute top-3 right-3 z-10">
-                    <span className={`px-2.5 py-1 rounded-full text-xs font-bold text-white ${course.level === 'beginner' ? 'bg-green-500' :
-                        course.level === 'intermediate' ? 'bg-blue-500' :
-                            'bg-purple-500'
-                        }`}>
-                        {course.level.toUpperCase()}
-                    </span>
-                </div>
-            </div>
-
-            {/* Content */}
-            <div className="p-4 flex flex-col flex-grow">
-                <div className="flex justify-between items-start">
-                    <div className="flex-1 min-w-0">
-                        <h3 className="text-base font-bold capitalize text-gray-800 dark:text-white line-clamp-2 leading-tight">
-                            {course.title} ({course.code})
-                        </h3>
-
-                    </div>
-                    <div className="text-right flex-shrink-0 whitespace-nowrap">
-                        <div className="flex items-center">
-                            <Star className="h-4 w-4 text-yellow-400 fill-current" />
-                            <span className="ml-1 text-sm font-medium text-gray-900 dark:text-white">
-                                {course.rating || '4.8'}
-                            </span>
-                            <span className="ml-1 text-xs text-gray-500 dark:text-gray-400">
-                                ({course.reviews || '1000+'})
-                            </span>
-                        </div>
-                    </div>
-                </div>
-                <p className="text-sm text-gray-600 font-medium dark:text-gray-300 line-clamp-2 mt-1">
-                    {course.shortDescription || course.subtitle}
-                </p>
-
-                {/* Schedule Info */}
-                {/* <div className="mt-3 flex items-center text-xs text-gray-600 dark:text-gray-400">
-                    <Calendar
-                        className="h-4 w-4 mr-1 flex-shrink-0"
-                        style={{ color: primaryColor }}
+                {/* Image */}
+                <div
+                    style={{ borderRadius: "15px 15px 0px 0px" }}
+                    className="relative overflow-hidden h-[170px]"
+                >
+                    <img
+                        src={
+                            !course.thumbnail?.url
+                                ? "/images/logo.png"
+                                : `${ImageBaseUrl}/${course.thumbnail.url}`
+                        }
+                        alt={course.title}
+                        className="object-cover h-full w-full"
+                        onError={(e) => {
+                            e.currentTarget.src =
+                                "https://foundr.com/wp-content/uploads/2023/04/How-to-create-an-online-course.jpg";
+                        }}
                     />
-                    <span>Starts: {formatDate(course.schedule.startDate)}</span>
-                    {course.status === 'upcoming' && (
-                        <span
-                            className="ml-2 px-2 py-0.5 rounded-full text-xs font-medium"
-                            style={{ backgroundColor: `${primaryColor}20`, color: primaryColor }}
-                        >
-                            {getDaysRemaining(course.schedule.startDate)} days left
+
+                    {course.featured && (
+                        <span className="absolute top-3 left-3 bg-[#FF6A3D] text-white text-xs font-medium px-3 py-1 rounded-full">
+                            Featured
                         </span>
                     )}
-                </div> */}
 
-                {/* Metadata Grid */}
-                {/* <div className="grid grid-cols-3 gap-3 mt-4 text-xs text-gray-600 dark:text-gray-300">
-                    <div className="flex items-center space-x-1.5">
-                        <Users className="h-4 w-4 flex-shrink-0" style={{ color: primaryColor }} />
-                        <span>{course.studentsEnrolled?.toLocaleString() || '300+'} enrolled</span>
-                    </div>
-                    <div className="flex items-center space-x-1.5">
-                        <TrendingUp className="h-4 w-4 flex-shrink-0" style={{ color: secondaryColor }} />
-                        <span className="capitalize">{course.language || 'English'}</span>
-                    </div>
-                    <div className="flex items-center space-x-1.5">
-                        <BookOpen className="h-4 w-4 flex-shrink-0" style={{ color: primaryColor }} />
-                        <span>{course.instructors?.length || 1} instructors</span>
-                    </div>
-                </div> */}
+                    {discountPercent > 0 && (
+                        <span className="absolute top-3 right-3 bg-green-500 text-white text-xs font-medium px-3 py-1 rounded-full">
+                            {discountPercent}% OFF
+                        </span>
+                    )}
+                </div>
 
-                <div className="mt-2 flex flex-col space-y-3 pt-2 border-t border-gray-100 dark:border-gray-700">
-                    <div className="flex items-baseline justify-between">
-                        <div className="flex items-baseline space-x-2">
-                            <span className="text-lg font-bold text-gray-900 dark:text-white">
-                                {formatPrice(finalPrice, course.pricing.currency)}
-                            </span>
-                            {discountPercent > 0 && (
-                                <span className="text-sm text-gray-500 dark:text-gray-400 line-through self-center">
-                                    {formatPrice(originalPrice, course.pricing.currency)}
-                                </span>
-                            )}
-                            <span
-                                className="px-1.5 py-0.5 text-xs font-bold text-white rounded-full flex items-center justify-center"
-                                style={{ backgroundColor: secondaryColor }}
-                            >
-                                {discountPercent}%
-                            </span>
+                {/* Content */}
+                <div
+                    onClick={() => navigate(`/course/${course.slug}`)}
+                    className="py-2 px-1 space-y-1 cursor-pointer"
+                >
+                    <h3 className="text-lg font-medium capitalize text-gray-900 line-clamp-2">
+                        {course.title}
+                    </h3>
+
+                    <p className="text-sm text-[#FF6A3D] font-medium line-clamp-1">
+                        {course.shortDescription || course.subtitle}
+                    </p>
+
+                    {/* Rating */}
+                    {/* <div className="flex items-center gap-2 pt-1">
+                        <Star className="h-4 w-4 fill-yellow-400 text-yellow-400" />
+                        <span className="text-sm font-medium">
+                            {course.rating || "4.8"}
+                        </span>
+                        <span className="text-xs text-gray-500">
+                            ({course.reviews || "1000+"})
+                        </span>
+                    </div> */}
+
+                    {/* Meta */}
+                    <div className="grid grid-cols-2 gap-y-2 text-sm text-gray-600 pt-2 pb-2">
+                        <div className="flex items-center gap-2">
+                            <BookOpen className="h-4 w-4 text-[#FF6A3D]" />
+                            {course.instructors?.length || 1} Instructor
                         </div>
-                        {isEarlyBirdActive && (
-                            <div
-                                className="text-[10px] px-2 py-1 rounded-full font-medium whitespace-nowrap"
-                                style={{ backgroundColor: `${primaryColor}40`, color: '#000' }}
-                            >
-                                Ends {formatDate(course.pricing.earlyBird.deadline)}
+
+                        <div className="flex capitalize items-center gap-2">
+                            <Languages className="h-4 w-4 text-[#FF6A3D]" />
+                            {course.language || "English"}
+                        </div>
+
+                        <div className="flex items-center gap-2">
+                            <Clock className="h-4 w-4 text-[#FF6A3D]" />
+                            {course.level || "Beginner"}
+                        </div>
+                    </div>
+                </div>
+
+                {/* Footer */}
+                <div className="flex items-start">
+
+                    <div
+                        style={{ borderRadius: "0px 0px 0px 15px" }}
+                        className="flex items-center flex-1 gap-1 bg-[#FF6A3D] text-center text-white px-2 py-2"
+                    >
+                        {course.pricing.isFree ? (
+                            <div className="text-3xl font-bold">
+                                Free
                             </div>
+                        ) : (
+                            <>
+                                {discountPercent > 0 && (
+                                    <div className="text-sm line-through opacity-70">
+                                        {formatPrice(originalPrice, course.pricing.currency)}
+                                    </div>
+                                )}
+
+                                <div className="text-2xl font-bold">
+                                    {formatPrice(finalPrice, course.pricing.currency)}
+                                </div>
+                            </>
                         )}
                     </div>
 
-                    <div className="flex space-x-2">
-                        <button
-                            onClick={() => navigate(`/course/${course.slug}`)}
-                            className="flex-1 py-2 px-3 hover:scale-105 border border-[#FF6B35] rounded-lg font-medium text-sm transition-all"
-                            style={{
-                                backgroundColor: 'white',
-                                color: '#000',
-                                fontWeight: 600
-                            }}
-                        >
-                            Explore
-                        </button>
-                        <button
-                            className="flex-1 py-2 px-3 hover:scale-105 rounded-lg font-medium text-sm text-white transition-all"
-                            style={{
-                                backgroundColor: "#FF6B35",
-                                fontWeight: 600
-                            }}
-                        >
-                            Enroll Now
-                        </button>
-                    </div>
+                    <button
+                        onClick={() => navigate(`/course/${course.slug}`)}
+                        style={{ borderRadius: "0px 0px 15px 0px" }}
+                        className="flex-1 bg-[#3B3B3B] text-white font-medium py-3 bg-gradient-to-b from-[#545454] via-[#ffffff]/30 to-[#545454] hover:bg-black transition"
+                    >
+                        {course.pricing.isFree ? "Start Course" : "Enroll Now"}
+                    </button>
+
                 </div>
+
             </div>
         </div>
     );

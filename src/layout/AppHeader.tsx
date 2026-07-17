@@ -82,15 +82,15 @@ const AppHeader: React.FC = () => {
     };
 
     return (
-        <header className="sticky top-0 flex w-full bg-white/90 dark:bg-gray-900/80 backdrop-blur-xl z-50 shadow">
-            <div className="flex flex-col items-center justify-between grow lg:flex-row lg:px-6">
+        <header className="sticky top-0 flex w-full bg-white dark:bg-gray-900/80 backdrop-blur-xl z-50 border-b border-gray-200 dark:border-gray-800">
+            <div className="flex flex-col items-center justify-between grow lg:flex-row lg:px-6 py-1 md:py-px">
                 {/* Mobile Header Section */}
-                <div className="flex items-center justify-between w-full gap-2 px-4 py-3 border-b border-gray-200 dark:border-gray-800 sm:gap-4 lg:justify-normal lg:border-b-0 lg:px-0 lg:py-3">
+                <div className="flex items-center justify-between w-full gap-2 px-4 py-2 sm:gap-4 lg:justify-normal lg:border-b-0 lg:px-0 lg:py-3">
                     {/* Sidebar Toggle */}
                     <motion.button
                         whileHover={{ scale: 1.05 }}
                         whileTap={{ scale: 0.95 }}
-                        className="flex items-center justify-center w-10 h-10 text-gray-600 dark:text-gray-400 border border-gray-200 dark:border-gray-800 rounded-xl bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700 transition-all duration-200"
+                        className="flex items-center lg:hidden justify-center w-10 h-10 text-gray-600 dark:text-gray-400 border border-gray-200 dark:border-gray-800 rounded-xl bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700 transition-all duration-200"
                         onClick={handleToggle}
                         aria-label="Toggle Sidebar"
                     >
@@ -106,22 +106,23 @@ const AppHeader: React.FC = () => {
                     </motion.button>
 
                     {/* Mobile Logo */}
-                    <Link to="/" className="lg:hidden">
+                    <Link to="/" className="lg:w-[250px]">
                         <motion.img
                             whileHover={{ scale: 1.05 }}
-                            className="dark:hidden h-8"
-                            src="https://www.gatewayabroadeducations.com/images/logo.svg"
-                            alt="Logo"
-                        />
-                        <motion.img
-                            whileHover={{ scale: 1.05 }}
-                            className="hidden dark:block h-8"
-                            src="https://www.gatewayabroadeducations.com/images/logo.svg"
+                            className="h-9 scale-150 pl-2"
+                            src="/ooshas-logo.png"
                             alt="Logo"
                         />
                     </Link>
+                    <div className="hidden lg:flex flex-col px-4">
+                        <span className="text-xs font-medium text-gray-500 dark:text-gray-400">
+                            Welcome back 👋
+                        </span>
+                        <h2 className="text-base font-semibold text-gray-900 dark:text-white">
+                            {user?.name.split(" ")[0] || "User"}
+                        </h2>
+                    </div>
 
-                    {/* Mobile Menu Toggle */}
                     <motion.button
                         whileHover={{ scale: 1.05 }}
                         whileTap={{ scale: 0.95 }}
@@ -157,7 +158,7 @@ const AppHeader: React.FC = () => {
                                 className="flex items-center gap-2 px-3 py-2 bg-[#FF6B35]/10 dark:from-purple-900/20 dark:to-pink-900/20 border border-[#FF6B35]/30 dark:border-purple-800 rounded-xl hover:shadow-md transition-all duration-200 group"
                             >
                                 <div className="flex items-center gap-2">
-                                    
+
                                     <span className="text-sm font-semibold">
                                         {formatCurrency(wallet?.balance)}
                                     </span>

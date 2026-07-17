@@ -140,11 +140,11 @@ const mockApi = {
 
 // ==================== SKELETON ====================
 export const SkeletonCard = ({ className = '' }) => (
-    <div className={`animate-pulse bg-gray-200 dark:bg-gray-800 rounded-2xl ${className}`} />
+    <div className={`animate-pulse bg-white dark:bg-gray-800 rounded-2xl ${className}`} />
 );
 
 const DashboardSkeleton = () => (
-    <div className="min-h-screen bg-[#f8f9fa] dark:bg-gray-900">
+    <div className="min-h-screen">
         <div className="p-8 space-y-6">
             <div className="flex justify-between"><SkeletonCard className="w-40 h-10" /><SkeletonCard className="w-60 h-10" /></div>
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
@@ -473,11 +473,11 @@ const GREDashboard = () => {
 
     if (!data) {
         return (
-            <div className="min-h-screen flex items-center justify-center bg-[#f8f9fa] pl-20">
+            <div className="min-h-screen max-w-7xl mx-auto flex items-center justify-center pl-20">
                 <motion.div
                     initial={{ scale: 0 }}
                     animate={{ scale: 1 }}
-                    className="text-center bg-white p-8 rounded-2xl shadow-xl"
+                    className="text-center p-8 rounded-2xl shadow-xl"
                 >
                     <AlertCircle className="w-16 h-16 text-red-500 mx-auto mb-4" />
                     <h2 className="text-2xl font-bold text-gray-900 mb-2">Error Loading Dashboard</h2>
@@ -496,7 +496,7 @@ const GREDashboard = () => {
 
     return (
 
-        <div className="p-3 max-w-[1600px] mx-auto">
+        <div className="p-3 max-w-7xl mx-auto mx-auto">
             <HeaderBanner data={data} />
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
                 <div className="flex flex-col gap-4 lg:col-span-2">

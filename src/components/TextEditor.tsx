@@ -13,7 +13,7 @@ const RichTextEditor = ({ initialValue = '', onChange, disabled = false, header 
 
     const initConfig = useMemo(() => {
         return {
-            height: header ? 500 : 300,
+            height: header ? 300 : 300,
             width: '100%',
             zindex: 9999999,
             placeholder: 'Start typing your content here...',

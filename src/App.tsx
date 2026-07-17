@@ -110,8 +110,6 @@ export default function App() {
               <Route path="/practice-tests" element={<MockTests testType="sectional" />} />
               <Route path="/quiz" element={<MockTests testType="quiz" />} />
 
-
-
               <Route path="/test-series/:slug" element={<TestSeriesDetailPage />} />
 
               <Route path="/mock-tests" element={<MockTest />} />

@@ -11,19 +11,16 @@ import {
   ChevronRight,
   Loader2,
   BookOpen,
-  SlidersHorizontal,
   Tag,
   HelpCircle,
   Filter,
   Calendar,
   Award,
   Layers,
-  Sparkles,
   TrendingUp,
   Clock,
   Eye,
 } from "lucide-react";
-import PageMeta from "../../components/common/PageMeta";
 import Button from "../../components/ui/button/Button";
 import Input from "../../components/form/input/InputField";
 import Label from "../../components/form/Label";
@@ -101,6 +98,7 @@ const QUESTION_TYPE_OPTIONS = [
   { value: "gmat_verbal_cr", label: "GMAT – Critical Reasoning" },
   { value: "gmat_verbal_rc", label: "GMAT – Reading Comprehension" },
   { value: "gmat_data_insights", label: "GMAT – Data Insights" },
+
   { value: "gre_analytical_writing", label: "GRE – Analytical Writing" },
   { value: "gre_verbal_text_completion", label: "GRE – Text Completion" },
   { value: "gre_verbal_sentence_equivalence", label: "GRE – Sentence Equivalence" },
@@ -109,31 +107,34 @@ const QUESTION_TYPE_OPTIONS = [
   { value: "gre_quantitative", label: "GRE – Quantitative" },
   { value: "gre_quantitative_multi", label: "GRE – Quantitative (Multiple Choice)" },
   { value: "gre_quantitative_value", label: "GRE – Quantitative (Value)" },
+
   { value: "sat_reading_writing", label: "SAT – Reading & Writing" },
   { value: "sat_math_calculator", label: "SAT – Math (Calculator)" },
   { value: "sat_math_no_calculator", label: "SAT – Math (No Calculator)" },
+
   { value: "read_aloud", label: "PTE-Read Aloud" },
   { value: "repeat_sentence", label: "PTE-Repeat Sentence" },
   { value: "describe_image", label: "PTE-Describe Image" },
-  { value: "retell_lesson", label: "PTE-Retell Lesson" },
-  { value: "short_answer", label: "PTE-Short Answer" },
-  { value: "summarize_group_discussions", label: "Summarize Group Discussions" },
-  { value: "pte_summarize_writing", label: "PTE-Summarize Writing" },
-  { value: "pte_situational", label: "PTE-Situational" },
+  { value: "retell_lesson", label: "PTE-Retell Lecture" },
+  { value: "short_answer", label: "PTE-Short Question" },
+  { value: "summarize_group_discussions", label: "PTE-Summarize Group Discussion" },
+  { value: "pte_situational", label: "PTE-Respond to a Situational" },
   { value: "pte_writing", label: "PTE-Writing" },
-  { value: "pte_fill_in_blanks", label: "PTE-Fill in the Blanks" },
-  { value: "pte_mcq_multiple", label: "PTE-MCQ (Multiple Choice)" },
-  { value: "pte_reorder", label: "PTE-Reorder" },
-  { value: "pte_fill_drag", label: "PTE-Fill and Drag" },
-  { value: "pte_mcq_single", label: "PTE-MCQ (Single Choice)" },
-  { value: "pte_summarize_spoken", label: "PTE-Summarize Spoken" },
-  { value: "pte_mcq_multiple_listening", label: "PTE-MCQ (Multiple Choice) listening" },
-  { value: "pte_fill_listening", label: "PTE-Fill listening" },
-  { value: "pte_highlight", label: "PTE-Highlight" },
-  { value: "pte_mcq_single_listening", label: "PTE-MCQ (Single Choice) listening" },
-  { value: "pte_summarize_listening", label: "PTE-Summarize listening" },
-  { value: "pte_writing_listening", label: "PTE-Writing listening" },
-  { value: "essay", label: "PTE-Essay / Long Answer" },
+  { value: "pte_fill_in_blanks", label: "PTE-Fill in the Blanks (Dropdown)" },
+  { value: "pte_mcq_multiple", label: "PTE-Multiple Choice (Multiple) " },
+  { value: "pte_reorder", label: "PTE-Reorder Paragraph" },
+  { value: "pte_fill_drag", label: "PTE-Fill in the Blanks (Drag and Drop)" },
+  { value: "pte_mcq_single", label: "PTE-Multiple Choice (Single)" },
+  { value: "pte_summarize_spoken", label: "PTE-Summarize Spoken Text" },
+  { value: "pte_mcq_multiple_listening", label: "PTE-Multiple Choice (Multiple) listening" },
+  { value: "pte_fill_listening", label: "PTE-Fill in the Blanks (Type In) listening" },
+  { value: "pte_highlight", label: "PTE-Highlight Incorrect Words" },
+  { value: "pte_mcq_single_listening", label: "PTE-Multiple Choice (Single) listening" },
+  { value: "pte_mcq_single_listening", label: "PTE-Select Missing Word listening" },
+  { value: "pte_summarize_listening", label: "PTE-Highlight Correct Summary listening" },
+  { value: "pte_writing_listening", label: "PTE-Write from Dictation on listening" },
+  { value: "pte_summarize_writing", label: "PTE-Summarize Written Text" },
+  { value: "essay", label: "PTE-Write Essay" },
   { value: "other", label: "Other" },
 ];
 
@@ -189,15 +190,12 @@ export default function QuestionManagementPage() {
   const [totalQuestions, setTotalQuestions] = useState(0);
   const [loading, setLoading] = useState(true);
   const [loadingExams, setLoadingExams] = useState(true);
-  // const [loadingSections, setLoadingSections] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [sideOpen, setSideOpen] = useState(false);
   const [editingQuestion, setEditingQuestion] = useState<any | null>(null);
   const [saving, setSaving] = useState(false);
   const [preview, setPreview] = useState(false)
   const [previewQuestion, setPreviewQuestion] = useState<any>(null)
-
-  console.log(previewQuestion)
 
   const {
     handleSubmit,
@@ -247,7 +245,8 @@ export default function QuestionManagementPage() {
       setLoadingExams(true);
       const res = await api.get("/test/exams", { params: { isActive: true, limit: 100 } });
       if (res.data?.success) {
-        setExams(res.data.data || res.data?.data?.data || []);
+        let examsData = res?.data?.data?.filter((i) => !i.name.toLowerCase().includes("ielt"));
+        setExams(examsData || []);
       } else {
         setExams([]);
       }
@@ -508,6 +507,37 @@ export default function QuestionManagementPage() {
     }, 150);
   };
 
+  const selectedExam = exams.find((e) => e._id == examId);
+  const examKey = selectedExam?.name.toLowerCase() || "";
+
+  console.log(watch("exam"))
+
+  const filteredQuestionTypes = QUESTION_TYPE_OPTIONS.filter((type) => {
+    console.log(examKey)
+    // console.log("🚀 ~ file: Questions.tsx ~ line 79 ~ filteredQuestionTypes ~ type", type);
+    if (!examKey) return true;
+
+    if (examKey.includes("gmat")) {
+      return type.label.toLowerCase().startsWith("gmat");
+    }
+
+    if (examKey.includes("gre")) {
+      return type.label.toLowerCase().startsWith("gre");
+    }
+
+    if (examKey.includes("sat")) {
+      return type.label.toLowerCase().startsWith("sat");
+    }
+
+    if (examKey.includes("pte")) {
+      return type.label.toLowerCase().startsWith("pte");
+    }
+
+    return true;
+  });
+
+  console.log(filteredQuestionTypes)
+
   const onSubmit = async (values: any) => {
     try {
       if (!values.exam) {
@@ -736,7 +766,6 @@ export default function QuestionManagementPage() {
           <h1 className="text-xl font-semibold sm:text-2xl flex items-center gap-2">
             Question Management
           </h1>
-
           <div className="mt-2 flex items-center gap-2 text-sm">
             <button
               onClick={() => {
@@ -746,16 +775,12 @@ export default function QuestionManagementPage() {
                   sectionId: "all",
                   questionType: "all",
                 }));
-
                 setSearchParams({});
               }}
             >
               Exams
             </button>
-
             <span>/</span>
-
-
           </div>
         </div>
 
@@ -775,7 +800,6 @@ export default function QuestionManagementPage() {
                     ...prev,
                     sectionId: section._id,
                   }));
-
                   setSearchParams({
                     exam: examId,
                     section: section._id,
@@ -789,7 +813,6 @@ export default function QuestionManagementPage() {
                     <h3 className="truncate text-sm font-medium text-gray-900">
                       {section.name}
                     </h3>
-
                     <p className="text-xs text-gray-500">
                       Click to open
                     </p>
@@ -1038,16 +1061,17 @@ export default function QuestionManagementPage() {
                       setFilters((prev) => ({ ...prev, sectionId: value }));
                       setPage(1);
                     }}
-                    className="rounded-2xl border-gray-200 dark:border-gray-700"
+                    className="border-gray-200 dark:border-gray-700"
                   />
                 </div>
 
                 {/* Type filter */}
                 <div>
                   <Select
+                    placeholder="false"
                     options={[
-                      { value: "all", label: "All Types" },
-                      ...QUESTION_TYPE_OPTIONS.map((t) => ({ value: t.value, label: t.label })),
+                      { value: "all", label: "All" },
+                      ...filteredQuestionTypes.map((t) => ({ value: t.value, label: t.label })),
                     ]}
                     defaultValue={filters.questionType}
                     onChange={(value: string) => {
@@ -1061,8 +1085,9 @@ export default function QuestionManagementPage() {
                 {/* Difficulty filter */}
                 <div>
                   <Select
+                    placeholder="false"
                     options={[
-                      { value: "all", label: "All Levels" },
+                      { value: "all", label: "All" },
                       ...DIFFICULTY_OPTIONS,
                     ]}
                     defaultValue={filters.difficulty}

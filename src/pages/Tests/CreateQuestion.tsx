@@ -4,6 +4,7 @@ import Label from '../../components/form/Label';
 import { toast } from 'react-toastify';
 import api, { ImageBaseUrl } from '../../axiosInstance';
 import RichTextEditor from '../../components/TextEditor';
+import { Delete, Trash2 } from 'lucide-react';
 
 const EXAM_TYPES = [
   { value: 'ielts', label: 'IELTS' },
@@ -124,6 +125,8 @@ const needsCompletion = (type) => [
   'form_completion', 'note_completion', 'table_completion', 'flow_chart_completion',
   'summary_completion', 'sentence_completion', 'fill_blanks', 'write_from_dictation'
 ].includes(type);
+
+const needsNoCorrectAnswer = (type) => ['multiple_choice_single', 'multiple_choice_multiple'].includes(type);
 
 export default function QuestionForm({
   examId: initialExamId = '',
@@ -278,6 +281,15 @@ export default function QuestionForm({
       )
     }));
   };
+
+  const removeOptionFromGroupQuestion = (gIndex, qIndex, oIndex) => {
+    setFormData(prev => ({
+      ...prev,
+      questionGroup: prev.questionGroup.map((g, i) =>
+        i === gIndex ? { ...g, questions: g.questions.map((q, j) => j === qIndex ? { ...q, options: q.options.filter((_, k) => k !== oIndex) } : q) } : g
+      )
+    }))
+  }
 
   const addGroup = () => {
     setFormData(prev => ({
@@ -614,7 +626,7 @@ export default function QuestionForm({
               </div>
 
               {/* Instruction */}
-              <div className="mb-4">
+             {!formData.isQuestionGroup && <div className="mb-4">
                 <Label className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Instruction *</Label>
                 <div className="relative">
 
@@ -625,7 +637,7 @@ export default function QuestionForm({
                   />
                   {errors.instruction && <p className="text-red-500 text-xs mt-1 flex items-center gap-1"><svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20"><path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd"></path></svg>{errors.instruction}</p>}
                 </div>
-              </div>
+              </div>}
             </div>
 
             {/* Conditional: Passage */}
@@ -949,12 +961,17 @@ export default function QuestionForm({
                     <div className="mb-6">
                       <Label className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Instruction *</Label>
                       <div className="relative">
-                        <textarea
+                        <RichTextEditor
+                          header={false}
+                          initialValue={group.instruction}
+                          onChange={(e) => updateGroupField(gIndex, 'instruction', e)}
+                        />
+                        {/* <textarea
                           value={group.instruction}
                           onChange={(e) => updateGroupField(gIndex, 'instruction', e.target.value)}
                           rows={4}
                           className="w-full px-4 py-2 rounded-xl border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-800 dark:text-gray-200 shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 resize-none"
-                        />
+                        /> */}
                         {errors[`group_${gIndex}_instruction`] && <p className="text-red-500 text-xs mt-1 flex items-center gap-1"><svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20"><path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd"></path></svg>{errors[`group_${gIndex}_instruction`]}</p>}
                       </div>
                     </div>
@@ -973,7 +990,7 @@ export default function QuestionForm({
                         </div>
                       </div>
 
-                      <div>
+                      {!needsNoCorrectAnswer(group.type) && <div>
                         <Label className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Common Options</Label>
                         <div className="relative">
                           <Input
@@ -983,7 +1000,7 @@ export default function QuestionForm({
                             className="w-full px-4 py-2 rounded-xl border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-800 dark:text-gray-200 shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200"
                           />
                         </div>
-                      </div>
+                      </div>}
                     </div>
 
                     <div className="mb-6">
@@ -1043,7 +1060,8 @@ export default function QuestionForm({
                                       className="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-800 dark:text-gray-200"
                                     />
                                   </div>
-                                  <div className="flex items-end">
+                                  <div className="flex flex-col items-end justify-between">
+
                                     <label className="flex items-center gap-2 cursor-pointer">
                                       <input
                                         type="checkbox"
@@ -1053,6 +1071,12 @@ export default function QuestionForm({
                                       />
                                       <span className="text-xs font-medium text-gray-700 dark:text-gray-300">Correct</span>
                                     </label>
+
+                                    <button
+                                      type="button"
+                                      onClick={() => removeOptionFromGroupQuestion(gIndex, qIndex, oIndex)}
+                                      className="text-red-600 dark:text-red-400 hover:text-red-700 dark:hover:text-red-300 transition-colors duration-200"
+                                    ><Trash2 className='h-4 w-4'/></button>
                                   </div>
                                 </div>
                               ))}
@@ -1069,7 +1093,7 @@ export default function QuestionForm({
                             </div>
                           )}
 
-                          <div className="mb-4">
+                          {!needsNoCorrectAnswer(group.type) && <div className="mb-4">
                             <Label className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Correct Answer</Label>
                             <Input
                               placeholder="Enter the correct answer"
@@ -1077,7 +1101,7 @@ export default function QuestionForm({
                               onChange={(e) => updateGroupQuestion(gIndex, qIndex, 'correctAnswer', e.target.value)}
                               className="w-full px-4 py-2 rounded-xl border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-800 dark:text-gray-200 shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200"
                             />
-                          </div>
+                          </div>}
                         </div>
                       ))}
 

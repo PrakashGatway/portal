@@ -757,6 +757,7 @@ export default function PteExamPage() {
               isNextDisabled={isNextDisabled}
               goToQuestion={goToQuestion}
               goNextQuestion={goNextQuestion}
+               isLastSection={isLastSection}
             />
           )}
 

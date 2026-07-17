@@ -345,15 +345,6 @@ const FullLengthTestPage: React.FC = () => {
 
     const [currentQuestionId, setCurrentQuestionId] = useState<string>("");
 
-
-
-
-
-
-
-
-
-
     const [currentTime, setCurrentTime] = useState(0);
     const [audioDuration, setAudioDuration] = useState(0);
 
@@ -466,37 +457,6 @@ const FullLengthTestPage: React.FC = () => {
         }
     };
 
-    // ---------- Speaking recording ----------
-    const startRecording = async () => {
-        try {
-            const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-            const mediaRecorder = new MediaRecorder(stream);
-            mediaRecorderRef.current = mediaRecorder;
-            const chunks: BlobPart[] = [];
-
-            mediaRecorder.ondataavailable = (e) => {
-                chunks.push(e.data);
-            };
-
-            mediaRecorder.onstop = async () => {
-                const blob = new Blob(chunks, { type: "audio/webm" });
-                const url = URL.createObjectURL(blob);
-                setRecordedUrl(url);
-            };
-
-            mediaRecorder.start();
-            setRecording(true);
-        } catch (e) {
-            console.error("Unable to access microphone", e);
-            setGlobalError("Could not access microphone. Check permissions.");
-        }
-    };
-
-    const stopRecording = () => {
-        mediaRecorderRef.current?.stop();
-        setRecording(false);
-    };
-
     // ---------- Load / resume test ----------
     const fetchOrStartTest = async () => {
         if (!testSeriesId) return;
@@ -584,7 +544,7 @@ const FullLengthTestPage: React.FC = () => {
         fixedUrl = fixedUrl.replace(/\/\//g, '/');
 
 
-        const baseUrl = 'https://uat.gatewayabroadeducations.com';
+        const baseUrl = 'http://localhost:5000';
 
 
         if (fixedUrl.startsWith('/')) {
@@ -1474,7 +1434,7 @@ const FullLengthTestPage: React.FC = () => {
         }
 
         // Matching Features
-        if (questionType === "matching_features" && commonOptions) {
+        if ((questionType === "matching_features" || questionType === "matching_headings") && commonOptions) {
             const optionsArray = typeof commonOptions === 'string'
                 ? commonOptions.split(',').map(opt => opt.trim())
                 : commonOptions;
@@ -2607,9 +2567,9 @@ const FullLengthTestPage: React.FC = () => {
                                             </div>
                                         </div>
 
-                                        {!showWritingLayout && (
+                                        {!currentQuestion?.isQuestionGroup && !showWritingLayout && (
                                             <div className="mt-4 rounded-xl bg-blue-50 p-4 dark:bg-blue-900/20">
-                                                <p className="text-sm text-blue-800 dark:text-blue-200"
+                                                <span className="text-sm text-blue-800 dark:text-blue-200"
                                                     dangerouslySetInnerHTML={{
                                                         __html: currentQuestion.content.instruction
                                                     }}
@@ -2654,9 +2614,8 @@ const FullLengthTestPage: React.FC = () => {
                                                     >
 
                                                         {group.instruction && (
-                                                            <p className="mb-4 text-lg text-gray-600 dark:text-gray-400">
-                                                                {group.instruction}
-                                                            </p>
+                                                            <span className="mb-4 text-lg text-gray-600 dark:text-gray-400"
+                                                                dangerouslySetInnerHTML={{ __html: group.instruction }} />
                                                         )}
                                                         <div className="space-y-4">
                                                             {group.questions.map((sub, subIndex) => {
