@@ -753,21 +753,6 @@ const ContentCard = ({ content, onView, onEdit, onDelete }: any) => {
     let navigate = useNavigate();
     const [isUploadModalOpen, setIsUploadModalOpen] = useState(false);
 
-    const getContentTypeIcon = (type) => {
-        switch (type) {
-            case 'LiveClasses':
-                return <Video className="mt-1 h-5 w-5 text-red-500" />;
-            case 'RecordedClasses':
-                return <Play className="mt-1 h-5 w-5 text-blue-500" />;
-            case 'Tests':
-                return <Clipboard className="mt-1 h-5 w-5 text-green-500" />;
-            case 'StudyMaterials':
-                return <FileText className="mt-1 h-5 w-5 text-yellow-500" />;
-            default:
-                return <FileText className="mt-1 h-5 w-5 text-gray-500" />;
-        }
-    };
-
     const getContentTypeLabel = (type) => {
         switch (type) {
             case 'LiveClasses':
@@ -784,121 +769,229 @@ const ContentCard = ({ content, onView, onEdit, onDelete }: any) => {
     };
 
     return (
-        <div className="relative border border-gray-200 dark:border-gray-700 rounded-lg shadow-sm overflow-hidden bg-white dark:bg-gray-800 hover:shadow-md transition-shadow duration-200">
-            <div className="relative">
-                <img
-                    className="h-36 w-full object-cover  transition-all duration-300"
-                    src={content.thumbnailPic ? `${ImageBaseUrl}/${content?.thumbnailPic}` : "https://www.gatewayabroadeducations.com/img/counselling-session.svg"}
-                    alt={content.title || "Content thumbnail"}
-                />
-                {content.__t === "RecordedClasses" && content.video?.publicId && (
-                    <button
-                        onClick={() =>
-                            navigate(
-                                `/class/${content._id}/${content.courseInfo?._id}?module=${content.module}`
-                            )
-                        }
-                        className="absolute inset-0 flex items-center justify-center bg-black/20 bg-opacity-30 opacity-100 hover:opacity-100 transition-opacity"
-                        aria-label="Play Recorded Class"
-                    >
-                        <Play className="h-12 w-12 text-white" />
-                    </button>
+        <>
+            <div
+                className="
+      group
+      bg-white dark:bg-gray-800
+      overflow-hidden
+      border border-gray-200 dark:border-gray-700
+      shadow-md
+      hover:shadow-2xl
+      hover:-translate-y-1
+      transition-all
+      duration-300
+      flex
+      flex-col
+      "
+            >
+                {/* IMAGE */}
+                {content.__t !== "StudyMaterials" && (
+                    <div className="relative h-36 overflow-hidden">
+                        <img
+                            src={
+                                content.thumbnailPic
+                                    ? `${ImageBaseUrl}/${content.thumbnailPic}`
+                                    : "https://www.gatewayabroadeducations.com/img/counselling-session.svg"
+                            }
+                            alt={content.title}
+                            className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
+                        />
+
+                        <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/10 to-transparent" />
+
+                        {/* Status */}
+                        <span className="absolute top-0 right-0 rounded-bl-2xl text-white bg-black backdrop-blur px-3 py-1.5 text-sm font-semibold capitalize shadow">
+                            {content.status}
+                        </span>
+
+                        {/* Content Type */}
+                        <div className="absolute bottom-0 left-0 flex items-center gap-2 rounded-tr-2xl bg-black backdrop-blur px-3 py-1.5 text-xs shadow-xl">
+                            <span className=" font-semibold text-gray-100">
+                                {getContentTypeLabel(content.__t)}
+                            </span>
+                        </div>
+
+                        {/* Play Button */}
+                        {content.__t === "RecordedClasses" &&
+                            content.video?.publicId && (
+                                <button
+                                    onClick={() =>
+                                        navigate(
+                                            `/class/${content._id}/${content.courseInfo?._id}?module=${content.module}`
+                                        )
+                                    }
+                                    className="
+                absolute inset-0
+                flex items-center justify-center
+                opacity-0 group-hover:opacity-100
+                transition
+                "
+                                >
+                                    <div className="bg-white rounded-full p-4 shadow-xl">
+                                        <Play className="w-8 h-8 text-gray-600 fill-gray-600" />
+                                    </div>
+                                </button>
+                            )}
+
+                        {content.__t === "LiveClasses" && (
+                            <button
+                                onClick={() =>
+                                    navigate(
+                                        `/class/${content._id}/${content.courseInfo?._id}?module=${content.module}`
+                                    )
+                                }
+                                className="
+              absolute inset-0
+              flex items-center justify-center
+              opacity-0 group-hover:opacity-100
+              transition
+              "
+                            >
+                                <div className="bg-red-500 rounded-full p-4 shadow-xl">
+                                    <Radio className="w-8 h-8 text-white" />
+                                </div>
+                            </button>
+                        )}
+                    </div>
                 )}
-                {content.__t === "LiveClasses" && content && (
-                    <button
-                        onClick={() =>
-                            navigate(
-                                `/class/${content._id}/${content.courseInfo?._id}?module=${content.module}`
-                            )
-                        }
-                        className="absolute inset-0 flex items-center justify-center bg-black/20 bg-opacity-30 opacity-100 hover:opacity-100 transition-opacity"
-                        aria-label="Play Recorded Class"
-                    >
-                        <Radio className="h-12 w-12 text-white" />
-                    </button>
+
+                {content.__t == "StudyMaterials" && (
+                    <div className="relative h-8 overflow-hidden">
+                        <span className="absolute top-0 right-0 rounded-bl-2xl text-white bg-black backdrop-blur px-4 py-1.5 text-xs font-semibold capitalize shadow">
+                            {content.status}
+                        </span>
+
+                        {/* Content Type */}
+                        <div className="absolute top-0 left-0 flex items-center gap-2 rounded-br-2xl bg-black backdrop-blur px-4 py-1.5 text-xs shadow-xl">
+                            <span className=" font-semibold text-gray-100">
+                                {getContentTypeLabel(content.__t)}
+                            </span>
+                        </div>
+                    </div>
                 )}
-            </div>
-            <div className="p-4 py-2">
-                <div className="flex justify-between items-start">
-                    <div className="flex items-start gap-2">
-                        {getContentTypeIcon(content.__t)}
-                        <h3 className="text-base font-semibold text-gray-800 dark:text-white">
-                            {content.title}
+
+                {/* BODY */}
+                <div className="flex-1 p-3 pb-1">
+                    <div className="flex justify-between items-start gap-3">
+                        <h3 className="font-bold text-base text-gray-900 dark:text-white line-clamp-2">
+                            {content.order}. {content.title}
                         </h3>
                     </div>
-                    <span className={`absolute right-2 top-2 items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${content.status === 'published'
-                        ? "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200"
-                        : content.status === 'draft'
-                            ? "bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200"
-                            : content.status === 'archived'
-                                ? "bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-200"
-                                : "bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200"
-                        }`}>
-                        {content.status.toUpperCase()}
-                    </span>
+
+                    <p className="mt-1 text-sm text-gray-600 font-medium">
+                        {content.courseInfo?.title || "No Course"}
+                    </p>
+                    {/* 
+                    <p className="mt-1 text-sm text-gray-600 dark:text-gray-300 line-clamp-1 leading-6">
+                        {content.description || "No description available."}
+                    </p> */}
                 </div>
-                <p className="mt-2 text-sm text-gray-500 dark:text-gray-400">
-                    {content.courseInfo?.title || "N/A"} - {getContentTypeLabel(content.__t)}
-                </p>
-                <p className="mt-2 text-xs text-gray-600 dark:text-gray-300 line-clamp-2">
-                    {content.description || "No description provided."}
-                </p>
-                <div className="mt-4 flex justify-between items-center text-xs text-gray-500 dark:text-gray-400">
-                    <span>Order: {content.order}</span>
+
+                {/* FOOTER */}
+                <div className="p-3">
+                    <div className="flex items-center justify-between">
+
+                        <div className="flex items-center gap-2">
+
+                            {content.__t === "RecordedClasses" &&
+                                !content.video?.publicId && (
+                                    <button
+                                        onClick={() => setIsUploadModalOpen(true)}
+                                        className="
+                  w-10 h-10
+                  rounded-xl
+                  bg-green-100
+                  hover:bg-green-500
+                  text-green-600
+                  hover:text-white
+                  transition
+                  flex items-center justify-center
+                  "
+                                        title="Upload Video"
+                                    >
+                                        <Upload size={18} />
+                                    </button>
+                                )}
+
+                            <button
+                                onClick={() => onView(content)}
+                                className="
+              w-10 h-10
+              rounded-xl
+              bg-indigo-100
+              hover:bg-indigo-600
+              text-indigo-600
+              hover:text-white
+              transition
+              flex items-center justify-center
+              "
+                            >
+                                <Eye size={18} />
+                            </button>
+
+                            <button
+                                onClick={onEdit}
+                                className="
+              w-10 h-10
+              rounded-xl
+              bg-blue-100
+              hover:bg-blue-600
+              text-blue-600
+              hover:text-white
+              transition
+              flex items-center justify-center
+              "
+                            >
+                                <Pencil size={18} />
+                            </button>
+
+                            <button
+                                onClick={onDelete}
+                                className="
+              w-10 h-10
+              rounded-xl
+              bg-red-100
+              hover:bg-red-600
+              text-red-600
+              hover:text-white
+              transition
+              flex items-center justify-center
+              "
+                            >
+                                <Trash2 size={18} />
+                            </button>
+
+                        </div>
+                    </div>
                 </div>
             </div>
-            <div className="bg-gray-50 dark:bg-gray-700 px-4 py-1 flex justify-end space-x-2">
-                {content.__t === 'RecordedClasses' && !content.video?.publicId && (
-                    <button
-                        onClick={() => setIsUploadModalOpen(true)}
-                        className="p-2 text-gray-500 hover:text-green-600 dark:text-gray-400 dark:hover:text-green-400 rounded-full hover:bg-gray-100 dark:hover:bg-gray-600"
-                        aria-label="Upload Video"
-                        title="Upload Video"
-                    >
-                        <Upload className="h-4 w-4" />
-                    </button>
-                )}
 
-
-                <button
-                    onClick={() => onView(content)}
-                    className="p-2 text-gray-500 hover:text-indigo-600 dark:text-gray-400 dark:hover:text-indigo-400 rounded-full hover:bg-gray-100 dark:hover:bg-gray-600"
-                    aria-label="View"
-                >
-                    <Eye className="h-4 w-4" />
-                </button>
-                <button
-                    onClick={onEdit}
-                    className="p-2 text-gray-500 hover:text-blue-600 dark:text-gray-400 dark:hover:text-blue-400 rounded-full hover:bg-gray-100 dark:hover:bg-gray-600"
-                    aria-label="Edit"
-                >
-                    <Pencil className="h-4 w-4" />
-                </button>
-                <button
-                    onClick={onDelete}
-                    className="p-2 text-gray-500 hover:text-red-600 dark:text-gray-400 dark:hover:text-red-400 rounded-full hover:bg-gray-100 dark:hover:bg-gray-600"
-                    aria-label="Delete"
-                >
-                    <Trash2 className="h-4 w-4" />
-                </button>
-            </div>
-            {content.__t === 'RecordedClasses' && (
+            {content.__t === "RecordedClasses" && (
                 <RecordedVideoUploadModal
                     isOpen={isUploadModalOpen}
                     onClose={() => setIsUploadModalOpen(false)}
                     content={content}
                     onUploadComplete={async (data) => {
                         try {
-                            await api.put(`/content/${content._id}`, { ...content, video: { url: data.url, duration: data.duration, publicId: data.vimeoId } });
-                            setIsUploadModalOpen(false)
+                            await api.put(`/content/${content._id}`, {
+                                ...content,
+                                video: {
+                                    url: data.url,
+                                    duration: data.duration,
+                                    publicId: data.vimeoId,
+                                },
+                            });
+
+                            setIsUploadModalOpen(false);
                             toast.success("Content updated successfully");
-                        } catch (error) {
-                            toast.error(error.message || "Error to update information")
+                        } catch (error: any) {
+                            toast.error(error.message || "Error updating content");
                         }
                     }}
                 />
             )}
-        </div>
+        </>
     );
 };
 
@@ -918,6 +1011,11 @@ const ContentForm = ({ content = null, onSave, onCancel, courses, type, instruct
         isFree: false,
         tags: [""],
         __t: type || "", // Default content type
+        isDownloadable: false,
+        version: "1.0",
+        textContent: "",
+        pages: 0,
+        externalLink: "",
         scheduledStart: "",
         scheduledEnd: "",
         maxParticipants: 100,
@@ -928,19 +1026,7 @@ const ContentForm = ({ content = null, onSave, onCancel, courses, type, instruct
         fileUrl: "",
         meetingId: ''
     }) as any;
-    type FormErrors = {
-        title?: string;
-        course?: string;
-        instructor?: string;
-        order?: string;
-        scheduledStart?: string;
-        scheduledEnd?: string;
-        videoUrl?: string;
-        videoDuration?: string;
-        fileUrl?: string;
-        [key: string]: string | undefined;
-    };
-    const [errors, setErrors] = useState<FormErrors>({});
+    const [errors, setErrors] = useState<any>({});
 
     useEffect(() => {
         if (content && courses) {
@@ -956,6 +1042,11 @@ const ContentForm = ({ content = null, onSave, onCancel, courses, type, instruct
                 isFree: content.isFree || false,
                 tags: content.tags?.length ? [...content.tags] : [""],
                 __t: content.__t || "LiveClasses",
+                isDownloadable: content.isDownloadable !== undefined ? content.isDownloadable : true,
+                version: content.version || "1.0",
+                textContent: content.content?.text || "",
+                pages: content.content?.pages || 0,
+                externalLink: content.externalLink || "",
                 scheduledStart: content.scheduledStart ? moment(content.scheduledStart).format("YYYY-MM-DDTHH:mm") : "",
                 scheduledEnd: content.scheduledEnd ? moment(content.scheduledEnd).format("YYYY-MM-DDTHH:mm") : "",
                 maxParticipants: content.maxParticipants || 100,
@@ -1060,18 +1151,20 @@ const ContentForm = ({ content = null, onSave, onCancel, courses, type, instruct
         const newErrors = {} as any;
         if (!formData.title.trim()) newErrors.title = 'Title is required';
         if (!formData.course) newErrors.course = 'Course is required';
-        if (!formData.instructor) newErrors.instructor = 'Instructor is required';
-        if (!formData.thumbnailPic && !thumbnailFile) newErrors.thumbnailPic = 'Thumbnail is required';
         if (formData.__t === 'LiveClasses') {
+            if (!formData.thumbnailPic && !thumbnailFile) newErrors.thumbnailPic = 'Thumbnail is required';
+            if (!formData.instructor) newErrors.instructor = 'Instructor is required';
             if (!formData.scheduledStart) newErrors.scheduledStart = 'Scheduled start time is required';
             if (!formData.scheduledEnd) newErrors.scheduledEnd = 'Scheduled end time is required';
         } else if (formData.__t === 'RecordedClasses') {
-
+            if (!formData.thumbnailPic && !thumbnailFile) newErrors.thumbnailPic = 'Thumbnail is required';
+            if (!formData.instructor) newErrors.instructor = 'Instructor is required';
         } else if (formData.__t === 'StudyMaterials') {
             if (!formData.fileUrl.trim()) newErrors.fileUrl = 'File URL is required';
+            if (!formData.materialType) {
+                newErrors.materialType = 'Material type is required';
+            }
         }
-
-
         setErrors(newErrors);
         return Object.keys(newErrors).length === 0;
     };
@@ -1106,6 +1199,13 @@ const ContentForm = ({ content = null, onSave, onCancel, courses, type, instruct
                 payload.file = {
                     url: formData.fileUrl
                 };
+                payload.isDownloadable = formData.isDownloadable === "true" || formData.isDownloadable === true;
+                payload.version = formData.version || "1.0";
+                payload.content = {
+                    text: formData.textContent || "",
+                    pages: parseInt(formData.pages, 10) || 0
+                };
+                payload.externalLink = formData.externalLink || "";
             }
             let finalThumbnailUrl = formData.thumbnailPic;
 
@@ -1133,7 +1233,7 @@ const ContentForm = ({ content = null, onSave, onCancel, courses, type, instruct
                 await api.put(`/content/${content._id}`, { ...payload, thumbnailPic: finalThumbnailUrl });
                 toast.success("Content updated successfully");
             } else {
-                await api.post(`/content/${type == "LiveClasses" ? "liveclass" : type == "RecordedClasses" ? "recordedclass" : type == "Tests" ? "test" : "study-material"}`, { ...payload, thumbnailPic: finalThumbnailUrl });
+                await api.post(`/content/${type == "LiveClasses" ? "liveclass" : type == "RecordedClasses" ? "recordedclass" : type == "Tests" ? "test" : "studymaterial"}`, { ...payload, thumbnailPic: finalThumbnailUrl });
                 toast.success("Content created successfully");
             }
             onSave();
@@ -1156,7 +1256,7 @@ const ContentForm = ({ content = null, onSave, onCancel, courses, type, instruct
                     />
                     {errors.title && <p className="mt-1 text-sm text-red-600">{errors.title}</p>}
                 </div>
-                <div className="md:col-span-2">
+                {formData.__t != 'StudyMaterials' && <div className="md:col-span-2">
                     <Label>Thumbnail Picture</Label>
                     <ContentThumbnailDropzone
                         value={{ url: formData.thumbnailPic ? ImageBaseUrl + "/" + formData.thumbnailPic : "" }}
@@ -1164,7 +1264,7 @@ const ContentForm = ({ content = null, onSave, onCancel, courses, type, instruct
                         onRemove={handleThumbnailRemove}
                         error={errors.thumbnailPic}
                     />
-                </div>
+                </div>}
                 {/* <div>
                     <Label>Content Type *</Label>
                     <Select
@@ -1202,7 +1302,7 @@ const ContentForm = ({ content = null, onSave, onCancel, courses, type, instruct
                         onChange={(value) => setFormData(prev => ({ ...prev, module: value }))}
                     />
                 </div>
-                <div>
+                {formData.__t != 'StudyMaterials' && <div>
                     <Label>Instructor *</Label>
                     <Select
                         defaultValue={formData.instructor}
@@ -1215,7 +1315,7 @@ const ContentForm = ({ content = null, onSave, onCancel, courses, type, instruct
                         onChange={(value) => setFormData(prev => ({ ...prev, instructor: value }))}
                     />
                     {errors.instructor && <p className="mt-1 text-sm text-red-600">{errors.instructor}</p>}
-                </div>
+                </div>}
                 <div>
                     <Label>Status</Label>
                     <Select
@@ -1331,7 +1431,7 @@ const ContentForm = ({ content = null, onSave, onCancel, courses, type, instruct
                     <Label>Test Type</Label>
                     <Select
                         name="testType"
-                        value={formData.testType}
+                        defaultValue={formData.testType}
                         options={[
                             { value: "quiz", label: "Quiz" },
                             { value: "assignment", label: "Assignment" },
@@ -1346,15 +1446,13 @@ const ContentForm = ({ content = null, onSave, onCancel, courses, type, instruct
             {formData.__t === 'StudyMaterials' && (
                 <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
                     <div>
-                        <Label>Material Type</Label>
+                        <Label>Material Type *</Label>
                         <Select
-                            name="materialType"
-                            value={formData.materialType}
+                            placeholder="false"
+                            defaultValue={formData.materialType}
                             options={[
                                 { value: "pdf", label: "PDF" },
                                 { value: "document", label: "Document" },
-                                { value: "presentation", label: "Presentation" },
-                                { value: "code", label: "Code" },
                                 { value: "link", label: "Link" },
                                 { value: "image", label: "Image" },
                                 { value: "audio", label: "Audio" }
@@ -1372,6 +1470,60 @@ const ContentForm = ({ content = null, onSave, onCancel, courses, type, instruct
                             placeholder="https://example.com/material.pdf"
                         />
                         {errors.fileUrl && <p className="mt-1 text-sm text-red-600">{errors.fileUrl}</p>}
+                    </div>
+                    <div>
+                        <Label>Is Downloadable</Label>
+                        <select
+                            name="isDownloadable"
+                            value={formData.isDownloadable}
+                            onChange={handleChange}
+                            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-200 focus:border-blue-500 dark:bg-gray-800 dark:border-gray-600 dark:text-white"
+                        >
+                            <option value="true">Yes</option>
+                            <option value="false">No</option>
+                        </select>
+                    </div>
+                    <div>
+                        <Label>Version</Label>
+                        <Input
+                            type="text"
+                            name="version"
+                            value={formData.version || "1.0"}
+                            onChange={handleChange}
+                            placeholder="1.0"
+                        />
+                    </div>
+                    <div className="md:col-span-2">
+                        <Label>Text Content</Label>
+                        <textarea
+                            name="textContent"
+                            value={formData.textContent || ""}
+                            onChange={handleChange}
+                            rows={3}
+                            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-200 focus:border-blue-500 dark:bg-gray-800 dark:border-gray-600 dark:text-white"
+                            placeholder="Enter text content for the study material"
+                        />
+                    </div>
+                    <div>
+                        <Label>Number of Pages</Label>
+                        <Input
+                            type="number"
+                            name="pages"
+                            value={formData.pages || ""}
+                            onChange={handleChange}
+                            placeholder="Enter number of pages"
+                            min="0"
+                        />
+                    </div>
+                    <div>
+                        <Label>External Link</Label>
+                        <Input
+                            type="url"
+                            name="externalLink"
+                            value={formData.externalLink || ""}
+                            onChange={handleChange}
+                            placeholder="https://example.com"
+                        />
                     </div>
                 </div>
             )}

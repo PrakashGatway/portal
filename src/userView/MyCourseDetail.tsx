@@ -336,7 +336,7 @@ export default function CourseDetailPage() {
                                                 {curriculum.map((section, sectionIndex) => (
                                                     <div
                                                         key={section._id}
-                                                        className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 overflow-hidden"
+                                                        className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 overflow-hidden"
                                                     >
                                                         <div className="flex items-center justify-between p-5 bg-gray-50 dark:bg-gray-700/50">
                                                             <h3 className="font-bold text-gray-900 dark:text-white">

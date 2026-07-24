@@ -58,7 +58,9 @@ import {
   UsersRound,
   ArrowBigLeft,
   ChevronRight,
-  ChevronLeft
+  ChevronLeft,
+  SquareStack,
+  FileStack
 } from "lucide-react";
 
 type IconType = React.ElementType;
@@ -84,14 +86,20 @@ const navItems: NavItem[] = [
     ]
   },
   {
+    icon: HelpCircle,
+    name: "Resources",
+    subItems: [
+      { name: "Live Classes", path: "/live-classes", icon: Video },
+      { name: "Recorded Classes", path: "/recorded-classes", icon: PlayCircle },
+      { icon: FolderOpen, name: "Study Materials", path: "/study-materials" }
+    ]
+  },
+  {
     icon: ClipboardCheck,
     name: "Test Series",
     subItems: [
       { name: "Exams", path: "/test/exams", icon: FileCheck },
-      { name: "Sections", path: "/test/sections", icon: Layers },
-      { name: "Questions", path: "/test/questions", icon: HelpCircle },
-      { name: "Tests", path: "/test-manage", icon: ScrollText },
-      { name: "Packages", path: "/test/packages", icon: ShoppingBag }
+      { name: "Sections", path: "/test/sections", icon: Layers }
     ]
   },
   {
@@ -104,14 +112,15 @@ const navItems: NavItem[] = [
     ]
   },
   {
-    icon: Video,
-    name: "Classes",
+    icon: Database,
+    name: "Ielts Bank",
     subItems: [
-      { name: "Live", path: "/live-classes", icon: Video },
-      { name: "Recorded", path: "/recorded-classes", icon: PlayCircle }
+      { name: "Questions", path: "/test/questions", icon: HelpCircle },
+      { name: "Tests", path: "/test-manage", icon: ScrollText },
+      { name: "Packages", path: "/test/packages", icon: ShoppingBag }
     ]
   },
-  { icon: FolderOpen, name: "Resources", path: "/study-materials" },
+
   { icon: UsersRound, name: "Users", path: "/users" },
   { icon: Rocket, name: "Leads", path: "/leads" },
   { icon: Tag, name: "Coupons", path: "/promocodes" },
@@ -138,7 +147,7 @@ const navItemsUser: NavItem[] = [
   { icon: TestTube2, name: "Mock Tests", path: "/tests" },
   { icon: Pencil, name: "Practice Tests", path: "/practice-tests" },
   { icon: Book, name: "Tests Series", path: "/test-series" },
-  { icon: BookOpen, name: "Study Material", path: "/study-material" },
+  { icon: FileStack, name: "Resources", path: "/resources" },
   { icon: GraduationCap, name: "My Courses", path: "/my-courses" },
   { icon: Sparkles, name: "Free Quiz", path: "/Quiz" },
   { icon: Gift, name: "Offers", path: "/offers" },
@@ -287,7 +296,7 @@ const AppSidebar: React.FC = () => {
             {nav.subItems ? (
               <button
                 onClick={() => handleSubmenuToggle(index, menuType)}
-                className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg ransition-all duration-200 ease-out group relative
+                className={`w-full flex items-center gap-3 ${isExpanded || isHovered || isMobileOpen ? 'px-4' : 'px-1'} py-3 rounded-lg ransition-all duration-200 ease-out group relative
                   ${active ? "font-semibold" : "font-medium"}
                   ${active
                     ? "bg-orange-500/10 text-orange-500"
@@ -314,7 +323,7 @@ const AppSidebar: React.FC = () => {
             ) : nav.path ? (
               <Link
                 to={nav.path}
-                className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg transition-all duration-200 ease-out group relative
+                className={`w-full flex items-center gap-3 ${isExpanded || isHovered || isMobileOpen ? 'px-4' : 'px-1'} py-3 rounded-lg transition-all duration-200 ease-out group relative
                   ${isActive(nav.path) ? "font-semibold" : "font-medium"}
                   ${isActive(nav.path)
                     ? "bg-orange-500/10 text-orange-500"
@@ -333,8 +342,7 @@ const AppSidebar: React.FC = () => {
                 ) : (
                   <div className="relative flex flex-col gap-1 items-center justify-center w-full">
                     <Icon className={`w-6 h-6 stroke-[1.7] transition-colors duration-200 ${isActive(nav.path) ? "text-orange-600" : "text-zinc-500 dark:text-zinc-500"}`} />
-
-                    <span className=" text-left font-medium text-[10px] tracking-wide">{nav.name}</span>
+                    <span className=" text-center font-semibold text-[11px]">{nav.name}</span>
                   </div>
                 )}
               </Link>
@@ -459,9 +467,9 @@ const AppSidebar: React.FC = () => {
             aria-label="Toggle Sidebar"
           >
             {isMobileOpen || isExpanded || isHovered ? (
-              <ChevronLeft/>
+              <ChevronLeft />
             ) : (
-              <ChevronRight/>
+              <ChevronRight />
             )}
           </button>
           <nav className="flex-1 flex flex-col gap-5">

@@ -59,6 +59,7 @@ import DailyReport from "./pages/Leads/DailyReport";
 import { Toaster } from "sonner";
 import MockTests from "./tests/mcqtest";
 import JobSelectionsWall from "./userView/Selection";
+import SecureMaterialViewer from "./userView/SecureMaterial";
 
 // Define roles
 export const ROLES = {
@@ -94,16 +95,22 @@ export default function App() {
               <Route path="/coming" element={<ComingSoon />} />
               <Route path="/course" element={<CourseListingPage />} />
               <Route path="/course/:slug" element={<CourseDetailPage />} />
-
               <Route path="/offers" element={<OffersPage />} />
               <Route path="/transactions" element={<TransactionsPage />} />
               <Route path="/referrals" element={<ReferAndEarnPage />} />
               <Route path="/my-courses" element={<MyCoursesPage />} />
+
               <Route path="/courses/:slug" element={<CourseDetailPageee />} />
-              <Route path="/study-material" element={<StudyMaterialPage />} />
+
+              // study material
+              <Route path="/resources" element={<StudyMaterialPage />} />
+              <Route path="/resources/:slug" element={<SecureMaterialViewer />} />
+
+
               <Route path="/class/:contentId/:courseId" element={<VideoPlayerPage />} />
+
               <Route path="/support" element={<SupportPage />} />
-              <Route path="/our-selection" element = {<JobSelectionsWall/>} />
+              <Route path="/our-selection" element={<JobSelectionsWall />} />
 
               <Route path="/test-series" element={<MockTestsPage />} />
               <Route path="/tests" element={<MockTests testType="full_length" />} />

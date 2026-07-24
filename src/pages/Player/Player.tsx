@@ -127,51 +127,6 @@ export default function VideoPlayerPage() {
         setRating(0);
     };
 
-    const getTypeIcon = (type) => {
-        switch (type) {
-            case "Video":
-            case "RecordedClasses": // Map RecordedClasses to Video icon
-                return <Play className="w-4 h-4" />;
-            case "LiveClasses": // Map RecordedClasses to Video icon
-                return <RadioIcon className="w-4 h-4" />;
-            case "PDF":
-            case "StudyMaterials": // Map StudyMaterials to PDF icon
-                return <FileText className="w-4 h-4" />;
-            case "Quiz":
-            case "Tests": // Map Tests to Quiz/Clock icon
-                return <Clock className="w-4 h-4" />;
-            default:
-                return <FileText className="w-4 h-4" />;
-        }
-    };
-
-    const getTypeColorClasses = (type) => {
-        switch (type) {
-            case "Video":
-            case "RecordedClasses":
-                return "text-blue-700 bg-blue-100 dark:text-blue-300 dark:bg-blue-900/30";
-            case "PDF":
-            case "StudyMaterials":
-                return "text-red-700 bg-red-100 dark:text-red-300 dark:bg-red-900/30";
-            case "Quiz":
-            case "Tests":
-                return "text-amber-700 bg-amber-100 dark:text-amber-300 dark:bg-amber-900/30";
-            default:
-                return "text-gray-700 bg-gray-100 dark:text-gray-300 dark:bg-gray-700";
-        }
-    };
-
-    const getStatusBadgeClasses = (status) => {
-        const displayStatus = status === 'scheduled' ? 'pending' : status;
-
-        if (displayStatus === "completed") {
-            return "bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400";
-        } else if (displayStatus === "published") {
-            return "bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-400";
-        }
-        return "bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-300";
-    };
-
     const handleFeedbackChange = (id) => {
         setFeedbackOptions((prev) =>
             prev.map((option) =>
@@ -236,12 +191,12 @@ export default function VideoPlayerPage() {
     ];
 
     return (
-        <div className="flex h-[85vh] bg-gray-50 dark:bg-gray-900 text-gray-900 dark:text-gray-100">
+        <div className="flex h-[85vh] text-gray-900 dark:text-gray-100">
             <div
                 className={`${isSidebarOpen ? "w-80" : "w-0 opacity-0"
-                    } transition-all rounded-xl duration-300 ease-in-out flex flex-col bg-white dark:bg-gray-900 overflow-hidden`}
+                    } transition-all rounded-2xl border duration-300 ease-in-out flex flex-col bg-white dark:bg-gray-900 overflow-hidden`}
             >
-                <div className="p-4 py-1 flex items-center justify-between border-b border-gray-200 dark:border-gray-700 bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm">
+                <div className="p-4 py-3 flex items-center justify-between border-b border-gray-200 dark:border-gray-700 backdrop-blur-sm">
                     <h2 className="text-lg font-semibold text-gray-800 dark:text-gray-200 truncate">
                         {moduleDetails.title || "Module"}
                     </h2>
@@ -249,7 +204,7 @@ export default function VideoPlayerPage() {
                         variant="ghost"
                         size="icon"
                         onClick={() => setIsSidebarOpen(!isSidebarOpen)}
-                        className="h-8 w-8 text-gray-500 hover:bg-gray-100 dark:text-gray-400 dark:hover:bg-gray-700"
+                        className="h-8 w-8 border shadow-xl !rounded-full text-gray-500 hover:bg-gray-100 dark:text-gray-400 dark:hover:bg-gray-700"
                     >
                         <ArrowLeft className={`w-4 h-4 ${isSidebarOpen ? '' : 'rotate-180'}`} /> {/* Rotate icon based on state */}
                     </Button>
@@ -273,11 +228,6 @@ export default function VideoPlayerPage() {
                                 >
                                     <div className="flex items-center gap-3">
                                         <div className="relative flex-shrink-0">
-                                            {/* <div className={`w-8 h-8 rounded-lg flex items-center justify-center text-white text-sm
-                            ${getTypeColorClasses(item.type)}`}
-                                            >
-                                                {getTypeIcon(item.type)}
-                                            </div> */}
                                             {item.status === "completed" && (
                                                 <div className="absolute -top-1 -right-1 w-3 h-3 bg-green-500 rounded-full border-2 border-white dark:border-gray-800" />
                                             )}
@@ -288,7 +238,7 @@ export default function VideoPlayerPage() {
 
                                         <div className="flex-1 min-w-0">
                                             <div className="flex items-center justify-between gap-2 mb-1">
-                                                <h3 className={`font-medium text-sm truncate
+                                                <h3 className={`font-semibold text-sm 
                                 ${item.id === contentId
                                                         ? "text-blue-900 dark:text-blue-100 font-semibold"
                                                         : "text-gray-900 dark:text-white"
@@ -296,16 +246,11 @@ export default function VideoPlayerPage() {
                                                 >
                                                     {item.title}
                                                 </h3>
-
                                             </div>
 
                                             <div className="flex items-center justify-between">
                                                 <div className="flex items-center gap-2">
-                                                    {/* <span className={`text-xs px-2 py-1 rounded-full font-medium
-                                    ${getStatusBadgeClasses(item.status)}`}
-                                                    >
-                                                        {item.status.charAt(0).toUpperCase() + item.status.slice(1).replace('-', ' ')}
-                                                    </span> */}
+
                                                     <span className="text-xs text-gray-500 dark:text-gray-400 whitespace-nowrap flex-shrink-0">
                                                         {item.duration}
                                                     </span>
@@ -364,7 +309,7 @@ export default function VideoPlayerPage() {
                     variant="ghost"
                     size="icon"
                     onClick={() => setIsSidebarOpen(true)}
-                    className="h-8 w-8 self-start mt-4 ml-2 text-gray-500 hover:bg-gray-100 dark:text-gray-400 dark:hover:bg-gray-700 z-10"
+                    className="h-8 w-8 border shadow-xl !rounded-full bg-gray-500 text-white mt-4 ml-2 text-gray-500 hover:bg-gray-400 dark:text-gray-400 dark:hover:bg-gray-700 z-10"
                 >
                     <ArrowLeft className="w-4 h-4 rotate-180" />
                 </Button>
@@ -372,7 +317,7 @@ export default function VideoPlayerPage() {
 
             <div className="flex-1 flex flex-col">
                 <div className="flex-1 p-4 py-1 overflow-y-auto">
-                    <div className="max-w-5xl mx-auto">
+                    <div className="max-w-5xl mx-auto bg-white border overflow-hidden rounded-2xl">
                         {contentDetails.contentType == "RecordedClasses" ?
 
                             <div className="relative w-full" style={{ paddingBottom: "57.25%" }}>
@@ -403,16 +348,14 @@ export default function VideoPlayerPage() {
                                 )}
                             </div>
                         }
-
-                        {/* Video Info Section */}
-                        <div className="bg-white dark:bg-gray-800 p-5 py-2 rounded-xl border border-gray-200 dark:border-gray-700 shadow-sm">
+                        <div className="px-4 py-2 pb-4">
                             <div className="flex flex-col lg:flex-row lg:items-start lg:justify-between gap-3">
                                 <div className="flex-1 space-y-4">
                                     <div>
-                                        <h2 className="text-lg mt-2 sm:text-lg font-bold text-gray-800 dark:text-gray-100 mb-2">
+                                        <h2 className="text-xl mt-1 sm:text-lg font-bold text-gray-800 dark:text-gray-100 mb-1">
                                             {contentDetails.title}
                                         </h2>
-                                        <p className="text-gray-600 dark:text-gray-400">
+                                        <p className="text-gray-600 text-sm dark:text-gray-400">
                                             {contentDetails.description}
                                         </p>
                                     </div>
