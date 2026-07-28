@@ -67,7 +67,7 @@ export const MockTestCard = ({ test }: { test: TestTemplate }) => {
             else if (examName.includes("gre")) navigate(`/gre/tests/${test._id}`);
             else navigate(`/mcq/tests/${test._id}`);
         } else {
-            navigate(`/test-details/${test._id}`);
+            navigate(`/checkout/${test?._id}`, { state: { testSeries: true } })
         }
     };
 
@@ -183,7 +183,6 @@ export default function MockTests({testType}: any) {
 
                 const testsRes = await api.get("/mcu/test", {
                     params: {
-                        isActive: true,
                         limit: 100,
                         category: user?.category?._id,
                         testType: testType || ""

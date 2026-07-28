@@ -1,14 +1,13 @@
 import React, { useEffect, useState } from 'react';
-import { useParams } from 'react-router';
+import { useNavigate, useParams } from 'react-router';
 import { Viewer, Worker } from '@react-pdf-viewer/core';
 import { toolbarPlugin } from '@react-pdf-viewer/toolbar';
-import { FileText, Image as ImageIcon, Music, Link as LinkIcon, ExternalLink, AlertTriangle, Lock } from 'lucide-react';
+import { FileText, Image as ImageIcon, Music, Link as LinkIcon, ExternalLink, AlertTriangle, Lock, ChevronLeft } from 'lucide-react';
 import api from '../axiosInstance'; // Adjust this import path to match your project structure
 
 // Import PDF Viewer styles
 import '@react-pdf-viewer/core/lib/styles/index.css';
 import '@react-pdf-viewer/toolbar/lib/styles/index.css';
-import { Loader } from '../components/fullScreeLoader';
 
 const SecureMaterialViewer = ({ material: initialMaterial }) => {
   const { slug } = useParams();
@@ -16,6 +15,7 @@ const SecureMaterialViewer = ({ material: initialMaterial }) => {
   const [loading, setLoading] = useState(!initialMaterial);
   const [error, setError] = useState(null);
   const [isClient, setIsClient] = useState(false);
+  let navigate = useNavigate();
 
   useEffect(() => {
     setIsClient(true);
@@ -53,7 +53,7 @@ const SecureMaterialViewer = ({ material: initialMaterial }) => {
 
   if (!isClient || loading) {
     return (
-      <div className="flex animate-pulse animate-bounce p-4 items-start justify-center h-[85vh] rounded-xl">
+      <div className="flex animate-pulse animate-bounce p-4 mx-auto max-w-7xl items-start justify-center h-[85vh] rounded-xl">
         {/* Header */}
         <div className="w-full animate-pulse flex flex-col gap-4">
           <div className="h-40 w-full rounded-xl bg-gray-200 dark:bg-gray-700" />
@@ -75,7 +75,7 @@ const SecureMaterialViewer = ({ material: initialMaterial }) => {
     );
   }
 
-  const fileUrl = 'https://uat.gatewayabroadeducations.com/uploads/g.pdf';
+  const fileUrl = material.file?.url || material.externalLink;
   const watermarkText = material.instructor?.email || material.course?.title || 'Confidential';
 
   const renderContent = () => {
@@ -91,21 +91,22 @@ const SecureMaterialViewer = ({ material: initialMaterial }) => {
             <img
               src={fileUrl}
               alt={material.title}
-              className="max-w-full max-h-[80vh] object-contain shadow-lg rounded-lg select-none"
+              className="max-w-full object-contain shadow-lg select-none"
               draggable="false"
-              onContextMenu={(e) => e.preventDefault()} // Prevent right-click save
+              onContextMenu={(e) => e.preventDefault()}
             />
           </div>
         );
 
       case 'audio':
         return (
-          <div className="relative w-full h-full flex flex-col items-center justify-center bg-gray-50 dark:bg-gray-900 p-8">
+          <div className="relative w-full h-full flex flex-col items-center justify-center bg-gray-50 dark:bg-gray-900 ">
             <Watermark text={watermarkText} />
-            <div className="bg-white dark:bg-gray-800 p-8 rounded-2xl shadow-xl w-full max-w-2xl text-center z-10 border border-gray-200 dark:border-gray-700">
-              <Music className="h-16 w-16 text-orange-500 mx-auto mb-4" />
+            <div className="bg-white dark:bg-gray-800 p-8 rounded-2xl w-full h-full">
+              <Music className="h-16 w-16 text-orange-500 mb-4" />
               <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-2">{material.title}</h3>
-              <p className="text-gray-500 dark:text-gray-400 mb-6">Secure Audio Player</p>
+               <p className="text-gray-500 font-medium dark:text-gray-400 mb-6">{material.description}</p>
+              {/* <p className="text-gray-500 dark:text-gray-400 mb-6">Secure Audio Player</p> */}
               <audio
                 controls
                 src={fileUrl}
@@ -120,19 +121,22 @@ const SecureMaterialViewer = ({ material: initialMaterial }) => {
 
       case 'link':
         return (
-          <div className="relative w-full h-full flex items-center justify-center p-8">
-            <Watermark text={watermarkText} />
-            <div className="bg-white dark:bg-gray-800 p-8 rounded-2xl shadow-xl w-full max-w-2xl text-center z-10 border border-gray-200 dark:border-gray-700">
-              <LinkIcon className="h-16 w-16 text-blue-500 mx-auto mb-4" />
+          <div className="relative flex items-center justify-center bg-white h-full w-full">
+            {/* <Watermark text={watermarkText} /> */}
+            <div className=" text-center z-10">
+              <LinkIcon className="h-16 w-16 text-orange-500 mx-auto mb-4" />
               <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-2">{material.title}</h3>
-              <p className="text-gray-500 dark:text-gray-400 mb-6">
+              <p className="text-base mb-3 text-gray-600 font-medium dark:text-gray-400 capitalize">
+                {material.description || 'General'}
+              </p>
+              <p className="text-gray-500 text-sm dark:text-gray-400 mb-6">
                 This is an external resource. Click below to open it.
               </p>
               <a
                 href={fileUrl}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="inline-flex items-center gap-2 px-6 py-3 bg-orange-500 text-white rounded-lg font-medium hover:bg-orange-600 transition-colors"
+                className="inline-flex items-center gap-2 px-6 py-3 bg-orange-500 text-white rounded-3xl font-medium hover:bg-orange-600 transition-colors"
               >
                 Open External Link <ExternalLink className="h-4 w-4" />
               </a>
@@ -161,16 +165,24 @@ const SecureMaterialViewer = ({ material: initialMaterial }) => {
         {/* Header */}
         <div className="p-4 bg-white flex items-center justify-between">
           <div>
-            <h2 className="text-lg font-semibold text-gray-900 dark:text-white">{material.title}</h2>
-            <p className="text-sm text-gray-500 dark:text-gray-400 capitalize">
-              {material.materialType} • {material.course?.title || 'General'}
-            </p>
+            <div className='flex items-start justify-start gap-2'>
+              <button
+                onClick={() => navigate(-1)}
+                className="text-gray-500 rounded-full bg-gray-100 hover:bg-gray-300 mt-1 h-9 w-9 flex items-center justify-center  hover:text-gray-600 dark:text-gray-400 dark:hover:text-gray-300 transition-colors"
+              >
+                <ChevronLeft className="h-5.5 w-5.5" />
+              </button>
+              <div>
+                <h2 className="text-xl font-semibold text-gray-900 dark:text-white">{material.title}</h2>
+                <p className="text-xs text-gray-500 dark:text-gray-400 capitalize">
+                  {material.materialType} • {material.course?.title || 'General'}
+                </p>
+              </div>
+            </div>
           </div>
-
         </div>
-
         {/* Content Area */}
-        <div className="relative" style={{ height: '85vh' }}>
+        <div className="relative" style={{ height: '72vh' }}>
           {renderContent()}
         </div>
       </div>

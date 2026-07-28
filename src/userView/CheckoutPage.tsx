@@ -161,7 +161,6 @@ export default function CheckoutPage() {
                 currentPrice: basePrice
             });
 
-
             const { success, discountAmount, discountType, message } = response.data;
 
             if (success) {
@@ -294,7 +293,7 @@ export default function CheckoutPage() {
 
     return (
         <div className="min-h-screen bg-gradient-to-br from-gray-50 to-blue-50 dark:from-gray-900 dark:to-blue-900/20 transition-all duration-500">
-            <header className="sticky top-0 z-10 bg-white dark:bg-gray-800 shadow-sm border-b border-gray-200 dark:border-gray-700">
+            <header className="sticky top-0 z-10 bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700">
                 <div className="max-w-7xl mx-auto px-4 py-4 flex items-center justify-between">
                     <button
                         onClick={() => navigate(-1)}
@@ -335,10 +334,11 @@ export default function CheckoutPage() {
                                 <div className="flex flex-col lg:flex-row gap-6">
                                     <div className="relative">
                                         <img
-                                            src={course.thumbnail?.url ? `${ImageBaseUrl}/${course.thumbnail.url}` : "/placeholder-course.jpg"}
-                                            alt={course.title}
-                                            className="w-full lg:w-44 h-28 object-cover rounded-xl"
-                                            onError={(e) => { (e.target as HTMLImageElement).src = "/placeholder-course.jpg"; }}
+                                            src={course.thumbnail?.url && `${ImageBaseUrl}/${course.thumbnail.url}`}
+                                            alt={course.title || "Course thumbnail"}
+                                            loading="lazy"
+                                            decoding="async"
+                                            className="w-full h-28 lg:w-44 lg:h-auto lg:aspect-video object-cover rounded-xl shadow-sm transition-transform duration-300 hover:scale-105"
                                         />
                                         {course.mode === 'free' && (
                                             <div className="absolute top-4 left-4 bg-gradient-to-r from-green-500 to-emerald-500 text-white px-3 py-1 rounded-full text-sm font-semibold">
@@ -432,9 +432,10 @@ export default function CheckoutPage() {
                                     <div className="relative">
                                         <img
                                             src={course.thumbnail?.url ? `${ImageBaseUrl}/${course.thumbnail.url}` : "/placeholder-course.jpg"}
-                                            alt={course.title}
-                                            className="w-full lg:w-44 h-28 object-cover rounded-xl"
-                                            onError={(e) => { (e.target as HTMLImageElement).src = "/placeholder-course.jpg"; }}
+                                            alt={course.title || "Course thumbnail"}
+                                            loading="lazy"
+                                            decoding="async"
+                                            className="w-full h-28 lg:w-44 lg:h-auto lg:aspect-video object-cover rounded-xl shadow-sm transition-transform duration-300 hover:scale-105"
                                         />
                                         {course.mode === 'free' && (
                                             <div className="absolute top-4 left-4 bg-gradient-to-r from-green-500 to-emerald-500 text-white px-3 py-1 rounded-full text-sm font-semibold">

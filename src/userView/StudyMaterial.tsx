@@ -202,7 +202,7 @@ const StudyMaterialPage = () => {
         {/* Tabs */}
         <div className="flex flex-wrap gap-2 mb-5">
           {[
-            { id: '', label: 'All' },
+            { id: 'all', label: 'All' },
             { id: "pdf", label: "PDF" },
             { id: "document", label: "Document" },
             { id: "link", label: "Link" },
@@ -263,7 +263,7 @@ const StudyMaterialPage = () => {
           </motion.div>
         ) : (
           <motion.div
-            className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-6 gap-2"
+            className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4"
           >
             <AnimatePresence>
               {materials.map(material => (

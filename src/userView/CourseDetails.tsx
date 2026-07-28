@@ -589,7 +589,7 @@ export default function CourseDetailPage() {
                                                                                 <Button disabled size="sm" variant="outline" className="text-gray-400 cursor-not-allowed">
                                                                                     Locked
                                                                                 </Button>
-                                                                            ) }
+                                                                            )}
                                                                             {/* {item.isPreview && !item.isLocked && (
                                                                                 <Button variant="outline" size="sm" className="text-blue-600 dark:text-blue-400">
                                                                                     Preview
@@ -919,7 +919,7 @@ export default function CourseDetailPage() {
                                                 <div style={{ borderRadius: "0px 0px 12px 15px" }} className="flex-1 f bg-[#FF6A3D] text-center text-white text-3xl font-bold px-4 py-2">
                                                     {formatPrice(finalPrice, course.pricing.currency)}
                                                 </div>
-                                                <button onClick={() => navigate(`/checkout/${slug}`)} style={{ borderRadius: "0px 0px 15px 0px" }} onClick={() => { series?.pricing?.isFree ? "" : navigate(`/checkout/${series?.slug}`, { state: { testSeries: true } }) }} className="flex-1 bg-[#3B3B3B] text-white font-medium py-2 bg-gradient-to-b from-[#545454] via-[#ffffff]/30 to-[#545454] hover:bg-black transition">
+                                                <button style={{ borderRadius: "0px 0px 15px 0px" }} onClick={() => { course?.pricing?.isFree ? "" : navigate(`/checkout/${slug}`) }} className="flex-1 bg-[#3B3B3B] text-white font-medium py-2 bg-gradient-to-b from-[#545454] via-[#ffffff]/30 to-[#545454] hover:bg-black transition">
                                                     Enroll Now
                                                 </button>
                                             </div>

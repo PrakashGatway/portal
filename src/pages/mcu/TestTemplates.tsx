@@ -1,6 +1,6 @@
 // TestTemplateManagementPage.tsx
 import { useEffect, useMemo, useState } from "react";
-import { useForm, useFieldArray, set } from "react-hook-form";
+import { useForm, useFieldArray } from "react-hook-form";
 import {
     BookOpen,
     ChevronLeft,
@@ -15,8 +15,31 @@ import {
     X,
     Tag,
     IndianRupee,
-    UserPlus2Icon,
     Play,
+    Clock,
+    HelpCircle,
+    Layers,
+    ChevronDown,
+    ArrowUpDown,
+    AlertCircle,
+    CheckCircle2,
+    XCircle,
+    BarChart3,
+    Timer,
+    Hash,
+    Bookmark,
+    Star,
+    Zap,
+    Target,
+    Layout,
+    Grid3X3,
+    List,
+    Eye,
+    Copy,
+    MoreHorizontal,
+    Link2,
+    LucideLink2,
+    ArrowUpRight,
 } from "lucide-react";
 import Button from "../../components/ui/button/Button";
 import Input from "../../components/form/input/InputField";
@@ -26,14 +49,23 @@ import { toast } from "react-toastify";
 import api from "../../axiosInstance";
 import { motion, AnimatePresence } from "framer-motion";
 import { useNavigate } from "react-router";
+import {
+    DropdownMenu,
+    DropdownMenuContent,
+    DropdownMenuItem,
+    DropdownMenuTrigger,
+} from "./DropDown";
 
+// Types (keep existing interfaces)
 interface Exam {
     _id: string;
     name: string;
+    sections?: any[];
 }
 interface Section {
     _id: string;
     name: string;
+    duration?: number;
 }
 interface Series {
     _id: string;
@@ -54,10 +86,10 @@ interface SectionInTestForm {
     questionCount: number;
     selectionMode: "fixed" | "random";
     randomQuestionCount?: number;
-    randomQuestionTypes?: string; // comma separated
-    randomDifficulties?: string;  // comma separated
+    randomQuestionTypes?: string;
+    randomDifficulties?: string;
     randomTags?: string;
-    questions?: string[];         // comma separated
+    questionIds?: string[];
 }
 interface TestTemplateListItem {
     _id: string;
@@ -75,6 +107,7 @@ interface TestTemplateListItem {
     price?: number;
     salePrice?: number;
     createdAt?: string;
+    isActive?: boolean;
 }
 interface TestTemplateDetail extends TestTemplateListItem {
     sections?: any[];
@@ -88,6 +121,7 @@ interface TestTemplateDetail extends TestTemplateListItem {
         seriesOnly: boolean;
     };
     seriesDocs?: Series[];
+    series?: any[];
 }
 interface TestTemplateFormValues {
     title: string;
@@ -95,62 +129,39 @@ interface TestTemplateFormValues {
     exam: string;
     testType: "full_length" | "sectional" | "quiz";
     difficultyLabel: "Easy" | "Medium" | "Hard" | "Mixed";
-    // sections builder (for full/sectional)
     sections: SectionInTestForm[];
-    // quiz config (for quiz)
     quizMode: "single_type" | "mixed_types";
-    quizAllowedTypesInput: string;   // comma-separated questionType keys
-    quizDifficultiesInput: string;   // comma-separated
-    quizTagsInput: string;           // comma-separated
+    quizAllowedTypesInput: string;
+    quizDifficultiesInput: string;
+    quizTagsInput: string;
     quizTotalQuestions: number;
     quizDurationMinutes: number;
-    // pricing
     pricingIsSellable: boolean;
     pricingIsFree: boolean;
     pricingSeriesOnly: boolean;
     pricingPrice: number;
     pricingSalePrice?: number;
-    // series
     selectedSeriesIds: string[];
+    isActive: boolean;
 }
 
-const QUESTION_TYPE_KEYS = [
-    "gmat_quant_problem_solving",
-    "gmat_quant_data_sufficiency",
-    "gmat_verbal_sc",
-    "gmat_verbal_cr",
-    "gmat_verbal_rc",
-    "gmat_data_insights",
-    "gre_analytical_writing",
-    "gre_verbal_text_completion",
-    "gre_verbal_sentence_equivalence",
-    "gre_verbal_reading_comp",
-    "gre_quantitative",
-    "sat_reading_writing",
-    "sat_math_calculator",
-    "sat_math_no_calculator",
-    "essay",
-    "other",
-];
-
 const TEST_TYPE_OPTIONS = [
-    { value: "full_length", label: "Full Length" },
-    { value: "sectional", label: "Sectional" },
-    { value: "quiz", label: "Quiz" },
+    { value: "full_length", label: "Full Length", icon: BookOpen },
+    { value: "sectional", label: "Sectional", icon: Layout },
+    { value: "quiz", label: "Quiz", icon: Zap },
 ];
 
 const DIFFICULTY_LABEL_OPTIONS = [
-    { value: "Easy", label: "Easy" },
-    { value: "Medium", label: "Medium" },
-    { value: "Hard", label: "Hard" },
-    { value: "Mixed", label: "Mixed" },
+    { value: "Easy", label: "Easy", color: "green" },
+    { value: "Medium", label: "Medium", color: "yellow" },
+    { value: "Hard", label: "Hard", color: "red" },
+    { value: "Mixed", label: "Mixed", color: "blue" },
 ];
 
 const LIMIT_OPTIONS = [
-    { value: 10, label: "10" },
-    { value: 20, label: "20" },
-    { value: 50, label: "50" },
-    { value: 100, label: "100" },
+    { value: 12, label: "12" },
+    { value: 24, label: "24" },
+    { value: 48, label: "48" },
 ];
 
 export default function TestTemplateManagementPage() {
@@ -158,6 +169,7 @@ export default function TestTemplateManagementPage() {
     const [sections, setSections] = useState<Section[]>([]);
     const [seriesList, setSeriesList] = useState<Series[]>([]);
     const [tests, setTests] = useState<TestTemplateListItem[]>([]);
+    const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
     const [filters, setFilters] = useState({
         search: "",
         examId: "all",
@@ -166,7 +178,7 @@ export default function TestTemplateManagementPage() {
         isFree: "all",
         isActive: "all",
     });
-
+    const [showFilters, setShowFilters] = useState(true);
 
     const [questionModalOpen, setQuestionModalOpen] = useState(false);
     const [questionModalSectionIndex, setQuestionModalSectionIndex] = useState<number | null>(null);
@@ -178,7 +190,7 @@ export default function TestTemplateManagementPage() {
     const [debouncedSearch, setDebouncedSearch] = useState("");
     const [searchTimeout, setSearchTimeout] = useState<NodeJS.Timeout | null>(null);
     const [page, setPage] = useState(1);
-    const [limit, setLimit] = useState(12); // State for limit
+    const [limit, setLimit] = useState(12);
     const [totalPages, setTotalPages] = useState(1);
     const [totalTests, setTotalTests] = useState(0);
     const [loading, setLoading] = useState(true);
@@ -187,6 +199,8 @@ export default function TestTemplateManagementPage() {
     const [editingId, setEditingId] = useState<string | null>(null);
     const [formLoading, setFormLoading] = useState(false);
     const [saving, setSaving] = useState(false);
+    const [selectedTests, setSelectedTests] = useState<string[]>([]);
+
     const allQuestionsSelected =
         questionModalList.length > 0 &&
         questionModalSelectedIds.length === questionModalList.length;
@@ -197,14 +211,11 @@ export default function TestTemplateManagementPage() {
 
     const handleToggleSelectAllQuestions = () => {
         if (allQuestionsSelected) {
-            // unselect all
             setQuestionModalSelectedIds([]);
         } else {
-            // select all visible
             setQuestionModalSelectedIds(questionModalList.map((q) => q._id));
         }
     };
-
 
     const {
         handleSubmit,
@@ -247,6 +258,7 @@ export default function TestTemplateManagementPage() {
             pricingPrice: 0,
             pricingSalePrice: 0,
             selectedSeriesIds: [],
+            isActive: true,
         },
     });
 
@@ -274,102 +286,14 @@ export default function TestTemplateManagementPage() {
     const watchPricingPrice = watch("pricingPrice");
     const watchPricingSalePrice = watch("pricingSalePrice");
     const watchSelectedSeriesIds = watch("selectedSeriesIds");
+    const watchIsActive = watch("isActive");
 
-    // -----------------------------
-    // Fetch exams / sections / series
-    // -----------------------------
-
-
-    const openQuestionModalForSection = async (sectionIndex: number) => {
-        const examId = watch("exam");
-        const sectionId = watch(`sections.${sectionIndex}.sectionId` as const);
-
-        if (!examId) {
-            toast.error("Select exam first");
-            return;
-        }
-        if (!sectionId) {
-            toast.error("Select section first");
-            return;
-        }
-
-        try {
-            setQuestionModalLoading(true);
-            setQuestionModalSectionIndex(sectionIndex);
-
-            // Get already selected questionIds from form
-            const currentSelected: string[] = watch(
-                `sections.${sectionIndex}.questionIds` as const
-            ) || [];
-            setQuestionModalSelectedIds(currentSelected);
-
-            const params: any = {
-                examId,
-                sectionId,
-                limit: 100,
-            };
-            if (questionModalSearch) params.search = questionModalSearch;
-
-            const res = await api.get("/mcu/questions", { params });
-            if (res.data?.success) {
-                const list = (res.data.data || res.data?.data?.data || []) as any[];
-                setQuestionModalList(
-                    list.map((q) => ({
-                        _id: q._id,
-                        questionText: q.questionText,
-                        questionType: q.questionType,
-                        difficulty: q.difficulty,
-                    }))
-                );
-            } else {
-                setQuestionModalList([]);
-            }
-
-            setQuestionModalOpen(true);
-        } catch (err: any) {
-            console.error("Fetch questions for modal error:", err);
-            toast.error("Failed to fetch questions for this section");
-        } finally {
-            setQuestionModalLoading(false);
-        }
-    };
-
-    const closeQuestionModal = () => {
-        setQuestionModalOpen(false);
-        setQuestionModalSectionIndex(null);
-        setQuestionModalList([]);
-        setQuestionModalSearch("");
-    };
-
-    // when user toggles a checkbox
-    const toggleQuestionSelection = (id: string) => {
-        setQuestionModalSelectedIds((prev) =>
-            prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id]
-        );
-    };
-
-    // when user clicks "Apply"
-    const applyQuestionSelectionToSection = () => {
-        if (questionModalSectionIndex === null) return;
-        setValue(
-            `sections.${questionModalSectionIndex}.questionIds` as const,
-            questionModalSelectedIds
-        );
-        // also keep questionCount in sync
-        setValue(
-            `sections.${questionModalSectionIndex}.questionCount` as const,
-            questionModalSelectedIds.length
-        );
-        closeQuestionModal();
-    };
-
+    // Fetch functions
     const fetchExams = async () => {
         try {
             const res = await api.get("/test/exams", { params: { isActive: true, limit: 200 } });
             if (res.data?.success) {
                 setExams(res.data.data || res.data?.data?.data || []);
-            } else {
-                setExams([]);
             }
         } catch (err: any) {
             console.error("Fetch exams error:", err);
@@ -382,8 +306,6 @@ export default function TestTemplateManagementPage() {
             const res = await api.get("/mcu/test", { params: { isActive: true, limit: 200 } });
             if (res.data?.success) {
                 setSeriesList(res.data.data || res.data?.data?.data || []);
-            } else {
-                setSeriesList([]);
             }
         } catch (err: any) {
             console.error("Fetch series error:", err);
@@ -397,15 +319,15 @@ export default function TestTemplateManagementPage() {
 
     useEffect(() => {
         if (watchExam) {
-            const sections = exams.find((e) => e._id === watchExam)?.sections || [];
-            setSections(sections);
+            const exam = exams.find((e) => e._id === watchExam);
+            setSections(exam?.sections || []);
             sectionFields.forEach((_, index) => {
                 setValue(`sections.${index}.sectionId`, "");
             });
         } else {
             setSections([]);
         }
-    }, [watchExam, sectionFields, setValue]); // Add dependencies
+    }, [watchExam, exams]);
 
     const fetchTests = async () => {
         try {
@@ -452,7 +374,7 @@ export default function TestTemplateManagementPage() {
 
     useEffect(() => {
         fetchTests();
-    }, [page, limit, debouncedSearch, filters.examId, filters.testType, filters.difficultyLabel, filters.isFree, filters.isActive]); // Add limit to dependency
+    }, [page, limit, debouncedSearch, filters]);
 
     const handleSearchChange = (value: string) => {
         setFilters((prev) => ({ ...prev, search: value }));
@@ -474,9 +396,91 @@ export default function TestTemplateManagementPage() {
         setPage(1);
     };
 
-    // -----------------------------
-    // Drawer open/close + load detail
-    // -----------------------------
+    const activeFilterCount = Object.entries(filters).filter(
+        ([key, value]) => key !== "search" && value !== "all"
+    ).length;
+
+    // Question Modal
+    const openQuestionModalForSection = async (sectionIndex: number) => {
+        const examId = watch("exam");
+        const sectionId = watch(`sections.${sectionIndex}.sectionId` as const);
+
+        if (!examId) {
+            toast.error("Select exam first");
+            return;
+        }
+        if (!sectionId) {
+            toast.error("Select section first");
+            return;
+        }
+
+        try {
+            setQuestionModalLoading(true);
+            setQuestionModalSectionIndex(sectionIndex);
+
+            const currentSelected: string[] = watch(
+                `sections.${sectionIndex}.questionIds` as const
+            ) || [];
+            setQuestionModalSelectedIds(currentSelected);
+
+            const params: any = {
+                examId,
+                sectionId,
+                limit: 100,
+            };
+            if (questionModalSearch) params.search = questionModalSearch;
+
+            const res = await api.get("/mcu/questions", { params });
+            if (res.data?.success) {
+                const list = (res.data.data || res.data?.data?.data || []) as any[];
+                setQuestionModalList(
+                    list.map((q) => ({
+                        _id: q._id,
+                        questionText: q.questionText,
+                        questionType: q.questionType,
+                        difficulty: q.difficulty,
+                    }))
+                );
+            } else {
+                setQuestionModalList([]);
+            }
+
+            setQuestionModalOpen(true);
+        } catch (err: any) {
+            console.error("Fetch questions for modal error:", err);
+            toast.error("Failed to fetch questions for this section");
+        } finally {
+            setQuestionModalLoading(false);
+        }
+    };
+
+    const closeQuestionModal = () => {
+        setQuestionModalOpen(false);
+        setQuestionModalSectionIndex(null);
+        setQuestionModalList([]);
+        setQuestionModalSearch("");
+    };
+
+    const toggleQuestionSelection = (id: string) => {
+        setQuestionModalSelectedIds((prev) =>
+            prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id]
+        );
+    };
+
+    const applyQuestionSelectionToSection = () => {
+        if (questionModalSectionIndex === null) return;
+        setValue(
+            `sections.${questionModalSectionIndex}.questionIds` as const,
+            questionModalSelectedIds
+        );
+        setValue(
+            `sections.${questionModalSectionIndex}.questionCount` as const,
+            questionModalSelectedIds.length
+        );
+        closeQuestionModal();
+    };
+
+    // Drawer functions
     const openCreateDrawer = () => {
         setEditingId(null);
         reset({
@@ -497,6 +501,7 @@ export default function TestTemplateManagementPage() {
                     randomQuestionTypes: "",
                     randomDifficulties: "",
                     randomTags: "",
+                    questionIds: [],
                 },
             ],
             quizMode: "single_type",
@@ -511,6 +516,7 @@ export default function TestTemplateManagementPage() {
             pricingPrice: 0,
             pricingSalePrice: 0,
             selectedSeriesIds: [],
+            isActive: true,
         });
         setSideOpen(true);
     };
@@ -525,44 +531,60 @@ export default function TestTemplateManagementPage() {
                 throw new Error("Failed to load test");
             }
             const test: TestTemplateDetail = res.data.data;
+
+            await new Promise((resolve) => setTimeout(resolve, 1500));
+
+            const mappedSections = test.sections && test.sections.length
+                ? test.sections.map((s: any, index: number) => ({
+                    sectionId: s.section?._id || s.section?.toString() || "",
+                    customName: s.customName || "",
+                    order: s.order || index + 1,
+                    durationMinutes: s.durationMinutes || 0,
+                    questionCount: s.questionCount || s.randomConfig?.questionCount || 0,
+                    selectionMode: s.selectionMode || "fixed",
+                    randomQuestionCount: s.randomConfig?.questionCount || 0,
+                    randomQuestionTypes: Array.isArray(s.randomConfig?.questionTypes)
+                        ? s.randomConfig.questionTypes.join(", ")
+                        : "",
+                    randomDifficulties: Array.isArray(s.randomConfig?.difficulties)
+                        ? s.randomConfig.difficulties.join(", ")
+                        : "",
+                    randomTags: Array.isArray(s.randomConfig?.tags)
+                        ? s.randomConfig.tags.join(", ")
+                        : "",
+                    questionIds: s.questions?.map((q: any) => q._id || q) || [],
+                }))
+                : [{
+                    sectionId: "",
+                    customName: "",
+                    order: 1,
+                    durationMinutes: 0,
+                    questionCount: 0,
+                    selectionMode: "fixed",
+                    randomQuestionCount: 0,
+                    randomQuestionTypes: "",
+                    randomDifficulties: "",
+                    randomTags: "",
+                    questionIds: [],
+                }];
+
             reset({
-                title: test.title,
+                title: test.title || "",
                 description: test.description || "",
                 exam: test.exam?._id || "",
-                testType: test.testType,
+                testType: test.testType || "full_length",
                 difficultyLabel: test.difficultyLabel || "Mixed",
-                sections:
-                    test.sections && test.sections.length
-                        ? test.sections.map((s: any, index: number) => ({
-                            sectionId: s.section?._id || s.section?.toString() || "",
-                            customName: s.customName || "",
-                            order: s.order || index + 1,
-                            durationMinutes: s.durationMinutes || 0,
-                            questionCount: s.questionCount || s.randomConfig?.questionCount || 0,
-                            selectionMode: s.selectionMode || "fixed",
-                            randomQuestionCount: s.randomConfig?.questionCount || 0,
-                            randomQuestionTypes: (s.randomConfig?.questionTypes || []).join(", "),
-                            randomDifficulties: (s.randomConfig?.difficulties || []).join(", "),
-                            randomTags: (s.randomConfig?.tags || []).join(", "),
-                        }))
-                        : [
-                            {
-                                sectionId: "",
-                                customName: "",
-                                order: 1,
-                                durationMinutes: 0,
-                                questionCount: 0,
-                                selectionMode: "fixed",
-                                randomQuestionCount: 0,
-                                randomQuestionTypes: "",
-                                randomDifficulties: "",
-                                randomTags: "",
-                            },
-                        ],
+                sections: mappedSections,
                 quizMode: test.quizConfig?.mode || "single_type",
-                quizAllowedTypesInput: (test.quizConfig?.allowedQuestionTypes || []).join(", "),
-                quizDifficultiesInput: (test.quizConfig?.difficulties || []).join(", "),
-                quizTagsInput: (test.quizConfig?.tags || []).join(", "),
+                quizAllowedTypesInput: Array.isArray(test.quizConfig?.allowedQuestionTypes)
+                    ? test.quizConfig.allowedQuestionTypes.join(", ")
+                    : "",
+                quizDifficultiesInput: Array.isArray(test.quizConfig?.difficulties)
+                    ? test.quizConfig.difficulties.join(", ")
+                    : "",
+                quizTagsInput: Array.isArray(test.quizConfig?.tags)
+                    ? test.quizConfig.tags.join(", ")
+                    : "",
                 quizTotalQuestions: test.quizConfig?.totalQuestions || 10,
                 quizDurationMinutes: test.quizConfig?.durationMinutes || 30,
                 pricingIsSellable: test.pricing?.isSellable ?? true,
@@ -571,8 +593,9 @@ export default function TestTemplateManagementPage() {
                 pricingPrice: test.pricing?.price ?? 0,
                 pricingSalePrice: test.pricing?.salePrice ?? 0,
                 selectedSeriesIds: (test.seriesDocs || test.series || []).map(
-                    (s: any) => s._id
+                    (s: any) => s._id || s
                 ),
+                isActive: test.isActive ?? true,
             });
         } catch (err: any) {
             console.error("Load test detail error:", err);
@@ -590,10 +613,14 @@ export default function TestTemplateManagementPage() {
         setEditingId(null);
     };
 
-    let navigate = useNavigate();
+    const navigate = useNavigate();
 
     const formatDate = (iso?: string) =>
-        iso ? new Date(iso).toLocaleDateString("en-IN") : "";
+        iso ? new Date(iso).toLocaleDateString("en-IN", {
+            year: 'numeric',
+            month: 'short',
+            day: 'numeric'
+        }) : "";
 
     const onSubmit = async (values: TestTemplateFormValues) => {
         try {
@@ -611,29 +638,17 @@ export default function TestTemplateManagementPage() {
                     return;
                 }
                 const invalidSection = values.sections.find(
-                    (s) => !s.sectionId || (s.selectionMode === "fixed" && !s.questionCount)
+                    (s) => !s.sectionId
                 );
                 if (invalidSection) {
-                    toast.error("Each section must have section and question count");
+                    toast.error("Each section must have a section selected");
                     return;
                 }
-            } else {
-                if (!values.quizTotalQuestions || values.quizTotalQuestions <= 0) {
-                    toast.error("Quiz total questions must be > 0");
-                    return;
-                }
-                if (!values.quizDurationMinutes || values.quizDurationMinutes <= 0) {
-                    toast.error("Quiz duration must be > 0");
-                    return;
-                }
-            }
-            if (!watchIsFree && watchIsSellable && !values.pricingPrice) {
-                toast.error("Price is required for paid tests");
-                return;
             }
 
             setSaving(true);
-            // Build sections array
+
+            // Build sections payload
             let sectionsPayload: any[] = [];
             if (values.testType !== "quiz") {
                 sectionsPayload = values.sections.map((s, index) => {
@@ -656,14 +671,11 @@ export default function TestTemplateManagementPage() {
                     };
 
                     if (s.selectionMode === "fixed") {
-                        const selectedQuestions = s.questionIds || [];
-                        base.questions = selectedQuestions;
-                        base.questionCount =
-                            selectedQuestions.length || Number(s.questionCount) || 0;
+                        base.questions = s.questionIds || [];
+                        base.questionCount = (s.questionIds || []).length;
                     } else {
                         base.randomConfig = {
-                            questionCount:
-                                Number(s.randomQuestionCount || s.questionCount) || 0,
+                            questionCount: Number(s.randomQuestionCount) || 0,
                             questionTypes: randomTypes,
                             difficulties: randomDiffs,
                             tags: randomTags,
@@ -679,37 +691,25 @@ export default function TestTemplateManagementPage() {
                 quizConfig = {
                     mode: values.quizMode,
                     allowedQuestionTypes: values.quizAllowedTypesInput
-                        ? values.quizAllowedTypesInput
-                            .split(",")
-                            .map((x) => x.trim())
-                            .filter(Boolean)
+                        ? values.quizAllowedTypesInput.split(",").map((x) => x.trim()).filter(Boolean)
                         : [],
                     difficulties: values.quizDifficultiesInput
-                        ? values.quizDifficultiesInput
-                            .split(",")
-                            .map((x) => x.trim())
-                            .filter(Boolean)
+                        ? values.quizDifficultiesInput.split(",").map((x) => x.trim()).filter(Boolean)
                         : [],
                     tags: values.quizTagsInput
-                        ? values.quizTagsInput
-                            .split(",")
-                            .map((x) => x.trim())
-                            .filter(Boolean)
+                        ? values.quizTagsInput.split(",").map((x) => x.trim()).filter(Boolean)
                         : [],
                     totalQuestions: Number(values.quizTotalQuestions) || 0,
                     durationMinutes: Number(values.quizDurationMinutes) || 0,
                 };
             }
 
-            // pricing
             const pricing = {
                 isSellable: values.pricingIsSellable,
                 isFree: values.pricingIsFree,
                 seriesOnly: values.pricingSeriesOnly,
                 price: Number(values.pricingPrice) || 0,
-                salePrice: values.pricingSalePrice
-                    ? Number(values.pricingSalePrice)
-                    : undefined,
+                salePrice: values.pricingSalePrice ? Number(values.pricingSalePrice) : undefined,
                 currency: "INR",
             };
 
@@ -723,7 +723,7 @@ export default function TestTemplateManagementPage() {
                 quizConfig: values.testType === "quiz" ? quizConfig : undefined,
                 pricing,
                 series: values.selectedSeriesIds || [],
-                isActive: true,
+                isActive: values.isActive,
             };
 
             if (editingId) {
@@ -744,10 +744,10 @@ export default function TestTemplateManagementPage() {
     };
 
     const handleDelete = async (test: TestTemplateListItem) => {
-        if (!window.confirm(`Delete test "${test.title}"?`)) return;
+        if (!window.confirm(`Delete test "${test.title}"? This action cannot be undone.`)) return;
         try {
             await api.delete(`/mcu/test/${test._id}`);
-            toast.success("Test deleted");
+            toast.success("Test deleted successfully");
             fetchTests();
         } catch (err: any) {
             console.error("Delete test error:", err);
@@ -755,405 +755,800 @@ export default function TestTemplateManagementPage() {
         }
     };
 
-    // Summary for price
+    const handleBulkDelete = async () => {
+        if (!window.confirm(`Delete ${selectedTests.length} selected tests?`)) return;
+        try {
+            await Promise.all(selectedTests.map(id => api.delete(`/mcu/test/${id}`)));
+            toast.success(`${selectedTests.length} tests deleted`);
+            setSelectedTests([]);
+            fetchTests();
+        } catch (err: any) {
+            toast.error("Failed to delete some tests");
+        }
+    };
+
+    const getDifficultyColor = (label: string) => {
+        switch (label) {
+            case "Easy": return "bg-emerald-50 text-emerald-700 border-emerald-200 dark:bg-emerald-900/30 dark:text-emerald-300 dark:border-emerald-800";
+            case "Medium": return "bg-amber-50 text-amber-700 border-amber-200 dark:bg-amber-900/30 dark:text-amber-300 dark:border-amber-800";
+            case "Hard": return "bg-red-50 text-red-700 border-red-200 dark:bg-red-900/30 dark:text-red-300 dark:border-red-800";
+            case "Mixed": return "bg-blue-50 text-blue-700 border-blue-200 dark:bg-blue-900/30 dark:text-blue-300 dark:border-blue-800";
+            default: return "bg-gray-50 text-gray-700 border-gray-200";
+        }
+    };
+
+    const getTestTypeIcon = (type: string) => {
+        switch (type) {
+            case "full_length": return BookOpen;
+            case "sectional": return Layout;
+            case "quiz": return Zap;
+            default: return HelpCircle;
+        }
+    };
+
     const priceLabel = (t: TestTemplateListItem) => {
-        if (t.isFree) return "Free";
-        if (!t.isSellable && t.seriesOnly) return "Bundle only";
+        if (t.isFree) return { label: "Free", color: "text-emerald-600 dark:text-emerald-400" };
+        if (t.seriesOnly && !t.isSellable) return { label: "Series Only", color: "text-purple-600 dark:text-purple-400" };
         if (typeof t.salePrice === "number" && t.salePrice > 0) {
-            return `₹${t.salePrice} (₹${t.price})`;
+            return {
+                label: `₹${t.salePrice}`,
+                color: "text-orange-600 dark:text-orange-400",
+                original: t.price ? `₹${t.price}` : undefined
+            };
         }
         if (typeof t.price === "number" && t.price > 0) {
-            return `₹${t.price}`;
+            return { label: `₹${t.price}`, color: "text-blue-600 dark:text-blue-400" };
         }
-        return "N/A";
+        return { label: "N/A", color: "text-gray-500" };
     };
 
     const isQuiz = watchTestType === "quiz";
     const disabledPrice = watchIsFree || (!watchIsSellable && !watchSeriesOnly);
 
     return (
-        <>
-            <div className="relative">
-                <div className="mb-4 rounded-2xl border border-gray-200 bg-white p-4 shadow-sm dark:border-gray-800 dark:bg-gray-900/60">
-                    <div className="mb-3 flex items-center justify-between gap-3">
-                        <div className="flex items-center gap-2 text-sm font-medium text-gray-700 dark:text-gray-200">
+        <div className="min-h-screen p-4">
+
+            <div className="mb-3">
+                <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+                    <div>
+                        <h1 className="text-xl font-bold text-gray-900 dark:text-white">
+                            Test Templates
+                        </h1>
+                        <p className="text-sm text-gray-500 dark:text-gray-400">
+                            Manage and organize your test templates
+                        </p>
+                    </div>
+                    <div className="flex items-center gap-3">
+                        {selectedTests.length > 0 && (
+                            <Button
+                                variant="outline"
+                                size="sm"
+                                className="text-red-600 hover:text-red-700"
+                                onClick={handleBulkDelete}
+                            >
+                                <Trash2 className="mr-2 h-4 w-4" />
+                                Delete Selected ({selectedTests.length})
+                            </Button>
+                        )}
+                        <div className="flex items-center rounded-lg border border-gray-200 bg-white p-1 dark:border-gray-700 dark:bg-gray-800">
+                            <button
+                                onClick={() => setViewMode("grid")}
+                                className={`rounded-md p-2 ${viewMode === "grid" ? "bg-gray-100 text-blue-600 dark:bg-gray-700 dark:text-blue-400" : "text-gray-500"}`}
+                            >
+                                <Grid3X3 className="h-4 w-4" />
+                            </button>
+                            <button
+                                onClick={() => setViewMode("list")}
+                                className={`rounded-md p-2 ${viewMode === "list" ? "bg-gray-100 text-blue-600 dark:bg-gray-700 dark:text-blue-400" : "text-gray-500"}`}
+                            >
+                                <List className="h-4 w-4" />
+                            </button>
+                        </div>
+                        <Button onClick={openCreateDrawer}>
+                            <Plus className="mr-2 h-4 w-4" />
+                            Create Test
+                        </Button>
+                    </div>
+                </div>
+            </div>
+
+            <div className="mb-3 rounded-2xl bg-white dark:border-gray-800 dark:bg-gray-900">
+                <div className="border-b border-gray-100 p-4 dark:border-gray-800">
+                    <div className="flex items-center justify-between">
+                        <button
+                            onClick={() => setShowFilters(!showFilters)}
+                            className="flex items-center gap-2 text-sm font-medium text-gray-700 dark:text-gray-200"
+                        >
                             <SlidersHorizontal className="h-4 w-4" />
                             Filters
-                        </div>
-                        <div className="flex gap-2 ">
-                            <Button
-                                variant="outline"
-                                size="sm"
-                                onClick={resetFilters}
-                                className=""
-                            >
-                                Clear filters
-                            </Button>
-                            <Button
-                                variant="outline"
-                                size="sm"
-                                onClick={openCreateDrawer}
-                                className="!m-0"
-                            >
-                                <Plus className="h-4 w-4" />
-                                New Test
-                            </Button>
-                        </div>
-
-                    </div>
-                    <div className="grid gap-3 md:grid-cols-6">
-                        <div className="md:col-span-2">
+                            {activeFilterCount > 0 && (
+                                <span className="rounded-full bg-blue-100 px-2 py-0.5 text-xs text-blue-600 dark:bg-blue-900/30 dark:text-blue-400">
+                                    {activeFilterCount}
+                                </span>
+                            )}
+                            <ChevronDown className={`h-4 w-4 transition-transform ${showFilters ? 'rotate-180' : ''}`} />
+                        </button>
+                        <div className="flex items-center gap-3">
                             <div className="relative">
                                 <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" />
                                 <input
                                     type="text"
                                     value={filters.search}
                                     onChange={(e) => handleSearchChange(e.target.value)}
-                                    placeholder="Search by title or description"
-                                    className="w-full rounded-xl border border-gray-200 bg-white py-2 pl-9 pr-3 text-sm text-gray-900 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100"
+                                    placeholder="Search tests..."
+                                    className="w-64 rounded-xl border border-gray-200 bg-gray-50 py-2 pl-9 pr-4 text-sm text-gray-900 placeholder:text-gray-400 focus:border-blue-500 focus:bg-white focus:outline-none focus:ring-1 focus:ring-blue-500 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-100 dark:placeholder:text-gray-500"
                                 />
                             </div>
-                        </div>
-                        <div>
-                            <Select
-                                defaultValue={filters.examId}
-                                options={[
-                                    { value: "all", label: "All Exams" },
-                                    ...exams.map((e) => ({ value: e._id, label: e.name })),
-                                ]}
-                                onChange={(value: string) => {
-                                    setFilters((prev) => ({ ...prev, examId: value }));
-                                    setPage(1);
-                                }}
-                            />
-                        </div>
-                        <div>
-                            <Select
-                                defaultValue={filters.testType}
-                                options={[
-                                    { value: "all", label: "All" },
-                                    ...TEST_TYPE_OPTIONS,
-                                ]}
-                                onChange={(value: string) => {
-                                    setFilters((prev) => ({ ...prev, testType: value }));
-                                    setPage(1);
-                                }}
-                            />
-                        </div>
-                        <div>
-                            <Select
-                                defaultValue={filters.difficultyLabel}
-                                options={[
-                                    { value: "all", label: "All" },
-                                    ...DIFFICULTY_LABEL_OPTIONS,
-                                ]}
-                                onChange={(value: string) => {
-                                    setFilters((prev) => ({ ...prev, difficultyLabel: value }));
-                                    setPage(1);
-                                }}
-                            />
-                        </div>
-                        <div className="flex gap-2 md:col-span-1">
-                            <Select
-                                defaultValue={filters.isFree}
-                                options={[
-                                    { value: "all", label: "All" },
-                                    { value: "true", label: "Free" },
-                                    { value: "false", label: "Paid" },
-                                ]}
-                                onChange={(value: string) => {
-                                    setFilters((prev) => ({ ...prev, isFree: value }));
-                                    setPage(1);
-                                }}
-                            />
-                        </div>
-                        <div>
-                            <Select
-                                className=""
-                                options={LIMIT_OPTIONS.map(opt => ({ value: opt.value.toString(), label: opt.label }))}
-                                defaultValue={limit.toString()}
-                                onChange={(value: string) => {
-                                    setLimit(Number(value));
-                                    setPage(1); // Reset to first page when limit changes
-                                }}
-                            />
-                        </div>
-                    </div>
-                    <div className="mt-1 flex items-center justify-between text-xs text-gray-500 dark:text-gray-400">
-                        <div>
-                            Showing page <span className="font-semibold">{page}</span> of{" "}
-                            <span className="font-semibold">{totalPages}</span> •{" "}
-                            <span className="font-semibold">{totalTests}</span> tests
+                            {activeFilterCount > 0 && (
+                                <button
+                                    onClick={resetFilters}
+                                    className="text-sm text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200"
+                                >
+                                    Clear all
+                                </button>
+                            )}
                         </div>
                     </div>
                 </div>
-                {/* List */}
-                <div className="grid gap-4 md:grid-cols-3 lg:grid-cols-4">
-                    {loading && (
-                        <div className="rounded-2xl border border-gray-200 bg-white p-6 text-center text-sm text-gray-500 shadow-sm dark:border-gray-800 dark:bg-gray-900">
-                            <div className="mb-2 flex items-center justify-center gap-2">
-                                <Loader2 className="h-4 w-4 animate-spin" />
-                                Loading tests...
-                            </div>
-                        </div>
-                    )}
-                    {!loading && error && (
-                        <div className="rounded-2xl border border-red-200 bg-red-50 p-4 text-sm text-red-700 dark:border-red-800 dark:bg-red-900/20 dark:text-red-300">
-                            {error}
-                        </div>
-                    )}
-                    {!loading && !error && tests.length === 0 && (
-                        <div className="rounded-2xl border border-gray-200 bg-white p-6 text-center text-sm text-gray-500 shadow-sm dark:border-gray-800 dark:bg-gray-900">
-                            No tests found. Try changing filters or create a new one.
-                        </div>
-                    )}
-                    {!loading &&
-                        !error &&
-                        tests.map((t) => (
-                            <motion.div
-                                key={t._id}
-                                layout
-                                initial={{ opacity: 0, y: 10 }}
-                                animate={{ opacity: 1, y: 0 }}
-                                exit={{ opacity: 0, y: -10 }}
-                                transition={{ duration: 0.2 }}
-                                className="group rounded-2xl border border-gray-200 bg-white p-4 shadow-sm transition hover:-translate-y-0.5 hover:shadow-md dark:border-gray-800 dark:bg-gray-900"
-                            >
-                                <div className="space-y-2 gap-3 relative ">
-                                    <Button
-                                        variant="outline"
-                                        size="sm"
-                                        className="absolute -top-1 right-1 !p-0 h-6 w-6 rounded-full text-xs text-red-600 hover:text-red-700"
-                                        onClick={() => { if (t.exam?.name.toLowerCase().includes("gmat")) { navigate(`/gmat/tests/${t._id}`, { replace: true }) } else if (t.exam?.name.toLowerCase().includes("pte")) { navigate(`/pte/tests/${t._id}`, { replace: true }) } else if (t.exam?.name.toLowerCase().includes("gre")) { navigate(`/gre/tests/${t._id}`, { replace: true }) } else navigate(`/mcq/tests/${t._id}`, { replace: true }) }}
-                                    >
-                                        <Play className="h-3 w-3" />
-                                    </Button>
-                                    <div className="flex-1">
-                                        <h3 className="block mb-2 px-1 text-base uppercase text-gray-900 dark:text-gray-100">
-                                            {t.title}
-                                        </h3>
-                                        <div className="mb-1 flex flex-wrap items-center gap-2">
-                                            {/* {t.description && (
-                                                <p className="mt-1 text-xs text-gray-500 line-clamp-2 dark:text-gray-400">
-                                                    {t.description}
-                                                </p>
-                                            )} */}
-                                            <span className="rounded-full bg-gray-100 px-2 py-0.5 text-xs text-gray-700 dark:bg-gray-800 dark:text-gray-200">
-                                                {t.exam?.name || "Unknown exam"}
-                                            </span>
-                                            <span className="rounded-full bg-gray-100 px-2 py-0.5 text-xs text-gray-700 dark:bg-gray-800 dark:text-gray-300">
-                                                {TEST_TYPE_OPTIONS.find((x) => x.value === t.testType)?.label ||
-                                                    t.testType}
-                                            </span>
-                                            <span
-                                                className={`rounded-full px-2 py-0.5 text-xs ${t.difficultyLabel === "Easy"
-                                                    ? "bg-green-50 text-green-700 dark:bg-green-900/40 dark:text-green-300"
-                                                    : t.difficultyLabel === "Hard"
-                                                        ? "bg-red-50 text-red-700 dark:bg-red-900/40 dark:text-red-300"
-                                                        : t.difficultyLabel === "Medium"
-                                                            ? "bg-yellow-50 text-yellow-700 dark:bg-yellow-900/40 dark:text-yellow-300"
-                                                            : "bg-blue-50 text-blue-700 dark:bg-blue-900/40 dark:text-blue-300"
-                                                    }`}
-                                            >
-                                                {t.difficultyLabel}
-                                            </span>
-                                            <span className="flex items-center gap-1 rounded-full bg-purple-50 px-2 py-0.5 text-xs text-purple-700 dark:bg-purple-900/40 dark:text-purple-300">
-                                                <Tag className="h-3 w-3" />
-                                                {t.totalQuestions || 0} Q • {t.totalDurationMinutes || 0} mins
-                                            </span>
-                                            <span className="flex items-center gap-1 rounded-full bg-emerald-50 px-2 py-0.5 text-xs text-emerald-700 dark:bg-emerald-900/40 dark:text-emerald-300">
-                                                <IndianRupee className="h-3 w-3" />
-                                                {priceLabel(t)}
-                                            </span>
-                                        </div>
 
-                                        {/* <div className="mt-2 text-[11px] text-gray-500 dark:text-gray-400">
-                                            {t.createdAt && (
-                                                <span>Created: {formatDate(t.createdAt)} • </span>
-                                            )}
-                                            <span>
-                                                Sections: {t.sectionCount ?? (t.testType === "quiz" ? 1 : 0)}
-                                            </span>
-                                        </div> */}
-                                    </div>
-                                    <div className="flex flex-shrink-0 items-center gap-2">
-                                        <Button
-                                            variant="outline"
-                                            size="sm"
-                                            className="rounded-xl px-1 py-1 text-xs"
-                                            onClick={() => openEditDrawer(t._id)}
-                                        >
-                                            <Edit3 className="mr- h-3 w-3" />
-                                            Edit
-                                        </Button>
-                                        <Button
-                                            variant="outline"
-                                            size="sm"
-                                            className="rounded-xl px-1 py-1 text-xs text-red-600 hover:text-red-700"
-                                            onClick={() => handleDelete(t)}
-                                        >
-                                            <Trash2 className="mr- h-3 w-3" />
-                                            Delete
-                                        </Button>
-
-                                    </div>
+                <AnimatePresence>
+                    {showFilters && (
+                        <motion.div
+                            initial={{ height: 0, opacity: 0 }}
+                            animate={{ height: "auto", opacity: 1 }}
+                            exit={{ height: 0, opacity: 0 }}
+                            transition={{ duration: 0.2 }}
+                            className="overflow-hidden"
+                        >
+                            <div className="grid gap-4 p-4 sm:grid-cols-2 lg:grid-cols-5">
+                                <div>
+                                    <label className="mb-1.5 block text-xs font-medium text-gray-500 dark:text-gray-400">
+                                        Exam
+                                    </label>
+                                    <Select
+                                        defaultValue={filters.examId}
+                                        options={[
+                                            { value: "all", label: "All Exams" },
+                                            ...exams.map((e) => ({ value: e._id, label: e.name })),
+                                        ]}
+                                        onChange={(value: string) => {
+                                            setFilters((prev) => ({ ...prev, examId: value }));
+                                            setPage(1);
+                                        }}
+                                    />
                                 </div>
-                            </motion.div>
-                        ))}
+                                <div>
+                                    <label className="mb-1.5 block text-xs font-medium text-gray-500 dark:text-gray-400">
+                                        Test Type
+                                    </label>
+                                    <Select
+                                        defaultValue={filters.testType}
+                                        options={[
+                                            { value: "all", label: "All Types" },
+                                            ...TEST_TYPE_OPTIONS,
+                                        ]}
+                                        onChange={(value: string) => {
+                                            setFilters((prev) => ({ ...prev, testType: value }));
+                                            setPage(1);
+                                        }}
+                                    />
+                                </div>
+                                <div>
+                                    <label className="mb-1.5 block text-xs font-medium text-gray-500 dark:text-gray-400">
+                                        Difficulty
+                                    </label>
+                                    <Select
+                                        defaultValue={filters.difficultyLabel}
+                                        options={[
+                                            { value: "all", label: "All Difficulties" },
+                                            ...DIFFICULTY_LABEL_OPTIONS,
+                                        ]}
+                                        onChange={(value: string) => {
+                                            setFilters((prev) => ({ ...prev, difficultyLabel: value }));
+                                            setPage(1);
+                                        }}
+                                    />
+                                </div>
+                                <div>
+                                    <label className="mb-1.5 block text-xs font-medium text-gray-500 dark:text-gray-400">
+                                        Pricing
+                                    </label>
+                                    <Select
+                                        defaultValue={filters.isFree}
+                                        options={[
+                                            { value: "all", label: "All" },
+                                            { value: "true", label: "Free" },
+                                            { value: "false", label: "Paid" },
+                                        ]}
+                                        onChange={(value: string) => {
+                                            setFilters((prev) => ({ ...prev, isFree: value }));
+                                            setPage(1);
+                                        }}
+                                    />
+                                </div>
+                                <div>
+                                    <label className="mb-1.5 block text-xs font-medium text-gray-500 dark:text-gray-400">
+                                        Status
+                                    </label>
+                                    <Select
+                                        defaultValue={filters.isActive}
+                                        options={[
+                                            { value: "all", label: "All Status" },
+                                            { value: "true", label: "Active" },
+                                            { value: "false", label: "Inactive" },
+                                        ]}
+                                        onChange={(value: string) => {
+                                            setFilters((prev) => ({ ...prev, isActive: value }));
+                                            setPage(1);
+                                        }}
+                                    />
+                                </div>
+                            </div>
+                        </motion.div>
+                    )}
+                </AnimatePresence>
+            </div>
+
+            {!loading && !error && (
+                <div className="mb-3 flex items-center justify-between text-sm">
+                    <div className="text-gray-500 dark:text-gray-400">
+                        Showing <span className="font-semibold text-gray-700 dark:text-gray-200">{tests.length}</span> of{" "}
+                        <span className="font-semibold text-gray-700 dark:text-gray-200">{totalTests}</span> tests
+                        {filters.search && (
+                            <span className="ml-2">
+                                for "<span className="font-medium">{filters.search}</span>"
+                            </span>
+                        )}
+                    </div>
+                    <div className="flex items-center gap-2">
+                        <span className="text-gray-500 dark:text-gray-400">Limit:</span>
+                        <Select
+                            defaultValue={limit.toString()}
+                            options={LIMIT_OPTIONS.map(opt => ({ value: opt.value.toString(), label: opt.label }))}
+                            onChange={(value: string) => {
+                                setLimit(Number(value));
+                                setPage(1);
+                            }}
+                            className="!w-fit"
+                        />
+                    </div>
                 </div>
-                {/* Pagination */}
-                {!loading && totalPages > 1 && (
-                    <div className="mt-5 flex items-center justify-center gap-3">
+            )}
+
+            {/* Content */}
+            {loading ? (
+                <div className="flex items-center justify-center py-20">
+                    <div className="text-center">
+                        <Loader2 className="mx-auto mb-4 h-8 w-8 animate-spin text-orange-600" />
+                        <p className="text-sm text-gray-500 dark:text-gray-400">Loading tests...</p>
+                    </div>
+                </div>
+            ) : error ? (
+                <div className="rounded-2xl p-8 text-center">
+                    <AlertCircle className="mx-auto mb-3 h-8 w-8 text-red-500" />
+                    <p className="text-sm text-red-700 dark:text-red-300">{error}</p>
+                    <Button variant="outline" className="mt-4" onClick={fetchTests}>
+                        Try Again
+                    </Button>
+                </div>
+            ) : tests.length === 0 ? (
+                <div className="rounded-2xl bg-white p-12 text-center">
+                    <BookOpen className="mx-auto mb-4 h-12 w-12 text-gray-300 dark:text-gray-600" />
+                    <h3 className="text-lg font-semibold text-gray-900 dark:text-white">No tests found</h3>
+                    <p className="mt-2 text-sm text-gray-500 dark:text-gray-400">
+                        {filters.search || activeFilterCount > 0
+                            ? "Try adjusting your filters or search terms"
+                            : "Get started by creating your first test template"}
+                    </p>
+                    {!filters.search && activeFilterCount === 0 && (
+                        <Button className="mt-6" onClick={openCreateDrawer}>
+                            <Plus className="mr-2 h-4 w-4" />
+                            Create Your First Test
+                        </Button>
+                    )}
+                </div>
+            ) : viewMode === "grid" ? (
+                /* Enhanced Grid View */
+                <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+                    <AnimatePresence>
+                        {tests.map((t) => {
+                            const TestTypeIcon = getTestTypeIcon(t.testType);
+                            const price = priceLabel(t);
+
+                            return (
+                                <motion.div
+                                    key={t._id}
+                                    layout
+                                    initial={{ opacity: 0, scale: 0.95 }}
+                                    animate={{ opacity: 1, scale: 1 }}
+                                    exit={{ opacity: 0, scale: 0.95 }}
+                                    transition={{ duration: 0.2 }}
+                                    className={`group relative border rounded-2xl bg-white p-4 transition-all hover:shadow-lg dark:bg-gray-900 cursor-pointer ${selectedTests.includes(t._id)
+                                        ? "border-blue-500 ring-2 ring-blue-500/20"
+                                        : "border-gray-200 hover:border-gray-300 dark:border-gray-800 dark:hover:border-gray-700"
+                                        }`}
+                                    onClick={() => {
+                                        setSelectedTests(prev =>
+                                            prev.includes(t._id)
+                                                ? prev.filter(id => id !== t._id)
+                                                : [...prev, t._id]
+                                        );
+                                    }}
+                                >
+                                    {/* Selection indicator */}
+                                    <div className="absolute right-2 top-2">
+                                        <div className={`h-5 w-5 rounded-full border-2 transition-colors ${selectedTests.includes(t._id)
+                                            ? "border-blue-500 bg-blue-500"
+                                            : "border-gray-300 dark:border-gray-600"
+                                            }`}>
+                                            {selectedTests.includes(t._id) && (
+                                                <CheckCircle2 className="h-4 w-4 text-white" />
+                                            )}
+                                        </div>
+                                    </div>
+
+                                    {/* Header */}
+                                    <div className="mb-3 mt-3 flex items-start gap-3">
+
+                                        <div className="flex-1">
+                                            <h3 className="font-semibold text-gray-900 dark:text-white line-clamp-2">
+                                                {t.title}
+                                            </h3>
+                                            <p className="mt-px text-xs text-gray-500 dark:text-gray-400">
+                                                {t.exam?.name || "Unknown Exam"}
+                                            </p>
+                                        </div>
+                                    </div>
+
+                                    {/* Stats */}
+                                    <div className="mb-3 grid grid-cols-2 gap-2">
+                                        <div className="rounded-lg bg-gray-50 p-2 dark:bg-gray-800">
+                                            <div className="flex items-center gap-1 text-xs text-gray-500 dark:text-gray-400">
+                                                <Hash className="h-3 w-3" />
+                                                Questions
+                                            </div>
+                                            <p className="mt-0.5 text-sm font-semibold text-gray-900 dark:text-white">
+                                                {t.totalQuestions || 0}
+                                            </p>
+                                        </div>
+                                        <div className="rounded-lg bg-gray-50 p-2 dark:bg-gray-800">
+                                            <div className="flex items-center gap-1 text-xs text-gray-500 dark:text-gray-400">
+                                                <Timer className="h-3 w-3" />
+                                                Duration
+                                            </div>
+                                            <p className="mt-0.5 text-sm font-semibold text-gray-900 dark:text-white">
+                                                {t.totalDurationMinutes || 0}m
+                                            </p>
+                                        </div>
+                                    </div>
+
+                                    {/* Tags */}
+                                    <div className="mb-2 flex flex-wrap gap-2">
+                                        <span className={`inline-flex items-center gap-1 rounded-full border px-2 py-0.5 text-xs font-medium ${getDifficultyColor(t.difficultyLabel)}`}>
+                                            {t.difficultyLabel}
+                                        </span>
+                                        <span className="inline-flex items-center gap-1 rounded-full border border-gray-200 bg-gray-50 px-2 py-0.5 text-xs font-medium text-gray-700 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-300">
+                                            <Layers className="h-3 w-3" />
+                                            {t.sectionCount || 1} {t.sectionCount === 1 ? 'Section' : 'Sections'}
+                                        </span>
+                                    </div>
+
+                                    {/* Price and Actions */}
+                                    <div className="flex items-center justify-between dark:border-gray-800">
+                                        <div className="flex items-center gap-2">
+                                            <IndianRupee className={`h-4 w-4 ${price.color}`} />
+                                            <span className={`text-sm font-semibold ${price.color}`}>
+                                                {price.label}
+                                            </span>
+                                            {price.original && (
+                                                <span className="text-xs text-gray-400 line-through">
+                                                    {price.original}
+                                                </span>
+                                            )}
+                                        </div>
+                                        <div className="flex items-center gap-1 opacity-0 transition-opacity group-hover:opacity-100">
+                                            <button
+                                                className="rounded-full p-2 text-gray-500 hover:bg-gray-100 hover:text-blue-600 dark:hover:bg-gray-800 dark:hover:text-blue-400"
+                                                onClick={() => { if (t.exam?.name.toLowerCase().includes("gmat")) { navigate(`/gmat/tests/${t._id}`, { replace: true }) } else if (t.exam?.name.toLowerCase().includes("pte")) { navigate(`/pte/tests/${t._id}`, { replace: true }) } else if (t.exam?.name.toLowerCase().includes("gre")) { navigate(`/gre/tests/${t._id}`, { replace: true }) } else navigate(`/mcq/tests/${t._id}`, { replace: true }) }}
+                                            >
+                                                <ArrowUpRight className="h-5 w-5" />
+                                            </button>
+                                            <button
+                                                onClick={(e) => {
+                                                    e.stopPropagation();
+                                                    openEditDrawer(t._id);
+                                                }}
+                                                className="rounded-full p-2 text-gray-500 hover:bg-gray-100 hover:text-blue-600 dark:hover:bg-gray-800 dark:hover:text-blue-400"
+                                            >
+                                                <Edit3 className="h-5 w-5" />
+                                            </button>
+                                            <button
+                                                onClick={(e) => {
+                                                    e.stopPropagation();
+                                                    handleDelete(t);
+                                                }}
+                                                className="rounded-full p-2 text-gray-500 hover:bg-red-50 hover:text-red-600 dark:hover:bg-red-900/20 dark:hover:text-red-400"
+                                            >
+                                                <Trash2 className="h-5 w-5" />
+                                            </button>
+                                        </div>
+                                    </div>
+                                </motion.div>
+                            );
+                        })}
+                    </AnimatePresence>
+                </div>
+            ) : (
+                <div className="rounded-xl dark:bg-gray-800 bg-white">
+                    <div className="overflow-x-auto">
+                        <table className="w-full">
+                            <thead>
+                                <tr className="border-b border-gray-100 text-left dark:border-gray-800">
+                                    <th className="p-4">
+                                        <input
+                                            type="checkbox"
+                                            checked={selectedTests.length === tests.length}
+                                            onChange={() => {
+                                                if (selectedTests.length === tests.length) {
+                                                    setSelectedTests([]);
+                                                } else {
+                                                    setSelectedTests(tests.map(t => t._id));
+                                                }
+                                            }}
+                                            className="rounded border-gray-300"
+                                        />
+                                    </th>
+                                    <th className="p-4 text-xs font-medium text-gray-500 dark:text-gray-400">Test Name</th>
+                                    <th className="p-4 text-xs font-medium text-gray-500 dark:text-gray-400">Exam</th>
+                                    <th className="p-4 text-xs font-medium text-gray-500 dark:text-gray-400">Type</th>
+                                    <th className="p-4 text-xs font-medium text-gray-500 dark:text-gray-400">Difficulty</th>
+                                    <th className="p-4 text-xs font-medium text-gray-500 dark:text-gray-400">Questions</th>
+                                    <th className="p-4 text-xs font-medium text-gray-500 dark:text-gray-400">Duration</th>
+                                    <th className="p-4 text-xs font-medium text-gray-500 dark:text-gray-400">Price</th>
+                                    <th className="p-4 text-xs font-medium text-gray-500 dark:text-gray-400">Status</th>
+                                    <th className="p-4 text-xs font-medium text-gray-500 dark:text-gray-400">Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody className="divide-y divide-gray-100 dark:divide-gray-800">
+                                {tests.map((t) => {
+                                    const TestTypeIcon = getTestTypeIcon(t.testType);
+                                    const price = priceLabel(t);
+
+                                    return (
+                                        <tr
+                                            key={t._id}
+                                            className={`group transition-colors hover:bg-gray-50 dark:hover:bg-gray-800/50 ${selectedTests.includes(t._id) ? "bg-blue-50/50 dark:bg-blue-900/10" : ""
+                                                }`}
+                                        >
+                                            <td className="p-3">
+                                                <input
+                                                    type="checkbox"
+                                                    checked={selectedTests.includes(t._id)}
+                                                    onChange={() => {
+                                                        setSelectedTests(prev =>
+                                                            prev.includes(t._id)
+                                                                ? prev.filter(id => id !== t._id)
+                                                                : [...prev, t._id]
+                                                        );
+                                                    }}
+                                                    className="rounded border-gray-300"
+                                                />
+                                            </td>
+                                            <td className="p-3">
+                                                <div className="flex items-center gap-3">
+                                                    <div>
+                                                        <p className="font-medium text-gray-900 dark:text-white">
+                                                            {t.title}
+                                                        </p>
+                                                        
+                                                    </div>
+                                                </div>
+                                            </td>
+                                            <td className="p-3">
+                                                <div className="flex items-center gap-3">
+                                                    <div>
+                                                        
+                                                        <p className="text-xs text-gray-500 dark:text-gray-400">
+                                                            {t.exam?.name}
+                                                        </p>
+                                                    </div>
+                                                </div>
+                                            </td>
+                                            <td className="p-4">
+                                                <span className="inline-flex items-center gap-1 rounded-full bg-gray-100 px-2 py-0.5 text-xs font-medium text-gray-700 dark:bg-gray-800 dark:text-gray-300">
+                                                    {TEST_TYPE_OPTIONS.find(x => x.value === t.testType)?.label || t.testType}
+                                                </span>
+                                            </td>
+                                            <td className="p-4">
+                                                <span className={`inline-flex items-center rounded-full border px-2 py-0.5 text-xs font-medium ${getDifficultyColor(t.difficultyLabel)}`}>
+                                                    {t.difficultyLabel}
+                                                </span>
+                                            </td>
+                                            <td className="p-4 text-sm text-gray-700 dark:text-gray-300">
+                                                {t.totalQuestions || 0}
+                                            </td>
+                                            <td className="p-4 text-sm text-gray-700 dark:text-gray-300">
+                                                {t.totalDurationMinutes || 0}m
+                                            </td>
+                                            <td className="p-4">
+                                                <div className="flex items-center gap-1">
+                                                    <IndianRupee className={`h-3.5 w-3.5 ${price.color}`} />
+                                                    <span className={`text-sm font-medium ${price.color}`}>
+                                                        {price.label}
+                                                    </span>
+                                                </div>
+                                            </td>
+                                            <td className="p-4">
+                                                <span className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-xs font-medium ${t.isActive
+                                                    ? "bg-emerald-50 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-300"
+                                                    : "bg-gray-100 text-gray-500 dark:bg-gray-800 dark:text-gray-400"
+                                                    }`}>
+                                                    {t.isActive ? (
+                                                        <CheckCircle2 className="h-3 w-3" />
+                                                    ) : (
+                                                        <XCircle className="h-3 w-3" />
+                                                    )}
+                                                    {t.isActive ? "Active" : "Inactive"}
+                                                </span>
+                                            </td>
+                                            <td className="p-4">
+                                                <div className="flex items-center gap-2">
+                                                    <button
+                                                        onClick={() => openEditDrawer(t._id)}
+                                                        className="rounded-lg p-1.5 text-gray-500 hover:bg-gray-100 hover:text-blue-600 dark:hover:bg-gray-800 dark:hover:text-blue-400"
+                                                    >
+                                                        <Edit3 className="h-4 w-4" />
+                                                    </button>
+                                                    <button
+                                                        onClick={() => handleDelete(t)}
+                                                        className="rounded-lg p-1.5 text-gray-500 hover:bg-red-50 hover:text-red-600 dark:hover:bg-red-900/20 dark:hover:text-red-400"
+                                                    >
+                                                        <Trash2 className="h-4 w-4" />
+                                                    </button>
+                                                    <DropdownMenu>
+                                                        <DropdownMenuTrigger className="rounded-lg p-1.5 text-gray-500 hover:bg-gray-100 dark:hover:bg-gray-800">
+                                                            <MoreHorizontal className="h-4 w-4" />
+                                                        </DropdownMenuTrigger>
+                                                        <DropdownMenuContent>
+                                                            <DropdownMenuItem
+                                                                onClick={() => navigate(`/mcq/tests/${t._id}`)}
+                                                            >
+                                                                <Eye className="mr-2 h-4 w-4" />
+                                                                Preview
+                                                            </DropdownMenuItem>
+                                                            <DropdownMenuItem
+                                                                onClick={() => {
+                                                                    openCreateDrawer();
+                                                                    // Clone logic here
+                                                                }}
+                                                            >
+                                                                <Copy className="mr-2 h-4 w-4" />
+                                                                Duplicate
+                                                            </DropdownMenuItem>
+                                                        </DropdownMenuContent>
+                                                    </DropdownMenu>
+                                                </div>
+                                            </td>
+                                        </tr>
+                                    );
+                                })}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            )}
+
+            {/* Enhanced Pagination */}
+            {!loading && totalPages > 1 && (
+                <div className="mt-6 flex items-center justify-between">
+                    <p className="text-sm text-gray-500 dark:text-gray-400">
+                        Page {page} of {totalPages}
+                    </p>
+                    <div className="flex items-center gap-2">
                         <Button
                             variant="outline"
+                            size="sm"
                             disabled={page <= 1}
                             onClick={() => setPage((p) => Math.max(1, p - 1))}
-                            className="flex items-center gap-1 rounded-xl px-3 py-2 text-sm disabled:opacity-50"
+                            className="flex items-center gap-1"
                         >
                             <ChevronLeft className="h-4 w-4" />
-                            Prev
+                            Previous
                         </Button>
-                        <span className="text-sm text-gray-700 dark:text-gray-300">
-                            Page{" "}
-                            <span className="font-semibold text-blue-600 dark:text-blue-400">{page}</span>{" "}
-                            of {totalPages}
-                        </span>
+                        {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
+                            let pageNum;
+                            if (totalPages <= 5) {
+                                pageNum = i + 1;
+                            } else if (page <= 3) {
+                                pageNum = i + 1;
+                            } else if (page >= totalPages - 2) {
+                                pageNum = totalPages - 4 + i;
+                            } else {
+                                pageNum = page - 2 + i;
+                            }
+                            return (
+                                <button
+                                    key={pageNum}
+                                    onClick={() => setPage(pageNum)}
+                                    className={`h-8 w-8 rounded-lg text-sm font-medium transition-colors ${page === pageNum
+                                        ? "bg-blue-600 text-white"
+                                        : "text-gray-500 hover:bg-gray-100 dark:hover:bg-gray-800"
+                                        }`}
+                                >
+                                    {pageNum}
+                                </button>
+                            );
+                        })}
                         <Button
                             variant="outline"
+                            size="sm"
                             disabled={page >= totalPages}
                             onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
-                            className="flex items-center gap-1 rounded-xl px-3 py-2 text-sm disabled:opacity-50"
+                            className="flex items-center gap-1"
                         >
                             Next
                             <ChevronRight className="h-4 w-4" />
                         </Button>
                     </div>
-                )}
-                {/* Drawer */}
-                <AnimatePresence>
-                    {sideOpen && (
+                </div>
+            )}
+
+            {/* Enhanced Drawer */}
+            <AnimatePresence>
+                {sideOpen && (
+                    <motion.div
+                        className="fixed inset-0 z-50 flex"
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        exit={{ opacity: 0 }}
+                        transition={{ duration: 0.2 }}
+                    >
                         <motion.div
-                            className="fixed inset-0 z-50 flex" // Increased z-index to 50
+                            className="absolute inset-0 bg-black/20 backdrop-blur-[0.5px]"
+                            onClick={saving ? undefined : closeDrawer}
                             initial={{ opacity: 0 }}
                             animate={{ opacity: 1 }}
                             exit={{ opacity: 0 }}
-                            transition={{ duration: 0.2 }}
+                        />
+                        <motion.div
+                            className="relative ml-auto rounded-4xl overflow-hidden flex h-full w-full max-w-4xl flex-col bg-white shadow-2xl dark:bg-gray-900"
+                            initial={{ x: "100%" }}
+                            animate={{ x: 0 }}
+                            exit={{ x: "100%" }}
+                            transition={{ type: "spring", damping: 30, stiffness: 300 }}
                         >
-                            {/* Backdrop */}
-                            <motion.div
-                                className="absolute inset-0 bg-black/40 backdrop-blur-[1px]"
-                                onClick={saving ? undefined : closeDrawer}
-                                initial={{ opacity: 0 }}
-                                animate={{ opacity: 1 }}
-                                exit={{ opacity: 0 }}
-                                transition={{ duration: 0.2 }}
-                            />
-                            {/* Panel */}
-                            <motion.div
-                                className="relative ml-auto flex h-full w-full max-w-3xl rounded-3xl flex-col border border-gray-100 bg-white shadow-xl dark:border-gray-800 p-1 dark:bg-gray-900"
-                                initial={{ x: "100%" }}
-                                animate={{ x: 0 }}
-                                exit={{ x: "100%" }}
-                                transition={{ type: "tween", duration: 0.3, ease: "easeInOut" }}
-                            >
-                                <div className="flex items-center justify-between border-b border-gray-200 px-4 py-3 dark:border-gray-800">
-                                    <div>
-                                        <p className="flex items-center gap-2 text-base font-semibold text-gray-900 dark:text-gray-100">
-                                            {editingId ? "Edit Test Template" : "Create Test Template"}
-                                            <Filter className="h-3 w-3 text-gray-400" />
-                                        </p>
-                                        <p className="text-xs text-gray-500 dark:text-gray-400">
-                                            Configure sections, quiz settings and pricing.
-                                        </p>
-                                    </div>
-                                    <button
-                                        onClick={saving ? undefined : closeDrawer}
-                                        className="rounded-full p-1 text-gray-500 hover:bg-gray-100 dark:text-gray-400 dark:hover:bg-gray-800"
-                                    >
-                                        <X className="h-5 w-5" />
-                                    </button>
+                            {/* Drawer Header */}
+                            <div className="flex items-center justify-between border-b bg-gray-100 border-gray-200 px-6 py-3 dark:border-gray-800">
+                                <div>
+                                    <h2 className="text-lg font-semibold text-gray-900 dark:text-white">
+                                        {editingId ? "Edit Test Template" : "Create New Test Template"}
+                                    </h2>
+                                    <p className=" text-xs text-gray-500 dark:text-gray-400">
+                                        {editingId ? "Update your test configuration" : "Configure your new test template"}
+                                    </p>
                                 </div>
-                                {formLoading ? (
-                                    <div className="flex flex-1 items-center justify-center text-sm text-gray-500 dark:text-gray-400">
-                                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                                        Loading test details...
+                                <button
+                                    onClick={saving ? undefined : closeDrawer}
+                                    className="rounded-full p-2 text-gray-500 hover:bg-gray-100 dark:text-gray-400 dark:hover:bg-gray-800"
+                                >
+                                    <X className="h-5 w-5" />
+                                </button>
+                            </div>
+
+                            {formLoading ? (
+                                <div className="flex flex-1 items-center justify-center">
+                                    <div className="text-center">
+                                        <Loader2 className="mx-auto mb-4 h-8 w-8 animate-spin text-blue-600" />
+                                        <p className="text-sm text-gray-500 dark:text-gray-400">
+                                            Loading test details...
+                                        </p>
                                     </div>
-                                ) : (
-                                    <form
-                                        onSubmit={handleSubmit(onSubmit)}
-                                        className="flex-1 space-y-4 overflow-y-auto px-4 py-4"
-                                    >
-                                        {/* Basic Info */}
-                                        <div className="space-y-3 rounded-2xl border border-gray-200 p-3 dark:border-gray-800">
-                                            <div>
-                                                <Label>Title</Label>
-                                                <Input
-                                                    type="text"
-                                                    placeholder="GMAT Full Length Test 01"
-                                                    value={watchTitle}
-                                                    onChange={(e) => setValue("title", e.target.value)}
-                                                    error={!!errors.title}
-                                                    hint={errors.title?.message}
-                                                />
+                                </div>
+                            ) : (
+                                <form
+                                    onSubmit={handleSubmit(onSubmit)}
+                                    className="flex-1 overflow-y-auto"
+                                >
+                                    <div className="space-y-6 p-6">
+                                        {/* Basic Info Section */}
+                                        <div className="rounded-2xl border bg-gray-50 border-gray-200 p-5 dark:border-gray-800">
+                                            <div className="mb-4 flex items-center gap-2">
+                                               
+                                                <h3 className="text-base font-semibold text-gray-900 dark:text-white">
+                                                    Basic Information
+                                                </h3>
                                             </div>
-                                            <div>
-                                                <Label>Description</Label>
-                                                <Input
-                                                    type="text"
-                                                    placeholder="Short description for this test"
-                                                    value={watchDescription}
-                                                    onChange={(e) => setValue("description", e.target.value)}
-                                                />
-                                            </div>
-                                            <div className="grid gap-3 sm:grid-cols-3">
+                                            <div className="space-y-4">
                                                 <div>
-                                                    <Label>Exam</Label>
-                                                    <Select
-                                                        defaultValue={watch("exam")}
-                                                        options={[
-                                                            { value: "", label: "Select exam" },
-                                                            ...exams.map((e) => ({ value: e._id, label: e.name })),
-                                                        ]}
-                                                        onChange={(value: string) => setValue("exam", value)}
-                                                    />
-                                                    {errors.exam && (
-                                                        <p className="mt-1 text-xs text-red-500">
-                                                            {(errors as any).exam?.message || "Exam is required"}
-                                                        </p>
-                                                    )}
-                                                </div>
-                                                <div>
-                                                    <Label>Test Type</Label>
-                                                    <Select
-                                                        defaultValue={watchTestType}
-                                                        options={TEST_TYPE_OPTIONS}
-                                                        onChange={(value: any) =>
-                                                            setValue("testType", value as TestTemplateFormValues["testType"])
-                                                        }
+                                                    <Label>Title *</Label>
+                                                    <Input
+                                                        type="text"
+                                                        placeholder="e.g., GMAT Full Length Test 01"
+                                                        value={watchTitle}
+                                                        onChange={(e) => setValue("title", e.target.value)}
+                                                        error={!!errors.title}
+                                                        hint={errors.title?.message}
                                                     />
                                                 </div>
                                                 <div>
-                                                    <Label>Difficulty Label</Label>
-                                                    <Select
-                                                        defaultValue={watch("difficultyLabel")}
-                                                        options={DIFFICULTY_LABEL_OPTIONS}
-                                                        onChange={(value: any) =>
-                                                            setValue(
-                                                                "difficultyLabel",
-                                                                value as TestTemplateFormValues["difficultyLabel"]
-                                                            )
-                                                        }
+                                                    <Label>Description</Label>
+                                                    <textarea
+                                                        value={watchDescription}
+                                                        onChange={(e) => setValue("description", e.target.value)}
+                                                        placeholder="Brief description of this test..."
+                                                        rows={3}
+                                                        className="w-full rounded-xl border border-gray-200 bg-white px-3 py-2 text-sm text-gray-900 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-100"
                                                     />
+                                                </div>
+                                                <div className="grid gap-4 sm:grid-cols-3">
+                                                    <div>
+                                                        <Label>Exam *</Label>
+                                                        <Select
+                                                            defaultValue={watch("exam")}
+                                                            options={[
+                                                                { value: "", label: "Select exam" },
+                                                                ...exams.map((e) => ({ value: e._id, label: e.name })),
+                                                            ]}
+                                                            onChange={(value: string) => setValue("exam", value)}
+                                                        />
+                                                        {errors.exam && (
+                                                            <p className="mt-1 text-xs text-red-500">Exam is required</p>
+                                                        )}
+                                                    </div>
+                                                    <div>
+                                                        <Label>Test Type</Label>
+                                                        <Select
+                                                            defaultValue={watchTestType}
+                                                            options={TEST_TYPE_OPTIONS}
+                                                            onChange={(value: any) =>
+                                                                setValue("testType", value)
+                                                            }
+                                                        />
+                                                    </div>
+                                                    <div>
+                                                        <Label>Difficulty Label</Label>
+                                                        <Select
+                                                            defaultValue={watch("difficultyLabel")}
+                                                            options={DIFFICULTY_LABEL_OPTIONS}
+                                                            onChange={(value: any) =>
+                                                                setValue("difficultyLabel", value)
+                                                            }
+                                                        />
+                                                    </div>
+                                                </div>
+                                                <div>
+                                                    <Label>Status</Label>
+                                                    <div className="flex items-center gap-2">
+                                                        <label className="relative inline-flex cursor-pointer items-center">
+                                                            <input
+                                                                type="checkbox"
+                                                                checked={watchIsActive}
+                                                                onChange={(e) => setValue("isActive", e.target.checked)}
+                                                                className="peer sr-only"
+                                                            />
+                                                            <div className="h-6 w-11 rounded-full bg-gray-200 after:absolute after:left-[2px] after:top-[2px] after:h-5 after:w-5 after:rounded-full after:border after:border-gray-300 after:bg-white after:transition-all after:content-[''] peer-checked:bg-blue-600 peer-checked:after:translate-x-full peer-checked:after:border-white peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 dark:border-gray-600 dark:bg-gray-700 dark:peer-focus:ring-blue-800"></div>
+                                                        </label>
+                                                        <span className="text-sm text-gray-700 dark:text-gray-200">
+                                                            {watchIsActive ? "Active" : "Inactive"}
+                                                        </span>
+                                                    </div>
                                                 </div>
                                             </div>
                                         </div>
-                                        {/* Sections builder (for full/sectional) */}
+
+                                        {/* Sections Builder (for full/sectional) */}
                                         {!isQuiz && (
-                                            <div className="space-y-3 rounded-2xl border border-gray-200 p-3 dark:border-gray-800">
-                                                <div className="flex items-center justify-between">
-                                                    <Label>Sections in this Test</Label>
-                                                    <button
+                                            <div className="rounded-2xl border border-gray-200 p-5 dark:border-gray-800">
+                                                <div className="mb-4 flex items-center justify-between">
+                                                    <div className="flex items-center gap-2">
+                                                        <h3 className="text-base font-semibold text-gray-900 dark:text-white">
+                                                            Sections
+                                                        </h3>
+                                                    </div>
+                                                    <Button
                                                         type="button"
+                                                        variant="outline"
+                                                        size="sm"
                                                         onClick={() =>
                                                             append({
                                                                 sectionId: "",
@@ -1166,233 +1561,264 @@ export default function TestTemplateManagementPage() {
                                                                 randomQuestionTypes: "",
                                                                 randomDifficulties: "",
                                                                 randomTags: "",
-                                                                questionIds: []
+                                                                questionIds: [],
                                                             })
                                                         }
-                                                        className="text-xs text-blue-600 hover:underline dark:text-blue-400"
                                                     >
-                                                        + Add Section
-                                                    </button>
+                                                        <Plus className="mr-1 h-4 w-4" />
+                                                        Add Section
+                                                    </Button>
                                                 </div>
-                                                {sectionFields.length === 0 && (
-                                                    <p className="text-xs text-gray-500 dark:text-gray-400">
-                                                        No sections added yet.
-                                                    </p>
-                                                )}
-                                                <div className="space-y-3">
-                                                    {sectionFields.map((field, index) => {
-                                                        const selectionMode = watch(
-                                                            `sections.${index}.selectionMode` as const
-                                                        ) as "fixed" | "random";
-                                                        return (
-                                                            <motion.div
-                                                                key={field.id}
-                                                                layout
-                                                                initial={{ opacity: 0, scale: 0.9 }}
-                                                                animate={{ opacity: 1, scale: 1 }}
-                                                                exit={{ opacity: 0, scale: 0.9 }}
-                                                                transition={{ duration: 0.2 }}
-                                                                className="space-y-2 rounded-xl border border-gray-200 p-2 dark:border-gray-700"
-                                                            >
-                                                                <div className="flex items-center justify-between text-xs text-gray-500 dark:text-gray-400">
-                                                                    <span>Section #{index + 1}</span>
-                                                                    <button
-                                                                        type="button"
-                                                                        onClick={() => remove(index)}
-                                                                        className="rounded-full p-1 hover:bg-gray-100 dark:hover:bg-gray-800"
-                                                                    >
-                                                                        <X className="h-3 w-3" />
-                                                                    </button>
-                                                                </div>
-                                                                <div className="grid gap-2 sm:grid-cols-2">
-                                                                    <div>
-                                                                        <Label>Section</Label>
-                                                                        <Select
-                                                                            defaultValue={watch(
-                                                                                `sections.${index}.sectionId` as const
-                                                                            )}
-                                                                            options={[
-                                                                                { value: "", label: "Select section" },
-                                                                                ...sections.map((s) => ({
-                                                                                    value: s._id,
-                                                                                    label: s.name,
-                                                                                })),
-                                                                            ]}
-                                                                            onChange={(value: string) =>
-                                                                                setValue(
-                                                                                    `sections.${index}.sectionId` as const,
-                                                                                    value
-                                                                                )
-                                                                            }
-                                                                        />
-                                                                    </div>
-                                                                    <div>
-                                                                        <Label>Custom Name (optional)</Label>
-                                                                        <Input
-                                                                            type="text"
-                                                                            placeholder="e.g., Verbal Section 1"
-                                                                            value={watch(`sections.${index}.customName` as const)}
-                                                                            onChange={(e) =>
-                                                                                setValue(
-                                                                                    `sections.${index}.customName` as const,
-                                                                                    e.target.value
-                                                                                )
-                                                                            }
-                                                                        />
-                                                                    </div>
-                                                                </div>
-                                                                <div className="grid gap-2 sm:grid-cols-3">
-                                                                    <div>
-                                                                        <Label>Order</Label>
-                                                                        <Input
-                                                                            type="number"
-                                                                            value={watch(`sections.${index}.order` as const)}
-                                                                            onChange={(e) =>
-                                                                                setValue(
-                                                                                    `sections.${index}.order` as const,
-                                                                                    parseFloat(e.target.value) || 0
-                                                                                )
-                                                                            }
-                                                                        />
-                                                                    </div>
-                                                                    <div>
-                                                                        <Label>Duration (mins)</Label>
-                                                                        <Input
-                                                                            type="number"
-                                                                            value={watch(`sections.${index}.durationMinutes` as const) || sections.find(s => s._id === watch(`sections.${index}.sectionId` as const))?.duration / 60 || 0}
-                                                                            onChange={(e) =>
-                                                                                setValue(
-                                                                                    `sections.${index}.durationMinutes` as const,
-                                                                                    parseFloat(e.target.value) || 0
-                                                                                )
-                                                                            }
-                                                                        />
-                                                                    </div>
-                                                                    <div>
-                                                                        <Label>Selection Mode</Label>
-                                                                        <Select
-                                                                            defaultValue={selectionMode}
-                                                                            options={[
-                                                                                { value: "fixed", label: "Fixed questions" },
-                                                                                { value: "random", label: "Random from pool" },
-                                                                            ]}
-                                                                            onChange={(val: "fixed" | "random") =>
-                                                                                setValue(
-                                                                                    `sections.${index}.selectionMode` as const,
-                                                                                    val
-                                                                                )
-                                                                            }
-                                                                        />
-                                                                    </div>
-                                                                </div>
-                                                                {selectionMode === "fixed" ? (
-                                                                    <div className="flex flex-col gap-1 sm:flex-row sm:items-center sm:justify-between">
-                                                                        <div className="text-xs text-gray-500 dark:text-gray-400">
-                                                                            <span className="font-medium">
-                                                                                Selected questions:{" "}
-                                                                                {(watch(`sections.${index}.questionIds` as const) || []).length}
+
+                                                {sectionFields.length === 0 ? (
+                                                    <div className="rounded-xl border-2 border-dashed border-gray-200 p-8 text-center dark:border-gray-700">
+                                                        <Layers className="mx-auto mb-3 h-8 w-8 text-gray-300 dark:text-gray-600" />
+                                                        <p className="text-sm text-gray-500 dark:text-gray-400">
+                                                            No sections added yet. Click "Add Section" to begin.
+                                                        </p>
+                                                    </div>
+                                                ) : (
+                                                    <div className="space-y-4">
+                                                        {sectionFields.map((field, index) => {
+                                                            const selectionMode = watch(
+                                                                `sections.${index}.selectionMode` as const
+                                                            ) as "fixed" | "random";
+
+                                                            return (
+                                                                <motion.div
+                                                                    key={field.id}
+                                                                    layout
+                                                                    initial={{ opacity: 0, y: 20 }}
+                                                                    animate={{ opacity: 1, y: 0 }}
+                                                                    exit={{ opacity: 0, y: -20 }}
+                                                                    transition={{ duration: 0.3 }}
+                                                                    className="rounded-xl border border-gray-200 bg-gray-50/50 p-4 dark:border-gray-700 dark:bg-gray-800/50"
+                                                                >
+                                                                    <div className="mb-3 flex items-center justify-between">
+                                                                        <div className="flex items-center gap-2">
+                                                                            <span className="flex h-6 w-6 items-center justify-center rounded-full bg-blue-100 text-xs font-semibold text-blue-600 dark:bg-blue-900/30 dark:text-blue-400">
+                                                                                {index + 1}
                                                                             </span>
-                                                                            {(watch(`sections.${index}.questionIds` as const) || []).length > 0 && (
-                                                                                <span className="ml-1 text-[10px]">
-                                                                                    (Question count will auto-sync)
-                                                                                </span>
-                                                                            )}
+                                                                            <span className="text-sm font-medium text-gray-700 dark:text-gray-200">
+                                                                                Section
+                                                                            </span>
                                                                         </div>
-                                                                        <Button
+                                                                        <button
                                                                             type="button"
-                                                                            variant="outline"
-                                                                            size="sm"
-                                                                            className="mt-1 rounded-xl px-3 py-1 text-xs sm:mt-0"
-                                                                            onClick={(e: React.MouseEvent<HTMLButtonElement>) => { e.preventDefault(); openQuestionModalForSection(index) }}
+                                                                            onClick={() => remove(index)}
+                                                                            className="rounded-lg p-1.5 text-gray-400 hover:bg-red-50 hover:text-red-500 dark:hover:bg-red-900/20"
                                                                         >
-                                                                            Manage Questions
-                                                                        </Button>
+                                                                            <Trash2 className="h-4 w-4" />
+                                                                        </button>
                                                                     </div>
-                                                                ) : (
-                                                                    <div className="space-y-2 rounded-lg bg-gray-50 p-2 text-xs dark:bg-gray-800/50">
-                                                                        <div className="grid gap-2 sm:grid-cols-2">
-                                                                            <div>
-                                                                                <Label>Random Question Count</Label>
-                                                                                <Input
-                                                                                    type="number"
-                                                                                    value={watch(`sections.${index}.randomQuestionCount` as const)}
-                                                                                    onChange={(e) =>
+
+                                                                    <div className="grid gap-3 sm:grid-cols-2">
+                                                                        <div>
+                                                                            <Label>Section *</Label>
+                                                                            <Select
+                                                                                defaultValue={watch(
+                                                                                    `sections.${index}.sectionId` as const
+                                                                                )}
+                                                                                options={[
+                                                                                    { value: "", label: "Select section" },
+                                                                                    ...sections.map((s) => ({
+                                                                                        value: s._id,
+                                                                                        label: s.name,
+                                                                                    })),
+                                                                                ]}
+                                                                                onChange={(value: string) => {
+                                                                                    setValue(
+                                                                                        `sections.${index}.sectionId` as const,
+                                                                                        value
+                                                                                    );
+                                                                                    // Auto-fill duration from section
+                                                                                    const section = sections.find(s => s._id === value);
+                                                                                    if (section?.duration) {
                                                                                         setValue(
-                                                                                            `sections.${index}.randomQuestionCount` as const,
-                                                                                            parseFloat(e.target.value) || 0
-                                                                                        )
+                                                                                            `sections.${index}.durationMinutes` as const,
+                                                                                            Math.round(section.duration / 60)
+                                                                                        );
                                                                                     }
-                                                                                />
-                                                                            </div>
-                                                                            <div>
-                                                                                <Label>Question Types (keys)</Label>
-                                                                                <Input
-                                                                                    type="text"
-                                                                                    placeholder="e.g., gmat_quant_problem_solving"
-                                                                                    value={watch(`sections.${index}.randomQuestionTypes` as const)}
-                                                                                    onChange={(e) =>
-                                                                                        setValue(
-                                                                                            `sections.${index}.randomQuestionTypes` as const,
-                                                                                            e.target.value
-                                                                                        )
-                                                                                    }
-                                                                                />
+                                                                                }}
+                                                                            />
+                                                                        </div>
+                                                                        <div>
+                                                                            <Label>Custom Name</Label>
+                                                                            <Input
+                                                                                type="text"
+                                                                                placeholder="Optional display name"
+                                                                                value={watch(`sections.${index}.customName` as const)}
+                                                                                onChange={(e) =>
+                                                                                    setValue(
+                                                                                        `sections.${index}.customName` as const,
+                                                                                        e.target.value
+                                                                                    )
+                                                                                }
+                                                                            />
+                                                                        </div>
+                                                                    </div>
+
+                                                                    <div className="mt-3 grid gap-3 sm:grid-cols-3">
+                                                                        <div>
+                                                                            <Label>Order</Label>
+                                                                            <Input
+                                                                                type="number"
+                                                                                value={watch(`sections.${index}.order` as const)}
+                                                                                onChange={(e) =>
+                                                                                    setValue(
+                                                                                        `sections.${index}.order` as const,
+                                                                                        parseInt(e.target.value) || 1
+                                                                                    )
+                                                                                }
+                                                                            />
+                                                                        </div>
+                                                                        <div>
+                                                                            <Label>Duration (mins)</Label>
+                                                                            <Input
+                                                                                type="number"
+                                                                                value={watch(`sections.${index}.durationMinutes` as const)}
+                                                                                onChange={(e) =>
+                                                                                    setValue(
+                                                                                        `sections.${index}.durationMinutes` as const,
+                                                                                        parseInt(e.target.value) || 0
+                                                                                    )
+                                                                                }
+                                                                            />
+                                                                        </div>
+                                                                        <div>
+                                                                            <Label>Question Selection</Label>
+                                                                            <Select
+                                                                                defaultValue={selectionMode}
+                                                                                options={[
+                                                                                    { value: "fixed", label: "Fixed Questions" },
+                                                                                    { value: "random", label: "Random Pool" },
+                                                                                ]}
+                                                                                onChange={(val: "fixed" | "random") =>
+                                                                                    setValue(
+                                                                                        `sections.${index}.selectionMode` as const,
+                                                                                        val
+                                                                                    )
+                                                                                }
+                                                                            />
+                                                                        </div>
+                                                                    </div>
+
+                                                                    {selectionMode === "fixed" ? (
+                                                                        <div className="mt-4 rounded-lg border border-dashed border-gray-300 bg-white p-3 dark:border-gray-600 dark:bg-gray-800">
+                                                                            <div className="flex items-center justify-between">
+                                                                                <div>
+                                                                                    <p className="text-sm font-medium text-gray-700 dark:text-gray-200">
+                                                                                        Selected Questions
+                                                                                    </p>
+                                                                                    <p className="mt-0.5 text-xs text-gray-500 dark:text-gray-400">
+                                                                                        {(watch(`sections.${index}.questionIds` as const) || []).length} questions selected
+                                                                                    </p>
+                                                                                </div>
+                                                                                <Button
+                                                                                    type="button"
+                                                                                    variant="outline"
+                                                                                    size="sm"
+                                                                                    onClick={(e) => {
+                                                                                        e.preventDefault();
+                                                                                        openQuestionModalForSection(index);
+                                                                                    }}
+                                                                                >
+                                                                                    <Search className="mr-1 h-3 w-3" />
+                                                                                    Browse Questions
+                                                                                </Button>
                                                                             </div>
                                                                         </div>
-                                                                        <div className="grid gap-2 sm:grid-cols-2">
-                                                                            <div>
-                                                                                <Label>Difficulties</Label>
-                                                                                <Input
-                                                                                    type="text"
-                                                                                    placeholder="Easy,Medium,Hard"
-                                                                                    value={watch(`sections.${index}.randomDifficulties` as const)}
-                                                                                    onChange={(e) =>
-                                                                                        setValue(
-                                                                                            `sections.${index}.randomDifficulties` as const,
-                                                                                            e.target.value
-                                                                                        )
-                                                                                    }
-                                                                                />
+                                                                    ) : (
+                                                                        <div className="mt-4 space-y-3 rounded-lg border border-dashed border-gray-300 bg-white p-3 dark:border-gray-600 dark:bg-gray-800">
+                                                                            <p className="text-sm font-medium text-gray-700 dark:text-gray-200">
+                                                                                Random Pool Configuration
+                                                                            </p>
+                                                                            <div className="grid gap-3 sm:grid-cols-2">
+                                                                                <div>
+                                                                                    <Label>Number of Questions</Label>
+                                                                                    <Input
+                                                                                        type="number"
+                                                                                        value={watch(`sections.${index}.randomQuestionCount` as const)}
+                                                                                        onChange={(e) =>
+                                                                                            setValue(
+                                                                                                `sections.${index}.randomQuestionCount` as const,
+                                                                                                parseInt(e.target.value) || 0
+                                                                                            )
+                                                                                        }
+                                                                                    />
+                                                                                </div>
+                                                                                <div>
+                                                                                    <Label>Question Types</Label>
+                                                                                    <Input
+                                                                                        type="text"
+                                                                                        placeholder="gmat_quant_ps, gmat_verbal_rc"
+                                                                                        value={watch(`sections.${index}.randomQuestionTypes` as const)}
+                                                                                        onChange={(e) =>
+                                                                                            setValue(
+                                                                                                `sections.${index}.randomQuestionTypes` as const,
+                                                                                                e.target.value
+                                                                                            )
+                                                                                        }
+                                                                                    />
+                                                                                </div>
+                                                                                <div>
+                                                                                    <Label>Difficulties</Label>
+                                                                                    <Input
+                                                                                        type="text"
+                                                                                        placeholder="Easy, Medium, Hard"
+                                                                                        value={watch(`sections.${index}.randomDifficulties` as const)}
+                                                                                        onChange={(e) =>
+                                                                                            setValue(
+                                                                                                `sections.${index}.randomDifficulties` as const,
+                                                                                                e.target.value
+                                                                                            )
+                                                                                        }
+                                                                                    />
+                                                                                </div>
+                                                                                <div>
+                                                                                    <Label>Tags</Label>
+                                                                                    <Input
+                                                                                        type="text"
+                                                                                        placeholder="algebra, geometry"
+                                                                                        value={watch(`sections.${index}.randomTags` as const)}
+                                                                                        onChange={(e) =>
+                                                                                            setValue(
+                                                                                                `sections.${index}.randomTags` as const,
+                                                                                                e.target.value
+                                                                                            )
+                                                                                        }
+                                                                                    />
+                                                                                </div>
                                                                             </div>
-                                                                            <div>
-                                                                                <Label>Tags</Label>
-                                                                                <Input
-                                                                                    type="text"
-                                                                                    placeholder="algebra,probability"
-                                                                                    value={watch(`sections.${index}.randomTags` as const)}
-                                                                                    onChange={(e) =>
-                                                                                        setValue(
-                                                                                            `sections.${index}.randomTags` as const,
-                                                                                            e.target.value
-                                                                                        )
-                                                                                    }
-                                                                                />
-                                                                            </div>
+                                                                            <p className="text-xs text-gray-400">
+                                                                                Use comma-separated values. Leave empty to include all.
+                                                                            </p>
                                                                         </div>
-                                                                        <p className="text-[10px] text-gray-500 dark:text-gray-400">
-                                                                            Use comma separated values. Question types must match your
-                                                                            question schema keys.
-                                                                        </p>
-                                                                    </div>
-                                                                )}
-                                                            </motion.div>
-                                                        );
-                                                    })}
-                                                </div>
+                                                                    )}
+                                                                </motion.div>
+                                                            );
+                                                        })}
+                                                    </div>
+                                                )}
                                             </div>
                                         )}
+
                                         {/* Quiz Config */}
                                         {isQuiz && (
-                                            <div className="space-y-3 rounded-2xl border border-gray-200 p-3 dark:border-gray-800">
-                                                <Label>Quiz Config</Label>
-                                                <div className="grid gap-2 sm:grid-cols-2">
+                                            <div className="rounded-2xl border border-gray-200 p-5 dark:border-gray-800">
+                                                <div className="mb-4 flex items-center gap-2">
+                                                    <h3 className="text-base font-semibold text-gray-900 dark:text-white">
+                                                        Quiz Configuration
+                                                    </h3>
+                                                </div>
+                                                <div className="grid gap-4 sm:grid-cols-2">
                                                     <div>
                                                         <Label>Mode</Label>
                                                         <Select
                                                             defaultValue={watchQuizMode}
                                                             options={[
-                                                                { value: "single_type", label: "Single Type" },
-                                                                { value: "mixed_types", label: "Mixed Types" },
+                                                                { value: "single_type", label: "Single Question Type" },
+                                                                { value: "mixed_types", label: "Mixed Question Types" },
                                                             ]}
                                                             onChange={(value: "single_type" | "mixed_types") =>
                                                                 setValue("quizMode", value)
@@ -1405,19 +1831,17 @@ export default function TestTemplateManagementPage() {
                                                             type="number"
                                                             value={watchQuizTotalQuestions}
                                                             onChange={(e) =>
-                                                                setValue("quizTotalQuestions", parseFloat(e.target.value) || 0)
+                                                                setValue("quizTotalQuestions", parseInt(e.target.value) || 0)
                                                             }
                                                         />
                                                     </div>
-                                                </div>
-                                                <div className="grid gap-2 sm:grid-cols-2">
                                                     <div>
-                                                        <Label>Duration (mins)</Label>
+                                                        <Label>Duration (minutes)</Label>
                                                         <Input
                                                             type="number"
                                                             value={watchQuizDurationMinutes}
                                                             onChange={(e) =>
-                                                                setValue("quizDurationMinutes", parseFloat(e.target.value) || 0)
+                                                                setValue("quizDurationMinutes", parseInt(e.target.value) || 0)
                                                             }
                                                         />
                                                     </div>
@@ -1425,26 +1849,18 @@ export default function TestTemplateManagementPage() {
                                                         <Label>Allowed Question Types</Label>
                                                         <Input
                                                             type="text"
-                                                            placeholder="gmat_verbal_sc,gmat_verbal_rc"
+                                                            placeholder="gmat_verbal_sc, gmat_verbal_rc"
                                                             value={watchQuizAllowedTypesInput}
                                                             onChange={(e) =>
                                                                 setValue("quizAllowedTypesInput", e.target.value)
                                                             }
                                                         />
-                                                        <p className="mt-1 text-[10px] text-gray-500 dark:text-gray-400">
-                                                            Comma separated, keys like:{" "}
-                                                            <span className="font-mono text-[10px]">
-                                                                {QUESTION_TYPE_KEYS.slice(0, 3).join(", ")}...
-                                                            </span>
-                                                        </p>
                                                     </div>
-                                                </div>
-                                                <div className="grid gap-2 sm:grid-cols-2">
                                                     <div>
                                                         <Label>Difficulties</Label>
                                                         <Input
                                                             type="text"
-                                                            placeholder="Easy,Medium"
+                                                            placeholder="Easy, Medium"
                                                             value={watchQuizDifficultiesInput}
                                                             onChange={(e) =>
                                                                 setValue("quizDifficultiesInput", e.target.value)
@@ -1455,7 +1871,7 @@ export default function TestTemplateManagementPage() {
                                                         <Label>Tags</Label>
                                                         <Input
                                                             type="text"
-                                                            placeholder="reading,algebra"
+                                                            placeholder="reading, algebra"
                                                             value={watchQuizTagsInput}
                                                             onChange={(e) =>
                                                                 setValue("quizTagsInput", e.target.value)
@@ -1465,36 +1881,44 @@ export default function TestTemplateManagementPage() {
                                                 </div>
                                             </div>
                                         )}
-                                        {/* Pricing + Series */}
-                                        <div className="space-y-3 rounded-2xl border border-gray-200 p-3 dark:border-gray-800">
-                                            <Label>Pricing</Label>
-                                            <div className="grid gap-2 sm:grid-cols-3">
-                                                <label className="flex items-center gap-2 text-xs text-gray-700 dark:text-gray-200">
+
+                                        {/* Pricing Section */}
+                                        <div className="rounded-2xl border border-gray-200 p-5 dark:border-gray-800">
+                                            <div className="mb-4 flex items-center gap-2">
+                                                <h3 className="text-base font-semibold text-gray-900 dark:text-white">
+                                                    Pricing
+                                                </h3>
+                                            </div>
+                                            <div className="mb-4 flex flex-wrap gap-4">
+                                                <label className="flex items-center gap-2 rounded-xl border border-gray-200 bg-white px-4 py-2 text-sm dark:border-gray-700 dark:bg-gray-800">
                                                     <input
                                                         type="checkbox"
                                                         checked={watchPricingIsSellable}
                                                         onChange={(e) => setValue("pricingIsSellable", e.target.checked)}
+                                                        className="rounded"
                                                     />
-                                                    Sellable individually
+                                                    <span className="text-gray-700 dark:text-gray-200">Sellable Individually</span>
                                                 </label>
-                                                <label className="flex items-center gap-2 text-xs text-gray-700 dark:text-gray-200">
+                                                <label className="flex items-center gap-2 rounded-xl border border-gray-200 bg-white px-4 py-2 text-sm dark:border-gray-700 dark:bg-gray-800">
                                                     <input
                                                         type="checkbox"
                                                         checked={watchPricingIsFree}
                                                         onChange={(e) => setValue("pricingIsFree", e.target.checked)}
+                                                        className="rounded"
                                                     />
-                                                    Free test
+                                                    <span className="text-gray-700 dark:text-gray-200">Free Test</span>
                                                 </label>
-                                                <label className="flex items-center gap-2 text-xs text-gray-700 dark:text-gray-200">
+                                                <label className="flex items-center gap-2 rounded-xl border border-gray-200 bg-white px-4 py-2 text-sm dark:border-gray-700 dark:bg-gray-800">
                                                     <input
                                                         type="checkbox"
                                                         checked={watchPricingSeriesOnly}
                                                         onChange={(e) => setValue("pricingSeriesOnly", e.target.checked)}
+                                                        className="rounded"
                                                     />
-                                                    Available only in series
+                                                    <span className="text-gray-700 dark:text-gray-200">Series Only</span>
                                                 </label>
                                             </div>
-                                            <div className="grid gap-2 sm:grid-cols-2">
+                                            <div className="grid gap-4 sm:grid-cols-2">
                                                 <div>
                                                     <Label>Price (INR)</Label>
                                                     <Input
@@ -1504,6 +1928,7 @@ export default function TestTemplateManagementPage() {
                                                         onChange={(e) =>
                                                             setValue("pricingPrice", parseFloat(e.target.value) || 0)
                                                         }
+                                                        placeholder="0"
                                                     />
                                                 </div>
                                                 <div>
@@ -1515,55 +1940,16 @@ export default function TestTemplateManagementPage() {
                                                         onChange={(e) =>
                                                             setValue("pricingSalePrice", parseFloat(e.target.value) || 0)
                                                         }
+                                                        placeholder="Optional"
                                                     />
                                                 </div>
                                             </div>
-                                            {/* Series selection */}
-                                            {/* <div>
-                                                <Label>Assign to Series</Label>
-                                                {seriesList.length === 0 ? (
-                                                    <p className="text-xs text-gray-500 dark:text-gray-400">
-                                                        No series found.
-                                                    </p>
-                                                ) : (
-                                                    <div className="mt-1 grid max-h-32 grid-cols-1 gap-1 overflow-y-auto rounded-lg border border-gray-200 p-2 text-xs dark:border-gray-700">
-                                                        {seriesList.map((s) => {
-                                                            const selected = watchSelectedSeriesIds?.includes(s._id);
-                                                            return (
-                                                                <label
-                                                                    key={s._id}
-                                                                    className="flex cursor-pointer items-center justify-between gap-2 rounded-md px-2 py-1 hover:bg-gray-50 dark:hover:bg-gray-800"
-                                                                >
-                                                                    <span className="text-gray-700 dark:text-gray-200">
-                                                                        {s.title}
-                                                                    </span>
-                                                                    <input
-                                                                        type="checkbox"
-                                                                        checked={selected}
-                                                                        onChange={(e) => {
-                                                                            const current = watchSelectedSeriesIds || [];
-                                                                            if (e.target.checked) {
-                                                                                setValue("selectedSeriesIds", [
-                                                                                    ...current,
-                                                                                    s._id,
-                                                                                ]);
-                                                                            } else {
-                                                                                setValue(
-                                                                                    "selectedSeriesIds",
-                                                                                    current.filter((id) => id !== s._id)
-                                                                                );
-                                                                            }
-                                                                        }}
-                                                                    />
-                                                                </label>
-                                                            );
-                                                        })}
-                                                    </div>
-                                                )}
-                                            </div> */}
                                         </div>
-                                        {/* Actions */}
-                                        <div className="sticky bottom-0 mt-2 flex justify-end gap-2 border-t border-gray-200 bg-white py-3 dark:border-gray-800 dark:bg-gray-900">
+                                    </div>
+
+                                    {/* Drawer Footer */}
+                                    <div className="sticky bottom-0 border-t border-gray-200 bg-white px-6 py-4 dark:border-gray-800 dark:bg-gray-900">
+                                        <div className="flex items-center justify-end gap-3">
                                             <Button
                                                 variant="outline"
                                                 type="button"
@@ -1572,164 +1958,186 @@ export default function TestTemplateManagementPage() {
                                             >
                                                 Cancel
                                             </Button>
-                                            <Button type="submit" disabled={saving} isLoading={saving}>
+                                            <Button
+                                                type="submit"
+                                                disabled={saving}
+                                                isLoading={saving}
+                                            >
                                                 {editingId ? "Save Changes" : "Create Test"}
                                             </Button>
                                         </div>
-                                    </form>
-                                )}
-                            </motion.div>
+                                    </div>
+                                </form>
+                            )}
                         </motion.div>
-                    )}
-                </AnimatePresence>
-            </div>
-            {questionModalOpen && (
-                <div className="fixed inset-0 z-50 flex items-center justify-center">
-                    {/* backdrop */}
-                    <div
-                        className="absolute inset-0 bg-black/30 backdrop-blur-sm"
-                        onClick={closeQuestionModal}
-                    />
-                    {/* card */}
-                    <div className="relative z-10 w-full max-w-5xl rounded-2xl border border-gray-200 bg-white p-4 shadow-xl dark:border-gray-800 dark:bg-gray-900">
-                        <div className="mb-3 flex items-center justify-between">
-                            <div>
-                                <p className="text-base font-semibold text-gray-900 dark:text-gray-100">
-                                    Select Questions for Section
-                                </p>
-                                <p className="text-[12px] text-gray-500 dark:text-gray-400">
-                                    Only questions from this exam & section are shown.
-                                </p>
-                            </div>
-                            <button
-                                onClick={closeQuestionModal}
-                                className="rounded-full p-2 text-gray-500 hover:bg-gray-100 dark:text-gray-400 dark:hover:bg-gray-800"
-                            >
-                                <X className="h-5 w-5" />
-                            </button>
-                        </div>
+                    </motion.div>
+                )}
+            </AnimatePresence>
 
-                        {/* Search bar */}
-                        <div className="mb-3 flex items-center gap-2">
-                            <div className="relative flex-1">
-                                <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" />
-                                <input
-                                    type="text"
-                                    value={questionModalSearch}
-                                    onChange={(e) => setQuestionModalSearch(e.target.value)}
-                                    placeholder="Search question text"
-                                    className="w-full rounded-xl border border-gray-200 bg-white py-2 pl-9 pr-3 text-xs text-gray-900 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100"
-                                />
-                            </div>
-                            <Button
-                                type="button"
-                                size="sm"
-                                onClick={() => {
-                                    if (questionModalSectionIndex !== null) {
-                                        openQuestionModalForSection(questionModalSectionIndex);
-                                    }
-                                }}
-                                isLoading={questionModalLoading}
-                                className="rounded-xl px-3 py-1 text-xs"
-                            >
-                                Refresh
-                            </Button>
-                        </div>
-
-                        {/* Select all row */}
-                        <div className="mb-2 flex items-center justify-between text-xs">
-                            <label className="flex items-center gap-2 text-gray-700 dark:text-gray-200">
-                                <input
-                                    type="checkbox"
-                                    
-                                    checked={allQuestionsSelected}
-                                    onChange={handleToggleSelectAllQuestions}
-                                />
-                                <span>
-                                    {allQuestionsSelected
-                                        ? "Unselect all questions"
-                                        : "Select all questions on this list"}
-                                </span>
-                            </label>
-                            {someQuestionsSelected && !allQuestionsSelected && (
-                                <span className="text-[11px] text-gray-500 dark:text-gray-400">
-                                    {questionModalSelectedIds.length} selected
-                                </span>
-                            )}
-                        </div>
-
-                        {/* List */}
-                        <div className="max-h-[60vh] overflow-y-auto rounded-xl border border-gray-200 dark:border-gray-800">
-                            {questionModalLoading ? (
-                                <div className="flex items-center justify-center py-8 text-xs text-gray-500 dark:text-gray-400">
-                                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                                    Loading questions...
+            {/* Question Selection Modal */}
+            <AnimatePresence>
+                {questionModalOpen && (
+                    <motion.div
+                        className="fixed inset-0 z-[60] flex items-center justify-center p-4"
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        exit={{ opacity: 0 }}
+                    >
+                        <motion.div
+                            className="absolute inset-0 bg-black/40 backdrop-blur-sm"
+                            onClick={closeQuestionModal}
+                            initial={{ opacity: 0 }}
+                            animate={{ opacity: 1 }}
+                            exit={{ opacity: 0 }}
+                        />
+                        <motion.div
+                            className="relative z-10 w-full max-w-5xl rounded-2xl border border-gray-200 bg-white shadow-2xl dark:border-gray-800 dark:bg-gray-900"
+                            initial={{ scale: 0.95, opacity: 0 }}
+                            animate={{ scale: 1, opacity: 1 }}
+                            exit={{ scale: 0.95, opacity: 0 }}
+                            transition={{ duration: 0.2 }}
+                        >
+                            <div className="border-b border-gray-200 p-5 dark:border-gray-800">
+                                <div className="flex items-center justify-between">
+                                    <div>
+                                        <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
+                                            Select Questions
+                                        </h3>
+                                        <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
+                                            Choose questions for this section
+                                        </p>
+                                    </div>
+                                    <button
+                                        onClick={closeQuestionModal}
+                                        className="rounded-xl p-2 text-gray-500 hover:bg-gray-100 dark:text-gray-400 dark:hover:bg-gray-800"
+                                    >
+                                        <X className="h-5 w-5" />
+                                    </button>
                                 </div>
-                            ) : questionModalList.length === 0 ? (
-                                <div className="py-8 text-center text-xs text-gray-500 dark:text-gray-400">
-                                    No questions found for this exam + section.
-                                </div>
-                            ) : (
-                                <ul className="divide-y divide-gray-200 text-xs dark:divide-gray-800">
-                                    {questionModalList.map((q) => {
-                                        const selected = questionModalSelectedIds.includes(q._id);
-                                        return (
-                                            <li
-                                                key={q._id}
-                                                className="flex cursor-pointer items-start gap-2 px-3 py-2 hover:bg-gray-50 dark:hover:bg-gray-800/60"
-                                                onClick={() => toggleQuestionSelection(q._id)}
-                                            >
-                                                <input
-                                                    type="checkbox"
-                                                    checked={selected}
-                                                    readOnly
-                                                    className="mt-1 h-3 w-3"
-                                                />
-                                                <div className="flex-1">
-                                                    <span className="font-medium text-gray-900 dark:text-gray-100" dangerouslySetInnerHTML={{ __html: q.questionText }} />
-
-                                                    <p className="mt-0.5 text-[10px] text-gray-500 dark:text-gray-400">
-                                                        {q.questionType} • {q.difficulty}
-                                                    </p>
-                                                </div>
-                                            </li>
-                                        );
-                                    })}
-                                </ul>
-                            )}
-                        </div>
-
-                        {/* Footer */}
-                        <div className="mt-3 flex items-center justify-between text-xs">
-                            <span className="text-gray-500 dark:text-gray-400">
-                                Selected:{" "}
-                                <span className="font-semibold">
-                                    {questionModalSelectedIds.length}
-                                </span>
-                            </span>
-                            <div className="flex gap-2">
-                                <Button
-                                    type="button"
-                                    variant="outline"
-                                    size="sm"
-                                    onClick={closeQuestionModal}
-                                    className="rounded-xl px-3 py-1"
-                                >
-                                    Cancel
-                                </Button>
-                                <Button
-                                    type="button"
-                                    size="sm"
-                                    onClick={applyQuestionSelectionToSection}
-                                    className="rounded-xl px-3 py-1"
-                                >
-                                    Apply to Section
-                                </Button>
                             </div>
-                        </div>
-                    </div>
-                </div>
-            )}
-        </>
+
+                            <div className="p-5">
+                                <div className="mb-4 flex items-center gap-3">
+                                    <div className="relative flex-1">
+                                        <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" />
+                                        <input
+                                            type="text"
+                                            value={questionModalSearch}
+                                            onChange={(e) => setQuestionModalSearch(e.target.value)}
+                                            placeholder="Search questions..."
+                                            className="w-full rounded-xl border border-gray-200 bg-gray-50 py-2 pl-9 pr-4 text-sm text-gray-900 focus:border-blue-500 focus:bg-white focus:outline-none focus:ring-1 focus:ring-blue-500 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-100"
+                                        />
+                                    </div>
+                                    <Button
+                                        type="button"
+                                        size="sm"
+                                        variant="outline"
+                                        onClick={() => {
+                                            if (questionModalSectionIndex !== null) {
+                                                openQuestionModalForSection(questionModalSectionIndex);
+                                            }
+                                        }}
+                                        isLoading={questionModalLoading}
+                                    >
+                                        Refresh
+                                    </Button>
+                                </div>
+
+                                <div className="mb-3 flex items-center justify-between">
+                                    <label className="flex items-center gap-2 text-sm">
+                                        <input
+                                            type="checkbox"
+                                            checked={allQuestionsSelected}
+                                            onChange={handleToggleSelectAllQuestions}
+                                            className="rounded"
+                                        />
+                                        <span className="text-gray-700 dark:text-gray-200">
+                                            {allQuestionsSelected ? "Deselect All" : "Select All"}
+                                        </span>
+                                    </label>
+                                    <span className="text-sm text-gray-500 dark:text-gray-400">
+                                        {questionModalSelectedIds.length} selected
+                                    </span>
+                                </div>
+
+                                <div className="max-h-[50vh] overflow-y-auto rounded-xl border border-gray-200 dark:border-gray-800">
+                                    {questionModalLoading ? (
+                                        <div className="flex items-center justify-center py-12">
+                                            <Loader2 className="h-6 w-6 animate-spin text-blue-600" />
+                                        </div>
+                                    ) : questionModalList.length === 0 ? (
+                                        <div className="py-12 text-center">
+                                            <HelpCircle className="mx-auto mb-3 h-8 w-8 text-gray-300 dark:text-gray-600" />
+                                            <p className="text-sm text-gray-500 dark:text-gray-400">
+                                                No questions found
+                                            </p>
+                                        </div>
+                                    ) : (
+                                        <div className="divide-y divide-gray-100 dark:divide-gray-800">
+                                            {questionModalList.map((q) => {
+                                                const selected = questionModalSelectedIds.includes(q._id);
+                                                return (
+                                                    <div
+                                                        key={q._id}
+                                                        className={`cursor-pointer px-4 py-3 transition-colors hover:bg-gray-50 dark:hover:bg-gray-800/50 ${selected ? "bg-blue-50/50 dark:bg-blue-900/10" : ""
+                                                            }`}
+                                                        onClick={() => toggleQuestionSelection(q._id)}
+                                                    >
+                                                        <div className="flex items-start gap-3">
+                                                            <input
+                                                                type="checkbox"
+                                                                checked={selected}
+                                                                readOnly
+                                                                className="mt-1 rounded"
+                                                            />
+                                                            <div className="flex-1">
+                                                                <p className="text-sm text-gray-900 dark:text-white line-clamp-2"
+                                                                    dangerouslySetInnerHTML={{ __html: q.questionText }}
+                                                                />
+                                                                <div className="mt-1 flex items-center gap-2">
+                                                                    <span className="rounded-full bg-gray-100 px-2 py-0.5 text-xs text-gray-600 dark:bg-gray-800 dark:text-gray-400">
+                                                                        {q.questionType}
+                                                                    </span>
+                                                                    <span className={`rounded-full px-2 py-0.5 text-xs ${getDifficultyColor(q.difficulty)}`}>
+                                                                        {q.difficulty}
+                                                                    </span>
+                                                                </div>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                );
+                                            })}
+                                        </div>
+                                    )}
+                                </div>
+                            </div>
+
+                            <div className="border-t border-gray-200 p-5 dark:border-gray-800">
+                                <div className="flex items-center justify-between">
+                                    <span className="text-sm text-gray-500 dark:text-gray-400">
+                                        {questionModalSelectedIds.length} questions selected
+                                    </span>
+                                    <div className="flex items-center gap-3">
+                                        <Button
+                                            type="button"
+                                            variant="outline"
+                                            onClick={closeQuestionModal}
+                                        >
+                                            Cancel
+                                        </Button>
+                                        <Button
+                                            type="button"
+                                            onClick={applyQuestionSelectionToSection}
+                                        >
+                                            Apply Selection
+                                        </Button>
+                                    </div>
+                                </div>
+                            </div>
+                        </motion.div>
+                    </motion.div>
+                )}
+            </AnimatePresence>
+        </div>
     );
 }

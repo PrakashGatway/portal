@@ -1,6 +1,6 @@
 const Loader = () => {
   return (
-    <div className="animate-pulse space-y-6">
+    <div className="animate-pulse max-w-7xl p-2 mx-auto px-4 space-y-6">
       {/* Header */}
       <div className="flex justify-between items-center">
         <div className="h-10 w-72 rounded-xl bg-gray-200 dark:bg-gray-700" />
@@ -21,7 +21,6 @@ const Loader = () => {
             />
           ))}
         </div>
-
         <div className="h-12 w-48 mx-auto rounded-xl bg-gray-200 dark:bg-gray-700" />
       </div>
     </div>

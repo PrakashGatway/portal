@@ -11,7 +11,8 @@ export default function CourseSupportFooter() {
   const navigate = useNavigate();
 
   return (
-    <div className="mt-6 rounded-2xl border border-gray-200 bg-gradient-to-r from-white via-[#FFF8F5] to-white p-6">
+    <div className="px-4">
+    <div className="mt-6 max-w-7xl mx-auto rounded-2xl border border-gray-200 bg-gradient-to-r from-white via-[#FFF8F5] to-white p-6">
       <div className="flex flex-col lg:flex-row items-center justify-between gap-6">
 
         <div className="flex">
@@ -68,6 +69,8 @@ export default function CourseSupportFooter() {
 
 
       </div>
+    </div>
+
     </div>
   );
 }

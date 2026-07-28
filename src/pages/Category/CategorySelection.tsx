@@ -43,7 +43,7 @@ const CategorySelectionPage = () => {
             await fetchUserProfile()
         } catch (error: any) {
             toast.error('Failed to update categories');
-        } finally{
+        } finally {
             setLoading(false)
         }
     };
@@ -130,9 +130,9 @@ const CategorySelectionPage = () => {
     }
 
     return (
-        <div className="min-h-screen bg-gray-50 dark:bg-gray-900 text-gray-900 dark:text-white transition-colors duration-300">
+        <div className="min-h-screen bg-white text-gray-900 dark:text-white transition-colors duration-300">
             {/* Header */}
-            <header className="sticky top-0 z-10 bg-white dark:bg-gray-800 shadow-sm border-b border-gray-200 dark:border-gray-700">
+            <header className="sticky top-0 z-10 bg-[#fdf4ef] dark:bg-gray-800  border-b border-gray-200 dark:border-gray-700">
                 <div className="max-w-7xl mx-auto px-4 py-4 flex items-center justify-between">
                     <button
                         onClick={() => navigate(-1)}
@@ -151,62 +151,85 @@ const CategorySelectionPage = () => {
                 <>
                     {/* Popular Categories */}
                     <section className="mb-8">
-                        <h2 className="text-lg font-medium text-gray-800 dark:text-white mb-4">Popular Categories</h2>
-                        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                        <h2 className="text-xl font-semibold text-gray-800 dark:text-white mb-4">Popular Categories</h2>
+                        <div className="
+    grid
+    grid-cols-2
+    sm:grid-cols-2
+    md:grid-cols-3
+    lg:grid-cols-4
+    xl:grid-cols-5
+    gap-4
+    md:gap-6
+    justify-items-center
+  ">
                             {popularCategories.map((category) => {
-                                const colorClasses = getCategoryColorClasses(category);
-                                const hasSubcategories = getSubcategories(category._id).length > 0;
 
                                 return (
-                                    <motion.button
-                                        key={category._id}
-                                        whileHover={{ scale: 1.02, y: -2 }}
-                                        whileTap={{ scale: 0.98 }}
-                                        onClick={() => handleCategoryClick(category)}
-                                        className={`p-4 rounded-xl border border-gray-200 dark:border-gray-700 hover:shadow-lg transition-all duration-100 flex flex-col items-center justify-center cursor-pointer ${colorClasses.bg}`}
-                                    >
-                                        <div className={`p-3 rounded-full mb-3 ${colorClasses.bgLight}`}>
-                                            <DynamicIcon
-                                                name={category.icon}
-                                                className="h-8 w-8"
-                                                color={category.color}
-                                            />
-                                        </div>
-                                        <span className="font-medium text-gray-800 dark:text-white text-center text-base">
-                                            {category.name}
-                                        </span>
-                                    </motion.button>
+                                    <div key={category._id} className="relative flex justify-center w-full max-w-[180px] sm:max-w-[200px] md:max-w-[220px] pt-1.5">
+                                        <div
+                                            className="absolute top-0 left-1/2 -translate-x-1/2 w-[75%] h-4 rounded-t-lg"
+                                            style={{ backgroundColor: category.color }}
+                                        />
+                                        <motion.button
+                                            whileHover={{
+                                                scale: 1.01,
+                                                y: -1,
+                                                boxShadow: `20px 22px 40px ${category.color}65`,
+                                            }}
+                                            whileTap={{ scale: 0.98 }}
+                                            onClick={() => handleCategoryClick(category)}
+                                            className="relative  z-1 w-full h-44 rounded-lg !bg-white overflow-hidden"
+                                            style={{
+                                                background: `linear-gradient(180deg, ${category.color}30 100%`,
+                                            }}
+                                        >
+                                            <div className="flex flex-col items-center justify-center h-full px-3">
+                                                <h3
+                                                    className="text-4xl font-bold mb-2"
+                                                    style={{ color: category.color }}
+                                                >
+                                                    {category.name}
+                                                </h3>
+
+                                                {category.description && (
+                                                    <p className="text-center text-gray-600 text-[15px] font-medium leading-6 line-clamp-2">
+                                                        {category.description}
+                                                    </p>
+                                                )}
+                                            </div>
+                                        </motion.button>
+                                    </div>
                                 );
                             })}
                         </div>
                     </section>
 
                     {/* All Categories */}
-                    <section className="mb-8">
-                        <h2 className="text-lg font-medium text-gray-800 dark:text-white mb-4">All Categories</h2>
+                    <section className="mb-8 p-6 rounded-xl bg-[#fdf4ef]">
+                        <h2 className="text-xl font-semibold text-gray-800 dark:text-white mb-4">All Categories</h2>
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                             {groupedCategories.map((category) => {
                                 const colorClasses = getCategoryColorClasses(category);
                                 return (
                                     <motion.button
                                         key={category._id}
-                                        whileHover={{ scale: 1.02, y: -2 }}
+                                        whileHover={{ scale: 1.01, y: -1 }}
                                         whileTap={{ scale: 0.98 }}
                                         onClick={() => handleCategoryClick(category)}
-                                        className="p-4 rounded-xl bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 hover:shadow-lg transition-all duration-100 flex items-center space-x-3 cursor-pointer"
+                                        className="p-2.5 px-4 rounded-xl bg-white dark:bg-gray-800 dark:border-gray-700 hover:shadow-lg transition-all duration-100 flex items-center space-x-3 cursor-pointer"
                                     >
-                                        <div className={`p-3 rounded-lg ${colorClasses.bgLight}`}>
+                                        <div className={`p-3 rounded-full bg-[#f36e45]`}>
                                             <DynamicIcon
                                                 name={category.icon}
-                                                className="h-6 w-6"
-                                                color={category.color}
+                                                className="h-7 w-7 text-white stroke-[1.30]"
                                             />
                                         </div>
-                                        <div className="flex-1 text-left">
-                                            <span className="font-medium text-gray-800 dark:text-white block">
+                                        <div className="flex flex-col items-start text-left">
+                                            <span className="font-semibold text-lg text-gray-800 dark:text-white block">
                                                 {category.name}
                                             </span>
-                                            <span className="text-xs text-gray-500 dark:text-gray-400">
+                                            <span className="text-sm text-gray-500 font-medium dark:text-gray-400">
                                                 {category.subcategories?.length || 0} subcategories
                                             </span>
                                         </div>
@@ -217,18 +240,22 @@ const CategorySelectionPage = () => {
                     </section>
 
                     {/* Other Offerings */}
-                    <section>
-                        <h2 className="text-lg font-medium text-gray-800 dark:text-white mb-4">Other Offerings</h2>
+                    <section className="mb-8 p-6 rounded-xl bg-[#fdf4ef]">
+                        <h2 className="text-xl font-semibold text-gray-800 dark:text-white mb-4">Other Offerings</h2>
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                             <motion.button
-                                whileHover={{ scale: 1.02, y: -2 }}
+                                whileHover={{ scale: 1.01, y: -1 }}
                                 whileTap={{ scale: 0.98 }}
-                                className="p-4 rounded-xl bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 hover:shadow-lg transition-all duration-300 flex items-center space-x-3 cursor-pointer"
+                                className="p-2.5
+                                 px-4 rounded-xl bg-white dark:bg-gray-800 dark:border-gray-700 hover:shadow-lg transition-all duration-100 flex items-center space-x-3 cursor-pointer"
                             >
-                                <div className="p-3 rounded-lg bg-yellow-100 dark:bg-yellow-900/30">
-                                    <span className="text-xl">🎯</span>
+                                <div className={`p-3 rounded-full bg-[#f36e45]`}>
+                                    <DynamicIcon
+                                        name={"Target"}
+                                        className="h-7 w-7 text-white stroke-[1.30]"
+                                    />
                                 </div>
-                                <div className="flex-1 text-left">
+                                <div className="flex flex-col items-start text-left">
                                     <span className="font-medium text-gray-800 dark:text-white block">
                                         Career Guidance
                                     </span>
@@ -238,14 +265,17 @@ const CategorySelectionPage = () => {
                                 </div>
                             </motion.button>
                             <motion.button
-                                whileHover={{ scale: 1.02, y: -2 }}
+                                whileHover={{ scale: 1.01, y: -1 }}
                                 whileTap={{ scale: 0.98 }}
-                                className="p-4 rounded-xl bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 hover:shadow-lg transition-all duration-300 flex items-center space-x-3 cursor-pointer"
+                                className="p-2.5 px-4 rounded-xl bg-white dark:bg-gray-800 dark:border-gray-700 hover:shadow-lg transition-all duration-100 flex items-center space-x-3 cursor-pointer"
                             >
-                                <div className="p-3 rounded-lg bg-purple-100 dark:bg-purple-900/30">
-                                    <span className="text-xl">🚀</span>
+                                <div className={`p-3 rounded-full bg-[#f36e45]`}>
+                                    <DynamicIcon
+                                        name={"Rocket"}
+                                        className="h-7 w-7 text-white stroke-[1.30]"
+                                    />
                                 </div>
-                                <div className="flex-1 text-left">
+                                <div className="flex flex-col items-start text-left">
                                     <span className="font-medium text-gray-800 dark:text-white block">
                                         Skill Development
                                     </span>

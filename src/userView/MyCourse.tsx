@@ -364,7 +364,7 @@ export default function MyCoursesPage() {
     const filteredCourses = useMemo(() => {
         return courses.filter(course => {
             const matchesSearch =
-                course.course.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+                course.course?.title?.toLowerCase().includes(searchQuery.toLowerCase()) ||
                 (course.course.subtitle && course.course.subtitle.toLowerCase().includes(searchQuery.toLowerCase()));
 
             const progress = course.progress.percentage;
@@ -405,7 +405,7 @@ export default function MyCoursesPage() {
     ];
 
     return (
-        <div className="min-h-[85vh] bg-gradient-to-br from-slate-50 via-blue-50/30 to-purple-50/30 dark:from-gray-900 dark:via-blue-900/10 dark:to-purple-900/10 py-6">
+        <div className="min-h-[85vh]">
             <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
                 {/* <motion.div
                     initial={{ opacity: 0, y: -20 }}

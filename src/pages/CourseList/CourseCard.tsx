@@ -155,7 +155,7 @@ const CourseCard = ({ course, primaryColor = "#daff02", secondaryColor = "#fe572
                     </div>
 
                     <button
-                        onClick={() => navigate(`/course/${course.slug}`)}
+                        onClick={() => navigate(`/checkout/${course.slug}`)}
                         style={{ borderRadius: "0px 0px 15px 0px" }}
                         className="flex-1 bg-[#3B3B3B] text-white font-medium py-3 bg-gradient-to-b from-[#545454] via-[#ffffff]/30 to-[#545454] hover:bg-black transition"
                     >

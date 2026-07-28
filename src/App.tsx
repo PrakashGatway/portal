@@ -91,27 +91,34 @@ export default function App() {
 
             <Route element={<AppLayout />}>
               <Route index path="/" element={<Home />} />
+
+              //completed
+              <Route path="/offers" element={<OffersPage />} />
               <Route path="/profile" element={<UserProfiles />} />
               <Route path="/coming" element={<ComingSoon />} />
               <Route path="/course" element={<CourseListingPage />} />
               <Route path="/course/:slug" element={<CourseDetailPage />} />
-              <Route path="/offers" element={<OffersPage />} />
               <Route path="/transactions" element={<TransactionsPage />} />
               <Route path="/referrals" element={<ReferAndEarnPage />} />
-              <Route path="/my-courses" element={<MyCoursesPage />} />
 
+
+              //support
+              <Route path="/support" element={<SupportPage />} />
+              <Route path="/our-selection" element={<JobSelectionsWall />} />
+              <Route path="/events" element={<EventCalendar />} />
+
+              // my course
+              <Route path="/my-courses" element={<MyCoursesPage />} />
               <Route path="/courses/:slug" element={<CourseDetailPageee />} />
 
               // study material
               <Route path="/resources" element={<StudyMaterialPage />} />
               <Route path="/resources/:slug" element={<SecureMaterialViewer />} />
 
-
+              // Video player
               <Route path="/class/:contentId/:courseId" element={<VideoPlayerPage />} />
 
-              <Route path="/support" element={<SupportPage />} />
-              <Route path="/our-selection" element={<JobSelectionsWall />} />
-
+              // test series
               <Route path="/test-series" element={<MockTestsPage />} />
               <Route path="/tests" element={<MockTests testType="full_length" />} />
               <Route path="/practice-tests" element={<MockTests testType="sectional" />} />
@@ -119,10 +126,12 @@ export default function App() {
 
               <Route path="/test-series/:slug" element={<TestSeriesDetailPage />} />
 
+              // ilets
               <Route path="/mock-tests" element={<MockTest />} />
-              {/* <Route path="/test/:testId" element={<TestQuestionPage/>} /> */}
-              <Route path="/events" element={<EventCalendar />} />
 
+              {/* <Route path="/test/:testId" element={<TestQuestionPage/>} /> */}
+
+              // admin
               <Route element={<ProtectedRoute roles={[ROLES.ADMIN]} />}>
                 <Route path="/users" element={<UserListPage />} />
                 <Route path="/categories" element={<CategoryManagement />} />
@@ -132,7 +141,6 @@ export default function App() {
                 <Route path="/recorded-classes" element={<ContentManagement type="RecordedClasses" />} />
                 <Route path="/promocodes" element={<PromoCodeManagement />} />
                 <Route path="/all_transactions" element={<AdminTransactionsPage />} />
-                {/* <Route path="/tests" element={<ContentManagement type="Tests" />} /> */}
                 <Route path="/study-materials" element={<ContentManagement type="StudyMaterials" />} />
                 <Route path="/test/exams" element={<ExamManagement />} />
                 <Route path="/test/sections" element={<SectionManagement />} />
@@ -141,19 +149,20 @@ export default function App() {
                 <Route path="/test/packages" element={<PackageManagement />} />
               </Route>
 
+              // teachers
               <Route element={<ProtectedRoute roles={[ROLES.TEACHER, ROLES.ADMIN]} />}>
                 <Route path="/mcq/questions" element={<QuestionManagementPage />} />
                 <Route path="/mcq/tests" element={<TestTemplateManagementPage />} />
                 <Route path="/mcq/test-series" element={<TestSeriesManagementPage />} />
               </Route>
 
+              // Crm
               <Route element={<ProtectedRoute roles={[ROLES.COUNSEL, ROLES.ADMIN, ROLES.MANAGER, ROLES.LEADER]} />}>
                 <Route path="/leads" element={<LeadManagement />} />
                 <Route path="/lead-report" element={<DailyReport />} />
               </Route>
 
-              <Route path="*" element={<ComingSoon />} />
-
+              // website
               <Route element={<ProtectedRoute roles={[ROLES.EDITOR, ROLES.ADMIN]} />}>
                 <Route path="/pages" element={<PagesManagement />} />
                 <Route path="/entities" element={<EntityManagement />} />
@@ -172,6 +181,7 @@ export default function App() {
             <Route path="/gre/tests/:testTemplateId" element={<GreTestAttemptPage />} />
             <Route path="/gmat/analysis/:attemptId" element={<GmatTestAnalysisPage />} />
             <Route path="/pte/tests/:testTemplateId" element={<PteExamPage />} />
+            <Route path="*" element={<ComingSoon />} />
           </Route>
           <Route path="/unauthorized" element={<NotFound />} />
         </Routes>
