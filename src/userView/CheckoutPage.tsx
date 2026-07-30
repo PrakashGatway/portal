@@ -3,7 +3,6 @@ import { motion, AnimatePresence } from "framer-motion";
 import {
     Shield,
     CheckCircle,
-    Zap,
     Gift,
     Wallet,
     ArrowRight,
@@ -17,30 +16,57 @@ import {
     Loader2,
     AlertCircle,
     UserRoundSearch,
-    ArrowLeft
+    ArrowLeft,
+    FileText,
+    Layers,
+    Zap,
+    CreditCard,
+    Lock,
+    BadgePercent,
+    GraduationCap,
+    Timer,
+    BarChart3,
+    Tag,
+    TrendingDown,
+    Check
 } from "lucide-react";
 import api, { ImageBaseUrl } from "../axiosInstance";
 import { useParams, useNavigate, useLocation } from "react-router";
 import { useAuth } from "../context/UserContext";
+import Button from "../components/ui/button/Button";
+import Loader from "./Loader";
 
-// --- Types ---
-interface Course {
+// --- Types (keeping your existing types) ---
+interface BaseProduct {
     _id: string;
     title: string;
+    description: string;
+}
+
+interface CoursePricing {
+    amount: number;
+    originalAmount?: number;
+    currency: string;
+    discount?: number;
+    earlyBird?: {
+        discount: number;
+        deadline: string;
+    };
+}
+
+interface TestSeriesPricing {
+    isSellable: boolean;
+    isFree: boolean;
+    price: number;
+    salePrice: number;
+    currency: string;
+}
+
+interface CourseProduct extends BaseProduct {
+    type: 'course';
     slug: string;
     shortDescription: string;
-    description: string;
     thumbnail: { url: string };
-    pricing: {
-        amount: number; // Current price in rupees
-        originalAmount?: number; // Original price before any discounts
-        currency: string;
-        discount?: number; // Main discount percentage
-        earlyBird?: {
-            discount: number; // Early bird discount percentage
-            deadline: string;
-        };
-    };
     instructors: string[];
     instructorNames?: string[];
     studentsEnrolled?: number;
@@ -51,7 +77,126 @@ interface Course {
     reviews?: number;
     features: string[];
     mode: string;
+    pricing: CoursePricing;
 }
+
+interface TestProduct extends BaseProduct {
+    type: 'test';
+    exam: {
+        _id: string;
+        name: string;
+    };
+    testType: string;
+    difficultyLabel: string;
+    sections: Array<{
+        customName: string;
+        durationMinutes: number;
+        questionCount: number;
+    }>;
+    totalDurationMinutes: number;
+    totalQuestions: number;
+    pricing: TestSeriesPricing;
+}
+
+interface SeriesProduct extends BaseProduct {
+    type: 'series';
+    exam: string;
+    category: {
+        _id: string;
+        name: string;
+    };
+    tests: Array<{
+        test: string;
+        label: string;
+        testData: {
+            title: string;
+            testType: string;
+            totalDurationMinutes: number;
+            totalQuestions: number;
+        };
+    }>;
+    totalTests: number;
+    slug: string;
+    thumbnailPic?: string;
+    overview?: string;
+    pricing: TestSeriesPricing;
+}
+
+type Product = CourseProduct | TestProduct | SeriesProduct;
+
+const getProductType = (data: any): Product['type'] => {
+    if (data.slug && data.thumbnail && data.mode !== undefined) return 'course';
+    if (data.testType && data.sections && data.totalDurationMinutes !== undefined) return 'test';
+    if (data.tests && data.totalTests !== undefined) return 'series';
+    return 'course';
+};
+
+// --- Animated Background Component ---
+const AnimatedBackground = () => (
+    <div className="fixed inset-0 overflow-hidden pointer-events-none">
+        <div className="absolute -top-40 -right-40 w-80 h-80 bg-purple-300 rounded-full mix-blend-multiply filter blur-3xl opacity-20 animate-blob"></div>
+        <div className="absolute -bottom-40 -left-40 w-80 h-80 bg-blue-300 rounded-full mix-blend-multiply filter blur-3xl opacity-20 animate-blob animation-delay-2000"></div>
+        <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-80 h-80 bg-pink-300 rounded-full mix-blend-multiply filter blur-3xl opacity-20 animate-blob animation-delay-4000"></div>
+    </div>
+);
+
+// --- Confetti Component ---
+const Confetti = () => (
+    <div className="absolute inset-0 pointer-events-none">
+        {[...Array(20)].map((_, i) => (
+            <motion.div
+                key={i}
+                className="absolute w-2 h-2 rounded-full"
+                style={{
+                    background: ['#FF6B6B', '#4ECDC4', '#45B7D1', '#96CEB4', '#FFEAA7'][i % 5],
+                    left: `${Math.random() * 100}%`,
+                    top: -10,
+                }}
+                animate={{
+                    y: ['0vh', '100vh'],
+                    x: ['0%', `${(Math.random() - 0.5) * 100}%`],
+                    rotate: [0, 720],
+                    opacity: [1, 0],
+                }}
+                transition={{
+                    duration: 2 + Math.random() * 3,
+                    repeat: Infinity,
+                    delay: Math.random() * 2,
+                    ease: "easeInOut",
+                }}
+            />
+        ))}
+    </div>
+);
+
+// --- Countdown Timer Component ---
+const CountdownTimer = ({ deadline }: { deadline: string }) => {
+    const [timeLeft, setTimeLeft] = useState('');
+
+    useEffect(() => {
+        const timer = setInterval(() => {
+            const now = new Date().getTime();
+            const end = new Date(deadline).getTime();
+            const distance = end - now;
+
+            if (distance < 0) {
+                setTimeLeft('Expired');
+                clearInterval(timer);
+                return;
+            }
+
+            const days = Math.floor(distance / (1000 * 60 * 60 * 24));
+            const hours = Math.floor((distance % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+            const minutes = Math.floor((distance % (1000 * 60 * 60)) / (1000 * 60));
+
+            setTimeLeft(`${days}d ${hours}h ${minutes}m`);
+        }, 1000);
+
+        return () => clearInterval(timer);
+    }, [deadline]);
+
+    return <span className="font-mono font-bold">{timeLeft}</span>;
+};
 
 export default function CheckoutPage() {
     const { slug } = useParams<{ slug: string }>();
@@ -59,126 +204,161 @@ export default function CheckoutPage() {
     const location = useLocation();
 
     const isTestSeries = location.state?.testSeries ?? false;
+    const isTest = location.state?.isTest ?? false;
     const { wallet: userWallet, loading: walletLoading } = useAuth();
 
-    // --- State ---
-    const [course, setCourse] = useState<Course | null>(null);
+    const [product, setProduct] = useState<Product | null>(null);
     const [loading, setLoading] = useState<'initial' | 'promo' | 'payment' | 'none'>('initial');
     const [error, setError] = useState<string | null>(null);
-
     const [promoCode, setPromoCode] = useState("");
     const [promoApplied, setPromoApplied] = useState(false);
-    const [promoDiscountAmount, setPromoDiscountAmount] = useState(0); // in rupees
+    const [promoDiscountAmount, setPromoDiscountAmount] = useState(0);
     const [promoMessage, setPromoMessage] = useState<string | null>(null);
-
     const [useWalletBalance, setUseWalletBalance] = useState(false);
+    const [showConfetti, setShowConfetti] = useState(false);
 
-    // --- Fetch Course ---
     useEffect(() => {
         if (!slug) {
-            setError("Course not specified.");
+            setError("Product not specified.");
             setLoading('none');
             return;
         }
 
-        const fetchCourse = async () => {
+        const fetchProduct = async () => {
             try {
                 setLoading('initial');
+                let response;
 
-                const response = isTestSeries ? await api.get(`/mcu/series/${slug}`) : await api.get(`/courses/${slug}`);
-                const courseData = response.data.data;
-
-                if (!isTestSeries && courseData.instructors && Array.isArray(courseData.instructors)) {
-                    courseData.instructorNames = courseData.instructors.map((instructor: any) =>
-                        instructor.name || instructor.username || 'Teacher'
-                    );
+                if (isTestSeries) {
+                    response = await api.get(`/mcu/series/${slug}`);
+                } else if (isTest) {
+                    response = await api.get(`/mcu/test/${slug}`);
+                } else {
+                    response = await api.get(`/courses/${slug}`);
                 }
 
-                setCourse(courseData);
+                const productData = response.data.data;
+                const productType = getProductType(productData);
+
+                setProduct({
+                    ...productData,
+                    type: productType
+                });
+
+                if (productData.pricing?.earlyBird || productData.pricing?.discount > 30) {
+                    setShowConfetti(true);
+                    setTimeout(() => setShowConfetti(false), 3000);
+                }
             } catch (err: any) {
-                console.error("Failed to fetch course:", err);
-                setError(err?.message || "Failed to load course details.");
+                console.error("Failed to fetch product:", err);
+                setError(err?.message || "Failed to load product details.");
             } finally {
                 setLoading('none');
             }
         };
 
-        fetchCourse();
-    }, [slug]);
+        fetchProduct();
+    }, [slug, isTestSeries, isTest]);
 
-    // --- Check if Early Bird is Active ---
-    const isEarlyBirdActive = () => {
-        if (!course?.pricing.earlyBird) return false;
+    // --- Price Calculations (keeping your existing logic) ---
+    const getOriginalPrice = (): number => {
+        if (!product) return 0;
+        if (product.type === 'course') {
+            return product.pricing.originalAmount || product.pricing.amount || 0;
+        }
+        return product.pricing.price || 0;
+    };
 
+    const getCurrentPrice = (): number => {
+        if (!product) return 0;
+        if (product.type === 'course') {
+            return (product.pricing?.amount- product.pricing?.amount * product?.pricing?.discount/100) || 0;
+        }
+        return product.pricing.salePrice || product.pricing.price || 0;
+    };
+
+    const isEarlyBirdActive = (): boolean => {
+        if (!product || product.type !== 'course') return false;
+        if (!product.pricing.earlyBird) return false;
         const now = new Date();
-        const deadline = new Date(course.pricing.earlyBird.deadline);
+        const deadline = new Date(product.pricing.earlyBird.deadline);
         return now <= deadline;
     };
 
-    // --- Calculate Effective Price ---
     const calculateEffectivePrice = () => {
-        if (!course) return { basePrice: 0, discountAmount: 0, finalPrice: 0 };
-
-        const originalPrice = course.pricing.originalAmount || course.pricing.amount;
-        let effectivePrice = originalPrice;
-        let totalDiscount = 0;
-
-        // Apply main discount if exists
-        if (!isEarlyBirdActive() && course.pricing.discount && course.pricing.discount > 0) {
-            const discountAmount = (originalPrice * course.pricing.discount) / 100;
-            effectivePrice = originalPrice - discountAmount;
-            totalDiscount += discountAmount;
-        }
-
-        // Apply early bird discount if active
-        if (isEarlyBirdActive() && course.pricing.earlyBird) {
-            const earlyBirdDiscountAmount = (effectivePrice * course.pricing.earlyBird.discount) / 100;
-            effectivePrice -= earlyBirdDiscountAmount;
-            totalDiscount += earlyBirdDiscountAmount;
-        }
-
-        return {
-            basePrice: effectivePrice,
-            discountAmount: totalDiscount,
-            finalPrice: effectivePrice
+        if (!product) return {
+            originalPrice: 0,
+            currentPrice: 0,
+            effectivePrice: 0,
+            discountBreakdown: [] as Array<{ label: string, amount: number, percentage?: number }>
         };
+
+        const originalPrice = getOriginalPrice()
+
+        const currentPrice = getCurrentPrice();
+        let effectivePrice = currentPrice;
+        const discountBreakdown: Array<{ label: string, amount: number, percentage?: number }> = [];
+
+        if (product.type === 'course') {
+
+
+            if (product.pricing.discount && product.pricing.discount > 0) {
+                const mainDiscountAmount = originalPrice - currentPrice;
+                if (mainDiscountAmount > 0) {
+                    discountBreakdown.push({
+                        label: `Course Discount (${product.pricing.discount}%)`,
+                        amount: mainDiscountAmount,
+                        percentage: product.pricing.discount
+                    });
+                }
+            }
+        } else {
+            if (product.pricing.price > product.pricing.salePrice) {
+                const discountAmount = product.pricing.price - product.pricing.salePrice;
+                const discountPercentage = Math.round((discountAmount / product.pricing.price) * 100);
+                discountBreakdown.push({
+                    label: `Discount (${discountPercentage}%)`,
+                    amount: discountAmount,
+                    percentage: discountPercentage
+                });
+            }
+        }
+
+        if (isEarlyBirdActive() && product.type === 'course' && product.pricing.earlyBird) {
+            const earlyBirdDiscountAmount = (currentPrice * product.pricing.earlyBird.discount) / 100;
+            effectivePrice = currentPrice - earlyBirdDiscountAmount;
+            discountBreakdown.push({
+                label: `Early Bird Discount (${product.pricing.earlyBird.discount}%)`,
+                amount: earlyBirdDiscountAmount,
+                percentage: product.pricing.earlyBird.discount
+            });
+        }
+
+        return { originalPrice, currentPrice, effectivePrice, discountBreakdown };
     };
 
-    // --- Promo Code Validation ---
     const handlePromoApply = async () => {
-        if (!promoCode.trim() || !course) return;
-
+        if (!promoCode.trim() || !product) return;
         try {
             setLoading('promo');
             setError(null);
             setPromoMessage(null);
-
-            const { basePrice } = calculateEffectivePrice();
-
+            const { effectivePrice } = calculateEffectivePrice();
             const response = await api.post(`/promo-codes/validate`, {
                 code: promoCode.trim().toUpperCase(),
-                courseId: course._id,
-                currentPrice: basePrice
+                productId: product._id,
+                productType: product.type,
+                currentPrice: effectivePrice
             });
-
-            const { success, discountAmount, discountType, message } = response.data;
-
+            const { success, discountAmount, message } = response.data;
             if (success) {
-                let finalDiscountAmount = discountAmount;
-                // if (discountType === 'percentage') {
-                //     finalDiscountAmount = (basePrice * discountAmount) / 100;
-                // }
-
-                console.log(finalDiscountAmount)
-
-                setPromoDiscountAmount(finalDiscountAmount);
+                setPromoDiscountAmount(discountAmount);
                 setPromoApplied(true);
-                setPromoMessage(message || "Promo code applied!");
+                setPromoMessage(message || "Promo code applied successfully!");
             } else {
                 setPromoMessage(message || "Invalid promo code.");
             }
         } catch (err: any) {
-            console.error("Promo validation error:", err);
             setPromoMessage(err.response?.data?.message || "Failed to validate promo code.");
         } finally {
             setLoading('none');
@@ -199,12 +379,13 @@ export default function CheckoutPage() {
     };
 
     const handlePurchase = async () => {
-        if (!course || !userWallet) return;
+        if (!product || !userWallet) return;
         try {
             setLoading('payment');
             setError(null);
             const paymentData = {
-                courseId: course._id,
+                productId: product._id,
+                productType: isTestSeries ? "test-series" : isTest ? "test" : "course",
                 promoCode: promoApplied ? promoCode : undefined,
                 useWallet: useWalletBalance,
                 finalAmount: finalPrice
@@ -217,31 +398,34 @@ export default function CheckoutPage() {
                 setError(message || "Payment initiation failed.");
             }
         } catch (err: any) {
-            setError(err.response?.data?.message || "Failed to process payment.");
+            setError(err?.message || "Failed to process payment.");
         } finally {
             setLoading('none');
         }
     };
 
-    const currency = course?.pricing.currency || userWallet?.currency || "INR";
+    const currency = product?.type === 'course'
+        ? product.pricing.currency
+        : (product as TestProduct | SeriesProduct)?.pricing?.currency || userWallet?.currency || "INR";
+
+    const isFree = product?.type !== 'course' && (product as TestProduct | SeriesProduct)?.pricing?.isFree || false;
 
     const {
-        basePrice: effectiveBasePrice,
-        discountAmount: courseDiscountAmount
+        originalPrice,
+        currentPrice,
+        effectivePrice: effectiveBasePrice,
+        discountBreakdown
     } = calculateEffectivePrice();
 
-    const originalPrice = course?.pricing.amount || effectiveBasePrice;
-
     const promoDiscount = promoApplied ? promoDiscountAmount : 0;
-
     const maxWalletUsage = effectiveBasePrice * 0.1;
-    const actualWalletUsage = useWalletBalance ?
-        Math.min(userWallet?.balance || 0, maxWalletUsage) : 0;
+    const actualWalletUsage = useWalletBalance
+        ? Math.min(userWallet?.balance || 0, maxWalletUsage)
+        : 0;
 
     const priceAfterPromo = Math.max(0, effectiveBasePrice - promoDiscount);
     const finalPrice = Math.max(0, priceAfterPromo - actualWalletUsage);
-
-    const totalSavings = courseDiscountAmount + promoDiscount + actualWalletUsage;
+    const totalSavings = (originalPrice - effectiveBasePrice) + promoDiscount + actualWalletUsage;
 
     const formatPrice = (amount: number, curr = currency) => {
         return new Intl.NumberFormat("en-IN", {
@@ -252,383 +436,504 @@ export default function CheckoutPage() {
         }).format(amount);
     };
 
+    // --- Loading State ---
     if (loading === 'initial' || walletLoading) {
         return (
-            <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-gray-50 to-blue-50 dark:from-gray-900 dark:to-blue-900/20">
-                <div className="text-center">
-                    <Loader2 className="animate-spin h-12 w-12 text-blue-500 mx-auto" />
-                    <p className="mt-4 text-gray-600 dark:text-gray-400">Loading checkout details...</p>
-                </div>
+            <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50 dark:from-gray-900 dark:via-blue-900/20 dark:to-indigo-900/20 flex items-center justify-center">
+                <Loader/>
             </div>
         );
     }
 
+    // --- Error State ---
     if (error) {
         return (
-            <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-gray-50 to-blue-50 dark:from-gray-900 dark:to-blue-900/20">
-                <div className="p-8 max-w-xl w-full text-center">
-                    <AlertCircle className="h-12 w-12 text-red-500 mx-auto mb-4" />
-                    <h2 className="text-xl font-bold text-gray-900 dark:text-white mb-2">Error</h2>
-                    <p className="text-gray-600 dark:text-gray-300 mb-6">{error}</p>
-                    <button
-                        onClick={() => window.location.reload()}
-                        className="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors"
+            <div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50 dark:from-gray-900 dark:to-blue-900/20 flex items-center justify-center">
+                <motion.div
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    className="text-center max-w-md mx-auto p-8"
+                >
+                    <motion.div
+                        animate={{
+                            scale: [1, 1.1, 1],
+                            rotate: [0, 5, -5, 0]
+                        }}
+                        transition={{ duration: 0.5 }}
+                        className="w-24 h-24 mx-auto mb-6 bg-red-100 rounded-full flex items-center justify-center"
                     >
-                        Retry
-                    </button>
-                </div>
+                        <AlertCircle className="w-12 h-12 text-red-500" />
+                    </motion.div>
+                    <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-2">Oops!</h2>
+                    <p className="text-gray-600 dark:text-gray-300 mb-6">{error}</p>
+                    <div className="flex gap-4 justify-center">
+                        <Button onClick={() => navigate(-1)} className="px-6 py-3 !text-black bg-gray-200 hover:bg-gray-300 text-gray-700 rounded-xl">
+                            Go Back
+                        </Button>
+                        <Button onClick={() => window.location.reload()} className="px-6 py-3 bg-gradient-to-r from-blue-600 to-purple-600 text-white rounded-xl">
+                            Try Again
+                        </Button>
+                    </div>
+                </motion.div>
             </div>
         );
     }
 
-    if (!course || !userWallet) {
+    if (!product || !userWallet) {
         return (
-            <div className="min-h-[70vh] flex items-center justify-center bg-gradient-to-br from-gray-50 to-blue-50 dark:from-gray-900 dark:to-blue-900/20">
-                <p className="text-gray-600 dark:text-gray-400">Course or wallet data unavailable.</p>
+            <div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50 dark:from-gray-900 dark:to-blue-900/20 flex items-center justify-center">
+                <p className="text-gray-600 dark:text-gray-400">Product or wallet data unavailable.</p>
             </div>
         );
     }
 
     const earlyBirdActive = isEarlyBirdActive();
+    const discountPercent = Math.round(((originalPrice - currentPrice) / originalPrice) * 100);
+
+    const ProductTypeLabel = () => {
+        switch (product.type) {
+            case 'course': return 'Course';
+            case 'test': return 'Test';
+            case 'series': return 'Test Series';
+        }
+    };
 
     return (
-        <div className="min-h-screen bg-gradient-to-br from-gray-50 to-blue-50 dark:from-gray-900 dark:to-blue-900/20 transition-all duration-500">
-            <header className="sticky top-0 z-10 bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700">
-                <div className="max-w-7xl mx-auto px-4 py-4 flex items-center justify-between">
-                    <button
-                        onClick={() => navigate(-1)}
-                        className="flex items-center text-gray-600 hover:text-gray-800 dark:text-gray-400 dark:hover:text-gray-200 transition-colors"
-                    >
-                        <ArrowLeft className="h-5 w-5 mr-1" />
-                        Back
-                    </button>
-                    <h1 className="text-xl font-semibold text-gray-800 dark:text-white">Checkout</h1>
-                    <div className="w-10"></div>
+        <div className="min-h-screen relative">
+            <AnimatedBackground />
+            {showConfetti && <Confetti />}
+
+            {/* Premium Header */}
+            <motion.header
+                initial={{ y: -100 }}
+                animate={{ y: 0 }}
+                className="sticky top-0 z-50 bg-white border-b"
+            >
+                <div className="max-w-7xl mx-auto px-6 py-4">
+                    <div className="flex items-center justify-between">
+                        <motion.button
+                            whileHover={{ x: -5 }}
+                            whileTap={{ scale: 0.95 }}
+                            onClick={() => navigate(-1)}
+                            className="flex items-center space-x-2 text-gray-600 hover:text-gray-900 dark:text-gray-400 dark:hover:text-white transition-colors group"
+                        >
+                            <ArrowLeft className="w-5 h-5 group-hover:-translate-x-1 transition-transform" />
+                            <span className="font-medium">Back</span>
+                        </motion.button>
+
+                        <div className="flex items-center space-x-3">
+
+                            <h1 className="text-xl font-bold bg-gradient-to-r from-gray-900 to-gray-600 dark:from-white dark:to-gray-300 bg-clip-text text-transparent">
+                                Checkout
+                            </h1>
+                        </div>
+
+                        <div></div>
+                    </div>
                 </div>
-            </header>
-            <div className="max-w-6xl mx-auto p-6">
-                <div className="grid lg:grid-cols-3 gap-4 mx-auto">
-                    {/* Course Details */}
-                    {isTestSeries ? <div className="lg:col-span-2 space-y-2">
-                        <motion.div
-                            initial={{ opacity: 0, x: -20 }}
-                            animate={{ opacity: 1, x: 0 }}
-                            transition={{ delay: 0.3 }}
-                            className="bg-white dark:bg-gray-800 rounded-lg shadow-lg border border-gray-100 dark:border-gray-800 overflow-hidden"
-                        >
-                            <div className="p-6">
-                                <div className="flex items-center justify-between mb-3">
-                                    <h2 className="text-xl font-bold text-gray-900 dark:text-white flex items-center">
-                                        <BookOpen className="w-6 h-6 mr-3 text-blue-500" />
-                                        Course Details
-                                    </h2>
-                                    <div className="flex items-center space-x-2 text-sm text-gray-500 dark:text-gray-400">
-                                        <Star className="w-4 h-4 text-yellow-400 fill-current" />
-                                        <span>{course.rating || 4.5}</span>
-                                        <span>•</span>
-                                        <Users className="w-4 h-4" />
-                                        <span>{(course.studentsEnrolled || 0).toLocaleString()} students</span>
-                                    </div>
-                                </div>
+            </motion.header>
 
-                                <div className="flex flex-col lg:flex-row gap-6">
-                                    <div className="relative">
-                                        <img
-                                            src={course.thumbnail?.url && `${ImageBaseUrl}/${course.thumbnail.url}`}
-                                            alt={course.title || "Course thumbnail"}
-                                            loading="lazy"
-                                            decoding="async"
-                                            className="w-full h-28 lg:w-44 lg:h-auto lg:aspect-video object-cover rounded-xl shadow-sm transition-transform duration-300 hover:scale-105"
-                                        />
-                                        {course.mode === 'free' && (
-                                            <div className="absolute top-4 left-4 bg-gradient-to-r from-green-500 to-emerald-500 text-white px-3 py-1 rounded-full text-sm font-semibold">
-                                                Free
+            <div className="max-w-7xl bg-white dark:bg-gray-800 mx-auto px-4 my-4 py-4 rounded-2xl relative z-10">
+                <div className="grid lg:grid-cols-6 gap-4">
+                    {/* Product Details - Takes 3 columns */}
+                    <motion.div
+                        initial={{ opacity: 0, x: -30 }}
+                        animate={{ opacity: 1, x: 0 }}
+                        className="lg:col-span-4 space-y-6"
+                    >
+                        {/* Premium Product Card */}
+                        <div className="relative group">
+
+                            <div className="relative bg-gray-50 dark:bg-gray-800 rounded-xl overflow-hidden">
+                                {/* Product Header with Gradient */}
+                                <div className={`bg-gray-200 p-4 text-gray-600 dark:text-gray-400 border-b`}>
+                                    <div className="flex items-center justify-between">
+                                        <div className="flex items-center space-x-3">
+                                            <div>
+                                                <p className="text-base font-bold">{ProductTypeLabel()}</p>
                                             </div>
-                                        )}
+                                        </div>
                                         {earlyBirdActive && (
-                                            <div className="absolute top-4 left-4 bg-gradient-to-r from-orange-500 to-red-500 text-white px-3 py-1 rounded-full text-sm font-semibold animate-pulse">
-                                                Early Bird!
-                                            </div>
+                                            <motion.div
+                                                animate={{ scale: [1, 1.1, 1] }}
+                                                transition={{ duration: 2, repeat: Infinity }}
+                                                className="bg-yellow-400 text-yellow-900 px-4 py-2 rounded-xl font-bold text-sm"
+                                            >
+                                                ⚡ EARLY BIRD
+                                            </motion.div>
                                         )}
-                                        {course.featured && !earlyBirdActive && (
-                                            <div className="absolute top-4 left-4 bg-gradient-to-r from-blue-500 to-purple-500 text-white px-3 py-1 rounded-full text-sm font-semibold">
-                                                Bestseller
-                                            </div>
-                                        )}
-                                    </div>
-
-                                    <div className="flex-1">
-                                        <h3 className="text-xl font-bold text-gray-900 dark:text-white leading-tight">
-                                            {course.title}
-                                        </h3>
-                                        <p className="text-gray-600 text-sm dark:text-gray-300 mb-1">
-                                            {course.shortDescription || course.description}
-                                        </p>
-                                        <div className="grid grid-cols-3 gap-1 mb-2">
-                                            <div className="flex items-center text-sm text-gray-600 dark:text-gray-400">
-                                                <Clock className="w-4 h-4 mr-2 text-blue-500" />
-                                                {course.duration || "Self-paced"}
-                                            </div>
-                                            <div className="flex items-center text-sm text-gray-600 dark:text-gray-400">
-                                                <Award className="w-4 h-4 mr-2 text-green-500" />
-                                                {course.level?.charAt(0).toUpperCase() + course.level?.slice(1) || "All Levels"}
-                                            </div>
-                                            <div className="flex items-center text-sm text-gray-600 dark:text-gray-400">
-                                                <Shield className="w-4 h-4 mr-2 text-purple-500" />
-                                                {course.categoryInfo?.name || "Category"}
-                                            </div>
-                                            <div className="flex items-center text-sm text-gray-600 dark:text-gray-400">
-                                                <UserRoundSearch className="w-4 h-4 mr-2 text-orange-500" />
-                                                {course.mode?.charAt(0).toUpperCase() + course.mode?.slice(1) || "Online"}
-                                            </div>
-                                        </div>
-
-                                        {/* Discount Badges */}
-                                        <div className="flex flex-wrap gap-2 mb-4">
-                                            {earlyBirdActive && course.pricing.earlyBird && (
-                                                <span className="bg-orange-50 dark:bg-orange-900/30 text-orange-600 dark:text-orange-400 px-3 py-1 rounded-full text-sm font-semibold">
-                                                    🎁 Early Bird: {course.pricing.earlyBird.discount}% OFF
-                                                </span>
-                                            )}
-                                            {course.pricing.discount && course.pricing.discount > 0 && (
-                                                <span className="bg-green-50 dark:bg-green-900/30 text-green-600 dark:text-green-400 px-3 py-1 rounded-full text-sm">
-                                                    🔥 {course.pricing.discount}% OFF
-                                                </span>
-                                            )}
-                                            {/* <span className="bg-blue-50 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 px-3 py-1 rounded-full text-sm">
-                                                Lifetime Access
-                                            </span>
-                                            <span className="bg-green-50 dark:bg-green-900/30 text-green-600 dark:text-green-400 px-3 py-1 rounded-full text-sm">
-                                                Certificate
-                                            </span> */}
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        </motion.div>
-                    </div> : <div className="lg:col-span-2 space-y-2">
-                        <motion.div
-                            initial={{ opacity: 0, x: -20 }}
-                            animate={{ opacity: 1, x: 0 }}
-                            transition={{ delay: 0.3 }}
-                            className="bg-white dark:bg-gray-800 rounded-lg shadow-lg border border-gray-100 dark:border-gray-800 overflow-hidden"
-                        >
-                            <div className="p-6">
-                                <div className="flex items-center justify-between mb-3">
-                                    <h2 className="text-xl font-bold text-gray-900 dark:text-white flex items-center">
-                                        <BookOpen className="w-6 h-6 mr-3 text-blue-500" />
-                                        Course Details
-                                    </h2>
-                                    <div className="flex items-center space-x-2 text-sm text-gray-500 dark:text-gray-400">
-                                        <Star className="w-4 h-4 text-yellow-400 fill-current" />
-                                        <span>{course.rating || 4.5}</span>
-                                        <span>•</span>
-                                        <Users className="w-4 h-4" />
-                                        <span>{(course.studentsEnrolled || 0).toLocaleString()} students</span>
                                     </div>
                                 </div>
 
-                                <div className="flex flex-col lg:flex-row gap-6">
-                                    <div className="relative">
-                                        <img
-                                            src={course.thumbnail?.url ? `${ImageBaseUrl}/${course.thumbnail.url}` : "/placeholder-course.jpg"}
-                                            alt={course.title || "Course thumbnail"}
-                                            loading="lazy"
-                                            decoding="async"
-                                            className="w-full h-28 lg:w-44 lg:h-auto lg:aspect-video object-cover rounded-xl shadow-sm transition-transform duration-300 hover:scale-105"
-                                        />
-                                        {course.mode === 'free' && (
-                                            <div className="absolute top-4 left-4 bg-gradient-to-r from-green-500 to-emerald-500 text-white px-3 py-1 rounded-full text-sm font-semibold">
-                                                Free
-                                            </div>
-                                        )}
-                                        {earlyBirdActive && (
-                                            <div className="absolute top-4 left-4 bg-gradient-to-r from-orange-500 to-red-500 text-white px-3 py-1 rounded-full text-sm font-semibold animate-pulse">
-                                                Early Bird!
-                                            </div>
-                                        )}
-                                        {course.featured && !earlyBirdActive && (
-                                            <div className="absolute top-4 left-4 bg-gradient-to-r from-blue-500 to-purple-500 text-white px-3 py-1 rounded-full text-sm font-semibold">
-                                                Bestseller
-                                            </div>
-                                        )}
-                                    </div>
+                                <div className="p-6">
+                                    {/* Course Content */}
+                                    {product.type === 'course' && (
+                                        <div className="space-y-6">
+                                            <div className="flex flex-col sm:flex-row  gap-6">
+                                                <motion.div
+                                                    className="relative flex-shrink-0"
+                                                >
+                                                    <img
+                                                        src={product.thumbnail?.url ? `${ImageBaseUrl}/${product.thumbnail.url}` : "/placeholder-course.jpg"}
+                                                        alt={product.title}
+                                                        className="w-full sm:w-48 sm:h-32 object-cover bg-gray-100 rounded-xl"
+                                                        onError={(e) => (e.currentTarget.src = "https://www.ooshasprep.com/image/logo.png")}
+                                                    />
 
-                                    <div className="flex-1">
-                                        <h3 className="text-xl font-bold text-gray-900 dark:text-white leading-tight">
-                                            {course.title}
-                                        </h3>
-                                        <p className="text-gray-600 text-sm dark:text-gray-300 mb-1">
-                                            {course.shortDescription || course.description}
-                                        </p>
-                                        <div className="grid grid-cols-3 gap-1 mb-2">
-                                            <div className="flex items-center text-sm text-gray-600 dark:text-gray-400">
-                                                <Clock className="w-4 h-4 mr-2 text-blue-500" />
-                                                {course.duration || "Self-paced"}
+                                                </motion.div>
+                                                <div className="flex-1">
+                                                    <h2 className="text-xl text-slate-800 dark:text-white font-semibold">{product.title}</h2>
+                                                    <p className="text-gray-700 line-clamp-2 dark:text-gray-300 mb-3">
+                                                        {product.shortDescription || product.description}
+                                                    </p>
+                                                    <div className="grid grid-cols-3 gap-3">
+                                                        <div className="flex items-center space-x-2 text-sm">
+                                                            <Clock className="w-4 h-4 text-blue-500" />
+                                                            <span className="text-gray-600 dark:text-gray-300">{product.duration || "Self-paced"}</span>
+                                                        </div>
+                                                        <div className="flex items-center space-x-2 text-sm">
+                                                            <Award className="w-4 h-4 text-purple-500" />
+                                                            <span className="text-gray-600 dark:text-gray-300 capitalize">{product.level}</span>
+                                                        </div>
+                                                        <div className="flex items-center space-x-2 text-sm">
+                                                            <Star className="w-4 h-4 text-yellow-500 fill-current" />
+                                                            <span className="text-gray-600 dark:text-gray-300">{product.rating || 4.5} Rating</span>
+                                                        </div>
+                                                        <div className="flex items-center space-x-2 text-sm">
+                                                            <Users className="w-4 h-4 text-green-500" />
+                                                            <span className="text-gray-600 dark:text-gray-300">{(product.studentsEnrolled || 1000).toLocaleString()}+ Students</span>
+                                                        </div>
+                                                    </div>
+                                                </div>
                                             </div>
-                                            <div className="flex items-center text-sm text-gray-600 dark:text-gray-400">
-                                                <Award className="w-4 h-4 mr-2 text-green-500" />
-                                                {course.level?.charAt(0).toUpperCase() + course.level?.slice(1) || "All Levels"}
-                                            </div>
-                                            <div className="flex items-center text-sm text-gray-600 dark:text-gray-400">
-                                                <Shield className="w-4 h-4 mr-2 text-purple-500" />
-                                                {course.categoryInfo?.name || "Category"}
-                                            </div>
-                                            <div className="flex items-center text-sm text-gray-600 dark:text-gray-400">
-                                                <UserRoundSearch className="w-4 h-4 mr-2 text-orange-500" />
-                                                {course.mode?.charAt(0).toUpperCase() + course.mode?.slice(1) || "Online"}
-                                            </div>
-                                        </div>
 
-                                        {/* Discount Badges */}
-                                        <div className="flex flex-wrap gap-2 mb-4">
-                                            {earlyBirdActive && course.pricing.earlyBird && (
-                                                <span className="bg-orange-50 dark:bg-orange-900/30 text-orange-600 dark:text-orange-400 px-3 py-1 rounded-full text-sm font-semibold">
-                                                    🎁 Early Bird: {course.pricing.earlyBird.discount}% OFF
-                                                </span>
+                                            {/* Features Grid */}
+                                            {product.features && product.features.length > 0 && (
+                                                <div className="border rounded-xl p-4">
+                                                    <h3 className="font-medium text-xl text-gray-900 dark:text-white mb-3">What You'll Get</h3>
+                                                    <div className="grid grid-cols-2 gap-2">
+                                                        {product.features.map((feature, index) => (
+                                                            <motion.div
+                                                                key={index}
+                                                                initial={{ opacity: 0, x: -20 }}
+                                                                animate={{ opacity: 1, x: 0 }}
+                                                                transition={{ delay: index * 0.1 }}
+                                                                className="flex items-center space-x-3 text-sm"
+                                                            >
+                                                                <Check className="w-5 shadow border rounded-full p-1 h-5 text-green-500 flex-shrink-0" />
+                                                                <span className="text-gray-700 font-medium dark:text-gray-300">{feature}</span>
+                                                            </motion.div>
+                                                        ))}
+                                                    </div>
+                                                </div>
                                             )}
-                                            {course.pricing.discount && course.pricing.discount > 0 && (
-                                                <span className="bg-green-50 dark:bg-green-900/30 text-green-600 dark:text-green-400 px-3 py-1 rounded-full text-sm">
-                                                    🔥 {course.pricing.discount}% OFF
-                                                </span>
-                                            )}
-                                            {/* <span className="bg-blue-50 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 px-3 py-1 rounded-full text-sm">
-                                                Lifetime Access
-                                            </span>
-                                            <span className="bg-green-50 dark:bg-green-900/30 text-green-600 dark:text-green-400 px-3 py-1 rounded-full text-sm">
-                                                Certificate
-                                            </span> */}
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        </motion.div>
-                    </div>}
-                    <div className="lg:col-span-1">
-                        <motion.div
-                            initial={{ opacity: 0, y: 20 }}
-                            animate={{ opacity: 1, y: 0 }}
-                            transition={{ delay: 0.5 }}
-                            className="sticky top-8"
-                        >
-                            <div className="bg-gradient-to-br from-white to-blue-50 dark:from-gray-800 dark:to-blue-900/20 rounded-xl shadow-xl border border-gray-100 dark:border-gray-700 overflow-hidden">
-                                <div className="bg-gradient-to-r from-blue-500 to-purple-500 p-6 pb-3 text-white">
-                                    <h3 className="text-xl font-bold flex items-center">
-                                        <Sparkles className="w-5 h-5 mr-2" />
-                                        Order Summary
-                                    </h3>
-                                    <p className="text-blue-100 text-sm mt-1">
-                                        {course.mode === 'free' ? 'Free Enrollment' : 'One-time payment • Secure Payment'}
-                                    </p>
-                                    {earlyBirdActive && (
-                                        <div className="mt-1 bg-orange-500/20 border border-orange-300/30 rounded-lg px-3 py-2 text-xs">
-                                            ⚡ Early Bird offer ends {new Date(course.pricing.earlyBird!.deadline).toLocaleDateString()}
                                         </div>
                                     )}
-                                </div>
-                                <div className="p-6">
-                                    <div className="space-y-3 mb-3">
-                                        {/* Original Price */}
-                                        <div className="flex justify-between items-center text-sm">
-                                            <span className="text-gray-600 dark:text-gray-400">Original Price</span>
-                                            <span className="text-gray-900 dark:text-white line-through">
-                                                {formatPrice(originalPrice)}
-                                            </span>
-                                        </div>
 
-                                        {/* Main Course Discount */}
-                                        {course.pricing.discount && course.pricing.discount > 0 && (
-                                            <div className="flex justify-between items-center text-sm">
-                                                <span className="text-gray-600 dark:text-gray-400">
-                                                    Course Discount ({course.pricing.discount}%)
-                                                </span>
-                                                <span className="text-green-600 dark:text-green-400">
-                                                    -{formatPrice((originalPrice * course.pricing.discount) / 100)}
-                                                </span>
+                                    {/* Test Content */}
+                                    {product.type === 'test' && (
+                                        <div className="space-y-6">
+                                            <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
+                                                {[
+                                                    { icon: GraduationCap, label: 'Exam', value: product.exam.name, color: 'blue' },
+                                                    { icon: BarChart3, label: 'Type', value: product.testType.replace('_', ' '), color: 'green' },
+                                                    { icon: Timer, label: 'Duration', value: `${product.totalDurationMinutes} mins`, color: 'purple' },
+                                                    { icon: FileText, label: 'Questions', value: product.totalQuestions.toString(), color: 'orange' },
+                                                ].map((item, index) => (
+                                                    <motion.div
+                                                        key={index}
+                                                        whileHover={{ y: -5 }}
+                                                        className={`bg-${item.color}-50 dark:bg-${item.color}-900/20 p-4 rounded-xl`}
+                                                    >
+                                                        <item.icon className={`w-6 h-6 text-${item.color}-500 mb-2`} />
+                                                        <p className="text-xs text-gray-500 dark:text-gray-400">{item.label}</p>
+                                                        <p className="font-semibold text-gray-900 dark:text-white capitalize">{item.value}</p>
+                                                    </motion.div>
+                                                ))}
                                             </div>
-                                        )}
 
-                                        {/* Early Bird Discount */}
-                                        {earlyBirdActive && course.pricing.earlyBird && (
-                                            <div className="flex justify-between items-center text-sm">
-                                                <span className="text-gray-600 dark:text-gray-400">
-                                                    Early Bird Discount ({course.pricing.earlyBird.discount - course.pricing.discount}%)
-                                                </span>
-                                                <span className="text-orange-600 dark:text-orange-400">
-                                                    -{formatPrice((originalPrice * (course.pricing.earlyBird.discount - course.pricing.discount)) / 100)}
-                                                </span>
-                                            </div>
-                                        )}
-
-                                        {/* Current Price */}
-                                        <div className="flex justify-between items-center text-sm font-medium dark:border-gray-600 pt-1">
-                                            <span className="text-gray-600 dark:text-gray-400">Current Price</span>
-                                            <span className="text-gray-900 dark:text-white text-lg font-bold">
-                                                {formatPrice(effectiveBasePrice)}
-                                            </span>
-                                        </div>
-
-                                        {/* Promo Code Section */}
-                                        <AnimatePresence>
-                                            {!promoApplied ? (
-                                                <motion.div
-                                                    initial={{ opacity: 0, height: 0 }}
-                                                    animate={{ opacity: 1, height: "auto" }}
-                                                    exit={{ opacity: 0, height: 0 }}
-                                                    className="pt-1"
-                                                >
-                                                    <div className="flex gap-2 mb-1">
-                                                        <input
-                                                            type="text"
-                                                            value={promoCode}
-                                                            onChange={(e) => setPromoCode(e.target.value)}
-                                                            placeholder="Enter promo code"
-                                                            className="flex-1 px-3 py-2 text-sm bg-white dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-lg text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                                                            disabled={loading !== 'none' || course.mode === 'free'}
-                                                        />
-                                                        <button
-                                                            onClick={handlePromoApply}
-                                                            disabled={!promoCode.trim() || loading !== 'none' || course.mode === 'free'}
-                                                            className="px-4 py-2 text-sm bg-gradient-to-r from-blue-500 to-purple-500 text-white rounded-lg hover:from-blue-600 hover:to-purple-600 disabled:opacity-50"
-                                                        >
-                                                            {loading === 'promo' ? <Loader2 className="h-4 w-4 animate-spin" /> : "Apply"}
-                                                        </button>
+                                            {product.sections.length > 0 && (
+                                                <div>
+                                                    <h3 className="font-semibold text-gray-900 dark:text-white mb-3">Test Sections</h3>
+                                                    <div className="space-y-2">
+                                                        {product.sections.map((section, index) => (
+                                                            <motion.div
+                                                                key={index}
+                                                                initial={{ opacity: 0, x: -20 }}
+                                                                animate={{ opacity: 1, x: 0 }}
+                                                                transition={{ delay: index * 0.1 }}
+                                                                className="flex items-center justify-between bg-gradient-to-r from-gray-50 to-blue-50 dark:from-gray-700 dark:to-blue-900/20 p-3 rounded-xl"
+                                                            >
+                                                                <div className="flex items-center space-x-3">
+                                                                    <div className="w-2 h-2 rounded-full bg-blue-500"></div>
+                                                                    <span className="text-sm font-medium text-gray-700 dark:text-gray-300">{section.customName}</span>
+                                                                </div>
+                                                                <div className="flex items-center space-x-4 text-xs text-gray-500 dark:text-gray-400">
+                                                                    <span className="flex items-center space-x-1">
+                                                                        <FileText className="w-3 h-3" />
+                                                                        <span>{section.questionCount} Q</span>
+                                                                    </span>
+                                                                    <span className="flex items-center space-x-1">
+                                                                        <Clock className="w-3 h-3" />
+                                                                        <span>{section.durationMinutes} min</span>
+                                                                    </span>
+                                                                </div>
+                                                            </motion.div>
+                                                        ))}
                                                     </div>
-                                                    {promoMessage && (
-                                                        <div className={`mt-2 text-xs ${promoApplied ? 'text-green-600' : 'text-red-600'} dark:text-red-400`}>
-                                                            {promoMessage}
+                                                </div>
+                                            )}
+                                        </div>
+                                    )}
+
+                                    {/* Series Content */}
+                                    {product.type === 'series' && (
+                                        <div className="space-y-6">
+                                            <div className="flex gap-4">
+                                                {product.thumbnailPic && (
+                                                    <motion.img
+                                                        whileHover={{ scale: 1.05 }}
+                                                        src={product.thumbnailPic}
+                                                        alt={product.title}
+                                                        className="w-32 h-32 object-cover rounded-xl shadow-lg"
+                                                    />
+                                                )}
+                                                <div className="flex-1">
+                                                    <p className="text-gray-600 dark:text-gray-300 mb-4">{product.overview}</p>
+                                                    <div className="grid grid-cols-2 gap-3">
+                                                        <div className="bg-blue-50 dark:bg-blue-900/20 p-3 rounded-xl">
+                                                            <p className="text-xs text-gray-500">Category</p>
+                                                            <p className="font-semibold text-gray-900 dark:text-white">{product.category.name}</p>
                                                         </div>
-                                                    )}
+                                                        <div className="bg-green-50 dark:bg-green-900/20 p-3 rounded-xl">
+                                                            <p className="text-xs text-gray-500">Total Tests</p>
+                                                            <p className="font-semibold text-gray-900 dark:text-white">{product.totalTests}</p>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+
+                                            <div>
+                                                <h3 className="font-semibold text-gray-900 dark:text-white mb-3">Included Tests</h3>
+                                                <div className="space-y-2 max-h-64 overflow-y-auto custom-scrollbar">
+                                                    {product.tests.map((test, index) => (
+                                                        <motion.div
+                                                            key={index}
+                                                            initial={{ opacity: 0, x: -20 }}
+                                                            animate={{ opacity: 1, x: 0 }}
+                                                            transition={{ delay: index * 0.05 }}
+                                                            whileHover={{ x: 5 }}
+                                                            className="flex items-center justify-between bg-gradient-to-r from-gray-50 to-purple-50 dark:from-gray-700 dark:to-purple-900/20 p-3 rounded-xl group"
+                                                        >
+                                                            <div>
+                                                                <p className="text-sm font-medium text-gray-700 dark:text-gray-300">{test.label}</p>
+                                                                <p className="text-xs text-gray-500 capitalize">{test.testData.testType.replace('_', ' ')}</p>
+                                                            </div>
+                                                            <div className="text-xs text-gray-500 space-x-2">
+                                                                <span>{test.testData.totalQuestions} Q</span>
+                                                                <span>•</span>
+                                                                <span>{test.testData.totalDurationMinutes} min</span>
+                                                            </div>
+                                                        </motion.div>
+                                                    ))}
+                                                </div>
+                                            </div>
+                                        </div>
+                                    )}
+
+                                    {/* Discount Tags */}
+                                    <div className="flex flex-wrap gap-2 mt-6">
+                                        {earlyBirdActive && product.type === 'course' && (
+                                            <motion.span
+                                                animate={{ scale: [1, 1.05, 1] }}
+                                                transition={{ duration: 2, repeat: Infinity }}
+                                                className="inline-flex items-center space-x-1 bg-gradient-to-r from-orange-400 to-red-400 text-white px-3 py-1.5 rounded-full text-sm font-semibold shadow-lg"
+                                            >
+                                                <Zap className="w-4 h-4" />
+                                                <span>Early Bird {product.pricing.earlyBird?.discount}% OFF</span>
+                                            </motion.span>
+                                        )}
+                                        {discountPercent > 0 && (
+                                            <span className="inline-flex items-center space-x-1 bg-gradient-to-r from-green-400 to-emerald-400 text-white px-3 py-1.5 rounded-full text-sm font-semibold shadow-lg">
+                                                <TrendingDown className="w-4 h-4" />
+                                                <span>{discountPercent}% OFF</span>
+                                            </span>
+                                        )}
+                                        {product.type !== 'course' && (
+                                            <span className="inline-flex items-center space-x-1 bg-blue-100 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 px-3 py-1.5 rounded-full text-sm">
+                                                <Tag className="w-4 h-4" />
+                                                <span>Limited Time Offer</span>
+                                            </span>
+                                        )}
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </motion.div>
+                    <motion.div
+                        initial={{ opacity: 0, y: 30 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ delay: 0.2 }}
+                        className="lg:col-span-2"
+                    >
+                        <div className="sticky top-24 space-y-6">
+                            <div className="relative group">
+                                <div className="relative bg-white border dark:bg-gray-800 rounded-xl overflow-hidden">
+                                    <div className="bg-orange-400 p-4 text-white">
+                                        <div className="flex items-center justify-between">
+                                            <h3 className="text-base font-bold">Order Summary</h3>
+                                            <CreditCard className="w-5 h-5" />
+                                        </div>
+                                        {earlyBirdActive && (
+                                            <motion.div
+                                                initial={{ opacity: 0, height: 0 }}
+                                                animate={{ opacity: 1, height: 'auto' }}
+                                                className="mt-3 bg-white/20 backdrop-blur-sm rounded-xl p-3"
+                                            >
+                                                <div className="flex items-center justify-between text-sm">
+                                                    <span>⏰ Early Bird Ends In:</span>
+                                                    <CountdownTimer deadline={product.pricing.earlyBird!.deadline} />
+                                                </div>
+                                            </motion.div>
+                                        )}
+                                    </div>
+
+                                    <div className="p-6 space-y-4">
+                                        <div className="space-y-3">
+                                            {originalPrice > currentPrice && (
+                                                <motion.div
+                                                    initial={{ opacity: 0, x: -20 }}
+                                                    animate={{ opacity: 1, x: 0 }}
+                                                    className="flex justify-between items-center text-sm"
+                                                >
+                                                    <span className="text-gray-500">Original Price</span>
+                                                    <span className="text-gray-400 line-through">{formatPrice(originalPrice)}</span>
                                                 </motion.div>
-                                            ) : (
+                                            )}
+
+                                            {discountBreakdown.map((discount, index) => (
+                                                <motion.div
+                                                    key={index}
+                                                    initial={{ opacity: 0, x: -20 }}
+                                                    animate={{ opacity: 1, x: 0 }}
+                                                    transition={{ delay: index * 0.1 }}
+                                                    className="flex justify-between items-center text-sm"
+                                                >
+                                                    <span className="text-gray-500">{discount.label}</span>
+                                                    <span className={`font-medium ${discount.label.includes('Early Bird')
+                                                        ? 'text-orange-500'
+                                                        : 'text-green-500'
+                                                        }`}>
+                                                        -{formatPrice(discount.amount)}
+                                                    </span>
+                                                </motion.div>
+                                            ))}
+
+                                            <div className="pt-1">
+                                                <div className="flex justify-between items-center">
+                                                    <span className="text-gray-900 dark:text-white font-semibold">Current Price</span>
+                                                    <span className="text-2xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
+                                                        {isFree ? 'FREE' : formatPrice(effectiveBasePrice)}
+                                                    </span>
+                                                </div>
+                                            </div>
+                                            {!isFree && product.type == 'course' && (
+                                                <AnimatePresence>
+                                                    {!promoApplied ? (
+                                                        <motion.div
+                                                            initial={{ opacity: 0, height: 0 }}
+                                                            animate={{ opacity: 1, height: 'auto' }}
+                                                            className="pt-2"
+                                                        >
+                                                            <div className="relative">
+                                                                <input
+                                                                    type="text"
+                                                                    value={promoCode}
+                                                                    onChange={(e) => setPromoCode(e.target.value)}
+                                                                    placeholder="Have a promo code?"
+                                                                    className="w-full pl-10 pr-24 py-3 bg-gray-50 dark:bg-gray-700 border-2 border-gray-200 dark:border-gray-600 rounded-xl text-sm focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 transition-all"
+                                                                    disabled={loading !== 'none'}
+                                                                />
+                                                                <BadgePercent className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
+                                                                <motion.button
+                                                                    whileHover={{ scale: 1.05 }}
+                                                                    whileTap={{ scale: 0.95 }}
+                                                                    onClick={handlePromoApply}
+                                                                    disabled={!promoCode.trim() || loading !== 'none'}
+                                                                    className="absolute right-2 top-1/2 -translate-y-1/2 px-4 py-1.5 bg-gradient-to-r from-blue-600 to-purple-600 text-white text-sm rounded-lg font-medium hover:shadow-lg transition-all disabled:opacity-50"
+                                                                >
+                                                                    {loading === 'promo' ? (
+                                                                        <Loader2 className="w-4 h-4 animate-spin" />
+                                                                    ) : (
+                                                                        'Apply'
+                                                                    )}
+                                                                </motion.button>
+                                                            </div>
+                                                            {promoMessage && (
+                                                                <motion.p
+                                                                    initial={{ opacity: 0 }}
+                                                                    animate={{ opacity: 1 }}
+                                                                    className="mt-2 text-xs text-red-500"
+                                                                >
+                                                                    {promoMessage}
+                                                                </motion.p>
+                                                            )}
+                                                        </motion.div>
+                                                    ) : (
+                                                        <motion.div
+                                                            initial={{ opacity: 0, scale: 0.95 }}
+                                                            animate={{ opacity: 1, scale: 1 }}
+                                                            className="flex justify-between items-center bg-green-50 dark:bg-green-900/20 p-3 rounded-xl"
+                                                        >
+                                                            <div className="flex items-center space-x-2">
+                                                                <CheckCircle className="w-5 h-5 text-green-500" />
+                                                                <span className="text-sm font-medium text-green-700 dark:text-green-300">
+                                                                    Promo Applied!
+                                                                </span>
+                                                            </div>
+                                                            <div className="flex items-center space-x-2">
+                                                                <span className="text-green-600 dark:text-green-400 font-bold">
+                                                                    -{formatPrice(promoDiscount)}
+                                                                </span>
+                                                                <button
+                                                                    onClick={handleRemovePromo}
+                                                                    className="text-red-400 hover:text-red-600 transition-colors"
+                                                                >
+                                                                    <X className="w-4 h-4" />
+                                                                </button>
+                                                            </div>
+                                                        </motion.div>
+                                                    )}
+                                                </AnimatePresence>
+                                            )}
+
+                                            {/* Wallet Balance */}
+                                            {!isFree && (
                                                 <motion.div
                                                     initial={{ opacity: 0 }}
                                                     animate={{ opacity: 1 }}
-                                                    className="flex justify-between items-center text-sm text-green-600 dark:text-green-400 pt-1"
+                                                    className="bg-gray-50 dark:bg-gray-700/50 rounded-xl p-4"
                                                 >
-                                                    <span className="flex items-center">
-                                                        <Gift className="w-4 h-4 mr-1" />
-                                                        Promo Applied
-                                                    </span>
-                                                    <div className="flex items-center">
-                                                        <span>-{formatPrice(promoDiscount)}</span>
-                                                        <button
-                                                            onClick={handleRemovePromo}
-                                                            className="ml-2 text-red-500 hover:text-red-700"
-                                                        >
-                                                            <X className="w-4 h-4" />
-                                                        </button>
+                                                    <div className="flex items-center justify-between mb-3">
+                                                        <div className="flex items-center space-x-2">
+                                                            <Wallet className="w-5 h-5 text-blue-500" />
+                                                            <span className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                                                                Wallet Balance
+                                                            </span>
+                                                        </div>
+                                                        <span className="text-sm font-bold text-gray-900 dark:text-white">
+                                                            {formatPrice(userWallet.balance, userWallet.currency)}
+                                                        </span>
                                                     </div>
-                                                </motion.div>
-                                            )}
-                                        </AnimatePresence>
 
-                                        {/* Wallet Balance Section */}
-                                        {course.mode !== 'free' && (
-                                            <div className="pt-2">
-                                                <div className="flex items-center justify-between mb-2">
-                                                    <label className="flex items-center space-x-3 cursor-pointer">
-                                                        <div className="relative">
+                                                    <label className="flex items-center justify-between cursor-pointer">
+                                                        <span className="text-sm text-gray-600 dark:text-gray-400">
+                                                            Use wallet balance (Max 10%)
+                                                        </span>
+                                                        <motion.div
+                                                            whileTap={{ scale: 0.95 }}
+                                                            className="relative"
+                                                        >
                                                             <input
                                                                 type="checkbox"
                                                                 checked={useWalletBalance}
@@ -636,93 +941,104 @@ export default function CheckoutPage() {
                                                                 disabled={!userWallet || userWallet.balance <= 0}
                                                                 className="sr-only"
                                                             />
-                                                            <div className={`w-12 h-6 rounded-full transition-all ${useWalletBalance ? 'bg-blue-500' : 'bg-gray-300 dark:bg-gray-600'}`} />
-                                                            <div className={`absolute top-1 w-4 h-4 bg-white rounded-full transition-all transform ${useWalletBalance ? 'translate-x-7' : 'translate-x-1'}`} />
-                                                        </div>
-                                                        <span className="text-sm font-medium text-gray-700 dark:text-gray-300">
-                                                            <Wallet className="w-4 h-4 mr-2 inline" />
-                                                            Use Wallet Balance
-                                                        </span>
+                                                            <div className={`w-14 h-7 rounded-full transition-all duration-300 ${useWalletBalance
+                                                                ? 'bg-gradient-to-r from-blue-500 to-purple-500'
+                                                                : 'bg-gray-300 dark:bg-gray-600'
+                                                                }`}>
+                                                                <motion.div
+                                                                    className="absolute top-1 w-5 h-5 bg-white rounded-full shadow-md"
+                                                                    animate={{ left: useWalletBalance ? 'calc(100% - 1.5rem)' : '0.25rem' }}
+                                                                    transition={{ type: "spring", stiffness: 500, damping: 30 }}
+                                                                />
+                                                            </div>
+                                                        </motion.div>
                                                     </label>
-                                                </div>
-                                                {useWalletBalance && (
+
+                                                    {useWalletBalance && (
+                                                        <motion.div
+                                                            initial={{ opacity: 0, height: 0 }}
+                                                            animate={{ opacity: 1, height: 'auto' }}
+                                                            className="mt-3 flex justify-between text-sm text-green-600 dark:text-green-400"
+                                                        >
+                                                            <span>Wallet Discount</span>
+                                                            <span className="font-bold">-{formatPrice(actualWalletUsage)}</span>
+                                                        </motion.div>
+                                                    )}
+                                                </motion.div>
+                                            )}
+                                        </div>
+
+                                        {/* Total */}
+                                        <div className="border-t-2 border-gray-200 dark:border-gray-700 pt-3">
+                                            <div className="flex justify-between items-center mb-2">
+                                                <span className="text-lg font-bold text-gray-900 dark:text-white">Total Amount</span>
+                                                <div className="text-right">
                                                     <motion.div
-                                                        initial={{ opacity: 0, y: -10 }}
-                                                        animate={{ opacity: 1, y: 0 }}
-                                                        className="flex justify-between text-sm text-green-600 dark:text-green-400"
+                                                        key={finalPrice}
+                                                        initial={{ scale: 1.5, opacity: 0 }}
+                                                        animate={{ scale: 1, opacity: 1 }}
+                                                        className="text-xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent"
                                                     >
-                                                        <span>Wallet Credit Applied</span>
-                                                        <span>-{formatPrice(actualWalletUsage)}</span>
+                                                        {isFree ? 'FREE' : formatPrice(finalPrice)}
                                                     </motion.div>
-                                                )}
-                                                <div className="text-xs text-gray-500 dark:text-gray-400 mt-1">
-                                                    Available: {formatPrice(userWallet.balance, userWallet.currency)} (Max 10%)
+                                                    {totalSavings > 0 && (
+                                                        <motion.div
+                                                            initial={{ opacity: 0, y: -10 }}
+                                                            animate={{ opacity: 1, y: 0 }}
+                                                            className="text-sm text-green-600 dark:text-green-400 font-semibold"
+                                                        >
+                                                            You save {formatPrice(totalSavings)}! 🎉
+                                                        </motion.div>
+                                                    )}
                                                 </div>
                                             </div>
-                                        )}
-                                    </div>
+                                        </div>
 
-                                    {/* Total Amount */}
-                                    <div className="border-t border-gray-200 dark:border-gray-600 pt-2 mb-3">
-                                        <div className="flex justify-between items-center text-lg font-bold">
-                                            <span className="text-gray-900 dark:text-white">Total Amount</span>
-                                            <div className="text-right">
-                                                <div className="text-2xl bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent dark:from-blue-400 dark:to-purple-400">
-                                                    {course.mode === 'free' ? 'FREE' : formatPrice(finalPrice)}
-                                                </div>
-                                                {totalSavings > 0 && (
-                                                    <div className="text-sm text-green-600 dark:text-green-400 font-medium">
-                                                        You save {formatPrice(totalSavings)}
-                                                    </div>
+                                        {/* Purchase Button */}
+                                        <motion.button
+                                            whileHover={{ scale: 1.02, boxShadow: "0 20px 40px rgba(59, 130, 246, 0.3)" }}
+                                            whileTap={{ scale: 0.98 }}
+                                            onClick={handlePurchase}
+                                            disabled={loading !== 'none' || (!isFree && finalPrice < 0)}
+                                            className="w-full relative overflow-hidden bg-gradient-to-r from-blue-600 via-purple-600 to-pink-600 text-white py-2.5 px-6 rounded-xl font-bold text-base shadow-xl transition-all disabled:opacity-50 disabled:cursor-not-allowed group"
+                                        >
+                                            <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-1000"></div>
+                                            <span className="relative flex items-center justify-center space-x-2">
+                                                {loading === 'payment' ? (
+                                                    <>
+                                                        <Loader2 className="w-6 h-6 animate-spin" />
+                                                        <span>Processing Payment...</span>
+                                                    </>
+                                                ) : (
+                                                    <>
+                                                        <Lock className="w-5 h-5" />
+                                                        <span>{isFree ? 'Enroll Now - Free' : 'Complete Purchase'}</span>
+                                                        <ArrowRight className="w-5 h-5" />
+                                                    </>
                                                 )}
+                                            </span>
+                                        </motion.button>
+
+                                        {/* Trust Badges */}
+                                        <div className="flex flex-col w-full items-start font-medium  gap-2">
+                                            <div className="flex items-center justify-center space-x-2 text-xs text-gray-500 dark:text-gray-400">
+                                                <Shield className="w-4 h-4 text-green-500" />
+                                                <span>256-bit SSL Encrypted Payment</span>
                                             </div>
-                                        </div>
-                                    </div>
-
-                                    {/* Error Message */}
-                                    {error && (
-                                        <div className="mb-4 p-3 bg-red-50 dark:bg-red-900/20 text-red-700 dark:text-red-300 text-sm rounded-lg flex items-center">
-                                            <AlertCircle className="h-4 w-4 mr-2" />
-                                            {error}
-                                        </div>
-                                    )}
-
-                                    {/* Purchase Button */}
-                                    <motion.button
-                                        onClick={handlePurchase}
-                                        disabled={loading !== 'none' || (course.mode !== 'free' && finalPrice < 0)}
-                                        whileHover={{ scale: 1.02 }}
-                                        whileTap={{ scale: 0.98 }}
-                                        className="w-full bg-gradient-to-r from-blue-600 to-purple-600 text-white py-2 px-6 rounded-xl font-semibold text-lg shadow-lg hover:shadow-xl transition-all disabled:opacity-50 disabled:cursor-not-allowed"
-                                    >
-                                        {loading === 'payment' ? (
-                                            <>
-                                                <Loader2 className="w-5 h-5 animate-spin mr-2 inline" />
-                                                Processing...
-                                            </>
-                                        ) : (
-                                            <>
-                                                {course.mode === 'free' ? 'Enroll for Free' : 'Complete Purchase'}
-                                                <ArrowRight className="w-5 h-5 ml-2 inline" />
-                                            </>
-                                        )}
-                                    </motion.button>
-                                    {/* <div className="mt-6 space-y-3 text-center">
-                                        <div className="flex items-center justify-center text-xs text-gray-500 dark:text-gray-400 space-x-2">
-                                            <Shield className="w-4 h-4 text-green-500" />
-                                            <span>SSL Secure Payment</span>
-                                        </div>
-                                        {course.mode !== 'free' && (
-                                            <div className="flex items-center justify-center text-xs text-gray-500 dark:text-gray-400 space-x-2">
+                                            <div className="flex items-center justify-center space-x-2 text-xs text-gray-500 dark:text-gray-400">
                                                 <CheckCircle className="w-4 h-4 text-blue-500" />
-                                                <span>30-Day Money-Back Guarantee</span>
+                                                <span>Instant Access After Payment</span>
                                             </div>
-                                        )}
-                                    </div> */}
+                                            <div className="flex items-center justify-center space-x-2 text-xs text-gray-500 dark:text-gray-400">
+                                                <Lock className="w-4 h-4 text-purple-500" />
+                                                <span>100% Secure & Trusted</span>
+                                            </div>
+                                        </div>
+                                    </div>
                                 </div>
                             </div>
-                        </motion.div>
-                    </div>
+                        </div>
+                    </motion.div>
                 </div>
             </div>
         </div>

@@ -67,7 +67,7 @@ export const MockTestCard = ({ test }: { test: TestTemplate }) => {
             else if (examName.includes("gre")) navigate(`/gre/tests/${test._id}`);
             else navigate(`/mcq/tests/${test._id}`);
         } else {
-            navigate(`/checkout/${test?._id}`, { state: { testSeries: true } })
+            navigate(`/checkout/${test?._id}`, { state: { isTest: true } })
         }
     };
 
