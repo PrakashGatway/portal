@@ -38,7 +38,7 @@ const EducationAnalytics = () => {
   };
 
   useEffect(() => {
-    if (user?.role != "counselor") {
+    if (user?.role == "admin") {
       fetchCounselors();
     }
   }, [user?.role]);

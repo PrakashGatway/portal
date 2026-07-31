@@ -552,9 +552,9 @@ const GREDashboard = () => {
   ]
 );
 
-useEffect(() => {
-  instanceRef.current?.update();
-}, [courses.length]);
+// useEffect(() => {
+//   instanceRef.current?.update();
+// }, [courses.length]);
 
  
     if (loading) {

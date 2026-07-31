@@ -356,7 +356,7 @@ const AdminTransactionsPage = () => {
                                             <div className="text-xs text-gray-500 dark:text-gray-400">{txn.user?.email}</div>
                                         </td>
                                         <td className="whitespace-nowrap px-4 py-4 text-sm text-gray-500 dark:text-gray-300">
-                                            {txn.course?.title || '—'}
+                                            {txn.course?.title || txn.paymentFor}
                                         </td>
                                         <td className="whitespace-nowrap px-4 py-4 text-sm text-gray-500 dark:text-gray-300">
                                             {getTypeDisplayName(txn.type)}

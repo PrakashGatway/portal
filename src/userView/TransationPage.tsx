@@ -19,27 +19,20 @@ import {
     Receipt,
     Tag,
     Coins,
-    Shield
+    Shield,
+    BookOpen,
+    FileText,
+    GraduationCap
 } from "lucide-react";
 import Button from "../components/ui/button/Button";
 import api from "../axiosInstance";
 
-// ✅ Updated to match your Mongoose schema exactly
+// ✅ Updated to match your actual API response
 interface Transaction {
     _id: string;
     user: string;
-    course?: {
-        _id: string;
-        title: string;
-    };
-    type:
-    | "purchase"
-    | "subscription"
-    | "refund"
-    | "discount"
-    | "referral_bonus"
-    | "purchase_bonus"
-    | "course_purchase";
+    paymentFor: "McuTestSeries" | "TestTemplate" | "Course";
+    type: string;
     amount: number;
     breakdown: {
         baseAmount: number;
@@ -53,22 +46,47 @@ interface Transaction {
     paymentMethod: "wallet" | "bank";
     transactionId: string;
     orderId?: string;
-    invoiceNumber?: string;
-    receiptUrl?: string;
-    reason?: string;
-    refund?: {
-        isRefunded: boolean;
-        refundId?: string;
-        refundAmount?: number;
-        refundDate?: string;
-        reason?: string;
-    };
     coupon?: {
         code: string;
         discountType: "percentage" | "fixed";
         discountValue: number;
-    };
+    } | null;
     createdAt: string;
+    // Dynamic entity fields
+    McuTestSeries?: {
+        _id: string;
+        title: string;
+        pricing: {
+            price: number;
+            salePrice: number;
+            currency: string;
+        };
+        totalTests: number;
+        tests: Array<any>;
+    };
+    TestTemplate?: {
+        _id: string;
+        title: string;
+        pricing: {
+            price: number;
+            salePrice: number;
+            currency: string;
+        };
+        totalDurationMinutes: number;
+        totalQuestions: number;
+    };
+    Course?: {
+        _id: string;
+        title: string;
+        code: string;
+        pricing: {
+            amount: number;
+            currency: string;
+            discount: number;
+        };
+        level: string;
+        mode: string;
+    };
 }
 
 const Badge = ({
@@ -131,9 +149,7 @@ const LoadingSkeleton = () => (
     </div>
 );
 
-const PriceBreakdown = ({ breakdown, type }: { breakdown: Transaction['breakdown']; type: string }) => {
-    const isCredit = ['refund', 'referral_bonus', 'discount', 'purchase_bonus'].includes(type);
-
+const PriceBreakdown = ({ breakdown }: { breakdown: Transaction['breakdown'] }) => {
     return (
         <div className="bg-gray-50 dark:bg-gray-700/30 rounded-lg p-3 mt-3">
             <h5 className="font-medium text-sm text-gray-900 dark:text-white mb-2 flex items-center gap-2">
@@ -186,6 +202,55 @@ const PriceBreakdown = ({ breakdown, type }: { breakdown: Transaction['breakdown
     );
 };
 
+// Helper function to get entity details based on paymentFor type
+const getEntityDetails = (transaction: Transaction) => {
+    switch (transaction.paymentFor) {
+        case 'McuTestSeries':
+            return {
+                title: transaction.McuTestSeries?.title || 'Test Series',
+                type: 'Test Series',
+                icon: BookOpen,
+                details: transaction.McuTestSeries ? {
+                    'Total Tests': transaction.McuTestSeries.totalTests,
+                    'Original Price': `₹${transaction.McuTestSeries.pricing.price}`,
+                    'Sale Price': `₹${transaction.McuTestSeries.pricing.salePrice}`,
+                } : {}
+            };
+        case 'TestTemplate':
+            return {
+                title: transaction.TestTemplate?.title || 'Test',
+                type: 'Test',
+                icon: FileText,
+                details: transaction.TestTemplate ? {
+                    'Duration': `${transaction.TestTemplate.totalDurationMinutes} mins`,
+                    'Questions': transaction.TestTemplate.totalQuestions,
+                    'Original Price': `₹${transaction.TestTemplate.pricing.price}`,
+                    'Sale Price': `₹${transaction.TestTemplate.pricing.salePrice}`,
+                } : {}
+            };
+        case 'Course':
+            return {
+                title: transaction.Course?.title || 'Course',
+                type: 'Course',
+                icon: GraduationCap,
+                details: transaction.Course ? {
+                    'Course Code': transaction.Course.code,
+                    'Level': transaction.Course.level,
+                    'Mode': transaction.Course.mode,
+                    'Original Price': `₹${transaction.Course.pricing.amount}`,
+                    'Discount': `${transaction.Course.pricing.discount}%`,
+                } : {}
+            };
+        default:
+            return {
+                title: 'Unknown',
+                type: 'Unknown',
+                icon: CreditCard,
+                details: {}
+            };
+    }
+};
+
 export default function TransactionsPage() {
     const [transactions, setTransactions] = useState<Transaction[]>([]);
     const [loading, setLoading] = useState(true);
@@ -213,6 +278,7 @@ export default function TransactionsPage() {
             setSearchTerm(value);
         }, 700);
     };
+    
     useEffect(() => {
         return () => {
             if (searchTimeoutRef.current) {
@@ -228,6 +294,13 @@ export default function TransactionsPage() {
         { id: "failed", name: "Failed", icon: XCircle, color: "red" },
         { id: "refunded", name: "Refunded", icon: TrendingDown, color: "blue" },
         { id: "cancelled", name: "Cancelled", icon: AlertCircle, color: "red" },
+    ];
+
+    const paymentForTypes = [
+        { id: "all", name: "All Types", icon: Filter },
+        { id: "McuTestSeries", name: "Test Series", icon: BookOpen },
+        { id: "TestTemplate", name: "Tests", icon: FileText },
+        { id: "Course", name: "Courses", icon: GraduationCap },
     ];
 
     const [expandedId, setExpandedId] = useState<string | null>(null);
@@ -275,7 +348,6 @@ export default function TransactionsPage() {
     const handlePageChange = (newPage: number) => {
         if (newPage >= 1 && newPage <= totalPages) {
             setPage(newPage);
-            // Scroll to top when changing pages
             window.scrollTo({ top: 0, behavior: 'smooth' });
         }
     };
@@ -291,16 +363,6 @@ export default function TransactionsPage() {
         }
     };
 
-    const getTypeIcon = (type: string) => {
-        const creditTypes = ['refund', 'referral_bonus', 'discount', 'purchase_bonus'];
-        return creditTypes.includes(type) ? TrendingUp : TrendingDown;
-    };
-
-    const getTypeColor = (type: string) => {
-        const creditTypes = ['refund', 'referral_bonus', 'discount', 'purchase_bonus'];
-        return creditTypes.includes(type) ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400';
-    };
-
     const toggleExpand = (id: string) => {
         setExpandedId(expandedId === id ? null : id);
     };
@@ -308,8 +370,16 @@ export default function TransactionsPage() {
     const formatDate = (isoString: string) => {
         const date = new Date(isoString);
         return {
-            date: date.toLocaleDateString('en-IN'),
-            time: date.toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' }),
+            date: date.toLocaleDateString('en-IN', {
+                year: 'numeric',
+                month: 'short',
+                day: 'numeric'
+            }),
+            time: date.toLocaleTimeString('en-IN', { 
+                hour: '2-digit', 
+                minute: '2-digit',
+                hour12: true 
+            }),
             datetime: date.toISOString()
         };
     };
@@ -324,32 +394,29 @@ export default function TransactionsPage() {
         }
     };
 
-    const getTypeDisplayName = (type: string) => {
-        const typeMap: Record<string, string> = {
-            purchase: "Purchase",
-            subscription: "Subscription",
-            refund: "Refund",
-            discount: "Discount",
-            referral_bonus: "Referral Bonus",
-            purchase_bonus: "Purchase Bonus",
-            course_purchase: "Course Purchase"
-        };
-        return typeMap[type] || type.replace(/_/g, ' ');
-    };
-
     return (
         <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 dark:from-gray-900 dark:to-gray-800 transition-colors duration-300">
             <div className="max-w-7xl mx-auto px-3 sm:px-3 py-2">
 
+                {/* Header */}
+                <div className="mb-6">
+                    <h1 className="text-3xl font-bold text-gray-900 dark:text-white">
+                        Transaction History
+                    </h1>
+                    <p className="text-gray-600 dark:text-gray-400 mt-1">
+                        Track all your payments and purchases
+                    </p>
+                </div>
+
                 {/* Search and Filters */}
-                <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-200 dark:border-gray-700 p-4 mb-2 transition-all duration-300">
+                <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-200 dark:border-gray-700 p-4 mb-6 transition-all duration-300">
                     {/* Search Bar */}
                     <div className="mb-6">
                         <div className="relative group">
                             <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400 transition-colors duration-200 group-focus-within:text-blue-500" />
                             <input
                                 type="text"
-                                placeholder="Search by Order ID, Transaction ID, or Course..."
+                                placeholder="Search by Order ID, Transaction ID, or Item name..."
                                 value={debouncedSearchTerm}
                                 onChange={(e) => handleSearchChange(e.target.value)}
                                 className="w-full pl-12 pr-4 py-3 border border-gray-200 dark:border-gray-700 rounded-xl bg-white dark:bg-gray-800 text-gray-900 dark:text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 text-base shadow-sm"
@@ -361,6 +428,9 @@ export default function TransactionsPage() {
                     <div className="space-y-4">
                         {/* Status Filters */}
                         <div>
+                            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                                Status
+                            </label>
                             <div className="flex flex-wrap gap-2">
                                 {statuses.map(status => {
                                     const IconComponent = status.icon;
@@ -368,10 +438,11 @@ export default function TransactionsPage() {
                                         <button
                                             key={status.id}
                                             onClick={() => setSelectedStatus(status.id)}
-                                            className={`flex items-center px-4 py-2.5 rounded-xl border transition-all duration-200 text-sm font-medium transform hover:scale-105 active:scale-95 ${selectedStatus === status.id
-                                                ? `bg-${status.color}-500 text-white border-${status.color}-500 shadow-lg shadow-${status.color}-500/25`
-                                                : "bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 border-gray-200 dark:border-gray-700 hover:border-gray-300 dark:hover:border-gray-600"
-                                                }`}
+                                            className={`flex items-center px-4 py-2.5 rounded-xl border transition-all duration-200 text-sm font-medium transform hover:scale-105 active:scale-95 ${
+                                                selectedStatus === status.id
+                                                    ? `bg-${status.color}-500 text-white border-${status.color}-500 shadow-lg shadow-${status.color}-500/25`
+                                                    : "bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 border-gray-200 dark:border-gray-700 hover:border-gray-300 dark:hover:border-gray-600"
+                                            }`}
                                         >
                                             <IconComponent className="h-4 w-4 mr-2" />
                                             {status.name}
@@ -380,27 +451,48 @@ export default function TransactionsPage() {
                                 })}
                             </div>
                         </div>
-                    </div>
-                </div>
 
-                {(loading && transactions.length === 0) &&
-                    <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 dark:from-gray-900 dark:to-gray-800 transition-colors duration-300">
-                        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-                            <div className="animate-pulse">
-                                <div className="h-8 bg-gray-200 dark:bg-gray-700 rounded w-1/4 mb-6"></div>
-                                <LoadingSkeleton />
+                        {/* Type Filters */}
+                        <div>
+                            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                                Purchase Type
+                            </label>
+                            <div className="flex flex-wrap gap-2">
+                                {paymentForTypes.map(type => {
+                                    const IconComponent = type.icon;
+                                    return (
+                                        <button
+                                            key={type.id}
+                                            onClick={() => setSelectedType(type.id)}
+                                            className={`flex items-center px-4 py-2.5 rounded-xl border transition-all duration-200 text-sm font-medium transform hover:scale-105 active:scale-95 ${
+                                                selectedType === type.id
+                                                    ? "bg-purple-500 text-white border-purple-500 shadow-lg shadow-purple-500/25"
+                                                    : "bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 border-gray-200 dark:border-gray-700 hover:border-gray-300 dark:hover:border-gray-600"
+                                            }`}
+                                        >
+                                            <IconComponent className="h-4 w-4 mr-2" />
+                                            {type.name}
+                                        </button>
+                                    );
+                                })}
                             </div>
                         </div>
                     </div>
+                </div>
 
-                }
+                {/* Loading State */}
+                {(loading && transactions.length === 0) && (
+                    <div className="space-y-3">
+                        <LoadingSkeleton />
+                    </div>
+                )}
 
-
-                <div className="space-y-2 mb-8">
+                {/* Transactions List */}
+                <div className="space-y-3 mb-8">
                     {!loading && transactions.map((transaction, index) => {
                         const { date, time } = formatDate(transaction.createdAt);
-                        const TypeIcon = getTypeIcon(transaction.type);
-                        const isCredit = getTypeColor(transaction.type).includes('green');
+                        const entityDetails = getEntityDetails(transaction);
+                        const EntityIcon = entityDetails.icon;
 
                         return (
                             <Card
@@ -412,15 +504,20 @@ export default function TransactionsPage() {
                                     <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-4">
                                         <div className="flex-1 min-w-0">
                                             <div className="flex items-center gap-3 mb-3">
-                                                <div className={`p-2 rounded-lg ${isCredit ? 'bg-green-100 dark:bg-green-900/30' : 'bg-red-100 dark:bg-red-900/30'}`}>
-                                                    <TypeIcon className={`h-5 w-5 ${getTypeColor(transaction.type)}`} />
+                                                <div className="p-2 rounded-lg bg-blue-100 dark:bg-blue-900/30">
+                                                    <EntityIcon className="h-5 w-5 text-blue-600 dark:text-blue-400" />
                                                 </div>
                                                 <div className="flex-1 min-w-0">
-                                                    <h3 className="font-semibold text-gray-900 dark:text-white text-lg truncate">
-                                                        {transaction.course?.title || getTypeDisplayName(transaction.type)}
-                                                    </h3>
+                                                    <div className="flex items-center gap-2">
+                                                        <h3 className="font-semibold text-gray-900 dark:text-white text-lg truncate">
+                                                            {entityDetails.title}
+                                                        </h3>
+                                                        <Badge variant="info">
+                                                            {entityDetails.type}
+                                                        </Badge>
+                                                    </div>
                                                     <div className="flex flex-wrap items-center gap-2 mt-1">
-                                                        <Badge variant={getStatusColor(transaction.status)} className="animate-pulse">
+                                                        <Badge variant={getStatusColor(transaction.status)}>
                                                             {transaction.status.charAt(0).toUpperCase() + transaction.status.slice(1)}
                                                         </Badge>
                                                         <span className="text-xs text-gray-500 dark:text-gray-400 capitalize">
@@ -444,8 +541,8 @@ export default function TransactionsPage() {
                                         </div>
 
                                         <div className="flex flex-col items-end gap-3">
-                                            <div className={`text-2xl font-bold ${getTypeColor(transaction.type)} transform transition-transform duration-200 hover:scale-110`}>
-                                                {isCredit ? '+' : '-'}₹{transaction.amount.toLocaleString('en-IN')}
+                                            <div className="text-2xl font-bold text-red-600 dark:text-red-400 transform transition-transform duration-200 hover:scale-110">
+                                                -₹{transaction.amount.toLocaleString('en-IN')}
                                             </div>
                                             <Button
                                                 variant="ghost"
@@ -472,6 +569,7 @@ export default function TransactionsPage() {
                                     {expandedId === transaction._id && (
                                         <div className="mt-6 pt-4 border-t border-gray-200 dark:border-gray-700 animate-in fade-in duration-300">
                                             <div className="grid grid-cols-1 xl:grid-cols-3 gap-6">
+                                                {/* Transaction Info */}
                                                 <div className="space-y-2">
                                                     <h4 className="font-semibold text-gray-900 dark:text-white text-lg flex items-center gap-2">
                                                         <CreditCard className="h-5 w-5" />
@@ -498,37 +596,6 @@ export default function TransactionsPage() {
                                                                 {transaction.status}
                                                             </Badge>
                                                         </div>
-                                                        {transaction.reason && (
-                                                            <div className="flex justify-between py-2">
-                                                                <span className="text-gray-600 dark:text-gray-400">Reason:</span>
-                                                                <span className="text-gray-900 dark:text-white text-right">{transaction.reason}</span>
-                                                            </div>
-                                                        )}
-                                                    </div>
-                                                </div>
-
-                                                <div className="space-y-2">
-                                                    <h4 className="font-semibold text-gray-900 dark:text-white text-lg flex items-center gap-2">
-                                                        <Wallet className="h-5 w-5" />
-                                                        Order Details
-                                                    </h4>
-                                                    <div className="space-y-1">
-                                                        <div className="flex justify-between py-2">
-                                                            <span className="text-gray-600 dark:text-gray-400">Course:</span>
-                                                            <span className="text-gray-900 dark:text-white text-right">
-                                                                {transaction.course?.title || '—'}
-                                                            </span>
-                                                        </div>
-                                                        <div className="flex justify-between py-2">
-                                                            <span className="text-gray-600 dark:text-gray-400">Order ID:</span>
-                                                            <span className="text-gray-900 dark:text-white">{transaction.orderId || '—'}</span>
-                                                        </div>
-                                                        {transaction.invoiceNumber && (
-                                                            <div className="flex justify-between py-2 ">
-                                                                <span className="text-gray-600 dark:text-gray-400">Invoice:</span>
-                                                                <span className="text-gray-900 dark:text-white">{transaction.invoiceNumber}</span>
-                                                            </div>
-                                                        )}
                                                         {transaction.coupon && (
                                                             <div className="flex justify-between py-2">
                                                                 <span className="text-gray-600 dark:text-gray-400 flex items-center gap-1">
@@ -536,91 +603,82 @@ export default function TransactionsPage() {
                                                                     Coupon:
                                                                 </span>
                                                                 <div className="text-right">
-                                                                    <div className="text-gray-900 dark:text-white">{transaction.coupon.code} ({transaction.coupon.discountType === 'percentage'
-                                                                        ? `${transaction.coupon.discountValue}% off`
-                                                                        : `₹${transaction.coupon.discountValue} off`
-                                                                    })</div>
+                                                                    <span className="text-gray-900 dark:text-white">
+                                                                        {transaction.coupon.code} ({transaction.coupon.discountType === 'percentage'
+                                                                            ? `${transaction.coupon.discountValue}% off`
+                                                                            : `₹${transaction.coupon.discountValue} off`
+                                                                        })
+                                                                    </span>
                                                                 </div>
                                                             </div>
                                                         )}
                                                     </div>
                                                 </div>
 
-                                                {/* Price Breakdown */}
+                                                {/* Item Details */}
                                                 <div className="space-y-2">
-                                                    <PriceBreakdown
-                                                        breakdown={transaction.breakdown}
-                                                        type={transaction.type}
-                                                    />
-                                                    <div className="pt-1 p-3 mt-1.5">
-                                                        <div className="flex justify-between font-semibold">
-                                                            <span className="text-gray-900 dark:text-white">Total Amount:</span>
-                                                            <span className={`${isCredit ? 'text-green-600 dark:text-green-400' : 'text-gray-900 dark:text-white'}`}>
-                                                                {isCredit ? '+' : '-'}₹{transaction.amount?.toLocaleString() || '0'}
+                                                    <h4 className="font-semibold text-gray-900 dark:text-white text-lg flex items-center gap-2">
+                                                        <EntityIcon className="h-5 w-5" />
+                                                        {entityDetails.type} Details
+                                                    </h4>
+                                                    <div className="space-y-1">
+                                                        <div className="flex justify-between py-2">
+                                                            <span className="text-gray-600 dark:text-gray-400">Name:</span>
+                                                            <span className="text-gray-900 dark:text-white text-right font-medium">
+                                                                {entityDetails.title}
+                                                            </span>
+                                                        </div>
+                                                        {Object.entries(entityDetails.details).map(([key, value]) => (
+                                                            <div key={key} className="flex justify-between py-2">
+                                                                <span className="text-gray-600 dark:text-gray-400">{key}:</span>
+                                                                <span className="text-gray-900 dark:text-white capitalize">
+                                                                    {value}
+                                                                </span>
+                                                            </div>
+                                                        ))}
+                                                        <div className="flex justify-between py-2">
+                                                            <span className="text-gray-600 dark:text-gray-400">Order ID:</span>
+                                                            <span className="text-gray-900 dark:text-white">
+                                                                {transaction.orderId || '—'}
                                                             </span>
                                                         </div>
                                                     </div>
+                                                </div>
 
-                                                    {/* Refund Information */}
-                                                    {transaction.refund?.isRefunded && (
-                                                        <div className="bg-yellow-50 dark:bg-yellow-900/20 rounded-lg p-3 border border-yellow-200 dark:border-yellow-800">
-                                                            <h5 className="font-medium text-sm text-yellow-800 dark:text-yellow-300 mb-2 flex items-center gap-2">
-                                                                <AlertCircle className="h-4 w-4" />
-                                                                Refund Processed
-                                                            </h5>
-                                                            <div className="space-y-1 text-sm">
-                                                                <div className="flex justify-between">
-                                                                    <span className="text-yellow-700 dark:text-yellow-400">Refund Amount:</span>
-                                                                    <span className="text-yellow-800 dark:text-yellow-300 font-semibold">
-                                                                        ₹{transaction.refund.refundAmount?.toLocaleString('en-IN')}
-                                                                    </span>
-                                                                </div>
-                                                                {transaction.refund.refundId && (
-                                                                    <div className="flex justify-between">
-                                                                        <span className="text-yellow-700 dark:text-yellow-400">Refund ID:</span>
-                                                                        <span className="text-yellow-800 dark:text-yellow-300 text-xs">
-                                                                            {transaction.refund.refundId}
-                                                                        </span>
-                                                                    </div>
-                                                                )}
-                                                                {transaction.refund.reason && (
-                                                                    <div className="text-yellow-700 dark:text-yellow-400 text-xs">
-                                                                        Reason: {transaction.refund.reason}
-                                                                    </div>
-                                                                )}
-                                                            </div>
+                                                {/* Price Breakdown */}
+                                                <div className="space-y-2">
+                                                    <PriceBreakdown breakdown={transaction.breakdown} />
+                                                    <div className="pt-1 p-3 mt-1.5 bg-gray-50 dark:bg-gray-700/30 rounded-lg">
+                                                        <div className="flex justify-between font-semibold">
+                                                            <span className="text-gray-900 dark:text-white">Total Paid:</span>
+                                                            <span className="text-red-600 dark:text-red-400">
+                                                                -₹{transaction.amount?.toLocaleString() || '0'}
+                                                            </span>
                                                         </div>
-                                                    )}
+                                                    </div>
                                                 </div>
                                             </div>
 
                                             {/* Action Buttons */}
-                                            <div className="flex flex-wrap justify-end gap-3 mt-2 pt-2">
-                                                {transaction.receiptUrl && (
-                                                    <a
-                                                        href={transaction.receiptUrl}
-                                                        target="_blank"
-                                                        rel="noopener noreferrer"
-                                                        className="inline-block"
-                                                    >
-                                                        <Button
-                                                            variant="outline"
-                                                            size="sm"
-                                                            className="text-sm px-4 py-2 rounded-lg transition-all duration-200 hover:shadow-lg transform hover:scale-105"
-                                                        >
-                                                            <Download className="h-4 w-4 mr-2" />
-                                                            Download Receipt
-                                                        </Button>
-                                                    </a>
-                                                )}
+                                            <div className="flex flex-wrap justify-end gap-3 mt-4 pt-4 border-t border-gray-200 dark:border-gray-700">
                                                 <Button
                                                     variant="outline"
                                                     size="sm"
-                                                    onClick={() => copyToClipboard(transaction.transactionId, 'copy')}
+                                                    onClick={() => copyToClipboard(transaction.transactionId, transaction._id)}
                                                     className="text-sm px-4 py-2 rounded-lg transition-all duration-200 hover:shadow-lg transform hover:scale-105"
                                                 >
-                                                    <Copy className={`h-4 w-4 mr-2 ${copiedId === 'copy' ? 'text-green-500' : ''}`} />
-                                                    {copiedId === 'copy' ? 'Copied!' : 'Copy Transaction ID'}
+                                                    <Copy className={`h-4 w-4 mr-2 ${copiedId === transaction._id ? 'text-green-500' : ''}`} />
+                                                    {copiedId === transaction._id ? 'Copied!' : 'Copy Transaction ID'}
+                                                </Button>
+                                                <Button
+                                                    variant="outline"
+                                                    size="sm"
+                                                    onClick={() => copyToClipboard(transaction.orderId || '', `order-${transaction._id}`)}
+                                                    className="text-sm px-4 py-2 rounded-lg transition-all duration-200 hover:shadow-lg transform hover:scale-105"
+                                                    disabled={!transaction.orderId}
+                                                >
+                                                    <Copy className={`h-4 w-4 mr-2 ${copiedId === `order-${transaction._id}` ? 'text-green-500' : ''}`} />
+                                                    {copiedId === `order-${transaction._id}` ? 'Copied!' : 'Copy Order ID'}
                                                 </Button>
                                             </div>
                                         </div>
@@ -674,6 +732,7 @@ export default function TransactionsPage() {
                                 <Button
                                     onClick={() => {
                                         setSearchTerm("");
+                                        setDebouncedSearchTerm("");
                                         setSelectedStatus("all");
                                         setSelectedType("all");
                                     }}

@@ -1,9 +1,7 @@
 // src/pages/MyCoursesPage.tsx
-import { useState, useEffect, useMemo } from "react";
+import { useState, useEffect, useMemo, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
-    Play,
-    Clock,
     BookOpen,
     CheckCircle,
     Search,
@@ -11,15 +9,21 @@ import {
     List,
     Award,
     Sparkles,
-    Trophy,
-    Brain,
-    Zap,
-    Crown,
-    Target,
+    Clock,
     Timer,
     ChevronRight,
-    Rocket,
-    Lightbulb
+    Filter,
+    X,
+    ChevronLeft,
+    ChevronDown,
+    Package,
+    FileText,
+    File,
+    Video,
+    Music,
+    Link as LinkIcon,
+    Layers,
+    FileCheck
 } from "lucide-react";
 import Button from "../components/ui/button/Button";
 import api, { ImageBaseUrl } from "../axiosInstance";
@@ -36,18 +40,22 @@ interface CourseProgress {
 
 interface PurchasedCourse {
     _id: string;
-    course: {
+    itemId: string;
+    itemType: 'Course' | 'package' | 'McuTestSeries' | 'TestTemplate' | 'subscription' | 'ilets' | 'PDF' | 'Video' | 'Document';
+    item: {
         _id: string;
         title: string;
-        subtitle?: string;
-        slug: string;
-        thumbnail: { url: string };
-        level: string;
-        language: string;
-        status: string;
+        slug?: string;
+        thumbnail?: { url: string };
+        description?: string;
+        shortDescription?: string;
         duration?: string;
+        level?: string;
+        language?: string;
+        status?: string;
         rating?: number;
-        studentsEnrolled?: number;
+        price?: number;
+        salePrice?: number;
     };
     enrolledAt: string;
     accessExpiresAt?: string;
@@ -55,236 +63,191 @@ interface PurchasedCourse {
     isCompleted: boolean;
     completedAt?: string;
     progress: CourseProgress;
-    totalTimeSpent: number; // in seconds
+    totalTimeSpent: number;
     lastAccessedAt?: string;
-    isExpired?: boolean; // virtual field
+    isExpired?: boolean;
+    percentage: number;
 }
 
-const CourseCard = ({ course, viewMode }: { course: PurchasedCourse; viewMode: "grid" | "list" }) => {
+interface FilterState {
+    type: string;
+    itemId: string;
+    isActive: string;
+    isCompleted: string;
+    enrolledStart: string;
+    enrolledEnd: string;
+    accessStart: string;
+    accessEnd: string;
+    minPercentage: string;
+    maxPercentage: string;
+    includeExpired: boolean;
+    page: number;
+    limit: number;
+    sort: string;
+}
+
+// "Course", "package", "McuTestSeries", "TestTemplate", "subscription", "ilets"
+const materialTypes = [
+    { value: '', label: 'Courses', icon: BookOpen },
+    { value: 'McuTestSeries', label: 'Test Series', icon: FileCheck },
+    { value: 'TestTemplate', label: 'Tests', icon: FileCheck },
+    { value: 'package', label: 'Packages', icon: Package },
+    { value: 'subscription', label: 'Subscriptions', icon: Sparkles }
+];
+
+const sortOptions = [
+    { value: '-enrolledAt', label: 'Newest First' },
+    { value: 'enrolledAt', label: 'Oldest First' },
+    { value: '-lastAccessedAt', label: 'Recently Accessed' },
+    { value: '-percentage', label: 'Highest Progress' },
+    { value: 'percentage', label: 'Lowest Progress' },
+];
+
+const limitOptions = [6, 12, 24, 48];
+
+// Helper: Get type-specific styling
+const getTypeStyle = (type: string) => {
+    const lowerType = type?.toLowerCase();
+    switch (lowerType) {
+        case 'pdf':
+            return { bg: 'bg-red-50 dark:bg-red-900/20', text: 'text-red-700 dark:text-red-300', border: 'border-red-200 dark:border-red-800', icon: FileText, iconColor: 'text-red-600' };
+        case 'video':
+        case 'course':
+            return { bg: 'bg-blue-50 dark:bg-blue-900/20', text: 'text-blue-700 dark:text-blue-300', border: 'border-blue-200 dark:border-blue-800', icon: Video, iconColor: 'text-blue-600' };
+        case 'document':
+        case 'testtemplate':
+            return { bg: 'bg-emerald-50 dark:bg-emerald-900/20', text: 'text-emerald-700 dark:text-emerald-300', border: 'border-emerald-200 dark:border-emerald-800', icon: File, iconColor: 'text-emerald-600' };
+        case 'mcutestseries':
+        case 'ilets':
+            return { bg: 'bg-purple-50 dark:bg-purple-900/20', text: 'text-purple-700 dark:text-purple-300', border: 'border-purple-200 dark:border-purple-800', icon: FileCheck, iconColor: 'text-purple-600' };
+        case 'package':
+            return { bg: 'bg-amber-50 dark:bg-amber-900/20', text: 'text-amber-700 dark:text-amber-300', border: 'border-amber-200 dark:border-amber-800', icon: Package, iconColor: 'text-amber-600' };
+        case 'subscription':
+            return { bg: 'bg-pink-50 dark:bg-pink-900/20', text: 'text-pink-700 dark:text-pink-300', border: 'border-pink-200 dark:border-pink-800', icon: LinkIcon, iconColor: 'text-pink-600' };
+        default:
+            return { bg: 'bg-gray-50 dark:bg-gray-800', text: 'text-gray-700 dark:text-gray-300', border: 'border-gray-200 dark:border-gray-700', icon: BookOpen, iconColor: 'text-gray-600' };
+    }
+};
+
+const CourseCard = ({
+    course,
+    onContinue
+}: {
+    course: PurchasedCourse;
+    viewMode: "grid" | "list";
+    onContinue: (course: PurchasedCourse) => void;
+}) => {
     const progress = course.progress?.percentage || 0;
     const isCompleted = course.isCompleted || progress >= 100;
-    const isRecentlyAccessed = course.lastAccessedAt
-        ? new Date(course.lastAccessedAt).getTime() > Date.now() - 7 * 24 * 60 * 60 * 1000
-        : false;
-    const isNew = new Date(course.enrolledAt).getTime() > Date.now() - 3 * 24 * 60 * 60 * 1000;
-    const timeRemaining = course.accessExpiresAt
-        ? Math.ceil((new Date(course.accessExpiresAt).getTime() - Date.now()) / (1000 * 60 * 60 * 24))
-        : null;
-
-    const getLevelColor = (level: string) => {
-        switch (level?.toLowerCase()) {
-            case 'beginner': return 'bg-emerald-100 text-emerald-800 dark:bg-emerald-900/40 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800';
-            case 'intermediate': return 'bg-blue-100 text-blue-800 dark:bg-blue-900/40 dark:text-blue-300 border border-blue-200 dark:border-blue-800';
-            case 'advanced': return 'bg-purple-100 text-purple-800 dark:bg-purple-900/40 dark:text-purple-300 border border-purple-200 dark:border-purple-800';
-            default: return 'bg-gray-100 text-gray-800 dark:bg-gray-800 dark:text-gray-300 border border-gray-200 dark:border-gray-700';
-        }
-    };
-
-    const getProgressColor = (progress: number) => {
-        if (progress >= 80) return 'from-emerald-400 to-green-500';
-        if (progress >= 50) return 'from-blue-400 to-cyan-500';
-        if (progress >= 25) return 'from-amber-400 to-orange-500';
-        return 'from-gray-300 to-gray-400';
-    };
+    const isExpired = course.isExpired || (course.accessExpiresAt && new Date(course.accessExpiresAt).getTime() <= Date.now());
+    const typeStyle = getTypeStyle(course.itemType);
+    const TypeIcon = typeStyle.icon;
 
     const navigate = useNavigate();
 
-    if (viewMode === "list") {
-        return (
-            <motion.div
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.4, ease: "easeOut" }}
-                className="group relative bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700/80 hover:shadow-xl transition-all duration-500 hover:border-blue-200 dark:hover:border-blue-800/50 overflow-hidden"
-            >
-                <div className="absolute inset-0 bg-gradient-to-br from-blue-50/50 via-white to-purple-50/50 dark:from-blue-900/5 dark:via-gray-800 dark:to-purple-900/5 opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
+    const handleContinue = (e: React.MouseEvent) => {
+        e.stopPropagation();
+        if (isCompleted) {
+            navigate(`/courses/${course.item?.slug || course.itemId}/certificate`);
+        } else {
+            if(course.itemType === "Course"){
+                navigate(`/courses/${course.item?.slug || course.itemId}`);
+            }else if(course.itemType === "McuTestSeries"){
+                navigate(`/test-series/${course.item?.slug || course.itemId}`);
+            }else if(course.itemType === "ilets"){
+                navigate(`/ilets/${course.item?.slug || course.itemId}`);
+            }
+        }
+        onContinue(course);
+    };
 
-                <div className="relative flex items-center p-6 z-10">
-                    <div className="relative flex-shrink-0">
-                        <div className="relative w-56 h-32 rounded-xl overflow-hidden shadow-md group-hover:shadow-lg transition-all duration-500">
-                            <img
-                                src={!course.course.thumbnail?.url
-                                    ? 'https://www.gatewayabroadeducations.com/images/logo.svg'
-                                    : `${ImageBaseUrl}/${course.course.thumbnail.url}`
-                                }
-                                alt={course.course.title}
-                                className="w-full h-full object-cover transform transition-transform duration-700 ease-out"
-                            />
-                            <div className="absolute inset-0 bg-gradient-to-t from-black/20 via-transparent to-transparent" />
-                        </div>
-
-                        <div className="absolute -top-2 -left-2 flex flex-col gap-2">
-                            {isNew && (
-                                <div className="bg-gradient-to-r from-amber-400 to-orange-500 text-white text-xs px-3 py-1.5 rounded-full flex items-center shadow-lg border border-amber-300/50">
-                                    <Rocket className="h-3 w-3 mr-1" />
-                                    New
-                                </div>
-                            )}
-                            {isRecentlyAccessed && !isCompleted && (
-                                <div className="bg-gradient-to-r from-green-400 to-emerald-500 text-white text-xs px-3 py-1.5 rounded-full flex items-center shadow-lg border border-green-300/50">
-                                    <Zap className="h-3 w-3 mr-1" />
-                                    Recent
-                                </div>
-                            )}
-                        </div>
-                    </div>
-
-                    <div className="flex-1 ml-4">
-                        <div className="flex items-start justify-between mb-2">
-                            <div className="flex-1">
-                                <div className="flex items-center gap-3 mb-2">
-                                    <span className={`px-3 py-1.5 rounded-full text-xs font-semibold ${getLevelColor(course.course.level)}`}>
-                                        {course.course.level}
-                                    </span>
-                                    {isCompleted && (
-                                        <div className="flex items-center bg-gradient-to-r from-amber-400 to-orange-500 text-white px-3 py-1.5 rounded-full text-xs border border-amber-300/50">
-                                            <Award className="h-3 w-3 mr-1" />
-                                            Certificate Ready
-                                        </div>
-                                    )}
-                                </div>
-
-                                <h3
-                                    onClick={() => navigate(`/courses/${course.course.slug}`)}
-                                    className="text-lg font-semibold text-gray-900 dark:text-white group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors duration-300 cursor-pointer"
-                                >
-                                    {course.course.title}
-                                </h3>
-                                <p className="text-gray-600 dark:text-gray-300 text-sm leading-relaxed mb-2 line-clamp-2">
-                                    {course.course?.shortDescription}
-                                </p>
-                            </div>
-                        </div>
-
-                        <div className="flex items-center justify-between">
-                            <div className="flex items-center space-x-4">
-                                {timeRemaining && timeRemaining > 0 && (
-                                    <div className="flex items-center bg-red-50 dark:bg-red-900/20 text-red-700 dark:text-red-300 px-3 py-2 rounded-xl text-sm border border-red-200 dark:border-red-800">
-                                        <Clock className="h-4 w-4 mr-1.5" />
-                                        {timeRemaining} days left
-                                    </div>
-                                )}
-                            </div>
-
-                            <div className="flex items-center space-x-3">
-                                {isCompleted ? (
-                                    <Button
-                                        onClick={() => navigate(`/courses/${course.course.slug}/certificate`)}
-                                        size="sm"
-                                        className="bg-gradient-to-r from-amber-500 to-orange-600 hover:from-amber-600 hover:to-orange-700 text-white px-6 py-2 rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 transform hover:-translate-y-0.5"
-                                    >
-                                        <Trophy className="h-4 w-4 mr-2" />
-                                        Get Certificate
-                                    </Button>
-                                ) : (
-                                    <Button
-                                        onClick={() => navigate(`/courses/${course.course.slug}`)}
-                                        size="sm"
-                                        className="bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700 text-white px-6 py-2 rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 transform hover:-translate-y-0.5"
-                                    >
-                                        {progress === 0 ? "Start Learning" : "Continue"}
-                                        <ChevronRight className="h-4 w-4 ml-2 transform group-hover:translate-x-1 transition-transform duration-300" />
-                                    </Button>
-                                )}
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </motion.div>
-        );
-    }
+    const formatTime = (seconds: number) => {
+        if (!seconds) return '0m';
+        const h = Math.floor(seconds / 3600);
+        const m = Math.floor((seconds % 3600) / 60);
+        return h > 0 ? `${h}h ${m}m` : `${m}m`;
+    };
 
     // Grid View
     return (
         <motion.div
-            initial={{ opacity: 0, scale: 0.95 }}
+            initial={{ opacity: 0, scale: 0.98 }}
             animate={{ opacity: 1, scale: 1 }}
-            transition={{ duration: 0.4, ease: "easeOut" }}
-            className="group relative bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700/80 hover:shadow-xl transition-all duration-500 hover:border-blue-200 dark:hover:border-blue-800/50 overflow-hidden"
+            exit={{ opacity: 0, scale: 0.98 }}
+            className={`group relative bg-white dark:bg-gray-800 rounded-xl border ${isExpired ? 'border-red-200 dark:border-red-800/50' : 'border-gray-200 dark:border-gray-700'} hover:border-orange-300 dark:hover:border-orange-700 hover:shadow-lg transition-all duration-300 overflow-hidden flex flex-col`}
         >
-            <div className="absolute inset-0 bg-gradient-to-br from-blue-50/50 via-white to-purple-50/50 dark:from-blue-900/5 dark:via-gray-800 dark:to-purple-900/5 opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
+            {/* Header Image / Icon */}
+            <div className="relative h-40 bg-gray-100 dark:bg-gray-700 overflow-hidden">
+                {course.item?.thumbnail?.url ? (
+                    <img
+                        src={`${ImageBaseUrl}/${course.item.thumbnail.url}`}
+                        alt={course.item?.title}
+                        className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                    />
+                ) : (
+                    <div className={`w-full h-full flex flex-col items-center justify-center gap-2 ${typeStyle.bg}`}>
+                        <TypeIcon className={`h-10 w-10 ${typeStyle.iconColor}`} />
+                        <span className={`text-xs font-medium ${typeStyle.text}`}>{course.itemType}</span>
+                    </div>
+                )}
 
-            <div className="relative h-40 overflow-hidden">
-                <img
-                    src={!course.course.thumbnail?.url
-                        ? 'https://www.gatewayabroadeducations.com/images/logo.svg'
-                        : `${ImageBaseUrl}/${course.course.thumbnail.url}`
-                    }
-                    alt={course.course.title}
-                    className="w-full h-full object-cover transform transition-transform duration-700 ease-out"
-                />
-                <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-black/10 to-transparent" />
+                {isExpired && (
+                    <div className="absolute inset-0 bg-red-900/60 backdrop-blur-[1px] flex items-center justify-center">
+                        <span className="text-white text-sm font-bold px-3 py-1.5 bg-red-600 rounded-lg shadow-sm">EXPIRED</span>
+                    </div>
+                )}
 
-                <div className="absolute top-3 left-3 flex flex-col gap-2">
-                    {isNew && (
-                        <div className="bg-gradient-to-r from-amber-400 to-orange-500 text-white text-xs px-3 py-1.5 rounded-full flex items-center shadow-lg border border-amber-300/50">
-                            <Rocket className="h-3 w-3 mr-1" />
-                            New
-                        </div>
-                    )}
-                    {!course.accessExpiresAt && (
-                        <div className="bg-gradient-to-r from-purple-500 to-pink-600 text-white text-xs px-3 py-1.5 rounded-full flex items-center shadow-lg border border-purple-300/50">
-                            <Crown className="h-3 w-3 mr-1" />
-                            Lifetime
-                        </div>
-                    )}
-                </div>
-                <div className="flex items-center justify-between absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/60 to-transparent p-4">
-                    <span className={`px-3 py-1.5 rounded-full text-xs font-semibold ${getLevelColor(course.course.level)}`}>
-                        {course.course.level}
+                <div className="absolute top-3 left-3">
+                    <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-xs font-medium border backdrop-blur-md bg-white/90 dark:bg-gray-900/90 ${typeStyle.text} ${typeStyle.border}`}>
+                        <TypeIcon className="h-3 w-3" />
+                        {course.itemType}
                     </span>
-                    {isCompleted && (
-                        <div className="w-2 h-2 bg-emerald-400 rounded-full animate-pulse" />
-                    )}
                 </div>
             </div>
 
-            <div className="relative p-4 pt-2 z-10">
-                <div className="mb-2">
-                    <h3
-                        onClick={() => navigate(`/courses/${course.course.slug}`)}
-                        className="font-semibold text-gray-900 dark:text-white text-base mb-1 line-clamp-2 group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors duration-300 cursor-pointer"
-                    >
-                        {course.course.title}
-                    </h3>
-                    <p className="text-gray-600 dark:text-gray-300 text-xs leading-relaxed line-clamp-2">
-                        {course?.course?.shortDescription}
-                    </p>
-                </div>
-
-                <div className="flex items-center justify-between text-xs text-gray-500 dark:text-gray-400 mb-1">
-                    {course.course.rating && (
-                        <div className="flex items-center">
-                            <svg className="h-3 w-3 mr-1 text-amber-400 fill-current" viewBox="0 0 24 24">
-                                <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z" />
-                            </svg>
-                            {course.course.rating}
-                        </div>
-                    )}
-                    {/* {timeRemaining && timeRemaining > 0 && (
-                        <div className="flex items-center bg-red-50 dark:bg-red-900/20 text-red-700 dark:text-red-300 px-3 py-1 rounded-xl text-sm border border-red-200 dark:border-red-800">
-                            <Clock className="h-4 w-4 mr-1.5" />
-                            {timeRemaining} days left
-                        </div>
-                    )} */}
-                </div>
-
-                <Button
-                    onClick={() => navigate(`/courses/${course.course.slug}`)}
-                    className="w-full rounded-full py-2 bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700 text-white font-semibold shadow-lg hover:shadow-xl transform transition-all duration-300 hover:-translate-y-0.5 group"
-                    size="sm"
+            {/* Body */}
+            <div className="p-4 flex flex-col flex-1">
+                <h3
+                    onClick={handleContinue}
+                    className="text-base font-semibold text-gray-900 dark:text-white line-clamp-2 cursor-pointer hover:text-orange-600 dark:hover:text-orange-400 transition-colors mb-1"
                 >
-                    {isCompleted ? (
-                        <>
-                            <Trophy className="h-4 w-4 mr-1" />
-                            View Certificate
-                        </>
-                    ) : (
-                        <>
-                            {progress === 0 ? "Start Learning" : "Continue"}
-                        </>
-                    )}
-                    <ChevronRight className="h-4 w-4 ml-1 transform group-hover:translate-x-1 transition-transform duration-300" />
+                    {course.item?.title || 'Untitled Material'}
+                </h3>
+                <p className="text-xs text-gray-500 dark:text-gray-400 line-clamp-2 mb-4 flex-1">
+                    {course.item?.shortDescription || course.item?.description || 'No description available'}
+                </p>
+
+                {/* Progress */}
+                <div className="mb-4">
+                    <div className="flex items-center justify-between text-xs text-gray-500 dark:text-gray-400 mb-1.5">
+                        <span className="flex items-center gap-1">
+                            <Timer className="h-3 w-3" />
+                            {formatTime(course.totalTimeSpent)}
+                        </span>
+                        <span className="font-medium">{Math.round(progress)}%</span>
+                    </div>
+                    <div className="h-1.5 bg-gray-200 dark:bg-gray-700 rounded-full overflow-hidden">
+                        <div
+                            className={`h-full rounded-full transition-all duration-500 ${progress >= 80 ? 'bg-emerald-500' : progress >= 50 ? 'bg-blue-500' : 'bg-amber-500'}`}
+                            style={{ width: `${Math.min(progress, 100)}%` }}
+                        />
+                    </div>
+                </div>
+
+                {/* Action Button */}
+                <Button
+                    onClick={handleContinue}
+                    size="sm"
+                    disabled={!course.isActive || isExpired}
+                    className={`w-full py-2 rounded-lg text-sm font-medium transition-all flex items-center justify-center gap-1.5 ${isExpired || !course.isActive
+                        ? 'bg-gray-100 text-gray-400 cursor-not-allowed dark:bg-gray-700 dark:text-gray-500'
+                        : isCompleted
+                            ? 'bg-emerald-600 hover:bg-emerald-700 text-white'
+                            : 'bg-orange-600 hover:bg-orange-700 text-white'
+                        }`}
+                >
+                    {isExpired ? 'Expired' : isCompleted ? 'View Certificate' : progress === 0 ? 'Start Learning' : 'Continue'}
+                    <ChevronRight className="h-3.5 w-3.5" />
                 </Button>
             </div>
         </motion.div>
@@ -294,36 +257,142 @@ const CourseCard = ({ course, viewMode }: { course: PurchasedCourse; viewMode: "
 const CourseSkeleton = ({ viewMode }: { viewMode: "grid" | "list" }) => {
     if (viewMode === "list") {
         return (
-            <div className="bg-white dark:bg-gray-800 rounded-xl shadow border border-gray-200 dark:border-gray-700 p-6 animate-pulse">
-                <div className="flex items-center">
-                    <div className="w-56 h-32 bg-gray-200 dark:bg-gray-700 rounded-xl"></div>
-                    <div className="flex-1 ml-6 space-y-3">
-                        <div className="h-5 bg-gray-200 dark:bg-gray-700 rounded w-3/4"></div>
-                        <div className="h-4 bg-gray-200 dark:bg-gray-700 rounded w-1/2"></div>
-                        <div className="flex space-x-2 mt-4">
-                            <div className="h-8 w-20 bg-gray-200 dark:bg-gray-700 rounded-full"></div>
-                            <div className="h-8 w-24 bg-gray-200 dark:bg-gray-700 rounded-full"></div>
-                        </div>
-                        <div className="h-10 w-32 bg-gray-200 dark:bg-gray-700 rounded-xl mt-4"></div>
+            <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-4 animate-pulse">
+                <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4">
+                    <div className="w-full sm:w-48 h-24 bg-gray-200 dark:bg-gray-700 rounded-lg" />
+                    <div className="flex-1 w-full space-y-3">
+                        <div className="h-4 w-20 bg-gray-200 dark:bg-gray-700 rounded" />
+                        <div className="h-5 w-3/4 bg-gray-200 dark:bg-gray-700 rounded" />
+                        <div className="h-4 w-1/2 bg-gray-200 dark:bg-gray-700 rounded" />
+                        <div className="h-1.5 w-full bg-gray-200 dark:bg-gray-700 rounded-full mt-4" />
                     </div>
                 </div>
             </div>
         );
     }
+    return (
+        <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 animate-pulse overflow-hidden">
+            <div className="h-40 bg-gray-200 dark:bg-gray-700" />
+            <div className="p-4 space-y-3">
+                <div className="h-4 w-3/4 bg-gray-200 dark:bg-gray-700 rounded" />
+                <div className="h-3 w-full bg-gray-200 dark:bg-gray-700 rounded" />
+                <div className="h-1.5 w-full bg-gray-200 dark:bg-gray-700 rounded-full mt-4" />
+                <div className="h-9 w-full bg-gray-200 dark:bg-gray-700 rounded-lg mt-4" />
+            </div>
+        </div>
+    );
+};
+
+// Filter Panel Component
+const FilterPanel = ({
+    filters,
+    onFilterChange,
+    onReset,
+    isOpen,
+    onToggle
+}: {
+    filters: FilterState;
+    onFilterChange: (key: keyof FilterState, value: any) => void;
+    onReset: () => void;
+    isOpen: boolean;
+    onToggle: () => void;
+}) => {
+    const hasActiveFilters = Object.values(filters).some(v => v !== '' && v !== false && v !== 1 && v !== 6 && v !== '-enrolledAt');
 
     return (
-        <div className="bg-white dark:bg-gray-800 rounded-2xl shadow border border-gray-200 dark:border-gray-700 animate-pulse overflow-hidden">
-            <div className="w-full h-40 bg-gray-200 dark:bg-gray-700"></div>
-            <div className="p-4 space-y-3">
-                <div className="h-4 bg-gray-200 dark:bg-gray-700 rounded w-1/4"></div>
-                <div className="h-5 bg-gray-200 dark:bg-gray-700 rounded w-3/4"></div>
-                <div className="h-3 bg-gray-200 dark:bg-gray-700 rounded w-full"></div>
-                <div className="flex justify-between">
-                    <div className="h-4 w-12 bg-gray-200 dark:bg-gray-700 rounded"></div>
-                    <div className="h-4 w-16 bg-gray-200 dark:bg-gray-700 rounded"></div>
+        <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 overflow-hidden transition-all duration-300">
+            <button
+                onClick={onToggle}
+                className="w-full px-4 py-3 flex items-center justify-between hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors"
+            >
+                <div className="flex items-center gap-2">
+                    <Filter className="h-4 w-4 text-orange-600 dark:text-orange-400" />
+                    <span className="font-medium text-sm text-gray-900 dark:text-white">Advanced Filters</span>
+                    {hasActiveFilters && (
+                        <span className="bg-orange-100 dark:bg-orange-900/30 text-orange-700 dark:text-orange-300 text-[10px] font-bold px-2 py-0.5 rounded-full">
+                            ACTIVE
+                        </span>
+                    )}
                 </div>
-                <div className="h-10 bg-gray-200 dark:bg-gray-700 rounded-xl"></div>
-            </div>
+                <ChevronDown className={`h-4 w-4 text-gray-400 transition-transform duration-300 ${isOpen ? 'rotate-180' : ''}`} />
+            </button>
+
+            <AnimatePresence>
+                {isOpen && (
+                    <motion.div
+                        initial={{ height: 0, opacity: 0 }}
+                        animate={{ height: 'auto', opacity: 1 }}
+                        exit={{ height: 0, opacity: 0 }}
+                        transition={{ duration: 0.2 }}
+                        className="border-t border-gray-200 dark:border-gray-700"
+                    >
+                        <div className="p-4 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                            <div>
+                                <label className="block text-xs font-medium text-gray-500 dark:text-gray-400 mb-1.5">Status</label>
+                                <select
+                                    value={filters.isCompleted}
+                                    onChange={(e) => onFilterChange('isCompleted', e.target.value)}
+                                    className="w-full px-3 py-2 text-sm border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+                                >
+                                    <option value="">All Status</option>
+                                    <option value="true">Completed</option>
+                                    <option value="false">In Progress</option>
+                                </select>
+                            </div>
+
+                            <div>
+                                <label className="block text-xs font-medium text-gray-500 dark:text-gray-400 mb-1.5">Sort By</label>
+                                <select
+                                    value={filters.sort}
+                                    onChange={(e) => onFilterChange('sort', e.target.value)}
+                                    className="w-full px-3 py-2 text-sm border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+                                >
+                                    {sortOptions.map(opt => (
+                                        <option key={opt.value} value={opt.value}>{opt.label}</option>
+                                    ))}
+                                </select>
+                            </div>
+
+                            <div>
+                                <label className="block text-xs font-medium text-gray-500 dark:text-gray-400 mb-1.5">Progress Min (%)</label>
+                                <input
+                                    type="number"
+                                    placeholder="0"
+                                    min="0"
+                                    max="100"
+                                    value={filters.minPercentage}
+                                    onChange={(e) => onFilterChange('minPercentage', e.target.value)}
+                                    className="w-full px-3 py-2 text-sm border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+                                />
+                            </div>
+
+                            <div>
+                                <label className="block text-xs font-medium text-gray-500 dark:text-gray-400 mb-1.5">Show Expired</label>
+                                <select
+                                    value={filters.includeExpired ? 'true' : 'false'}
+                                    onChange={(e) => onFilterChange('includeExpired', e.target.value === 'true')}
+                                    className="w-full px-3 py-2 text-sm border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+                                >
+                                    <option value="false">Hide Expired</option>
+                                    <option value="true">Show Expired</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <div className="px-4 pb-4 flex items-center justify-end gap-2">
+                            <Button
+                                onClick={onReset}
+                                variant="outline"
+                                size="sm"
+                                className="px-3 py-1.5 text-xs font-medium text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg border border-gray-300 dark:border-gray-600"
+                            >
+                                <X className="h-3.5 w-3.5 mr-1" />
+                                Reset
+                            </Button>
+                        </div>
+                    </motion.div>
+                )}
+            </AnimatePresence>
         </div>
     );
 };
@@ -333,262 +402,269 @@ export default function MyCoursesPage() {
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
     const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
-    const [filter, setFilter] = useState<"all" | "in-progress" | "completed">("all");
     const [searchQuery, setSearchQuery] = useState("");
+    const [filterOpen, setFilterOpen] = useState(false);
+    const [pagination, setPagination] = useState({ page: 1, pages: 1, limit: 12, hasPrev: false, hasNext: false, total: 0 });
+
+    const [filters, setFilters] = useState<FilterState>({
+        type: '',
+        itemId: '',
+        isActive: 'true',
+        isCompleted: '',
+        enrolledStart: '',
+        enrolledEnd: '',
+        accessStart: '',
+        accessEnd: '',
+        minPercentage: '',
+        maxPercentage: '',
+        includeExpired: false,
+        page: 1,
+        limit: 12,
+        sort: '-enrolledAt'
+    });
+
     const navigate = useNavigate();
 
+    const fetchMyCourses = useCallback(async () => {
+        try {
+            setLoading(true);
+            setError(null);
+
+            const params: any = {
+                page: filters.page,
+                limit: filters.limit,
+                sort: filters.sort,
+                isActive: filters.isActive,
+                includeExpired: filters.includeExpired ? 'true' : 'false',
+            };
+
+            if (filters.type) params.type = filters.type;
+            if (filters.itemId) params.itemId = filters.itemId;
+            if (filters.isCompleted !== '') params.isCompleted = filters.isCompleted;
+            if (filters.enrolledStart) params.enrolledStart = filters.enrolledStart;
+            if (filters.enrolledEnd) params.enrolledEnd = filters.enrolledEnd;
+            if (filters.minPercentage) params.minPercentage = filters.minPercentage;
+            if (filters.maxPercentage) params.maxPercentage = filters.maxPercentage;
+
+            const response = await api.get("/purchase", { params });
+
+            setCourses(response.data.data || []);
+            setPagination({
+                page: response.data.pagination?.page || 1,
+                pages: response.data.pagination?.pages || 1,
+                limit: response.data.pagination?.limit || 12,
+                hasPrev: response.data.pagination?.hasPrev || false,
+                hasNext: response.data.pagination?.hasNext || false,
+                total: response.data.count || 0
+            });
+        } catch (err: any) {
+            console.error("Failed to fetch purchased courses:", err);
+            setError(err.response?.data?.message || "Failed to load materials");
+        } finally {
+            setLoading(false);
+        }
+    }, [filters]);
+
     useEffect(() => {
-        const fetchMyCourses = async () => {
-            try {
-                setLoading(true);
-                setError(null);
-                const response = await api.get("/purchase", {
-                    params: {
-                        populate: "course",
-                        sort: "-lastAccessedAt,-enrolledAt"
-                    }
-                });
-                setCourses(response.data.data || []);
-            } catch (err: any) {
-                console.error("Failed to fetch purchased courses:", err);
-                setError(err.response?.data?.message || "Failed to load courses");
-            } finally {
-                setLoading(false);
-            }
-        };
-
         fetchMyCourses();
-    }, []);
+    }, [fetchMyCourses]);
 
-    // Derived data
     const filteredCourses = useMemo(() => {
         return courses.filter(course => {
-            const matchesSearch =
-                course.course?.title?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                (course.course.subtitle && course.course.subtitle.toLowerCase().includes(searchQuery.toLowerCase()));
-
-            const progress = course.progress.percentage;
-            const isCompleted = course.isCompleted || progress >= 100;
-
-            const matchesFilter =
-                filter === "all" ||
-                (filter === "in-progress" && !isCompleted && progress > 0) ||
-                (filter === "completed" && isCompleted);
-
-            return matchesSearch && matchesFilter;
+            const matchesSearch = searchQuery === '' ||
+                course.item?.title?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+                course.item?.description?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+                course.itemType?.toLowerCase().includes(searchQuery.toLowerCase());
+            return matchesSearch;
         });
-    }, [courses, searchQuery, filter]);
+    }, [courses, searchQuery]);
 
-    // Stats
-    const stats = useMemo(() => {
-        const total = courses.length;
-        const completed = courses.filter(c => c.isCompleted || c.progress.percentage >= 100).length;
-        const inProgress = courses.filter(c => !c.isCompleted && c.progress.percentage > 0).length;
-        const totalTimeSeconds = courses.reduce((sum, c) => sum + (c.totalTimeSpent || 0), 0);
-        const avgProgress = total > 0
-            ? Math.round(courses.reduce((sum, c) => sum + c.progress.percentage, 0) / total)
-            : 0;
+    const handleFilterChange = (key: keyof FilterState, value: any) => {
+        setFilters(prev => ({ ...prev, [key]: value, page: 1 }));
+    };
 
-        return {
-            total,
-            completed,
-            inProgress,
-            totalTimeSeconds,
-            avgProgress
-        };
-    }, [courses]);
+    const handleResetFilters = () => {
+        setFilters({
+            type: '', itemId: '', isActive: 'true', isCompleted: '', enrolledStart: '',
+            enrolledEnd: '', accessStart: '', accessEnd: '', minPercentage: '', maxPercentage: '',
+            includeExpired: false, page: 1, limit: 12, sort: '-enrolledAt'
+        });
+        setSearchQuery('');
+    };
 
-    const filterButtons = [
-        { key: "all" as const, label: "All Courses", icon: Grid },
-        // { key: "in-progress" as const, label: "In Progress", icon: Play },
-        // { key: "completed" as const, label: "Completed", icon: CheckCircle },
-    ];
+    const handlePageChange = (newPage: number) => {
+        if (newPage >= 1 && newPage <= pagination.pages) {
+            handleFilterChange('page', newPage);
+        }
+    };
 
     return (
-        <div className="min-h-[85vh]">
-            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-                {/* <motion.div
-                    initial={{ opacity: 0, y: -20 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    className="mb-6"
-                >
-                    <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4">
-                        {[
-                            { label: "Total Courses", value: stats.total.toString(), icon: BookOpen },
-                            { label: "Completed", value: stats.completed.toString(), icon: CheckCircle },
-                            { label: "In Progress", value: stats.inProgress.toString(), icon: Brain },
-                            {
-                                label: "Learning Time",
-                                value: `${Math.floor(stats.totalTimeSeconds / 3600)}h ${Math.floor((stats.totalTimeSeconds % 3600) / 60)}m`,
-                                icon: Timer
-                            },
-                            { label: "Avg Progress", value: `${stats.avgProgress}%`, icon: Target }
-                        ].map((stat, index) => (
-                            <motion.div
-                                key={stat.label}
-                                initial={{ opacity: 0, y: 20 }}
-                                animate={{ opacity: 1, y: 0 }}
-                                transition={{ delay: index * 0.1 }}
-                                className="bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm rounded-2xl shadow border border-gray-200/50 dark:border-gray-700/50 p-4 text-center"
-                            >
-                                <stat.icon className="h-6 w-6 text-blue-500 mx-auto mb-2" />
-                                <div className="text-2xl font-bold text-gray-900 dark:text-white">{stat.value}</div>
-                                <div className="text-xs text-gray-600 dark:text-gray-400 mt-1">{stat.label}</div>
-                            </motion.div>
-                        ))}
+        <div className="min-h-screen transition-colors duration-300">
+            <div className="max-w-7xl mx-auto px-4 py-4">
+                {/* Header */}
+                <motion.div initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }} className="mb-4">
+                    <h1 className="text-2xl font-bold text-gray-900 dark:text-white tracking-tight">My Learning</h1>
+                    <p className="text-gray-500 dark:text-gray-400 mt-px text-sm">Track your progress and continue your study journey.</p>
+                </motion.div>
+
+                {/* Search & Controls */}
+                <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }} className="space-y-4 mb-6">
+                    <div className="relative">
+                        <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-400" />
+                        <input
+                            type="text"
+                            placeholder="Search by title, description, or type..."
+                            value={searchQuery}
+                            onChange={(e) => setSearchQuery(e.target.value)}
+                            className="w-full pl-12 pr-4 py-3 border border-gray-300 dark:border-gray-600 rounded-3xl bg-white dark:bg-gray-800 text-gray-900 dark:text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent transition-all"
+                        />
                     </div>
-                </motion.div> */}
 
-                {/* Controls */}
-                <motion.div
-                    initial={{ opacity: 0, y: 20 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ delay: 0.1 }}
-                    className="mb-4"
-                >
-                    <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between space-y-4 lg:space-y-0">
-                        <div className="relative flex-1 max-w-full mr-4">
-                            <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400" />
-                            <input
-                                type="text"
-                                placeholder="Search courses, instructors, or topics..."
-                                value={searchQuery}
-                                onChange={(e) => setSearchQuery(e.target.value)}
-                                className="w-full pl-12 pr-4 py-2.5 border border-gray-300 dark:border-gray-600 rounded-xl bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm shadow-inner transition-all duration-300"
-                            />
-                        </div>
-
-                        <div className="flex items-center space-x-4">
-                            <div className="flex items-center space-x-1 overflow-x-auto">
-                                {filterButtons.map((filterOption) => {
-                                    const IconComponent = filterOption.icon;
-                                    return (
-                                        <button
-                                            key={filterOption.key}
-                                            onClick={() => setFilter(filterOption.key)}
-                                            className={`flex items-center px-4 py-2.5 rounded-lg text-sm font-medium transition-all duration-300 whitespace-nowrap ${filter === filterOption.key
-                                                ? "bg-gradient-to-r from-blue-500 to-purple-600 text-white shadow-md"
-                                                : "text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700 hover:text-gray-900 dark:hover:text-white"
-                                                }`}
-                                        >
-                                            <IconComponent className="h-4 w-4 mr-2" />
-                                            {filterOption.label}
-                                        </button>
-                                    );
-                                })}
-                            </div>
-
-                            <div className="flex items-center space-x-1 bg-gray-100 dark:bg-gray-700 rounded-xl p-0.5">
+                    <div className="flex items-center gap-2 overflow-x-auto pb-2 scrollbar-hide -mx-4 px-4 sm:mx-0 sm:px-0">
+                        {materialTypes.map((type) => {
+                            const Icon = type.icon;
+                            const isActive = filters.type === type.value;
+                            return (
                                 <button
-                                    onClick={() => setViewMode("grid")}
-                                    className={`p-2 rounded-lg transition-all duration-300 ${viewMode === "grid"
-                                        ? "bg-white dark:bg-gray-600 shadow-lg text-blue-600 transform scale-110"
-                                        : "text-gray-500 hover:text-gray-700 dark:hover:text-gray-300"
+                                    key={type.value}
+                                    onClick={() => handleFilterChange('type', type.value)}
+                                    className={`flex items-center gap-2 px-4 py-2.5 rounded-full text-sm font-medium whitespace-nowrap transition-all duration-200 border ${isActive
+                                        ? 'bg-orange-600 text-white border-orange-600 shadow-md shadow-orange-200 dark:shadow-none'
+                                        : 'bg-white dark:bg-gray-800 text-gray-600 dark:text-gray-300 border-gray-200 dark:border-gray-700 hover:border-orange-300 dark:hover:border-orange-700 hover:text-orange-600 dark:hover:text-orange-400'
                                         }`}
                                 >
-                                    <Grid className="h-5 w-5" />
+                                    <Icon className="h-4 w-4" />
+                                    {type.label}
                                 </button>
-                                <button
-                                    onClick={() => setViewMode("list")}
-                                    className={`p-2 rounded-lg transition-all duration-300 ${viewMode === "list"
-                                        ? "bg-white dark:bg-gray-600 shadow-lg text-blue-600 transform scale-110"
-                                        : "text-gray-500 hover:text-gray-700 dark:hover:text-gray-300"
-                                        }`}
-                                >
-                                    <List className="h-5 w-5" />
-                                </button>
-                            </div>
-                        </div>
+                            );
+                        })}
+                        <div className="flex-1"></div>
+
+                        <button
+                            onClick={() => setFilterOpen(!filterOpen)}
+                            className={`flex items-center gap-2 px-4 py-2 rounded-full text-sm font-medium whitespace-nowrap transition-all duration-200 border ${filterOpen || Object.values(filters).some(v => v !== '' && v !== false && v !== 1 && v !== 12 && v !== '-enrolledAt')
+                                ? 'bg-orange-50 dark:bg-orange-900/20 text-orange-700 dark:text-orange-300 border-orange-200 dark:border-orange-800'
+                                : 'bg-white dark:bg-gray-800 text-gray-600 dark:text-gray-300 border-gray-200 dark:border-gray-700 hover:border-orange-300'
+                                }`}
+                        >
+                            <Filter className="h-4 w-4" />
+                            Filters
+                        </button>
                     </div>
                 </motion.div>
 
-                {/* Results */}
-                <motion.div
-                    initial={{ opacity: 0, y: 20 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ delay: 0.2 }}
-                >
-                    <div className="flex items-center justify-between mb-4">
-                        <p className="text-gray-600 dark:text-gray-400">
-                            {filteredCourses.length} {filteredCourses.length === 1 ? 'course' : 'courses'} found
-                            {searchQuery && ` for "${searchQuery}"`}
-                        </p>
-                        {filteredCourses.length > 0 && (
-                            <div className="flex items-center space-x-2 text-sm text-gray-500 dark:text-gray-400">
-                                <Lightbulb className="h-4 w-4" />
-                                <span>Sorted by: Recent Activity</span>
-                            </div>
-                        )}
-                    </div>
+                {/* Filter Panel */}
+                {filterOpen && <FilterPanel
+                    filters={filters}
+                    onFilterChange={handleFilterChange}
+                    onReset={handleResetFilters}
+                    isOpen={filterOpen}
+                    onToggle={() => setFilterOpen(!filterOpen)}
+                />}
 
-                    {loading ? (
-                        <div className={viewMode === "grid" ? "grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-6" : "space-y-6"}>
-                            {[...Array(viewMode === "grid" ? 8 : 4)].map((_, index) => (
-                                <CourseSkeleton key={index} viewMode={viewMode} />
-                            ))}
+                {/* Results Count */}
+                <div className="flex items-center justify-between mt-6 mb-4">
+                    <p className="text-sm text-gray-500 dark:text-gray-400">
+                        Showing <span className="font-semibold text-gray-900 dark:text-white">{filteredCourses.length}</span> of {pagination.total} materials
+                    </p>
+                </div>
+
+                {/* Content Area */}
+                {loading ? (
+                    <div className={viewMode === "grid" ? "grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5" : "space-y-4"}>
+                        {[...Array(8)].map((_, i) => <CourseSkeleton key={i} viewMode={viewMode} />)}
+                    </div>
+                ) : error ? (
+                    <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="text-center py-16 bg-white dark:bg-gray-800 rounded-2xl border border-gray-200 dark:border-gray-700">
+                        <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-red-100 dark:bg-red-900/20 mb-4">
+                            <X className="h-8 w-8 text-red-600 dark:text-red-400" />
                         </div>
-                    ) : error ? (
+                        <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-2">Failed to load materials</h3>
+                        <p className="text-gray-500 dark:text-gray-400 mb-6 max-w-sm mx-auto">{error}</p>
+                        <Button onClick={() => fetchMyCourses()} className="bg-orange-600 hover:bg-orange-700 text-white px-6 py-2 rounded-lg">
+                            Try Again
+                        </Button>
+                    </motion.div>
+                ) : filteredCourses.length === 0 ? (
+                    <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="text-center py-16 bg-white dark:bg-gray-800 rounded-2xl border border-gray-200 dark:border-gray-700">
+                        <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-gray-100 dark:bg-gray-700 mb-4">
+                            <Search className="h-8 w-8 text-gray-400" />
+                        </div>
+                        <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-2">No materials found</h3>
+                        <p className="text-gray-500 dark:text-gray-400 mb-6 max-w-sm mx-auto">
+                            {searchQuery || filters.type ? "Try adjusting your search or filters." : "You haven't enrolled in any materials yet."}
+                        </p>
+                        <Button onClick={() => navigate('/course')} className="bg-orange-600 hover:bg-orange-700 text-white px-6 py-2 rounded-lg">
+                            Browse Catalog
+                        </Button>
+                    </motion.div>
+                ) : (
+                    <>
                         <motion.div
-                            initial={{ opacity: 0, scale: 0.9 }}
-                            animate={{ opacity: 1, scale: 1 }}
-                            className="text-center py-16"
+                            layout
+                            className={viewMode === "grid" ? "grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5" : "space-y-4"}
                         >
-                            <div className="bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm rounded-3xl p-8 max-w-md mx-auto shadow-2xl border border-gray-200/50 dark:border-gray-700/50">
-                                <BookOpen className="h-16 w-16 text-red-400 mx-auto mb-4" />
-                                <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-2">Oops! Something went wrong</h3>
-                                <p className="text-gray-600 dark:text-gray-400 mb-6">{error}</p>
-                                <Button
-                                    onClick={() => window.location.reload()}
-                                    size="lg"
-                                    className="rounded-xl px-6 py-3 text-base font-semibold bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700 text-white shadow-lg"
-                                >
-                                    Try Again
-                                </Button>
-                            </div>
-                        </motion.div>
-                    ) : filteredCourses.length === 0 ? (
-                        <motion.div
-                            initial={{ opacity: 0, scale: 0.9 }}
-                            animate={{ opacity: 1, scale: 1 }}
-                            className="text-center py-16"
-                        >
-                            <div className="p-10 ">
-                                <BookOpen className="h-20 w-20 text-gray-400 mx-auto mb-6" />
-                                <h3 className="text-2xl font-bold text-gray-900 dark:text-white mb-3">
-                                    {searchQuery || filter !== "all"
-                                        ? "No courses match your criteria"
-                                        : "Start Your Learning Journey"}
-                                </h3>
-                                <p className="text-gray-600 dark:text-gray-400 mb-6 text-lg leading-relaxed">
-                                    {searchQuery || filter !== "all"
-                                        ? "Try adjusting your search or filter to find what you're looking for."
-                                        : "Explore our catalog and enroll in your first course to begin learning."
-                                    }
-                                </p>
-                                <Button
-                                    onClick={() => navigate('/course')}
-                                    size="lg"
-                                    className="rounded-xl px-8 py-2.5 text-base font-semibold bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700 text-white shadow-lg transform hover:scale-105 transition-all duration-300"
-                                >
-                                    <Sparkles className="h-5 w-5 mr-2" />
-                                    Browse Courses
-                                </Button>
-                            </div>
-                        </motion.div>
-                    ) : (
-                        <div className={viewMode === "grid" ? "grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-6" : "space-y-6"}>
-                            <AnimatePresence>
+                            <AnimatePresence mode="popLayout">
                                 {filteredCourses.map((course) => (
                                     <CourseCard
                                         key={course._id}
                                         course={course}
                                         viewMode={viewMode}
+                                        onContinue={() => { }}
                                     />
                                 ))}
                             </AnimatePresence>
-                        </div>
-                    )}
-                </motion.div>
+                        </motion.div>
+
+                        {/* Pagination */}
+                        {pagination.pages > 1 && (
+                            <div className="flex items-center justify-center gap-2 mt-8">
+                                <Button
+                                    variant="outline"
+                                    size="sm"
+                                    onClick={() => handlePageChange(pagination.page - 1)}
+                                    disabled={!pagination.hasPrev}
+                                    className="px-3 py-2 rounded-lg disabled:opacity-50 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700"
+                                >
+                                    <ChevronLeft className="h-4 w-4" />
+                                </Button>
+
+                                <div className="flex items-center gap-1">
+                                    {[...Array(Math.min(5, pagination.pages))].map((_, i) => {
+                                        let pageNum;
+                                        if (pagination.pages <= 5) pageNum = i + 1;
+                                        else if (pagination.page <= 3) pageNum = i + 1;
+                                        else if (pagination.page >= pagination.pages - 2) pageNum = pagination.pages - 4 + i;
+                                        else pageNum = pagination.page - 2 + i;
+
+                                        return (
+                                            <button
+                                                key={pageNum}
+                                                onClick={() => handlePageChange(pageNum)}
+                                                className={`w-9 h-9 rounded-lg text-sm font-medium transition-all ${pagination.page === pageNum
+                                                    ? 'bg-orange-600 text-white shadow-md'
+                                                    : 'text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700'
+                                                    }`}
+                                            >
+                                                {pageNum}
+                                            </button>
+                                        );
+                                    })}
+                                </div>
+
+                                <Button
+                                    variant="outline"
+                                    size="sm"
+                                    onClick={() => handlePageChange(pagination.page + 1)}
+                                    disabled={!pagination.hasNext}
+                                    className="px-3 py-2 rounded-lg disabled:opacity-50 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700"
+                                >
+                                    <ChevronRight className="h-4 w-4" />
+                                </Button>
+                            </div>
+                        )}
+                    </>
+                )}
             </div>
         </div>
     );

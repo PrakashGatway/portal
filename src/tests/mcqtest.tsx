@@ -4,12 +4,9 @@ import {
     BookOpen,
     Search,
     Clock,
-    Sparkles,
-    Crown,
     X,
     Filter,
-    TrendingUp,
-    Play,
+    TrendingUp
 } from "lucide-react";
 import Button from "../components/ui/button/Button";
 import api from "../axiosInstance";
