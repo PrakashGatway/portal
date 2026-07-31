@@ -114,14 +114,7 @@ const AppHeader: React.FC = () => {
                             alt="Logo"
                         />
                     </Link>
-                    <div className="hidden lg:flex flex-col px-4">
-                        <span className="text-xs font-medium text-gray-500 dark:text-gray-400">
-                            Welcome back 👋
-                        </span>
-                        <h2 className="text-base font-semibold text-gray-900 dark:text-white">
-                            {user?.name.split(" ")[0] || "User"}
-                        </h2>
-                    </div>
+                  
 
                     <motion.button
                         whileHover={{ scale: 1.05 }}
