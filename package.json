@@ -51,7 +51,11 @@
     "react-pdf": "^10.2.0",
     "react-player": "^3.3.2",
     "react-router": "^7.1.5",
+<<<<<<< Updated upstream
     "react-router-dom": "^7.18.2",
+=======
+    "react-select": "^5.10.2",
+>>>>>>> Stashed changes
     "react-toastify": "^11.0.5",
     "recharts": "^3.5.1",
     "regenerator-runtime": "^0.14.1",

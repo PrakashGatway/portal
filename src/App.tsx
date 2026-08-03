@@ -60,6 +60,8 @@ import { Toaster } from "sonner";
 import MockTests from "./tests/mcqtest";
 import JobSelectionsWall from "./userView/Selection";
 import SecureMaterialViewer from "./userView/SecureMaterial";
+import Setting from "./pages/Dashboard/Setting";
+import Notifications from './pages/Notifications';
 
 // Define roles
 export const ROLES = {
@@ -147,8 +149,9 @@ export default function App() {
                 <Route path="/test-manage" element={<TestSeriesManagement />} />
                 <Route path="/test/questions" element={<QuestionManagement />} />
                 <Route path="/test/packages" element={<PackageManagement />} />
+                <Route path="/setting" element={<Setting/>} />
               </Route>
-
+                <Route path="/notifications" element={<Notifications />} />
               // teachers
               <Route element={<ProtectedRoute roles={[ROLES.TEACHER, ROLES.ADMIN]} />}>
                 <Route path="/mcq/questions" element={<QuestionManagementPage />} />
@@ -171,6 +174,7 @@ export default function App() {
                 <Route path="/comments" element={<CommentsManagement />} />
               </Route>
             </Route>
+
             <Route path="/course/category" element={<CategorySelectionPage />} />
             <Route path="/checkout/:slug" element={<CheckoutPage />} />
             <Route path="/payment-status" element={<PaymentStatusPage />} />

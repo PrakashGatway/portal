@@ -60,7 +60,8 @@ import {
   ChevronRight,
   ChevronLeft,
   SquareStack,
-  FileStack
+  FileStack,
+  Settings
 } from "lucide-react";
 
 type IconType = React.ElementType;
@@ -207,7 +208,8 @@ const othersItems: NavItem[] = [
   { icon: User, name: "My Profile", path: "/profile" },
   { icon: Headphones, name: "Support", path: "/support" },
   { icon: Lock, name: "Our Selections", path: "/our-selection" },
-  { icon: Shield, name: "Privacy Policy", path: "/privacy-policy" }
+  { icon: Shield, name: "Privacy Policy", path: "/privacy-policy" },
+  { icon: Settings, name: "Setting", path: "/setting"}
 ];
 
 const teacherOthersItems: NavItem[] = [
