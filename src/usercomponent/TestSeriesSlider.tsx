@@ -31,8 +31,8 @@ export function LeftSlider() {
     }, []);
 
     return (
-        <div style={{ borderRadius: "20px 20px 0px 100px" }} className="p-[1.5px] col-span-3 lg:col-span-2 h-full relative  overflow-hidden col-span-2 w-full bg-gradient-to-b from-[#686868]/0 via-[#686868]/50 to-[#686868]">
-            <div style={{ borderRadius: "20px 20px 0px 100px" }} className="w-full relative overflow-hidden">
+        <div className="p-[1.5px]  col-span-3 lg:col-span-2 h-full relative  overflow-hidden col-span-2 w-full bg-gradient-to-b from-[#686868]/0 via-[#686868]/50 to-[#686868] rounded-4xl">
+            <div className="w-full relative overflow-hidden">
                 <AnimatePresence mode="wait">
                     <motion.div
                         key={index}
@@ -43,7 +43,7 @@ export function LeftSlider() {
                         className="h-full flex items-center"
                     >
                         <div className="h-[90px] sm:h-[140px] md:h-[150px] lg:h-[160px] w-full">
-                            <img className="h-full w-full object-cover object-center" src={slides[index].image} alt="" />
+                            <img className="h-full w-full object-cover object-center rounded-4xl" src={slides[index].image} alt="" />
                         </div>
 
                     </motion.div>
@@ -55,8 +55,8 @@ export function LeftSlider() {
 
 export function RightOffer({ content }) {
     return (
-        <div style={{ borderRadius: "20px 20px 100px 0px" }} className="p-[1.5px] hidden lg:block h-full relative overflow-hidden w-full bg-gradient-to-b from-[#686868]/0 via-[#686868]/60 to-[#686868]">
-            <div style={{ borderRadius: "20px 20px 100px 0px" }} className="flex items-center h-full w-full justify-between overflow-hidden p-6 bg-gradient-to-r from-[#EBEBEB] via-[#ffffff] to-[#EBEBEB]">
+        <div  className="p-[1.5px] rounded-4xl hidden lg:block h-full relative overflow-hidden w-full bg-gradient-to-b from-[#686868]/0 via-[#686868]/60 to-[#686868]">
+            <div  className="flex rounded-4xl items-center h-full w-full justify-between overflow-hidden p-6 bg-gradient-to-r from-[#EBEBEB] via-[#ffffff] to-[#EBEBEB]">
                 {!content ? <>
                     <div className="space-y-2 text-[#838383]">
                         <p className="text-xl font-medium">

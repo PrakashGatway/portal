@@ -6,6 +6,9 @@ import {
     Clock,
     X,
     Filter,
+      PenTool,
+  Mic,
+  Headphones,
     TrendingUp
 } from "lucide-react";
 import Button from "../components/ui/button/Button";
@@ -52,7 +55,7 @@ export const MockTestCard = ({ test }: { test: TestTemplate }) => {
             case 'Easy': return 'bg-green-100 text-green-700';
             case 'Medium': return 'bg-yellow-100 text-yellow-700';
             case 'Hard': return 'bg-red-100 text-red-700';
-            default: return 'bg-blue-100 text-blue-700';
+            default: return 'bg-orange-50 text-black';
         }
     };
 
@@ -69,70 +72,96 @@ export const MockTestCard = ({ test }: { test: TestTemplate }) => {
     };
 
     return (
-        <div className="p-[1.5px] rounded-2xl overflow-hidden w-full bg-gradient-to-b from-[#686868]/0 via-[#686868]/60 to-[#686868] hover:scale-[1.02] transition-transform duration-300">
-            <div className="relative rounded-2xl h-full bg-white p-1 sm:p-2 overflow-hidden">
-                <div className="absolute top-0 left-0 w-full h-[20%] bg-gradient-to-b from-[#ADADAC]/20 to-[#ADADAC]/0" />
-                <div className="py-3 px-2 space-y-1 bg-white">
-                    <h3 className="text-sm sm:text-lg font-semibold capitalize text-gray-900 line-clamp-1">
-                        {test.title}
-                    </h3>
+      <div
+  className={`relative rounded-[24px] overflow-hidden transition-all duration-300 
+    ${
+      test.isSelected
+        ? "border border-[#FF6A3D]"
+        : "border border-transparent"
+    }
+    bg-gradient-to-br from-[#FFF9F2] via-[#FFF3DE] to-[#FFF9F4]
+    hover:-translate-y-1 hover:shadow-xl
+  `}
+>
+  {/* Top Light Gradient */}
+  <div className="absolute inset-x-0 top-0 h-36 bg-gradient-to-b from-[#FFE8A3]/50 via-[#FFF6D6]/20 to-transparent" />
 
-                    <p className="text-sm text-[#FF6A3D] font-medium line-clamp-1">
-                        {test.exam?.name || "Unknown Exam"}
-                    </p>
+  <div className="relative  p-6  flex flex-col h-full min-h-[320px]">
+    {/* Header */}
+    <div className="flex items-center justify-between">
+      {test.isFree && (
+        <span className="rounded-md bg-gradient-to-r from-[#FF5B35] to-[#FF7B4D] px-3 py-1 text-white font-bold text-lg leading-none">
+          FREE
+        </span>
+      )}
 
-                    {/* Tags */}
-                    <div className="flex flex-wrap gap-2 pt-1">
-                        <span className={`px-2 py-0.5 rounded-full text-xs font-medium ${getDifficultyColor(test.difficultyLabel)}`}>
-                            {test.difficultyLabel}
-                        </span>
-                        {test.isFree && (
-                            <span className="px-2 py-0.5 rounded-full bg-green-100 text-green-700 text-xs font-medium">
-                                Free
-                            </span>
-                        )}
-                    </div>
+      <span
+        className={`px-3 py-1 rounded-full text-xs font-medium ${getDifficultyColor(
+          test.difficultyLabel
+        )}`}
+      >
+        {test.difficultyLabel}
+      </span>
+    </div>
 
-                    {/* Meta */}
-                    <div className="grid grid-cols-2 gap-y-2 text-gray-600 text-xs pt-2 pb-2">
-                        <div className="flex items-center gap-2">
-                            <BookOpen className="h-4 w-4 text-[#FF6A3D]" />
-                            {test.totalQuestions || 0} Ques...
-                        </div>
-                        <div className="flex items-center gap-2">
-                            <Clock className="h-4 w-4 text-[#FF6A3D]" />
-                            {test.totalDurationMinutes || 0} Mins
-                        </div>
-                        <div className="flex items-center gap-2 col-span-2">
-                            <TrendingUp className="h-4 w-4 text-[#FF6A3D]" />
-                            Language: English
-                        </div>
-                    </div>
-                </div>
+    {/* Title */}
+    <h3 className="mt-3 text-xl font-bold uppercase text-[#1A1A1A] leading-tight">
+      {test.title}
+    </h3>
 
-                {/* Footer */}
-                <div className="flex items-start">
-                    <div style={{ borderRadius: "0px 0px 12px 15px" }} className="flex-1 bg-[#FF6A3D] text-center text-white text-lg font-bold px-1 py-1.5">
-                        {getPriceLabel()}
-                    </div>
-                    <button
-                        style={{ borderRadius: "0px 0px 15px 0px" }}
-                        onClick={handleAction}
-                        className="flex-1 bg-[#3B3B3B] text-white text-sm font-medium py-1.5 bg-gradient-to-b from-[#545454] via-[#ffffff]/30 to-[#545454] hover:bg-black transition flex items-center justify-center gap-2"
-                    >
-                        {test.isFree ? (
-                            <>
-                                Start Test
-                            </>
-                        ) : (
-                            <>
-                                Buy Test
-                            </>
-                        )}
-                    </button>
-                </div>
-            </div>
+    {/* Exam */}
+    <p className="mt-1 text-[#FF6A3D] font-medium">
+      {test.exam?.name || "Unknown Exam"}
+    </p>
+
+    {/* Info Cards */}
+  <div className= "mt-auto">
+      <div className=" grid grid-cols-2 gap-8 px-2">
+      {/* Duration */}
+      <div className="rounded-2xl bg-white px-4 py-2 shadow-[0_6px_15px_rgba(0,0,0,0.08)]">
+        <div className="flex items-center gap-3">
+          <Clock className="h-5 w-5 text-[#FF6A3D]" />
+
+          <div>
+            <p className="text-xs font-bold text-gray-500">Duration</p>
+            <p className="text-base font-semibold text-[#FF6A3D]">
+              {test.totalDurationMinutes || 0} Min
+            </p>
+          </div>
         </div>
+      </div>
+
+      {/* Questions */}
+      <div className="rounded-2xl bg-white px-4 py-2 shadow-[0_6px_15px_rgba(0,0,0,0.08)]">
+        <div className="flex items-center gap-3">
+          <BookOpen className="h-5 w-5 text-[#FF6A3D]" />
+
+          <div>
+            <p className="text-xs font-bold text-gray-500">Questions</p>
+            <p className="text-base font-semibold text-[#FF6A3D]">
+              {test.totalQuestions || 0}
+            </p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    {/* Optional Language */}
+    <div className="mt-5 flex items-center gap-2 text-sm text-gray-500">
+      <TrendingUp className="h-4 w-4 text-[#FF6A3D]" />
+      Language: English
+    </div>
+
+    {/* Button */}
+    <button
+      onClick={handleAction}
+      className="mt-2 w-full rounded-xl bg-gradient-to-r from-[#FF4C2C] via-[#FF613A] to-[#FF7B59] py-2 text-base font-semibold text-white transition-all duration-300 hover:shadow-lg active:scale-[0.98]"
+    >
+      {test.isFree ? "Start FREE Test" : `Buy ${getPriceLabel()}`}
+    </button>
+  </div>
+  </div>
+</div>
     );
 };
 
@@ -218,6 +247,32 @@ export default function MockTests({testType}: any) {
             return matchesSearch && matchesExam && matchesDifficulty && matchesPrice;
         });
     }, [tests, searchQuery, filters]);
+
+
+    const tabs = [
+  {
+    id: "reading",
+    name: "Reading",
+    icon: BookOpen,
+  },
+  {
+    id: "writing",
+    name: "Writing",
+    icon: PenTool,
+  },
+  {
+    id: "speaking",
+    name: "Speaking",
+    icon: Mic,
+  },
+  {
+    id: "listening",
+    name: "Listening",
+    icon: Headphones,
+  },
+];
+
+const active = "reading";
 
     return (
         <div className="min-h-[85vh]">
@@ -435,14 +490,62 @@ export default function MockTests({testType}: any) {
                     </div>
                 </motion.div>
 
+                  <div className="w-full px-3 md:px-0">
+      <div className="overflow-hidden rounded-2xl bg-white shadow-[0_2px_12px_rgba(0,0,0,0.08)] border border-gray-100">
+        <div className="grid grid-cols-2 md:grid-cols-4">
+          {tabs.map((tab, index) => {
+            const Icon = tab.icon;
+            const isActive = active === tab.id;
+
+            return (
+              <button
+                key={tab.id}
+                className={`relative flex items-center justify-center gap-2 md:gap-3 h-16 md:h-[50px] transition-all duration-300
+                ${
+                  index !== tabs.length - 1
+                    ? "border-r border-gray-200"
+                    : ""
+                }`}
+              >
+                <Icon
+                  size={22}
+                  strokeWidth={1.8}
+                  className={`transition-all duration-300 ${
+                    isActive
+                      ? "text-[#ff6b35]"
+                      : "text-gray-700"
+                  }`}
+                />
+
+                <span
+                  className={`text-sm md:text-lg font-medium transition-all duration-300 ${
+                    isActive
+                      ? "text-[#ff6b35]"
+                      : "text-gray-800"
+                  }`}
+                >
+                  {tab.name}
+                </span>
+
+                {isActive && (
+                  <span className="absolute bottom-0 left-1/2 -translate-x-1/2 h-[5px] w-44 max-w-[80%] rounded-tl-2xl rounded-tr-2xl bg-[#ff6b35]" />
+                )}
+              </button>
+            );
+          })}
+        </div>
+      </div>
+    </div>
+
                 {/* Results */}
                 <motion.div
                     initial={{ opacity: 0, y: 20 }}
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ delay: 0.2 }}
+                    className="bg-white p-8 my-6 rounded-2xl"
                 >
                     {loading ? (
-                        <div className="grid grid-cols-2 md:grid-cols-2 xl:grid-cols-5 gap-2">
+                        <div className="grid grid-cols-2 md:grid-cols-2 xl:grid-cols-5 gap-5">
                             {[...Array(6)].map((_, index) => (
                                 <MockTestSkeleton key={index} />
                             ))}
@@ -499,13 +602,8 @@ export default function MockTests({testType}: any) {
                         </motion.div>
                     ) : (
                         <>
-                            <div className="flex items-center justify-between mb-4 px-1">
-                                <p className="text-gray-600 dark:text-gray-400 font-medium">
-                                    Showing <span className="text-[#FF7046] font-bold">{filteredTests.length}</span> {filteredTests.length === 1 ? 'test' : 'tests'}
-                                    {searchQuery && ` for "${searchQuery}"`}
-                                </p>
-                            </div>
-                            <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-5 gap-1 sm:gap-3">
+                            
+                            <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-3 gap-1 sm:gap-8 py-0">
                                 <AnimatePresence>
                                     {filteredTests.map((test) => (
                                         <motion.div

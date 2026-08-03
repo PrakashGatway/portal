@@ -12,7 +12,8 @@ import {
   ChevronLeft,
   ChevronRight,
   Loader2,
-  AlertCircle
+  AlertCircle,
+  Download
 } from 'lucide-react';
 import Button from '../components/ui/button/Button';
 import SecureMaterialViewer from './SecureMaterial';
@@ -161,16 +162,83 @@ const StudyMaterialPage = () => {
   }
 
   return (
-    <div className="min-h-screen">
-      <div className="max-w-7xl mx-auto px-2 sm:px-4">
-        <div className="mb-6">
-          <h1 className="text-2xl font-bold text-gray-900 dark:text-white mb-px">
-            Study Materials
+    <section>
+        
+      <div
+        className="
+          flex flex-col md:flex-row
+          items-start md:items-center
+          justify-between
+          gap-6
+          rounded-[28px]
+          bg-[#FF7048]
+          px-6
+          py-8
+          md:px-12
+          md:py-10
+          shadow-sm
+          my-5
+        "
+      >
+        {/* Left Content */}
+        <div>
+          <h1
+            className="
+              text-white
+              font-bold
+              leading-tight
+              text-3xl
+              sm:text-4xl
+              lg:text-[54px]
+            "
+          >
+            Resources Library
           </h1>
-          <p className="text-gray-600 dark:text-gray-400">
-            Browse through our collection of free study materials
+
+          <p
+            className="
+              mt-2
+              text-white/95
+              text-base
+              sm:text-lg
+              lg:text-[22px]
+              font-medium
+            "
+          >
+            High quality study material to help you crack your dream exam.
           </p>
         </div>
+
+        {/* Right Button */}
+        <button
+          className="
+            inline-flex
+            items-center
+            gap-2
+            rounded-lg
+            bg-white
+            px-5
+            py-3
+            text-sm
+            sm:text-base
+            font-semibold
+            text-[#3C3C3C]
+            shadow-md
+            transition-all
+            duration-300
+            hover:scale-105
+            hover:shadow-lg
+          "
+        >
+          <Download className="h-4 w-4 text-[#FF7048]" />
+
+          My Downloads
+        </button>
+      </div>
+    
+    <div className="min-h-screen bg-white rounded-2xl py-4">
+      <div className="max-w-7xl mx-auto px-2 sm:px-4">
+       
         <div className="mb-6">
           <div className="relative">
             <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400" />
@@ -200,27 +268,46 @@ const StudyMaterialPage = () => {
         </div>
 
         {/* Tabs */}
-        <div className="flex flex-wrap gap-2 mb-5">
-          {[
-            { id: 'all', label: 'All' },
-            { id: "pdf", label: "PDF" },
-            { id: "document", label: "Document" },
-            { id: "link", label: "Link" },
-            { id: "image", label: "Image" },
-            { id: "audio", label: "Audio" }
-          ].map(tab => (
-            <button
-              key={tab.id}
-              onClick={() => setActiveTab(tab.id)}
-              className={`px-4 !py-1.5 rounded-full text-sm font-medium transition-all duration-200 ${activeTab === tab.id
-                ? 'bg-orange-500 text-white shadow-lg shadow-orange-500/25 '
-                : 'bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-orange-50 dark:hover:bg-gray-700 border-2 border-gray-200 dark:border-gray-700'
-                }`}
-            >
-              {tab.label}
-            </button>
-          ))}
-        </div>
+       <div className="flex flex-wrap items-center gap-3 mb-6">
+  {/* Heading */}
+  <h3 className="text-[#2F2F2F] text-lg font-medium whitespace-nowrap mr-2">
+    Filter by Type -
+  </h3>
+
+  {[
+    { id: "all", label: "All Types" },
+    { id: "pdf", label: "Documents" },
+    { id: "document", label: "Image" },
+    { id: "link", label: "Videos" },
+    { id: "image", label: "Audio" },
+    { id: "audio", label: "Audio" },
+  ].map((tab) => (
+    <button
+      key={tab.id}
+      onClick={() => setActiveTab(tab.id)}
+      className={`
+        min-w-[110px]
+        sm:min-w-[130px]
+        px-5
+        py-2.5
+        rounded-xl
+        text-sm
+        font-medium
+        transition-all
+        duration-300
+        whitespace-nowrap
+
+        ${
+          activeTab === tab.id
+            ? "bg-[#FF7048] text-white shadow-[0_8px_20px_rgba(255,112,72,0.25)]"
+            : "bg-[#FBE9E3] text-[#2F2F2F] hover:bg-[#F7DDD4]"
+        }
+      `}
+    >
+      {tab.label}
+    </button>
+  ))}
+</div>
 
         {/* Results count */}
         <div className="flex justify-between items-center mb-4">
@@ -263,8 +350,8 @@ const StudyMaterialPage = () => {
           </motion.div>
         ) : (
           <motion.div
-            className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4"
-          >
+  className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-6"
+>
             <AnimatePresence>
               {materials.map(material => (
                 <motion.div
@@ -275,22 +362,61 @@ const StudyMaterialPage = () => {
                   exit={{ opacity: 0, scale: 0.8 }}
                   transition={{ duration: 0.3 }}
                   className="rounded-2xl p-[2px] hover:shadow-lg hover:scale-[.99] transition-all duration-300 "
-                  style={{
-                    background: "linear-gradient(405deg, #ff5a2f 0%, #ff6b35 18%, #ffe4da 35%, #ffffff 55%, #ececec 82%, #cfcfcf 100%)",
-                  }}
+               
                   onClick={() => navigate(`/resources/${material.slug}`)}
                 >
-                  <div className="bg-white h-full dark:bg-gray-800 rounded-2xl shadow-sm dark:border-gray-700 cursor-pointer transition-all duration-300  overflow-hidden group">
-                    {/* File Icon & Title */}
-                    <div className="p-4 py-6 pb-3 flex flex-col items-center">
-                      <div className="dark:bg-gray-700 rounded-2xl mb-3 dark:group-hover:bg-gray-600 transition-colors">
-                        {getIcon(material.materialType)}
-                      </div>
-                      <h4 className="font-semibold text-gray-900 dark:text-white text-center line-clamp-2 text-base">
-                        {material.title}
-                      </h4>
-                    </div>
-                  </div>
+                 <div className="bg-[#fff9e6] h-full dark:bg-gray-800 rounded-2xl shadow-sm dark:border-gray-700 cursor-pointer transition-all duration-300 overflow-hidden group flex flex-col justify-between">
+  {/* Top Section */}
+  <div className="p-4 flex gap-4">
+    {/* PDF Icon */}
+    <div className="flex-shrink-0">
+      <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-2xl bg-white flex items-center justify-center shadow-sm">
+        {getIcon(material.materialType)}
+      </div>
+    </div>
+
+    {/* Content */}
+    <div className="flex-1 min-w-0">
+      <h4 className="text-[15px] sm:text-base font-semibold text-gray-900 dark:text-white leading-snug line-clamp-2">
+        {material.title}
+      </h4>
+
+      <p className="mt-2 text-xs sm:text-sm text-gray-500 dark:text-gray-400 line-clamp-2">
+        {material.shortDescription ||
+          material.description ||
+          "50+ practice questions with model answers for band 7+"}
+      </p>
+    </div>
+  </div>
+
+  {/* Bottom Buttons */}
+  <div className="px-4 pb-4 mt-auto">
+    <div className="grid grid-cols-2 gap-12">
+      <button
+        onClick={(e) => {
+          e.stopPropagation();
+          window.open(material.file, "_blank");
+        }}
+        className="h-10 rounded-md border border-[#ff6b35] text-gray-600 bg-white hover:bg-[#fff4ef] transition font-medium text-sm"
+      >
+        View PDF
+      </button>
+
+      <button
+        onClick={(e) => {
+          e.stopPropagation();
+          const link = document.createElement("a");
+          link.href = material.file;
+          link.download = "";
+          link.click();
+        }}
+        className="h-10 rounded-md bg-[#ff6b35] hover:bg-[#f45b26] text-white font-semibold transition text-sm"
+      >
+        Download
+      </button>
+    </div>
+  </div>
+</div>
                 </motion.div>
               ))}
             </AnimatePresence>
@@ -361,32 +487,10 @@ const StudyMaterialPage = () => {
             </p>
           </div>
         </div> */}
-        <div className="relative overflow-hidden py-10">
-          <p
-            className="text-[100px]
-      font-black 
-      leading-none
-      text-transparent
-      opacity-70
-      pointer-events-none
-      select-none
-      whitespace-nowrap
-    "
-            style={{
-              WebkitTextStroke: "1px #00000047",
-              textShadow:
-                "0 0 2px rgba(255, 255, 255, 0), 0 0 10px rgb(255, 255, 255)",
-            }}
-          >
-            Ooshas <br /> prep
-          </p>
-
-          <div className="relative z-10">
-            {/* Your Content */}
-          </div>
-        </div>
+     
       </div>
     </div>
+    </section>
   );
 };
 
