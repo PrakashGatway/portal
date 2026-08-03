@@ -130,7 +130,6 @@ const LIMIT_OPTIONS = [
 ];
 
 export default function TestSeriesManagementPage() {
-  // State
   const [exams, setExams] = useState<Exam[]>([]);
   const [categories, setCategories] = useState<Category[]>([]);
   const [availableTests, setAvailableTests] = useState<any[]>([]);
@@ -145,7 +144,7 @@ export default function TestSeriesManagementPage() {
   });
 
   const [debouncedSearch, setDebouncedSearch] = useState("");
-  const [searchTimeout, setSearchTimeout] = useState<NodeJS.Timeout | null>(null);
+  const [searchTimeout, setSearchTimeout] = useState<any | null>(null);
   const [page, setPage] = useState(1);
   const [limit, setLimit] = useState(10);
   const [totalPages, setTotalPages] = useState(1);
@@ -158,8 +157,53 @@ export default function TestSeriesManagementPage() {
   const [formLoading, setFormLoading] = useState(false);
   const [saving, setSaving] = useState(false);
   const [testModalOpen, setTestModalOpen] = useState(false);
+  const [testSearch, setTestSearch] = useState("");
+  const [testFilters, setTestFilters] = useState({
+    testType: "",
+    isFree: "",
+  });
+  const [debouncedTestSearch, setDebouncedTestSearch] = useState("");
+  const [testSearchTimeout, setTestSearchTimeout] = useState<any>(null);
 
-  // Form
+  const TEST_TYPE_OPTIONS = [
+    { value: "full_length", label: "Full Length" },
+    { value: "sectional", label: "Sectional" },
+    { value: "quiz", label: "Quiz" },
+    { value: "mixed", label: "Mixed" },
+  ];
+
+  const FREE_OPTIONS = [
+    { value: "true", label: "Free" },
+    { value: "false", label: "Paid" },
+  ];
+
+  useEffect(() => {
+    if (testSearchTimeout) clearTimeout(testSearchTimeout);
+    const timeoutId = setTimeout(() => setDebouncedTestSearch(testSearch), 400);
+    setTestSearchTimeout(timeoutId);
+    return () => clearTimeout(timeoutId);
+  }, [testSearch]);
+
+  const filteredAvailableTests = availableTests.filter(test => {
+    const matchesSearch = !debouncedTestSearch ||
+      test.title?.toLowerCase().includes(debouncedTestSearch.toLowerCase()) ||
+      test.description?.toLowerCase().includes(debouncedTestSearch.toLowerCase());
+
+    const matchesType = !testFilters.testType || test.testType === testFilters.testType;
+
+    const matchesFree = !testFilters.isFree ||
+      (testFilters.isFree === "true" ? test.pricing?.isFree : !test.pricing?.isFree);
+
+    return matchesSearch && matchesType && matchesFree;
+  });
+
+  const openTestModal = () => {
+    setTestSearch("");
+    setDebouncedTestSearch("");
+    setTestFilters({ testType: "", isFree: "" });
+    setTestModalOpen(true);
+  };
+
   const {
     handleSubmit,
     reset,
@@ -1256,6 +1300,7 @@ export default function TestSeriesManagementPage() {
       </AnimatePresence>
 
       {/* Test Selection Modal */}
+      {/* Test Selection Modal */}
       <AnimatePresence>
         {testModalOpen && (
           <motion.div
@@ -1272,10 +1317,10 @@ export default function TestSeriesManagementPage() {
             />
 
             {/* Modal */}
-            <div className="relative z-10 w-full max-w-3xl rounded-2xl border border-gray-200 bg-white p-4 shadow-xl dark:border-gray-800 dark:bg-gray-900">
-              <div className="mb-4 flex items-center justify-between">
+            <div className="relative z-10 w-full max-w-4xl rounded-2xl border border-gray-200 bg-white p-6 shadow-xl dark:border-gray-800 dark:bg-gray-900">
+              <div className="mb-6 flex items-center justify-between">
                 <div>
-                  <p className="text-sm font-semibold text-gray-900 dark:text-gray-100">
+                  <p className="text-lg font-semibold text-gray-900 dark:text-gray-100">
                     Select Tests for Series
                   </p>
                   <p className="text-sm text-gray-500 dark:text-gray-400">
@@ -1286,68 +1331,204 @@ export default function TestSeriesManagementPage() {
                   onClick={() => setTestModalOpen(false)}
                   className="rounded-full p-1 text-gray-500 hover:bg-gray-100 dark:text-gray-400 dark:hover:bg-gray-800"
                 >
-                  <X className="h-4 w-4" />
+                  <X className="h-5 w-5" />
                 </button>
               </div>
 
-              {/* Filter */}
-              <div className="mb-4">
-                <div className="relative">
-                  <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" />
-                  <input
-                    type="text"
-                    placeholder="Search tests..."
-                    className="w-full rounded-xl border border-gray-200 bg-white py-2 pl-9 pr-3 text-sm text-gray-900 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100"
-                  />
+              {/* Filters Section */}
+              <div className="mb-4 rounded-xl border border-gray-200 bg-gray-50 p-3 dark:border-gray-700 dark:bg-gray-800/50">
+                <div className="grid gap-3 md:grid-cols-4">
+                  {/* Search */}
+                  <div className="md:col-span-2">
+                    <div className="relative">
+                      <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" />
+                      <input
+                        type="text"
+                        placeholder="Search tests by title or description..."
+                        value={testSearch}
+                        onChange={(e) => setTestSearch(e.target.value)}
+                        className="w-full rounded-lg border border-gray-200 bg-white py-2 pl-9 pr-3 text-sm text-gray-900 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100"
+                      />
+                      {testSearch && (
+                        <button
+                          onClick={() => setTestSearch("")}
+                          className="absolute right-2 top-1/2 -translate-y-1/2 rounded-full p-1 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300"
+                        >
+                          <X className="h-3 w-3" />
+                        </button>
+                      )}
+                    </div>
+                  </div>
+
+                  {/* Test Type Filter */}
+                  <div>
+                    <Select
+                      options={[
+                        { value: "", label: "All Types" },
+                        ...TEST_TYPE_OPTIONS,
+                      ]}
+                      defaultValue={testFilters.testType}
+                      onChange={(value: string) => setTestFilters(prev => ({ ...prev, testType: value }))}
+                      placeholder="Test Type"
+                    />
+                  </div>
+
+                  {/* Free/Paid Filter */}
+                  <div>
+                    <Select
+                      options={[
+                        { value: "", label: "All Prices" },
+                        ...FREE_OPTIONS,
+                      ]}
+                      defaultValue={testFilters.isFree}
+                      onChange={(value: string) => setTestFilters(prev => ({ ...prev, isFree: value }))}
+                      placeholder="Price Type"
+                    />
+                  </div>
                 </div>
+
+                {/* Active Filters Display */}
+                {(testFilters.testType || testFilters.isFree) && (
+                  <div className="mt-2 flex items-center gap-2">
+                    <span className="text-xs text-gray-500 dark:text-gray-400">Active filters:</span>
+                    {testFilters.testType && (
+                      <span className="inline-flex items-center gap-1 rounded-full bg-blue-50 px-2 py-0.5 text-xs font-medium text-blue-700 dark:bg-blue-900/40 dark:text-blue-300">
+                        {TEST_TYPE_OPTIONS.find(t => t.value === testFilters.testType)?.label}
+                        <button
+                          onClick={() => setTestFilters(prev => ({ ...prev, testType: "" }))}
+                          className="ml-0.5 rounded-full p-0.5 hover:bg-blue-100 dark:hover:bg-blue-800"
+                        >
+                          <X className="h-3 w-3" />
+                        </button>
+                      </span>
+                    )}
+                    {testFilters.isFree && (
+                      <span className="inline-flex items-center gap-1 rounded-full bg-green-50 px-2 py-0.5 text-xs font-medium text-green-700 dark:bg-green-900/40 dark:text-green-300">
+                        {testFilters.isFree === "true" ? "Free" : "Paid"}
+                        <button
+                          onClick={() => setTestFilters(prev => ({ ...prev, isFree: "" }))}
+                          className="ml-0.5 rounded-full p-0.5 hover:bg-green-100 dark:hover:bg-green-800"
+                        >
+                          <X className="h-3 w-3" />
+                        </button>
+                      </span>
+                    )}
+                    <button
+                      onClick={() => setTestFilters({ testType: "", isFree: "" })}
+                      className="text-xs text-blue-600 hover:text-blue-700 dark:text-blue-400"
+                    >
+                      Clear all
+                    </button>
+                  </div>
+                )}
+              </div>
+
+              {/* Results count */}
+              <div className="mb-3 flex items-center justify-between text-sm text-gray-500 dark:text-gray-400">
+                <span>
+                  Showing <span className="font-semibold text-gray-700 dark:text-gray-300">{filteredAvailableTests.length}</span> of{" "}
+                  <span className="font-semibold text-gray-700 dark:text-gray-300">{availableTests.length}</span> tests
+                </span>
+                <span>
+                  {watchTests?.length || 0} test{(watchTests?.length || 0) !== 1 ? 's' : ''} selected
+                </span>
               </div>
 
               {/* Tests List */}
-              <div className="max-h-96 overflow-y-auto rounded-xl border border-gray-200 dark:border-gray-800">
+              <div className="max-h-96 overflow-y-auto rounded-xl border border-gray-200 dark:border-gray-700">
                 {availableTests.length === 0 ? (
-                  <div className="py-8 text-center text-sm text-gray-500 dark:text-gray-400">
-                    No tests available.
+                  <div className="flex flex-col items-center justify-center py-12 text-center">
+                    <Package className="mb-3 h-12 w-12 text-gray-300 dark:text-gray-600" />
+                    <p className="text-sm font-medium text-gray-500 dark:text-gray-400">
+                      No tests available
+                    </p>
+                    <p className="mt-1 text-xs text-gray-400 dark:text-gray-500">
+                      {watchExam ? "No tests found for the selected exam" : "Please select an exam first"}
+                    </p>
+                  </div>
+                ) : filteredAvailableTests.length === 0 ? (
+                  <div className="flex flex-col items-center justify-center py-12 text-center">
+                    <Search className="mb-3 h-12 w-12 text-gray-300 dark:text-gray-600" />
+                    <p className="text-sm font-medium text-gray-500 dark:text-gray-400">
+                      No tests match your filters
+                    </p>
+                    <p className="mt-1 text-xs text-gray-400 dark:text-gray-500">
+                      Try adjusting your search or filter criteria
+                    </p>
+                    <button
+                      onClick={() => {
+                        setTestSearch("");
+                        setDebouncedTestSearch("");
+                        setTestFilters({ testType: "", isFree: "" });
+                      }}
+                      className="mt-3 text-sm text-blue-600 hover:text-blue-700 dark:text-blue-400"
+                    >
+                      Clear all filters
+                    </button>
                   </div>
                 ) : (
-                  <div className="divide-y divide-gray-200 dark:divide-gray-800">
-                    {availableTests.map((test) => {
-                      const alreadyAdded = watchTests.some(t => t.test === test._id);
+                  <div className="divide-y divide-gray-200 dark:divide-gray-700">
+                    {filteredAvailableTests.map((test) => {
+                      const alreadyAdded = watchTests?.some(t => t.test === test._id);
                       return (
                         <div
                           key={test._id}
-                          className={`flex items-center justify-between p-3 ${alreadyAdded ? 'opacity-50' : 'hover:bg-gray-50 dark:hover:bg-gray-800/60'}`}
+                          className={`flex items-center justify-between p-4 transition-colors ${alreadyAdded
+                              ? 'bg-blue-50/50 dark:bg-blue-900/10'
+                              : 'hover:bg-gray-50 dark:hover:bg-gray-800/60'
+                            }`}
                         >
-                          <div className="flex-1">
-                            <div className="flex items-center gap-2">
-                              <h4 className="text-sm font-medium text-gray-900 dark:text-gray-100">
+                          <div className="flex-1 min-w-0">
+                            <div className="flex items-center gap-2 flex-wrap">
+                              <h4 className="text-sm font-semibold text-gray-900 dark:text-gray-100 truncate">
                                 {test.title}
                               </h4>
-                              {test.pricing?.isFree && (
-                                <span className="rounded-full bg-green-50 px-2 py-0.5 text-sm text-green-700 dark:bg-green-900/40 dark:text-green-300">
+                              {test.pricing?.isFree ? (
+                                <span className="inline-flex items-center gap-1 rounded-full bg-green-50 px-2 py-0.5 text-xs font-medium text-green-700 dark:bg-green-900/40 dark:text-green-300">
                                   Free
+                                </span>
+                              ) : (
+                                <span className="inline-flex items-center gap-1 rounded-full bg-orange-50 px-2 py-0.5 text-xs font-medium text-orange-700 dark:bg-orange-900/40 dark:text-orange-300">
+                                  <IndianRupee className="h-3 w-3" />
+                                  {test.pricing?.salePrice || test.pricing?.price || 0}
+                                </span>
+                              )}
+                              {alreadyAdded && (
+                                <span className="inline-flex items-center gap-1 rounded-full bg-blue-100 px-2 py-0.5 text-xs font-medium text-blue-700 dark:bg-blue-900/40 dark:text-blue-300">
+                                  <Check className="h-3 w-3" />
+                                  Added
                                 </span>
                               )}
                             </div>
 
-                            <div className="mt-1 flex flex-wrap items-center gap-2 text-sm text-gray-500 dark:text-gray-400">
-                              <span className="rounded-full bg-gray-100 px-2 py-0.5 dark:bg-gray-800">
-                                {test.testType}
+                            <div className="mt-1 flex flex-wrap items-center gap-2 text-xs text-gray-500 dark:text-gray-400">
+                              <span className="inline-flex items-center rounded-md bg-gray-100 px-1.5 py-0.5 font-medium dark:bg-gray-800">
+                                {TEST_TYPE_OPTIONS.find(t => t.value === test.testType)?.label || test.testType}
                               </span>
                               {test.totalQuestions && (
-                                <span>{test.totalQuestions} Q</span>
+                                <span className="flex items-center gap-1">
+                                  <ActivitySquare className="h-3 w-3" />
+                                  {test.totalQuestions} questions
+                                </span>
                               )}
                               {test.totalDurationMinutes && (
-                                <span>{test.totalDurationMinutes} min</span>
+                                <span className="flex items-center gap-1">
+                                  <svg className="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                  </svg>
+                                  {test.totalDurationMinutes} min
+                                </span>
                               )}
-                              {test.pricing && !test.pricing.isFree && (
-                                <span className="text-emerald-600 dark:text-emerald-400">
-                                  ₹{test.pricing.salePrice || test.pricing.price}
+                              {test.totalMarks && (
+                                <span className="flex items-center gap-1">
+                                  <Target className="h-3 w-3" />
+                                  {test.totalMarks} marks
                                 </span>
                               )}
                             </div>
 
                             {test.description && (
-                              <p className="mt-1 text-sm text-gray-500 line-clamp-1 dark:text-gray-400">
+                              <p className="mt-1.5 text-xs text-gray-500 line-clamp-2 dark:text-gray-400">
                                 {test.description}
                               </p>
                             )}
@@ -1358,9 +1539,22 @@ export default function TestSeriesManagementPage() {
                             size="sm"
                             disabled={alreadyAdded}
                             onClick={() => addTestToSeries(test._id)}
-                            className="ml-2"
+                            className={`ml-4 flex-shrink-0 ${alreadyAdded
+                                ? 'bg-blue-100 text-blue-700 dark:bg-blue-900/40 dark:text-blue-300'
+                                : ''
+                              }`}
                           >
-                            {alreadyAdded ? "Added" : "Add"}
+                            {alreadyAdded ? (
+                              <>
+                                <Check className="mr-1 h-3 w-3" />
+                                Added
+                              </>
+                            ) : (
+                              <>
+                                <Plus className="mr-1 h-3 w-3" />
+                                Add
+                              </>
+                            )}
                           </Button>
                         </div>
                       );
@@ -1370,14 +1564,19 @@ export default function TestSeriesManagementPage() {
               </div>
 
               {/* Footer */}
-              <div className="mt-4 flex justify-end">
-                <Button
-                  type="button"
-                  variant="outline"
-                  onClick={() => setTestModalOpen(false)}
-                >
-                  Close
-                </Button>
+              <div className="mt-4 flex items-center justify-between">
+                <div className="text-sm text-gray-500 dark:text-gray-400">
+                  {watchTests?.length || 0} test{(watchTests?.length || 0) !== 1 ? 's' : ''} currently in series
+                </div>
+                <div className="flex gap-2">
+                  <Button
+                    type="button"
+                    variant="outline"
+                    onClick={() => setTestModalOpen(false)}
+                  >
+                    Done
+                  </Button>
+                </div>
               </div>
             </div>
           </motion.div>
