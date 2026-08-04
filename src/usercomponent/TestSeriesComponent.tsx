@@ -26,7 +26,7 @@ export const TestSeriesCard: React.FC<any> = ({ testSeries: series }) => {
             initial={{ opacity: 0, x: 20 }}
             animate={{ opacity: 1, x: 0 }}
             transition={{ delay: 0.3 }}
-            className="sticky top-20 lg:-mt-30 overflow-hidden sm:p-5"
+            className="sticky top-20 lg:-mt-0 overflow-hidden sm:p-5"
         >
             <div className="p-[1.5px] rounded-2xl overflow-hidden w-full bg-gradient-to-b from-[#686868]/0 via-[#686868]/60 to-[#686868]">
                 <div className="relative rounded-2xl h-full bg-white p-2 overflow-hidden">
@@ -234,43 +234,125 @@ export const TestSeriesTabs: React.FC<TestSeriesTabsProps> = ({
                         className="space-y-6"
                     >
                         <h3 className="text-xl font-bold text-gray-900 ">All Tests</h3>
-                        {testSeries?.tests?.map((testItem, index) => (
-                            <div className="p-[1.1px] rounded-2xl relative bg-gradient-to-b from-[#686868]/0 via-[#686868] to-[#686868]">
-                                <div className="absolute -top-4 left-4 bg-gradient-to-r uppercase shadow from-[#2F2F2F] via-[#686868]/80 to-[#2F2F2F] text-white text-sm font-medium px-3 py-2 rounded-lg">
-                                    {testSeries?.category.name} Test {index + 1}
-                                </div>
-                                <div className="rounded-2xl bg-gradient-to-r from-[#EBEBEB] via-[#ffffff] to-[#EBEBEB] p-4 flex justify-between items-start">
-                                    <div className="space-y-2 mt-2">
-                                        <span className="text-[#FF7046] font-medium">{testItem?.title}</span>
-                                        <p className="text-sm text-gray-700">
-                                            <span className="text-[#FF7046] font-semibold">{testItem?.totalQuestions}</span> Questions{" "}
-                                            | <span className="text-[#FF7046] font-semibold">{testItem?.totalDurationMinutes}</span> Mins{" "}
-                                            | Type {" "}<span className="text-[#FF7046] font-semibold uppercase">- {testItem?.testType}</span>
-                                            | Difficulty Label {" "}<span className="text-[#FF7046] font-semibold uppercase">- {testItem?.difficultyLabel}</span>
-                                        </p>
-                                        <p className="text-sm text-gray-600 p-0 m-0">
-                                            {testItem?.description}
-                                        </p>
+                        {testSeries?.tests?.map((testItem, index) => { 
+                          
+                            
+                            return (
+                           <div className="p-[0.8px] rounded-xl bg-gradient-to-b from-white via-[#2B2B2B] to-black ">
+  <div className="w-full rounded-xl bg-gradient-to-br from-[#FFFFFF] via-[#F8F8F8] to-[#EFEFEF] overflow-hidden transition-all hover:shadow-sm">
 
-                                        {/* <div className="flex items-center gap-2 text-sm text-gray-600">
-                                            <CalendarDays className="h-4 w-4" />
-                                            Held on Jan 07, 2026 at 09:00 AM
-                                        </div> */}
-                                    </div>
+    {/* Badge */}
+    <div className="">
+      <span className="inline-flex items-center rounded-full bg-[#FF6A3D] px-3 py-1 text-sm font-semibold text-white uppercase">
+        {testSeries?.category?.name} Test {index + 1}
+      </span>
+    </div>
 
-                                    <div className="flex flex-col items-center justify-center text-gray-500">
-                                        {testItem?.pricing?.isFree ?
-                                            <button onClick={() => navigate(`/gmat/tests/${testItem?._id}`)} className='p-2 rounded-xl bg-[#FF7046] px-4 shadow  text-white hover:bg-[#2F2F2F]'>
-                                                Start Test
-                                            </button> : <><div className="h-10 w-10 rounded-full bg-[#FFE1D6] flex items-center justify-center">
-                                                <LockIcon className="h-5 w-5 text-[#2F2F2F]" />
-                                            </div>
-                                            <span className="text-xs mt-1">Locked</span></>}
-                                    </div>
-                                </div>
-                            </div>
+    {/* Card Body */}
+    <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 px-4 py-5">
 
-                        ))}
+      {/* Left */}
+      <div className="flex-1">
+
+        <h3 className="text-lg font-semibold text-[#FF6A3D] ">
+          {testItem?.testData?.title}
+        </h3>
+        {/* Description */}
+        <p className="text-base text-gray-600 ">
+          {testItem?.testData?.description}
+        </p>
+
+        {/* Top Info */}
+        <div className="flex flex-wrap items-center text-base gap-y-2">
+
+          <div className="flex items-center">
+            <FileText className="w-4 h-4 text-gray-500 mr-2" />
+            <span className="text-[#FF6A3D] font-semibold">
+              {testItem?.testData?.totalQuestions}
+            </span>
+            <span className="ml-1 text-[#555]">Questions</span>
+          </div>
+
+          <span className="mx-3 text-gray-400 hidden sm:block">|</span>
+
+          <div>
+            <span className="text-[#FF6A3D] font-semibold">
+              {testItem?.testData?.totalDurationMinutes}
+            </span>
+            <span className="ml-1 text-[#555]">Mins</span>
+          </div>
+
+          <span className="mx-3 text-gray-400 hidden sm:block">|</span>
+
+          <div>
+            <span className="text-[#555]">Type - </span>
+            <span className="text-[#FF6A3D] font-semibold uppercase">
+              {testItem?.testData?.testType}
+            </span>
+          </div>
+
+          <span className="mx-3 text-gray-400 hidden sm:block">|</span>
+
+          <div>
+            <span className="text-[#555]">Difficulty - </span>
+            <span className="text-[#FF6A3D] font-semibold uppercase">
+              {testItem?.testData?.difficultyLabel}
+            </span>
+          </div>
+
+        </div>
+
+        <div className="flex flex-wrap items-center text-base gap-y-2">
+<div className="flex items-center">
+            <FileText className="w-4 h-4 text-gray-500 mr-2" />
+            <span className="text-[#FF6A3D] font-semibold">
+              {testItem?.accessDays}
+            </span>
+            <span className="ml-1 text-[#555]">Days Access</span>
+          </div>
+        </div>
+
+       
+
+        {/* Optional Date */}
+        {/* <div className="flex items-center gap-2 mt-4 text-[#555] text-base">
+          <CalendarDays className="w-4 h-4" />
+          Held on Jan 07, 2026 at 09:00 AM
+        </div> */}
+
+      </div>
+
+      {/* Right */}
+      <div className="flex flex-row md:flex-col items-center justify-center gap-3 md:min-w-[140px]">
+
+        {testItem?.pricing?.isFree ? (
+          <button
+            onClick={() => navigate(`/gmat/tests/${testItem?._id}`)}
+            className="rounded-xl bg-[#FF7046] px-6 py-3 text-white font-semibold hover:bg-[#2F2F2F] transition"
+          >
+            Start Test
+          </button>
+        ) : (
+          <>
+            <div className="w-12 h-12 rounded-full bg-[#FFE8A3] flex items-center justify-center -mt-4">
+              <LockIcon className="w-8 h-8 text-black"  />
+            </div>
+
+            <p className="text-xl text-[#555] font-medium">
+              Locked
+            </p>
+          </>
+        )}
+
+      </div>
+
+    </div>
+  </div>
+</div>
+
+                        )})}
+
+                    
                     </motion.div>
                 );
 

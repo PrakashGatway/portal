@@ -79,12 +79,14 @@ export const MockTestCard = ({ test }: { test: TestTemplate }) => {
         ? "border border-[#FF6A3D]"
         : "border border-transparent"
     }
+    dark:bg-gray-800
     bg-gradient-to-br from-[#FFF9F2] via-[#FFF3DE] to-[#FFF9F4]
-    hover:-translate-y-1 hover:shadow-xl
+    
+    hover:-translate-y-1 hover:shadow-xl 
   `}
 >
   {/* Top Light Gradient */}
-  <div className="absolute inset-x-0 top-0 h-36 bg-gradient-to-b from-[#FFE8A3]/50 via-[#FFF6D6]/20 to-transparent" />
+  <div className="absolute inset-x-0 top-0 h-36 bg-gradient-to-b from-[#FFE8A3]/50 via-[#FFF6D6]/20 to-transparent " />
 
   <div className="relative  p-6  flex flex-col h-full min-h-[320px]">
     {/* Header */}
@@ -116,7 +118,7 @@ export const MockTestCard = ({ test }: { test: TestTemplate }) => {
 
     {/* Info Cards */}
   <div className= "mt-auto">
-      <div className=" grid grid-cols-2 gap-8 px-2">
+      <div className=" grid grid-cols-2 gap-2 lg:gap-8 lg:px-2">
       {/* Duration */}
       <div className="rounded-2xl bg-white px-4 py-2 shadow-[0_6px_15px_rgba(0,0,0,0.08)]">
         <div className="flex items-center gap-3">
@@ -124,7 +126,7 @@ export const MockTestCard = ({ test }: { test: TestTemplate }) => {
 
           <div>
             <p className="text-xs font-bold text-gray-500">Duration</p>
-            <p className="text-base font-semibold text-[#FF6A3D]">
+            <p className="text-sm lg:text-base font-semibold text-[#FF6A3D]">
               {test.totalDurationMinutes || 0} Min
             </p>
           </div>
@@ -138,7 +140,7 @@ export const MockTestCard = ({ test }: { test: TestTemplate }) => {
 
           <div>
             <p className="text-xs font-bold text-gray-500">Questions</p>
-            <p className="text-base font-semibold text-[#FF6A3D]">
+            <p className="text-sm lg:text-base font-semibold text-[#FF6A3D]">
               {test.totalQuestions || 0}
             </p>
           </div>
@@ -490,59 +492,14 @@ const active = "reading";
                     </div>
                 </motion.div>
 
-                  <div className="w-full px-3 md:px-0">
-      <div className="overflow-hidden rounded-2xl bg-white shadow-[0_2px_12px_rgba(0,0,0,0.08)] border border-gray-100">
-        <div className="grid grid-cols-2 md:grid-cols-4">
-          {tabs.map((tab, index) => {
-            const Icon = tab.icon;
-            const isActive = active === tab.id;
-
-            return (
-              <button
-                key={tab.id}
-                className={`relative flex items-center justify-center gap-2 md:gap-3 h-16 md:h-[50px] transition-all duration-300
-                ${
-                  index !== tabs.length - 1
-                    ? "border-r border-gray-200"
-                    : ""
-                }`}
-              >
-                <Icon
-                  size={22}
-                  strokeWidth={1.8}
-                  className={`transition-all duration-300 ${
-                    isActive
-                      ? "text-[#ff6b35]"
-                      : "text-gray-700"
-                  }`}
-                />
-
-                <span
-                  className={`text-sm md:text-lg font-medium transition-all duration-300 ${
-                    isActive
-                      ? "text-[#ff6b35]"
-                      : "text-gray-800"
-                  }`}
-                >
-                  {tab.name}
-                </span>
-
-                {isActive && (
-                  <span className="absolute bottom-0 left-1/2 -translate-x-1/2 h-[5px] w-44 max-w-[80%] rounded-tl-2xl rounded-tr-2xl bg-[#ff6b35]" />
-                )}
-              </button>
-            );
-          })}
-        </div>
-      </div>
-    </div>
+               
 
                 {/* Results */}
                 <motion.div
                     initial={{ opacity: 0, y: 20 }}
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ delay: 0.2 }}
-                    className="bg-white p-8 my-6 rounded-2xl"
+                    className="bg-white p-8 my-6 rounded-2xl dark:bg-gray-800"
                 >
                     {loading ? (
                         <div className="grid grid-cols-2 md:grid-cols-2 xl:grid-cols-5 gap-5">
@@ -603,7 +560,7 @@ const active = "reading";
                     ) : (
                         <>
                             
-                            <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-3 gap-1 sm:gap-8 py-0">
+                            <div className="grid grid-cols-1 md:grid-cols-3 xl:grid-cols-3 gap-1 gap-4 sm:gap-8 py-0">
                                 <AnimatePresence>
                                     {filteredTests.map((test) => (
                                         <motion.div

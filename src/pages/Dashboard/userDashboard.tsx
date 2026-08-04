@@ -21,7 +21,8 @@ import {
     Filter,
     Search,
     Star,
-    Bell
+    Bell,
+    ChevronLeft
 } from 'lucide-react';
 import {
     XAxis, Tooltip,
@@ -380,18 +381,18 @@ const QuickActions = () => {
     );
 };
 
-const HeaderBanner = ({ data }) => (
+const HeaderBanner = ({ data, user }) => (
     <section className="w-full ">
-        <div className="relative  rounded-3xl bg-[#FF764B] min-h-[220px] md:min-h-[280px] lg:min-h-[250px] px-6 sm:px-10 lg:px-8 flex flex-col md:flex-row items-center justify-between">
+        <div className="relative  rounded-3xl  bg-[#FF764B] min-h-[220px] md:min-h-[280px] lg:min-h-[250px] px-6 sm:px-10 lg:px-8 flex flex-col md:flex-row items-center justify-between">
 
             {/* Left Content */}
             <div className="relative z-10 w-full md:w-full text-center md:text-left py-8 md:py-0">
                 <h3 className="text-white text-2xl sm:text-3xl md:text-4xl font-medium">
-                    Hi Rohan!
+                    Hi {user?.name}!
                 </h3>
 
                 <h1 className="mt-2 text-white font-black uppercase leading-none text-[42px] sm:text-[60px] md:text-[72px] lg:text-[86px]">
-                    IELTS EXAM
+                    {user?.category?.name} EXAM
                 </h1>
 
                 <p className="mt-4 text-white text-base sm:text-lg md:text-xl font-medium">
@@ -400,7 +401,7 @@ const HeaderBanner = ({ data }) => (
             </div>
 
             {/* Right Illustration */}
-            <div className="relative w-full md:w-2/5 flex justify-center items-end mt-6 md:-mt-16">
+            <div className="relative lg:block hidden w-full md:w-2/5 flex justify-center items-end mt-6 md:-mt-16">
 
                 {/* Paper */}
                 <img
@@ -419,7 +420,7 @@ const HeaderBanner = ({ data }) => (
 import "keen-slider/keen-slider.min.css";
 import { useKeenSlider } from "keen-slider/react";
 import { toast } from 'react-toastify';
-import { Link } from 'react-router-dom';
+import { Link } from 'react-router';
 
 // ==================== MAIN DASHBOARD COMPONENT ====================
 const GREDashboard = () => {
@@ -682,12 +683,12 @@ const GREDashboard = () => {
     return (
 
         <div className=" mx-auto max-w-7xl">
-            <div className='grid grid-cols-[1.5fr_0.5fr] gap-6 my-4'>
-                <HeaderBanner data={data} />
+            <div className='grid grid-cols-1 lg:grid-cols-[1.5fr_0.5fr] gap-6 my-4'>
+                <HeaderBanner data={data} user={user} />
 
                 {(
                     <div>
-                        <div className=" rounded-[28px] border border-[#FFE7DE] bg-white p-4  shadow-[0_10px_40px_rgba(255,119,51,0.12)]">
+                        <div className=" rounded-3xl  bg-white dark:bg-gray-800 p-4 ">
                             {/* Top */}
                             <div className="flex items-start gap-4">
                                 {/* <Image
@@ -703,11 +704,11 @@ const GREDashboard = () => {
 
 
                                 <div className="flex-1">
-                                    <p className="text-gray-500 text-sm font-medium">
+                                    <p className="text-gray-500 text-sm font-medium dark:text-white">
                                         Your Counsellor
                                     </p>
 
-                                    <h3 className="text-base leading-none font-bold text-[#222] mt-1">
+                                    <h3 className="text-base leading-none font-bold text-[#222] mt-1 dark:text-white">
                                         Lavisha
                                     </h3>
 
@@ -723,7 +724,7 @@ const GREDashboard = () => {
                                             ))}
                                         </div>
 
-                                        <span className="text-sm font-semibold text-gray-400">
+                                        <span className="text-sm font-semibold text-gray-400 dark:text-gray-300">
                                             4.9 · 200+ students
                                         </span>
                                     </div>
@@ -731,13 +732,14 @@ const GREDashboard = () => {
                             </div>
 
                             {/* Description */}
-                            <p className="mt-6 text-[14px] text-[#6B7280] leading-6">
+                            <p className="mt-6 text-[14px] text-[#6B7280] leading-6 dark:text-gray-400">
                                 Specializes in Canada & UK admissions.
                                 <br />
                                 Available Mon–Fri, 10am–7pm IST.
                             </p>
 
                             {/* Button */}
+                            <Link to="/support">
                             <button
                                 className="
         mt-4
@@ -750,13 +752,11 @@ const GREDashboard = () => {
         text-base
         font-semibold
         text-white
-        transition-all
-        hover:scale-[1.02]
-        hover:shadow-[0_12px_35px_rgba(255,98,41,0.45)]
+       
       "
                             >
                                 Book a Session →
-                            </button>
+                            </button></Link>
                         </div>
 
                     </div>
@@ -773,240 +773,220 @@ const GREDashboard = () => {
 
                             <div className="w-full mx-auto overflow-hidden">
 
-                                <div className="keen-slider" ref={sliderRef3}>
+                                <div className="keen-slider overflow-hidden rounded-3xl" ref={sliderRef3}>
                                     {
                                         purchase.map((item) => (
-                                       
-                                                <div className="relative bg-white rounded-3xl  p-6 lg:p-4 keen-slider__slide" >
+
+                                            <div className="relative dark:bg-gray-800 bg-white rounded-3xl overflow-hidden p-6 lg:p-4 keen-slider__slide" >
 
 
 
-                                                    <div className="grid grid-cols-1 xl:grid-cols-[0.8fr_1.2fr] gap-4 ">
+                                                <div className="grid grid-cols-1 xl:grid-cols-[0.8fr_1.2fr] lg:gap-4 ">
 
-                                                        {/* Left Image */}
-                                                        <div className="flex flex-col gap-4 py-4 px-2">
-                                                            <div><h2 className="text-2xl font-bold text-[#202020]">
-                                                                My Courses
-                                                            </h2></div>
+                                                    {/* Left Image */}
+                                                    <div className="flex flex-col gap-4 lg:py-4 px-2">
+                                                        <div><h2 className="text-xl lg:-mt-4 lg:mb-4 lg:text-2xl font-bold text-[#202020] dark:text-white">
+                                                            My Courses
+                                                        </h2></div>
 
-                                                            <div className='rounded-xl overflow-hidden'> <img
-                                                                src={`${ImageBaseUrl}/${item?.item?.thumbnail.url}` || "/images/course-thumbnail.webp"}
-                                                                alt=""
-                                                                className="w-full h-[230px] lg:h-full  object-contain"
-                                                            /></div>
-                                                        </div>
-
-
-                                                        <div className='flex flex-col gap-4'>
-                                                            {/* Center */}
-                                                            <div className="xl:col-span-3">
-                                                                <div className='flex'>
-                                                                    <div>
-                                                                        <h3 className="text-lg font-bold text-gray-900">
-                                                                            {item?.item?.title}
-                                                                        </h3>
-
-                                                                        <p className="text-gray-500  text-sm ">
-                                                                            {item?.item?.description?.length > 100 ? item?.item?.description?.substring(0, 100) + "..." : item?.item?.description}
-                                                                        </p>
-                                                                    </div>
-                                                                    <div className="bg-[#FFF3EC] w-1/2 mx-auto rounded-2xl p-2 mb-5">
-                                                                        <div className='flex gap-3 justify-center items-center'>
-                                                                            <Target className='text-[#FF5A14] ' />
-                                                                            <div>
-                                                                                <p className="text-xs text-center font-semibold uppercase text-gray-500">
-                                                                                    Target Band
-                                                                                </p>
-
-                                                                                <h2 className="text-sm font-bold text-[#FF5A14]  text-left">
-                                                                                    7+
-                                                                                </h2>
-
-                                                                            </div>
-
-
-                                                                        </div>
-
-
-
-                                                                    </div>
-
-                                                                </div>
-
-
-                                                            </div>
-
-                                                            {/* Right */}
-
-                                                            <div className="flex gap-6">
-
-
-                                                                <div className="flex flex-col lg:flex-col items-center gap-2 mt-4">
-
-                                                                    {/* Progress */}
-
-                                                                    <div className="relative w-30 h-30">
-
-                                                                        <svg
-                                                                            className="w-full h-full -rotate-90"
-                                                                            viewBox="0 0 120 120"
-                                                                        >
-                                                                            <circle
-                                                                                cx="60"
-                                                                                cy="60"
-                                                                                r="50"
-                                                                                fill="none"
-                                                                                stroke="#F2F2F2"
-                                                                                strokeWidth="10"
-                                                                            />
-
-                                                                            <circle
-                                                                                cx="60"
-                                                                                cy="60"
-                                                                                r="50"
-                                                                                fill="none"
-                                                                                stroke="#FF5A14"
-                                                                                strokeWidth="10"
-                                                                                strokeLinecap="round"
-                                                                                strokeDasharray={314}
-                                                                                strokeDashoffset={314 - (314 * progress) / 100}
-                                                                            />
-                                                                        </svg>
-
-                                                                        <div className="absolute inset-0 flex flex-col justify-center items-center">
-                                                                            <h2 className="text-base font-bold">{progress}%</h2>
-                                                                            <span className="text-xs text-gray-500 font-semibold mt-1">
-                                                                                COMPLETE
-                                                                            </span>
-                                                                        </div>
-                                                                    </div>
-
-                                                                    {/* Buttons */}
-
-                                                                    <div className="flex items-center  gap-2 w-full">
-
-                                                                        <button className="bg-[#FF5A14] hover:bg-[#f04d08] text-xs text-white rounded-xl py-3 px-4 flex gap-2 items-center justify-center  font-semibold transition">
-                                                                            <Play size={18} fill="white" />
-                                                                            CONTINUE LEARNING
-                                                                        </button>
-
-
-
-                                                                    </div>
-                                                                </div>
-
-
-                                                                {/* Stats */}
-
-                                                                <div className="space-y-2 border-l border-gray-100 pl-4">
-
-                                                                    <div className="flex gap-4 items-start">
-
-                                                                        <div className="w-10 h-10 rounded-xl bg-orange-50 flex items-center justify-center">
-                                                                            <BookOpen size={22} />
-                                                                        </div>
-
-                                                                        <div>
-                                                                            <p className="text-gray-500 text-base">
-                                                                                Lessons Completed
-                                                                            </p>
-
-                                                                            <h3 className="font-bold text-sm">
-                                                                                48 / 60
-                                                                                <span className="font-normal text-base text-gray-500">
-                                                                                    {" "}
-                                                                                    Lessons
-                                                                                </span>
-                                                                            </h3>
-                                                                        </div>
-
-                                                                    </div>
-
-                                                                    <hr />
-
-                                                                    <div className="flex gap-4 items-start">
-
-                                                                        <div className="w-10 h-10 rounded-xl bg-orange-50 flex items-center justify-center">
-                                                                            <Clock3 size={22} />
-                                                                        </div>
-
-                                                                        <div>
-                                                                            <p className="text-gray-500 text-base">
-                                                                                Last Activity
-                                                                            </p>
-
-                                                                            <h3 className="font-bold text-sm">
-                                                                                Today
-                                                                            </h3>
-                                                                        </div>
-
-                                                                    </div>
-
-                                                                    <hr />
-
-                                                                    <div className="flex gap-4 items-start">
-
-                                                                        <div className="w-10 h-10 rounded-xl bg-orange-50 flex items-center justify-center">
-                                                                            <CalendarDays
-                                                                                size={22}
-
-                                                                            />
-                                                                        </div>
-
-                                                                        <div>
-                                                                            <p className="text-gray-500 text-base">
-                                                                                Batch Validity
-                                                                            </p>
-
-                                                                            <h3 className="font-bold text-sm text-[#FF5A14]">
-                                                                                120
-                                                                                <span className="text-gray-500 text-base font-normal">
-                                                                                    {" "}
-                                                                                    Days Left
-                                                                                </span>
-                                                                            </h3>
-                                                                        </div>
-
-                                                                    </div>
-
-                                                                </div>
-
-                                                            </div>
-                                                        </div>
-
-
+                                                        <div className='rounded-xl overflow-hidden'> <img
+                                                            src={`${ImageBaseUrl}/${item?.item?.thumbnail.url}` || "/images/course-thumbnail.webp"}
+                                                            alt=""
+                                                            className="w-full h-[140px] lg:h-full  object-contain"
+                                                        /></div>
                                                     </div>
 
-                                                    {/* Right Arrow */}
 
-                                                    <button onClick={() => instanceRef.current?.next()} className="hidden xl:flex absolute right-0 top-1/2 -translate-y-1/2 w-10 h-10 rounded-full border items-center justify-center hover:bg-orange-50">
+                                                    <div className='flex flex-col gap-4'>
+                                                        {/* Center */}
+                                                        <div className="xl:col-span-3 px-2 lg:px-0">
+                                                            <div className='flex gap-2 '>
+                                                                <div>
+                                                                    <h3 className="text-lg font-bold text-gray-900 dark:text-white">
+                                                                        {item?.item?.title}
+                                                                    </h3>
+
+                                                                    <p className="text-gray-500  text-sm dark:text-gray-400 ">
+                                                                        {item?.item?.shortDescription?.length > 100 ? item?.item?.shortDescription?.substring(0, 100) + "..." : item?.item?.shortDescription}
+                                                                    </p>
+                                                                </div>
+
+
+                                                            </div>
+
+
+                                                        </div>
+
+                                                        {/* Right */}
+
+                                                        <div className="flex flex-col lg:flex-row gap-8 lg:gap-6">
+
+
+                                                            <div className="flex flex-col lg:flex-col items-center gap-2 lg:mt-4 mb-4 lg:mb-0">
+
+                                                                {/* Progress */}
+
+                                                                <div className="relative w-30 h-30 hidden lg:block">
+
+                                                                    <svg
+                                                                        className="w-full h-full -rotate-90"
+                                                                        viewBox="0 0 120 120"
+                                                                    >
+                                                                        <circle
+                                                                            cx="60"
+                                                                            cy="60"
+                                                                            r="50"
+                                                                            fill="none"
+                                                                            stroke="#F2F2F2"
+                                                                            strokeWidth="10"
+                                                                        />
+
+                                                                        <circle
+                                                                            cx="60"
+                                                                            cy="60"
+                                                                            r="50"
+                                                                            fill="none"
+                                                                            stroke="#FF5A14"
+                                                                            strokeWidth="10"
+                                                                            strokeLinecap="round"
+                                                                            strokeDasharray={314}
+                                                                            strokeDashoffset={314 - (314 * item?.percentage) / 100}
+                                                                        />
+                                                                    </svg>
+
+                                                                    <div className="absolute inset-0 flex flex-col justify-center items-center dark:text-white">
+                                                                        <h2 className="text-base font-bold">{item?.percentage}%</h2>
+                                                                        <span className="text-xs text-gray-500 dark:text-gray-400 font-semibold mt-1">
+                                                                            COMPLETE
+                                                                        </span>
+                                                                    </div>
+                                                                </div>
+
+                                                                {/* Buttons */}
+
+                                                                <div className="flex items-center  gap-2 w-full">
+
+                                                                    <Link to={`/course/${item?.item?.slug}?isCurriculum=true`} className="bg-[#FF5A14] hover:bg-[#f04d08] text-xs text-white rounded-xl py-3 px-4 flex gap-2 items-center justify-center  font-semibold transition">
+                                                                        <Play size={18} fill="white" />
+                                                                        CONTINUE LEARNING
+                                                                    </Link>
+
+
+
+                                                                </div>
+                                                            </div>
+
+
+                                                            {/* Stats */}
+
+                                                            <div className="space-y-3.5  border-l border-gray-100 pl-4 lg:pl-2">
+
+                                                                <div className="flex gap-4 items-start">
+
+                                                                    <div className="w-10 h-10 rounded-xl bg-orange-50 dark:bg-gray-600 flex items-center justify-center">
+                                                                        <BookOpen size={22} className="text-[#FF5B1F] dark:text-white" />
+                                                                    </div>
+
+                                                                    <div>
+                                                                        <p className="text-gray-500 dark:text-white text-base">
+                                                                            Language
+                                                                        </p>
+
+                                                                        <h3 className="font-bold text-sm dark:text-white">
+                                                                            {item?.item?.language}
+                                                                        </h3>
+                                                                    </div>
+
+                                                                </div>
+
+                                                                <hr />
+
+                                                                <div className="flex gap-4 items-start">
+
+                                                                    <div className="w-10 h-10 rounded-xl bg-orange-50 flex items-center justify-center dark:bg-gray-600">
+                                                                        <Clock3 size={22} className="text-[#FF5B1F] dark:text-white" />
+                                                                    </div>
+
+                                                                    <div>
+                                                                        <p className="text-gray-500 dark:text-white text-base">
+                                                                            Level
+                                                                        </p>
+
+                                                                        <h3 className="font-bold text-sm dark:text-white">
+                                                                            {item?.item?.level}
+                                                                        </h3>
+                                                                    </div>
+
+                                                                </div>
+
+                                                                <hr />
+
+                                                                <div className="flex gap-4 items-start">
+
+                                                                    <div className="w-10 h-10 rounded-xl bg-orange-50 flex items-center justify-center dark:bg-gray-600">
+                                                                        <CalendarDays
+                                                                            size={22}
+                                                                            className="text-[#FF5B1F] dark:text-white"
+                                                                        />
+                                                                    </div>
+
+                                                                    <div>
+                                                                        <p className="text-gray-500 dark:text-white text-base">Days Left</p>
+
+                                                                        <h3 className="font-bold text-sm text-[#FF5A14]">
+                                                                            {Math.max(
+                                                                                0,
+                                                                                Math.ceil(
+                                                                                    (new Date(item?.accessExpiresAt) - new Date()) /
+                                                                                    (1000 * 60 * 60 * 24)
+                                                                                )
+                                                                            )}{" "}
+                                                                            Days
+                                                                        </h3>
+                                                                    </div>
+
+                                                                </div>
+
+                                                            </div>
+
+                                                        </div>
+                                                    </div>
+
+
+                                                </div>
+
+                                                {/* Right Arrow */}
+                                                <div className='flex justify-end items-center gap-6 absolute right-9 bottom-7 '>
+
+
+                                                    <button onClick={() => instanceRef.current?.prev()} className="hidden xl:flex  w-10 h-10 rounded-full border items-center justify-center hover:bg-orange-50">
+                                                        <ChevronLeft className="text-[#FF5A14]" />
+                                                    </button>
+
+                                                    <button onClick={() => instanceRef.current?.next()} className="hidden xl:flex  w-10 h-10 rounded-full border items-center justify-center hover:bg-orange-50">
                                                         <ChevronRight className="text-[#FF5A14]" />
                                                     </button>
 
-                                                    {/* Dots */}
 
-                                                    <div className="flex justify-center gap-2 mt-3">
-                                                        <span className="w-2 h-2 rounded-full bg-[#FF5A14]" />
-                                                        <span className="w-2 h-2 rounded-full bg-gray-300" />
-                                                        <span className="w-2 h-2 rounded-full bg-gray-300" />
-                                                    </div>
+
                                                 </div>
-                                        
+                                            </div>
+
                                         )
                                         )} </div>
                             </div>
                         </section>
 
-                        <div className="bg-white rounded-2xl border border-[#FFDCCB] shadow-[0_10px_40px_rgba(255,119,51,0.12)] overflow-y-auto max-h-[330px]">
+                        <div className="bg-white dark:bg-gray-800 rounded-2xl overflow-y-auto max-h-[300px]">
                             {/* Header */}
                             <div className="px-5 py-4 border-b border-gray-50 flex items-center justify-between">
                                 <div className="flex items-center gap-2">
                                     <div className="relative">
-                                        <Bell className="w-5 h-5 text-gray-700" />
+                                        <Bell className="w-5 h-5 text-gray-700 dark:text-gray-300" />
                                         <span className="absolute -top-1 -right-1 w-2.5 h-2.5 bg-rose-500 rounded-full border-2 border-white" />
                                     </div>
 
-                                    <h3 className="text-base font-bold text-gray-900">
+                                    <h3 className="text-base font-bold text-gray-900 dark:text-white">
                                         Alerts
                                     </h3>
 
@@ -1015,7 +995,7 @@ const GREDashboard = () => {
                                     </span>
                                 </div>
 
-                                <span className="px-2 py-0.5 rounded-full bg-rose-50 text-rose-600 text-[12px] font-bold border border-rose-100">
+                                <span className="px-2 py-0.5 rounded-full bg-rose-50 text-rose-600  text-[12px] font-bold border border-rose-100">
                                     3 Critical
                                 </span>
                             </div>
@@ -1026,10 +1006,10 @@ const GREDashboard = () => {
                                 {/* Alert 1 */}
                                 <div
                                     //   onClick={() => router.push("/dashboard/settings")}
-                                    className="rounded-xl bg-[#FFF6F6] p-4 cursor-pointer"
+                                    className="rounded-xl bg-[#FFF6F6] dark:bg-gray-800 p-4 cursor-pointer"
                                 >
-                                    <div className="flex items-center gap-2 mb-2">
-                                        <h4 className="text-sm font-semibold text-gray-900">
+                                    <div className="flex items-center gap-2 ">
+                                        <h4 className="text-sm font-semibold text-gray-900 dark:text-white">
                                             Universities - Missing
                                         </h4>
 
@@ -1038,7 +1018,7 @@ const GREDashboard = () => {
                                         </span>
                                     </div>
 
-                                    <p className="text-gray-500 text-sm leading-7">
+                                    <p className="text-gray-500 text-sm  dark:text-gray-400">
                                         No applications submitted. Please submit at least 1 university
                                         application
                                     </p>
@@ -1052,10 +1032,10 @@ const GREDashboard = () => {
                                 {/* Alert 2 */}
                                 <div
                                     //   onClick={() => router.push("/dashboard/settings")}
-                                    className="rounded-xl bg-[#FFF6F6] p-4 cursor-pointer"
+                                    className="rounded-xl bg-[#FFF6F6] dark:bg-gray-800 p-4 cursor-pointer"
                                 >
                                     <div className="flex items-center gap-2 mb-2">
-                                        <h4 className="text-sm font-semibold text-gray-900">
+                                        <h4 className="text-sm font-semibold text-gray-900 dark:text-white">
                                             Offer Letter - Missing
                                         </h4>
 
@@ -1064,7 +1044,7 @@ const GREDashboard = () => {
                                         </span>
                                     </div>
 
-                                    <p className="text-gray-500 text-sm leading-7">
+                                    <p className="text-gray-500 text-sm leading-7 dark:text-gray-400">
                                         No applications to receive offers.
                                     </p>
 
@@ -1083,17 +1063,17 @@ const GREDashboard = () => {
                     <section className="w-full  py-6 md:py-1">
                         <div className="max-w-7xl mx-auto ">
 
-                            <div className="bg-white rounded-3xl shadow-sm border border-[#F5F5F5] p-5 md:p-8 lg:p-4">
+                            <div className="bg-white dark:bg-gray-800 rounded-3xl shadow-sm p-5 md:p-8 lg:p-4">
 
                                 {/* Heading */}
 
-                                <h2 className="text-[28px] md:text-[36px] lg:text-2xl font-bold text-[#181818] mb-4">
+                                <h2 className="text-xl md:text-[36px] lg:text-2xl font-bold text-[#181818] mb-4 dark:text-white md:px-2">
                                     Quick Access
                                 </h2>
 
                                 {/* Cards */}
 
-                                <div className="grid grid-cols-2 lg:grid-cols-4 ">
+                                <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 lg:gap-0">
 
                                     {quickAccess.map((item, index) => {
                                         const Icon = item.icon;
@@ -1105,20 +1085,21 @@ const GREDashboard = () => {
                                             >
                                                 {/* Icon */}
 
-                                                <div className="relative bg-white">
+                                                <div className="relative bg-white dark:bg-gray-800">
 
                                                     {/* Glow */}
 
-                                                    <div className="absolute inset-0 bg-[#FFEFE7] rounded-full blur-xl scale-110 opacity-70" />
+                                                    <div className="absolute inset-0 bg-[#FFEFE7] dark:bg-gray-800 rounded-full blur-xl scale-110 opacity-70" />
 
                                                     {/* Circle */}
 
                                                     <div className="relative flex items-center justify-center
-                      w-24 h-24
+                      w-20 h-20
                       sm:w-28 sm:h-28
                       md:w-22 md:h-22
                       rounded-full
                       bg-white
+                      dark:bg-gray-500
                       shadow-lg
                       border
                       p-1
@@ -1126,10 +1107,10 @@ const GREDashboard = () => {
                     ">
 
 
-                                                        <div className='bg-orange-100 w-full h-full rounded-full flex justify-center items-center'>
+                                                        <div className='bg-orange-100 dark:bg-gray-600 w-full h-full rounded-full flex justify-center items-center'>
                                                             <div>
                                                                 <Icon
-                                                                    className="text-[#FF5B1F]"
+                                                                    className="text-[#FF5B1F] dark:text-white"
                                                                     strokeWidth={1.8}
                                                                     size={30}
                                                                 />
@@ -1148,7 +1129,7 @@ const GREDashboard = () => {
 
                                                 {/* Title */}
 
-                                                <h3 className="mt-1 text-lg sm:text-2xl md:text-xl font-bold text-[#171717] leading-tight">
+                                                <h3 className="lg:mt-1  text-sm sm:text-2xl md:text-xl font-bold text-[#171717] leading-tight dark:text-white">
                                                     {item.title}
                                                 </h3>
                                             </div>
@@ -1160,16 +1141,16 @@ const GREDashboard = () => {
                         </div>
                     </section>
 
-                    <div className="bg-white rounded-3xl p-5 md:px-6">
+                    <div className="bg-white dark:bg-gray-800 rounded-3xl p-5 md:px-6">
                         {/* Heading */}
 
-                        <h2 className="text-2xl md:text-2xl font-bold text-[#151515]">
+                        <h2 className="text-xl md:text-2xl font-bold text-[#151515] dark:text-white">
                             Browse {user?.category?.name} Courses
                         </h2>
 
                         {/* Search */}
 
-                        <div className="mt-7 flex flex-col md:flex-row gap-4">
+                        <div className="lg:mt-7 mt-2 flex flex-col md:flex-row gap-4">
                             <div className="flex-1 relative">
                                 <Search
                                     className="absolute left-5 top-6 -translate-y-1/2 text-gray-500"
@@ -1184,7 +1165,7 @@ const GREDashboard = () => {
                                 />
                             </div>
 
-                            <div className="relative group inline-block">
+                            <div className="relative group lg:inline-block hidden lg:block">
                                 <button className="h-12 px-4 rounded-2xl border border-[#FF8356] flex items-center justify-center gap-3 bg-white hover:bg-orange-50 transition">
                                     <Filter size={22} />
                                     <span className="text-base font-medium">Filters</span>
@@ -1245,10 +1226,9 @@ const GREDashboard = () => {
                                         : course?.pricing?.discount;
 
                                     const price = realPrice - (realPrice * discount) / 100;
-
                                     return (
                                         <div className=''>
-                                            <div className='bg-gradient-to-b from-[#CFCFCF] via-[#ECECEC] to-black rounded-[28px] p-[2px] relative'>
+                                            <div className='bg-gradient-to-b from-[#CFCFCF] via-[#ECECEC] to-black  rounded-[28px] p-[1px] relative '>
                                                 {course?.pricing?.earlyBird && new Date(course.pricing.earlyBird.deadline) > new Date() && (
                                                     <div className="absolute top-0 left-0 z-10">
                                                         <span className="inline-flex items-center gap-1 rounded-tl-[22px] rounded-br-[22px] bg-gradient-to-r from-[#FF6B35] to-[#FF8A3D] px-3 py-1 text-sm font-bold text-white shadow-lg">
@@ -1258,36 +1238,36 @@ const GREDashboard = () => {
                                                 )}
                                                 <div
                                                     key={course.id}
-                                                    className="rounded-[28px]  bg-white overflow-hidden shadow-sm hover:shadow-xl duration-300 keen-slider__slide relative"
+                                                    className="rounded-[28px]  bg-white dark:bg-gray-800 overflow-hidden shadow-sm hover:shadow-xl duration-300 relative keen-slider__slide"
                                                 >
 
                                                     {/* Image */}
 
                                                     <div className="rounded-2xl p-2.5 bg-gradient-to-b from-[#CFCFCF] via-[#ECECEC] to-white ">
-                                                        <div className=" rounded-2xl overflow-hidden h-50">
+                                                        <div className=" rounded-2xl overflow-hidden ">
                                                             <img
                                                                 src={course?.thumbnail?.url && `${ImageBaseUrl}/${course?.thumbnail?.url}`}
                                                                 alt=""
-                                                                className=" w-full h-full  object-cover"
+                                                                className=" w-full h-full lg:h-45 lg:object-cover"
                                                             />
                                                         </div>
                                                     </div>
 
                                                     {/* Body */}
 
-                                                    <div className="px-6 py-2">
-                                                        <h3 className="text-[20px] md:text-xl font-bold">
+                                                    <div className="px-6 pb-4 lg:py-0">
+                                                        <h3 className="text-xl md:text-xl font-bold">
                                                             <span className="text-[#FF6736]">{course.title.split(" ")[0]}</span>{" "}
-                                                            {course.title.split(" ").slice(1).join(" ")}
+                                                            <span className="dark:text-white text-base"> {course.title.split(" ").slice(1).join(" ")}</span>
                                                         </h3>
 
-                                                        <div className="mt-4 space-y-2 text-gray-600">
+                                                        <div className=" space-y-2 text-gray-600 dark:text-white">
                                                             <div className="flex items-center gap-3 text-base">
                                                                 <Radio size={20} className="text-[#FF6736]" />
                                                                 <span className='text-sm'> {course?.mode}</span>
                                                             </div>
 
-                                                            <div className="flex items-center gap-3 text-base">
+                                                            <div className="flex items-center gap-3 text-base " >
                                                                 <Calendar size={20} className="text-[#FF6736]" />
                                                                 <span className='text-sm'>Starts on {new Date(course?.schedule?.startDate).toLocaleDateString("en-GB")}</span>
                                                             </div>
@@ -1295,17 +1275,17 @@ const GREDashboard = () => {
 
                                                         {/* Price */}
 
-                                                        <div className="mt-3 flex justify-between items-end">
+                                                        <div className="mt-2 flex justify-between items-end">
                                                             <div>
-                                                                <div className="flex items-center gap-2 flex-wrap">
+                                                                <div className="flex items-center gap-2 flex-wrap dark:text-white">
                                                                     {course?.pricing?.currency}
                                                                     <span className="text-base font-bold"></span>
 
-                                                                    <span className="text-base font-bold">
+                                                                    <span className="text-base font-bold ">
                                                                         {price}
                                                                     </span>
 
-                                                                    <span className="line-through text-gray-400 text-base">
+                                                                    <span className="line-through text-gray-400 text-base dark:text-white">
                                                                         {course?.pricing?.amount} {" "}
                                                                         {course?.pricing?.currency}
                                                                     </span>
@@ -1319,18 +1299,19 @@ const GREDashboard = () => {
                                                             <Link to={`/course/${course.slug}`} className="border border-[#FF6736] rounded-2xl px-6 py-2 text-[#FF6736] text-base hover:bg-[#FF6736] hover:text-white transition ">
                                                                 Explore
                                                             </Link>
+
                                                         </div>
                                                     </div>
 
                                                     {/* Footer */}
 
-                                                    <div className="px-5 pb-5">
-                                                        <div className="rounded-full bg-[#FCE7D3] flex items-center p-2">
-                                                            <span className="bg-[#FF6D42] text-white rounded-full px-4 py-1 text-sm font-semibold">
+                                                    <div className="px-5 pb-2 mt-2 hidden lg:block">
+                                                        <div className="rounded-full bg-[#FCE7D3] dark:bg-gray-600 flex items-center p-2">
+                                                            <span className="bg-[#FF6D42] text-white rounded-full px-4 py-1 text-xs font-semibold">
                                                                 Ooshas Prep
                                                             </span>
 
-                                                            <span className="ml-3 text-gray-700 text-sm">
+                                                            <span className="ml-3 text-gray-700 text-xs dark:text-white">
                                                                 Limited Time Offer
                                                             </span>
                                                         </div>
@@ -1356,7 +1337,7 @@ const GREDashboard = () => {
                                     const price = realPrice - (realPrice * discount) / 100;
                                     return (
                                         <div className=''>
-                                            <div className='bg-gradient-to-b from-[#CFCFCF] via-[#ECECEC] to-black rounded-[28px] p-[2px] relative '>
+                                            <div className='bg-gradient-to-b from-[#CFCFCF] via-[#ECECEC] to-black  rounded-[28px] p-[1px] relative '>
                                                 {course?.pricing?.earlyBird && new Date(course.pricing.earlyBird.deadline) > new Date() && (
                                                     <div className="absolute top-0 left-0 z-10">
                                                         <span className="inline-flex items-center gap-1 rounded-tl-[22px] rounded-br-[22px] bg-gradient-to-r from-[#FF6B35] to-[#FF8A3D] px-3 py-1 text-sm font-bold text-white shadow-lg">
@@ -1366,36 +1347,36 @@ const GREDashboard = () => {
                                                 )}
                                                 <div
                                                     key={course.id}
-                                                    className="rounded-[28px]  bg-white overflow-hidden shadow-sm hover:shadow-xl duration-300 relative "
+                                                    className="rounded-[28px]  bg-white dark:bg-gray-800 overflow-hidden shadow-sm hover:shadow-xl duration-300 relative "
                                                 >
 
                                                     {/* Image */}
 
                                                     <div className="rounded-2xl p-2.5 bg-gradient-to-b from-[#CFCFCF] via-[#ECECEC] to-white ">
-                                                        <div className=" rounded-2xl overflow-hidden h-50">
+                                                        <div className=" rounded-2xl overflow-hidden ">
                                                             <img
                                                                 src={course?.thumbnail?.url && `${ImageBaseUrl}/${course?.thumbnail?.url}`}
                                                                 alt=""
-                                                                className=" w-full h-full  object-cover"
+                                                                className=" w-full h-full lg:h-45 lg:object-cover"
                                                             />
                                                         </div>
                                                     </div>
 
                                                     {/* Body */}
 
-                                                    <div className="px-6 py-2">
-                                                        <h3 className="text-[20px] md:text-xl font-bold">
+                                                    <div className="px-6 pb-4 lg:py-0">
+                                                        <h3 className="text-xl md:text-xl font-bold">
                                                             <span className="text-[#FF6736]">{course.title.split(" ")[0]}</span>{" "}
-                                                            {course.title.split(" ").slice(1).join(" ")}
+                                                            <span className="dark:text-white text-base "> {course.title.split(" ").slice(1).join(" ")}</span>
                                                         </h3>
 
-                                                        <div className="mt-4 space-y-2 text-gray-600">
+                                                        <div className=" space-y-2 text-gray-600 dark:text-white">
                                                             <div className="flex items-center gap-3 text-base">
                                                                 <Radio size={20} className="text-[#FF6736]" />
                                                                 <span className='text-sm'> {course?.mode}</span>
                                                             </div>
 
-                                                            <div className="flex items-center gap-3 text-base">
+                                                            <div className="flex items-center gap-3 text-base " >
                                                                 <Calendar size={20} className="text-[#FF6736]" />
                                                                 <span className='text-sm'>Starts on {new Date(course?.schedule?.startDate).toLocaleDateString("en-GB")}</span>
                                                             </div>
@@ -1403,17 +1384,17 @@ const GREDashboard = () => {
 
                                                         {/* Price */}
 
-                                                        <div className="mt-3 flex justify-between items-end">
+                                                        <div className="mt-2 flex justify-between items-end">
                                                             <div>
-                                                                <div className="flex items-center gap-2 flex-wrap">
+                                                                <div className="flex items-center gap-2 flex-wrap dark:text-white">
                                                                     {course?.pricing?.currency}
                                                                     <span className="text-base font-bold"></span>
 
-                                                                    <span className="text-base font-bold">
+                                                                    <span className="text-base font-bold ">
                                                                         {price}
                                                                     </span>
 
-                                                                    <span className="line-through text-gray-400 text-base">
+                                                                    <span className="line-through text-gray-400 text-base dark:text-white">
                                                                         {course?.pricing?.amount} {" "}
                                                                         {course?.pricing?.currency}
                                                                     </span>
@@ -1433,13 +1414,13 @@ const GREDashboard = () => {
 
                                                     {/* Footer */}
 
-                                                    <div className="px-5 pb-5">
-                                                        <div className="rounded-full bg-[#FCE7D3] flex items-center p-2">
-                                                            <span className="bg-[#FF6D42] text-white rounded-full px-4 py-1 text-sm font-semibold">
+                                                    <div className="px-5 pb-2 mt-2 hidden lg:block">
+                                                        <div className="rounded-full bg-[#FCE7D3] dark:bg-gray-600 flex items-center p-2">
+                                                            <span className="bg-[#FF6D42]  text-white rounded-full px-4 py-1 text-xs font-semibold">
                                                                 Ooshas Prep
                                                             </span>
 
-                                                            <span className="ml-3 text-gray-700 text-sm">
+                                                            <span className="ml-3 text-gray-700 text-xs dark:text-white">
                                                                 Limited Time Offer
                                                             </span>
                                                         </div>
@@ -1460,9 +1441,9 @@ const GREDashboard = () => {
             </div>
 
             {/* BOTTOM GRID */}
-            <section className="w-full rounded-3xl bg-white p-4 sm:p-6 lg:p-7 lg:my-5">
+            <section className="w-full rounded-3xl bg-white dark:bg-gray-800 p-4 sm:p-6 lg:p-7 lg:my-5">
                 {/* Heading */}
-                <h2 className="mb-6 text-xl md:text-2xl font-bold text-[#222]">
+                <h2 className="mb-6 text-xl md:text-2xl font-bold text-[#222] dark:text-white">
                     Explore Other Test Preps
                 </h2>
 
@@ -1481,7 +1462,7 @@ const GREDashboard = () => {
 
                         const price = realPrice - (realPrice * discount) / 100;
                         return (
-                            <div className='bg-gradient-to-b from-[#CFCFCF] via-[#ECECEC] to-black p-[2px] rounded-[22px] keen-slider__slide relative'>
+                            <div className='bg-gradient-to-b from-[#CFCFCF] via-[#ECECEC] to-black dark:bg-gray-800 p-[1px] rounded-[22px] relative keen-slider__slide'>
                                 {item?.pricing?.earlyBird && new Date(item.pricing.earlyBird.deadline) > new Date() && (
                                     <div className="absolute top-0 left-0 z-10">
                                         <span className="inline-flex items-center gap-1 rounded-tl-[22px] rounded-br-[22px] bg-gradient-to-r from-[#FF6B35] to-[#FF8A3D] px-3 py-1 text-xs font-bold text-white shadow-lg">
@@ -1491,7 +1472,7 @@ const GREDashboard = () => {
                                 )}
                                 <div
                                     key={item.id}
-                                    className="overflow-hidden rounded-[22px] border border-[#d8d8d8] bg-white shadow-sm transition-all duration-300 hover:-translate-y-1 hover:shadow-xl relative"
+                                    className="overflow-hidden rounded-[22px] border border-[#d8d8d8] bg-white dark:bg-gray-800 shadow-sm "
                                 >
 
                                     {/* Banner */}
@@ -1509,33 +1490,32 @@ const GREDashboard = () => {
                                     <div className="p-4">
                                         <h3 className="text-xl font-bold leading-none">
                                             <span className="text-orange-500">{item.title.split(" ")[0]}</span>{" "}
-                                            <span className="text-black text-base font-semibold">
+                                            <span className="text-black dark:text-white text-base font-semibold">
                                                 {item.title.split(" ").slice(1).join(" ")}
                                             </span>
                                         </h3>
 
                                         {/* Price */}
-                                        <div className="mt-4 flex items-center flex-wrap gap-2">
-                                            <span className="text-base font-bold text-[#222]">
+                                        <div className="mt-4 flex items-center flex-wrap gap-2 ">
+                                            <span className="text-base font-bold text-[#222] dark:text-white">
                                                 ₹ {price}
                                             </span>
 
-                                            <span className="text-base text-gray-400 line-through">
+                                            <span className="text-base text-gray-400 line-through dark:text-white">
                                                 ₹{item.pricing?.amount}
                                             </span>
 
-                                            <span className="text-base font-semibold text-green-600">
+                                            <span className="text-base font-semibold text-green-600 dark:text-white">
                                                 {discount}%
                                             </span>
                                         </div>
 
                                         {/* Button */}
-                                        <div className='mx-auto w-1/2'>
-
-                                            <Link to={`/course/${item.slug}`} className="mt-5 py-2 w-full text-base   rounded-xl border border-[#ff5b2e] text-[#ff5b2e] font-medium transition-all duration-300 hover:bg-[#ff5b2e] hover:text-white">
+                                        <Link to={`/course/${item.slug}`} className='flex justify-center'>
+                                            <button className="mt-5 py-2  w-1/2 text-base   rounded-xl border border-[#ff5b2e] text-[#ff5b2e] font-medium transition-all duration-300 hover:bg-[#ff5b2e] hover:text-white">
                                                 Explore
-                                            </Link>
-                                        </div>
+                                            </button>
+                                        </Link>
                                     </div>
                                 </div>
                             </div>
@@ -1557,7 +1537,7 @@ const GREDashboard = () => {
 
                             const price = realPrice - (realPrice * discount) / 100;
                             return (
-                                <div className='bg-gradient-to-b from-[#CFCFCF] via-[#ECECEC] to-black p-[2px] rounded-[22px] relative'>
+                                <div className='bg-gradient-to-b from-[#CFCFCF] via-[#ECECEC] to-black dark:bg-gray-800 p-[1px] rounded-[22px] relative'>
                                     {item?.pricing?.earlyBird && new Date(item.pricing.earlyBird.deadline) > new Date() && (
                                         <div className="absolute top-0 left-0 z-10">
                                             <span className="inline-flex items-center gap-1 rounded-tl-[22px] rounded-br-[22px] bg-gradient-to-r from-[#FF6B35] to-[#FF8A3D] px-3 py-1 text-xs font-bold text-white shadow-lg">
@@ -1567,7 +1547,7 @@ const GREDashboard = () => {
                                     )}
                                     <div
                                         key={item.id}
-                                        className="overflow-hidden rounded-[22px] border border-[#d8d8d8] bg-white shadow-sm "
+                                        className="overflow-hidden rounded-[22px] border border-[#d8d8d8] bg-white dark:bg-gray-800 shadow-sm "
                                     >
 
                                         {/* Banner */}
@@ -1585,22 +1565,22 @@ const GREDashboard = () => {
                                         <div className="p-4">
                                             <h3 className="text-xl font-bold leading-none">
                                                 <span className="text-orange-500">{item.title.split(" ")[0]}</span>{" "}
-                                                <span className="text-black text-base font-semibold">
+                                                <span className="text-black dark:text-white text-base font-semibold">
                                                     {item.title.split(" ").slice(1).join(" ")}
                                                 </span>
                                             </h3>
 
                                             {/* Price */}
-                                            <div className="mt-4 flex items-center flex-wrap gap-2">
-                                                <span className="text-base font-bold text-[#222]">
+                                            <div className="mt-4 flex items-center flex-wrap gap-2 ">
+                                                <span className="text-base font-bold text-[#222] dark:text-white">
                                                     ₹ {price}
                                                 </span>
 
-                                                <span className="text-base text-gray-400 line-through">
+                                                <span className="text-base text-gray-400 line-through dark:text-white">
                                                     ₹{item.pricing?.amount}
                                                 </span>
 
-                                                <span className="text-base font-semibold text-green-600">
+                                                <span className="text-base font-semibold text-green-600 dark:text-white">
                                                     {discount}%
                                                 </span>
                                             </div>

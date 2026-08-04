@@ -43,7 +43,7 @@ export function LeftSlider() {
                         className="h-full flex items-center"
                     >
                         <div className="h-[90px] sm:h-[140px] md:h-[150px] lg:h-[160px] w-full">
-                            <img className="h-full w-full object-cover object-center rounded-4xl" src={slides[index].image} alt="" />
+                            <img className="h-full w-full lg:object-cover object-center rounded-4xl" src={slides[index].image} alt="" />
                         </div>
 
                     </motion.div>

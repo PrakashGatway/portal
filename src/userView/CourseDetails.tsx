@@ -29,7 +29,7 @@ import {
 } from "lucide-react"
 import Button from "../components/ui/button/Button"
 import api, { ImageBaseUrl } from "../axiosInstance"
-import { useNavigate, useParams } from "react-router"
+import { useLocation, useNavigate, useParams, useSearchParams } from "react-router"
 import { motion, LayoutGroup } from "framer-motion"
 import { SkeletonCard } from "../pages/Dashboard/userDashboard"
 import CourseSupportFooter from "../components/SupportFooter"
@@ -212,6 +212,16 @@ export default function CourseDetailPage() {
         }
         fetchCourse()
     }, [slug])
+
+  const location = useLocation();
+
+useEffect(() => {
+  const searchParams = new URLSearchParams(location.search);
+
+  if (searchParams.get("isCurriculum") === "true") {
+    setActiveTab("curriculum");
+  }
+}, [location.search]);
 
     useEffect(() => {
         if (activeTab === "curriculum" && course && !curriculumRef.current) {
