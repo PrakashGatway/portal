@@ -139,7 +139,9 @@ const navItems: NavItem[] = [
       { name: "Categories", path: "/blog-categories", icon: Tags }
     ]
   },
-  { icon: CreditCard, name: "Orders", path: "/all_transactions" }
+  { icon: CreditCard, name: "Orders", path: "/all_transactions" },
+  { icon: Settings, name: "Setting", path: "/setting"}
+
 ];
 
 const navItemsUser: NavItem[] = [
@@ -152,6 +154,7 @@ const navItemsUser: NavItem[] = [
   { icon: GraduationCap, name: "My Courses", path: "/my-courses" },
   { icon: Sparkles, name: "Free Quiz", path: "/Quiz" },
   { icon: Gift, name: "Offers", path: "/offers" },
+  { icon: Bell, name: "Notifications", path: "/notifications" },
   { icon: Handshake, name: "Refer & Earn", path: "/referrals" },
   { icon: History, name: "Orders History", path: "/transactions" }
 ];
@@ -209,7 +212,6 @@ const othersItems: NavItem[] = [
   { icon: Headphones, name: "Support", path: "/support" },
   { icon: Lock, name: "Our Selections", path: "/our-selection" },
   { icon: Shield, name: "Privacy Policy", path: "/privacy-policy" },
-  { icon: Settings, name: "Setting", path: "/setting"}
 ];
 
 const teacherOthersItems: NavItem[] = [

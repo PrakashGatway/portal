@@ -61,27 +61,24 @@ import MockTests from "./tests/mcqtest";
 import JobSelectionsWall from "./userView/Selection";
 import SecureMaterialViewer from "./userView/SecureMaterial";
 import Setting from "./pages/Dashboard/Setting";
-import Notifications from './pages/Notifications';
+import Notifications from "./pages/Notifications";
 
 // Define roles
 export const ROLES = {
-  ADMIN: 'admin',
-  USER: 'user',
-  EDITOR: 'editor',
-  COUNSEL: 'counselor',
+  ADMIN: "admin",
+  USER: "user",
+  EDITOR: "editor",
+  COUNSEL: "counselor",
   MANAGER: "manager",
   LEADER: "leader",
-  TEACHER: "teacher"
+  TEACHER: "teacher",
 };
 
 export default function App() {
-
   return (
     <Router>
       <AuthProvider>
-        <ToastContainer
-          style={{ zIndex: 999999 }}
-        />
+        <ToastContainer style={{ zIndex: 999999 }} />
         <Toaster position="top-center" richColors closeButton />
         <ScrollToTop />
         <Routes>
@@ -90,10 +87,8 @@ export default function App() {
           </Route> */}
 
           <Route element={<ProtectedRoute />}>
-
             <Route element={<AppLayout />}>
               <Route index path="/" element={<Home />} />
-
               //completed
               <Route path="/offers" element={<OffersPage />} />
               <Route path="/profile" element={<UserProfiles />} />
@@ -102,35 +97,41 @@ export default function App() {
               <Route path="/course/:slug" element={<CourseDetailPage />} />
               <Route path="/transactions" element={<TransactionsPage />} />
               <Route path="/referrals" element={<ReferAndEarnPage />} />
-
-
               //support
               <Route path="/support" element={<SupportPage />} />
               <Route path="/our-selection" element={<JobSelectionsWall />} />
               <Route path="/events" element={<EventCalendar />} />
-
               // my course
               <Route path="/my-courses" element={<MyCoursesPage />} />
               <Route path="/courses/:slug" element={<CourseDetailPageee />} />
-
               // study material
               <Route path="/resources" element={<StudyMaterialPage />} />
-              <Route path="/resources/:slug" element={<SecureMaterialViewer />} />
-
+              <Route
+                path="/resources/:slug"
+                element={<SecureMaterialViewer />}
+              />
               // Video player
-              <Route path="/class/:contentId/:courseId" element={<VideoPlayerPage />} />
-
+              <Route
+                path="/class/:contentId/:courseId"
+                element={<VideoPlayerPage />}
+              />
               // test series
               <Route path="/test-series" element={<MockTestsPage />} />
-              <Route path="/tests" element={<MockTests testType="full_length" />} />
-              <Route path="/practice-tests" element={<MockTests testType="sectional" />} />
+              <Route
+                path="/tests"
+                element={<MockTests testType="full_length" />}
+              />
+              <Route
+                path="/practice-tests"
+                element={<MockTests testType="sectional" />}
+              />
               <Route path="/quiz" element={<MockTests testType="quiz" />} />
-
-              <Route path="/test-series/:slug" element={<TestSeriesDetailPage />} />
-
+              <Route
+                path="/test-series/:slug"
+                element={<TestSeriesDetailPage />}
+              />
               // ilets
               <Route path="/mock-tests" element={<MockTest />} />
-
               {/* <Route path="/test/:testId" element={<TestQuestionPage/>} /> */}
               // admin
               <Route element={<ProtectedRoute roles={[ROLES.ADMIN]} />}>
@@ -138,51 +139,115 @@ export default function App() {
                 <Route path="/categories" element={<CategoryManagement />} />
                 <Route path="/courses" element={<CourseManagement />} />
                 <Route path="/modules" element={<ModuleManagement />} />
-                <Route path="/live-classes" element={<ContentManagement type="LiveClasses" />} />
-                <Route path="/recorded-classes" element={<ContentManagement type="RecordedClasses" />} />
+                <Route
+                  path="/live-classes"
+                  element={<ContentManagement type="LiveClasses" />}
+                />
+                <Route
+                  path="/recorded-classes"
+                  element={<ContentManagement type="RecordedClasses" />}
+                />
                 <Route path="/promocodes" element={<PromoCodeManagement />} />
-                <Route path="/all_transactions" element={<AdminTransactionsPage />} />
-                <Route path="/study-materials" element={<ContentManagement type="StudyMaterials" />} />
+                <Route
+                  path="/all_transactions"
+                  element={<AdminTransactionsPage />}
+                />
+                <Route
+                  path="/study-materials"
+                  element={<ContentManagement type="StudyMaterials" />}
+                />
                 <Route path="/test/exams" element={<ExamManagement />} />
                 <Route path="/test/sections" element={<SectionManagement />} />
                 <Route path="/test-manage" element={<TestSeriesManagement />} />
-                <Route path="/test/questions" element={<QuestionManagement />} />
+                <Route
+                  path="/test/questions"
+                  element={<QuestionManagement />}
+                />
                 <Route path="/test/packages" element={<PackageManagement />} />
                 <Route path="/setting" element={<Setting />} />
               </Route>
               <Route path="/notifications" element={<Notifications />} />
               // teachers
-              <Route element={<ProtectedRoute roles={[ROLES.TEACHER, ROLES.ADMIN]} />}>
-                <Route path="/mcq/questions" element={<QuestionManagementPage />} />
-                <Route path="/mcq/tests" element={<TestTemplateManagementPage />} />
-                <Route path="/mcq/test-series" element={<TestSeriesManagementPage />} />
+              <Route
+                element={
+                  <ProtectedRoute roles={[ROLES.TEACHER, ROLES.ADMIN]} />
+                }
+              >
+                <Route
+                  path="/mcq/questions"
+                  element={<QuestionManagementPage />}
+                />
+                <Route
+                  path="/mcq/tests"
+                  element={<TestTemplateManagementPage />}
+                />
+                <Route
+                  path="/mcq/test-series"
+                  element={<TestSeriesManagementPage />}
+                />
               </Route>
               // Crm
-              <Route element={<ProtectedRoute roles={[ROLES.COUNSEL, ROLES.ADMIN, ROLES.MANAGER, ROLES.LEADER]} />}>
+              <Route
+                element={
+                  <ProtectedRoute
+                    roles={[
+                      ROLES.COUNSEL,
+                      ROLES.ADMIN,
+                      ROLES.MANAGER,
+                      ROLES.LEADER,
+                    ]}
+                  />
+                }
+              >
                 <Route path="/leads" element={<LeadManagement />} />
                 <Route path="/lead-report" element={<DailyReport />} />
               </Route>
-
               // website
-              <Route element={<ProtectedRoute roles={[ROLES.EDITOR, ROLES.ADMIN]} />}>
+              <Route
+                element={<ProtectedRoute roles={[ROLES.EDITOR, ROLES.ADMIN]} />}
+              >
                 <Route path="/pages" element={<PagesManagement />} />
                 <Route path="/entities" element={<EntityManagement />} />
-                <Route path="/blog-categories" element={<BlogCategoryManagement />} />
+                <Route
+                  path="/blog-categories"
+                  element={<BlogCategoryManagement />}
+                />
                 <Route path="/blogs" element={<ArticleManagement />} />
                 <Route path="/comments" element={<CommentsManagement />} />
               </Route>
             </Route>
 
-            <Route path="/course/category" element={<CategorySelectionPage />} />
+            <Route
+              path="/course/category"
+              element={<CategorySelectionPage />}
+            />
             <Route path="/checkout/:slug" element={<CheckoutPage />} />
             <Route path="/payment-status" element={<PaymentStatusPage />} />
-            <Route path="/full/:testSeriesId" element={<FullLengthTestPage />} />
+            <Route
+              path="/full/:testSeriesId"
+              element={<FullLengthTestPage />}
+            />
             <Route path="/sat" element={<FullTestsPage />} />
-            <Route path="/mcq/tests/:testTemplateId" element={<SatTestAttemptPage />} />
-            <Route path="/gmat/tests/:testTemplateId" element={<GmatTestAttemptPage />} />
-            <Route path="/gre/tests/:testTemplateId" element={<GreTestAttemptPage />} />
-            <Route path="/gmat/analysis/:attemptId" element={<GmatTestAnalysisPage />} />
-            <Route path="/pte/tests/:testTemplateId" element={<PteExamPage />} />
+            <Route
+              path="/mcq/tests/:testTemplateId"
+              element={<SatTestAttemptPage />}
+            />
+            <Route
+              path="/gmat/tests/:testTemplateId"
+              element={<GmatTestAttemptPage />}
+            />
+            <Route
+              path="/gre/tests/:testTemplateId"
+              element={<GreTestAttemptPage />}
+            />
+            <Route
+              path="/gmat/analysis/:attemptId"
+              element={<GmatTestAnalysisPage />}
+            />
+            <Route
+              path="/pte/tests/:testTemplateId"
+              element={<PteExamPage />}
+            />
             <Route path="*" element={<ComingSoon />} />
           </Route>
           <Route path="/unauthorized" element={<NotFound />} />

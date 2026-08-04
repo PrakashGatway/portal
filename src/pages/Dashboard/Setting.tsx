@@ -131,45 +131,16 @@ const bannerService = {
   delete: (id: string) => api.delete(`/Banner/${id}`),
   toggleStatus: (id: string, status: boolean) =>
     api.put(`/Banner/${id}`, { isActive: status }),
-  uploadImage: (file: File) => {
+  uploadImage: ({file, oldFile}: any) => {
     const formData = new FormData();
     formData.append("image", file);
+    if (oldFile) {
+      formData.append("oldfile", oldFile);
+    }
     return api.post("/upload/single", formData, {
       headers: { "Content-Type": "multipart/form-data" },
     });
   },
-};
-
-
-const validateBannerForm = (data: FormData): Record<string, string> => {
-  const errors: Record<string, string> = {};
-
-  if (!data.name.trim()) {
-    errors.name = "Banner name is required";
-  } else if (data.name.length > 50) {
-    errors.name = "Name cannot exceed 50 characters";
-  }
-
-  if (!data.key.trim()) {
-    errors.key = "Key is required";
-  } else if (!/^[a-z0-9-]+$/.test(data.key)) {
-    errors.key = "Key can only contain lowercase letters, numbers, and hyphens";
-  }
-
-  if (data.description.length > 500) {
-    errors.description = "Description cannot exceed 500 characters";
-  }
-
-  data.Banners.forEach((bannerPair, index) => {
-    if (!bannerPair.Banner.file) {
-      errors[`banner_${index}`] = `Banner ${index + 1} image is required`;
-    }
-    if (!bannerPair.Banner.alt) {
-      errors[`banner_alt_${index}`] = `Banner ${index + 1} alt text is required`;
-    }
-  });
-
-  return errors;
 };
 
 
@@ -926,7 +897,7 @@ export default function BannerManagement() {
   }, [fetchBanners, debouncedSearch]);
 
   // Upload image helper
-  const uploadImage = async (file: File): Promise<string | null> => {
+  const uploadImage = async ({file, oldFile}: any): Promise<string | null> => {
     if (!file) return null;
 
     // Validate file size (5MB)
@@ -942,7 +913,7 @@ export default function BannerManagement() {
     }
 
     try {
-      const { data } = await bannerService.uploadImage(file);
+      const { data } = await bannerService.uploadImage({file, oldFile});
       return data?.file?.filename || data?.file?.path || null;
     } catch (error) {
       console.error("Upload failed:", error);
@@ -960,13 +931,14 @@ export default function BannerManagement() {
     const file = e.target.files?.[0];
     if (!file) return;
 
+    const field = type === "banner" ? "Banner" : "subBanner";
+    const oldFile = formData.Banners[index]?.[field]?.file || "";
+
     setUploading(true);
-    const uploadedUrl = await uploadImage(file);
+    const uploadedUrl = await uploadImage({file, oldFile});
     setUploading(false);
 
     if (!uploadedUrl) return;
-
-    const field = type === "banner" ? "Banner" : "subBanner";
 
     setFormData((prev) => {
       const updatedBanners = [...prev.Banners];
@@ -1569,13 +1541,6 @@ export default function BannerManagement() {
 
 
 
-
-
-
-
-
-
-
 // import { useState, useEffect, useCallback, useMemo, useRef } from "react";
 // import moment from "moment";
 // import { Modal } from "../../components/ui/modal";
@@ -1585,8 +1550,9 @@ export default function BannerManagement() {
 // import Select from "../../components/form/Select";
 // import { toast } from "react-toastify";
 // import api from "../../axiosInstance";
-// import { Pencil, Trash2, X, Plus, Image as ImageIcon } from "lucide-react";
+// import { Pencil, Trash2, X, Plus, Image as ImageIcon, Bell, Layout, FileText } from "lucide-react";
 // import RichTextEditor from "../../components/TextEditor";
+// import NotificationManagement from "../../components/notificationManagement"; 
 
 
 // const BANNER_TYPE = "Banner";
@@ -1653,9 +1619,7 @@ export default function BannerManagement() {
 
 // type BannerType = typeof BANNER_TYPE | typeof OTHER_TYPE;
 
-// // ============================================
-// // INITIAL STATE
-// // ============================================
+
 // const INITIAL_FORM_DATA: FormData = {
 //   name: "",
 //   description: "",
@@ -1685,9 +1649,7 @@ export default function BannerManagement() {
 //   search: "",
 // };
 
-// // ============================================
-// // CUSTOM HOOKS
-// // ============================================
+
 // const useDebounce = <T,>(value: T, delay: number): T => {
 //   const [debouncedValue, setDebouncedValue] = useState<T>(value);
 
@@ -1704,9 +1666,7 @@ export default function BannerManagement() {
 //   return debouncedValue;
 // };
 
-// // ============================================
-// // BANNER SERVICE
-// // ============================================
+
 // const bannerService = {
 //   fetchAll: (params: any) => api.get("/Banner", { params }),
 //   create: (data: any) => api.post("/Banner", data),
@@ -1714,52 +1674,17 @@ export default function BannerManagement() {
 //   delete: (id: string) => api.delete(`/Banner/${id}`),
 //   toggleStatus: (id: string, status: boolean) =>
 //     api.put(`/Banner/${id}`, { isActive: status }),
-//   uploadImage: (file: File) => {
+//   uploadImage: ({file, oldFile}: any) => {
 //     const formData = new FormData();
 //     formData.append("image", file);
+//     formData.append("oldfile", oldFile)
 //     return api.post("/upload/single", formData, {
 //       headers: { "Content-Type": "multipart/form-data" },
 //     });
 //   },
 // };
 
-// // ============================================
-// // VALIDATION
-// // ============================================
-// const validateBannerForm = (data: FormData): Record<string, string> => {
-//   const errors: Record<string, string> = {};
 
-//   if (!data.name.trim()) {
-//     errors.name = "Banner name is required";
-//   } else if (data.name.length > 50) {
-//     errors.name = "Name cannot exceed 50 characters";
-//   }
-
-//   if (!data.key.trim()) {
-//     errors.key = "Key is required";
-//   } else if (!/^[a-z0-9-]+$/.test(data.key)) {
-//     errors.key = "Key can only contain lowercase letters, numbers, and hyphens";
-//   }
-
-//   if (data.description.length > 500) {
-//     errors.description = "Description cannot exceed 500 characters";
-//   }
-
-//   data.Banners.forEach((bannerPair, index) => {
-//     if (!bannerPair.Banner.file) {
-//       errors[`banner_${index}`] = `Banner ${index + 1} image is required`;
-//     }
-//     if (!bannerPair.Banner.alt) {
-//       errors[`banner_alt_${index}`] = `Banner ${index + 1} alt text is required`;
-//     }
-//   });
-
-//   return errors;
-// };
-
-// // ============================================
-// // SUB-COMPONENTS
-// // ============================================
 
 // // Image Preview Component
 // const ImagePreview: React.FC<{ url: string; alt: string; onRemove?: () => void }> = ({
@@ -1814,7 +1739,7 @@ export default function BannerManagement() {
 //   pair: BannerItem;
 //   errors: Record<string, string>;
 //   uploading: boolean;
-//   onFileUpload: (e: React.ChangeEvent<HTMLInputElement>, index: number, type: "banner" | "subBanner") => void;
+//   onFileUpload: (e: React.ChangeEvent<HTMLInputElement>, index: number, type: "banner" | "subBanner", oldfile: string) => void;
 //   onAltChange: (index: number, type: "banner" | "subBanner", value: string) => void;
 //   onRemove: (index: number) => void;
 //   isRemovable: boolean;
@@ -1853,7 +1778,7 @@ export default function BannerManagement() {
 //             <Input
 //               type="file"
 //               accept="image/*"
-//               onChange={(e) => onFileUpload(e, index, "banner")}
+//               onChange={(e) => onFileUpload(e, index, "banner", pair?.Banner?.file || "")}
 //               className="flex-1"
 //               disabled={uploading}
 //             />
@@ -1939,11 +1864,536 @@ export default function BannerManagement() {
 //   );
 // };
 
-// // ============================================
-// // MAIN COMPONENT
-// // ============================================
+
+
+// // Section Header Component
+// interface SectionHeaderProps {
+//   title: string;
+//   icon: React.ReactNode;
+//   count?: number;
+//   onAdd: () => void;
+//   addButtonText: string;
+// }
+
+// const SectionHeader: React.FC<SectionHeaderProps> = ({
+//   title,
+//   icon,
+//   count,
+//   onAdd,
+//   addButtonText,
+// }) => (
+//   <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-4">
+//     <div className="flex items-center gap-3">
+//       <div className="p-2 bg-blue-50 dark:bg-blue-900/20 rounded-lg">
+//         {icon}
+//       </div>
+//       <div>
+//         <h3 className="text-lg font-semibold text-gray-800 dark:text-white/90">
+//           {title}
+//         </h3>
+//         {count !== undefined && (
+//           <p className="text-sm text-gray-500 dark:text-gray-400">
+//             {count} items
+//           </p>
+//         )}
+//       </div>
+//     </div>
+//     <button
+//       onClick={onAdd}
+//       className="flex items-center justify-center gap-2 rounded-full bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700 transition-colors shadow-theme-xs"
+//     >
+//       <Plus className="w-4 h-4" />
+//       {addButtonText}
+//     </button>
+//   </div>
+// );
+
+// // Banner Section Component
+// const BannerSection: React.FC<{
+//   banners: any[];
+//   loading: boolean;
+//   filters: Filters;
+//   total: number;
+//   loadingStates: Record<string, boolean>;
+//   onFilterChange: (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => void;
+//   onResetFilters: () => void;
+//   onPageChange: (page: number) => void;
+//   onToggleStatus: (id: string, status: boolean) => void;
+//   onEdit: (banner: Banner) => void;
+//   onDelete: (banner: Banner) => void;
+//   onAdd: () => void;
+// }> = ({
+//   banners,
+//   loading,
+//   filters,
+//   total,
+//   loadingStates,
+//   onFilterChange,
+//   onResetFilters,
+//   onPageChange,
+//   onToggleStatus,
+//   onEdit,
+//   onDelete,
+//   onAdd,
+// }) => {
+//   const memoizedBanners = useMemo(() => {
+//     return banners.map((banner) => ({
+//       ...banner,
+//       formattedDate: moment(banner.createdAt).format("MMM D, YYYY"),
+//       bannerCount: banner.Banners?.length || 0,
+//       displayType: banner.bannerLayout && banner.bannerLayout.startsWith('layout-') 
+//         ? 'Banner' 
+//         : 'Other',
+//     }));
+//   }, [banners]);
+
+//   return (
+//     <div className="bg-white dark:bg-gray-800 rounded-2xl border border-gray-200 dark:border-gray-700 p-4">
+//       <SectionHeader
+//         title="Banners & Content"
+//         icon={<Layout className="w-5 h-5 text-blue-600 dark:text-blue-400" />}
+//         count={banners.length}
+//         onAdd={onAdd}
+//         addButtonText="Add Banner"
+//       />
+
+//       {/* Filters */}
+//       <div className="mb-6 grid grid-cols-1 gap-4 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4">
+//         <div>
+//           <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+//             Search
+//           </label>
+//           <input
+//             type="text"
+//             name="search"
+//             value={filters.search}
+//             onChange={onFilterChange}
+//             placeholder="Search banners..."
+//             className="w-full rounded-md border border-gray-300 bg-white py-2 px-3 text-sm focus:border-indigo-500 focus:outline-none focus:ring-indigo-500 dark:border-gray-600 dark:bg-gray-800 dark:text-white"
+//           />
+//         </div>
+//         <div>
+//           <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+//             Status
+//           </label>
+//           <select
+//             name="isActive"
+//             value={filters.isActive}
+//             onChange={onFilterChange}
+//             className="w-full rounded-md border border-gray-300 bg-white py-2 px-3 text-sm focus:border-indigo-500 focus:outline-none focus:ring-indigo-500 dark:border-gray-600 dark:bg-gray-800 dark:text-white"
+//           >
+//             <option value="">All Statuses</option>
+//             <option value="true">Active</option>
+//             <option value="false">Inactive</option>
+//           </select>
+//         </div>
+//         <div>
+//           <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+//             Rows per page
+//           </label>
+//           <select
+//             name="limit"
+//             value={filters.limit}
+//             onChange={onFilterChange}
+//             className="w-full rounded-md border border-gray-300 bg-white py-2 px-3 text-sm focus:border-indigo-500 focus:outline-none focus:ring-indigo-500 dark:border-gray-600 dark:bg-gray-800 dark:text-white"
+//           >
+//             {[5, 10, 20, 50].map((value) => (
+//               <option key={value} value={value}>
+//                 {value}
+//               </option>
+//             ))}
+//           </select>
+//         </div>
+//         <div className="flex items-end">
+//           <button
+//             onClick={onResetFilters}
+//             className="w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm font-medium text-gray-700 shadow-sm hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 dark:border-gray-600 dark:bg-gray-800 dark:text-white dark:hover:bg-gray-700"
+//           >
+//             Reset Filters
+//           </button>
+//         </div>
+//       </div>
+
+//       {/* Table */}
+//       <div className="overflow-x-auto rounded-lg border border-gray-200 dark:border-gray-700">
+//         {loading ? (
+//           <div className="flex h-64 items-center justify-center">
+//             <div className="h-8 w-8 animate-spin rounded-full border-4 border-indigo-500 border-t-transparent"></div>
+//           </div>
+//         ) : (
+//           <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
+//             <thead className="bg-gray-50 dark:bg-gray-800">
+//               <tr>
+//                 {[
+//                   "Name",
+//                   "Key",
+//                   "Type",
+//                   "Layout",
+//                   "Banners",
+//                   "Status",
+//                   "Created",
+//                   "Actions",
+//                 ].map((header) => (
+//                   <th
+//                     key={header}
+//                     scope="col"
+//                     className="px-2 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500 dark:text-gray-300"
+//                   >
+//                     {header}
+//                   </th>
+//                 ))}
+//               </tr>
+//             </thead>
+//             <tbody className="divide-y divide-gray-200 bg-white dark:divide-gray-700 dark:bg-gray-800">
+//               {memoizedBanners.length > 0 ? (
+//                 memoizedBanners.map((banner) => (
+//                   <tr
+//                     key={banner._id}
+//                     className="hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
+//                   >
+//                     <td className="whitespace-nowrap px-2 py-4">
+//                       <span className="text-sm font-semibold capitalize text-gray-900 dark:text-white">
+//                         {banner.name}
+//                       </span>
+//                     </td>
+//                     <td className="whitespace-nowrap px-2 py-4">
+//                       <span className="text-sm text-gray-500 dark:text-gray-300">
+//                         {banner.key}
+//                       </span>
+//                     </td>
+//                     <td className="whitespace-nowrap px-2 py-4">
+//                       <span className={`text-sm px-2 py-1 rounded-full ${
+//                         banner.displayType === 'Banner' 
+//                           ? 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200'
+//                           : 'bg-purple-100 text-purple-800 dark:bg-purple-900 dark:text-purple-200'
+//                       }`}>
+//                         {banner.displayType}
+//                       </span>
+//                     </td>
+//                     <td className="whitespace-nowrap px-2 py-4">
+//                       <span className="text-sm text-gray-500 dark:text-gray-300">
+//                         {banner.bannerLayout || "N/A"}
+//                       </span>
+//                     </td>
+//                     <td className="px-2 py-4">
+//                       <span className="text-sm text-gray-500 dark:text-gray-300">
+//                         {banner.bannerCount} pairs
+//                       </span>
+//                     </td>
+//                     <td className="whitespace-nowrap px-2 py-4 text-sm text-gray-500 dark:text-gray-300">
+//                       <span
+//                         onClick={() => onToggleStatus(banner._id, banner.isActive)}
+//                         className={`inline-flex cursor-pointer rounded-full px-2 text-xs font-semibold leading-5 ${
+//                           loadingStates[banner._id]
+//                             ? "opacity-50 cursor-not-allowed"
+//                             : ""
+//                         } ${
+//                           banner.isActive
+//                             ? "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200"
+//                             : "bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200"
+//                         }`}
+//                       >
+//                         {loadingStates[banner._id]
+//                           ? "Updating..."
+//                           : banner.isActive
+//                           ? "Active"
+//                           : "Inactive"}
+//                       </span>
+//                     </td>
+//                     <td className="whitespace-nowrap px-2 py-4 text-sm text-gray-500 dark:text-gray-300">
+//                       {banner.formattedDate}
+//                     </td>
+//                     <td className="whitespace-nowrap px-2 py-4 text-sm font-medium text-gray-900 dark:text-white">
+//                       <div className="flex space-x-2">
+//                         <button
+//                           onClick={() => onEdit(banner)}
+//                           className="p-1 rounded-lg text-blue-600 hover:text-blue-900 dark:text-blue-400 dark:hover:text-blue-300 transition-colors"
+//                           aria-label="Edit banner"
+//                         >
+//                           <Pencil className="h-5 w-5" />
+//                         </button>
+//                         <button
+//                           onClick={() => onDelete(banner)}
+//                           className="p-1 rounded-lg text-red-600 hover:text-red-900 dark:text-red-400 dark:hover:text-red-300 transition-colors"
+//                           aria-label="Delete banner"
+//                         >
+//                           <Trash2 className="h-5 w-5" />
+//                         </button>
+//                       </div>
+//                     </td>
+//                   </tr>
+//                 ))
+//               ) : (
+//                 <tr>
+//                   <td
+//                     colSpan={8}
+//                     className="px-2 py-8 text-center text-sm text-gray-500 dark:text-gray-300"
+//                   >
+//                     <div className="flex flex-col items-center gap-2">
+//                       <ImageIcon className="w-12 h-12 text-gray-300" />
+//                       <p>No banners found</p>
+//                       <button
+//                         onClick={onAdd}
+//                         className="text-blue-600 hover:text-blue-700 text-sm"
+//                       >
+//                         Create your first banner
+//                       </button>
+//                     </div>
+//                   </td>
+//                 </tr>
+//               )}
+//             </tbody>
+//           </table>
+//         )}
+//       </div>
+
+//       {/* Pagination */}
+//       {total > 0 && (
+//         <div className="mt-4 flex flex-col items-center justify-between space-y-4 sm:flex-row sm:space-y-0">
+//           <div className="text-sm text-gray-500 dark:text-gray-300">
+//             Showing{" "}
+//             <span className="font-medium">
+//               {(filters.page - 1) * filters.limit + 1}
+//             </span>{" "}
+//             to{" "}
+//             <span className="font-medium">
+//               {Math.min(filters.page * filters.limit, total)}
+//             </span>{" "}
+//             of <span className="font-medium">{total}</span> results
+//           </div>
+//           <div className="flex space-x-2">
+//             <button
+//               onClick={() => onPageChange(filters.page - 1)}
+//               disabled={filters.page === 1}
+//               className={`rounded-md border border-gray-300 px-3 py-1 text-sm ${
+//                 filters.page === 1
+//                   ? "cursor-not-allowed bg-gray-100 text-gray-400 dark:bg-gray-700 dark:text-gray-500"
+//                   : "bg-white text-gray-700 hover:bg-gray-50 dark:bg-gray-800 dark:text-white dark:hover:bg-gray-700"
+//               }`}
+//             >
+//               Previous
+//             </button>
+//             {Array.from(
+//               { length: Math.ceil(total / filters.limit) },
+//               (_, i) => i + 1
+//             )
+//               .slice(
+//                 Math.max(0, filters.page - 3),
+//                 Math.min(Math.ceil(total / filters.limit), filters.page + 2)
+//               )
+//               .map((pageNum) => (
+//                 <button
+//                   key={pageNum}
+//                   onClick={() => onPageChange(pageNum)}
+//                   className={`rounded-md border px-3 py-1 text-sm ${
+//                     filters.page === pageNum
+//                       ? "border-indigo-500 bg-indigo-500 text-white"
+//                       : "border-gray-300 bg-white text-gray-700 hover:bg-gray-50 dark:border-gray-600 dark:bg-gray-800 dark:text-white dark:hover:bg-gray-700"
+//                   }`}
+//                 >
+//                   {pageNum}
+//                 </button>
+//               ))}
+//             <button
+//               onClick={() => onPageChange(filters.page + 1)}
+//               disabled={filters.page * filters.limit >= total}
+//               className={`rounded-md border border-gray-300 px-3 py-1 text-sm ${
+//                 filters.page * filters.limit >= total
+//                   ? "cursor-not-allowed bg-gray-100 text-gray-400 dark:bg-gray-700 dark:text-gray-500"
+//                   : "bg-white text-gray-700 hover:bg-gray-50 dark:bg-gray-800 dark:text-white dark:hover:bg-gray-700"
+//               }`}
+//             >
+//               Next
+//             </button>
+//           </div>
+//         </div>
+//       )}
+//     </div>
+//   );
+// };
+
+// // Other Content Section Component
+// const OtherContentSection: React.FC<{
+//   banners: any[];
+//   loading: boolean;
+//   filters: Filters;
+//   total: number;
+//   loadingStates: Record<string, boolean>;
+//   onFilterChange: (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => void;
+//   onResetFilters: () => void;
+//   onPageChange: (page: number) => void;
+//   onToggleStatus: (id: string, status: boolean) => void;
+//   onEdit: (banner: Banner) => void;
+//   onDelete: (banner: Banner) => void;
+//   onAdd: () => void;
+// }> = ({
+//   banners,
+//   loading,
+//   filters,
+//   total,
+//   loadingStates,
+//   onFilterChange,
+//   onResetFilters,
+//   onPageChange,
+//   onToggleStatus,
+//   onEdit,
+//   onDelete,
+//   onAdd,
+// }) => {
+//   const otherBanners = banners.filter(b => !b.bannerLayout || !b.bannerLayout.startsWith('layout-'));
+  
+//   const memoizedOtherBanners = useMemo(() => {
+//     return otherBanners.map((banner) => ({
+//       ...banner,
+//       formattedDate: moment(banner.createdAt).format("MMM D, YYYY"),
+//       bannerCount: banner.Banners?.length || 0,
+//       displayType: 'Other',
+//     }));
+//   }, [otherBanners]);
+
+//   return (
+//     <div className="bg-white dark:bg-gray-800 rounded-2xl border border-gray-200 dark:border-gray-700 p-4">
+//       <SectionHeader
+//         title="Other Content"
+//         icon={<FileText className="w-5 h-5 text-purple-600 dark:text-purple-400" />}
+//         count={otherBanners.length}
+//         onAdd={onAdd}
+//         addButtonText="Add Content"
+//       />
+
+//       {/* Table */}
+//       <div className="overflow-x-auto rounded-lg border border-gray-200 dark:border-gray-700">
+//         {loading ? (
+//           <div className="flex h-64 items-center justify-center">
+//             <div className="h-8 w-8 animate-spin rounded-full border-4 border-indigo-500 border-t-transparent"></div>
+//           </div>
+//         ) : (
+//           <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
+//             <thead className="bg-gray-50 dark:bg-gray-800">
+//               <tr>
+//                 {[
+//                   "Name",
+//                   "Key",
+//                   "Content",
+//                   "Status",
+//                   "Created",
+//                   "Actions",
+//                 ].map((header) => (
+//                   <th
+//                     key={header}
+//                     scope="col"
+//                     className="px-2 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500 dark:text-gray-300"
+//                   >
+//                     {header}
+//                   </th>
+//                 ))}
+//               </tr>
+//             </thead>
+//             <tbody className="divide-y divide-gray-200 bg-white dark:divide-gray-700 dark:bg-gray-800">
+//               {memoizedOtherBanners.length > 0 ? (
+//                 memoizedOtherBanners.map((banner) => (
+//                   <tr
+//                     key={banner._id}
+//                     className="hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
+//                   >
+//                     <td className="whitespace-nowrap px-2 py-4">
+//                       <span className="text-sm font-semibold capitalize text-gray-900 dark:text-white">
+//                         {banner.name}
+//                       </span>
+//                     </td>
+//                     <td className="whitespace-nowrap px-2 py-4">
+//                       <span className="text-sm text-gray-500 dark:text-gray-300">
+//                         {banner.key}
+//                       </span>
+//                     </td>
+//                     <td className="px-2 py-4">
+//                       <div className="text-sm text-gray-500 dark:text-gray-300 max-w-xs truncate">
+//                         {banner.extraData ? 'Content available' : 'No content'}
+//                       </div>
+//                     </td>
+//                     <td className="whitespace-nowrap px-2 py-4 text-sm text-gray-500 dark:text-gray-300">
+//                       <span
+//                         onClick={() => onToggleStatus(banner._id, banner.isActive)}
+//                         className={`inline-flex cursor-pointer rounded-full px-2 text-xs font-semibold leading-5 ${
+//                           loadingStates[banner._id]
+//                             ? "opacity-50 cursor-not-allowed"
+//                             : ""
+//                         } ${
+//                           banner.isActive
+//                             ? "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200"
+//                             : "bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200"
+//                         }`}
+//                       >
+//                         {loadingStates[banner._id]
+//                           ? "Updating..."
+//                           : banner.isActive
+//                           ? "Active"
+//                           : "Inactive"}
+//                       </span>
+//                     </td>
+//                     <td className="whitespace-nowrap px-2 py-4 text-sm text-gray-500 dark:text-gray-300">
+//                       {banner.formattedDate}
+//                     </td>
+//                     <td className="whitespace-nowrap px-2 py-4 text-sm font-medium text-gray-900 dark:text-white">
+//                       <div className="flex space-x-2">
+//                         <button
+//                           onClick={() => onEdit(banner)}
+//                           className="p-1 rounded-lg text-blue-600 hover:text-blue-900 dark:text-blue-400 dark:hover:text-blue-300 transition-colors"
+//                           aria-label="Edit content"
+//                         >
+//                           <Pencil className="h-5 w-5" />
+//                         </button>
+//                         <button
+//                           onClick={() => onDelete(banner)}
+//                           className="p-1 rounded-lg text-red-600 hover:text-red-900 dark:text-red-400 dark:hover:text-red-300 transition-colors"
+//                           aria-label="Delete content"
+//                         >
+//                           <Trash2 className="h-5 w-5" />
+//                         </button>
+//                       </div>
+//                     </td>
+//                   </tr>
+//                 ))
+//               ) : (
+//                 <tr>
+//                   <td
+//                     colSpan={6}
+//                     className="px-2 py-8 text-center text-sm text-gray-500 dark:text-gray-300"
+//                   >
+//                     <div className="flex flex-col items-center gap-2">
+//                       <FileText className="w-12 h-12 text-gray-300" />
+//                       <p>No other content found</p>
+//                       <button
+//                         onClick={onAdd}
+//                         className="text-blue-600 hover:text-blue-700 text-sm"
+//                       >
+//                         Create your first content
+//                       </button>
+//                     </div>
+//                   </td>
+//                 </tr>
+//               )}
+//             </tbody>
+//           </table>
+//         )}
+//       </div>
+//     </div>
+//   );
+// };
+
+// // Notification Section Component
+// const NotificationSection: React.FC = () => {
+//   return (
+//     <div className="bg-white dark:bg-gray-800 rounded-2xl border border-gray-200 dark:border-gray-700 p-4">
+     
+//       <NotificationManagement />
+//     </div>
+//   );
+// };
+
+
 // export default function BannerManagement() {
-//   // State
+  
 //   const [banners, setBanners] = useState<Banner[]>([]);
 //   const [loading, setLoading] = useState(true);
 //   const [total, setTotal] = useState(0);
@@ -1956,6 +2406,7 @@ export default function BannerManagement() {
 //   const [errors, setErrors] = useState<Record<string, string>>({});
 //   const [uploading, setUploading] = useState(false);
 //   const [loadingStates, setLoadingStates] = useState<Record<string, boolean>>({});
+//   const [activeSection, setActiveSection] = useState<'banners' | 'content' | 'notifications'>('banners');
 
 //   // Debounced search
 //   const debouncedSearch = useDebounce(filters.search, 500);
@@ -1987,7 +2438,7 @@ export default function BannerManagement() {
 //   }, [fetchBanners, debouncedSearch]);
 
 //   // Upload image helper
-//   const uploadImage = async (file: File): Promise<string | null> => {
+//   const uploadImage = async ({file,oldFile}: any): Promise<string | null> => {
 //     if (!file) return null;
 
 //     // Validate file size (5MB)
@@ -2003,7 +2454,7 @@ export default function BannerManagement() {
 //     }
 
 //     try {
-//       const { data } = await bannerService.uploadImage(file);
+//       const { data } = await bannerService.uploadImage(file,oldFile);
 //       return data?.file?.filename || data?.file?.path || null;
 //     } catch (error) {
 //       console.error("Upload failed:", error);
@@ -2016,13 +2467,14 @@ export default function BannerManagement() {
 //   const handleBannerFileUpload = async (
 //     e: React.ChangeEvent<HTMLInputElement>,
 //     index: number,
-//     type: "banner" | "subBanner"
+//     type: "banner" | "subBanner",
+//     oldFile: string
 //   ) => {
 //     const file = e.target.files?.[0];
 //     if (!file) return;
 
 //     setUploading(true);
-//     const uploadedUrl = await uploadImage(file);
+//     const uploadedUrl = await uploadImage(file, oldFile);
 //     setUploading(false);
 
 //     if (!uploadedUrl) return;
@@ -2090,7 +2542,6 @@ export default function BannerManagement() {
 
 //   // Save banner
 //   const handleSaveBanner = async () => {
-
 //     try {
 //       const payload = {
 //         name: formData.name,
@@ -2160,16 +2611,13 @@ export default function BannerManagement() {
 //     setFormData({
 //       ...INITIAL_FORM_DATA,
 //       extraData: type === OTHER_TYPE ? "" : "",
-//       // Set default layout based on type
 //       bannerLayout: type === BANNER_TYPE ? "" : "",
 //     });
 //     setErrors({});
 //     setEditModalOpen(true);
 //   };
 
-//   // UPDATED: Open edit modal with proper data mapping
 //   const openEditModal = (banner: Banner) => {
-//     // Determine the type based on bannerLayout
 //     const type = banner.bannerLayout && banner.bannerLayout.startsWith('layout-') 
 //       ? BANNER_TYPE 
 //       : OTHER_TYPE;
@@ -2177,7 +2625,6 @@ export default function BannerManagement() {
 //     setBannerType(type);
 //     setSelectedBanner(banner);
     
-//     // Map the form data based on type
 //     setFormData({
 //       name: banner.name || "",
 //       description: banner.description || "",
@@ -2235,24 +2682,16 @@ export default function BannerManagement() {
 //     setFilters(INITIAL_FILTERS);
 //   };
 
-//   // Memoized data
-//   const memoizedBanners = useMemo(() => {
-//     return banners.map((banner) => ({
-//       ...banner,
-//       formattedDate: moment(banner.createdAt).format("MMM D, YYYY"),
-//       bannerCount: banner.Banners?.length || 0,
-//       // Determine if it's a banner or other type
-//       displayType: banner.bannerLayout && banner.bannerLayout.startsWith('layout-') 
-//         ? 'Banner' 
-//         : 'Other',
-//     }));
-//   }, [banners]);
+//   // Section navigation
+//   const sections = [
+//     { id: 'banners', label: 'Banners', icon: Layout },
+//     { id: 'content', label: 'Other Content', icon: FileText },
+//     { id: 'notifications', label: 'Notifications', icon: Bell },
+//   ] as const;
 
 //   return (
-//     <div className="w-full overflow-x-auto">
-//       {/* ============================================ */}
-//       {/* HEADER SECTION */}
-//       {/* ============================================ */}
+//     <div className="w-full">
+      
 //       <div className="p-4 border border-gray-200 rounded-2xl dark:border-gray-800 lg:p-4 mb-3 bg-white dark:border-gray-700 dark:bg-gray-800 dark:text-gray-400">
 //         <div className="flex flex-col gap-5 xl:flex-row xl:items-center xl:justify-between">
 //           <div className="flex flex-col items-center w-full gap-6 xl:flex-row">
@@ -2272,304 +2711,98 @@ export default function BannerManagement() {
 //             </div>
 //             <div className="order-3 xl:order-2">
 //               <h4 className="mb-2 text-lg font-semibold text-center text-gray-800 dark:text-white/90 xl:text-left">
-//                 Setting 
+//                 Setting
 //               </h4>
 //               <div className="flex flex-col items-center gap-1 text-center xl:flex-row xl:gap-3 xl:text-left">
 //                 <p className="text-sm text-gray-500 dark:text-gray-400">
-//                   Manage your banners and Other things
+//                   Manage banners, content, and notifications
 //                 </p>
 //                 <div className="hidden h-3.5 w-px bg-gray-300 dark:bg-gray-700 xl:block"></div>
 //                 <p className="text-sm text-gray-500 dark:text-gray-400">
-//                   {banners.length} banners
+//                   {banners.length} items total
 //                 </p>
 //               </div>
 //             </div>
 //           </div>
-//           <div className="flex w-full flex-col gap-3 sm:flex-row sm:items-center sm:justify-end xl:gap-4">
-//             <button
-//               onClick={() => openCreateModal(BANNER_TYPE)}
-//               className="flex w-full items-center justify-center gap-2 rounded-full border border-gray-300 bg-white px-4 py-3 text-sm font-medium text-gray-700 shadow-theme-xs hover:bg-gray-50 hover:text-gray-800 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-400 dark:hover:bg-white/[0.03] dark:hover:text-gray-200 lg:inline-flex lg:w-auto"
-//             >
-//               <Plus className="w-4 h-4" />
-//               Add Banner
-//             </button>
-
-//             <button
-//               onClick={() => openCreateModal(OTHER_TYPE)}
-//               className="flex w-full items-center justify-center gap-2 rounded-full border border-gray-300 bg-white px-4 py-3 text-sm font-medium text-gray-700 shadow-theme-xs hover:bg-gray-50 hover:text-gray-800 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-400 dark:hover:bg-white/[0.03] dark:hover:text-gray-200 lg:inline-flex lg:w-auto"
-//             >
-//               <Plus className="w-4 h-4" />
-//               Add Other Data
-//             </button>
-//           </div>
 //         </div>
 //       </div>
 
-//       {/* ============================================ */}
-//       {/* TABLE SECTION */}
-//       {/* ============================================ */}
-//       <div className="min-h-[70vh] overflow-x-auto rounded-2xl border border-gray-200 bg-white px-4 py-4 dark:border-gray-800 dark:bg-white/[0.03] xl:px-4 xl:py-4">
-//         {/* Filters */}
-//         <div className="mb-6 grid grid-cols-1 gap-4 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4">
-//           <div>
-//             <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-//               Search
-//             </label>
-//             <input
-//               type="text"
-//               name="search"
-//               value={filters.search}
-//               onChange={handleFilterChange}
-//               placeholder="Search banners..."
-//               className="w-full rounded-md border border-gray-300 bg-white py-2 px-3 text-sm focus:border-indigo-500 focus:outline-none focus:ring-indigo-500 dark:border-gray-600 dark:bg-gray-800 dark:text-white"
-//             />
-//           </div>
-//           <div>
-//             <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-//               Status
-//             </label>
-//             <select
-//               name="isActive"
-//               value={filters.isActive}
-//               onChange={handleFilterChange}
-//               className="w-full rounded-md border border-gray-300 bg-white py-2 px-3 text-sm focus:border-indigo-500 focus:outline-none focus:ring-indigo-500 dark:border-gray-600 dark:bg-gray-800 dark:text-white"
-//             >
-//               <option value="">All Statuses</option>
-//               <option value="true">Active</option>
-//               <option value="false">Inactive</option>
-//             </select>
-//           </div>
-//           <div>
-//             <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-//               Rows per page
-//             </label>
-//             <select
-//               name="limit"
-//               value={filters.limit}
-//               onChange={handleFilterChange}
-//               className="w-full rounded-md border border-gray-300 bg-white py-2 px-3 text-sm focus:border-indigo-500 focus:outline-none focus:ring-indigo-500 dark:border-gray-600 dark:bg-gray-800 dark:text-white"
-//             >
-//               {[5, 10, 20, 50].map((value) => (
-//                 <option key={value} value={value}>
-//                   {value}
-//                 </option>
-//               ))}
-//             </select>
-//           </div>
-//           <div className="flex items-end">
-//             <button
-//               onClick={resetFilters}
-//               className="w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm font-medium text-gray-700 shadow-sm hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 dark:border-gray-600 dark:bg-gray-800 dark:text-white dark:hover:bg-gray-700"
-//             >
-//               Reset Filters
-//             </button>
-//           </div>
-//         </div>
 
-//         {/* Table */}
-//         <div className="overflow-x-auto rounded-lg border border-gray-200 dark:border-gray-700">
-//           {loading ? (
-//             <div className="flex h-64 items-center justify-center">
-//               <div className="h-8 w-8 animate-spin rounded-full border-4 border-indigo-500 border-t-transparent"></div>
-//             </div>
-//           ) : (
-//             <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
-//               <thead className="bg-gray-50 dark:bg-gray-800">
-//                 <tr>
-//                   {[
-//                     "Name",
-//                     "Key",
-//                     "Type",
-//                     "Layout",
-//                     "Banners",
-//                     "Status",
-//                     "Created",
-//                     "Actions",
-//                   ].map((header) => (
-//                     <th
-//                       key={header}
-//                       scope="col"
-//                       className="px-2 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500 dark:text-gray-300"
-//                     >
-//                       {header}
-//                     </th>
-//                   ))}
-//                 </tr>
-//               </thead>
-//               <tbody className="divide-y divide-gray-200 bg-white dark:divide-gray-700 dark:bg-gray-800">
-//                 {memoizedBanners.length > 0 ? (
-//                   memoizedBanners.map((banner) => (
-//                     <tr
-//                       key={banner._id}
-//                       className="hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
-//                     >
-//                       <td className="whitespace-nowrap px-2 py-4">
-//                         <span className="text-sm font-semibold capitalize text-gray-900 dark:text-white">
-//                           {banner.name}
-//                         </span>
-//                       </td>
-//                       <td className="whitespace-nowrap px-2 py-4">
-//                         <span className="text-sm text-gray-500 dark:text-gray-300">
-//                           {banner.key}
-//                         </span>
-//                       </td>
-//                       <td className="whitespace-nowrap px-2 py-4">
-//                         <span className={`text-sm px-2 py-1 rounded-full ${
-//                           banner.displayType === 'Banner' 
-//                             ? 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200'
-//                             : 'bg-purple-100 text-purple-800 dark:bg-purple-900 dark:text-purple-200'
-//                         }`}>
-//                           {banner.displayType}
-//                         </span>
-//                       </td>
-//                       <td className="whitespace-nowrap px-2 py-4">
-//                         <span className="text-sm text-gray-500 dark:text-gray-300">
-//                           {banner.bannerLayout || "N/A"}
-//                         </span>
-//                       </td>
-//                       <td className="px-2 py-4">
-//                         <span className="text-sm text-gray-500 dark:text-gray-300">
-//                           {banner.bannerCount} pairs
-//                         </span>
-//                       </td>
-//                       <td className="whitespace-nowrap px-2 py-4 text-sm text-gray-500 dark:text-gray-300">
-//                         <span
-//                           onClick={() =>
-//                             toggleBannerStatus(banner._id, banner.isActive)
-//                           }
-//                           className={`inline-flex cursor-pointer rounded-full px-2 text-xs font-semibold leading-5 ${
-//                             loadingStates[banner._id]
-//                               ? "opacity-50 cursor-not-allowed"
-//                               : ""
-//                           } ${
-//                             banner.isActive
-//                               ? "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200"
-//                               : "bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200"
-//                           }`}
-//                         >
-//                           {loadingStates[banner._id]
-//                             ? "Updating..."
-//                             : banner.isActive
-//                             ? "Active"
-//                             : "Inactive"}
-//                         </span>
-//                       </td>
-//                       <td className="whitespace-nowrap px-2 py-4 text-sm text-gray-500 dark:text-gray-300">
-//                         {banner.formattedDate}
-//                       </td>
-//                       <td className="whitespace-nowrap px-2 py-4 text-sm font-medium text-gray-900 dark:text-white">
-//                         <div className="flex space-x-2">
-//                           <button
-//                             onClick={() => {openEditModal(banner)}}
-//                             className="p-1 rounded-lg text-blue-600 hover:text-blue-900 dark:text-blue-400 dark:hover:text-blue-300 transition-colors"
-//                             aria-label="Edit banner"
-//                           >
-//                             <Pencil className="h-5 w-5" />
-//                           </button>
-//                           <button
-//                             onClick={() => {
-//                               setSelectedBanner(banner);
-//                               setDeleteModalOpen(true);
-//                             }}
-//                             className="p-1 rounded-lg text-red-600 hover:text-red-900 dark:text-red-400 dark:hover:text-red-300 transition-colors"
-//                             aria-label="Delete banner"
-//                           >
-//                             <Trash2 className="h-5 w-5" />
-//                           </button>
-//                         </div>
-//                       </td>
-//                     </tr>
-//                   ))
-//                 ) : (
-//                   <tr>
-//                     <td
-//                       colSpan={8}
-//                       className="px-2 py-8 text-center text-sm text-gray-500 dark:text-gray-300"
-//                     >
-//                       <div className="flex flex-col items-center gap-2">
-//                         <ImageIcon className="w-12 h-12 text-gray-300" />
-//                         <p>No banners found</p>
-//                         <button
-//                           onClick={() => openCreateModal(BANNER_TYPE)}
-//                           className="text-blue-600 hover:text-blue-700 text-sm"
-//                         >
-//                           Create your first banner
-//                         </button>
-//                       </div>
-//                     </td>
-//                   </tr>
-//                 )}
-//               </tbody>
-//             </table>
-//           )}
-//         </div>
+//       <div className="mb-4 border-b border-gray-200 dark:border-gray-700">
+//         <nav className="flex space-x-4" aria-label="Tabs">
+//           {sections.map((section) => {
+//             const Icon = section.icon;
+//             return (
+//               <button
+//                 key={section.id}
+//                 onClick={() => setActiveSection(section.id)}
+//                 className={`
+//                   flex items-center gap-2 px-4 py-3 text-sm font-medium border-b-2 transition-colors
+//                   ${activeSection === section.id
+//                     ? 'border-blue-500 text-blue-600 dark:text-blue-400'
+//                     : 'border-transparent text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-300'
+//                   }
+//                 `}
+//               >
+//                 <Icon className="w-4 h-4" />
+//                 {section.label}
+//               </button>
+//             );
+//           })}
+//         </nav>
+//       </div>
 
-//         {/* Pagination */}
-//         {total > 0 && (
-//           <div className="mt-4 flex flex-col items-center justify-between space-y-4 sm:flex-row sm:space-y-0">
-//             <div className="text-sm text-gray-500 dark:text-gray-300">
-//               Showing{" "}
-//               <span className="font-medium">
-//                 {(filters.page - 1) * filters.limit + 1}
-//               </span>{" "}
-//               to{" "}
-//               <span className="font-medium">
-//                 {Math.min(filters.page * filters.limit, total)}
-//               </span>{" "}
-//               of <span className="font-medium">{total}</span> results
-//             </div>
-//             <div className="flex space-x-2">
-//               <button
-//                 onClick={() => handlePageChange(filters.page - 1)}
-//                 disabled={filters.page === 1}
-//                 className={`rounded-md border border-gray-300 px-3 py-1 text-sm ${
-//                   filters.page === 1
-//                     ? "cursor-not-allowed bg-gray-100 text-gray-400 dark:bg-gray-700 dark:text-gray-500"
-//                     : "bg-white text-gray-700 hover:bg-gray-50 dark:bg-gray-800 dark:text-white dark:hover:bg-gray-700"
-//                 }`}
-//               >
-//                 Previous
-//               </button>
-//               {Array.from(
-//                 { length: Math.ceil(total / filters.limit) },
-//                 (_, i) => i + 1
-//               )
-//                 .slice(
-//                   Math.max(0, filters.page - 3),
-//                   Math.min(Math.ceil(total / filters.limit), filters.page + 2)
-//                 )
-//                 .map((pageNum) => (
-//                   <button
-//                     key={pageNum}
-//                     onClick={() => handlePageChange(pageNum)}
-//                     className={`rounded-md border px-3 py-1 text-sm ${
-//                       filters.page === pageNum
-//                         ? "border-indigo-500 bg-indigo-500 text-white"
-//                         : "border-gray-300 bg-white text-gray-700 hover:bg-gray-50 dark:border-gray-600 dark:bg-gray-800 dark:text-white dark:hover:bg-gray-700"
-//                     }`}
-//                   >
-//                     {pageNum}
-//                   </button>
-//                 ))}
-//               <button
-//                 onClick={() => handlePageChange(filters.page + 1)}
-//                 disabled={filters.page * filters.limit >= total}
-//                 className={`rounded-md border border-gray-300 px-3 py-1 text-sm ${
-//                   filters.page * filters.limit >= total
-//                     ? "cursor-not-allowed bg-gray-100 text-gray-400 dark:bg-gray-700 dark:text-gray-500"
-//                     : "bg-white text-gray-700 hover:bg-gray-50 dark:bg-gray-800 dark:text-white dark:hover:bg-gray-700"
-//                 }`}
-//               >
-//                 Next
-//               </button>
-//             </div>
-//           </div>
+
+//       <div className="space-y-4">
+//         {/* Banners Section */}
+//         {activeSection === 'banners' && (
+//           <BannerSection
+//             banners={banners.filter(b => b.bannerLayout && b.bannerLayout.startsWith('layout-'))}
+//             loading={loading}
+//             filters={filters}
+//             total={total}
+//             loadingStates={loadingStates}
+//             onFilterChange={handleFilterChange}
+//             onResetFilters={resetFilters}
+//             onPageChange={handlePageChange}
+//             onToggleStatus={toggleBannerStatus}
+//             onEdit={openEditModal}
+//             onDelete={(banner) => {
+//               setSelectedBanner(banner);
+//               setDeleteModalOpen(true);
+//             }}
+//             onAdd={() => openCreateModal(BANNER_TYPE)}
+//           />
+//         )}
+
+//         {/* Other Content Section */}
+//         {activeSection === 'content' && (
+//           <OtherContentSection
+//             banners={banners}
+//             loading={loading}
+//             filters={filters}
+//             total={total}
+//             loadingStates={loadingStates}
+//             onFilterChange={handleFilterChange}
+//             onResetFilters={resetFilters}
+//             onPageChange={handlePageChange}
+//             onToggleStatus={toggleBannerStatus}
+//             onEdit={openEditModal}
+//             onDelete={(banner) => {
+//               setSelectedBanner(banner);
+//               setDeleteModalOpen(true);
+//             }}
+//             onAdd={() => openCreateModal(OTHER_TYPE)}
+//           />
+//         )}
+
+//         {/* Notifications Section */}
+//         {activeSection === 'notifications' && (
+//           <NotificationSection />
 //         )}
 //       </div>
 
-//       {/* ============================================ */}
-//       {/* EDIT/CREATE MODAL */}
-//       {/* ============================================ */}
+
 //       <Modal
 //         isOpen={editModalOpen}
 //         onClose={closeModal}
@@ -2746,7 +2979,7 @@ export default function BannerManagement() {
 //                         }
 //                         className="h-5 w-5 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
 //                       />
-//                       <span>Active Banner</span>
+//                       <span>Active</span>
 //                     </Label>
 //                   </div>
 //                 </div>
@@ -2770,17 +3003,15 @@ export default function BannerManagement() {
 //                 {uploading
 //                   ? "Uploading..."
 //                   : selectedBanner
-//                   ? "Update Banner"
-//                   : "Create Banner"}
+//                   ? "Update"
+//                   : "Create"}
 //               </button>
 //             </div>
 //           </form>
 //         </div>
 //       </Modal>
 
-//       {/* ============================================ */}
-//       {/* DELETE CONFIRMATION MODAL */}
-//       {/* ============================================ */}
+
 //       <Modal
 //         isOpen={isDeleteModalOpen}
 //         onClose={() => {
@@ -2796,7 +3027,7 @@ export default function BannerManagement() {
 //                 Confirm Deletion
 //               </h4>
 //               <p className="mb-2 text-sm text-gray-500 dark:text-gray-400 lg:mb-2">
-//                 Are you sure you want to delete this banner? This action cannot
+//                 Are you sure you want to delete this item? This action cannot
 //                 be undone.
 //               </p>
 //             </div>
@@ -2833,7 +3064,7 @@ export default function BannerManagement() {
 //                 onClick={deleteBanner}
 //                 className="rounded-md bg-red-600 px-4 py-2 text-sm font-medium text-white hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-red-500 transition-colors"
 //               >
-//                 Delete Banner
+//                 Delete
 //               </button>
 //             </div>
 //           </div>
@@ -2842,5 +3073,13 @@ export default function BannerManagement() {
 //     </div>
 //   );
 // }
+
+
+
+
+
+
+
+
 
 

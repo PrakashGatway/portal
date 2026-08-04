@@ -752,7 +752,7 @@ const NotificationManagement = () => {
                       </div>
 
                       <div className="flex items-center gap-1 pl-4">
-                        {notification.status === "unread" && (
+                        {/* {notification.status === "unread" && (
                           <button
                             onClick={() => markAsRead(notification._id)}
                             disabled={actionLoading === notification._id}
@@ -765,9 +765,9 @@ const NotificationManagement = () => {
                               <Check className="h-4 w-4" />
                             )}
                           </button>
-                        )}
+                        )} */}
 
-                        {notification.status !== "archived" && (
+                        {/* {notification.status !== "archived" && (
                           <button
                             onClick={() =>
                               archiveNotification(notification._id)
@@ -778,7 +778,7 @@ const NotificationManagement = () => {
                           >
                             <Archive className="h-4 w-4" />
                           </button>
-                        )}
+                        )} */}
 
                         <button
                           onClick={() => deleteNotification(notification._id)}

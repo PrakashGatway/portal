@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useCallback } from "react";
 import {
   Bell,
   Trash2,
@@ -15,6 +15,7 @@ import {
   Bell as BellIcon,
   Smartphone,
   AlertCircle,
+  RefreshCw,
 } from "lucide-react";
 import api from "../axiosInstance";
 import { useAuth } from "../context/UserContext";
@@ -67,7 +68,6 @@ interface NotificationResponse {
 }
 
 const Notifications = () => {
-  
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [loading, setLoading] = useState(false);
   const [actionLoading, setActionLoading] = useState<string | null>(null);
@@ -76,13 +76,12 @@ const Notifications = () => {
   const [filter, setFilter] = useState<"all" | "unread" | "archived">("all");
   const [error, setError] = useState<string | null>(null);
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
+  const [totalCount, setTotalCount] = useState(0);
   
-    const { user, fetchUserProfile } = useAuth() as any;
+  const { user, fetchUserProfile } = useAuth() as any;
 
-    console.log( user ," user, fetchUserProfile ")
-
-  // Fetch notifications
-  const fetchNotifications = async (currentPage = 1, currentFilter = filter) => {
+  // Fetch notifications with memoization
+  const fetchNotifications = useCallback(async (currentPage = 1, currentFilter = filter) => {
     try {
       setLoading(true);
       setError(null);
@@ -90,24 +89,26 @@ const Notifications = () => {
       const params = new URLSearchParams({
         page: currentPage.toString(),
         limit: "10",
-        isActive : user?.lastActive?.split('T')[0],
-        category : user?.category?._id
-        // course : user?.
       });
 
-      // if (currentFilter === "unread") {
-      //   params.append("status", "unread");
-      // } else if (currentFilter === "archived") {
-      //   params.append("status", "archived");
-      // }
+      // Add filters only if they exist
+      if (user?.lastActive) {
+        params.append("isActive", user.lastActive.split('T')[0]);
+      }
+      if (user?.category?._id) {
+        params.append("category", user.category._id);
+      }
+      if (currentFilter !== "all") {
+        params.append("status", currentFilter);
+      }
 
       const response = await api.get(`/notification?${params.toString()}`);
-      // const response = await api.get(`/notification`);
       const result: NotificationResponse = response.data;
 
       if (result.success) {
         setNotifications(result.data || []);
         setTotalPages(result.pagination?.totalPages || 1);
+        setTotalCount(result.pagination?.total || 0);
         setPage(result.pagination?.page || currentPage);
       } else {
         throw new Error("Failed to fetch notifications");
@@ -118,7 +119,7 @@ const Notifications = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [user, filter]);
 
   // Archive notification
   const archiveNotification = async (notificationId: string) => {
@@ -133,8 +134,10 @@ const Notifications = () => {
         setNotifications((prev) =>
           prev.filter((notification) => notification._id !== notificationId)
         );
-        setSuccessMessage("Notification archived");
-        setTimeout(() => setSuccessMessage(null), 3000);
+        showSuccess("Notification archived successfully");
+        
+        // Update total count
+        setTotalCount(prev => Math.max(0, prev - 1));
       } else {
         throw new Error(result?.message || "Failed to archive notification");
       }
@@ -163,8 +166,10 @@ const Notifications = () => {
         setNotifications((prev) =>
           prev.filter((notification) => notification._id !== notificationId)
         );
-        setSuccessMessage("Notification deleted");
-        setTimeout(() => setSuccessMessage(null), 3000);
+        showSuccess("Notification deleted successfully");
+        
+        // Update total count
+        setTotalCount(prev => Math.max(0, prev - 1));
       } else {
         throw new Error(result?.message || "Failed to delete notification");
       }
@@ -193,6 +198,7 @@ const Notifications = () => {
               : notification
           )
         );
+        showSuccess("Marked as read");
       } else {
         throw new Error(result?.message || "Failed to mark as read");
       }
@@ -204,11 +210,45 @@ const Notifications = () => {
     }
   };
 
+  // Mark all as read
+  const markAllAsRead = async () => {
+    try {
+      setLoading(true);
+      const unreadIds = notifications
+        .filter(n => n.status === "unread")
+        .map(n => n._id);
+
+      if (unreadIds.length === 0) {
+        showSuccess("No unread notifications");
+        return;
+      }
+
+      const response = await api.put('/notification/mark-all-read', {
+        notificationIds: unreadIds
+      });
+
+      if (response.data.success) {
+        setNotifications(prev =>
+          prev.map(notification =>
+            notification.status === "unread"
+              ? { ...notification, status: "read", readAt: new Date().toISOString() }
+              : notification
+          )
+        );
+        showSuccess(`Marked ${unreadIds.length} notifications as read`);
+      }
+    } catch (error: any) {
+      console.error("Mark all as read error:", error);
+      setError(error.response?.data?.message || "Failed to mark all as read");
+    } finally {
+      setLoading(false);
+    }
+  };
+
   // Handle filter change
   const handleFilterChange = (newFilter: "all" | "unread" | "archived") => {
     setFilter(newFilter);
     setPage(1);
-    fetchNotifications(1, newFilter);
   };
 
   // Handle page navigation
@@ -222,6 +262,12 @@ const Notifications = () => {
     if (page > 1) {
       fetchNotifications(page - 1, filter);
     }
+  };
+
+  // Show success message with auto-dismiss
+  const showSuccess = (message: string) => {
+    setSuccessMessage(message);
+    setTimeout(() => setSuccessMessage(null), 3000);
   };
 
   // Format date
@@ -244,59 +290,111 @@ const Notifications = () => {
   // Get priority color
   const getPriorityColor = (priority: string) => {
     switch (priority) {
-      case "urgent": return "text-red-600 bg-red-50";
-      case "high": return "text-orange-600 bg-orange-50";
-      case "medium": return "text-blue-600 bg-blue-50";
-      case "low": return "text-gray-600 bg-gray-50";
-      default: return "text-gray-600 bg-gray-50";
+      case "urgent": return "text-red-600 bg-red-50 border-red-200";
+      case "high": return "text-orange-600 bg-orange-50 border-orange-200";
+      case "medium": return "text-blue-600 bg-blue-50 border-blue-200";
+      case "low": return "text-gray-600 bg-gray-50 border-gray-200";
+      default: return "text-gray-600 bg-gray-50 border-gray-200";
     }
   };
 
   // Get status badge
   const getStatusBadge = (status: string) => {
     switch (status) {
-      case "unread": return "bg-blue-100 text-blue-700";
-      case "read": return "bg-gray-100 text-gray-700";
-      case "archived": return "bg-yellow-100 text-yellow-700";
-      default: return "bg-gray-100 text-gray-700";
+      case "unread": return "bg-blue-100 text-blue-700 border-blue-200";
+      case "read": return "bg-gray-100 text-gray-700 border-gray-200";
+      case "archived": return "bg-yellow-100 text-yellow-700 border-yellow-200";
+      default: return "bg-gray-100 text-gray-700 border-gray-200";
     }
   };
+
+  // Get filtered notifications
+  const getFilteredNotifications = () => {
+    if (filter === "all") return notifications;
+    return notifications.filter(n => n.status === filter);
+  };
+
+  const filteredNotifications = getFilteredNotifications();
 
   // Initial load
   useEffect(() => {
     fetchNotifications();
-  }, []);
+  }, [fetchNotifications]);
+
+  // Reload when filter changes
+  useEffect(() => {
+    fetchNotifications(1, filter);
+  }, [filter, fetchNotifications]);
+
+  // Calculate unread count
+  const unreadCount = notifications.filter(n => n.status === "unread").length;
 
   return (
-    <div className="min-h-screen bg-gray-50 p-6">
+    <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 p-6">
       <div className="mx-auto max-w-7xl">
         {/* Header */}
         <div className="mb-8 flex items-center justify-between">
           <div>
-            <h1 className="text-2xl font-bold text-gray-900">Notification Management</h1>
+            <div className="flex items-center gap-3">
+              <h1 className="text-2xl font-bold text-gray-900">Notifications</h1>
+              {unreadCount > 0 && (
+                <span className="inline-flex items-center rounded-full bg-red-100 px-2.5 py-0.5 text-xs font-medium text-red-800">
+                  {unreadCount} unread
+                </span>
+              )}
+            </div>
             <p className="mt-1 text-sm text-gray-500">
-               {notifications.length}
+              {totalCount} total notifications
             </p>
           </div>
           
-          
+          <div className="flex items-center gap-3">
+            {unreadCount > 0 && (
+              <button
+                onClick={markAllAsRead}
+                disabled={loading}
+                className="inline-flex items-center gap-2 rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white transition hover:bg-blue-700 disabled:opacity-50"
+              >
+                {loading ? (
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                ) : (
+                  <Check className="h-4 w-4" />
+                )}
+                Mark all as read
+              </button>
+            )}
+            <button
+              onClick={() => fetchNotifications(page, filter)}
+              disabled={loading}
+              className="rounded-lg bg-white p-2 text-gray-600 shadow-sm transition hover:bg-gray-50 disabled:opacity-50"
+              title="Refresh"
+            >
+              <RefreshCw className={`h-5 w-5 ${loading ? 'animate-spin' : ''}`} />
+            </button>
+          </div>
         </div>
 
         {/* Success/Error Messages */}
         {successMessage && (
-          <div className="mb-4 rounded-lg bg-green-50 p-4 text-sm text-green-700">
-            {successMessage}
+          <div className="mb-4 rounded-lg bg-green-50 p-4 text-sm text-green-700 border border-green-200">
+            <div className="flex items-center gap-2">
+              <Check className="h-4 w-4" />
+              {successMessage}
+            </div>
           </div>
         )}
         
         {error && (
-          <div className="mb-4 rounded-lg bg-red-50 p-4 text-sm text-red-700">
-            {error}
+          <div className="mb-4 rounded-lg bg-red-50 p-4 text-sm text-red-700 border border-red-200">
+            <div className="flex items-center gap-2">
+              <AlertCircle className="h-4 w-4" />
+              {error}
+            </div>
           </div>
         )}
 
         {/* Filters */}
-        <div className="mb-6 flex items-center gap-4">
+        <div className="mb-6 flex flex-wrap items-center gap-4">
           <div className="flex gap-1 rounded-lg bg-white p-1 shadow-sm">
             {["all", "unread", "archived"].map((option) => (
               <button
@@ -304,66 +402,71 @@ const Notifications = () => {
                 onClick={() => handleFilterChange(option as any)}
                 className={`rounded-md px-4 py-2 text-sm font-medium transition capitalize ${
                   filter === option
-                    ? "bg-blue-600 text-white"
+                    ? "bg-blue-600 text-white shadow-sm"
                     : "text-gray-600 hover:bg-gray-100"
                 }`}
               >
                 {option}
+                {option === "unread" && unreadCount > 0 && (
+                  <span className="ml-2 inline-flex items-center rounded-full bg-red-100 px-2 py-0.5 text-xs font-medium text-red-800">
+                    {unreadCount}
+                  </span>
+                )}
               </button>
             ))}
           </div>
         </div>
 
         {/* Notifications List */}
-        <div className="rounded-lg bg-white shadow-sm">
+        <div className="rounded-lg bg-white shadow-sm overflow-hidden">
           {loading ? (
             <div className="flex items-center justify-center py-12">
               <Loader2 className="h-8 w-8 animate-spin text-blue-600" />
             </div>
-          ) : notifications.length === 0 ? (
+          ) : filteredNotifications.length === 0 ? (
             <div className="flex flex-col items-center justify-center py-12">
               <div className="mb-3 flex h-16 w-16 items-center justify-center rounded-full bg-gray-100">
                 <Bell className="h-8 w-8 text-gray-400" />
               </div>
               <p className="text-sm font-medium text-gray-700">No notifications</p>
               <p className="mt-1 text-xs text-gray-400">
-                {filter === "all" ? "Create your first notification" : `No ${filter} notifications`}
+                {filter === "all" ? "You're all caught up!" : `No ${filter} notifications`}
               </p>
             </div>
           ) : (
             <>
               <div className="divide-y divide-gray-200">
-                {notifications.map((notification) => (
+                {filteredNotifications.map((notification) => (
                   <div
                     key={notification._id}
                     className={`p-4 transition hover:bg-gray-50 ${
-                      notification.status === "unread" ? "bg-blue-50/30" : ""
+                      notification.status === "unread" ? "bg-blue-50/50 border-l-4 border-blue-500" : ""
                     }`}
                   >
-                    <div className="flex items-start justify-between">
-                      <div className="flex-1 space-y-1">
-                        <div className="flex items-center gap-2">
+                    <div className="flex items-start justify-between gap-4">
+                      <div className="flex-1 space-y-2">
+                        <div className="flex flex-wrap items-center gap-2">
                           <h3 className="text-sm font-medium text-gray-900">
                             {notification.title}
                           </h3>
                           <span
-                            className={`inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium ${getStatusBadge(
+                            className={`inline-flex items-center rounded-full border px-2 py-0.5 text-xs font-medium ${getStatusBadge(
                               notification.status
                             )}`}
                           >
                             {notification.status}
                           </span>
                           <span
-                            className={`inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium ${getPriorityColor(
+                            className={`inline-flex items-center rounded-full border px-2 py-0.5 text-xs font-medium ${getPriorityColor(
                               notification.priority
                             )}`}
                           >
                             {notification.priority}
                           </span>
                           {notification.isGlobal ? (
-                            <Globe className="h-3.5 w-3.5 text-purple-500" />
+                            <Globe className="h-3.5 w-3.5 text-purple-500" title="Global" />
                           ) : (
-                            <User className="h-3.5 w-3.5 text-blue-500" />
+                            <User className="h-3.5 w-3.5 text-blue-500" title="Personal" />
                           )}
                         </div>
 
@@ -372,7 +475,14 @@ const Notifications = () => {
                         <div className="flex flex-wrap items-center gap-4 text-xs text-gray-400">
                           <span>{formatDate(notification.createdAt)}</span>
                           <span>•</span>
-                          <span>Type: {notification.type}</span>
+                          <span className="capitalize">Type: {notification.type.replace('-', ' ')}</span>
+                          
+                          {notification.sender?.name && (
+                            <>
+                              <span>•</span>
+                              <span>From: {notification.sender.name}</span>
+                            </>
+                          )}
                           
                           {notification.channels && (
                             <>
@@ -396,13 +506,21 @@ const Notifications = () => {
                         </div>
 
                         {notification.data?.actionText && (
-                          <div className="mt-1 flex items-center gap-1 text-xs font-medium text-blue-600">
+                          <button 
+                            className="mt-1 inline-flex items-center gap-1 text-xs font-medium text-blue-600 hover:text-blue-700"
+                            onClick={() => {
+                              if (notification.data?.url) {
+                                window.location.href = notification.data.url;
+                              }
+                            }}
+                          >
                             {notification.data.actionText}
-                          </div>
+                            <Send className="h-3 w-3" />
+                          </button>
                         )}
                       </div>
 
-                      <div className="flex items-center gap-1 pl-4">
+                      <div className="flex items-center gap-1 flex-shrink-0">
                         {notification.status === "unread" && (
                           <button
                             onClick={() => markAsRead(notification._id)}
@@ -429,14 +547,14 @@ const Notifications = () => {
                           </button>
                         )}
 
-                        <button
+                        {/* <button
                           onClick={() => deleteNotification(notification._id)}
                           disabled={actionLoading === notification._id}
                           className="rounded-md p-1.5 text-gray-400 transition hover:bg-red-50 hover:text-red-600 disabled:opacity-50"
                           title="Delete"
                         >
                           <Trash2 className="h-4 w-4" />
-                        </button>
+                        </button> */}
                       </div>
                     </div>
                   </div>
@@ -444,32 +562,33 @@ const Notifications = () => {
               </div>
 
               {/* Pagination */}
-              <div className="flex items-center justify-between border-t border-gray-200 px-4 py-3">
-                <button
-                  disabled={page <= 1 || loading}
-                  onClick={handlePreviousPage}
-                  className="rounded-md border border-gray-200 px-4 py-2 text-sm font-medium text-gray-600 transition hover:bg-gray-50 disabled:cursor-not-allowed disabled:opacity-40"
-                >
-                  Previous
-                </button>
+              {totalPages > 1 && (
+                <div className="flex items-center justify-between border-t border-gray-200 px-4 py-3">
+                  <button
+                    disabled={page <= 1 || loading}
+                    onClick={handlePreviousPage}
+                    className="rounded-md border border-gray-200 px-4 py-2 text-sm font-medium text-gray-600 transition hover:bg-gray-50 disabled:cursor-not-allowed disabled:opacity-40"
+                  >
+                    Previous
+                  </button>
 
-                <span className="text-sm text-gray-400">
-                  Page {page} of {totalPages}
-                </span>
+                  <span className="text-sm text-gray-400">
+                    Page {page} of {totalPages}
+                  </span>
 
-                <button
-                  disabled={page >= totalPages || loading}
-                  onClick={handleNextPage}
-                  className="rounded-md border border-gray-200 px-4 py-2 text-sm font-medium text-gray-600 transition hover:bg-gray-50 disabled:cursor-not-allowed disabled:opacity-40"
-                >
-                  Next
-                </button>
-              </div>
+                  <button
+                    disabled={page >= totalPages || loading}
+                    onClick={handleNextPage}
+                    className="rounded-md border border-gray-200 px-4 py-2 text-sm font-medium text-gray-600 transition hover:bg-gray-50 disabled:cursor-not-allowed disabled:opacity-40"
+                  >
+                    Next
+                  </button>
+                </div>
+              )}
             </>
           )}
         </div>
       </div>
-
     </div>
   );
 };
