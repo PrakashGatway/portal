@@ -132,7 +132,6 @@ export default function App() {
               <Route path="/mock-tests" element={<MockTest />} />
 
               {/* <Route path="/test/:testId" element={<TestQuestionPage/>} /> */}
-
               // admin
               <Route element={<ProtectedRoute roles={[ROLES.ADMIN]} />}>
                 <Route path="/users" element={<UserListPage />} />
@@ -149,16 +148,15 @@ export default function App() {
                 <Route path="/test-manage" element={<TestSeriesManagement />} />
                 <Route path="/test/questions" element={<QuestionManagement />} />
                 <Route path="/test/packages" element={<PackageManagement />} />
-                <Route path="/setting" element={<Setting/>} />
+                <Route path="/setting" element={<Setting />} />
               </Route>
-                <Route path="/notifications" element={<Notifications />} />
+              <Route path="/notifications" element={<Notifications />} />
               // teachers
               <Route element={<ProtectedRoute roles={[ROLES.TEACHER, ROLES.ADMIN]} />}>
                 <Route path="/mcq/questions" element={<QuestionManagementPage />} />
                 <Route path="/mcq/tests" element={<TestTemplateManagementPage />} />
                 <Route path="/mcq/test-series" element={<TestSeriesManagementPage />} />
               </Route>
-
               // Crm
               <Route element={<ProtectedRoute roles={[ROLES.COUNSEL, ROLES.ADMIN, ROLES.MANAGER, ROLES.LEADER]} />}>
                 <Route path="/leads" element={<LeadManagement />} />

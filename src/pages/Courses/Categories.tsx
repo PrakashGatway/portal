@@ -430,15 +430,20 @@ export default function CategoryManagement() {
                                 {categories?.length > 0 ? (
                                     categories.map((category) => (
                                         <tr key={category._id} className="hover:bg-gray-50 dark:hover:bg-gray-700">
-                                            <td className="whitespace-nowrap px-2 py-4">
+                                            <td className="whitespace-nowrap px-2 py-3">
                                                 <div className="flex items-center">
-                                                    <div className="flex gap-1 text-sm font-semibold capitalize text-gray-900 dark:text-white">
-                                                        <DynamicIcon name={category.icon} className="text-blue-500" />
-                                                        {category.name}
+                                                    <div className="flex gap-2 text-sm font-semibold capitalize text-gray-900 dark:text-white">
+                                                        <div className="text-slate-600 flex items-center justify-center shadow-xl p-2 bg-slate-200 dark:bg-slate-600 rounded-full" >
+                                                        <DynamicIcon className="h-5 w-5 stroke-[1.8]" name={category.icon} />
+
+                                                        </div>
+                                                        <div className="flex items-center gap-2">
+                                                            {category.name}
+                                                        </div>
                                                     </div>
                                                 </div>
                                             </td>
-                                            <td className="whitespace-nowrap capitalize px-2 py-4 text-sm text-gray-500 dark:text-gray-300">
+                                            <td className="whitespace-nowrap capitalize px-2 py-3 text-sm text-gray-500 dark:text-gray-300">
                                                 {category.parent ?
                                                     (typeof category.parent === 'string' ?
                                                         allCategories.find(cat => cat._id === category.parent)?.name || 'Unknown' :
@@ -446,16 +451,16 @@ export default function CategoryManagement() {
                                                     'Root'
                                                 }
                                             </td>
-                                            <td className="whitespace-nowrap px-2 py-4 text-sm text-gray-500 dark:text-gray-300">
+                                            <td className="whitespace-nowrap px-2 py-3 text-sm text-gray-500 dark:text-gray-300">
                                                 {category.order}
                                             </td>
-                                            <td className="whitespace-nowrap px-2 py-4 text-sm text-gray-500 dark:text-gray-300">
+                                            <td className="whitespace-nowrap px-2 py-3 text-sm text-gray-500 dark:text-gray-300">
                                                 {category.subcategoriesCount || 0}
                                             </td>
-                                            <td className="whitespace-nowrap px-2 py-4 text-sm text-gray-500 dark:text-gray-300">
+                                            <td className="whitespace-nowrap px-2 py-3 text-sm text-gray-500 dark:text-gray-300">
                                                 {category.coursesCount || 0}
                                             </td>
-                                            <td className="whitespace-nowrap px-2 py-4 text-sm text-gray-500 dark:text-gray-300">
+                                            <td className="whitespace-nowrap px-2 py-3 text-sm text-gray-500 dark:text-gray-300">
                                                 <span
                                                     onClick={() => toggleCategoryStatus(category._id, category.isActive)}
                                                     className={`inline-flex cursor-pointer rounded-full px-2 text-xs font-semibold leading-5 ${category.isActive
@@ -466,11 +471,11 @@ export default function CategoryManagement() {
                                                     {category.isActive ? "Active" : "Inactive"}
                                                 </span>
                                             </td>
-                                            <td className="whitespace-nowrap px-2 py-4 text-sm text-gray-500 dark:text-gray-300">
+                                            <td className="whitespace-nowrap px-2 py-3 text-sm text-gray-500 dark:text-gray-300">
                                                 {moment(category.createdAt).format("MMM D, YYYY")}
                                             </td>
 
-                                            <td className="whitespace-nowrap px-2 py-4 text-sm font-medium text-gray-900 dark:text-white">
+                                            <td className="whitespace-nowrap px-2 py-3 text-sm font-medium text-gray-900 dark:text-white">
                                                 <div className="flex space-x-2">
                                                     <button
                                                         onClick={() => viewCategoryDetails(category)}
@@ -499,7 +504,7 @@ export default function CategoryManagement() {
                                     <tr>
                                         <td
                                             colSpan={8}
-                                            className="px-2 py-4 text-center text-sm text-gray-500 dark:text-gray-300"
+                                            className="px-2 py-3 text-center text-sm text-gray-500 dark:text-gray-300"
                                         >
                                             No categories found matching your criteria
                                         </td>

@@ -8,10 +8,47 @@ import Label from "../../components/form/Label";
 import Select from "../../components/form/Select";
 import { toast } from "react-toastify";
 import api from "../../axiosInstance";
-import { Eye, Pencil, Trash2, BookOpen, Search, CheckCircle, FolderOpen, Info } from "lucide-react";
+import {
+    Eye,
+    Pencil,
+    Trash2,
+    BookOpen,
+    Search,
+    CheckCircle,
+    FolderOpen,
+    Info,
+    Plus,
+    X,
+    ChevronRight,
+    ChevronLeft,
+    Clock,
+    Layers,
+    Filter,
+    SlidersHorizontal,
+    ArrowUpDown,
+    Grid3X3,
+    List,
+    MoreHorizontal,
+    AlertCircle,
+    CheckCircle2,
+    XCircle,
+    BarChart3,
+    Calendar,
+    Hash,
+    Tag,
+    Loader2,
+    RefreshCcw,
+} from "lucide-react";
 import TextArea from "../../components/form/input/TextArea";
 import { useAuth } from "../../context/UserContext";
 import moment from "moment";
+import { motion, AnimatePresence } from "framer-motion";
+import {
+    DropdownMenu,
+    DropdownMenuContent,
+    DropdownMenuItem,
+    DropdownMenuTrigger,
+} from "../../components/ui/dropdown/Dropdown";
 
 const ExamTypes = [
     "Language Proficiency",
@@ -30,14 +67,21 @@ export default function ExamManagement() {
     const [allCategories, setAllCategories] = useState([]);
     const [allSections, setAllSections] = useState([]);
     const { user } = useAuth();
+    const [viewMode, setViewMode] = useState("grid"); // table or grid
+    const [showFilters, setShowFilters] = useState(true);
+    const [selectedExams, setSelectedExams] = useState([]);
 
     // Filters for listing
     const [filters, setFilters] = useState({
         page: 1,
-        limit: 10,
+        limit: 12,
         examType: "",
         search: ""
     });
+
+    // Debounced search
+    const [searchInput, setSearchInput] = useState("");
+    const [searchTimeout, setSearchTimeout] = useState(null);
 
     // Form state
     const [formData, setFormData] = useState({
@@ -48,8 +92,9 @@ export default function ExamManagement() {
         sections: []
     });
     const [errors, setErrors] = useState({});
-    const [currentStep, setCurrentStep] = useState(1); // 1 = basic, 2 = sections
+    const [currentStep, setCurrentStep] = useState(1);
     const [searchTerm, setSearchTerm] = useState("");
+    const [saving, setSaving] = useState(false);
 
     // Fetch data on filter change
     useEffect(() => {
@@ -57,6 +102,15 @@ export default function ExamManagement() {
         fetchCategories();
         fetchSections();
     }, [filters]);
+
+    useEffect(() => {
+        if (searchTimeout) clearTimeout(searchTimeout);
+        const timeoutId = setTimeout(() => {
+            setFilters(prev => ({ ...prev, search: searchInput, page: 1 }));
+        }, 500);
+        setSearchTimeout(timeoutId);
+        return () => clearTimeout(timeoutId);
+    }, [searchInput]);
 
     const fetchExams = async () => {
         setLoading(true);
@@ -69,7 +123,7 @@ export default function ExamManagement() {
             };
             const response = await api.get("/test/exams", { params });
             setExams(response.data?.data || []);
-            setTotal(response.data?.total || 0);
+            setTotal(response.data?.total || response.data?.pagination?.total || 0);
         } catch (error) {
             toast.error("Failed to load exams");
         } finally {
@@ -104,10 +158,22 @@ export default function ExamManagement() {
         setFilters((prev) => ({ ...prev, page: newPage }));
     };
 
+    const resetFilters = () => {
+        setFilters({
+            page: 1,
+            limit: 12,
+            examType: "",
+            search: ""
+        });
+        setSearchInput("");
+    };
+
+    const activeFilterCount = filters.examType ? 1 : 0;
+
     const viewExamDetails = async (exam) => {
         try {
             const res = await api.get(`/test/exams/${exam._id}`);
-            setSelectedExam(res.data?.data || exam); // fallback to passed exam
+            setSelectedExam(res.data?.data || exam);
             openModal();
         } catch (error) {
             toast.error("Failed to load exam details");
@@ -125,6 +191,7 @@ export default function ExamManagement() {
         });
         setErrors({});
         setCurrentStep(1);
+        setSearchTerm("");
         setEditModalOpen(true);
     };
 
@@ -139,10 +206,10 @@ export default function ExamManagement() {
         });
         setErrors({});
         setCurrentStep(1);
+        setSearchTerm("");
         setEditModalOpen(true);
     };
 
-    // --- VALIDATION ---
     const validateStep1 = () => {
         const newErrors = {};
         if (!formData.name?.trim()) newErrors.name = "Exam name is required";
@@ -152,7 +219,6 @@ export default function ExamManagement() {
         return Object.keys(newErrors).length === 0;
     };
 
-    // --- STEPPER NAVIGATION ---
     const goToNextStep = () => {
         if (currentStep === 1 && validateStep1()) {
             setCurrentStep(2);
@@ -163,7 +229,6 @@ export default function ExamManagement() {
         setCurrentStep(1);
     };
 
-    // --- SECTION SELECTION ---
     const filteredSections = useMemo(() => {
         if (!searchTerm) return allSections;
         return allSections.filter(section =>
@@ -192,9 +257,9 @@ export default function ExamManagement() {
         }));
     };
 
-    // --- SUBMIT HANDLERS ---
     const handleCreateExam = async () => {
         try {
+            setSaving(true);
             await api.post("/test/exams", formData);
             toast.success("Exam created successfully");
             fetchExams();
@@ -202,11 +267,14 @@ export default function ExamManagement() {
         } catch (error) {
             const msg = error.response?.data?.message || "Failed to create exam";
             toast.error(msg);
+        } finally {
+            setSaving(false);
         }
     };
 
     const handleUpdateExam = async () => {
         try {
+            setSaving(true);
             await api.put(`/test/exams/${selectedExam._id}`, formData);
             toast.success("Exam updated successfully");
             fetchExams();
@@ -214,6 +282,8 @@ export default function ExamManagement() {
         } catch (error) {
             const msg = error.response?.data?.message || "Failed to update exam";
             toast.error(msg);
+        } finally {
+            setSaving(false);
         }
     };
 
@@ -243,290 +313,570 @@ export default function ExamManagement() {
         }
     };
 
+    const handleBulkDelete = async () => {
+        if (!window.confirm(`Delete ${selectedExams.length} selected exams?`)) return;
+        try {
+            await Promise.all(selectedExams.map(id => api.delete(`/test/exams/${id}`)));
+            toast.success(`${selectedExams.length} exams deleted`);
+            setSelectedExams([]);
+            fetchExams();
+        } catch (error) {
+            toast.error("Failed to delete some exams");
+        }
+    };
+
+    const totalPages = Math.ceil(total / filters.limit);
+
     return (
-        <div className="w-full overflow-x-auto">
+        <div className="min-h-screen max-w-7xl mx-auto p-3">
             {/* Header */}
-            <div className="p-4 border border-gray-200 rounded-2xl dark:border-gray-800 lg:p-4 mb-3 bg-white dark:border-gray-700 dark:bg-gray-800 dark:text-gray-400">
-                <div className="flex flex-col gap-5 xl:flex-row xl:items-center xl:justify-between">
-                    <div className="flex flex-col items-center w-full gap-6 xl:flex-row">
-                        <div className="w-16 h-16 overflow-hidden border border-gray-200 rounded-full dark:border-gray-800 flex items-center justify-center bg-indigo-50">
-                            <BookOpen className="text-indigo-600 h-8 w-8" />
-                        </div>
-                        <div className="order-3 xl:order-2">
-                            <h4 className="mb-2 text-lg font-semibold text-center text-gray-800 dark:text-white/90 xl:text-left">
-                                Exam Management
-                            </h4>
-                            <div className="flex flex-col items-center gap-1 text-center xl:flex-row xl:gap-3 xl:text-left">
-                                <p className="text-sm text-gray-500 dark:text-gray-400">Manage test series exams</p>
-                                <div className="hidden h-3.5 w-px bg-gray-300 dark:bg-gray-700 xl:block"></div>
-                                <p className="text-sm text-gray-500 dark:text-gray-400">{exams.length} exams</p>
-                            </div>
-                        </div>
+            <div className="mb-3">
+                <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+                    <div>
+                        <h1 className="text-xl font-bold text-gray-900 dark:text-white">
+                            Exam Management
+                        </h1>
+                        <p className="text-sm text-gray-500 dark:text-gray-400">
+                            Manage your exam configurations and sections
+                        </p>
                     </div>
-                    <div className="flex w-full flex-col gap-3 sm:flex-row sm:items-center sm:justify-end xl:gap-4">
-                        <button
-                            onClick={openCreateModal}
-                            className="flex w-full items-center justify-center gap-2 rounded-full border border-gray-300 bg-white px-4 py-3 text-sm font-medium text-gray-700 shadow-theme-xs hover:bg-gray-50 hover:text-gray-800 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-400 dark:hover:bg-white/[0.03] dark:hover:text-gray-200 lg:inline-flex lg:w-auto"
-                        >
-                            <svg className="fill-current" width="18" height="18" viewBox="0 0 18 18">
-                                <path fillRule="evenodd" clipRule="evenodd" d="M15.0911 2.78206C14.2125 1.90338 12.7878 1.90338 11.9092 2.78206L4.57524 10.116C4.26682 10.4244 4.0547 10.8158 3.96468 11.2426L3.31231 14.3352C3.25997 14.5833 3.33653 14.841 3.51583 15.0203C3.69512 15.1996 3.95286 15.2761 4.20096 15.2238L7.29355 14.5714C7.72031 14.4814 8.11172 14.2693 8.42013 13.9609L15.7541 6.62695C16.6327 5.74827 16.6327 4.32365 15.7541 3.44497L15.0911 2.78206ZM12.9698 3.84272C13.2627 3.54982 13.7376 3.54982 14.0305 3.84272L14.6934 4.50563C14.9863 4.79852 14.9863 5.2734 14.6934 5.56629L14.044 6.21573L12.3204 4.49215L12.9698 3.84272ZM11.2597 5.55281L5.6359 11.1766C5.53309 11.2794 5.46238 11.4099 5.43238 11.5522L5.01758 13.5185L6.98394 13.1037C7.1262 13.0737 7.25666 13.003 7.35947 12.9002L12.9833 7.27639L11.2597 5.55281Z" fill="currentColor" />
-                            </svg>
+                    <div className="flex items-center gap-3">
+                        {/* {selectedExams.length > 0 && (
+                            <Button
+                                variant="outline"
+                                size="sm"
+                                className="text-red-600 hover:text-red-700"
+                                onClick={handleBulkDelete}
+                            >
+                                <Trash2 className="mr-2 h-4 w-4" />
+                                Delete Selected ({selectedExams.length})
+                            </Button>
+                        )} */}
+                        <div className="flex items-center rounded-lg border border-gray-200 bg-white p-1 dark:border-gray-700 dark:bg-gray-800">
+                            <button
+                                onClick={() => setViewMode("table")}
+                                className={`rounded-md p-1.5 ${viewMode === "table"
+                                    ? "bg-gray-100 text-blue-600 dark:bg-gray-700 dark:text-blue-400"
+                                    : "text-gray-500"
+                                    }`}
+                            >
+                                <List className="h-4 w-4" />
+                            </button>
+                            <button
+                                onClick={() => setViewMode("grid")}
+                                className={`rounded-md p-1.5 ${viewMode === "grid"
+                                    ? "bg-gray-100 text-blue-600 dark:bg-gray-700 dark:text-blue-400"
+                                    : "text-gray-500"
+                                    }`}
+                            >
+                                <Grid3X3 className="h-4 w-4" />
+                            </button>
+                        </div>
+                        <Button onClick={openCreateModal}>
+                            <Plus className="mr-2 h-4 w-4" />
                             Add New Exam
-                        </button>
+                        </Button>
                     </div>
                 </div>
             </div>
 
-            {/* Filters */}
-            <div className="min-h-[70vh] overflow-x-auto rounded-2xl border border-gray-200 bg-white px-4 py-4 dark:border-gray-800 dark:bg-white/[0.03]">
-                <div className="mb-6 grid grid-cols-1 gap-4 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4">
-                    <div>
-                        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                            Search (Name)
-                        </label>
-                        <input
-                            type="text"
-                            name="search"
-                            value={filters.search}
-                            onChange={(e) => setFilters(prev => ({ ...prev, search: e.target.value, page: 1 }))}
-                            placeholder="Search exams..."
-                            className="w-full rounded-md border border-gray-300 bg-white py-2 px-3 text-sm focus:border-indigo-500 focus:outline-none focus:ring-indigo-500 dark:border-gray-600 dark:bg-gray-800 dark:text-white"
-                        />
-                    </div>
-                    <div>
-                        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                            Exam Type
-                        </label>
-                        <select
-                            name="examType"
-                            value={filters.examType}
-                            onChange={handleFilterChange}
-                            className="w-full rounded-md border border-gray-300 bg-white py-2 px-3 text-sm focus:border-indigo-500 focus:outline-none focus:ring-indigo-500 dark:border-gray-600 dark:bg-gray-800 dark:text-white"
-                        >
-                            <option value="">All Types</option>
-                            {ExamTypes.map((type) => (
-                                <option key={type} value={type}>
-                                    {type}
-                                </option>
-                            ))}
-                        </select>
-                    </div>
-                    <div className="flex items-end">
+            {/* Enhanced Filters */}
+            <div className="mb-3 rounded-2xl border border-gray-200 bg-white dark:border-gray-800 dark:bg-gray-900">
+                <div className="border-b border-gray-100 p-3 dark:border-gray-800">
+                    <div className="flex items-center justify-between">
                         <button
-                            onClick={() =>
-                                setFilters({
-                                    page: 1,
-                                    limit: 10,
-                                    examType: "",
-                                    search: ""
-                                })
-                            }
-                            className="w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm font-medium text-gray-700 shadow-sm hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 dark:border-gray-600 dark:bg-gray-800 dark:text-white dark:hover:bg-gray-700"
+                            onClick={() => setShowFilters(!showFilters)}
+                            className="flex items-center gap-2 text-sm font-medium text-gray-700 dark:text-gray-200"
                         >
-                            Reset Filters
+                            <SlidersHorizontal className="h-4 w-4" />
+                            Filters
+                            {activeFilterCount > 0 && (
+                                <span className="rounded-full bg-blue-100 px-2 py-0.5 text-xs text-blue-600 dark:bg-blue-900/30 dark:text-blue-400">
+                                    {activeFilterCount}
+                                </span>
+                            )}
+                            <ChevronRight className={`h-4 w-4 transition-transform ${showFilters ? 'rotate-90' : ''}`} />
                         </button>
-                    </div>
-                </div>
-
-                {/* Table Actions */}
-                <div className="mb-4 flex flex-col justify-between space-y-4 sm:flex-row sm:items-center sm:space-y-0">
-                    <div className="flex items-center space-x-2">
-                        <label className="text-sm font-medium text-gray-700 dark:text-gray-300">Rows per page:</label>
-                        <select
-                            name="limit"
-                            value={filters.limit}
-                            onChange={handleFilterChange}
-                            className="rounded-md border border-gray-300 bg-white py-1 px-2 text-sm focus:border-indigo-500 focus:outline-none focus:ring-indigo-500 dark:border-gray-600 dark:bg-gray-800 dark:text-white"
-                        >
-                            <option value="5">5</option>
-                            <option value="10">10</option>
-                            <option value="20">20</option>
-                            <option value="50">50</option>
-                        </select>
-                    </div>
-                </div>
-
-                {/* Table */}
-                <div className="overflow-x-auto rounded-lg border border-gray-200 dark:border-gray-700">
-                    {loading ? (
-                        <div className="flex h-64 items-center justify-center">
-                            <div className="h-8 w-8 animate-spin rounded-full border-4 border-indigo-500 border-t-transparent"></div>
+                        <div className="flex items-center gap-3">
+                            <div className="relative">
+                                <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" />
+                                <input
+                                    type="text"
+                                    value={searchInput}
+                                    onChange={(e) => setSearchInput(e.target.value)}
+                                    placeholder="Search exams..."
+                                    className="w-64 rounded-xl border border-gray-200 bg-gray-50 py-2 pl-9 pr-4 text-sm text-gray-900 placeholder:text-gray-400 focus:border-blue-500 focus:bg-white focus:outline-none focus:ring-1 focus:ring-blue-500 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-100 dark:placeholder:text-gray-500"
+                                />
+                            </div>
+                            {activeFilterCount > 0 && (
+                                <button
+                                    onClick={resetFilters}
+                                    className="text-sm text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200"
+                                >
+                                    Clear all
+                                </button>
+                            )}
                         </div>
-                    ) : (
-                        <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
-                            <thead className="bg-gray-50 dark:bg-gray-800">
-                                <tr>
-                                    <th className="px-2 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500 dark:text-gray-300">Name</th>
-                                    <th className="px-2 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500 dark:text-gray-300">Type</th>
-                                    <th className="px-2 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500 dark:text-gray-300">Category</th>
-                                    <th className="px-2 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500 dark:text-gray-300">Sections</th>
-                                    <th className="px-2 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500 dark:text-gray-300">Created</th>
-                                    <th className="px-2 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500 dark:text-gray-300">Actions</th>
+                    </div>
+                </div>
+
+                <AnimatePresence>
+                    {showFilters && (
+                        <motion.div
+                            initial={{ height: 0, opacity: 0 }}
+                            animate={{ height: "auto", opacity: 1 }}
+                            exit={{ height: 0, opacity: 0 }}
+                            transition={{ duration: 0.2 }}
+                            className="overflow-hidden"
+                        >
+                            <div className="grid gap-4 p-4 sm:grid-cols-3">
+                                <div>
+                                    <label className="mb-1.5 block text-xs font-medium text-gray-500 dark:text-gray-400">
+                                        Exam Type
+                                    </label>
+                                    <select
+                                        name="examType"
+                                        value={filters.examType}
+                                        onChange={handleFilterChange}
+                                        className="w-full rounded-xl border border-gray-200 bg-white py-2 px-3 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500 dark:border-gray-700 dark:bg-gray-800 dark:text-white"
+                                    >
+                                        <option value="">All Types</option>
+                                        {ExamTypes.map((type) => (
+                                            <option key={type} value={type}>{type}</option>
+                                        ))}
+                                    </select>
+                                </div>
+                                <div>
+                                    <label className="mb-1.5 block text-xs font-medium text-gray-500 dark:text-gray-400">
+                                        Per Page
+                                    </label>
+                                    <select
+                                        name="limit"
+                                        value={filters.limit}
+                                        onChange={handleFilterChange}
+                                        className="w-full rounded-xl border border-gray-200 bg-white py-2 px-3 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500 dark:border-gray-700 dark:bg-gray-800 dark:text-white"
+                                    >
+                                        <option value="12">12 per page</option>
+                                        <option value="24">24 per page</option>
+                                        <option value="48">48 per page</option>
+                                    </select>
+                                </div>
+                                <div className="flex items-end">
+                                    <button
+                                        onClick={resetFilters}
+                                        className="w-full rounded-xl border border-gray-200 bg-white py-2 px-4 text-sm font-medium text-gray-700 hover:bg-gray-50 dark:border-gray-700 dark:bg-gray-800 dark:text-white dark:hover:bg-gray-700"
+                                    >
+                                        <RefreshCcw className="mr-2 inline-block h-4 w-4" />
+                                        Reset Filters
+                                    </button>
+                                </div>
+                            </div>
+                        </motion.div>
+                    )}
+                </AnimatePresence>
+            </div>
+
+            {/* Stats Bar */}
+            {!loading && (
+                <div className="mb-4 flex items-center justify-between text-sm">
+                    <div className="text-gray-500 dark:text-gray-400">
+                        Showing <span className="font-semibold text-gray-700 dark:text-gray-200">{exams.length}</span> of{" "}
+                        <span className="font-semibold text-gray-700 dark:text-gray-200">{total}</span> exams
+                    </div>
+                </div>
+            )}
+
+            {/* Content */}
+            {loading ? (
+                <div className="flex items-center justify-center py-20">
+                    <div className="text-center">
+                        <Loader2 className="mx-auto mb-4 h-8 w-8 animate-spin text-blue-600" />
+                        <p className="text-sm text-gray-500 dark:text-gray-400">Loading exams...</p>
+                    </div>
+                </div>
+            ) : exams.length === 0 ? (
+                <div className="rounded-2xl border border-gray-200 bg-white p-12 text-center dark:border-gray-800 dark:bg-gray-900">
+                    <BookOpen className="mx-auto mb-4 h-12 w-12 text-gray-300 dark:text-gray-600" />
+                    <h3 className="text-lg font-semibold text-gray-900 dark:text-white">No exams found</h3>
+                    <p className="mt-2 text-sm text-gray-500 dark:text-gray-400">
+                        {filters.search || filters.examType
+                            ? "Try adjusting your filters or search terms"
+                            : "Get started by creating your first exam"}
+                    </p>
+                    {!filters.search && !filters.examType && (
+                        <Button className="mt-6" onClick={openCreateModal}>
+                            <Plus className="mr-2 h-4 w-4" />
+                            Create Your First Exam
+                        </Button>
+                    )}
+                </div>
+            ) : viewMode === "table" ? (
+                <div className="rounded-2xl border border-gray-200 bg-white dark:border-gray-800 dark:bg-gray-900">
+                    <div className="overflow-x-auto">
+                        <table className="w-full">
+                            <thead>
+                                <tr className="border-b border-gray-100 text-left dark:border-gray-800">
+                                    <th className="p-4">
+                                        <input
+                                            type="checkbox"
+                                            checked={selectedExams.length === exams.length && exams.length > 0}
+                                            onChange={() => {
+                                                if (selectedExams.length === exams.length) {
+                                                    setSelectedExams([]);
+                                                } else {
+                                                    setSelectedExams(exams.map(e => e._id));
+                                                }
+                                            }}
+                                            className="rounded border-gray-300"
+                                        />
+                                    </th>
+                                    <th className="p-4 text-sm font-medium text-gray-500 dark:text-gray-400">Exam Name</th>
+                                    <th className="p-4 text-sm font-medium text-gray-500 dark:text-gray-400">Type</th>
+                                    <th className="p-4 text-sm font-medium text-gray-500 dark:text-gray-400">Category</th>
+                                    <th className="p-4 text-sm font-medium text-gray-500 dark:text-gray-400">Sections</th>
+                                    <th className="p-4 text-sm font-medium text-gray-500 dark:text-gray-400">Created</th>
+                                    <th className="p-4 text-sm font-medium text-gray-500 dark:text-gray-400">Actions</th>
                                 </tr>
                             </thead>
-                            <tbody className="divide-y divide-gray-200 bg-white dark:divide-gray-700 dark:bg-gray-800">
-                                {exams.length > 0 ? (
-                                    exams.map((exam) => (
-                                        <tr key={exam._id} className="hover:bg-gray-50 dark:hover:bg-gray-700">
-                                            <td className="whitespace-nowrap px-2 py-2">
-                                                <div className="text-sm font-semibold text-gray-900 dark:text-white capitalize">{exam.name}</div>
-                                                {exam.description && (
-                                                    <div className="text-xs text-gray-500 dark:text-gray-400 mt-1 line-clamp-1">
-                                                        {exam.description}
+                            <tbody className="divide-y divide-gray-100 dark:divide-gray-800">
+                                <AnimatePresence>
+                                    {exams.map((exam) => (
+                                        <motion.tr
+                                            key={exam._id}
+                                            initial={{ opacity: 0, y: 10 }}
+                                            animate={{ opacity: 1, y: 0 }}
+                                            exit={{ opacity: 0, y: -10 }}
+                                            className={`group transition-colors hover:bg-gray-50 dark:hover:bg-gray-800/50 ${selectedExams.includes(exam._id) ? "bg-blue-50/50 dark:bg-blue-900/10" : ""
+                                                }`}
+                                        >
+                                            <td className="p-4">
+                                                <input
+                                                    type="checkbox"
+                                                    checked={selectedExams.includes(exam._id)}
+                                                    onChange={() => {
+                                                        setSelectedExams(prev =>
+                                                            prev.includes(exam._id)
+                                                                ? prev.filter(id => id !== exam._id)
+                                                                : [...prev, exam._id]
+                                                        );
+                                                    }}
+                                                    className="rounded border-gray-300"
+                                                />
+                                            </td>
+                                            <td className="p-3">
+                                                <div className="flex items-center gap-3">
+                                                    
+                                                    <div>
+                                                        <p className="font-medium text-gray-900 dark:text-white capitalize">
+                                                            {exam.name}
+                                                        </p>
+                                                        {exam.description && (
+                                                            <p className="text-xs text-gray-500 dark:text-gray-400 line-clamp-1">
+                                                                {exam.description}
+                                                            </p>
+                                                        )}
                                                     </div>
-                                                )}
+                                                </div>
                                             </td>
-                                            <td className="whitespace-nowrap px-2 py-2 text-sm text-gray-500 dark:text-gray-300">
-                                                {exam.examType}
+                                            <td className="p-3">
+                                                <span className="inline-flex items-center rounded-full bg-gray-100 px-2.5 py-0.5 text-xs font-medium text-gray-700 dark:bg-gray-800 dark:text-gray-300">
+                                                    {exam.examType}
+                                                </span>
                                             </td>
-                                            <td className="whitespace-nowrap px-2 py-2 text-sm text-gray-500 dark:text-gray-300">
+                                            <td className="p-3 text-sm text-gray-700 dark:text-gray-300">
                                                 {exam.category?.name || "—"}
                                             </td>
-                                            <td className="whitespace-nowrap px-2 py-2 text-sm text-gray-500 dark:text-gray-300">
-                                                {exam.sections?.length || 0}
+                                            <td className="p-3">
+                                                <span className="inline-flex items-center gap-1 rounded-full bg-blue-50 px-2.5 py-0.5 text-xs font-medium text-blue-700 dark:bg-blue-900/30 dark:text-blue-300">
+                                                    <Layers className="h-3 w-3" />
+                                                    {exam.sections?.length || 0}
+                                                </span>
                                             </td>
-                                            <td className="whitespace-nowrap px-2 py-2 text-sm text-gray-500 dark:text-gray-300">
-                                                {moment(exam.createdAt).format("MMM D, YYYY")}
+                                            <td className="p-3 text-sm text-gray-500 dark:text-gray-400">
+                                                <div className="flex items-center gap-1">
+                                                    <Calendar className="h-3 w-3" />
+                                                    {moment(exam.createdAt).format("MMM D, YYYY")}
+                                                </div>
                                             </td>
-                                            <td className="whitespace-nowrap px-2 py-2 text-sm font-medium">
-                                                <div className="flex space-x-2">
+                                            <td className="p-3">
+                                                <div className="flex items-center gap-2">
                                                     <button
                                                         onClick={() => viewExamDetails(exam)}
-                                                        className="p-1 rounded-lg text-indigo-600 hover:text-indigo-900 dark:text-indigo-400 dark:hover:text-indigo-300"
+                                                        className="rounded-lg p-1.5 text-gray-500 hover:bg-gray-100 hover:text-indigo-600 dark:hover:bg-gray-800 dark:hover:text-indigo-400"
+                                                        title="View Details"
                                                     >
-                                                        <Eye className="h-5 w-5" />
+                                                        <Eye className="h-4 w-4" />
                                                     </button>
                                                     <button
                                                         onClick={() => openEditModal(exam)}
-                                                        className="p-1 rounded-lg text-blue-600 hover:text-blue-900 dark:text-blue-400 dark:hover:text-blue-300"
+                                                        className="rounded-lg p-1.5 text-gray-500 hover:bg-gray-100 hover:text-blue-600 dark:hover:bg-gray-800 dark:hover:text-blue-400"
+                                                        title="Edit"
                                                     >
-                                                        <Pencil className="h-5 w-5" />
+                                                        <Pencil className="h-4 w-4" />
                                                     </button>
                                                     <button
                                                         onClick={() => {
                                                             setSelectedExam(exam);
                                                             setDeleteModalOpen(true);
                                                         }}
-                                                        className="p-1 rounded-lg text-red-600 hover:text-red-900 dark:text-red-400 dark:hover:text-red-300"
+                                                        className="rounded-lg p-1.5 text-gray-500 hover:bg-red-50 hover:text-red-600 dark:hover:bg-red-900/20 dark:hover:text-red-400"
+                                                        title="Delete"
                                                     >
-                                                        <Trash2 className="h-5 w-5" />
+                                                        <Trash2 className="h-4 w-4" />
                                                     </button>
                                                 </div>
                                             </td>
-                                        </tr>
-                                    ))
-                                ) : (
-                                    <tr>
-                                        <td colSpan={6} className="px-2 py-4 text-center text-sm text-gray-500 dark:text-gray-300">
-                                            No exams found
-                                        </td>
-                                    </tr>
-                                )}
+                                        </motion.tr>
+                                    ))}
+                                </AnimatePresence>
                             </tbody>
                         </table>
-                    )}
-                </div>
-
-                {/* Pagination */}
-                {total > 0 && (
-                    <div className="mt-4 flex flex-col items-center justify-between space-y-4 sm:flex-row sm:space-y-0">
-                        <div className="text-sm text-gray-500 dark:text-gray-300">
-                            Showing <span className="font-medium">{(filters.page - 1) * filters.limit + 1}</span> to{" "}
-                            <span className="font-medium">{Math.min(filters.page * filters.limit, total)}</span> of{" "}
-                            <span className="font-medium">{total}</span> results
-                        </div>
-                        <div className="flex space-x-2">
-                            <button
-                                onClick={() => handlePageChange(filters.page - 1)}
-                                disabled={filters.page === 1}
-                                className={`rounded-md border px-3 py-1 text-sm ${filters.page === 1
-                                    ? "cursor-not-allowed bg-gray-100 text-gray-400 dark:bg-gray-700 dark:text-gray-500"
-                                    : "border-gray-300 bg-white text-gray-700 hover:bg-gray-50 dark:border-gray-600 dark:bg-gray-800 dark:text-white dark:hover:bg-gray-700"
-                                    }`}
-                            >
-                                Previous
-                            </button>
-                            {Array.from({ length: Math.ceil(total / filters.limit) }, (_, i) => i + 1)
-                                .slice(Math.max(0, filters.page - 3), Math.min(Math.ceil(total / filters.limit), filters.page + 2))
-                                .map((pageNum) => (
-                                    <button
-                                        key={pageNum}
-                                        onClick={() => handlePageChange(pageNum)}
-                                        className={`rounded-md border px-3 py-1 text-sm ${filters.page === pageNum
-                                            ? "border-indigo-500 bg-indigo-500 text-white"
-                                            : "border-gray-300 bg-white text-gray-700 hover:bg-gray-50 dark:border-gray-600 dark:bg-gray-800 dark:text-white dark:hover:bg-gray-700"
-                                            }`}
-                                    >
-                                        {pageNum}
-                                    </button>
-                                ))}
-                            <button
-                                onClick={() => handlePageChange(filters.page + 1)}
-                                disabled={filters.page * filters.limit >= total}
-                                className={`rounded-md border px-3 py-1 text-sm ${filters.page * filters.limit >= total
-                                    ? "cursor-not-allowed bg-gray-100 text-gray-400 dark:bg-gray-700 dark:text-gray-500"
-                                    : "border-gray-300 bg-white text-gray-700 hover:bg-gray-50 dark:border-gray-600 dark:bg-gray-800 dark:text-white dark:hover:bg-gray-700"
-                                    }`}
-                            >
-                                Next
-                            </button>
-                        </div>
                     </div>
-                )}
-            </div>
+                </div>
+            ) : (
+                <div className="grid gap-3 grid-cols-2 lg:grid-cols-4 xl:grid-cols-5">
+                    <AnimatePresence>
+                        {exams.map((exam) => (
+                            <motion.div
+                                key={exam._id}
+                                layout
+                                initial={{ opacity: 0, scale: 0.95 }}
+                                animate={{ opacity: 1, scale: 1 }}
+                                exit={{ opacity: 0, scale: 0.95 }}
+                                transition={{ duration: 0.2 }}
+                                className={`group relative rounded-2xl border bg-white p-5 transition-all hover:shadow-lg dark:bg-gray-900 cursor-pointer ${selectedExams.includes(exam._id)
+                                    ? "border-blue-500 ring-2 ring-blue-500/20"
+                                    : "border-gray-200 hover:border-gray-300 dark:border-gray-800 dark:hover:border-gray-700"
+                                    }`}
+                                onClick={() => {
+                                    setSelectedExams(prev =>
+                                        prev.includes(exam._id)
+                                            ? prev.filter(id => id !== exam._id)
+                                            : [...prev, exam._id]
+                                    );
+                                }}
+                            >
+                                {/* Selection indicator */}
+                                <div className="absolute right-2 top-2">
+                                    <div className={`h-5 w-5 rounded-full border-2 transition-colors ${selectedExams.includes(exam._id)
+                                        ? "border-blue-500 bg-blue-500"
+                                        : "border-gray-300 dark:border-gray-600"
+                                        }`}>
+                                        {selectedExams.includes(exam._id) && (
+                                            <CheckCircle2 className="h-4 w-4 text-white" />
+                                        )}
+                                    </div>
+                                </div>
+
+                                {/* Header */}
+                                <div className="mb-4 flex items-start gap-3">
+
+                                    <div className="flex-1">
+                                        <h3 className="font-semibold text-gray-900 dark:text-white capitalize line-clamp-2">
+                                            {exam.name}
+                                        </h3>
+                                        <span className="mt-1 inline-flex items-center rounded-full bg-gray-100 px-2 py-0.5 text-xs font-medium text-gray-600 dark:bg-gray-800 dark:text-gray-400">
+                                            {exam.examType}
+                                        </span>
+                                    </div>
+                                </div>
+
+                                {/* Stats */}
+                                <div className="mb-4 grid grid-cols-2 gap-2">
+                                    <div className="rounded-lg bg-gray-50 p-2 dark:bg-gray-800">
+                                        <div className="flex items-center gap-1 text-xs text-gray-500 dark:text-gray-400">
+                                            <Layers className="h-3 w-3" />
+                                            Sections
+                                        </div>
+                                        <p className="mt-0.5 text-sm font-semibold text-gray-900 dark:text-white">
+                                            {exam.sections?.length || 0}
+                                        </p>
+                                    </div>
+                                    <div className="rounded-lg bg-gray-50 p-2 dark:bg-gray-800">
+                                        <div className="flex items-center gap-1 text-xs text-gray-500 dark:text-gray-400">
+                                            <Tag className="h-3 w-3" />
+                                            Category
+                                        </div>
+                                        <p className="mt-0.5 text-sm font-semibold text-gray-900 dark:text-white truncate">
+                                            {exam.category?.name || "—"}
+                                        </p>
+                                    </div>
+                                </div>
+
+                                {/* Footer */}
+                                <div className="flex items-center justify-between border-t border-gray-100 pt-3 dark:border-gray-800">
+                                    <div className="flex items-center gap-1 text-xs text-gray-500 dark:text-gray-400">
+                                        <Calendar className="h-3 w-3" />
+                                        {moment(exam.createdAt).format("MMM D, YYYY")}
+                                    </div>
+                                    <div className="flex items-center gap-1 opacity-0 transition-opacity group-hover:opacity-100">
+                                        <button
+                                            onClick={(e) => {
+                                                e.stopPropagation();
+                                                viewExamDetails(exam);
+                                            }}
+                                            className="rounded-lg p-1.5 text-gray-500 hover:bg-gray-100 hover:text-indigo-600 dark:hover:bg-gray-800 dark:hover:text-indigo-400"
+                                        >
+                                            <Eye className="h-4 w-4" />
+                                        </button>
+                                        <button
+                                            onClick={(e) => {
+                                                e.stopPropagation();
+                                                openEditModal(exam);
+                                            }}
+                                            className="rounded-lg p-1.5 text-gray-500 hover:bg-gray-100 hover:text-blue-600 dark:hover:bg-gray-800 dark:hover:text-blue-400"
+                                        >
+                                            <Pencil className="h-4 w-4" />
+                                        </button>
+                                        <button
+                                            onClick={(e) => {
+                                                e.stopPropagation();
+                                                setSelectedExam(exam);
+                                                setDeleteModalOpen(true);
+                                            }}
+                                            className="rounded-lg p-1.5 text-gray-500 hover:bg-red-50 hover:text-red-600 dark:hover:bg-red-900/20 dark:hover:text-red-400"
+                                        >
+                                            <Trash2 className="h-4 w-4" />
+                                        </button>
+                                    </div>
+                                </div>
+                            </motion.div>
+                        ))}
+                    </AnimatePresence>
+                </div>
+            )}
+
+            {/* Enhanced Pagination */}
+            {!loading && totalPages > 1 && (
+                <div className="mt-6 flex items-center justify-between">
+                    <p className="text-sm text-gray-500 dark:text-gray-400">
+                        Page {filters.page} of {totalPages}
+                    </p>
+                    <div className="flex items-center gap-2">
+                        <Button
+                            variant="outline"
+                            size="sm"
+                            disabled={filters.page === 1}
+                            onClick={() => handlePageChange(filters.page - 1)}
+                        >
+                            <ChevronLeft className="mr-1 h-4 w-4" />
+                            Previous
+                        </Button>
+                        {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
+                            let pageNum;
+                            if (totalPages <= 5) {
+                                pageNum = i + 1;
+                            } else if (filters.page <= 3) {
+                                pageNum = i + 1;
+                            } else if (filters.page >= totalPages - 2) {
+                                pageNum = totalPages - 4 + i;
+                            } else {
+                                pageNum = filters.page - 2 + i;
+                            }
+                            return (
+                                <button
+                                    key={pageNum}
+                                    onClick={() => handlePageChange(pageNum)}
+                                    className={`h-8 w-8 rounded-lg text-sm font-medium transition-colors ${filters.page === pageNum
+                                        ? "bg-blue-600 text-white"
+                                        : "text-gray-500 hover:bg-gray-100 dark:hover:bg-gray-800"
+                                        }`}
+                                >
+                                    {pageNum}
+                                </button>
+                            );
+                        })}
+                        <Button
+                            variant="outline"
+                            size="sm"
+                            disabled={filters.page >= totalPages}
+                            onClick={() => handlePageChange(filters.page + 1)}
+                        >
+                            Next
+                            <ChevronRight className="ml-1 h-4 w-4" />
+                        </Button>
+                    </div>
+                </div>
+            )}
 
             {/* View Modal */}
             <Modal isOpen={isOpen} onClose={closeModal} className="max-w-[700px] m-4">
-                <div className="no-scrollbar relative w-full max-w-[700px] overflow-y-auto rounded-3xl bg-white p-4 dark:bg-gray-900 lg:p-11">
-                    <div className="px-2 pr-14">
-                        <h4 className="mb-2 text-2xl font-semibold text-gray-800 dark:text-white/90">Exam Details</h4>
-                        <p className="mb-6 text-sm text-gray-500 dark:text-gray-400 lg:mb-7">Detailed information</p>
+                <div className="no-scrollbar relative w-full max-w-[700px] overflow-y-auto rounded-3xl bg-white p-6 dark:bg-gray-900 lg:p-8">
+                    <div className="mb-6 flex items-center justify-between">
+                        <div>
+                            <h4 className="text-2xl font-semibold text-gray-800 dark:text-white/90">Exam Details</h4>
+                            <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">Detailed information about this exam</p>
+                        </div>
+                        <button
+                            onClick={closeModal}
+                            className="rounded-xl p-2 text-gray-500 hover:bg-gray-100 dark:text-gray-400 dark:hover:bg-gray-800"
+                        >
+                            <X className="h-5 w-5" />
+                        </button>
                     </div>
+
                     {selectedExam && (
-                        <div className="space-y-3 px-2">
-                            <div>
-                                <p className="text-sm text-gray-500">Name</p>
-                                <p className="text-sm font-medium text-gray-800 dark:text-white">{selectedExam.name}</p>
+                        <div className="space-y-4">
+                            <div className="grid gap-4 sm:grid-cols-2">
+                                <div className="rounded-xl bg-gray-50 p-4 dark:bg-gray-800">
+                                    <p className="text-xs font-medium text-gray-500 dark:text-gray-400">Name</p>
+                                    <p className="mt-1 text-sm font-semibold text-gray-900 dark:text-white capitalize">
+                                        {selectedExam.name}
+                                    </p>
+                                </div>
+                                <div className="rounded-xl bg-gray-50 p-4 dark:bg-gray-800">
+                                    <p className="text-xs font-medium text-gray-500 dark:text-gray-400">Exam Type</p>
+                                    <p className="mt-1 text-sm font-semibold text-gray-900 dark:text-white">
+                                        {selectedExam.examType}
+                                    </p>
+                                </div>
+                                <div className="rounded-xl bg-gray-50 p-4 dark:bg-gray-800">
+                                    <p className="text-xs font-medium text-gray-500 dark:text-gray-400">Category</p>
+                                    <p className="mt-1 text-sm font-semibold text-gray-900 dark:text-white">
+                                        {selectedExam.category?.name || "—"}
+                                    </p>
+                                </div>
+                                <div className="rounded-xl bg-gray-50 p-4 dark:bg-gray-800">
+                                    <p className="text-xs font-medium text-gray-500 dark:text-gray-400">Created</p>
+                                    <p className="mt-1 text-sm font-semibold text-gray-900 dark:text-white">
+                                        {moment(selectedExam.createdAt).format("MMM D, YYYY h:mm A")}
+                                    </p>
+                                </div>
                             </div>
-                            <div>
-                                <p className="text-sm text-gray-500">Exam Type</p>
-                                <p className="text-sm font-medium text-gray-800 dark:text-white">{selectedExam.examType}</p>
-                            </div>
-                            <div>
-                                <p className="text-sm text-gray-500">Category</p>
-                                <p className="text-sm font-medium text-gray-800 dark:text-white">
-                                    {selectedExam.category?.name || "—"}
+
+                            {selectedExam.description && (
+                                <div className="rounded-xl bg-gray-50 p-4 dark:bg-gray-800">
+                                    <p className="text-xs font-medium text-gray-500 dark:text-gray-400">Description</p>
+                                    <p className="mt-1 text-sm text-gray-900 dark:text-white">
+                                        {selectedExam.description}
+                                    </p>
+                                </div>
+                            )}
+
+                            <div className="rounded-xl bg-gray-50 p-4 dark:bg-gray-800">
+                                <p className="text-xs font-medium text-gray-500 dark:text-gray-400">
+                                    Sections ({selectedExam.sections?.length || 0})
                                 </p>
-                            </div>
-                            <div>
-                                <p className="text-sm text-gray-500">Description</p>
-                                <p className="text-sm font-medium text-gray-800 dark:text-white">
-                                    {selectedExam.description || "—"}
-                                </p>
-                            </div>
-                            <div>
-                                <p className="text-sm text-gray-500">Sections</p>
                                 {selectedExam.sections && selectedExam.sections.length > 0 ? (
-                                    <ul className="mt-1 space-y-1">
+                                    <div className="mt-2 flex flex-wrap gap-2">
                                         {selectedExam.sections.map((sec) => (
-                                            <li key={sec._id} className="text-base text-gray-800 dark:text-white">
-                                                • {sec.name || `Section ${sec._id}`}
-                                            </li>
+                                            <span
+                                                key={sec._id}
+                                                className="inline-flex items-center gap-1 rounded-lg bg-white px-3 py-1.5 text-sm font-medium text-gray-700 shadow-sm dark:bg-gray-700 dark:text-gray-200"
+                                            >
+                                                <Layers className="h-3.5 w-3.5 text-indigo-500" />
+                                                {sec.name || `Section ${sec._id}`}
+                                            </span>
                                         ))}
-                                    </ul>
+                                    </div>
                                 ) : (
-                                    <p className="text-sm font-medium text-gray-500 dark:text-gray-400">No sections assigned</p>
+                                    <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">No sections assigned</p>
                                 )}
-                            </div>
-                            <div>
-                                <p className="text-sm text-gray-500">Created At</p>
-                                <p className="text-sm font-medium text-gray-800 dark:text-white">
-                                    {moment(selectedExam.createdAt).format("MMM D, YYYY h:mm A")}
-                                </p>
                             </div>
                         </div>
                     )}
-                    <div className="flex items-center gap-3 px-2 mt-6 lg:justify-end">
+
+                    <div className="mt-6 flex justify-end">
                         <Button size="sm" variant="outline" onClick={closeModal}>
                             Close
                         </Button>
@@ -536,227 +886,290 @@ export default function ExamManagement() {
 
             {/* Create/Edit Stepper Modal */}
             <Modal isOpen={editModalOpen} onClose={() => setEditModalOpen(false)} className="max-w-[700px] m-4">
-                <div className="no-scrollbar relative w-full max-w-[700px] overflow-y-auto rounded-3xl bg-white p-4 dark:bg-gray-900 lg:p-11">
-                    <div className="px-2 pr-14">
-                        <div className="flex items-center justify-between mb-4">
-                            <h4 className="text-2xl font-semibold text-gray-800 dark:text-white/90">
-                                {selectedExam ? "Edit Exam" : "Add New Exam"}
+                <div className="no-scrollbar relative w-full max-w-[700px] overflow-y-auto rounded-3xl bg-white p-6 dark:bg-gray-900">
+                    <div className="mb-3 flex items-center justify-between">
+                        <div>
+                            <h4 className="text-xl font-semibold text-gray-800 dark:text-white/90">
+                                {selectedExam ? "Edit Exam" : "Create New Exam"}
                             </h4>
-                            <div className="flex items-center gap-2">
-                                <span className="text-sm text-gray-500 dark:text-gray-400">
-                                    Step {currentStep} of 2
-                                </span>
-                            </div>
+                            <p className=" text-sm text-gray-500 dark:text-gray-400">
+                                {currentStep === 1 ? "Basic information" : "Select sections"}
+                            </p>
                         </div>
-                        <div className="flex justify-between mx-auto items-center w-[150px] mb-3">
-                            <div className={`flex items-center justify-center w-8 h-8 rounded-full ${currentStep === 1 ? 'bg-indigo-600 text-white' : 'bg-gray-300 text-gray-600 dark:bg-gray-700 dark:text-gray-400'} transition-colors`}>
-                                1
-                            </div>
-                            <div className={`flex-1 h-1 mx-2 ${currentStep === 1 ? 'bg-gray-300' : 'bg-indigo-600'} transition-colors`}></div>
-                            <div className={`flex items-center justify-center w-8 h-8 rounded-full ${currentStep === 2 ? 'bg-indigo-600 text-white' : 'bg-gray-300 text-gray-600 dark:bg-gray-700 dark:text-gray-400'} transition-colors`}>
-                                2
-                            </div>
-                        </div>
-                        <p className="text-sm text-gray-500 dark:text-gray-400 lg:mb-4">
-                            {currentStep === 1 ? "Enter basic exam details" : "Select sections for the exam"}
-                        </p>
+                       
+                        <div></div>
                     </div>
+                     <div className="mb-6">
+                            <div className="flex items-center justify-center">
+                                <div className="flex items-center">
+                                    <div
+                                        className={`flex h-10 w-10 items-center justify-center rounded-full transition-all ${currentStep === 1
+                                            ? "bg-indigo-600 text-white shadow-lg shadow-indigo-500/25"
+                                            : currentStep > 1
+                                                ? "bg-green-500 text-white"
+                                                : "bg-gray-200 text-gray-600 dark:bg-gray-700 dark:text-gray-400"
+                                            }`}
+                                    >
+                                        {currentStep > 1 ? (
+                                            <CheckCircle className="h-5 w-5" />
+                                        ) : (
+                                            <span className="text-sm font-semibold">1</span>
+                                        )}
+                                    </div>
+                                    <div
+                                        className={`mx-4 h-1 w-24 rounded-full transition-all ${currentStep > 1 ? "bg-green-500" : "bg-gray-200 dark:bg-gray-700"
+                                            }`}
+                                    />
+                                    <div
+                                        className={`flex h-10 w-10 items-center justify-center rounded-full transition-all ${currentStep === 2
+                                            ? "bg-indigo-600 text-white shadow-lg shadow-indigo-500/25"
+                                            : "bg-gray-200 text-gray-600 dark:bg-gray-700 dark:text-gray-400"
+                                            }`}
+                                    >
+                                        <span className="text-sm font-semibold">2</span>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                        </div>
+
+                    {/* Enhanced Stepper */}
+
 
                     <form onSubmit={handleSubmit} className="flex flex-col">
-                        <div className="custom-scrollbar max-h-[400px] min-h-[350px] overflow-y-auto px-2 pb-3">
+                        <div className="custom-scrollbar max-h-[400px] min-h-[350px] overflow-y-auto pb-3">
                             {/* Step 1: Basic Info */}
-                            {currentStep === 1 && (
-                                <div className="space-y-3">
-                                    <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
-                                        <div>
-                                            <Label>Name *</Label>
-                                            <Input
-                                                type="text"
-                                                name="name"
-                                                value={formData.name}
-                                                onChange={(e) => {
-                                                    setFormData({ ...formData, name: e.target.value });
-                                                    if (errors.name) setErrors({ ...errors, name: "" });
-                                                }}
-                                                placeholder="e.g. IELTS Academic"
-                                            />
-                                            {errors.name && <p className="mt-1 text-sm text-red-600">{errors.name}</p>}
-                                        </div>
-                                        <div>
-                                            <Label>Exam Type *</Label>
-                                            <Select
-                                                options={ExamTypes.map(t => ({ value: t, label: t }))}
-                                                defaultValue={formData.examType}
-                                                onChange={(val) => {
-                                                    setFormData({ ...formData, examType: val });
-                                                    if (errors.examType) setErrors({ ...errors, examType: "" });
-                                                }}
-                                            />
-                                            {errors.examType && <p className="mt-1 text-sm text-red-600">{errors.examType}</p>}
-                                        </div>
-                                        <div className="md:col-span-2">
-                                            <Label>Category *</Label>
-                                            <Select
-                                                options={allCategories.map(c => ({ value: c._id, label: c.name }))}
-                                                defaultValue={formData.category}
-                                                onChange={(val) => {
-                                                    setFormData({ ...formData, category: val });
-                                                    if (errors.category) setErrors({ ...errors, category: "" });
-                                                }}
-                                            />
-                                            {errors.category && <p className="mt-1 text-sm text-red-600">{errors.category}</p>}
-                                        </div>
-                                        <div className="md:col-span-2">
-                                            <Label>Description</Label>
-                                            <TextArea
-                                                value={formData.description}
-                                                onChange={(val) => setFormData({ ...formData, description: val })}
-                                                placeholder="Brief description of the exam..."
-                                                rows={3}
-                                            />
-                                        </div>
-                                    </div>
-                                    {formData.sections.length > 0 && (
-                                        <div className="mt-6 p-4 bg-blue-50 border border-blue-200 rounded-lg dark:bg-blue-900/20 dark:border-blue-800">
-                                            <div className="flex items-center gap-2 mb-2">
-                                                <Info className="h-4 w-4 text-blue-600 dark:text-blue-400" />
-                                                <span className="text-sm font-medium text-blue-800 dark:text-blue-300">
-                                                    Sections Preview
-                                                </span>
-                                            </div>
-                                            <p className="text-sm text-blue-700 dark:text-blue-400">
-                                                You have selected <strong>{formData.sections.length}</strong> section{formData.sections.length !== 1 ? 's' : ''}.
-                                                You can review and modify them in the next step.
-                                            </p>
-                                        </div>
-                                    )}
-                                </div>
-                            )}
-
-                            {/* Step 2: Sections */}
-                            {currentStep === 2 && (
-                                <div className="space-y-3">
-                                    <div className="md:col-span-2">
-                                        <div className="flex flex-col sm:flex-row gap-2 mb-4">
-                                            <div className="relative flex-1">
-                                                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
-                                                <input
+                            <AnimatePresence mode="wait">
+                                {currentStep === 1 ? (
+                                    <motion.div
+                                        key="step1"
+                                        initial={{ opacity: 0, x: -20 }}
+                                        animate={{ opacity: 1, x: 0 }}
+                                        exit={{ opacity: 0, x: 20 }}
+                                        transition={{ duration: 0.2 }}
+                                        className="space-y-4"
+                                    >
+                                        <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+                                            <div>
+                                                <Label>Exam Name *</Label>
+                                                <Input
                                                     type="text"
-                                                    placeholder="Search sections..."
-                                                    value={searchTerm}
-                                                    onChange={(e) => setSearchTerm(e.target.value)}
-                                                    className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 dark:border-gray-600 dark:bg-gray-700 dark:text-white text-sm"
+                                                    value={formData.name}
+                                                    onChange={(e) => {
+                                                        setFormData({ ...formData, name: e.target.value });
+                                                        if (errors.name) setErrors({ ...errors, name: "" });
+                                                    }}
+                                                    placeholder="e.g., IELTS Academic"
+                                                    error={!!errors.name}
+                                                    hint={errors.name}
                                                 />
                                             </div>
-                                            <div className="flex gap-2">
-                                                <button
-                                                    type="button"
-                                                    onClick={handleSelectAll}
-                                                    className="px-3 py-2 text-xs border border-gray-300 rounded-lg hover:bg-gray-50 dark:border-gray-600 dark:hover:bg-gray-700 dark:text-white transition-colors"
-                                                >
-                                                    Select All
-                                                </button>
-                                                <button
-                                                    type="button"
-                                                    onClick={handleClearAll}
-                                                    className="px-3 py-2 text-xs border border-gray-300 rounded-lg hover:bg-gray-50 dark:border-gray-600 dark:hover:bg-gray-700 dark:text-white transition-colors"
-                                                >
-                                                    Clear All
-                                                </button>
-                                            </div>
-                                        </div>
-                                        <div className="border border-gray-300 rounded-lg dark:border-gray-600 overflow-hidden">
-                                            <div className="max-h-64 overflow-y-auto">
-                                                {filteredSections.length > 0 ? (
-                                                    <div className="divide-y divide-gray-200 dark:divide-gray-700">
-                                                        {filteredSections.map((section) => (
-                                                            <label
-                                                                key={section._id}
-                                                                className="flex items-start gap-3 p-3 hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors cursor-pointer group"
-                                                            >
-                                                                <div className="flex items-center h-5 mt-0.5">
-                                                                    <input
-                                                                        type="checkbox"
-                                                                        checked={formData.sections.includes(section._id)}
-                                                                        onChange={() => toggleSection(section._id)}
-                                                                        className="h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300 rounded transition-colors"
-                                                                    />
-                                                                </div>
-                                                                <div className="flex-1 min-w-0">
-                                                                    <div className="flex items-start justify-between">
-                                                                        <span className="text-base capitalize text-gray-900 dark:text-white group-hover:text-indigo-600 dark:group-hover:text-indigo-400 transition-colors">
-                                                                            {section.name}
-                                                                            {section.description && (
-                                                                                <span className="text-sm text-gray-500 dark:text-gray-400">
-                                                                                    {" - " + section.description}
-                                                                                </span>
-                                                                            )}
-                                                                        </span>
-                                                                        {formData.sections.includes(section._id) && (
-                                                                            <CheckCircle className="h-4 w-4 text-green-500 flex-shrink-0 ml-2" />
-                                                                        )}
-                                                                    </div>
-                                                                    {section.questionCount !== undefined && (
-                                                                        <p className="text-xs text-gray-500 dark:text-gray-500 mt-1">
-                                                                            {section.questionCount} questions
-                                                                        </p>
-                                                                    )}
-                                                                </div>
-                                                            </label>
-                                                        ))}
-                                                    </div>
-                                                ) : (
-                                                    <div className="text-center py-8">
-                                                        <FolderOpen className="mx-auto h-8 w-8 text-gray-400" />
-                                                        <p className="mt-2 text-sm text-gray-500 dark:text-gray-400">
-                                                            {allSections.length === 0 ? 'No sections available' : 'No sections match your search'}
-                                                        </p>
-                                                        {allSections.length === 0 && (
-                                                            <p className="text-xs text-gray-400 mt-1">Create sections first to add them to exams</p>
-                                                        )}
-                                                    </div>
+                                            <div>
+                                                <Label>Exam Type *</Label>
+                                                <Select
+                                                    options={ExamTypes.map(t => ({ value: t, label: t }))}
+                                                    defaultValue={formData.examType}
+                                                    onChange={(val) => {
+                                                        setFormData({ ...formData, examType: val });
+                                                        if (errors.examType) setErrors({ ...errors, examType: "" });
+                                                    }}
+                                                />
+                                                {errors.examType && (
+                                                    <p className="mt-1 text-xs text-red-500">{errors.examType}</p>
                                                 )}
                                             </div>
+                                            <div className="md:col-span-2">
+                                                <Label>Category *</Label>
+                                                <Select
+                                                    options={allCategories.map(c => ({ value: c._id, label: c.name }))}
+                                                    defaultValue={formData.category}
+                                                    onChange={(val) => {
+                                                        setFormData({ ...formData, category: val });
+                                                        if (errors.category) setErrors({ ...errors, category: "" });
+                                                    }}
+                                                />
+                                                {errors.category && (
+                                                    <p className="mt-1 text-xs text-red-500">{errors.category}</p>
+                                                )}
+                                            </div>
+                                            <div className="md:col-span-2">
+                                                <Label>Description</Label>
+                                                <TextArea
+                                                    value={formData.description}
+                                                    onChange={(val) => setFormData({ ...formData, description: val })}
+                                                    placeholder="Brief description of the exam..."
+                                                    rows={3}
+                                                />
+                                            </div>
                                         </div>
-                                        <p className="mt-3 text-xs text-gray-500 dark:text-gray-400 flex items-center gap-1">
-                                            <Info className="h-3 w-3" />
-                                            Select sections to include in this exam. Each section will contribute questions to the exam.
-                                        </p>
-                                    </div>
-                                </div>
-                            )}
+
+                                        {formData.sections.length > 0 && (
+                                            <div className="rounded-xl border border-blue-200 bg-blue-50 p-4 dark:border-blue-800 dark:bg-blue-900/20">
+                                                <div className="flex items-center gap-2 mb-2">
+                                                    <Info className="h-4 w-4 text-blue-600 dark:text-blue-400" />
+                                                    <span className="text-sm font-medium text-blue-800 dark:text-blue-300">
+                                                        Sections Preview
+                                                    </span>
+                                                </div>
+                                                <p className="text-sm text-blue-700 dark:text-blue-400">
+                                                    You have <strong>{formData.sections.length}</strong> section{formData.sections.length !== 1 ? 's' : ''} selected.
+                                                    You can review and modify them in the next step.
+                                                </p>
+                                            </div>
+                                        )}
+                                    </motion.div>
+                                ) : (
+                                    <motion.div
+                                        key="step2"
+                                        initial={{ opacity: 0, x: 20 }}
+                                        animate={{ opacity: 1, x: 0 }}
+                                        exit={{ opacity: 0, x: -20 }}
+                                        transition={{ duration: 0.2 }}
+                                        className="space-y-4"
+                                    >
+                                        <div>
+                                            <div className="mb-4 flex flex-col gap-3 sm:flex-row">
+                                                <div className="relative flex-1">
+                                                    <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" />
+                                                    <input
+                                                        type="text"
+                                                        placeholder="Search sections..."
+                                                        value={searchTerm}
+                                                        onChange={(e) => setSearchTerm(e.target.value)}
+                                                        className="w-full rounded-xl border border-gray-200 bg-gray-50 py-2.5 pl-10 pr-4 text-sm focus:border-indigo-500 focus:bg-white focus:outline-none focus:ring-1 focus:ring-indigo-500 dark:border-gray-700 dark:bg-gray-800 dark:text-white"
+                                                    />
+                                                </div>
+                                                <div className="flex gap-2">
+                                                    <button
+                                                        type="button"
+                                                        onClick={handleSelectAll}
+                                                        className="rounded-xl border border-gray-200 bg-white px-4 py-2.5 text-xs font-medium text-gray-700 hover:bg-gray-50 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-200 dark:hover:bg-gray-700 transition-colors"
+                                                    >
+                                                        Select All
+                                                    </button>
+                                                    <button
+                                                        type="button"
+                                                        onClick={handleClearAll}
+                                                        className="rounded-xl border border-gray-200 bg-white px-4 py-2.5 text-xs font-medium text-gray-700 hover:bg-gray-50 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-200 dark:hover:bg-gray-700 transition-colors"
+                                                    >
+                                                        Clear All
+                                                    </button>
+                                                </div>
+                                            </div>
+
+                                            <div className="overflow-hidden rounded-xl border border-gray-200 dark:border-gray-700">
+                                                <div className="max-h-64 overflow-y-auto">
+                                                    {filteredSections.length > 0 ? (
+                                                        <div className="divide-y divide-gray-100 dark:divide-gray-800">
+                                                            {filteredSections.map((section) => (
+                                                                <label
+                                                                    key={section._id}
+                                                                    className={`flex cursor-pointer items-start gap-3 p-3 transition-colors hover:bg-gray-50 dark:hover:bg-gray-800/50 ${formData.sections.includes(section._id)
+                                                                        ? "bg-indigo-50/50 dark:bg-indigo-900/10"
+                                                                        : ""
+                                                                        }`}
+                                                                >
+                                                                    <div className="flex items-center h-5 mt-0.5">
+                                                                        <input
+                                                                            type="checkbox"
+                                                                            checked={formData.sections.includes(section._id)}
+                                                                            onChange={() => toggleSection(section._id)}
+                                                                            className="h-4 w-4 rounded border-gray-300 text-indigo-600 focus:ring-indigo-500"
+                                                                        />
+                                                                    </div>
+                                                                    <div className="flex-1 min-w-0">
+                                                                        <div className="flex items-start justify-between">
+                                                                            <span className="text-sm font-medium text-gray-900 dark:text-white capitalize">
+                                                                                {section.name}
+                                                                            </span>
+                                                                            {formData.sections.includes(section._id) && (
+                                                                                <CheckCircle className="h-4 w-4 text-green-500 flex-shrink-0 ml-2" />
+                                                                            )}
+                                                                        </div>
+                                                                        {section.description && (
+                                                                            <p className="mt-0.5 text-xs text-gray-500 dark:text-gray-400">
+                                                                                {section.description}
+                                                                            </p>
+                                                                        )}
+                                                                        {section.questionCount !== undefined && (
+                                                                            <p className="mt-1 text-xs text-gray-400 dark:text-gray-500">
+                                                                                {section.questionCount} questions available
+                                                                            </p>
+                                                                        )}
+                                                                    </div>
+                                                                </label>
+                                                            ))}
+                                                        </div>
+                                                    ) : (
+                                                        <div className="py-12 text-center">
+                                                            <FolderOpen className="mx-auto h-10 w-10 text-gray-300 dark:text-gray-600" />
+                                                            <p className="mt-3 text-sm font-medium text-gray-500 dark:text-gray-400">
+                                                                {allSections.length === 0 ? 'No sections available' : 'No sections match your search'}
+                                                            </p>
+                                                            {allSections.length === 0 && (
+                                                                <p className="mt-1 text-xs text-gray-400">
+                                                                    Create sections first to add them to exams
+                                                                </p>
+                                                            )}
+                                                        </div>
+                                                    )}
+                                                </div>
+                                            </div>
+
+                                            <div className="mt-3 flex items-center gap-2 rounded-lg bg-gray-50 p-3 text-xs text-gray-500 dark:bg-gray-800 dark:text-gray-400">
+                                                <Info className="h-4 w-4 flex-shrink-0" />
+                                                <span>
+                                                    Select sections to include in this exam. Each section will contribute questions to the exam.
+                                                    <strong className="ml-1 text-gray-700 dark:text-gray-200">
+                                                        {formData.sections.length} section{formData.sections.length !== 1 ? 's' : ''} selected
+                                                    </strong>
+                                                </span>
+                                            </div>
+                                        </div>
+                                    </motion.div>
+                                )}
+                            </AnimatePresence>
                         </div>
 
                         {/* Modal Footer */}
-                        <div className="flex items-center justify-between px-2 mt-6">
+                        <div className=" flex items-center justify-between dark:border-gray-800">
                             <div>
                                 {currentStep === 2 && (
-                                    <button
+                                    <Button
                                         type="button"
+                                        variant="outline"
                                         onClick={goToPrevStep}
-                                        className="rounded-md border border-gray-300 bg-transparent px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-100 dark:border-gray-600 dark:text-gray-300 dark:hover:bg-gray-700 transition-colors"
                                     >
-                                        ← Back
-                                    </button>
+                                        <ChevronLeft className="mr-2 h-4 w-4" />
+                                        Back
+                                    </Button>
                                 )}
                             </div>
                             <div className="flex items-center gap-3">
-                                <button
+                                <Button
                                     type="button"
+                                    variant="outline"
                                     onClick={() => {
                                         setEditModalOpen(false);
                                         setCurrentStep(1);
                                     }}
-                                    className="rounded-md border border-gray-300 bg-transparent px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-100 dark:border-gray-600 dark:text-gray-300 dark:hover:bg-gray-700 transition-colors"
                                 >
                                     Cancel
-                                </button>
-                                <button
+                                </Button>
+                                <Button
                                     type="submit"
-                                    className="rounded-md bg-indigo-600 px-4 py-2 text-sm font-medium text-white hover:bg-indigo-700 transition-colors"
+                                    isLoading={saving}
+                                    disabled={saving}
                                 >
-                                    {currentStep === 1 ? "Continue →" : (selectedExam ? "Save Changes" : "Create Exam")}
-                                </button>
+                                    {currentStep === 1 ? (
+                                        <>
+                                            Continue
+                                            <ChevronRight className="ml-2 h-4 w-4" />
+                                        </>
+                                    ) : (
+                                        selectedExam ? "Save Changes" : "Create Exam"
+                                    )}
+                                </Button>
                             </div>
                         </div>
                     </form>
@@ -766,26 +1179,52 @@ export default function ExamManagement() {
             {/* Delete Confirmation Modal */}
             <Modal isOpen={isDeleteModalOpen} onClose={() => setDeleteModalOpen(false)} className="max-w-lg">
                 {selectedExam && (
-                    <div className="no-scrollbar relative w-full overflow-y-auto rounded-3xl bg-white p-4 dark:bg-gray-900 lg:p-6">
-                        <div className="px-2 pr-14">
-                            <h4 className="mb-2 text-2xl font-semibold text-gray-800 dark:text-white/90">Confirm Deletion</h4>
-                            <p className="mb-2 text-sm text-gray-500 dark:text-gray-400">
-                                Are you sure you want to delete this exam? This action cannot be undone.
-                            </p>
-                        </div>
-                        <div className="px-2">
-                            <div className="rounded-md bg-red-50 p-2 py-4 dark:bg-red-900/20">
-                                <h3 className="text-sm font-medium text-red-800 dark:text-red-200">Warning</h3>
-                                <p className="mt-2 text-sm text-red-700 dark:text-red-300">
-                                    Deleting <strong>"{selectedExam.name}"</strong> will permanently remove it and its association with sections.
+                    <div className="no-scrollbar relative w-full overflow-y-auto rounded-3xl bg-white p-6 dark:bg-gray-900 lg:p-8">
+                        <div className="mb-6 flex items-center justify-between">
+                            <div>
+                                <h4 className="text-xl font-semibold text-gray-800 dark:text-white/90">Delete Exam</h4>
+                                <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
+                                    This action cannot be undone
                                 </p>
                             </div>
+                            <button
+                                onClick={() => setDeleteModalOpen(false)}
+                                className="rounded-xl p-2 text-gray-500 hover:bg-gray-100 dark:text-gray-400 dark:hover:bg-gray-800"
+                            >
+                                <X className="h-5 w-5" />
+                            </button>
                         </div>
-                        <div className="flex items-center gap-3 px-2 mt-6 lg:justify-end">
-                            <Button size="sm" variant="outline" onClick={() => setDeleteModalOpen(false)}>
+
+                        <div className="rounded-xl border border-red-200 bg-red-50 p-4 dark:border-red-800 dark:bg-red-900/20">
+                            <div className="flex items-start gap-3">
+                                <AlertCircle className="h-5 w-5 text-red-600 dark:text-red-400 flex-shrink-0 mt-0.5" />
+                                <div>
+                                    <h3 className="text-sm font-semibold text-red-800 dark:text-red-200">
+                                        Warning
+                                    </h3>
+                                    <p className="mt-1 text-sm text-red-700 dark:text-red-300">
+                                        You are about to permanently delete{" "}
+                                        <strong className="capitalize">"{selectedExam.name}"</strong>.
+                                        This will remove all associations with sections and cannot be recovered.
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div className="mt-6 flex items-center justify-end gap-3">
+                            <Button
+                                size="sm"
+                                variant="outline"
+                                onClick={() => setDeleteModalOpen(false)}
+                            >
                                 Cancel
                             </Button>
-                            <Button size="sm" variant="primary" onClick={deleteExam}>
+                            <Button
+                                size="sm"
+                                onClick={deleteExam}
+                                className="bg-red-600 hover:bg-red-700 text-white"
+                            >
+                                <Trash2 className="mr-2 h-4 w-4" />
                                 Delete Exam
                             </Button>
                         </div>

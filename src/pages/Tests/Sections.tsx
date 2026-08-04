@@ -1,4 +1,5 @@
-import { useState, useEffect } from "react";
+// SectionManagement.jsx
+import { useState, useEffect, useMemo } from "react";
 import { useModal } from "../../hooks/useModal";
 import { Modal } from "../../components/ui/modal";
 import Button from "../../components/ui/button/Button";
@@ -7,8 +8,35 @@ import Label from "../../components/form/Label";
 import Select from "../../components/form/Select";
 import { toast } from "react-toastify";
 import api from "../../axiosInstance";
-import { Eye, Pencil, Trash2 } from "lucide-react";
+import {
+  Eye,
+  Pencil,
+  Trash2,
+  Search,
+  Plus,
+  X,
+  ChevronRight,
+  ChevronLeft,
+  Clock,
+  Layers,
+  SlidersHorizontal,
+  Grid3X3,
+  List,
+  AlertCircle,
+  CheckCircle2,
+  Calendar,
+  Hash,
+  Loader2,
+  RefreshCcw,
+  Timer,
+  HelpCircle,
+  FileText,
+  BookOpen,
+} from "lucide-react";
+import TextArea from "../../components/form/input/TextArea";
+import { useAuth } from "../../context/UserContext";
 import moment from "moment";
+import { motion, AnimatePresence } from "framer-motion";
 
 export default function SectionManagement() {
   const [sections, setSections] = useState([]);
@@ -18,13 +46,23 @@ export default function SectionManagement() {
   const [editModalOpen, setEditModalOpen] = useState(false);
   const [selectedSection, setSelectedSection] = useState(null);
   const [isDeleteModalOpen, setDeleteModalOpen] = useState(false);
+  const [viewMode, setViewMode] = useState("grid");
+  const [showFilters, setShowFilters] = useState(true);
+  const [selectedSections, setSelectedSections] = useState([]);
+  const [saving, setSaving] = useState(false);
 
+  // Filters for listing
   const [filters, setFilters] = useState({
     page: 1,
     limit: 10,
     search: "",
   });
 
+  // Debounced search
+  const [searchInput, setSearchInput] = useState("");
+  const [searchTimeout, setSearchTimeout] = useState(null);
+
+  // Form state
   const [formData, setFormData] = useState({
     name: "",
     description: "",
@@ -36,9 +74,19 @@ export default function SectionManagement() {
 
   const [errors, setErrors] = useState({});
 
+  // Fetch data on filter change
   useEffect(() => {
     fetchSections();
   }, [filters]);
+
+  useEffect(() => {
+    if (searchTimeout) clearTimeout(searchTimeout);
+    const timeoutId = setTimeout(() => {
+      setFilters(prev => ({ ...prev, search: searchInput, page: 1 }));
+    }, 500);
+    setSearchTimeout(timeoutId);
+    return () => clearTimeout(timeoutId);
+  }, [searchInput]);
 
   const fetchSections = async () => {
     setLoading(true);
@@ -48,10 +96,9 @@ export default function SectionManagement() {
         limit: filters.limit,
         ...(filters.search && { search: filters.search }),
       };
-
       const response = await api.get("/test/sections", { params });
       setSections(response.data?.data || []);
-      setTotal(response.data?.total || 0);
+      setTotal(response.data?.total || response.data?.pagination?.total || 0);
     } catch (error) {
       toast.error("Failed to load sections");
     } finally {
@@ -72,81 +119,23 @@ export default function SectionManagement() {
     setFilters((prev) => ({ ...prev, page: newPage }));
   };
 
-  const viewSectionDetails = (section) => {
-    setSelectedSection(section);
-    openModal();
-  };
-
-  const openEditModal = (section) => {
-    setSelectedSection(section);
-    setFormData({
-      name: section.name || "",
-      description: section.description || "",
-      instructions: section.instructions || "",
-      thumbnailPic: section.thumbnailPic || "",
-      duration: section.duration || 0,
-      totalQuestions: section.totalQuestions || 0,
+  const resetFilters = () => {
+    setFilters({
+      page: 1,
+      limit: 12,
+      search: "",
     });
-    setEditModalOpen(true);
+    setSearchInput("");
   };
 
-  const validateForm = () => {
-    const newErrors = {};
-    if (!formData.name?.trim()) newErrors.name = "Name is required";
-    if (formData.duration <= 0) newErrors.duration = "Duration must be > 0";
-    if (formData.totalQuestions <= 0) newErrors.totalQuestions = "Total questions must be > 0";
-
-    setErrors(newErrors);
-    return Object.keys(newErrors).length === 0;
-  };
-
-  const handleSaveSection = async () => {
-    if (!validateForm()) return;
+  const viewSectionDetails = async (section) => {
     try {
-      const payload = {
-        ...formData,
-        duration: Number(formData.duration),
-        totalQuestions: Number(formData.totalQuestions),
-        order: Number(formData.order),
-      };
-
-      await api.put(`/test/sections/${selectedSection._id}`, payload);
-      toast.success("Section updated successfully");
-      fetchSections();
-      setEditModalOpen(false);
+      const res = await api.get(`/test/sections/${section._id}`);
+      setSelectedSection(res.data?.data || section);
+      openModal();
     } catch (error) {
-      toast.error(error.response?.data?.message || "Failed to update section");
-    }
-  };
-
-  const handleCreateSection = async () => {
-    if (!validateForm()) return;
-    try {
-      const payload = {
-        ...formData,
-        duration: Number(formData.duration),
-        totalQuestions: Number(formData.totalQuestions),
-      };
-
-      await api.post("/test/sections", payload);
-      toast.success("Section created successfully");
-      fetchSections();
-      setEditModalOpen(false);
-    } catch (error) {
-      toast.error(error.response?.data?.message || "Failed to create section");
-    }
-  };
-
-  const deleteSection = async () => {
-    if (!selectedSection) return;
-    try {
-      await api.delete(`/test/sections/${selectedSection._id}`);
-      toast.success("Section deleted successfully");
-      fetchSections();
-      setDeleteModalOpen(false);
-      setSelectedSection(null);
-    } catch (error) {
-      toast.error(error.response?.data?.message || "Failed to delete section");
+      setSelectedSection(section);
+      openModal();
     }
   };
 
@@ -164,110 +153,221 @@ export default function SectionManagement() {
     setEditModalOpen(true);
   };
 
-  const handleChange = (e) => {
-    const { name, value, type, checked } = e.target;
-    setFormData((prev) => ({
-      ...prev,
-      [name]: type === "checkbox" ? checked : value,
-    }));
-    if (errors[name]) {
-      setErrors((prev) => ({ ...prev, [name]: "" }));
+  const openEditModal = (section) => {
+    setSelectedSection(section);
+    setFormData({
+      name: section.name || "",
+      description: section.description || "",
+      instructions: section.instructions || "",
+      thumbnailPic: section.thumbnailPic || "",
+      duration: section.duration || 0,
+      totalQuestions: section.totalQuestions || 0,
+    });
+    setErrors({});
+    setEditModalOpen(true);
+  };
+
+  const validateForm = () => {
+    const newErrors = {};
+    if (!formData.name?.trim()) newErrors.name = "Section name is required";
+    if (!formData.duration || formData.duration <= 0) newErrors.duration = "Duration must be greater than 0";
+    if (!formData.totalQuestions || formData.totalQuestions <= 0) newErrors.totalQuestions = "Total questions must be greater than 0";
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
+  };
+
+  const handleCreateSection = async () => {
+    if (!validateForm()) return;
+    try {
+      setSaving(true);
+      const payload = {
+        ...formData,
+        duration: Number(formData.duration),
+        totalQuestions: Number(formData.totalQuestions),
+      };
+      await api.post("/test/sections", payload);
+      toast.success("Section created successfully");
+      fetchSections();
+      setEditModalOpen(false);
+    } catch (error) {
+      const msg = error.response?.data?.message || "Failed to create section";
+      toast.error(msg);
+    } finally {
+      setSaving(false);
     }
   };
 
-  const handleSelectChange = (value, name) => {
-    setFormData((prev) => ({ ...prev, [name]: value }));
+  const handleSaveSection = async () => {
+    if (!validateForm()) return;
+    try {
+      setSaving(true);
+      const payload = {
+        ...formData,
+        duration: Number(formData.duration),
+        totalQuestions: Number(formData.totalQuestions),
+      };
+      await api.put(`/test/sections/${selectedSection._id}`, payload);
+      toast.success("Section updated successfully");
+      fetchSections();
+      setEditModalOpen(false);
+    } catch (error) {
+      const msg = error.response?.data?.message || "Failed to update section";
+      toast.error(msg);
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const handleSubmit = (e) => {
+    e.preventDefault();
+    if (selectedSection) {
+      handleSaveSection();
+    } else {
+      handleCreateSection();
+    }
+  };
+
+  const deleteSection = async () => {
+    if (!selectedSection) return;
+    try {
+      await api.delete(`/test/sections/${selectedSection._id}`);
+      toast.success("Section deleted successfully");
+      fetchSections();
+      setDeleteModalOpen(false);
+      setSelectedSection(null);
+    } catch (error) {
+      const msg = error.response?.data?.message || "Failed to delete section";
+      toast.error(msg);
+    }
+  };
+
+  const handleBulkDelete = async () => {
+    if (!window.confirm(`Delete ${selectedSections.length} selected sections?`)) return;
+    try {
+      await Promise.all(selectedSections.map(id => api.delete(`/test/sections/${id}`)));
+      toast.success(`${selectedSections.length} sections deleted`);
+      setSelectedSections([]);
+      fetchSections();
+    } catch (error) {
+      toast.error("Failed to delete some sections");
+    }
   };
 
   const formatDuration = (seconds) => {
-    if (!seconds) return "0:00";
-    const mins = Math.floor(seconds / 60);
+    if (!seconds || seconds === 0) return "0m";
+    const hours = Math.floor(seconds / 3600);
+    const mins = Math.floor((seconds % 3600) / 60);
     const secs = seconds % 60;
-    return `${mins}:${secs.toString().padStart(2, "0")}`;
+
+    let result = "";
+    if (hours > 0) result += `${hours}h `;
+    if (mins > 0) result += `${mins}m `;
+    if (secs > 0 && hours === 0) result += `${secs}s`;
+
+    return result.trim() || "0m";
   };
 
+  const totalPages = Math.ceil(total / filters.limit);
+
   return (
-    <div className="w-full overflow-x-auto">
+    <div className="min-h-screen max-w-7xl mx-auto p-3">
       {/* Header */}
-      <div className="p-4 border border-gray-200 rounded-2xl dark:border-gray-800 lg:p-4 mb-3 bg-white dark:border-gray-700 dark:bg-gray-800 dark:text-gray-400">
-        <div className="flex flex-col gap-5 xl:flex-row xl:items-center xl:justify-between">
-          <div className="flex flex-col items-center w-full gap-6 xl:flex-row">
-            <div className="w-16 h-16 overflow-hidden border border-gray-200 rounded-full dark:border-gray-800 flex items-center justify-center bg-blue-50">
-              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" className="text-blue-600">
-                <path d="M3 19V5c0-1.1.9-2 2-2h14c1.1 0 2 .9 2 2v14c0 1.1-.9 2-2 2H5c-1.1 0-2-.9-2-2zm2-16v14h14V3H5zm2 2h10v2H7V5zm0 4h10v2H7V9zm0 4h7v2H7v-2z" fill="currentColor" />
-              </svg>
-            </div>
-            <div className="order-3 xl:order-2">
-              <h4 className="mb-2 text-lg font-semibold text-center text-gray-800 dark:text-white/90 xl:text-left">
-                Section Management
-              </h4>
-              <div className="flex flex-col items-center gap-1 text-center xl:flex-row xl:gap-3 xl:text-left">
-                <p className="text-sm text-gray-500 dark:text-gray-400">Manage test sections</p>
-                <div className="hidden h-3.5 w-px bg-gray-300 dark:bg-gray-700 xl:block"></div>
-                <p className="text-sm text-gray-500 dark:text-gray-400">{sections.length} sections</p>
-              </div>
-            </div>
+      <div className="mb-3">
+        <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+          <div>
+            <h1 className="text-xl font-bold text-gray-900 dark:text-white">
+              Section Management
+            </h1>
+            <p className="text-sm text-gray-500 dark:text-gray-400">
+              Manage your test sections and configurations
+            </p>
           </div>
-          <div className="flex w-full flex-col gap-3 sm:flex-row sm:items-center sm:justify-end xl:gap-4">
-            <button
-              onClick={openCreateModal}
-              className="flex w-full items-center justify-center gap-2 rounded-full border border-gray-300 bg-white px-4 py-3 text-sm font-medium text-gray-700 shadow-theme-xs hover:bg-gray-50 hover:text-gray-800 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-400 dark:hover:bg-white/[0.03] dark:hover:text-gray-200 lg:inline-flex lg:w-auto"
-            >
-              <svg className="fill-current" width="18" height="18" viewBox="0 0 18 18" fill="none">
-                <path fillRule="evenodd" clipRule="evenodd" d="M15.0911 2.78206C14.2125 1.90338 12.7878 1.90338 11.9092 2.78206L4.57524 10.116C4.26682 10.4244 4.0547 10.8158 3.96468 11.2426L3.31231 14.3352C3.25997 14.5833 3.33653 14.841 3.51583 15.0203C3.69512 15.1996 3.95286 15.2761 4.20096 15.2238L7.29355 14.5714C7.72031 14.4814 8.11172 14.2693 8.42013 13.9609L15.7541 6.62695C16.6327 5.74827 16.6327 4.32365 15.7541 3.44497L15.0911 2.78206ZM12.9698 3.84272C13.2627 3.54982 13.7376 3.54982 14.0305 3.84272L14.6934 4.50563C14.9863 4.79852 14.9863 5.2734 14.6934 5.56629L14.044 6.21573L12.3204 4.49215L12.9698 3.84272ZM11.2597 5.55281L5.6359 11.1766C5.53309 11.2794 5.46238 11.4099 5.43238 11.5522L5.01758 13.5185L6.98394 13.1037C7.1262 13.0737 7.25666 13.003 7.35947 12.9002L12.9833 7.27639L11.2597 5.55281Z" fill="" />
-              </svg>
+          <div className="flex items-center gap-3">
+            {/* {selectedSections.length > 0 && (
+                            <Button
+                                variant="outline"
+                                size="sm"
+                                className="text-red-600 hover:text-red-700"
+                                onClick={handleBulkDelete}
+                            >
+                                <Trash2 className="mr-2 h-4 w-4" />
+                                Delete Selected ({selectedSections.length})
+                            </Button>
+                        )} */}
+            <div className="flex items-center rounded-lg border border-gray-200 bg-white p-1 dark:border-gray-700 dark:bg-gray-800">
+              <button
+                onClick={() => setViewMode("table")}
+                className={`rounded-md p-1.5 ${viewMode === "table"
+                    ? "bg-gray-100 text-blue-600 dark:bg-gray-700 dark:text-blue-400"
+                    : "text-gray-500"
+                  }`}
+              >
+                <List className="h-4 w-4" />
+              </button>
+              <button
+                onClick={() => setViewMode("grid")}
+                className={`rounded-md p-1.5 ${viewMode === "grid"
+                    ? "bg-gray-100 text-blue-600 dark:bg-gray-700 dark:text-blue-400"
+                    : "text-gray-500"
+                  }`}
+              >
+                <Grid3X3 className="h-4 w-4" />
+              </button>
+            </div>
+            <Button onClick={openCreateModal}>
+              <Plus className="mr-2 h-4 w-4" />
               Add Section
-            </button>
+            </Button>
           </div>
         </div>
       </div>
 
-      {/* Filters */}
-      <div className="min-h-[70vh] overflow-x-auto rounded-2xl border border-gray-200 bg-white px-4 py-4 dark:border-gray-800 dark:bg-white/[0.03] xl:px-4 xl:py-4">
-        <div className="mb-6 grid grid-cols-1 gap-4 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4">
-          <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-              Search (Name, Description)
-            </label>
-            <input
-              type="text"
-              name="search"
-              value={filters.search}
-              onChange={handleFilterChange}
-              placeholder="Search sections..."
-              className="w-full rounded-md border border-gray-300 bg-white py-2 px-3 text-sm focus:border-indigo-500 focus:outline-none focus:ring-indigo-500 dark:border-gray-600 dark:bg-gray-800 dark:text-white"
-            />
-          </div>
-          <div className="flex items-end">
+      {/* Enhanced Filters */}
+      <div className="mb-3 rounded-2xl border border-gray-200 bg-white dark:border-gray-800 dark:bg-gray-900">
+        <div className="border-b border-gray-100 p-3 dark:border-gray-800">
+          <div className="flex items-center justify-between">
             <button
-              onClick={() =>
-                setFilters({
-                  page: 1,
-                  limit: 10,
-                  search: "",
-                })
-              }
-              className="w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm font-medium text-gray-700 shadow-sm hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 dark:border-gray-600 dark:bg-gray-800 dark:text-white dark:hover:bg-gray-700"
+              onClick={() => setShowFilters(!showFilters)}
+              className="flex items-center gap-2 text-sm font-medium text-gray-700 dark:text-gray-200"
             >
-              Reset Filters
+              <SlidersHorizontal className="h-4 w-4" />
+              Filters
+              <ChevronRight className={`h-4 w-4 transition-transform ${showFilters ? 'rotate-90' : ''}`} />
             </button>
-          </div>
-        </div>
 
-        {/* Table Actions */}
-        <div className="mb-4 flex flex-col justify-between space-y-4 sm:flex-row sm:items-center sm:space-y-0">
-          <div className="flex items-center space-x-4">
-            <div className="flex items-center space-x-2">
-              <label className="text-sm font-medium text-gray-700 dark:text-gray-300">
-                Rows per page:
-              </label>
+            <div className="flex items-center gap-3">
+              <div className="relative">
+                <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" />
+                <input
+                  type="text"
+                  value={searchInput}
+                  onChange={(e) => setSearchInput(e.target.value)}
+                  placeholder="Search sections..."
+                  className="w-64 rounded-xl border border-gray-200 bg-gray-50 py-2 pl-9 pr-4 text-sm text-gray-900 placeholder:text-gray-400 focus:border-blue-500 focus:bg-white focus:outline-none focus:ring-1 focus:ring-blue-500 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-100 dark:placeholder:text-gray-500"
+                />
+              </div>
+
+              {filters.search && (
+                <button
+                  onClick={resetFilters}
+                  className="text-sm text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200"
+                >
+                  Clear
+                </button>
+              )}
+              <button
+                    onClick={resetFilters}
+                    className="w-full flex items-center rounded-xl border border-gray-200 bg-white py-2 px-4 text-sm font-medium text-gray-700 hover:bg-gray-50 dark:border-gray-700 dark:bg-gray-800 dark:text-white dark:hover:bg-gray-700"
+                  >
+                    <RefreshCcw className="mr-2 inline-block h-4 w-4" />
+                    Reset
+                  </button>
               <select
                 name="limit"
                 value={filters.limit}
                 onChange={handleFilterChange}
-                className="rounded-md border border-gray-300 bg-white py-1 px-2 text-sm focus:border-indigo-500 focus:outline-none focus:ring-indigo-500 dark:border-gray-600 dark:bg-gray-800 dark:text-white"
+                className="w-full rounded-xl border border-gray-200 bg-white py-2 px-3 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500 dark:border-gray-700 dark:bg-gray-800 dark:text-white"
               >
-                <option value="5">5</option>
                 <option value="10">10</option>
                 <option value="20">20</option>
                 <option value="50">50</option>
@@ -275,171 +375,408 @@ export default function SectionManagement() {
             </div>
           </div>
         </div>
+      </div>
 
-        <div className="overflow-x-auto rounded-lg border border-gray-200 dark:border-gray-700">
-          {loading ? (
-            <div className="flex h-64 items-center justify-center">
-              <div className="h-8 w-8 animate-spin rounded-full border-4 border-indigo-500 border-t-transparent"></div>
-            </div>
-          ) : (
-            <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
-              <thead className="bg-gray-50 dark:bg-gray-800">
-                <tr>
-                  <th className="px-2 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500 dark:text-gray-300">Name</th>
-                  <th className="px-2 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500 dark:text-gray-300">Description</th>
-                  <th className="px-2 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500 dark:text-gray-300">Duration</th>
-                  <th className="px-2 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500 dark:text-gray-300">Questions</th>
-                  <th className="px-2 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500 dark:text-gray-300">Created</th>
-                  <th className="px-2 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500 dark:text-gray-300">Actions</th>
+      {/* Stats Bar */}
+      {!loading && (
+        <div className="mb-4 flex items-center justify-between text-sm">
+          <div className="text-gray-500 dark:text-gray-400">
+            Showing <span className="font-semibold text-gray-700 dark:text-gray-200">{sections.length}</span> of{" "}
+            <span className="font-semibold text-gray-700 dark:text-gray-200">{total}</span> sections
+          </div>
+        </div>
+      )}
+
+      {/* Content */}
+      {loading ? (
+        <div className="flex items-center justify-center py-20">
+          <div className="text-center">
+            <Loader2 className="mx-auto mb-4 h-8 w-8 animate-spin text-blue-600" />
+            <p className="text-sm text-gray-500 dark:text-gray-400">Loading sections...</p>
+          </div>
+        </div>
+      ) : sections.length === 0 ? (
+        <div className="rounded-2xl border border-gray-200 bg-white p-12 text-center dark:border-gray-800 dark:bg-gray-900">
+          <Layers className="mx-auto mb-4 h-12 w-12 text-gray-300 dark:text-gray-600" />
+          <h3 className="text-lg font-semibold text-gray-900 dark:text-white">No sections found</h3>
+          <p className="mt-2 text-sm text-gray-500 dark:text-gray-400">
+            {filters.search
+              ? "Try adjusting your search terms"
+              : "Get started by creating your first section"}
+          </p>
+          {!filters.search && (
+            <Button className="mt-6" onClick={openCreateModal}>
+              <Plus className="mr-2 h-4 w-4" />
+              Create Your First Section
+            </Button>
+          )}
+        </div>
+      ) : viewMode === "table" ? (
+        /* Enhanced Table View */
+        <div className="rounded-2xl border border-gray-200 bg-white dark:border-gray-800 dark:bg-gray-900">
+          <div className="overflow-x-auto">
+            <table className="w-full">
+              <thead>
+                <tr className="border-b border-gray-100 text-left dark:border-gray-800">
+                  <th className="p-4">
+                    <input
+                      type="checkbox"
+                      checked={selectedSections.length === sections.length && sections.length > 0}
+                      onChange={() => {
+                        if (selectedSections.length === sections.length) {
+                          setSelectedSections([]);
+                        } else {
+                          setSelectedSections(sections.map(s => s._id));
+                        }
+                      }}
+                      className="rounded border-gray-300"
+                    />
+                  </th>
+                  <th className="p-4 text-sm font-medium text-gray-500 dark:text-gray-400">Section Name</th>
+                  <th className="p-4 text-sm font-medium text-gray-500 dark:text-gray-400">Description</th>
+                  <th className="p-4 text-sm font-medium text-gray-500 dark:text-gray-400">Duration</th>
+                  <th className="p-4 text-sm font-medium text-gray-500 dark:text-gray-400">Questions</th>
+                  <th className="p-4 text-sm font-medium text-gray-500 dark:text-gray-400">Created</th>
+                  <th className="p-4 text-sm font-medium text-gray-500 dark:text-gray-400">Actions</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-gray-200 bg-white dark:divide-gray-700 dark:bg-gray-800">
-                {sections.length > 0 ? (
-                  sections.map((section) => (
-                    <tr key={section._id} className="hover:bg-gray-50 dark:hover:bg-gray-700">
-                      <td className="whitespace-nowrap px-2 py-2">
-                        <div className="text-sm font-semibold text-gray-900 dark:text-white">{section.name}</div>
+              <tbody className="divide-y divide-gray-100 dark:divide-gray-800">
+                <AnimatePresence>
+                  {sections.map((section) => (
+                    <motion.tr
+                      key={section._id}
+                      initial={{ opacity: 0, y: 10 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      exit={{ opacity: 0, y: -10 }}
+                      className={`group transition-colors hover:bg-gray-50 dark:hover:bg-gray-800/50 ${selectedSections.includes(section._id) ? "bg-blue-50/50 dark:bg-blue-900/10" : ""
+                        }`}
+                    >
+                      <td className="p-4">
+                        <input
+                          type="checkbox"
+                          checked={selectedSections.includes(section._id)}
+                          onChange={() => {
+                            setSelectedSections(prev =>
+                              prev.includes(section._id)
+                                ? prev.filter(id => id !== section._id)
+                                : [...prev, section._id]
+                            );
+                          }}
+                          className="rounded border-gray-300"
+                        />
                       </td>
-                      <td className="whitespace-nowrap px-2 py-2 text-sm text-gray-500 dark:text-gray-300 line-clamp-1">
-                        {section.description}
+                      <td className="p-3">
+                        <div className="flex items-center gap-3">
+                          
+                          <div>
+                            <p className="font-medium text-gray-900 dark:text-white">
+                              {section.name}
+                            </p>
+                            {section.instructions && (
+                              <p className="text-xs text-gray-500 dark:text-gray-400 line-clamp-1">
+                                {section.instructions}
+                              </p>
+                            )}
+                          </div>
+                        </div>
                       </td>
-                      <td className="whitespace-nowrap px-2 py-2 text-sm text-gray-500 dark:text-gray-300">
-                        {formatDuration(section.duration)}
+                      <td className="p-3 text-sm text-gray-700 dark:text-gray-300 max-w-xs">
+                        <p className="line-clamp-2">
+                          {section.description || "—"}
+                        </p>
                       </td>
-                      <td className="whitespace-nowrap px-2 py-2 text-sm text-gray-500 dark:text-gray-300">
-                        {section.totalQuestions}
+                      <td className="p-3">
+                        <span className="inline-flex items-center gap-1 rounded-full bg-green-50 px-2.5 py-0.5 text-xs font-medium text-green-700 dark:bg-green-900/30 dark:text-green-300">
+                          <Timer className="h-3 w-3" />
+                          {formatDuration(section.duration)}
+                        </span>
                       </td>
-                      <td className="whitespace-nowrap px-2 py-2 text-sm text-gray-500 dark:text-gray-300">
-                        {moment(section.createdAt).format("MMM D, YYYY")}
+                      <td className="p-3">
+                        <span className="inline-flex items-center gap-1 rounded-full bg-blue-50 px-2.5 py-0.5 text-xs font-medium text-blue-700 dark:bg-blue-900/30 dark:text-blue-300">
+                          <Hash className="h-3 w-3" />
+                          {section.totalQuestions || 0}
+                        </span>
                       </td>
-                      <td className="whitespace-nowrap px-2 py-2 text-sm font-medium text-gray-900 dark:text-white">
-                        <div className="flex space-x-2">
+                      <td className="p-3 text-sm text-gray-500 dark:text-gray-400">
+                        <div className="flex items-center gap-1">
+                          <Calendar className="h-3 w-3" />
+                          {moment(section.createdAt).format("MMM D, YYYY")}
+                        </div>
+                      </td>
+                      <td className="p-3">
+                        <div className="flex items-center gap-2">
                           <button
                             onClick={() => viewSectionDetails(section)}
-                            className="p-1 rounded-lg text-indigo-600 hover:text-indigo-900 dark:text-indigo-400 dark:hover:text-indigo-300"
+                            className="rounded-lg p-1.5 text-gray-500 hover:bg-gray-100 hover:text-indigo-600 dark:hover:bg-gray-800 dark:hover:text-indigo-400"
+                            title="View Details"
                           >
-                            <Eye className="h-5 w-5" />
+                            <Eye className="h-4 w-4" />
                           </button>
                           <button
                             onClick={() => openEditModal(section)}
-                            className="p-1 rounded-lg text-blue-600 hover:text-blue-900 dark:text-blue-400 dark:hover:text-blue-300"
+                            className="rounded-lg p-1.5 text-gray-500 hover:bg-gray-100 hover:text-blue-600 dark:hover:bg-gray-800 dark:hover:text-blue-400"
+                            title="Edit"
                           >
-                            <Pencil className="h-5 w-5" />
+                            <Pencil className="h-4 w-4" />
                           </button>
                           <button
                             onClick={() => {
                               setSelectedSection(section);
                               setDeleteModalOpen(true);
                             }}
-                            className="p-1 rounded-lg text-red-600 hover:text-red-900 dark:text-red-400 dark:hover:text-red-300"
+                            className="rounded-lg p-1.5 text-gray-500 hover:bg-red-50 hover:text-red-600 dark:hover:bg-red-900/20 dark:hover:text-red-400"
+                            title="Delete"
                           >
-                            <Trash2 className="h-5 w-5" />
+                            <Trash2 className="h-4 w-4" />
                           </button>
                         </div>
                       </td>
-                    </tr>
-                  ))
-                ) : (
-                  <tr>
-                    <td colSpan={5} className="px-2 py-4 text-center text-sm text-gray-500 dark:text-gray-300">
-                      No sections found
-                    </td>
-                  </tr>
-                )}
+                    </motion.tr>
+                  ))}
+                </AnimatePresence>
               </tbody>
             </table>
-          )}
-        </div>
-
-        {/* Pagination */}
-        {total > 0 && (
-          <div className="mt-4 flex flex-col items-center justify-between space-y-4 sm:flex-row sm:space-y-0">
-            <div className="text-sm text-gray-500 dark:text-gray-300">
-              Showing <span className="font-medium">{(filters.page - 1) * filters.limit + 1}</span> to{" "}
-              <span className="font-medium">{Math.min(filters.page * filters.limit, total)}</span> of{" "}
-              <span className="font-medium">{total}</span> results
-            </div>
-            <div className="flex space-x-2">
-              <button
-                onClick={() => handlePageChange(filters.page - 1)}
-                disabled={filters.page === 1}
-                className={`rounded-md border px-3 py-1 text-sm ${
-                  filters.page === 1
-                    ? "cursor-not-allowed bg-gray-100 text-gray-400 dark:bg-gray-700 dark:text-gray-500"
-                    : "border-gray-300 bg-white text-gray-700 hover:bg-gray-50 dark:border-gray-600 dark:bg-gray-800 dark:text-white dark:hover:bg-gray-700"
-                }`}
-              >
-                Previous
-              </button>
-              {Array.from({ length: Math.ceil(total / filters.limit) }, (_, i) => i + 1)
-                .slice(Math.max(0, filters.page - 3), Math.min(Math.ceil(total / filters.limit), filters.page + 2))
-                .map((pageNum) => (
-                  <button
-                    key={pageNum}
-                    onClick={() => handlePageChange(pageNum)}
-                    className={`rounded-md border px-3 py-1 text-sm ${
-                      filters.page === pageNum
-                        ? "border-indigo-500 bg-indigo-500 text-white"
-                        : "border-gray-300 bg-white text-gray-700 hover:bg-gray-50 dark:border-gray-600 dark:bg-gray-800 dark:text-white dark:hover:bg-gray-700"
-                    }`}
-                  >
-                    {pageNum}
-                  </button>
-                ))}
-              <button
-                onClick={() => handlePageChange(filters.page + 1)}
-                disabled={filters.page * filters.limit >= total}
-                className={`rounded-md border px-3 py-1 text-sm ${
-                  filters.page * filters.limit >= total
-                    ? "cursor-not-allowed bg-gray-100 text-gray-400 dark:bg-gray-700 dark:text-gray-500"
-                    : "border-gray-300 bg-white text-gray-700 hover:bg-gray-50 dark:border-gray-600 dark:bg-gray-800 dark:text-white dark:hover:bg-gray-700"
-                }`}
-              >
-                Next
-              </button>
-            </div>
           </div>
-        )}
-      </div>
+        </div>
+      ) : (
+        /* Grid View */
+        <div className="grid gap-3 grid-cols-2 lg:grid-cols-4 xl:grid-cols-5">
+          <AnimatePresence>
+            {sections.map((section) => (
+              <motion.div
+                key={section._id}
+                layout
+                initial={{ opacity: 0, scale: 0.95 }}
+                animate={{ opacity: 1, scale: 1 }}
+                exit={{ opacity: 0, scale: 0.95 }}
+                transition={{ duration: 0.2 }}
+                className={`group relative rounded-2xl border bg-white p-5 transition-all hover:shadow-lg dark:bg-gray-900 cursor-pointer ${selectedSections.includes(section._id)
+                    ? "border-blue-500 ring-2 ring-blue-500/20"
+                    : "border-gray-200 hover:border-gray-300 dark:border-gray-800 dark:hover:border-gray-700"
+                  }`}
+                onClick={() => {
+                  setSelectedSections(prev =>
+                    prev.includes(section._id)
+                      ? prev.filter(id => id !== section._id)
+                      : [...prev, section._id]
+                  );
+                }}
+              >
+                {/* Selection indicator */}
+                <div className="absolute right-2 top-2">
+                  <div className={`h-5 w-5 rounded-full border-2 transition-colors ${selectedSections.includes(section._id)
+                      ? "border-blue-500 bg-blue-500"
+                      : "border-gray-300 dark:border-gray-600"
+                    }`}>
+                    {selectedSections.includes(section._id) && (
+                      <CheckCircle2 className="h-4 w-4 text-white" />
+                    )}
+                  </div>
+                </div>
+
+                {/* Header */}
+                <div className="mb-4">
+                  <div className="flex items-start gap-3">
+                   
+                    <div className="flex-1">
+                      <h3 className="font-semibold text-gray-900 dark:text-white line-clamp-2">
+                        {section.name}
+                      </h3>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Stats */}
+                <div className="mb-4 grid grid-cols-2 gap-2">
+                  <div className="rounded-lg bg-gray-50 p-2 dark:bg-gray-800">
+                    <div className="flex items-center gap-1 text-xs text-gray-500 dark:text-gray-400">
+                      <Timer className="h-3 w-3" />
+                      Duration
+                    </div>
+                    <p className="mt-0.5 text-sm font-semibold text-gray-900 dark:text-white">
+                      {formatDuration(section.duration)}
+                    </p>
+                  </div>
+                  <div className="rounded-lg bg-gray-50 p-2 dark:bg-gray-800">
+                    <div className="flex items-center gap-1 text-xs text-gray-500 dark:text-gray-400">
+                      <Hash className="h-3 w-3" />
+                      Questions
+                    </div>
+                    <p className="mt-0.5 text-sm font-semibold text-gray-900 dark:text-white">
+                      {section.totalQuestions || 0}
+                    </p>
+                  </div>
+                </div>
+
+                {/* Description Preview */}
+                {section.description && (
+                  <p className="mb-3 text-xs text-gray-500 dark:text-gray-400 line-clamp-2">
+                    {section.description}
+                  </p>
+                )}
+
+                {/* Footer */}
+                <div className="flex items-center justify-between border-t border-gray-100 pt-3 dark:border-gray-800">
+                  <div className="flex items-center gap-1 text-xs text-gray-500 dark:text-gray-400">
+                    <Calendar className="h-3 w-3" />
+                    {moment(section.createdAt).format("MMM D, YYYY")}
+                  </div>
+                  <div className="flex items-center gap-1 opacity-0 transition-opacity group-hover:opacity-100">
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        viewSectionDetails(section);
+                      }}
+                      className="rounded-lg p-1.5 text-gray-500 hover:bg-gray-100 hover:text-indigo-600 dark:hover:bg-gray-800 dark:hover:text-indigo-400"
+                    >
+                      <Eye className="h-4 w-4" />
+                    </button>
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        openEditModal(section);
+                      }}
+                      className="rounded-lg p-1.5 text-gray-500 hover:bg-gray-100 hover:text-blue-600 dark:hover:bg-gray-800 dark:hover:text-blue-400"
+                    >
+                      <Pencil className="h-4 w-4" />
+                    </button>
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setSelectedSection(section);
+                        setDeleteModalOpen(true);
+                      }}
+                      className="rounded-lg p-1.5 text-gray-500 hover:bg-red-50 hover:text-red-600 dark:hover:bg-red-900/20 dark:hover:text-red-400"
+                    >
+                      <Trash2 className="h-4 w-4" />
+                    </button>
+                  </div>
+                </div>
+              </motion.div>
+            ))}
+          </AnimatePresence>
+        </div>
+      )}
+
+      {/* Enhanced Pagination */}
+      {!loading && totalPages > 1 && (
+        <div className="mt-6 flex items-center justify-between">
+          <p className="text-sm text-gray-500 dark:text-gray-400">
+            Page {filters.page} of {totalPages}
+          </p>
+          <div className="flex items-center gap-2">
+            <Button
+              variant="outline"
+              size="sm"
+              disabled={filters.page === 1}
+              onClick={() => handlePageChange(filters.page - 1)}
+            >
+              <ChevronLeft className="mr-1 h-4 w-4" />
+              Previous
+            </Button>
+            {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
+              let pageNum;
+              if (totalPages <= 5) {
+                pageNum = i + 1;
+              } else if (filters.page <= 3) {
+                pageNum = i + 1;
+              } else if (filters.page >= totalPages - 2) {
+                pageNum = totalPages - 4 + i;
+              } else {
+                pageNum = filters.page - 2 + i;
+              }
+              return (
+                <button
+                  key={pageNum}
+                  onClick={() => handlePageChange(pageNum)}
+                  className={`h-8 w-8 rounded-lg text-sm font-medium transition-colors ${filters.page === pageNum
+                      ? "bg-blue-600 text-white"
+                      : "text-gray-500 hover:bg-gray-100 dark:hover:bg-gray-800"
+                    }`}
+                >
+                  {pageNum}
+                </button>
+              );
+            })}
+            <Button
+              variant="outline"
+              size="sm"
+              disabled={filters.page >= totalPages}
+              onClick={() => handlePageChange(filters.page + 1)}
+            >
+              Next
+              <ChevronRight className="ml-1 h-4 w-4" />
+            </Button>
+          </div>
+        </div>
+      )}
 
       {/* View Modal */}
       <Modal isOpen={isOpen} onClose={closeModal} className="max-w-[700px] m-4">
-        <div className="no-scrollbar relative w-full max-w-[700px] overflow-y-auto rounded-3xl bg-white p-4 dark:bg-gray-900 lg:p-11">
-          <div className="px-2 pr-14">
-            <h4 className="mb-2 text-2xl font-semibold text-gray-800 dark:text-white/90">Section Details</h4>
-            <p className="mb-6 text-sm text-gray-500 dark:text-gray-400 lg:mb-7">Detailed information</p>
+        <div className="no-scrollbar relative w-full max-w-[700px] overflow-y-auto rounded-3xl bg-white p-6 dark:bg-gray-900 lg:p-8">
+          <div className="mb-6 flex items-center justify-between">
+            <div>
+              <h4 className="text-2xl font-semibold text-gray-800 dark:text-white/90">Section Details</h4>
+              <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">Detailed information about this section</p>
+            </div>
+            <button
+              onClick={closeModal}
+              className="rounded-xl p-2 text-gray-500 hover:bg-gray-100 dark:text-gray-400 dark:hover:bg-gray-800"
+            >
+              <X className="h-5 w-5" />
+            </button>
           </div>
+
           {selectedSection && (
-            <div className="space-y-4 px-2">
-              <div>
-                <p className="text-sm text-gray-500">Name</p>
-                <p className="text-sm font-medium text-gray-800 dark:text-white">{selectedSection.name}</p>
+            <div className="space-y-4">
+              <div className="grid gap-4 sm:grid-cols-2">
+                <div className="rounded-xl bg-gray-50 p-4 dark:bg-gray-800">
+                  <p className="text-xs font-medium text-gray-500 dark:text-gray-400">Name</p>
+                  <p className="mt-1 text-sm font-semibold text-gray-900 dark:text-white">
+                    {selectedSection.name}
+                  </p>
+                </div>
+                <div className="rounded-xl bg-gray-50 p-4 dark:bg-gray-800">
+                  <p className="text-xs font-medium text-gray-500 dark:text-gray-400">Duration</p>
+                  <p className="mt-1 text-sm font-semibold text-gray-900 dark:text-white">
+                    {formatDuration(selectedSection.duration)}
+                  </p>
+                </div>
+                <div className="rounded-xl bg-gray-50 p-4 dark:bg-gray-800">
+                  <p className="text-xs font-medium text-gray-500 dark:text-gray-400">Total Questions</p>
+                  <p className="mt-1 text-sm font-semibold text-gray-900 dark:text-white">
+                    {selectedSection.totalQuestions}
+                  </p>
+                </div>
+                <div className="rounded-xl bg-gray-50 p-4 dark:bg-gray-800">
+                  <p className="text-xs font-medium text-gray-500 dark:text-gray-400">Created</p>
+                  <p className="mt-1 text-sm font-semibold text-gray-900 dark:text-white">
+                    {moment(selectedSection.createdAt).format("MMM D, YYYY h:mm A")}
+                  </p>
+                </div>
               </div>
-              <div>
-                <p className="text-sm text-gray-500">Description</p>
-                <p className="text-sm font-medium text-gray-800 dark:text-white">
-                  {selectedSection.description || "—"}
-                </p>
-              </div>
-              <div>
-                <p className="text-sm text-gray-500">Instructions</p>
-                <p className="text-sm font-medium text-gray-800 dark:text-white">
-                  {selectedSection.instructions || "—"}
-                </p>
-              </div>
-              <div>
-                <p className="text-sm text-gray-500">Duration</p>
-                <p className="text-sm font-medium text-gray-800 dark:text-white">
-                  {formatDuration(selectedSection.duration)}
-                </p>
-              </div>
-              <div>
-                <p className="text-sm text-gray-500">Total Questions</p>
-                <p className="text-sm font-medium text-gray-800 dark:text-white">{selectedSection.totalQuestions}</p>
-              </div>
+
+              {selectedSection.description && (
+                <div className="rounded-xl bg-gray-50 p-4 dark:bg-gray-800">
+                  <p className="text-xs font-medium text-gray-500 dark:text-gray-400">Description</p>
+                  <p className="mt-1 text-sm text-gray-900 dark:text-white">
+                    {selectedSection.description}
+                  </p>
+                </div>
+              )}
+
+              {selectedSection.instructions && (
+                <div className="rounded-xl bg-gray-50 p-4 dark:bg-gray-800">
+                  <p className="text-xs font-medium text-gray-500 dark:text-gray-400">Instructions</p>
+                  <p className="mt-1 text-sm text-gray-900 dark:text-white">
+                    {selectedSection.instructions}
+                  </p>
+                </div>
+              )}
             </div>
           )}
-          <div className="flex items-center gap-3 px-2 mt-6 lg:justify-end">
+
+          <div className="mt-6 flex justify-end">
             <Button size="sm" variant="outline" onClick={closeModal}>
               Close
             </Button>
@@ -447,98 +784,120 @@ export default function SectionManagement() {
         </div>
       </Modal>
 
-      {/* Edit/Create Modal */}
+      {/* Create/Edit Modal */}
       <Modal isOpen={editModalOpen} onClose={() => setEditModalOpen(false)} className="max-w-[700px] m-4">
-        <div className="no-scrollbar relative w-full max-w-[700px] overflow-y-auto rounded-3xl bg-white p-4 dark:bg-gray-900 lg:p-11">
-          <div className="px-2 pr-14">
-            <h4 className="mb-2 text-2xl font-semibold text-gray-800 dark:text-white/90">
-              {selectedSection ? "Edit Section" : "Add New Section"}
-            </h4>
-            <p className="mb-6 text-sm text-gray-500 dark:text-gray-400 lg:mb-7">
-              {selectedSection ? "Update section details" : "Create a new test section"}
-            </p>
+        <div className="no-scrollbar relative w-full max-w-[700px] overflow-y-auto rounded-3xl bg-white p-6 dark:bg-gray-900 lg:p-8">
+          <div className="mb-6 flex items-center justify-between">
+            <div>
+              <h4 className="text-2xl font-semibold text-gray-800 dark:text-white/90">
+                {selectedSection ? "Edit Section" : "Create New Section"}
+              </h4>
+              <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
+                {selectedSection ? "Update section details" : "Configure your new section"}
+              </p>
+            </div>
+            <button
+              onClick={() => setEditModalOpen(false)}
+              className="rounded-xl p-2 text-gray-500 hover:bg-gray-100 dark:text-gray-400 dark:hover:bg-gray-800"
+            >
+              <X className="h-5 w-5" />
+            </button>
           </div>
-          <form
-            onSubmit={(e) => {
-              e.preventDefault();
-              selectedSection ? handleSaveSection() : handleCreateSection();
-            }}
-            className="flex flex-col"
-          >
-            <div className="custom-scrollbar h-[450px] overflow-y-auto px-2 pb-3">
-              <div className="space-y-6">
-                <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
-                 
-                  <div className="col-span-2">
-                    <Label>Name *</Label>
+
+          <form onSubmit={handleSubmit} className="flex flex-col">
+            <div className="custom-scrollbar max-h-[450px] overflow-y-auto pb-3">
+              <div className="space-y-4">
+                <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+                  <div className="md:col-span-2">
+                    <Label>Section Name *</Label>
                     <Input
                       type="text"
-                      name="name"
                       value={formData.name}
-                      onChange={handleChange}
-                      placeholder="Section name"
+                      onChange={(e) => {
+                        setFormData({ ...formData, name: e.target.value });
+                        if (errors.name) setErrors({ ...errors, name: "" });
+                      }}
+                      placeholder="e.g., Quantitative Reasoning"
+                      error={!!errors.name}
+                      hint={errors.name}
                     />
-                    {errors.name && <p className="mt-1 text-sm text-red-600">{errors.name}</p>}
                   </div>
-                  <div className="col-span-2">
+
+                  <div className="md:col-span-2">
                     <Label>Description</Label>
-                    <textarea
-                      name="description"
+                    <TextArea
                       value={formData.description}
-                      onChange={handleChange}
-                      rows={2}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-200 focus:border-blue-500 dark:bg-gray-800 dark:border-gray-600 dark:text-white"
+                      onChange={(val) => setFormData({ ...formData, description: val })}
+                      placeholder="Brief description of this section..."
+                      rows={3}
                     />
                   </div>
-                  <div className="col-span-2">
+
+                  <div className="md:col-span-2">
                     <Label>Instructions</Label>
-                    <textarea
-                      name="instructions"
+                    <TextArea
                       value={formData.instructions}
-                      onChange={handleChange}
-                      rows={2}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-200 focus:border-blue-500 dark:bg-gray-800 dark:border-gray-600 dark:text-white"
+                      onChange={(val) => setFormData({ ...formData, instructions: val })}
+                      placeholder="Instructions for test takers..."
+                      rows={3}
                     />
                   </div>
+
                   <div>
                     <Label>Duration (seconds) *</Label>
                     <Input
                       type="number"
-                      name="duration"
                       value={formData.duration}
-                      onChange={handleChange}
+                      onChange={(e) => {
+                        setFormData({ ...formData, duration: e.target.value });
+                        if (errors.duration) setErrors({ ...errors, duration: "" });
+                      }}
+                      placeholder="e.g., 3600"
                       min="1"
+                      error={!!errors.duration}
+                      hint={errors.duration}
                     />
-                    {errors.duration && <p className="mt-1 text-sm text-red-600">{errors.duration}</p>}
+                    {formData.duration > 0 && (
+                      <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">
+                        = {formatDuration(Number(formData.duration))}
+                      </p>
+                    )}
                   </div>
+
                   <div>
                     <Label>Total Questions *</Label>
                     <Input
                       type="number"
-                      name="totalQuestions"
                       value={formData.totalQuestions}
-                      onChange={handleChange}
+                      onChange={(e) => {
+                        setFormData({ ...formData, totalQuestions: e.target.value });
+                        if (errors.totalQuestions) setErrors({ ...errors, totalQuestions: "" });
+                      }}
+                      placeholder="e.g., 36"
                       min="1"
+                      error={!!errors.totalQuestions}
+                      hint={errors.totalQuestions}
                     />
-                    {errors.totalQuestions && <p className="mt-1 text-sm text-red-600">{errors.totalQuestions}</p>}
                   </div>
                 </div>
               </div>
             </div>
-            <div className="flex items-center gap-3 px-2 mt-6 lg:justify-end">
-              <button
+
+            <div className="mt-6 flex items-center justify-end gap-3 border-t border-gray-200 pt-4 dark:border-gray-800">
+              <Button
                 type="button"
+                variant="outline"
                 onClick={() => setEditModalOpen(false)}
-                className="rounded-md border border-gray-300 bg-transparent px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-100 dark:border-gray-600 dark:text-gray-300 dark:hover:bg-gray-700"
               >
                 Cancel
-              </button>
-              <button
+              </Button>
+              <Button
                 type="submit"
-                className="rounded-md bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700"
+                isLoading={saving}
+                disabled={saving}
               >
                 {selectedSection ? "Save Changes" : "Create Section"}
-              </button>
+              </Button>
             </div>
           </form>
         </div>
@@ -547,26 +906,52 @@ export default function SectionManagement() {
       {/* Delete Confirmation Modal */}
       <Modal isOpen={isDeleteModalOpen} onClose={() => setDeleteModalOpen(false)} className="max-w-lg">
         {selectedSection && (
-          <div className="no-scrollbar relative w-full overflow-y-auto rounded-3xl bg-white p-4 dark:bg-gray-900 lg:p-6">
-            <div className="px-2 pr-14">
-              <h4 className="mb-2 text-2xl font-semibold text-gray-800 dark:text-white/90">Confirm Deletion</h4>
-              <p className="mb-2 text-sm text-gray-500 dark:text-gray-400">
-                Are you sure you want to delete this section? This action cannot be undone.
-              </p>
-            </div>
-            <div className="px-2">
-              <div className="rounded-md bg-red-50 p-2 py-4 dark:bg-red-900/20">
-                <h3 className="text-sm font-medium text-red-800 dark:text-red-200">Warning</h3>
-                <p className="mt-2 text-sm text-red-700 dark:text-red-300">
-                  Deleting "{selectedSection.name}" will permanently remove it.
+          <div className="no-scrollbar relative w-full overflow-y-auto rounded-3xl bg-white p-6 dark:bg-gray-900 lg:p-8">
+            <div className="mb-6 flex items-center justify-between">
+              <div>
+                <h4 className="text-xl font-semibold text-gray-800 dark:text-white/90">Delete Section</h4>
+                <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
+                  This action cannot be undone
                 </p>
               </div>
+              <button
+                onClick={() => setDeleteModalOpen(false)}
+                className="rounded-xl p-2 text-gray-500 hover:bg-gray-100 dark:text-gray-400 dark:hover:bg-gray-800"
+              >
+                <X className="h-5 w-5" />
+              </button>
             </div>
-            <div className="flex items-center gap-3 px-2 mt-6 lg:justify-end">
-              <Button size="sm" variant="outline" onClick={() => setDeleteModalOpen(false)}>
+
+            <div className="rounded-xl border border-red-200 bg-red-50 p-4 dark:border-red-800 dark:bg-red-900/20">
+              <div className="flex items-start gap-3">
+                <AlertCircle className="h-5 w-5 text-red-600 dark:text-red-400 flex-shrink-0 mt-0.5" />
+                <div>
+                  <h3 className="text-sm font-semibold text-red-800 dark:text-red-200">
+                    Warning
+                  </h3>
+                  <p className="mt-1 text-sm text-red-700 dark:text-red-300">
+                    You are about to permanently delete{" "}
+                    <strong>"{selectedSection.name}"</strong>.
+                    This will remove all associations and cannot be recovered.
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            <div className="mt-6 flex items-center justify-end gap-3">
+              <Button
+                size="sm"
+                variant="outline"
+                onClick={() => setDeleteModalOpen(false)}
+              >
                 Cancel
               </Button>
-              <Button size="sm" variant="primary" onClick={deleteSection}>
+              <Button
+                size="sm"
+                onClick={deleteSection}
+                className="bg-red-600 hover:bg-red-700 text-white"
+              >
+                <Trash2 className="mr-2 h-4 w-4" />
                 Delete Section
               </Button>
             </div>
