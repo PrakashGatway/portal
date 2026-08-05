@@ -36,22 +36,22 @@ const quickAccess = [
     {
         title: "Mock TEST",
         count: "12 Tests",
-        icon: ClipboardList,
+        img: ClipboardList,
     },
     {
         title: "Practice Test",
         count: "156 Questions",
-        icon: Target,
+        img: Target,
     },
     {
         title: "Quiz",
         count: "24 Quiz",
-        icon: CircleHelp,
+        img: CircleHelp,
     },
     {
         title: "Study Material",
         count: "58 PDFs",
-        icon: BookOpen,
+        img: BookOpen,
     },
 ]
 
@@ -781,7 +781,7 @@ const GREDashboard = () => {
 
 
 
-                                                <div className="grid grid-cols-1 xl:grid-cols-[0.8fr_1.2fr] lg:gap-4 ">
+                                                <div className="grid grid-cols-1 xl:grid-cols-[0.9fr_1.1fr] lg:gap-4 ">
 
                                                     {/* Left Image */}
                                                     <div className="flex flex-col gap-4 lg:py-4 px-2">
@@ -802,7 +802,7 @@ const GREDashboard = () => {
                                                         <div className="xl:col-span-3 px-2 lg:px-0">
                                                             <div className='flex gap-2 '>
                                                                 <div>
-                                                                    <h3 className="text-lg font-bold text-gray-900 dark:text-white">
+                                                                    <h3 className="text-2xl font-bold text-gray-900 dark:text-white">
                                                                         {item?.item?.title}
                                                                     </h3>
 
@@ -819,14 +819,14 @@ const GREDashboard = () => {
 
                                                         {/* Right */}
 
-                                                        <div className="flex flex-col lg:flex-row gap-8 lg:gap-6">
+                                                        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-0  justify-center items-center mr-22">
 
 
-                                                            <div className="flex flex-col lg:flex-col items-center gap-2 lg:mt-4 mb-4 lg:mb-0">
+                                                            <div className="flex flex-col lg:flex-col items-center gap-2 lg:mt-0 mb-4 lg:mb-0">
 
                                                                 {/* Progress */}
 
-                                                                <div className="relative w-30 h-30 hidden lg:block">
+                                                                <div className="relative w-40 h-40 hidden lg:block">
 
                                                                     <svg
                                                                         className="w-full h-full -rotate-90"
@@ -855,8 +855,9 @@ const GREDashboard = () => {
                                                                     </svg>
 
                                                                     <div className="absolute inset-0 flex flex-col justify-center items-center dark:text-white">
-                                                                        <h2 className="text-base font-bold">{item?.percentage}%</h2>
-                                                                        <span className="text-xs text-gray-500 dark:text-gray-400 font-semibold mt-1">
+                                                                        <div className="flex items-end gap-1">
+                                                                        <h2 className="text-5xl font-bold">{item?.percentage}</h2><span className='text-2xl'>%</span></div>
+                                                                        <span className="text-sm text-gray-500 dark:text-gray-400 font-semibold mt-1">
                                                                             COMPLETE
                                                                         </span>
                                                                     </div>
@@ -864,7 +865,7 @@ const GREDashboard = () => {
 
                                                                 {/* Buttons */}
 
-                                                                <div className="flex items-center  gap-2 w-full">
+                                                                <div className="flex items-center  gap-2 w-full ">
 
                                                                     <Link to={`/course/${item?.item?.slug}?isCurriculum=true`} className="bg-[#FF5A14] hover:bg-[#f04d08] text-xs text-white rounded-xl py-3 px-4 flex gap-2 items-center justify-center  font-semibold transition">
                                                                         <Play size={18} fill="white" />
@@ -879,16 +880,16 @@ const GREDashboard = () => {
 
                                                             {/* Stats */}
 
-                                                            <div className="space-y-3.5  border-l border-gray-100 pl-4 lg:pl-2">
+                                                            <div className="space-y-3.5  border-l border-gray-100 pl-4 lg:pl-6">
 
                                                                 <div className="flex gap-4 items-start">
 
                                                                     <div className="w-10 h-10 rounded-xl bg-orange-50 dark:bg-gray-600 flex items-center justify-center">
-                                                                        <BookOpen size={22} className="text-[#FF5B1F] dark:text-white" />
+                                                                        <BookOpen size={22} className="text-black dark:text-white" />
                                                                     </div>
 
                                                                     <div>
-                                                                        <p className="text-gray-500 dark:text-white text-base">
+                                                                        <p className="text-gray-500 dark:text-white text-sm">
                                                                             Language
                                                                         </p>
 
@@ -904,11 +905,11 @@ const GREDashboard = () => {
                                                                 <div className="flex gap-4 items-start">
 
                                                                     <div className="w-10 h-10 rounded-xl bg-orange-50 flex items-center justify-center dark:bg-gray-600">
-                                                                        <Clock3 size={22} className="text-[#FF5B1F] dark:text-white" />
+                                                                        <Clock3 size={22} className="text-black dark:text-white" />
                                                                     </div>
 
                                                                     <div>
-                                                                        <p className="text-gray-500 dark:text-white text-base">
+                                                                        <p className="text-gray-500 dark:text-white text-sm">
                                                                             Level
                                                                         </p>
 
@@ -926,12 +927,12 @@ const GREDashboard = () => {
                                                                     <div className="w-10 h-10 rounded-xl bg-orange-50 flex items-center justify-center dark:bg-gray-600">
                                                                         <CalendarDays
                                                                             size={22}
-                                                                            className="text-[#FF5B1F] dark:text-white"
+                                                                            className="text-black dark:text-white"
                                                                         />
                                                                     </div>
 
                                                                     <div>
-                                                                        <p className="text-gray-500 dark:text-white text-base">Days Left</p>
+                                                                        <p className="text-gray-500 dark:text-white text-sm">Days Left</p>
 
                                                                         <h3 className="font-bold text-sm text-[#FF5A14]">
                                                                             {Math.max(
@@ -956,12 +957,9 @@ const GREDashboard = () => {
                                                 </div>
 
                                                 {/* Right Arrow */}
-                                                <div className='flex justify-end items-center gap-6 absolute right-9 bottom-7 '>
+                                                <div className='flex justify-end items-center gap-6 absolute right-2 bottom-40 '>
 
 
-                                                    <button onClick={() => instanceRef.current?.prev()} className="hidden xl:flex  w-10 h-10 rounded-full border items-center justify-center hover:bg-orange-50">
-                                                        <ChevronLeft className="text-[#FF5A14]" />
-                                                    </button>
 
                                                     <button onClick={() => instanceRef.current?.next()} className="hidden xl:flex  w-10 h-10 rounded-full border items-center justify-center hover:bg-orange-50">
                                                         <ChevronRight className="text-[#FF5A14]" />
@@ -970,6 +968,10 @@ const GREDashboard = () => {
 
 
                                                 </div>
+{/*                                                 
+                                                    <button onClick={() => instanceRef.current?.prev()} className="hidden xl:flex  w-10 h-10 rounded-full border items-center justify-center hover:bg-orange-50 absolute">
+                                                        <ChevronLeft className="text-[#FF5A14]" />
+                                                    </button> */}
                                             </div>
 
                                         )
@@ -1076,7 +1078,7 @@ const GREDashboard = () => {
                                 <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 lg:gap-0">
 
                                     {quickAccess.map((item, index) => {
-                                        const Icon = item.icon;
+                                        const img = item.img;
 
                                         return (
                                             <div
@@ -1109,11 +1111,7 @@ const GREDashboard = () => {
 
                                                         <div className='bg-orange-100 dark:bg-gray-600 w-full h-full rounded-full flex justify-center items-center'>
                                                             <div>
-                                                                <Icon
-                                                                    className="text-[#FF5B1F] dark:text-white"
-                                                                    strokeWidth={1.8}
-                                                                    size={30}
-                                                                />
+                                                               <img src={img} alt="image" />
                                                             </div>
                                                         </div>
 
