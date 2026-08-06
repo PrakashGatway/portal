@@ -36,22 +36,22 @@ const quickAccess = [
     {
         title: "Mock TEST",
         count: "12 Tests",
-        img: ClipboardList,
+        img: "/images/dashboard-icon-1.webp",
     },
     {
         title: "Practice Test",
         count: "156 Questions",
-        img: Target,
+        img: "/images/dashboard-icon-2.webp",
     },
     {
         title: "Quiz",
         count: "24 Quiz",
-        img: CircleHelp,
+        img: "/images/dashboard-icon-3.webp",
     },
     {
         title: "Study Material",
         count: "58 PDFs",
-        img: BookOpen,
+        img: "/images/dashboard-icon-4.webp",
     },
 ]
 
@@ -687,8 +687,8 @@ const GREDashboard = () => {
                 <HeaderBanner data={data} user={user} />
 
                 {(
-                    <div>
-                        <div className=" rounded-3xl  bg-white dark:bg-gray-800 p-4 ">
+                    <div className="bg-gradient-to-b from-orange-500 via-orange-500 to-orange-200/50 p-[2px] rounded-xl"> 
+                        <div className="bg-white rounded-xl   p-4 ">
                             {/* Top */}
                             <div className="flex items-start gap-4">
                                 {/* <Image
@@ -1098,7 +1098,7 @@ const GREDashboard = () => {
                                                     <div className="relative flex items-center justify-center
                       w-20 h-20
                       sm:w-28 sm:h-28
-                      md:w-22 md:h-22
+                      md:w-25 md:h-25
                       rounded-full
                       bg-white
                       dark:bg-gray-500
