@@ -1,5 +1,6 @@
 import { useRef, useState, useMemo, useEffect } from "react";
 import { Editor } from "@tinymce/tinymce-react";
+import api from "../axiosInstance";
 
 const RichTextEditor = ({
   initialValue = "",
@@ -9,6 +10,43 @@ const RichTextEditor = ({
 }: any) => {
   const editorRef = useRef<any>(null);
   const [isDarkMode, setIsDarkMode] = useState(false);
+
+  const uploadImage = async (file: File): Promise<string> => {
+    try {
+      const formData = new FormData();
+
+      // Must match multer .single("image")
+      formData.append("image", file);
+
+      const response = await api.post(
+        `/upload/upload_blogs`,
+        formData,
+        {
+          headers: {
+            "Content-Type": "multipart/form-data",
+          },
+        }
+      );
+
+      console.log("Image upload response:", response.data);
+
+      const imageUrl = response.data?.data?.url;
+
+      if (!imageUrl) {
+        throw new Error("Image URL not returned from server");
+      }
+
+      return imageUrl;
+    } catch (error: any) {
+      console.error("Image upload failed:", error);
+
+      throw new Error(
+        error?.response?.data?.message ||
+        error?.response?.data?.error ||
+        "Failed to upload image"
+      );
+    }
+  };
 
   const toggleTheme = () => {
     setIsDarkMode((prev) => !prev);
@@ -145,27 +183,53 @@ help
 
       image_title: true,
       automatic_uploads: false,
-      file_picker_types: "image",
-      file_picker_callback: (callback: any, value: any, meta: any) => {
-        const input = document.createElement("input");
-        input.setAttribute("type", "file");
-        input.setAttribute("accept", "image/*");
+      images_upload_handler: async (blobInfo: any) => {
+        try {
+          const file = blobInfo.blob();
 
-        input.addEventListener("change", (e: any) => {
-          const file = e.target.files?.[0];
+          return await uploadImage(file);
+        } catch (error: any) {
+          console.error(
+            "TinyMCE image upload failed:",
+            error
+          );
+          throw new Error(
+            error.message || "Image upload failed"
+          );
+        }
+      },
+      file_picker_types: "image",
+
+      file_picker_callback: (
+        callback: any,
+        value: any,
+        meta: any
+      ) => {
+        if (meta.filetype !== "image") return;
+
+        const input = document.createElement("input");
+
+        input.type = "file";
+        input.accept = "image/jpeg,image/png,image/webp,image/gif";
+
+        input.onchange = async (event: any) => {
+          const file = event.target.files?.[0];
+
           if (!file) return;
 
-          const reader = new FileReader();
-          reader.addEventListener("load", () => {
-            const id = "blobid" + new Date().getTime();
-            const blobCache = editorRef.current.editorUpload.blobCache;
-            const base64 = (reader.result as string).split(",")[1];
-            const blobInfo = blobCache.create(id, file, base64);
-            blobCache.add(blobInfo);
-            callback(blobInfo.blobUri(), { title: file.name });
-          });
-          reader.readAsDataURL(file);
-        });
+          try {
+            const imageUrl = await uploadImage(file);
+
+            callback(imageUrl, {
+              title: file.name,
+              alt: file.name,
+            });
+          } catch (error: any) {
+            console.error(error);
+
+            alert(error.message || "Image upload failed");
+          }
+        };
 
         input.click();
       },
