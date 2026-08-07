@@ -23,11 +23,14 @@ import {
     Music,
     Link as LinkIcon,
     Layers,
-    FileCheck
+    FileCheck,
+    CalendarDays,
+    Clock3,
+    Play
 } from "lucide-react";
 import Button from "../components/ui/button/Button";
 import api, { ImageBaseUrl } from "../axiosInstance";
-import { useNavigate } from "react-router";
+import { Link, useNavigate } from "react-router";
 
 // Types
 interface CourseProgress {
@@ -170,87 +173,274 @@ const CourseCard = ({
 
     // Grid View
     return (
-        <motion.div
-            initial={{ opacity: 0, scale: 0.98 }}
-            animate={{ opacity: 1, scale: 1 }}
-            exit={{ opacity: 0, scale: 0.98 }}
-            className={`group relative bg-white dark:bg-gray-800 rounded-xl border ${isExpired ? 'border-red-200 dark:border-red-800/50' : 'border-gray-200 dark:border-gray-700'} hover:border-orange-300 dark:hover:border-orange-700 hover:shadow-lg transition-all duration-300 overflow-hidden flex flex-col`}
-        >
-            {/* Header Image / Icon */}
-            <div className="relative h-40 bg-gray-100 dark:bg-gray-700 overflow-hidden">
-                {course.item?.thumbnail?.url ? (
-                    <img
-                        src={`${ImageBaseUrl}/${course.item.thumbnail.url}`}
-                        alt={course.item?.title}
-                        className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
-                    />
-                ) : (
-                    <div className={`w-full h-full flex flex-col items-center justify-center gap-2 ${typeStyle.bg}`}>
-                        <TypeIcon className={`h-10 w-10 ${typeStyle.iconColor}`} />
-                        <span className={`text-xs font-medium ${typeStyle.text}`}>{course.itemType}</span>
-                    </div>
-                )}
+        // <motion.div
+        //     initial={{ opacity: 0, scale: 0.98 }}
+        //     animate={{ opacity: 1, scale: 1 }}
+        //     exit={{ opacity: 0, scale: 0.98 }}
+        //     className={`group relative bg-white dark:bg-gray-800 rounded-xl border ${isExpired ? 'border-red-200 dark:border-red-800/50' : 'border-gray-200 dark:border-gray-700'} hover:border-orange-300 dark:hover:border-orange-700 hover:shadow-lg transition-all duration-300 overflow-hidden flex flex-col`}
+        // >
+        //     {/* Header Image / Icon */}
+        //     <div className="relative h-40 bg-gray-100 dark:bg-gray-700 overflow-hidden">
+        //         {course.item?.thumbnail?.url ? (
+        //             <img
+        //                 src={`${ImageBaseUrl}/${course.item.thumbnail.url}`}
+        //                 alt={course.item?.title}
+        //                 className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+        //             />
+        //         ) : (
+        //             <div className={`w-full h-full flex flex-col items-center justify-center gap-2 ${typeStyle.bg}`}>
+        //                 <TypeIcon className={`h-10 w-10 ${typeStyle.iconColor}`} />
+        //                 <span className={`text-xs font-medium ${typeStyle.text}`}>{course.itemType}</span>
+        //             </div>
+        //         )}
 
-                {isExpired && (
-                    <div className="absolute inset-0 bg-red-900/60 backdrop-blur-[1px] flex items-center justify-center">
-                        <span className="text-white text-sm font-bold px-3 py-1.5 bg-red-600 rounded-lg shadow-sm">EXPIRED</span>
-                    </div>
-                )}
+        //         {isExpired && (
+        //             <div className="absolute inset-0 bg-red-900/60 backdrop-blur-[1px] flex items-center justify-center">
+        //                 <span className="text-white text-sm font-bold px-3 py-1.5 bg-red-600 rounded-lg shadow-sm">EXPIRED</span>
+        //             </div>
+        //         )}
 
-                <div className="absolute top-3 left-3">
-                    <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-xs font-medium border backdrop-blur-md bg-white/90 dark:bg-gray-900/90 ${typeStyle.text} ${typeStyle.border}`}>
-                        <TypeIcon className="h-3 w-3" />
-                        {course.itemType}
-                    </span>
-                </div>
-            </div>
+        //         <div className="absolute top-3 left-3">
+        //             <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-xs font-medium border backdrop-blur-md bg-white/90 dark:bg-gray-900/90 ${typeStyle.text} ${typeStyle.border}`}>
+        //                 <TypeIcon className="h-3 w-3" />
+        //                 {course.itemType}
+        //             </span>
+        //         </div>
+        //     </div>
 
-            {/* Body */}
-            <div className="p-4 flex flex-col flex-1">
-                <h3
-                    onClick={handleContinue}
-                    className="text-base font-semibold text-gray-900 dark:text-white line-clamp-2 cursor-pointer hover:text-orange-600 dark:hover:text-orange-400 transition-colors mb-1"
-                >
-                    {course.item?.title || 'Untitled Material'}
-                </h3>
-                <p className="text-xs text-gray-500 dark:text-gray-400 line-clamp-2 mb-4 flex-1">
-                    {course.item?.shortDescription || course.item?.description || 'No description available'}
-                </p>
+        //     {/* Body */}
+        //     <div className="p-4 flex flex-col flex-1">
+        //         <h3
+        //             onClick={handleContinue}
+        //             className="text-base font-semibold text-gray-900 dark:text-white line-clamp-2 cursor-pointer hover:text-orange-600 dark:hover:text-orange-400 transition-colors mb-1"
+        //         >
+        //             {course.item?.title || 'Untitled Material'}
+        //         </h3>
+        //         <p className="text-xs text-gray-500 dark:text-gray-400 line-clamp-2 mb-4 flex-1">
+        //             {course.item?.shortDescription || course.item?.description || 'No description available'}
+        //         </p>
 
-                {/* Progress */}
-                <div className="mb-4">
-                    <div className="flex items-center justify-between text-xs text-gray-500 dark:text-gray-400 mb-1.5">
-                        <span className="flex items-center gap-1">
-                            <Timer className="h-3 w-3" />
-                            {formatTime(course.totalTimeSpent)}
-                        </span>
-                        <span className="font-medium">{Math.round(progress)}%</span>
-                    </div>
-                    <div className="h-1.5 bg-gray-200 dark:bg-gray-700 rounded-full overflow-hidden">
-                        <div
-                            className={`h-full rounded-full transition-all duration-500 ${progress >= 80 ? 'bg-emerald-500' : progress >= 50 ? 'bg-blue-500' : 'bg-amber-500'}`}
-                            style={{ width: `${Math.min(progress, 100)}%` }}
-                        />
-                    </div>
-                </div>
+        //         {/* Progress */}
+        //         <div className="mb-4">
+        //             <div className="flex items-center justify-between text-xs text-gray-500 dark:text-gray-400 mb-1.5">
+        //                 <span className="flex items-center gap-1">
+        //                     <Timer className="h-3 w-3" />
+        //                     {formatTime(course.totalTimeSpent)}
+        //                 </span>
+        //                 <span className="font-medium">{Math.round(progress)}%</span>
+        //             </div>
+        //             <div className="h-1.5 bg-gray-200 dark:bg-gray-700 rounded-full overflow-hidden">
+        //                 <div
+        //                     className={`h-full rounded-full transition-all duration-500 ${progress >= 80 ? 'bg-emerald-500' : progress >= 50 ? 'bg-blue-500' : 'bg-amber-500'}`}
+        //                     style={{ width: `${Math.min(progress, 100)}%` }}
+        //                 />
+        //             </div>
+        //         </div>
 
-                {/* Action Button */}
-                <Button
-                    onClick={handleContinue}
-                    size="sm"
-                    disabled={!course.isActive || isExpired}
-                    className={`w-full py-2 rounded-lg text-sm font-medium transition-all flex items-center justify-center gap-1.5 ${isExpired || !course.isActive
-                        ? 'bg-gray-100 text-gray-400 cursor-not-allowed dark:bg-gray-700 dark:text-gray-500'
-                        : isCompleted
-                            ? 'bg-emerald-600 hover:bg-emerald-700 text-white'
-                            : 'bg-orange-600 hover:bg-orange-700 text-white'
-                        }`}
-                >
-                    {isExpired ? 'Expired' : isCompleted ? 'View Certificate' : progress === 0 ? 'Start Learning' : 'Continue'}
-                    <ChevronRight className="h-3.5 w-3.5" />
-                </Button>
-            </div>
-        </motion.div>
+        //         {/* Action Button */}
+        //         <Button
+        //             onClick={handleContinue}
+        //             size="sm"
+        //             disabled={!course.isActive || isExpired}
+        //             className={`w-full py-2 rounded-lg text-sm font-medium transition-all flex items-center justify-center gap-1.5 ${isExpired || !course.isActive
+        //                 ? 'bg-gray-100 text-gray-400 cursor-not-allowed dark:bg-gray-700 dark:text-gray-500'
+        //                 : isCompleted
+        //                     ? 'bg-emerald-600 hover:bg-emerald-700 text-white'
+        //                     : 'bg-orange-600 hover:bg-orange-700 text-white'
+        //                 }`}
+        //         >
+        //             {isExpired ? 'Expired' : isCompleted ? 'View Certificate' : progress === 0 ? 'Start Learning' : 'Continue'}
+        //             <ChevronRight className="h-3.5 w-3.5" />
+        //         </Button>
+        //     </div>
+        // </motion.div>
+        
+                                                    <div className="relative dark:bg-gray-800 bg-white rounded-3xl overflow-hidden p-6 lg:p-4 " >
+        
+        
+        
+                                                        <div className="grid grid-cols-1 xl:grid-cols-[0.9fr_1.1fr] lg:gap-4 ">
+        
+                                                            {/* Left Image */}
+                                                            <div className="flex flex-col gap-4 lg:py-4 px-2">
+                                                               
+        
+                                                                <div className='rounded-xl overflow-hidden'> <img
+                                                                    src={`${ImageBaseUrl}/${course?.item?.thumbnail.url}` || "/images/course-thumbnail.webp"}
+                                                                    alt=""
+                                                                    className="w-full h-[140px] lg:h-full  object-contain"
+                                                                /></div>
+                                                            </div>
+        
+        
+                                                            <div className='flex flex-col gap-4'>
+                                                                {/* Center */}
+                                                                <div className="xl:col-span-3 px-2 lg:px-0">
+                                                                    <div className='flex gap-2 '>
+                                                                        <div>
+                                                                            <h3 className="text-2xl font-bold text-gray-900 dark:text-white">
+                                                                                {course?.item?.title}
+                                                                            </h3>
+        
+                                                                            <p className="text-gray-500  text-sm dark:text-gray-400 ">
+                                                                                {course?.item?.shortDescription?.length > 100 ? course?.item?.shortDescription?.substring(0, 100) + "..." : course?.item?.shortDescription}
+                                                                            </p>
+                                                                        </div>
+        
+        
+                                                                    </div>
+        
+        
+                                                                </div>
+        
+                                                                {/* Right */}
+        
+                                                                <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-0  justify-center items-center mr-22">
+        
+        
+                                                                    <div className="flex flex-col lg:flex-col items-center gap-2 lg:mt-0 mb-4 lg:mb-0">
+        
+                                                                        {/* Progress */}
+        
+                                                                        <div className="relative w-40 h-40 hidden lg:block">
+        
+                                                                            <svg
+                                                                                className="w-full h-full -rotate-90"
+                                                                                viewBox="0 0 120 120"
+                                                                            >
+                                                                                <circle
+                                                                                    cx="60"
+                                                                                    cy="60"
+                                                                                    r="50"
+                                                                                    fill="none"
+                                                                                    stroke="#F2F2F2"
+                                                                                    strokeWidth="10"
+                                                                                />
+        
+                                                                                <circle
+                                                                                    cx="60"
+                                                                                    cy="60"
+                                                                                    r="50"
+                                                                                    fill="none"
+                                                                                    stroke="#FF5A14"
+                                                                                    strokeWidth="10"
+                                                                                    strokeLinecap="round"
+                                                                                    strokeDasharray={314}
+                                                                                    strokeDashoffset={314 - (314 * course?.percentage) / 100}
+                                                                                />
+                                                                            </svg>
+        
+                                                                            <div className="absolute inset-0 flex flex-col justify-center items-center dark:text-white">
+                                                                                <div className="flex items-end gap-1">
+                                                                                <h2 className="text-5xl font-bold">{course?.percentage}</h2><span className='text-2xl'>%</span></div>
+                                                                                <span className="text-sm text-gray-500 dark:text-gray-400 font-semibold mt-1">
+                                                                                    COMPLETE
+                                                                                </span>
+                                                                            </div>
+                                                                        </div>
+        
+                                                                        {/* Buttons */}
+        
+                                                                        <div className="flex items-center  gap-2 w-full ">
+        
+                                                                            <Link to={`/course/${course?.item?.slug}?isCurriculum=true`} className="bg-[#FF5A14] hover:bg-[#f04d08] text-xs text-white rounded-xl py-3 px-4 flex gap-2 items-center justify-center  font-semibold transition">
+                                                                                <Play size={18} fill="white" />
+                                                                                CONTINUE LEARNING
+                                                                            </Link>
+        
+        
+        
+                                                                        </div>
+                                                                    </div>
+        
+        
+                                                                    {/* Stats */}
+        
+                                                                    <div className="space-y-3.5  border-l border-gray-100 pl-4 lg:pl-6">
+        
+                                                                        <div className="flex gap-4 items-start">
+        
+                                                                            <div className="w-10 h-10 rounded-xl bg-orange-50 dark:bg-gray-600 flex items-center justify-center">
+                                                                                <BookOpen size={22} className="text-black dark:text-white" />
+                                                                            </div>
+        
+                                                                            <div>
+                                                                                <p className="text-gray-500 dark:text-white text-sm">
+                                                                                    Language
+                                                                                </p>
+        
+                                                                                <h3 className="font-bold text-sm dark:text-white">
+                                                                                    {course?.item?.language}
+                                                                                </h3>
+                                                                            </div>
+        
+                                                                        </div>
+        
+                                                                        <hr />
+        
+                                                                        <div className="flex gap-4 items-start">
+        
+                                                                            <div className="w-10 h-10 rounded-xl bg-orange-50 flex items-center justify-center dark:bg-gray-600">
+                                                                                <Clock3 size={22} className="text-black dark:text-white" />
+                                                                            </div>
+        
+                                                                            <div>
+                                                                                <p className="text-gray-500 dark:text-white text-sm">
+                                                                                    Level
+                                                                                </p>
+        
+                                                                                <h3 className="font-bold text-sm dark:text-white">
+                                                                                    {course?.item?.level}
+                                                                                </h3>
+                                                                            </div>
+        
+                                                                        </div>
+        
+                                                                        <hr />
+        
+                                                                        <div className="flex gap-4 items-start">
+        
+                                                                            <div className="w-10 h-10 rounded-xl bg-orange-50 flex items-center justify-center dark:bg-gray-600">
+                                                                                <CalendarDays
+                                                                                    size={22}
+                                                                                    className="text-black dark:text-white"
+                                                                                />
+                                                                            </div>
+        
+                                                                            <div>
+                                                                                <p className="text-gray-500 dark:text-white text-sm">Days Left</p>
+        
+                                                                                <h3 className="font-bold text-sm text-[#FF5A14]">
+                                                                                    {Math.max(
+                                                                                        0,
+                                                                                        Math.ceil(
+                                                                                            (new Date(course?.accessExpiresAt) - new Date()) /
+                                                                                            (1000 * 60 * 60 * 24)
+                                                                                        )
+                                                                                    )}{" "}
+                                                                                    Days
+                                                                                </h3>
+                                                                            </div>
+        
+                                                                        </div>
+        
+                                                                    </div>
+        
+                                                                </div>
+                                                            </div>
+        
+        
+                                                        </div>
+        
+                                                        {/* Right Arrow */}
+                                                    
+        {/*                                                 
+                                                            <button onClick={() => instanceRef.current?.prev()} className="hidden xl:flex  w-10 h-10 rounded-full border items-center justify-center hover:bg-orange-50 absolute">
+                                                                <ChevronLeft className="text-[#FF5A14]" />
+                                                            </button> */}
+                                                    </div>
+        
+                                               
     );
 };
 
@@ -571,7 +761,7 @@ export default function MyCoursesPage() {
 
                 {/* Content Area */}
                 {loading ? (
-                    <div className={viewMode === "grid" ? "grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5" : "space-y-4"}>
+                    <div className={viewMode === "grid" ? "grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-1 xl:grid-cols-1 gap-5" : "space-y-4"}>
                         {[...Array(8)].map((_, i) => <CourseSkeleton key={i} viewMode={viewMode} />)}
                     </div>
                 ) : error ? (
@@ -600,9 +790,11 @@ export default function MyCoursesPage() {
                     </motion.div>
                 ) : (
                     <>
-                        <motion.div
+                      <div className="grid grid-cols-[1.6fr_0.4fr] gap-5"> 
+
+                          <motion.div
                             layout
-                            className={viewMode === "grid" ? "grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5" : "space-y-4"}
+                            className={viewMode === "grid" ? "grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-1 gap-5" : "space-y-4"}
                         >
                             <AnimatePresence mode="popLayout">
                                 {filteredCourses.map((course) => (
@@ -615,6 +807,10 @@ export default function MyCoursesPage() {
                                 ))}
                             </AnimatePresence>
                         </motion.div>
+                        <div>
+
+                        </div>
+                      </div>
 
                         {/* Pagination */}
                         {pagination.pages > 1 && (

@@ -39,7 +39,7 @@ interface TestTemplate {
 }
 
 // Card Component
-export const MockTestCard = ({ test }: { test: TestTemplate }) => {
+export const MockTestCard = ({ test, index }: { test: TestTemplate; index: number }) => {
     let navigate = useNavigate();
 
     const getPriceLabel = () => {
@@ -71,8 +71,33 @@ export const MockTestCard = ({ test }: { test: TestTemplate }) => {
         }
     };
 
+
+    const cardThemes = [
+  // Card 1 - Peach
+  {
+    cardBg: "from-[#FFF9F2] via-[#FFF5E9] to-[#FFFDFB]",
+    topGlow: "from-[#FFE3C7]/70 via-[#FFF4E6]/40 to-transparent",
+    hoverBorder: "from-[#FF6A3D] via-[#FF8A50] to-[#FFD9C8]",
+  },
+
+  // Card 2 - Yellow
+  {
+    cardBg: "from-[#FFFBEA] via-[#FFF6D9] to-[#FFFDF5]",
+    topGlow: "from-[#FFE36E]/40 via-[#FFF4B8]/40 to-transparent",
+    hoverBorder: "from-[#F6C90E] via-[#FFD84D] to-[#FFF2B5]",
+  },
+
+  // Card 3 - Orange
+  {
+    cardBg: "from-[#FFF7F0] via-[#FFF0E4] to-[#FFFDF8]",
+    topGlow: "from-[#FFD2A8]/20 via-[#FFEAD6]/40 to-transparent",
+    hoverBorder: "from-[#FF8A3D] via-[#FFA866] to-[#FFE2C8]",
+  },
+];
+const theme = cardThemes[index % cardThemes.length];
+
     return (
-      <div
+     <div className="hover:bg-gradient-to-b from-orange-500 via-orange-500 to-orange-200/50 p-[2px] rounded-[24px] transition-all duration-300"> <div
   className={`relative rounded-[24px] overflow-hidden transition-all duration-300 
     ${
       test.isSelected
@@ -80,13 +105,13 @@ export const MockTestCard = ({ test }: { test: TestTemplate }) => {
         : "border border-transparent"
     }
     dark:bg-gray-800
-    bg-gradient-to-br from-[#FFF9F2] via-[#FFF3DE] to-[#FFF9F4]
+    bg-gradient-to-br ${theme.cardBg}
     
-    hover:-translate-y-1 hover:shadow-xl 
+    
   `}
 >
   {/* Top Light Gradient */}
-  <div className="absolute inset-x-0 top-0 h-36 bg-gradient-to-b from-[#FFE8A3]/50 via-[#FFF6D6]/20 to-transparent " />
+  <div className={`absolute inset-x-0 top-0 h-36 bg-gradient-to-b ${theme.topGlow}`} />
 
   <div className="relative  p-6  flex flex-col h-full min-h-[320px]">
     {/* Header */}
@@ -163,7 +188,7 @@ export const MockTestCard = ({ test }: { test: TestTemplate }) => {
     </button>
   </div>
   </div>
-</div>
+</div></div>
     );
 };
 
@@ -562,7 +587,7 @@ const active = "reading";
                             
                             <div className="grid grid-cols-1 md:grid-cols-3 xl:grid-cols-3 gap-1 gap-4 sm:gap-8 py-0">
                                 <AnimatePresence>
-                                    {filteredTests.map((test) => (
+                                    {filteredTests.map((test,index) => (
                                         <motion.div
                                             key={test._id}
                                             layout
@@ -571,7 +596,7 @@ const active = "reading";
                                             exit={{ opacity: 0, scale: 0.9 }}
                                             transition={{ duration: 0.2 }}
                                         >
-                                            <MockTestCard test={test} />
+                                            <MockTestCard test={test} index={index} />
                                         </motion.div>
                                     ))}
                                 </AnimatePresence>
