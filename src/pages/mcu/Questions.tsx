@@ -263,15 +263,16 @@ export default function QuestionManagementPage() {
   }, []);
 
   useEffect(() => {
-    if (watchExam) {
-      let sectionsData = exams.find((e) => e._id === watchExam)?.sections || [];
-      setSections(sectionsData);
-      setValue("section", "");
-      // setFilters((prev) => ({ ...prev, sectionId: "all" }));
-    } else {
+    if (!watchExam) {
       setSections([]);
+      return;
     }
-  }, [watchExam, exams, setValue]);
+
+    const sectionsData =
+      exams.find((e) => e._id === watchExam)?.sections || [];
+
+    setSections(sectionsData);
+  }, [watchExam, exams]);
 
   const fetchQuestions = async () => {
     try {
@@ -507,36 +508,33 @@ export default function QuestionManagementPage() {
     }, 150);
   };
 
-  const selectedExam = exams.find((e) => e._id == examId);
-  const examKey = selectedExam?.name.toLowerCase() || "";
-
-  console.log(watch("exam"))
+  const selectedExam = exams.find((e) => e._id === watchExam);
+  const examKey = selectedExam?.name?.toLowerCase() || "";
 
   const filteredQuestionTypes = QUESTION_TYPE_OPTIONS.filter((type) => {
-    console.log(examKey)
-    // console.log("🚀 ~ file: Questions.tsx ~ line 79 ~ filteredQuestionTypes ~ type", type);
-    if (!examKey) return true;
+    const label = type.label.toLowerCase();
+
+    if (!examKey) return [];
 
     if (examKey.includes("gmat")) {
-      return type.label.toLowerCase().startsWith("gmat");
+      return label.startsWith("gmat");
     }
 
     if (examKey.includes("gre")) {
-      return type.label.toLowerCase().startsWith("gre");
+      return label.startsWith("gre");
     }
 
     if (examKey.includes("sat")) {
-      return type.label.toLowerCase().startsWith("sat");
+      return label.startsWith("sat");
     }
 
     if (examKey.includes("pte")) {
-      return type.label.toLowerCase().startsWith("pte");
+      return label.startsWith("pte");
     }
 
-    return true;
+    return false;
   });
 
-  console.log(filteredQuestionTypes)
 
   const onSubmit = async (values: any) => {
     try {
@@ -1037,7 +1035,7 @@ export default function QuestionManagementPage() {
 
                 {/* Exam filter */}
                 <div>
-                  <Select
+                 <Select
                     options={[
                       ...exams.map((e) => ({ value: e._id, label: e.name })),
                     ]}
@@ -1402,17 +1400,18 @@ export default function QuestionManagementPage() {
                         <div>
                           <Label className="text-sm font-medium text-gray-700 dark:text-gray-300">Question Type</Label>
                           <Select
-                            options={QUESTION_TYPE_OPTIONS.filter((t) => {
-                              const examName = exams.find(e => e._id === watch("exam"))?.name?.toLowerCase() || "";
-                              if (examName.includes("gmat")) return t.label.startsWith("GMAT");
-                              if (examName.includes("gre")) return t.label.startsWith("GRE");
-                              if (examName.includes("sat")) return t.label.startsWith("SAT");
-                              if (examName.includes("pte")) return t.label.startsWith("PTE");
-                              return true;
-                            })}
-                            defaultValue={watchQuestionType}
-                            onChange={(value: string) => setValue("questionType", value)}
-                            className="mt-1 rounded-2xl border-gray-200 dark:border-gray-700"
+                            key={`question-type-${watchExam}`}
+                            defaultValue={watchQuestionType || ""}
+                            options={filteredQuestionTypes.map((type) => ({
+                              value: type.value,
+                              label: type.label,
+                            }))}
+                            onChange={(value: string) => {
+                              setValue("questionType", value, {
+                                shouldDirty: true,
+                                shouldValidate: true,
+                              });
+                            }}
                           />
                           {errors.questionType && (
                             <p className="mt-1 text-xs text-rose-500">{errors.questionType.message}</p>
