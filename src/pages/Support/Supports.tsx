@@ -33,7 +33,8 @@ import {
   ReplyAll,
   Paperclip,
   Smile,
-  Mic
+  Mic,
+  MessageCircle
 } from 'lucide-react';
 import { toast } from "react-toastify";
 import Button from "../../components/ui/button/Button";
@@ -249,76 +250,249 @@ const SupportPage = () => {
   ];
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-50 to-white dark:from-gray-900 dark:to-gray-800">
+    <div className="min-h-screen  dark:from-gray-900 dark:to-gray-800">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 py-6">
 
         {/* Header Section */}
-        <motion.div
-          initial={{ opacity: 0, y: -20 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="bg-white dark:bg-gray-800 rounded-3xl shadow-sm border border-gray-200/50 dark:border-gray-700 p-6 mb-6"
-        >
-          <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
-            <div className="flex items-center gap-4">
-              <motion.div
-                whileHover={{ rotate: -10, scale: 1.05 }}
-                className="w-14 h-14 rounded-2xl bg-gradient-to-br from-orange-500 to-orange-600 flex items-center justify-center shadow-lg shadow-orange-500/25"
-              >
-                <MessageSquare className="h-7 w-7 text-white" />
-              </motion.div>
-              <div>
-                <h1 className="text-2xl font-bold text-gray-900 dark:text-white">
-                  Support Center
-                </h1>
-                <p className="text-sm text-gray-500 dark:text-gray-400">
-                  Get help with your account, payments, or technical issues
-                </p>
-              </div>
-            </div>
+      <div className="w-full  rounded-3xl overflow-hidden">
+  <div className="relative mx-auto w-full max-w-7xl px-5 sm:px-8 lg:px-10">
 
-            <div className="flex flex-wrap items-center gap-3">
-              <div className="flex items-center gap-2 px-3 py-1.5 bg-gray-50 dark:bg-gray-700/50 rounded-full">
-                <div className="flex -space-x-1">
-                  {['bg-green-500', 'bg-blue-500', 'bg-orange-500', 'bg-gray-400'].map((color, i) => (
-                    <div key={i} className={`w-6 h-6 rounded-full border-2 border-white dark:border-gray-800 ${color.replace('bg-', 'bg-')}`} />
-                  ))}
-                </div>
-                <span className="text-xs font-medium text-gray-600 dark:text-gray-300">
-                  {stats.total} Tickets
-                </span>
-              </div>
+    {/* Content */}
+    <div className="relative z-10 py-8 sm:py-10 lg:py-12">
 
-              <Button
-                onClick={() => setShowCreateForm(true)}
-                className="bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 text-white shadow-lg shadow-orange-500/25 rounded-full px-6 py-2.5"
-              >
-                <Plus className="h-4 w-4 mr-2" />
-                New Ticket
-              </Button>
-            </div>
+      {/* Heading */}
+      <div className="max-w-2xl">
+        <h1 className="text-2xl sm:text-3xl lg:text-4xl font-extrabold text-[#171717]">
+          Support Center
+        </h1>
+
+        <p className="mt-2 text-sm sm:text-base text-[#6B7280]">
+          We're here to help you succeed. Find answers or get in touch with our
+          team.
+        </p>
+      </div>
+
+      {/* Search Card */}
+      <div className="mt-7 sm:mt-8 w-full lg:w-[700px] rounded-2xl border border-[#E8E8E8] bg-white p-3 sm:p-4 shadow-sm">
+
+        {/* Search */}
+        <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2">
+
+          <div className="relative flex-1">
+            <Search
+              size={19}
+              className="absolute left-4 top-1/2 -translate-y-1/2 text-[#9CA3AF]"
+            />
+
+            <input
+              type="text"
+              placeholder="Search for help articles, guides or topics..."
+              className="
+                w-full
+                h-12
+                rounded-xl
+                border border-[#E5E7EB]
+                bg-white
+                pl-11
+                pr-4
+                text-sm
+                text-[#333]
+                outline-none
+                placeholder:text-[#9CA3AF]
+                focus:border-[#FF6B35]
+                focus:ring-1
+                focus:ring-[#FF6B35]
+              "
+            />
           </div>
 
-          {/* Quick Stats */}
-          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mt-4 pt-4 border-t border-gray-100 dark:border-gray-700">
-            {[
-              { label: 'Open', value: stats.open, color: 'text-yellow-500', bg: 'bg-yellow-50 dark:bg-yellow-900/20' },
-              { label: 'In Progress', value: stats.inProgress, color: 'text-blue-500', bg: 'bg-blue-50 dark:bg-blue-900/20' },
-              { label: 'Resolved', value: stats.resolved, color: 'text-green-500', bg: 'bg-green-50 dark:bg-green-900/20' },
-              { label: 'Total', value: stats.total, color: 'text-gray-500', bg: 'bg-gray-50 dark:bg-gray-700/50' }
-            ].map((stat, idx) => (
-              <motion.div
-                key={idx}
-                initial={{ opacity: 0, y: 10 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: idx * 0.05 }}
-                className={`px-4 py-2 rounded-xl ${stat.bg} text-center`}
-              >
-                <p className={`text-xl font-bold ${stat.color}`}>{stat.value}</p>
-                <p className="text-xs text-gray-500 dark:text-gray-400">{stat.label}</p>
-              </motion.div>
-            ))}
-          </div>
-        </motion.div>
+          <button
+            className="
+              h-12
+              px-7
+              rounded-xl
+              bg-[#FF6B35]
+              hover:bg-[#F15A24]
+              text-white
+              text-sm
+              font-semibold
+              shadow-sm
+              transition
+              duration-200
+            "
+          >
+            Search
+          </button>
+        </div>
+
+        {/* Popular Searches */}
+        <div className="mt-3 flex flex-wrap items-center gap-2">
+
+          <span className="text-xs sm:text-sm font-bold text-[#222]">
+            Popular Searches:
+          </span>
+
+          {[
+            "How to Enroll",
+            "Payment Issues",
+            "Refund Policy",
+            "Mock Test Help",
+            "Certificate",
+          ].map((item) => (
+            <button
+              key={item}
+              className="
+                rounded-full
+                bg-[#FFF8F5]
+                border border-[#F8EDE7]
+                px-3
+                py-1.5
+                text-[11px] sm:text-xs
+                text-[#666]
+                whitespace-nowrap
+                hover:bg-[#FFF0EA]
+                hover:text-[#FF6B35]
+                transition
+              "
+            >
+              {item}
+            </button>
+          ))}
+        </div>
+      </div>
+    </div>
+
+    {/* Right Illustration */}
+    <div
+      className="
+        hidden
+        lg:block
+        absolute
+        right-8
+        bottom-0
+        w-[310px]
+        xl:w-[350px]
+        pointer-events-none
+      "
+    >
+      <img
+        src="/images/support/support-center.png"
+        alt="Support Center"
+        className="w-full h-auto object-contain"
+      />
+    </div>
+
+  </div>
+</div>
+
+        <div className="font-semibold text-xl">How can i we help you?</div>
+
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 my-6">
+
+  {/* Live Chat */}
+  <div className="bg-white shadow-lg flex gap-4 p-4 rounded-2xl justify-center items-center min-h-[150px]">
+    
+    <div className="h-16 w-16 shrink-0 bg-orange-50 flex justify-center items-center rounded-full">
+      <MessageCircle className="text-orange-500" size={32} />
+    </div>
+
+    <div className="flex flex-col gap-4 min-w-0">
+      <div className="space-y-1 flex flex-col">
+        <span className="font-bold text-black text-base">
+          Live Chat
+        </span>
+
+        <span className="text-sm text-gray-500 whitespace-nowrap">
+          Chat with our support team
+        </span>
+      </div>
+
+      <div className="bg-green-100/50 rounded-xl py-2 px-3 w-fit flex justify-center items-center font-bold text-sm text-green-600">
+        Online Now
+      </div>
+    </div>
+
+  </div>
+
+
+  {/* Email Support */}
+  <div className="bg-white shadow-lg flex gap-4 p-4 rounded-2xl justify-center items-center min-h-[150px]">
+
+    <div className="h-16 w-16 shrink-0 bg-orange-50 flex justify-center items-center rounded-full">
+      <Mail className="text-orange-500" size={32} />
+    </div>
+
+    <div className="flex flex-col gap-4 min-w-0">
+      <div className="space-y-1 flex flex-col">
+        <span className="font-bold text-black text-base">
+          Email Support
+        </span>
+
+        <span className="text-sm text-gray-500">
+          We usually reply in 24 hrs
+        </span>
+      </div>
+
+      <div className="bg-orange-50 rounded-xl py-2 px-3 w-fit flex justify-center items-center font-bold text-sm text-orange-500">
+        Send Email
+      </div>
+    </div>
+
+  </div>
+
+
+  {/* Call Support */}
+  <div className="bg-white shadow-lg flex gap-4 p-4 rounded-2xl justify-center items-center min-h-[150px]">
+
+    <div className="h-16 w-16 shrink-0 bg-orange-50 flex justify-center items-center rounded-full">
+      <Phone className="text-orange-500" size={32} />
+    </div>
+
+    <div className="flex flex-col gap-4 min-w-0">
+      <div className="space-y-1 flex flex-col">
+        <span className="font-bold text-black text-base">
+          Call Support
+        </span>
+
+        <span className="text-sm text-gray-500 whitespace-nowrap">
+          Mon – Sat, 10AM – 7PM
+        </span>
+      </div>
+
+      <div className="bg-orange-50 rounded-xl py-2 px-3 w-fit flex justify-center items-center font-bold text-sm text-orange-500 whitespace-nowrap">
+        +91 98765 43210
+      </div>
+    </div>
+
+  </div>
+
+
+  {/* Raise a Ticket */}
+  <div className="bg-white shadow-lg flex gap-4 p-4 rounded-2xl justify-center items-center min-h-[150px]">
+
+    <div className="h-16 w-16 shrink-0 bg-orange-50 flex justify-center items-center rounded-full">
+      <FileText className="text-orange-500" size={32} />
+    </div>
+
+    <div className="flex flex-col gap-4 min-w-0">
+      <div className="space-y-1 flex flex-col">
+        <span className="font-bold text-black text-base">
+          Raise a Ticket
+        </span>
+
+        <span className="text-sm text-gray-500">
+          Submit your issue
+        </span>
+      </div>
+
+      <div onClick={() => setShowCreateForm(true)} className="bg-orange-50 rounded-xl py-2 px-3 w-fit flex justify-center items-center font-bold text-sm text-orange-500 ">
+        Create Ticket
+      </div>
+    </div>
+
+  </div>
+
+</div>
 
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
 

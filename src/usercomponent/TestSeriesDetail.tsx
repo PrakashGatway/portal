@@ -56,7 +56,7 @@ const TestSeriesDetailPage: React.FC = () => {
         <div className="min-h-[85vh] max-w-7xl mx-auto p-4">
             <div className="grid max-h-[250px] grid-cols-3 lg:grid-cols-3 gap-1 rounded-3xl space-x-2 mb-4">
                 <LeftSlider />
-                <RightOffer content={true} />
+                <RightOffer content={false} />
             </div>
 
             <div className="mx-auto p-1">

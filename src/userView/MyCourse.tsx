@@ -26,7 +26,8 @@ import {
     FileCheck,
     CalendarDays,
     Clock3,
-    Play
+    Play,
+    MoreVertical
 } from "lucide-react";
 import Button from "../components/ui/button/Button";
 import api, { ImageBaseUrl } from "../axiosInstance";
@@ -153,11 +154,11 @@ const CourseCard = ({
         if (isCompleted) {
             navigate(`/courses/${course.item?.slug || course.itemId}/certificate`);
         } else {
-            if(course.itemType === "Course"){
+            if (course.itemType === "Course") {
                 navigate(`/courses/${course.item?.slug || course.itemId}`);
-            }else if(course.itemType === "McuTestSeries"){
+            } else if (course.itemType === "McuTestSeries") {
                 navigate(`/test-series/${course.item?.slug || course.itemId}`);
-            }else if(course.itemType === "ilets"){
+            } else if (course.itemType === "ilets") {
                 navigate(`/ilets/${course.item?.slug || course.itemId}`);
             }
         }
@@ -254,193 +255,97 @@ const CourseCard = ({
         //         </Button>
         //     </div>
         // </motion.div>
-        
-                                                    <div className="relative dark:bg-gray-800 bg-white rounded-3xl overflow-hidden p-6 lg:p-4 " >
-        
-        
-        
-                                                        <div className="grid grid-cols-1 xl:grid-cols-[0.9fr_1.1fr] lg:gap-4 ">
-        
-                                                            {/* Left Image */}
-                                                            <div className="flex flex-col gap-4 lg:py-4 px-2">
-                                                               
-        
-                                                                <div className='rounded-xl overflow-hidden'> <img
-                                                                    src={`${ImageBaseUrl}/${course?.item?.thumbnail.url}` || "/images/course-thumbnail.webp"}
-                                                                    alt=""
-                                                                    className="w-full h-[140px] lg:h-full  object-contain"
-                                                                /></div>
-                                                            </div>
-        
-        
-                                                            <div className='flex flex-col gap-4'>
-                                                                {/* Center */}
-                                                                <div className="xl:col-span-3 px-2 lg:px-0">
-                                                                    <div className='flex gap-2 '>
-                                                                        <div>
-                                                                            <h3 className="text-2xl font-bold text-gray-900 dark:text-white">
-                                                                                {course?.item?.title}
-                                                                            </h3>
-        
-                                                                            <p className="text-gray-500  text-sm dark:text-gray-400 ">
-                                                                                {course?.item?.shortDescription?.length > 100 ? course?.item?.shortDescription?.substring(0, 100) + "..." : course?.item?.shortDescription}
-                                                                            </p>
-                                                                        </div>
-        
-        
-                                                                    </div>
-        
-        
-                                                                </div>
-        
-                                                                {/* Right */}
-        
-                                                                <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-0  justify-center items-center mr-22">
-        
-        
-                                                                    <div className="flex flex-col lg:flex-col items-center gap-2 lg:mt-0 mb-4 lg:mb-0">
-        
-                                                                        {/* Progress */}
-        
-                                                                        <div className="relative w-40 h-40 hidden lg:block">
-        
-                                                                            <svg
-                                                                                className="w-full h-full -rotate-90"
-                                                                                viewBox="0 0 120 120"
-                                                                            >
-                                                                                <circle
-                                                                                    cx="60"
-                                                                                    cy="60"
-                                                                                    r="50"
-                                                                                    fill="none"
-                                                                                    stroke="#F2F2F2"
-                                                                                    strokeWidth="10"
-                                                                                />
-        
-                                                                                <circle
-                                                                                    cx="60"
-                                                                                    cy="60"
-                                                                                    r="50"
-                                                                                    fill="none"
-                                                                                    stroke="#FF5A14"
-                                                                                    strokeWidth="10"
-                                                                                    strokeLinecap="round"
-                                                                                    strokeDasharray={314}
-                                                                                    strokeDashoffset={314 - (314 * course?.percentage) / 100}
-                                                                                />
-                                                                            </svg>
-        
-                                                                            <div className="absolute inset-0 flex flex-col justify-center items-center dark:text-white">
-                                                                                <div className="flex items-end gap-1">
-                                                                                <h2 className="text-5xl font-bold">{course?.percentage}</h2><span className='text-2xl'>%</span></div>
-                                                                                <span className="text-sm text-gray-500 dark:text-gray-400 font-semibold mt-1">
-                                                                                    COMPLETE
-                                                                                </span>
-                                                                            </div>
-                                                                        </div>
-        
-                                                                        {/* Buttons */}
-        
-                                                                        <div className="flex items-center  gap-2 w-full ">
-        
-                                                                            <Link to={`/course/${course?.item?.slug}?isCurriculum=true`} className="bg-[#FF5A14] hover:bg-[#f04d08] text-xs text-white rounded-xl py-3 px-4 flex gap-2 items-center justify-center  font-semibold transition">
-                                                                                <Play size={18} fill="white" />
-                                                                                CONTINUE LEARNING
-                                                                            </Link>
-        
-        
-        
-                                                                        </div>
-                                                                    </div>
-        
-        
-                                                                    {/* Stats */}
-        
-                                                                    <div className="space-y-3.5  border-l border-gray-100 pl-4 lg:pl-6">
-        
-                                                                        <div className="flex gap-4 items-start">
-        
-                                                                            <div className="w-10 h-10 rounded-xl bg-orange-50 dark:bg-gray-600 flex items-center justify-center">
-                                                                                <BookOpen size={22} className="text-black dark:text-white" />
-                                                                            </div>
-        
-                                                                            <div>
-                                                                                <p className="text-gray-500 dark:text-white text-sm">
-                                                                                    Language
-                                                                                </p>
-        
-                                                                                <h3 className="font-bold text-sm dark:text-white">
-                                                                                    {course?.item?.language}
-                                                                                </h3>
-                                                                            </div>
-        
-                                                                        </div>
-        
-                                                                        <hr />
-        
-                                                                        <div className="flex gap-4 items-start">
-        
-                                                                            <div className="w-10 h-10 rounded-xl bg-orange-50 flex items-center justify-center dark:bg-gray-600">
-                                                                                <Clock3 size={22} className="text-black dark:text-white" />
-                                                                            </div>
-        
-                                                                            <div>
-                                                                                <p className="text-gray-500 dark:text-white text-sm">
-                                                                                    Level
-                                                                                </p>
-        
-                                                                                <h3 className="font-bold text-sm dark:text-white">
-                                                                                    {course?.item?.level}
-                                                                                </h3>
-                                                                            </div>
-        
-                                                                        </div>
-        
-                                                                        <hr />
-        
-                                                                        <div className="flex gap-4 items-start">
-        
-                                                                            <div className="w-10 h-10 rounded-xl bg-orange-50 flex items-center justify-center dark:bg-gray-600">
-                                                                                <CalendarDays
-                                                                                    size={22}
-                                                                                    className="text-black dark:text-white"
-                                                                                />
-                                                                            </div>
-        
-                                                                            <div>
-                                                                                <p className="text-gray-500 dark:text-white text-sm">Days Left</p>
-        
-                                                                                <h3 className="font-bold text-sm text-[#FF5A14]">
-                                                                                    {Math.max(
-                                                                                        0,
-                                                                                        Math.ceil(
-                                                                                            (new Date(course?.accessExpiresAt) - new Date()) /
-                                                                                            (1000 * 60 * 60 * 24)
-                                                                                        )
-                                                                                    )}{" "}
-                                                                                    Days
-                                                                                </h3>
-                                                                            </div>
-        
-                                                                        </div>
-        
-                                                                    </div>
-        
-                                                                </div>
-                                                            </div>
-        
-        
-                                                        </div>
-        
-                                                        {/* Right Arrow */}
-                                                    
-        {/*                                                 
-                                                            <button onClick={() => instanceRef.current?.prev()} className="hidden xl:flex  w-10 h-10 rounded-full border items-center justify-center hover:bg-orange-50 absolute">
-                                                                <ChevronLeft className="text-[#FF5A14]" />
-                                                            </button> */}
-                                                    </div>
-        
-                                               
+
+        <div className="bg-gradient-to-r from-black via-[#FAFAFA] to-white p-[1px] rounded-[22px] ">
+            <div className="bg-[linear-gradient(90deg,#CFCFCF_0px,#F5F5F5_18px,#FFFFFF_40px,#FFFFFF_100%)] dark:bg-gray-800 rounded-[22px] border border-[#EFEFEF] overflow-hidden shadow-sm hover:shadow-md transition-all duration-300">
+                <div className="flex flex-col lg:flex-row items-center">
+
+                    {/* LEFT IMAGE */}
+                    <div className="relative w-full lg:w-[360px] h-full lg:h-full flex-shrink-0 p-2">
+                        <div className="rounded-2xl overflow-hidden h-full">
+                            <img
+                                src={`${ImageBaseUrl}/${course?.item?.thumbnail?.url}`}
+                                alt={course?.item?.title}
+                                className="w-full h-full object-contain "
+                            />
+                        </div>
+                    </div>
+
+                    {/* CENTER */}
+                    <div className="flex-1 pl-4 lg:pl-16 py-4 lg:py-5">
+
+                        <div className="flex justify-between w-full">
+                            <div className="w-full">
+                                <h2 className="text-xl lg:text-2xl font-bold text-[#111827] dark:text-white leading-tight">
+                                    {course?.item?.title}
+                                </h2>
+
+                                <p className="text-[#6B7280] text-[14px] lg:text-[15px] mt-2 max-w-[520px] leading-6 lg:leading-7">
+                                    {course?.item?.shortDescription?.length > 120
+                                        ? course?.item?.shortDescription.substring(0, 120) + "..."
+                                        : course?.item?.shortDescription}
+                                </p>
+                            </div>
+                        </div>
+
+                        {/* Progress */}
+                        <div className="mt-5 lg:mt-6">
+
+                            <div className="flex items-center gap-2 mb-2">
+                                <span className="text-[#FF6B35] font-semibold text-sm">
+                                    {course?.percentage}%
+                                </span>
+
+                                <span className="text-[#666] text-sm">
+                                    Completed
+                                </span>
+                            </div>
+
+                            <div className="w-full lg:w-120 h-[8px] bg-[#ECECEC] rounded-full overflow-hidden">
+                                <div
+                                    className="h-full bg-[#FF6B35] rounded-full transition-all duration-500"
+                                    style={{ width: `${course?.percentage}%` }}
+                                />
+                            </div>
+                        </div>
+
+                        {/* Days Left */}
+                        <div className="flex mt-3 gap-2 items-center text-[#FF6B35]">
+                            <CalendarDays size={18} />
+
+                            <span className="text-[14px] lg:text-[15px]">
+                                {Math.max(
+                                    0,
+                                    Math.ceil(
+                                        (new Date(course?.accessExpiresAt) - new Date()) /
+                                        (1000 * 60 * 60 * 24)
+                                    )
+                                )}{" "}
+                                <span className="text-black dark:text-white">
+                                    Days Left
+                                </span>
+                            </span>
+                        </div>
+                    </div>
+
+                    {/* RIGHT */}
+                    <div className="flex flex-col mt-0 lg:mt-auto my-4 justify-center items-stretch lg:items-end px-4 lg:px-6 pb-0 lg:pb-0 gap-6 min-w-0 lg:min-w-[220px]">
+
+                        <Link
+                            to={`/course/${course?.item?.slug}?isCurriculum=true`}
+                            className="bg-[#FF6B35] hover:bg-[#f95d26] text-white px-3 py-3 text-sm rounded-xl font-medium transition text-center whitespace-nowrap"
+                        >
+                            Continue Learning &gt;
+                        </Link>
+
+                    </div>
+
+                </div>
+            </div>
+        </div>
+
+
+
     );
 };
 
@@ -790,27 +695,27 @@ export default function MyCoursesPage() {
                     </motion.div>
                 ) : (
                     <>
-                      <div className="grid grid-cols-[1.6fr_0.4fr] gap-5"> 
+                        <div className=" gap-5">
 
-                          <motion.div
-                            layout
-                            className={viewMode === "grid" ? "grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-1 gap-5" : "space-y-4"}
-                        >
-                            <AnimatePresence mode="popLayout">
-                                {filteredCourses.map((course) => (
-                                    <CourseCard
-                                        key={course._id}
-                                        course={course}
-                                        viewMode={viewMode}
-                                        onContinue={() => { }}
-                                    />
-                                ))}
-                            </AnimatePresence>
-                        </motion.div>
-                        <div>
+                            <motion.div
+                                layout
+                                className={viewMode === "grid" ? "grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-1 gap-5" : "space-y-4"}
+                            >
+                                <AnimatePresence mode="popLayout">
+                                    {filteredCourses.map((course) => (
+                                        <CourseCard
+                                            key={course._id}
+                                            course={course}
+                                            viewMode={viewMode}
+                                            onContinue={() => { }}
+                                        />
+                                    ))}
+                                </AnimatePresence>
+                            </motion.div>
+                            <div>
 
+                            </div>
                         </div>
-                      </div>
 
                         {/* Pagination */}
                         {pagination.pages > 1 && (

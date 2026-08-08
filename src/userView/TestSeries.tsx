@@ -66,10 +66,20 @@ interface TestSeries {
 
 export const TestSeriesCard = ({ series }: { series: TestSeries }) => {
     let navigate = useNavigate();
+    const offerPercentage = Math.ceil(
+  ((series?.pricing.price - series?.pricing.salePrice) /
+    series?.pricing.price) * 100
+);
     return (
         <div className="p-[1.5px] rounded-2xl overflow-hidden w-full bg-gradient-to-b from-[#686868]/0 via-[#686868]/60 to-[#686868]">
             <div className="relative rounded-2xl h-full bg-white p-2 overflow-hidden">
                 <div className="absolute top-0 left-0 w-full h-[40%] bg-gradient-to-b from-[#ADADAC] to-[#ADADAC]/0" />
+
+                {offerPercentage > 0 && (
+  <span className="absolute top-3 right-3 z-10 rounded-full bg-green-500 px-3 py-1 text-xs font-bold text-white shadow-md">
+    {offerPercentage}% OFF
+  </span>
+)}
                 <div style={{ borderRadius: "15px 15px 0px 0px" }} className="relative overflow-hidden h-[170px]">
                     <img
                         src={series?.thumbnailPic || "/images/logo.png"}
@@ -221,57 +231,51 @@ export default function TestSeriesPage() {
         <div className="min-h-[85vh] ">
             <div className="max-w-7xl p-0 mx-auto sm:p-4 rounded-xl min-h-[87vh]">
 
-                <div className="grid max-h-[170px] grid-cols-3 lg:grid-cols-[1.4fr_0.6fr] gap-1 rounded-3xl space-x-2 mb-4">
+                <div className="grid max-h-[170px] grid-cols-1 lg:grid-cols-[1.4fr_0.6fr] gap-1 items-center rounded-3xl space-x-2 mb-4">
                     <div className="h-fit">
                         <LeftSlider />
                     </div>
 
-                    <div className="flex flex-col gap-4">
-                    
+                    <div className="flex flex-col gap-4 lg:block hidden">
 
-                       <motion.div
-  initial={{ opacity: 0, y: 20 }}
-  animate={{ opacity: 1, y: 0 }}
-  transition={{ delay: 0.3 }}
-  className=""
->
-  <div className="w-full rounded-2xl bg-[#FFF8E8] px-5 py-4">
-    <div className="flex items-center gap-4">
-
-      {/* Image */}
-      <div className="flex-shrink-0">
-        <img
-          src="/images/iels/listening.png"
-          alt="Support"
-          className="w-16 h-16 sm:w-20 sm:h-20 object-contain"
-        />
-      </div>
-
-      {/* Content */}
-      <div className="flex-1">
-        <h3 className="text-[#FF6B3D] text-lg sm:text-base font-bold leading-none">
-          Still have some queries?
-        </h3>
-
-        <p className="mt-2 text-sm sm:text-sm text-[#333333]">
-          Give us a missed call at{" "}
-          <a
-            href="tel:0719-243-492"
-            className="text-[#FF6B3D] font-semibold"
-          >
-            0719-243-492
-          </a>
-        </p>
-
-        <p className="mt-1 text-sm sm:text-sm text-[#333333]">
-          We'll get back to you within 24 hours.
-        </p>
-      </div>
-
+  <motion.div
+    initial={{ opacity: 0, y: 20 }}
+    animate={{ opacity: 1, y: 0 }}
+    transition={{ delay: 0.3 }}
+    className="flex flex-col sm:flex-row items-center sm:items-start gap-3 sm:gap-4"
+  >
+    {/* Image */}
+    <div className="flex-shrink-0">
+      <img
+        src="/images/iels/listening.png"
+        alt="Support"
+        className="w-16 h-16 sm:w-20 sm:h-20 object-contain"
+      />
     </div>
-  </div>
-</motion.div>
-                    </div>
+
+    {/* Content */}
+    <div className="flex-1 text-center sm:text-left">
+      <h3 className="text-[#FF6B3D] text-lg sm:text-base font-bold leading-tight">
+        Still have some queries?
+      </h3>
+
+      <p className="mt-2 text-sm text-[#333333]">
+        Give us a missed call at{" "}
+        <a
+          href="tel:0719-243-492"
+          className="text-[#FF6B3D] font-semibold whitespace-nowrap"
+        >
+          0719-243-492
+        </a>
+      </p>
+
+      <p className="mt-1 text-sm text-[#333333]">
+        We'll get back to you within 24 hours.
+      </p>
+    </div>
+  </motion.div>
+
+</div>
                  
                 </div>
 

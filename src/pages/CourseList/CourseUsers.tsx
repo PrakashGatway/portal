@@ -79,7 +79,7 @@ const COLORS = {
 const heroImages = [
   {
     id: "1",
-    url: "/images/1.jpg",
+    url: "/images/1.webp",
     title: "LAKSHYA POWER BATCH",
     subtitle: "JEE 2026 | FOR CLASS 12",
     description: "Master JEE with India's most trusted coaching platform. Live classes, doubt solving, personal mentors.",

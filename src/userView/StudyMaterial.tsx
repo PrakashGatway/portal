@@ -13,7 +13,9 @@ import {
   ChevronRight,
   Loader2,
   AlertCircle,
-  Download
+  Download,
+  Calendar,
+  Radio
 } from 'lucide-react';
 import Button from '../components/ui/button/Button';
 import SecureMaterialViewer from './SecureMaterial';
@@ -98,6 +100,34 @@ const StudyMaterialPage = () => {
       window.scrollTo({ top: 0, behavior: 'smooth' });
     }
   };
+
+
+ const courses = [
+  {
+    id: 1,
+    title: "IELTS Basics & Test Overview",
+    description:
+      "Exam format, band system, Academic vs General Training",
+    image: "/images/resource-1.webp",
+    bgColor: "#fef0bf63",
+  },
+  {
+    id: 2,
+    title: "Listening Foundation Course",
+    description:
+      "Question types, common traps, basic practice sets",
+    image: "/images/resource-2.webp",
+    bgColor: "#fcd6a565",
+  },
+  {
+    id: 3,
+    title: "Reading Skills Builder",
+    description:
+      "Skimming, scanning, true/false/not given practice",
+    image: "/images/resource-3.webp",
+    bgColor: "#fdefbe5c",
+  },
+];
 
   const getIcon = (type: string) => {
     const iconClass = "h-14 w-14";
@@ -236,8 +266,8 @@ const StudyMaterialPage = () => {
         </button>
       </div>
     
-    <div className="min-h-screen bg-white rounded-2xl py-4">
-      <div className="max-w-7xl mx-auto px-2 sm:px-4">
+    <div className="min-h-screen  rounded-2xl py-4">
+      <div className="max-w-7xl mx-auto px-2 sm:px-0">
        
         <div className="mb-6">
           <div className="relative">
@@ -268,8 +298,8 @@ const StudyMaterialPage = () => {
         </div>
 
         {/* Tabs */}
-       <div className="flex flex-wrap items-center gap-3 mb-6">
-  {/* Heading */}
+       {/* <div className="flex flex-wrap items-center gap-3 mb-6">
+  
   <h3 className="text-[#2F2F2F] text-lg font-medium whitespace-nowrap mr-2">
     Filter by Type -
   </h3>
@@ -307,17 +337,9 @@ const StudyMaterialPage = () => {
       {tab.label}
     </button>
   ))}
-</div>
+</div> */}
 
-        {/* Results count */}
-        <div className="flex justify-between items-center mb-4">
-          <p className="text-sm text-gray-500 dark:text-gray-400">
-            Showing {materials.length} of {pagination.total} materials
-          </p>
-          {loading && materials.length > 0 && (
-            <Loader2 className="h-5 w-5 animate-spin text-orange-500" />
-          )}
-        </div>
+     
 
         {/* File Grid */}
         {materials.length === 0 && !loading ? (
@@ -349,78 +371,214 @@ const StudyMaterialPage = () => {
             </div>
           </motion.div>
         ) : (
-          <motion.div
-  className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-6"
->
-            <AnimatePresence>
-              {materials.map(material => (
-                <motion.div
-                  key={material._id}
-                  layout
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  exit={{ opacity: 0, scale: 0.8 }}
-                  transition={{ duration: 0.3 }}
-                  className="rounded-2xl p-[2px] hover:shadow-lg hover:scale-[.99] transition-all duration-300 "
+//           <motion.div
+//   className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-6"
+// >
+//             <AnimatePresence>
+//               {materials.map(material => (
+//                 <motion.div
+//                   key={material._id}
+//                   layout
+//                   initial={{ opacity: 0, y: 20 }}
+//                   animate={{ opacity: 1, y: 0 }}
+//                   exit={{ opacity: 0, scale: 0.8 }}
+//                   transition={{ duration: 0.3 }}
+//                   className="rounded-2xl p-[2px] hover:shadow-lg hover:scale-[.99] transition-all duration-300 "
                
-                  onClick={() => navigate(`/resources/${material.slug}`)}
-                >
-                 <div className="bg-[#fff9e6] h-full dark:bg-gray-800 rounded-2xl shadow-sm dark:border-gray-700 cursor-pointer transition-all duration-300 overflow-hidden group flex flex-col justify-between">
-  {/* Top Section */}
-  <div className="p-4 flex gap-4">
-    {/* PDF Icon */}
-    <div className="flex-shrink-0">
-      <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-2xl bg-white flex items-center justify-center shadow-sm">
-        {getIcon(material.materialType)}
+//                   onClick={() => navigate(`/resources/${material.slug}`)}
+//                 >
+//                  <div className="bg-[#fff9e6] h-full dark:bg-gray-800 rounded-2xl shadow-sm dark:border-gray-700 cursor-pointer transition-all duration-300 overflow-hidden group flex flex-col justify-between">
+//   {/* Top Section */}
+//   <div className="p-4 flex gap-4">
+//     {/* PDF Icon */}
+//     <div className="flex-shrink-0">
+//       <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-2xl bg-white flex items-center justify-center shadow-sm">
+//         {getIcon(material.materialType)}
+//       </div>
+//     </div>
+
+//     {/* Content */}
+//     <div className="flex-1 min-w-0">
+//       <h4 className="text-[15px] sm:text-base font-semibold text-gray-900 dark:text-white leading-snug line-clamp-2">
+//         {material.title}
+//       </h4>
+
+//       <p className="mt-2 text-xs sm:text-sm text-gray-500 dark:text-gray-400 line-clamp-2">
+//         {material.shortDescription ||
+//           material.description ||
+//           "50+ practice questions with model answers for band 7+"}
+//       </p>
+//     </div>
+//   </div>
+
+//   {/* Bottom Buttons */}
+//   <div className="px-4 pb-4 mt-auto">
+//     <div className="grid grid-cols-2 gap-12">
+//       <button
+//         onClick={(e) => {
+//           e.stopPropagation();
+//           window.open(material.file, "_blank");
+//         }}
+//         className="h-10 rounded-md border border-[#ff6b35] text-gray-600 bg-white hover:bg-[#fff4ef] transition font-medium text-sm"
+//       >
+//         View PDF
+//       </button>
+
+//       <button
+//         onClick={(e) => {
+//           e.stopPropagation();
+//           const link = document.createElement("a");
+//           link.href = material.file;
+//           link.download = "";
+//           link.click();
+//         }}
+//         className="h-10 rounded-md bg-[#ff6b35] hover:bg-[#f45b26] text-white font-semibold transition text-sm"
+//       >
+//         Download
+//       </button>
+//     </div>
+//   </div>
+// </div>
+//                 </motion.div>
+//               ))}
+//             </AnimatePresence>
+//           </motion.div>
+ <div className="grid lg:grid-cols-[0.5fr_1.5fr] gap-6">
+  
+   
+  <div className="rounded-[28px] h-100 bg-white shadow-md overflow-hidden border border-gray-100">
+
+  {/* Image */}
+  <div className="rounded-2xl p-2.5 bg-gradient-to-b from-[#CFCFCF] via-[#ECECEC] to-white">
+    <div className="rounded-2xl overflow-hidden">
+      <img
+        src="/images/course-thumbnail.webp"
+        alt="IELTS Course"
+        className="w-full h-full lg:h-full object-contain"
+      />
+    </div>
+  </div>
+
+  {/* Body */}
+  <div className="px-6 ">
+    <h3 className="text-xl font-bold">
+      <span className="text-[#FF6736]">IELTS</span>{" "}
+      <span className="text-gray-900 dark:text-white">
+        Basics & Test Overview
+      </span>
+    </h3>
+
+    <div className=" space-y-3 text-gray-600 dark:text-gray-300">
+      <div className="flex items-center gap-3">
+        <Radio size={20} className="text-[#FF6736]" />
+        <span className="text-sm">Online Live Classes</span>
+      </div>
+
+      <div className="flex items-center gap-3">
+        <Calendar size={20} className="text-[#FF6736]" />
+        <span className="text-sm">Starts on 20 August 2026</span>
       </div>
     </div>
 
-    {/* Content */}
-    <div className="flex-1 min-w-0">
-      <h4 className="text-[15px] sm:text-base font-semibold text-gray-900 dark:text-white leading-snug line-clamp-2">
-        {material.title}
-      </h4>
+    {/* Price */}
+    <div className=" flex items-end justify-between">
+      <div>
+        <div className="flex items-center gap-2">
+          <span className="text-lg font-bold">₹4,999</span>
 
-      <p className="mt-2 text-xs sm:text-sm text-gray-500 dark:text-gray-400 line-clamp-2">
-        {material.shortDescription ||
-          material.description ||
-          "50+ practice questions with model answers for band 7+"}
-      </p>
+          <span className="text-gray-400 line-through text-sm">
+            ₹7,999
+          </span>
+        </div>
+
+        <p className=" text-sm font-semibold text-[#16A34A]">
+          38% OFF
+        </p>
+      </div>
+
+      <button className="rounded-2xl border border-[#FF6736] px-6 py-2 text-sm font-medium text-[#FF6736] transition hover:bg-[#FF6736] hover:text-white">
+        Explore
+      </button>
     </div>
   </div>
 
-  {/* Bottom Buttons */}
-  <div className="px-4 pb-4 mt-auto">
-    <div className="grid grid-cols-2 gap-12">
-      <button
-        onClick={(e) => {
-          e.stopPropagation();
-          window.open(material.file, "_blank");
-        }}
-        className="h-10 rounded-md border border-[#ff6b35] text-gray-600 bg-white hover:bg-[#fff4ef] transition font-medium text-sm"
-      >
-        View PDF
-      </button>
+  {/* Footer */}
+  <div className="px-5 pb-5 my-2 hidden lg:block">
+    <div className="flex items-center rounded-full bg-[#FCE7D3] p-2 dark:bg-gray-700">
+      <span className="rounded-full bg-[#FF6D42] px-4 py-1 text-xs font-semibold text-white">
+        Ooshas Prep
+      </span>
 
-      <button
-        onClick={(e) => {
-          e.stopPropagation();
-          const link = document.createElement("a");
-          link.href = material.file;
-          link.download = "";
-          link.click();
-        }}
-        className="h-10 rounded-md bg-[#ff6b35] hover:bg-[#f45b26] text-white font-semibold transition text-sm"
-      >
-        Download
-      </button>
+      <span className="ml-3 text-xs text-gray-700 dark:text-white">
+        Limited Time Offer
+      </span>
     </div>
   </div>
 </div>
-                </motion.div>
-              ))}
-            </AnimatePresence>
-          </motion.div>
+
+   <section className="w-full  px-4 md:px-5 py-4 bg-white rounded-xl">
+      {/* Heading */}
+      <div className="mb-8">
+        <h2 className="text-[#FF6B35] text-3xl md:text-4xl font-bold">
+          IELTS
+        </h2>
+
+        <p className="text-gray-600 text-lg mt-1">
+          International English Language Testing System
+        </p>
+      </div>
+
+      {/* Cards */}
+      <div className="space-y-4">
+        {courses.map((item) => (
+          <div
+          style={{ backgroundColor: item.bgColor }}
+            key={item.id}
+            className={`
+            rounded-[28px]
+            p-5 md:p-4
+            flex flex-col md:flex-row
+            items-center
+            gap-6
+          `}
+          >
+            {/* Image */}
+            <div
+              className="bg-white
+              rounded-3xl
+              w-full
+              md:w-[135px]
+              h-[120px]
+              md:h-[120px]
+              flex
+              items-center
+              justify-center
+              shrink-0
+              shadow-sm"
+            >
+              <img
+                src={item.image}
+                alt={item.title}
+                className="w-[90px] md:w-[110px] object-cover"
+              />
+            </div>
+
+            {/* Text */}
+            <div className="flex-1 text-center md:text-left">
+              <h3 className="text-[#FF5A2C] font-bold text-xl md:text-xl">
+                {item.title}
+              </h3>
+
+              <p className="text-gray-600 mt-2 text-base md:text-lg leading-relaxed">
+                {item.description}
+              </p>
+            </div>
+          </div>
+        ))}
+      </div>
+    </section>
+
+ </div>
         )}
 
         {/* Pagination */}

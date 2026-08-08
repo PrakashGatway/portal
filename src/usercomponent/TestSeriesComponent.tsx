@@ -20,78 +20,155 @@ import {
 
 export const TestSeriesCard: React.FC<any> = ({ testSeries: series }) => {
     let navigate = useNavigate();
+    const offerPercentage = Math.ceil(
+  ((series?.pricing.price - series?.pricing.salePrice) /
+    series?.pricing.price) * 100
+);
 
     return (
-        <motion.div
-            initial={{ opacity: 0, x: 20 }}
-            animate={{ opacity: 1, x: 0 }}
-            transition={{ delay: 0.3 }}
-            className="sticky top-20 lg:-mt-0 overflow-hidden sm:p-5"
-        >
-            <div className="p-[1.5px] rounded-2xl overflow-hidden w-full bg-gradient-to-b from-[#686868]/0 via-[#686868]/60 to-[#686868]">
-                <div className="relative rounded-2xl h-full bg-white p-2 overflow-hidden">
-                    <div className="absolute top-0 left-0 w-full h-[40%] bg-gradient-to-b from-[#ADADAC] to-[#ADADAC]/0" />
-                    <div style={{ borderRadius: "15px 15px 0px 0px" }} className="relative overflow-hidden h-[170px]">
-                        <img
+        // <motion.div
+        //     initial={{ opacity: 0, x: 20 }}
+        //     animate={{ opacity: 1, x: 0 }}
+        //     transition={{ delay: 0.3 }}
+        //     className="sticky top-20 lg:-mt-0 overflow-hidden sm:p-5"
+        // >
+        //     <div className="p-[1.5px] rounded-2xl overflow-hidden w-full bg-gradient-to-b from-[#686868]/0 via-[#686868]/60 to-[#686868]">
+        //         <div className="relative rounded-2xl h-full bg-white p-2 overflow-hidden">
+        //             <div className="absolute top-0 left-0 w-full h-[40%] bg-gradient-to-b from-[#ADADAC] to-[#ADADAC]/0" />
+        //             <div style={{ borderRadius: "15px 15px 0px 0px" }} className="relative overflow-hidden h-[170px]">
+        //                 <img
+        //                     src={series?.thumbnailPic || "/images/logo.png"}
+        //                     alt={series?.title}
+        //                     className="object-cover h-full w-full"
+        //                 />
+        //             </div>
+
+        //             <div className="py-2 px-1 space-y-1 cursor-pointer">
+        //                 <h3 className="text-lg font-medium capitalize text-gray-900">
+        //                     {series?.title}
+        //                 </h3>
+
+        //                 <p className="text-sm text-[#FF6A3D] font-medium">
+        //                     {series?.description || series?.exam?.name}
+        //                 </p>
+
+        //                 {/* TAGS */}
+        //                 {/* <div className="flex flex-wrap gap-2">
+        //                 <span
+        //                     className="px-3 py-1 rounded-full shadow  bg-[#FFF1EB] text-[#FF6A3D] text-sm uppercase font-medium"
+        //                 >
+        //                     {series?.defaultTestType}
+        //                 </span>
+        //                 <span
+        //                     className="px-3 py-1 rounded-full shadow  bg-[#FFF1EB] text-[#FF6A3D] text-sm uppercase font-medium"
+        //                 >
+        //                     {series?.category?.name}
+        //                 </span>
+        //             </div> */}
+
+        //                 {/* META */}
+        //                 <div className="grid grid-cols-2 gap-y-2 text-sm text-gray-600 pt-2 pb-2">
+
+        //                     {/* VALIDITY */}
+        //                     <div className="flex items-center gap-2">
+        //                         <Clock className="h-4 w-4 text-[#FF6A3D]" />
+        //                         Valid for 1 year
+        //                     </div>
+
+        //                     {/* TOTAL TESTS */}
+        //                     <div className="flex items-center gap-2">
+        //                         <BookOpen className="h-4 w-4 text-[#FF6A3D]" />
+        //                         Include: {series?.totalTests} Tests
+        //                     </div>
+        //                 </div>
+
+        //             </div>
+
+        //             {/* FOOTER */}
+        //             <div className="flex items-start">
+        //                 <div style={{ borderRadius: "0px 0px 12px 15px" }} className="flex-1 f bg-[#FF6A3D] text-center text-white text-3xl font-bold px-4 py-2">
+        //                     {series?.pricing?.isFree ? "Free" : `₹ ${series?.finalPrice || 1000}`}
+        //                 </div>
+        //                 <button style={{ borderRadius: "0px 0px 15px 0px" }} onClick={() => { series?.pricing?.isFree ? "" : navigate(`/checkout/${series?.slug}`, { state: { testSeries: true } }) }} className="flex-1 bg-[#3B3B3B] text-white font-medium py-2 bg-gradient-to-b from-[#545454] via-[#ffffff]/30 to-[#545454] hover:bg-black transition">
+        //                     {series?.pricing?.isFree ? "Start Test" : "Buy Test"}
+        //                 </button>
+        //             </div>
+        //         </div>
+        //     </div>
+        // </motion.div>
+
+        <motion.div className='sticky top-20 lg:-mt-0 overflow-hidden sm:p-5'>
+         <div className='bg-gradient-to-b from-[#CFCFCF] via-[#ECECEC] to-black dark:bg-gray-800 p-[1px] rounded-[22px] relative'>
+                              
+                                    <div
+                                        key={series.id}
+                                        className="overflow-hidden rounded-[22px] border border-[#d8d8d8] bg-white dark:bg-gray-800 shadow-sm "
+                                    >
+
+                                        {/* Banner */}
+                                        <div className='p-[6px] rounded-2xl bg-gradient-to-b from-[#CFCFCF] via-[#ECECEC] to-white'>
+                                            <div className="relative  overflow-hidden">
+                                                <img
                             src={series?.thumbnailPic || "/images/logo.png"}
                             alt={series?.title}
-                            className="object-cover h-full w-full"
+                            className="object-contain h-full w-full rounded-2xl"
                         />
-                    </div>
+                                            </div>
+                                        </div>
 
-                    <div className="py-2 px-1 space-y-1 cursor-pointer">
-                        <h3 className="text-lg font-medium capitalize text-gray-900">
-                            {series?.title}
-                        </h3>
+                                        {/* Content */}
+                                        <div className="p-4">
+                                            <h3 className="text-xl font-bold leading-none">
+                                                <span className="text-orange-500">{series.title.split(" ")[0]}</span>{" "}
+                                                <span className="text-black dark:text-white text-base font-semibold">
+                                                    {series.title.split(" ").slice(1).join(" ")}
+                                                </span>
+                                            </h3>
+                                            {/* <p className="text-sm text-[#FF6A3D] font-medium">
+                             {series?.description || series?.exam?.name}
+                      </p> */}
+                                             <div className="grid grid-cols-2 gap-y-2 text-sm text-gray-600 pt-2 pb-2">
 
-                        <p className="text-sm text-[#FF6A3D] font-medium">
-                            {series?.description || series?.exam?.name}
-                        </p>
+                             {/* VALIDITY */}
+                             <div className="flex items-center gap-2">
+                                 <Clock className="h-4 w-4 text-[#FF6A3D]" />
+                                 Valid for 1 year
+                             </div>
 
-                        {/* TAGS */}
-                        {/* <div className="flex flex-wrap gap-2">
-                        <span
-                            className="px-3 py-1 rounded-full shadow  bg-[#FFF1EB] text-[#FF6A3D] text-sm uppercase font-medium"
-                        >
-                            {series?.defaultTestType}
-                        </span>
-                        <span
-                            className="px-3 py-1 rounded-full shadow  bg-[#FFF1EB] text-[#FF6A3D] text-sm uppercase font-medium"
-                        >
-                            {series?.category?.name}
-                        </span>
-                    </div> */}
+                             {/* TOTAL TESTS */}
+                             <div className="flex items-center gap-2">
+                                 <BookOpen className="h-4 w-4 text-[#FF6A3D]" />
+                                 Include: {series?.totalTests} Tests
+                             </div>
+                       </div>
 
-                        {/* META */}
-                        <div className="grid grid-cols-2 gap-y-2 text-sm text-gray-600 pt-2 pb-2">
+                                            {/* Price */}
+                                            <div className="mt-4 flex items-center flex-wrap gap-2 ">
+                                                <span className="text-base font-bold text-[#222] dark:text-white">
+                                                    ₹ {series?.pricing?.salePrice}
+                                                </span>
 
-                            {/* VALIDITY */}
-                            <div className="flex items-center gap-2">
-                                <Clock className="h-4 w-4 text-[#FF6A3D]" />
-                                Valid for 1 year
-                            </div>
+                                                <span className="text-base text-gray-400 line-through dark:text-white">
+                                                    ₹{series.pricing?.price}
+                                                </span>
 
-                            {/* TOTAL TESTS */}
-                            <div className="flex items-center gap-2">
-                                <BookOpen className="h-4 w-4 text-[#FF6A3D]" />
-                                Include: {series?.totalTests} Tests
-                            </div>
-                        </div>
+                                                <span className="text-base font-semibold text-green-600 dark:text-white">
+                                                    {offerPercentage}%
+                                                </span>
+                                            </div>
 
-                    </div>
+                                            {/* Button */}
+                                            <div className='flex justify-center'>
+                                             
 
-                    {/* FOOTER */}
-                    <div className="flex items-start">
-                        <div style={{ borderRadius: "0px 0px 12px 15px" }} className="flex-1 f bg-[#FF6A3D] text-center text-white text-3xl font-bold px-4 py-2">
-                            {series?.pricing?.isFree ? "Free" : `₹ ${series?.finalPrice || 1000}`}
-                        </div>
-                        <button style={{ borderRadius: "0px 0px 15px 0px" }} onClick={() => { series?.pricing?.isFree ? "" : navigate(`/checkout/${series?.slug}`, { state: { testSeries: true } }) }} className="flex-1 bg-[#3B3B3B] text-white font-medium py-2 bg-gradient-to-b from-[#545454] via-[#ffffff]/30 to-[#545454] hover:bg-black transition">
+                                                 <button  onClick={() => { series?.pricing?.isFree ? "" : navigate(`/checkout/${series?.slug}`, { state: { testSeries: true } }) }} className="mt-5 py-2  w-1/2 text-base   rounded-xl border border-[#ff5b2e] text-[#ff5b2e] font-medium transition-all duration-300 hover:bg-[#ff5b2e] hover:text-white">
                             {series?.pricing?.isFree ? "Start Test" : "Buy Test"}
                         </button>
-                    </div>
-                </div>
-            </div>
-        </motion.div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                </motion.div>
     );
 };
 
@@ -101,7 +178,7 @@ import {
     ListChecks,
     FileQuestion,
 } from 'lucide-react';
-import { useNavigate } from 'react-router';
+import { Link, useNavigate } from 'react-router';
 
 interface TestSeriesTabsProps {
     testSeries: any;
@@ -231,19 +308,43 @@ export const TestSeriesTabs: React.FC<TestSeriesTabsProps> = ({
                     <motion.div
                         initial={{ opacity: 0, y: 10 }}
                         animate={{ opacity: 1, y: 0 }}
-                        className="space-y-6"
+                        className="space-y-6 bg-white rounded-xl p-4"
                     >
                         <h3 className="text-xl font-bold text-gray-900 ">All Tests</h3>
                         {testSeries?.tests?.map((testItem, index) => { 
-                          
-                            
+                            const cardThemes = [
+  // Card 1 - Peach
+  {
+    cardBg: "from-[#FFF9F2] via-[#FFF5E9] to-[#FFFDFB]",
+    topGlow: "from-[#FFE3C7]/70 via-[#FFF4E6]/40 to-transparent",
+    hoverBorder: "from-[#FF6A3D] via-[#FF8A50] to-[#FFD9C8]",
+  },
+
+  // Card 2 - Yellow
+  {
+    cardBg: "from-[#FFFBEA] via-[#FFF6D9] to-[#FFFDF5]",
+    topGlow: "from-[#FFE36E]/70 via-[#FFF4B8]/40 to-transparent",
+    hoverBorder: "from-[#F6C90E] via-[#FFD84D] to-[#FFF2B5]",
+  },
+
+  // Card 3 - Orange
+  {
+    cardBg: "from-[#FFF7F0] via-[#FFF0E4] to-[#FFFDF8]",
+    topGlow: "from-[#FFD2A8]/70 via-[#FFEAD6]/40 to-transparent",
+    hoverBorder: "from-[#FF8A3D] via-[#FFA866] to-[#FFE2C8]",
+  },
+];
+
+const theme = cardThemes[index % cardThemes.length];
+                            // const unlocktest = if(testItem)
                             return (
-                           <div className="p-[0.8px] rounded-xl bg-gradient-to-b from-white via-[#2B2B2B] to-black ">
-  <div className="w-full rounded-xl bg-gradient-to-br from-[#FFFFFF] via-[#F8F8F8] to-[#EFEFEF] overflow-hidden transition-all hover:shadow-sm">
+                           <div className={`p-[0.8px] rounded-xl bg-gradient-to-b from-white via-[#2B2B2B] to-black  `}>
+  <div className={`w-full rounded-xl bg-gradient-to-br ${theme.cardBg} overflow-hidden transition-all hover:shadow-sm relative`}>
+
 
     {/* Badge */}
     <div className="">
-      <span className="inline-flex items-center rounded-full bg-[#FF6A3D] px-3 py-1 text-sm font-semibold text-white uppercase">
+      <span className="inline-flex items-center rounded-full bg-orange-500 px-3 py-1 text-sm text-white font-semibold text-orange-500 uppercase">
         {testSeries?.category?.name} Test {index + 1}
       </span>
     </div>
@@ -263,7 +364,7 @@ export const TestSeriesTabs: React.FC<TestSeriesTabsProps> = ({
         </p>
 
         {/* Top Info */}
-        <div className="flex flex-wrap items-center text-base gap-y-2">
+        <div className="flex items-center text-base gap-y-2">
 
           <div className="flex items-center">
             <FileText className="w-4 h-4 text-gray-500 mr-2" />
@@ -323,12 +424,12 @@ export const TestSeriesTabs: React.FC<TestSeriesTabsProps> = ({
       </div>
 
       {/* Right */}
-      <div className="flex flex-row md:flex-col items-center justify-center gap-3 md:min-w-[140px]">
+      <div className="flex flex-row md:flex-col items-center justify-center gap-3 md:min-w-[110px]">
 
-        {testItem?.pricing?.isFree ? (
+        {testItem?.isMandatory=== false || testSeries?.isPurchased === true ? (
           <button
             onClick={() => navigate(`/gmat/tests/${testItem?._id}`)}
-            className="rounded-xl bg-[#FF7046] px-6 py-3 text-white font-semibold hover:bg-[#2F2F2F] transition"
+            className="rounded-xl bg-[#FF7046] px-6 py-3 text-white font-semibold transition"
           >
             Start Test
           </button>

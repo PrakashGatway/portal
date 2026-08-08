@@ -64,7 +64,7 @@ import {
   Settings
 } from "lucide-react";
 
-type IconType = React.ElementType;
+type IconType = React.ElementType | string;
 
 type NavItem = {
   name: string;
@@ -140,24 +140,26 @@ const navItems: NavItem[] = [
     ]
   },
   { icon: CreditCard, name: "Orders", path: "/all_transactions" },
-  { icon: Settings, name: "Setting", path: "/setting"}
+  { icon: Settings, name: "Setting", path: "/setting" }
 
 ];
 
 const navItemsUser: NavItem[] = [
-  { icon: LayoutDashboard, name: "Dashboard", path: "/" },
-  { icon: Target, name: "Batches", path: "/course" },
-  { icon: TestTube2, name: "Mock Tests", path: "/tests" },
-  { icon: Pencil, name: "Practice Tests", path: "/practice-tests" },
-  { icon: Book, name: "Tests Series", path: "/test-series" },
-  { icon: FileStack, name: "Resources", path: "/resources" },
-  { icon: GraduationCap, name: "My Courses", path: "/my-courses" },
-  { icon: Sparkles, name: "Free Quiz", path: "/Quiz" },
-  { icon: Gift, name: "Offers", path: "/offers" },
-  { icon: Bell, name: "Notifications", path: "/notifications" },
-  { icon: Handshake, name: "Refer & Earn", path: "/referrals" },
-  { icon: History, name: "Orders History", path: "/transactions" }
+  { icon: "📊", name: "Dashboard", path: "/" },
+  { icon: "📚", name: "Batches", path: "/course" },
+  { icon: "🧪", name: "Mock Tests", path: "/tests" },
+  { icon: "📝", name: "Practice Tests", path: "/practice-tests" },
+  { icon: "📖", name: "Tests Series", path: "/test-series" },
+  { icon: "📁", name: "Resources", path: "/resources" },
+  { icon: "🎓", name: "My Courses", path: "/my-courses" },
+  { icon: "✨", name: "Free Quiz", path: "/Quiz" },
+  { icon: "🎉", name: "Offers", path: "/offers" },
+  { icon: "🔔", name: "Notifications", path: "/notifications" },
+  { icon: "💰", name: "Refer & Earn", path: "/referrals" },
+  { icon: "🧾", name: "Orders History", path: "/transactions" }
 ];
+
+
 
 const navItemsCoun: NavItem[] = [
   { icon: LayoutDashboard, name: "Dashboard", path: "/" }
@@ -208,7 +210,7 @@ const navItemsTeacher: NavItem[] = [
 ];
 
 const othersItems: NavItem[] = [
-  { icon: User, name: "My Profile", path: "/profile" },
+  { icon: "👤", name: "My Profile", path: "/profile" },
   { icon: Headphones, name: "Support", path: "/support" },
   { icon: Lock, name: "Our Selections", path: "/our-selection" },
   { icon: Shield, name: "Privacy Policy", path: "/privacy-policy" },
@@ -288,7 +290,7 @@ const AppSidebar: React.FC = () => {
   const showLabels = isExpanded || isHovered || isMobileOpen;
 
   const renderMenuItems = (items: NavItem[], menuType: "main" | "others") => (
-    <ul className="flex flex-col gap-0.5">
+    <ul className="flex flex-col gap-3 ml-2 mt-6">
       {items.map((nav, index) => {
         const isSubmenuOpen = openSubmenu?.type === menuType && openSubmenu?.index === index;
         const hasActiveSubItem = nav.subItems?.some(subItem => isActive(subItem.path));
@@ -296,7 +298,7 @@ const AppSidebar: React.FC = () => {
         const Icon = nav.icon;
 
         return (
-          <li key={nav.name} className="relative">
+          <li key={nav.name} className="relative ">
             {nav.subItems ? (
               <button
                 onClick={() => handleSubmenuToggle(index, menuType)}
@@ -313,43 +315,89 @@ const AppSidebar: React.FC = () => {
 
                 {showLabels ? (
                   <>
-                    <Icon className={`w-[20px] h-[20px] stroke-[2.2] flex-shrink-0 transition-colors duration-200 ${active ? "text-orange-500" : "text-zinc-500 dark:text-zinc-500"}`} />
-                    <span className="flex-1 text-left text-[15px] tracking-wide">{nav.name}</span>
-                    <ChevronDown className={`w-3.5 h-3.5 flex-shrink-0 transition-transform duration-300 text-zinc-300 dark:text-zinc-600 ${isSubmenuOpen ? "rotate-180" : ""}`} />
+                    {typeof nav.icon === "string" ? (
+                      <span className="text-[22px]">{nav.icon}</span>
+                    ) : (
+                      <Icon
+                        className={`w-[20px] h-[20px] stroke-[2.2] flex-shrink-0 transition-colors duration-200 ${active ? "text-orange-500" : "text-zinc-500 dark:text-zinc-500"
+                          }`}
+                      />
+                    )}
+
+                    <span className="flex-1 text-left text-[15px] tracking-wide">
+                      {nav.name}
+                    </span>
+
+                    <ChevronDown
+                      className={`w-3.5 h-3.5 flex-shrink-0 transition-transform duration-300 text-zinc-300 dark:text-zinc-600 ${isSubmenuOpen ? "rotate-180" : ""
+                        }`}
+                    />
                   </>
                 ) : (
                   <div className="relative flex flex-col gap-1 items-center justify-center w-full">
-                    <Icon className={`w-6 h-6 stroke-[1.7] transition-colors duration-200 ${active ? "text-orange-600" : "text-zinc-500 dark:text-zinc-500"}`} />
-                    <span className=" text-left font-medium text-[10px] tracking-wide">{nav.name}</span>
+
+                    {typeof nav.icon === "string" ? (
+                      <span className="text-3xl">{nav.icon}</span>
+                    ) : (
+                      <Icon
+                        className={`w-6 h-6 stroke-[1.7] transition-colors duration-200 ${active ? "text-orange-600" : "text-zinc-500 dark:text-zinc-500"
+                          }`}
+                      />
+                    )}
+
+                    <span className="text-left font-medium text-[10px] tracking-wide">
+                      {nav.name}
+                    </span>
+
                   </div>
                 )}
               </button>
             ) : nav.path ? (
-              <Link
-                to={nav.path}
-                className={`w-full flex items-center gap-3 ${isExpanded || isHovered || isMobileOpen ? 'px-4' : 'px-1'} py-3 rounded-lg transition-all duration-200 ease-out group relative
+              <div className={`bg-[#ff764b] rounded-[26px] ${isExpanded ? "pl-[5px]" : "pl-[5px]"} `}>
+                <Link
+                  to={nav.path}
+                  className={`w-full  flex items-center gap-3 ${isExpanded || isHovered || isMobileOpen ? 'px-4' : 'px-1'} py-2  rounded-[26px]  group relative
                   ${isActive(nav.path) ? "font-semibold" : "font-medium"}
                   ${isActive(nav.path)
-                    ? "bg-orange-500/10 text-orange-500"
-                    : "text-zinc-600 dark:text-zinc-400 hover:bg-black/[0.04] dark:hover:bg-white/[0.06] hover:text-zinc-900 dark:hover:text-zinc-100"
-                  }`}
-              >
-                {isActive(nav.path) && (
-                  <span className="absolute left-0 top-1/2 -translate-y-1/2 w-[4px] h-7 rounded-r-full bg-orange-500" />
-                )}
+                      ? "bg-orange-50 text-orange-500"
+                      : "text-zinc-600 dark:text-zinc-400 hover:bg-black/[0.04] bg-white dark:hover:bg-white/[0.06] hover:text-zinc-900 dark:hover:text-zinc-100 hover:bg-orange-50"
+                    }`}
+                >
+                  {/* {isActive(nav.path) && (
+                  <span className="absolute left-0 top-1/2 -translate-y-1/2 w-[8px] h-12 rounded-r-full bg-orange-500" />
+                )} */}
 
-                {showLabels ? (
-                  <>
-                    <Icon className={`w-[20px] h-[20px] stroke-[2.2] flex-shrink-0 transition-colors duration-200 ${isActive(nav.path) ? "text-orange-500" : "text-zinc-500 dark:text-zinc-500"}`} />
-                    <span className="text-[15px] tracking-wide">{nav.name}</span>
-                  </>
-                ) : (
-                  <div className="relative flex flex-col gap-1 items-center justify-center w-full">
-                    <Icon className={`w-6 h-6 stroke-[1.7] transition-colors duration-200 ${isActive(nav.path) ? "text-orange-600" : "text-zinc-500 dark:text-zinc-500"}`} />
-                    <span className=" text-center font-semibold text-[11px]">{nav.name}</span>
-                  </div>
-                )}
-              </Link>
+                  {showLabels ? (
+                    <>
+                      {typeof nav.icon === "string" ? (
+                        <span className="text-[22px] ">{nav.icon}</span>
+                      ) : (
+                        <Icon
+                          className={`w-[20px] h-[20px]  ${isActive(nav.path)
+                              ? "text-orange-500"
+                              : "text-zinc-500 dark:text-zinc-500"
+                            }`}
+                        />
+                      )}
+                      <span className="text-[15px] tracking-wide">{nav.name}</span>
+                    </>
+                  ) : (
+                    <div className="relative flex flex-col gap-1 items-center justify-center w-full">
+                      {typeof nav.icon === "string" ? (
+                        <span className="text-3xl ">{nav.icon}</span>
+                      ) : (
+                        <Icon
+                          className={`w-6 h-6 stroke-[2.2] ${isActive(nav.path)
+                              ? "text-orange-600"
+                              : "text-zinc-500 dark:text-zinc-500"
+                            }`}
+                        />
+                      )}
+                      <span className=" text-center font-semibold text-[11px]">{nav.name}</span>
+                    </div>
+                  )}
+                </Link>
+              </div>
             ) : null}
 
             {nav.subItems && showLabels && (
@@ -466,7 +514,7 @@ const AppSidebar: React.FC = () => {
         {/* Navigation */}
         <div className="flex flex-col flex-1 overflow-y-auto sidebar-scroll px-2.5 py-3">
           <button
-            className="hidden lg:flex absolute lg:top-18 -right-4 items-center justify-center p-2 w-9 h-9 text-gray-100 dark:text-gray-400 border border-gray-200 dark:border-gray-800 rounded-full bg-gray-600 dark:bg-gray-800 hover:bg-gray-500 dark:hover:bg-gray-700 transition-all duration-200"
+            className="hidden lg:flex absolute lg:top-18 -right-4 items-center justify-center p-2 w-9 h-9 text-gray-100 dark:text-gray-400 border border-gray-200 dark:border-gray-800 rounded-full bg-gray-600 dark:bg-gray-800 hover:bg-gray-500 dark:hover:bg-gray-700 transition-all duration-200 z-11"
             onClick={handleToggle}
             aria-label="Toggle Sidebar"
           >

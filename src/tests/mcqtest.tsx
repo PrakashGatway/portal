@@ -97,7 +97,7 @@ export const MockTestCard = ({ test, index }: { test: TestTemplate; index: numbe
 const theme = cardThemes[index % cardThemes.length];
 
     return (
-     <div className="hover:bg-gradient-to-b from-orange-500 via-orange-500 to-orange-200/50 p-[2px] rounded-[24px] transition-all duration-300"> <div
+     <div className="hover:bg-gradient-to-b from-orange-500 via-orange-500 to-orange-200/50 p-[1px] rounded-[24px] transition-all duration-300"> <div
   className={`relative rounded-[24px] overflow-hidden transition-all duration-300 
     ${
       test.isSelected
@@ -305,7 +305,7 @@ const active = "reading";
         <div className="min-h-[85vh]">
             <div className="max-w-7xl p-0 mx-auto sm:p-4 rounded-xl min-h-[87vh]">
                 {/* Top Slider */}
-                <div className="grid max-h-[250px] grid-cols-3 lg:grid-cols-3 gap-1 rounded-3xl space-x-2 mb-4">
+                <div className="grid max-h-[250px] grid-cols-1 lg:grid-cols-3 gap-1 rounded-3xl space-x-2 mb-4">
                     <LeftSlider />
                     <RightOffer />
                 </div>

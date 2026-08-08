@@ -141,11 +141,11 @@ const Badge = ({
 }
 
 const Card = ({ children, className = "" }: { children: React.ReactNode; className?: string }) => (
-    <div className="p-[1.5px] rounded-2xl overflow-hidden w-full bg-gradient-to-b from-[#686868]/0 via-[#686868]/60 to-[#686868]">
-        <div className="relative rounded-2xl h-full bg-white p-1.5 overflow-hidden">
+    <div className={`p-[1.5px] rounded-2xl overflow-hidden w-full ${className} `}>
+        <div className="relative rounded-2xl h-full  p-1.5 overflow-hidden">
 
             {/* Top Highlight */}
-            <div className="absolute top-0 left-0 w-full h-[40%] bg-gradient-to-b from-[#ADADAC] to-[#ADADAC]/0" />
+            <div className="absolute top-0 left-0 w-full h-[40%] " />
             <div className={``}>{children}</div>
         </div>
     </div>
@@ -410,7 +410,7 @@ useEffect(() => {
                             </div> */}
                                 {/* Course Details Grid */}
                                 <div className="grid grid-cols-2 md:grid-cols-4 gap-4 py-2">
-                                    <Card className="border border-gray-200 dark:border-gray-700 dark:bg-gray-800/50">
+                                    <Card className="border  border-gray-200 bg-[#FFF7DD] dark:border-gray-700 dark:bg-gray-800/50">
                                         <CardContent className="text-center p-2">
                                             <p className="text-lg font-semibold text-gray-800 dark:text-white">Start Date</p>
                                             <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">
@@ -418,7 +418,7 @@ useEffect(() => {
                                             </p>
                                         </CardContent>
                                     </Card>
-                                    <Card className="border border-gray-200 dark:border-gray-700  dark:bg-gray-800/50">
+                                    <Card className="border border-gray-200 dark:border-gray-700 bg-[#FDF0EC]  dark:bg-gray-800/50">
                                         <CardContent className="p-2 text-center">
                                             <p className="text-lg font-semibold text-gray-800 dark:text-white">Mode</p>
                                             <p className="text-sm text-gray-600 dark:text-gray-400 mt-1 capitalize">
@@ -426,7 +426,7 @@ useEffect(() => {
                                             </p>
                                         </CardContent>
                                     </Card>
-                                    <Card className="border border-gray-200 dark:border-gray-700  dark:bg-gray-800/50 backdrop-blur-sm">
+                                    <Card className="border border-gray-200 dark:border-gray-700  bg-[#FFF7DD] dark:bg-gray-800/50 backdrop-blur-sm">
                                         <CardContent className="p-2 text-center">
                                             <p className="text-lg font-semibold text-gray-800 dark:text-white">Language</p>
                                             <p className="text-sm text-gray-600 dark:text-gray-400 mt-1 capitalize">
@@ -434,7 +434,7 @@ useEffect(() => {
                                             </p>
                                         </CardContent>
                                     </Card>
-                                    <Card className="border border-gray-200 dark:border-gray-700  dark:bg-gray-800/50 backdrop-blur-sm">
+                                    <Card className="border border-gray-200 dark:border-gray-700 bg-[#FDF0EC]  dark:bg-gray-800/50 backdrop-blur-sm">
                                         <CardContent className="p-2 text-center">
                                             <p className="text-lg font-semibold text-gray-800 dark:text-white">Validity</p>
                                             <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">
@@ -925,14 +925,17 @@ useEffect(() => {
                                             </div>
 
                                             {/* FOOTER */}
-                                            <div className="flex items-start">
+                                          {course?.isPurchased === false ? ( 
+                                             <div className="flex items-start">
                                                 <div style={{ borderRadius: "0px 0px 12px 15px" }} className="flex-1 f bg-[#FF6A3D] text-center text-white text-3xl font-bold px-4 py-2">
                                                     {formatPrice(finalPrice, course.pricing.currency)}
                                                 </div>
                                                 <button style={{ borderRadius: "0px 0px 15px 0px" }} onClick={() => { course?.pricing?.isFree ? "" : navigate(`/checkout/${slug}`) }} className="flex-1 bg-[#3B3B3B] text-white font-medium py-2 bg-gradient-to-b from-[#545454] via-[#ffffff]/30 to-[#545454] hover:bg-black transition">
                                                     Enroll Now
                                                 </button>
-                                            </div>
+                                            </div>):(
+                                                null
+                                            )}
                                         </div>
                                     </div>
                                 </motion.div>

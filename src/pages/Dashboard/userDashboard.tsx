@@ -687,8 +687,8 @@ const GREDashboard = () => {
                 <HeaderBanner data={data} user={user} />
 
                 {(
-                    <div className="bg-gradient-to-b from-orange-500 via-orange-500 to-orange-200/50 p-[2px] rounded-xl"> 
-                        <div className="bg-white rounded-xl   p-4 ">
+                    <div>
+                        <div className=" rounded-3xl  bg-white dark:bg-gray-800 p-4 ">
                             {/* Top */}
                             <div className="flex items-start gap-4">
                                 {/* <Image
@@ -740,8 +740,8 @@ const GREDashboard = () => {
 
                             {/* Button */}
                             <Link to="/support">
-                            <button
-                                className="
+                                <button
+                                    className="
         mt-4
         w-full
         rounded-2xl
@@ -754,9 +754,9 @@ const GREDashboard = () => {
         text-white
        
       "
-                            >
-                                Book a Session →
-                            </button></Link>
+                                >
+                                    Book a Session →
+                                </button></Link>
                         </div>
 
                     </div>
@@ -769,23 +769,23 @@ const GREDashboard = () => {
                     <div className="grid grid-cols-1 md:grid-cols-[1.5fr_0.5fr] gap-4">
 
                         {/* 1. Pink/Orange Gradient Card */}
-                        <section className="w-full py-0 overflow-hidden">
+                        <section className="w-full  overflow-hidden">
 
-                            <div className="w-full mx-auto overflow-hidden">
-
-                                <div className="keen-slider overflow-hidden rounded-3xl" ref={sliderRef3}>
-                                    {
-                                        purchase.map((item) => (
-
-                                            <div className="relative dark:bg-gray-800 bg-white rounded-3xl overflow-hidden p-6 lg:p-4 keen-slider__slide" >
+                            <div className="w-full mx-auto overflow-hidden ">
 
 
-
-                                                <div className="grid grid-cols-1 xl:grid-cols-[0.9fr_1.1fr] lg:gap-4 ">
+                                {purchase?.length > 0 ? (
+                                    <div className="keen-slider overflow-hidden rounded-3xl  " ref={sliderRef3}>
+                                        {purchase.map((item) => (
+                                            <div
+                                                key={item?._id}
+                                                className="relative dark:bg-gray-800 bg-white rounded-3xl overflow-hidden p-6 lg:p-0 keen-slider__slide "
+                                            >
+                                                <div className="grid grid-cols-1 lg:grid-cols-[0.9fr_1.1fr] lg:gap-4 py-4 px-4">
 
                                                     {/* Left Image */}
-                                                    <div className="flex flex-col gap-4 lg:py-4 px-2">
-                                                        <div><h2 className="text-xl lg:-mt-4 lg:mb-4 lg:text-2xl font-bold text-[#202020] dark:text-white">
+                                                    <div className="flex flex-col gap-4 lg:py-0 px-2">
+                                                        <div><h2 className="text-xl lg:-mt-0 lg:mb-4 lg:text-2xl font-bold text-[#202020] dark:text-white">
                                                             My Courses
                                                         </h2></div>
 
@@ -802,7 +802,7 @@ const GREDashboard = () => {
                                                         <div className="xl:col-span-3 px-2 lg:px-0">
                                                             <div className='flex gap-2 '>
                                                                 <div>
-                                                                    <h3 className="text-2xl font-bold text-gray-900 dark:text-white">
+                                                                    <h3 className="text-2xl font-bold text-gray-900 dark:text-white line-clamp-1">
                                                                         {item?.item?.title}
                                                                     </h3>
 
@@ -826,7 +826,7 @@ const GREDashboard = () => {
 
                                                                 {/* Progress */}
 
-                                                                <div className="relative w-40 h-40 hidden lg:block">
+                                                                <div className="relative w-38 h-38 hidden lg:block">
 
                                                                     <svg
                                                                         className="w-full h-full -rotate-90"
@@ -856,7 +856,7 @@ const GREDashboard = () => {
 
                                                                     <div className="absolute inset-0 flex flex-col justify-center items-center dark:text-white">
                                                                         <div className="flex items-end gap-1">
-                                                                        <h2 className="text-5xl font-bold">{item?.percentage}</h2><span className='text-2xl'>%</span></div>
+                                                                            <h2 className="text-5xl font-bold">{item?.percentage}</h2><span className='text-2xl'>%</span></div>
                                                                         <span className="text-sm text-gray-500 dark:text-gray-400 font-semibold mt-1">
                                                                             COMPLETE
                                                                         </span>
@@ -968,14 +968,25 @@ const GREDashboard = () => {
 
 
                                                 </div>
-{/*                                                 
-                                                    <button onClick={() => instanceRef.current?.prev()} className="hidden xl:flex  w-10 h-10 rounded-full border items-center justify-center hover:bg-orange-50 absolute">
-                                                        <ChevronLeft className="text-[#FF5A14]" />
-                                                    </button> */}
                                             </div>
+                                        ))}
+                                    </div>
+                                ) : (
+                                    <div className="flex flex-col items-center justify-center min-h-[300px] rounded-3xl bg-white dark:bg-gray-800">
+                                        <BookOpen
+                                            size={48}
+                                            className="text-gray-400 mb-4"
+                                        />
 
-                                        )
-                                        )} </div>
+                                        <h2 className="text-xl font-bold text-gray-800 dark:text-white">
+                                            No Course Purchased
+                                        </h2>
+
+                                        <p className="mt-2 text-sm text-gray-500 dark:text-gray-400">
+                                            You haven't purchased any course yet.
+                                        </p>
+                                    </div>
+                                )}
                             </div>
                         </section>
 
@@ -1111,7 +1122,7 @@ const GREDashboard = () => {
 
                                                         <div className='bg-orange-100 dark:bg-gray-600 w-full h-full rounded-full flex justify-center items-center'>
                                                             <div>
-                                                               <img src={img} alt="image" />
+                                                                <img src={img} alt="image" />
                                                             </div>
                                                         </div>
 
@@ -1254,12 +1265,12 @@ const GREDashboard = () => {
                                                     {/* Body */}
 
                                                     <div className="px-6 pb-4 lg:py-0">
-                                                        <h3 className="text-xl md:text-xl font-bold">
-                                                            <span className="text-[#FF6736]">{course.title.split(" ")[0]}</span>{" "}
-                                                            <span className="dark:text-white text-base"> {course.title.split(" ").slice(1).join(" ")}</span>
+                                                        <h3 className="text-xl md:text-2xl font-bold">
+                                                            <span className="text-[#FF6736] text-2xl">{course.title.split(" ")[0]}</span>{" "}
+                                                            <span className="dark:text-white text-2xl"> {course.title.split(" ").slice(1).join(" ")}</span>
                                                         </h3>
 
-                                                        <div className=" space-y-2 text-gray-600 dark:text-white">
+                                                        <div className="mt-2 space-y-2 text-gray-600 dark:text-white">
                                                             <div className="flex items-center gap-3 text-base">
                                                                 <Radio size={20} className="text-[#FF6736]" />
                                                                 <span className='text-sm'> {course?.mode}</span>
@@ -1364,11 +1375,11 @@ const GREDashboard = () => {
 
                                                     <div className="px-6 pb-4 lg:py-0">
                                                         <h3 className="text-xl md:text-xl font-bold">
-                                                            <span className="text-[#FF6736]">{course.title.split(" ")[0]}</span>{" "}
-                                                            <span className="dark:text-white text-base "> {course.title.split(" ").slice(1).join(" ")}</span>
+                                                            <span className="text-[#FF6736] text-xl">{course.title.split(" ")[0]}</span>{" "}
+                                                            <span className="dark:text-white text-xl "> {course.title.split(" ").slice(1).join(" ")}</span>
                                                         </h3>
 
-                                                        <div className=" space-y-2 text-gray-600 dark:text-white">
+                                                        <div className="mt-2 space-y-2 text-gray-600 dark:text-white">
                                                             <div className="flex items-center gap-3 text-base">
                                                                 <Radio size={20} className="text-[#FF6736]" />
                                                                 <span className='text-sm'> {course?.mode}</span>
@@ -1384,11 +1395,11 @@ const GREDashboard = () => {
 
                                                         <div className="mt-2 flex justify-between items-end">
                                                             <div>
-                                                                <div className="flex items-center gap-2 flex-wrap dark:text-white">
+                                                                <div className="flex items-center gap-1  dark:text-white">
                                                                     {course?.pricing?.currency}
                                                                     <span className="text-base font-bold"></span>
 
-                                                                    <span className="text-base font-bold ">
+                                                                    <span className="text-2xl font-bold ">
                                                                         {price}
                                                                     </span>
 
@@ -1412,7 +1423,7 @@ const GREDashboard = () => {
 
                                                     {/* Footer */}
 
-                                                    <div className="px-5 pb-2 mt-2 hidden lg:block">
+                                                    <div className="px-5 pb-1 mt-2 hidden lg:block">
                                                         <div className="rounded-full bg-[#FCE7D3] dark:bg-gray-600 flex items-center p-2">
                                                             <span className="bg-[#FF6D42]  text-white rounded-full px-4 py-1 text-xs font-semibold">
                                                                 Ooshas Prep

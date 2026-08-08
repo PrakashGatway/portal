@@ -33,7 +33,7 @@ const ProfilePicture = ({
 
   return (
     <div className="relative group">
-     <div className=" rounded-full h-24 w-24 bg-orange-500">
+     <div className=" rounded-full h-24 w-24 bg-white">
        <div className="relative p-2  w-24 h-24 overflow-hidden  rounded-full dark:border-gray-800 ">
         <img
           src={profilePicUrl}
@@ -176,7 +176,7 @@ const ViewMode = ({
     </div>
 
     {/* Personal Information */}
-    <div className="p-5  rounded-2xl dark:border-gray-800 lg:p-6 bg-orange-200/20">
+    <div className="p-5  rounded-2xl dark:border-gray-800 lg:p-6">
       <h4 className="mb-4 text-xl font-bold text-gray-500 dark:text-white/90">
         Personal Information
       </h4>
@@ -217,7 +217,7 @@ const ViewMode = ({
     </div>
 
     {/* Address */}
-    <div className="p-5  rounded-2xl dark:border-gray-800 lg:p-6 bg-orange-200/20">
+    <div className="p-5  rounded-2xl dark:border-gray-800 lg:p-6 ">
       <h4 className="mb-4 text-xl font-bold text-gray-500 dark:text-white/90">
         Address
       </h4>
@@ -384,10 +384,10 @@ const EditMode = ({
   isLoading,
   user,
 }:any) => (
-  <div className="space-y-2">
+  <div className="space-y-2 ">
     {/* Profile Header */}
     <div className="rounded-2xl bg-gradient-to-b from-gray-300 to-orange-500 p-[2px]">
-    <div className="p-5 border border-gray-200 bg-gray-100 rounded-2xl dark:border-gray-800 lg:p-6">
+    <div className="p-5 border border-gray-200 bg-orange-50 rounded-2xl dark:border-gray-800 lg:p-6">
       <div className="flex flex-col items-center gap-5 md:flex-row">
         <ProfilePicture
           editable={true}
@@ -427,7 +427,7 @@ const EditMode = ({
     </div>
 
     {/* Personal Information */}
-    <div className="p-5 bg-orange-200/20 rounded-2xl dark:border-gray-800 lg:p-6">
+    <div className="p-5 rounded-2xl dark:border-gray-800 lg:p-6">
       <h4 className="mb-4 text-lg font-semibold text-gray-800 dark:text-white/90">
         Personal Information
       </h4>
@@ -501,7 +501,7 @@ const EditMode = ({
     </div>
 
     {/* Address */}
-    <div className="p-5 bg-orange-200/20 rounded-2xl dark:border-gray-800 lg:p-6">
+    <div className="p-5 rounded-2xl dark:border-gray-800 lg:p-6">
       <h4 className="mb-4 text-lg font-semibold text-gray-800 dark:text-white/90">
         Address
       </h4>
@@ -1052,9 +1052,9 @@ export default function UserProfile() {
         title="Profile Dashboard"
         description="User profile dashboard with personal information, address, and settings."
       />
-      <div className=" p-5 dark:border-gray-800 dark:bg-white/[0.03] lg:p-6">
+      <div className=" p-5 bg-white dark:border-gray-800 dark:bg-white/[0.03] lg:p-6 rounded-2xl">
        
-        {isEditing ? (
+        { (
           <EditMode
             formData={formData}
             handleChange={handleChange}
@@ -1070,12 +1070,6 @@ export default function UserProfile() {
             user={user}
             handleProfilePictureUpload={handleProfilePictureUpload}
             fileInputRef={fileInputRef}
-          />
-        ) : (
-          <ViewMode
-            formData={formData}
-            user={user}
-            setIsEditing={setIsEditing}
           />
         )}
       </div>

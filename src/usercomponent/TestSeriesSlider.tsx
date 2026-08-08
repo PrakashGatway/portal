@@ -31,7 +31,7 @@ export function LeftSlider() {
     }, []);
 
     return (
-        <div className="p-[1.5px]  col-span-3 lg:col-span-2 h-full relative  overflow-hidden col-span-2 w-full bg-gradient-to-b from-[#686868]/0 via-[#686868]/50 to-[#686868] rounded-4xl">
+        <div className="p-[1.5px]  h-full lg:col-span-2 h-full relative  overflow-hidden col-span-2 w-full bg-gradient-to-b from-[#686868]/0 via-[#686868]/50 to-[#686868] rounded-4xl">
             <div className="w-full relative overflow-hidden">
                 <AnimatePresence mode="wait">
                     <motion.div
