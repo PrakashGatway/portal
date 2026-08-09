@@ -34,13 +34,24 @@ import {
   Paperclip,
   Smile,
   Mic,
-  MessageCircle
+  MessageCircle,
+  GraduationCap,
+  CreditCard,
+  ClipboardList,
+  UserRound,
+  Settings,
+  ArrowRight,
+  Headphones,
+  Zap,
+  ShieldCheck,
+  ThumbsUp
 } from 'lucide-react';
 import { toast } from "react-toastify";
 import Button from "../../components/ui/button/Button";
 import Input from "../../components/form/input/InputField";
 import Label from "../../components/form/Label";
 import api from "../../axiosInstance";
+import { Link } from "react-router";
 
 // Types
 interface Ticket {
@@ -249,20 +260,89 @@ const SupportPage = () => {
     "We've escalated this to our technical team for review."
   ];
 
+
+  const helpTopics = [
+  {
+    title: "Courses & Enrollments",
+    description:
+      "Find answers related to course content, enrollment and access.",
+    articles: "12 Articles",
+    icon: GraduationCap,
+    iconBg: "bg-[#EEF2FF]",
+    iconColor: "text-[#2563EB]",
+  },
+  {
+    title: "Payments & Refunds",
+    description:
+      "Payment methods, failed transactions, refunds and invoices.",
+    articles: "8 Articles",
+    icon: CreditCard,
+    iconBg: "bg-[#FFF3E8]",
+    iconColor: "text-[#F97316]",
+  },
+  {
+    title: "Mock Tests",
+    description:
+      "How to take tests, test settings, results and performance.",
+    articles: "15 Articles",
+    icon: ClipboardList,
+    iconBg: "bg-[#FFF3E8]",
+    iconColor: "text-[#F97316]",
+  },
+  {
+    title: "Account & Profile",
+    description:
+      "Manage your account, profile, password and preferences.",
+    articles: "10 Articles",
+    icon: UserRound,
+    iconBg: "bg-[#FFF0F2]",
+    iconColor: "text-[#F43F5E]",
+  },
+  {
+    title: "Technical Help",
+    description:
+      "App issues, login problems, video playback and other technical queries.",
+    articles: "9 Articles",
+    icon: Settings,
+    iconBg: "bg-[#FFF3E8]",
+    iconColor: "text-[#F97316]",
+  },
+];
+
+
+const supportBenefits = [
+  {
+    title: "Fast Response Time",
+    description: "We reply within 24 hours",
+    icon: Zap,
+  },
+  {
+    title: "Expert Support",
+    description: "Trained professionals to help you",
+    icon: ShieldCheck,
+  },
+  {
+    title: "100% Satisfaction",
+    description: "Your success is our priority",
+    icon: ThumbsUp,
+  },
+];
+
   return (
     <div className="min-h-screen  dark:from-gray-900 dark:to-gray-800">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 py-6">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 py-0">
 
         {/* Header Section */}
       <div className="w-full  rounded-3xl overflow-hidden">
-  <div className="relative mx-auto w-full max-w-7xl px-5 sm:px-8 lg:px-10">
+  <div className="relative mx-auto w-full max-w-7xl px-5 sm:px-8 lg:px-0">
 
     {/* Content */}
-    <div className="relative z-10 py-8 sm:py-10 lg:py-12">
+    <div className="relative z-10 py-8 sm:py-10 lg:pb-5">
 
       {/* Heading */}
-      <div className="max-w-2xl">
-        <h1 className="text-2xl sm:text-3xl lg:text-4xl font-extrabold text-[#171717]">
+      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+       <div>
+         <h1 className="text-2xl sm:text-3xl lg:text-4xl font-extrabold text-[#171717]">
           Support Center
         </h1>
 
@@ -270,6 +350,73 @@ const SupportPage = () => {
           We're here to help you succeed. Find answers or get in touch with our
           team.
         </p>
+       </div>
+
+       <div>
+        <div
+  className="
+    flex flex-col gap-3
+    sm:flex-row sm:items-center
+  "
+>
+  {/* All Support Tickets */}
+  <Link to="/all-tickets"
+    type="button"
+    className="
+      flex h-[38px]
+      w-full sm:w-auto
+      items-center justify-center
+      rounded-[8px]
+      border border-[#E5E3E1]
+      bg-white
+      px-5
+      text-[12px]
+      font-semibold
+      text-[#444444]
+      transition-all duration-300
+      hover:border-[#F45B2A]
+      hover:bg-[#FFF7F3]
+      hover:text-[#F45B2A]
+    "
+  >
+    All Support Tickets
+  </Link>
+
+  {/* Create New Ticket */}
+  <button
+    type="button"
+    className="
+      group
+      flex h-[38px]
+      w-full sm:w-auto
+      items-center justify-center
+      gap-2
+      rounded-[8px]
+      bg-[#F45B2A]
+      px-5
+      text-[12px]
+      font-semibold
+      text-white
+      shadow-[0_4px_10px_rgba(244,91,42,0.16)]
+      transition-all duration-300
+      hover:bg-[#E94F20]
+      hover:shadow-[0_6px_16px_rgba(244,91,42,0.22)]
+    "
+  >
+    <Plus
+      size={17}
+      strokeWidth={2}
+      className="
+        transition-transform duration-300
+        group-hover:rotate-90
+      "
+    />
+
+    <span>Create New Ticket</span>
+  </button>
+</div>
+
+       </div>
       </div>
 
       {/* Search Card */}
@@ -493,6 +640,318 @@ const SupportPage = () => {
   </div>
 
 </div>
+
+
+ <section className="w-full px-4 py-6 sm:px-6 lg:px-0">
+      <div className="mx-auto w-full max-w-[1400px]">
+        {/* Header */}
+        <div className="mb-4 flex items-center justify-between gap-4">
+          <h2 className="text-[17px] font-bold tracking-[-0.2px] text-[#171717] sm:text-[18px]">
+            Browse Help Topics
+          </h2>
+
+          <button
+            type="button"
+            className="group flex shrink-0 items-center gap-1.5 text-[12px] font-medium text-[#E87545] transition-colors hover:text-[#D95F32] sm:text-[13px]"
+          >
+            <span>View All Articles</span>
+
+            <ArrowRight
+              size={15}
+              strokeWidth={1.8}
+              className="transition-transform duration-200 group-hover:translate-x-1"
+            />
+          </button>
+        </div>
+
+        {/* Cards */}
+        <div
+          className="
+            grid grid-cols-1 gap-3
+            sm:grid-cols-2
+            lg:grid-cols-3
+            xl:grid-cols-5
+          "
+        >
+          {helpTopics.map((topic, index) => {
+            const Icon = topic.icon;
+
+            return (
+              <div
+                key={topic.title}
+                className="
+                  group relative min-h-[158px]
+                  rounded-[15px]
+                  border border-[#E9E7E5]
+                  bg-white
+                  p-4
+                  shadow-[0_1px_3px_rgba(0,0,0,0.02)]
+                  transition-all duration-300
+                  hover:-translate-y-0.5
+                  hover:border-[#E4DCD7]
+                  hover:shadow-[0_8px_24px_rgba(0,0,0,0.06)]
+                  sm:p-[17px]
+                "
+              >
+                <div className="flex items-start gap-3">
+                  {/* Icon */}
+                  <div
+                    className={`
+                      flex h-[43px] w-[43px] shrink-0
+                      items-center justify-center
+                      rounded-full
+                      ${topic.iconBg}
+                      transition-transform duration-300
+                      group-hover:scale-105
+                    `}
+                  >
+                    <Icon
+                      size={22}
+                      strokeWidth={2}
+                      className={topic.iconColor}
+                    />
+                  </div>
+
+                  {/* Content */}
+                  <div className="min-w-0 flex-1">
+                    <h3
+                      className="
+                        pt-[1px]
+                        text-[13px]
+                        font-semibold
+                        leading-[18px]
+                        text-[#242424]
+                      "
+                    >
+                      {topic.title}
+                    </h3>
+
+                    <p
+                      className="
+                        mt-2
+                        text-[11px]
+                        font-normal
+                        leading-[18px]
+                        text-[#777777]
+                      "
+                    >
+                      {topic.description}
+                    </p>
+                  </div>
+                </div>
+
+                {/* Article count */}
+                <div className="mt-4 pl-[55px]">
+                  <span className="text-[11px] font-medium text-[#666666]">
+                    {topic.articles}
+                  </span>
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      </div>
+    </section>
+
+
+
+     <section className="w-full px-4 py-6 sm:px-6 lg:px-8">
+      <div className="mx-auto w-full max-w-[1400px] space-y-6">
+
+        {/* ================= SUPPORT CTA ================= */}
+        <div
+          className="
+            relative overflow-hidden
+            flex flex-col
+            gap-6
+            rounded-[14px]
+            border border-[#F3E7E1]
+            bg-gradient-to-r from-[#FFF4EE] to-[#FFF8F5]
+            px-6 py-6
+            sm:px-8 sm:py-7
+            md:flex-row
+            md:items-center
+            md:justify-between
+            lg:px-10
+          "
+        >
+          {/* Decorative circles */}
+          <div className="pointer-events-none absolute -left-5 top-1/2 h-20 w-20 -translate-y-1/2 rounded-full border border-[#F7D9CB]" />
+          <div className="pointer-events-none absolute -left-2 top-1/2 h-12 w-12 -translate-y-1/2 rounded-full border border-[#F4CDBD]" />
+
+          {/* Left Content */}
+          <div className="relative z-10 flex items-center gap-5 sm:gap-7">
+            {/* Headphone Icon */}
+            <div
+              className="
+                relative flex h-[68px] w-[68px]
+                shrink-0 items-center justify-center
+                rounded-full
+                bg-[#FFF0E8]
+                sm:h-[76px] sm:w-[76px]
+              "
+            >
+              <Headphones
+                size={42}
+                strokeWidth={1.8}
+                className="text-[#262626]"
+              />
+
+              {/* Small orange ear pads */}
+              <span className="absolute left-[15px] top-[31px] h-[14px] w-[6px] rounded-full bg-[#F15B2A]" />
+              <span className="absolute right-[15px] top-[31px] h-[14px] w-[6px] rounded-full bg-[#F15B2A]" />
+            </div>
+
+            {/* Text */}
+            <div>
+              <h2
+                className="
+                  text-[17px]
+                  font-bold
+                  leading-6
+                  tracking-[-0.2px]
+                  text-[#242424]
+                  sm:text-[18px]
+                "
+              >
+                Can’t find what you’re looking for?
+              </h2>
+
+              <p
+                className="
+                  mt-2
+                  text-[12px]
+                  leading-5
+                  text-[#777777]
+                  sm:text-[13px]
+                "
+              >
+                Our support team is ready to help you with any issue.
+              </p>
+            </div>
+          </div>
+
+          {/* Button */}
+          <button
+            type="button"
+            className="
+              group relative z-10
+              flex h-[44px]
+              w-full
+              items-center justify-center
+              gap-3
+              rounded-[10px]
+              bg-[#F45B2A]
+              px-6
+              text-[13px]
+              font-semibold
+              text-white
+              shadow-[0_5px_14px_rgba(244,91,42,0.18)]
+              transition-all duration-300
+              hover:bg-[#E94E20]
+              hover:shadow-[0_7px_18px_rgba(244,91,42,0.25)]
+              sm:w-auto
+              sm:min-w-[222px]
+            "
+          >
+            <span>Contact Support Team</span>
+
+            <ArrowRight
+              size={18}
+              strokeWidth={2}
+              className="
+                transition-transform
+                duration-300
+                group-hover:translate-x-1
+              "
+            />
+          </button>
+        </div>
+
+        {/* ================= BENEFITS ================= */}
+        <div
+          className="
+            grid
+            grid-cols-1
+            overflow-hidden
+            rounded-[14px]
+            border border-[#ECE9E7]
+            bg-white
+            sm:grid-cols-3
+          "
+        >
+          {supportBenefits.map((item, index) => {
+            const Icon = item.icon;
+
+            return (
+              <div
+                key={item.title}
+                className={`
+                  flex
+                  items-center
+                  gap-4
+                  px-6
+                  py-5
+                  sm:px-7
+                  lg:px-10
+                  ${
+                    index !== supportBenefits.length - 1
+                      ? "border-b border-[#ECE9E7] sm:border-b-0 sm:border-r"
+                      : ""
+                  }
+                `}
+              >
+                {/* Icon */}
+                <div
+                  className="
+                    flex
+                    h-[36px]
+                    w-[36px]
+                    shrink-0
+                    items-center
+                    justify-center
+                    rounded-full
+                    bg-[#FFF1E9]
+                  "
+                >
+                  <Icon
+                    size={19}
+                    strokeWidth={2.3}
+                    className="text-[#F45B2A]"
+                  />
+                </div>
+
+                {/* Text */}
+                <div className="min-w-0">
+                  <h3
+                    className="
+                      text-[13px]
+                      font-semibold
+                      leading-[18px]
+                      text-[#353535]
+                    "
+                  >
+                    {item.title}
+                  </h3>
+
+                  <p
+                    className="
+                      mt-0.5
+                      text-[11px]
+                      leading-[17px]
+                      text-[#858585]
+                    "
+                  >
+                    {item.description}
+                  </p>
+                </div>
+              </div>
+            );
+          })}
+        </div>
+
+      </div>
+    </section>
 
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
 

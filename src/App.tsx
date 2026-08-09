@@ -62,6 +62,7 @@ import JobSelectionsWall from "./userView/Selection";
 import SecureMaterialViewer from "./userView/SecureMaterial";
 import Setting from "./pages/Dashboard/Setting";
 import Notifications from "./pages/Notifications";
+import SupportTickets from "./pages/Support/Tickets";
 
 // Define roles
 export const ROLES = {
@@ -99,6 +100,7 @@ export default function App() {
               <Route path="/referrals" element={<ReferAndEarnPage />} />
               //support
               <Route path="/support" element={<SupportPage />} />
+              <Route path="/all-tickets" element={<SupportTickets />} />
               <Route path="/our-selection" element={<JobSelectionsWall />} />
               <Route path="/events" element={<EventCalendar />} />
               // my course
