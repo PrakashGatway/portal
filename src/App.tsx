@@ -63,6 +63,7 @@ import SecureMaterialViewer from "./userView/SecureMaterial";
 import Setting from "./pages/Dashboard/Setting";
 import Notifications from "./pages/Notifications";
 import SupportTickets from "./pages/Support/Tickets";
+import Privacy from "./pages/privacy"
 
 // Define roles
 export const ROLES = {
@@ -169,6 +170,7 @@ export default function App() {
                 <Route path="/setting" element={<Setting />} />
               </Route>
               <Route path="/notifications" element={<Notifications />} />
+              <Route path="/privacy-policy" element={<Privacy />} />
               // teachers
               <Route
                 element={
