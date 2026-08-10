@@ -81,8 +81,8 @@ interface CreateNotificationData {
   isGlobal: boolean;
   title: string;
   message: string;
-  Category : string;
-  Courses : string;
+  Category? : null | string;
+  Courses ?: null | string;
   to : string;
   from : string;
   type: string;
@@ -108,16 +108,20 @@ interface UsersResponse {
 
 // ==================== Constants ====================
 const NOTIFICATION_TYPES = [
-  "announcement",
-  "test_assigned",
-  "test_submitted",
-  "test_graded",
-  "lesson_updated",
-  "course_updated",
-  "payment_success",
-  "payment_failed",
-  "reminder",
-  "system",
+  
+        "course_enrollment",
+        "lesson_completion",
+        "test_assigned",
+        "test_graded",
+        "live_class_reminder",
+        "live_class_started",
+        "assignment_due",
+        "certificate_earned",
+        "announcement",
+        "message",
+        "payment",
+        "system",
+      
 ];
 
 const ROLES = [
@@ -158,10 +162,10 @@ const NotificationManagement = () => {
     title: "",
     message: "",
     type: "announcement",
-    Category : "",
+    Category :null,
     to : "",
     from : "",
-    Courses : "",
+    Courses : null,
     priority: "medium",
     channels: {
       inApp: true,
@@ -935,12 +939,12 @@ const NotificationManagement = () => {
                   <div className="grid grid-cols-2 gap-4">
                     <div>
                       <label className="block text-sm font-medium text-gray-700">
-                        Active To
+                        Active From*
                       </label>
                        <input type="date"  
-                        value={formData.to}                  
+                        value={formData.from}                  
                         onChange={(e) => {
-                          setFormData({...formData, to : e.target.value})
+                          setFormData({...formData, from : e.target.value})
                         }}
                         max={new Date().toISOString().split('T')[0]}
                       className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
@@ -949,20 +953,21 @@ const NotificationManagement = () => {
 
                     <div>
                       <label className="block text-sm font-medium text-gray-700">
-                        Active From *
+                        Active To *
                       </label>
                       <input type="date"    
-                      value={formData.from}
-                      max={new Date().toISOString().split('T')[0]}                   
+                      value={formData.to}
+                      // max={new Date().toISOString().split('T')[0]}                   
                         onChange={(e) => {
-                          setFormData({...formData, from : e.target.value})
+                          setFormData({...formData, to : e.target.value})
                         }}
                       className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
                       />
                     </div>
                   </div>
 
-                      <div>
+                      {formData.isGlobal && (
+                        <div>
                         <label className="block text-sm font-medium text-gray-700">
                           Courses
                         </label>
@@ -985,7 +990,9 @@ const NotificationManagement = () => {
                           isSearchable={true}
                         />
                       </div>
+                      )}
                       
+                      {formData.isGlobal && (
                       <div>
                         <label className="block text-sm font-medium text-gray-700">
                           Category
@@ -1010,6 +1017,7 @@ const NotificationManagement = () => {
                           isSearchable={true}
                         />
                       </div>                  
+                    )}
 
                   {/* Title */}
                   <div>

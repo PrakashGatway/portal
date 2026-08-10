@@ -141,7 +141,7 @@ const navItems: NavItem[] = [
   },
   { icon: CreditCard, name: "Orders", path: "/all_transactions" },
   { icon: Settings, name: "Setting", path: "/setting" }
-
+  
 ];
 
 const navItemsUser: NavItem[] = [
