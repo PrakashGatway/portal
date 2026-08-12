@@ -40,6 +40,7 @@ import QuestionManagement from "./pages/Tests/Questions";
 import SupportPage from "./pages/Support/Supports";
 import BlogCategoryManagement from "./pages/Website/BlogCategories";
 import ArticleManagement from "./pages/Website/Blogs";
+import BlogsManagement from "./pages/Website/Article";
 import CommentsManagement from "./pages/Website/BlogComent";
 import MockTest from "./userView/Mocktest";
 import TestQuestionPage from "./userView/Testquestionpage";
@@ -216,7 +217,8 @@ export default function App() {
                   path="/blog-categories"
                   element={<BlogCategoryManagement />}
                 />
-                <Route path="/blogs" element={<ArticleManagement />} />
+                <Route path="/article" element={<ArticleManagement />} />
+                <Route path="/blogs" element={<BlogsManagement />} />
                 <Route path="/comments" element={<CommentsManagement />} />
               </Route>
             </Route>

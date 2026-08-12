@@ -134,6 +134,7 @@ const navItems: NavItem[] = [
     subItems: [
       { name: "Pages", path: "/pages", icon: File },
       { name: "Entities", path: "/entities", icon: Box },
+      { name: "Article", path: "/article", icon: PenTool },
       { name: "Blogs", path: "/blogs", icon: PenTool },
       { name: "Comments", path: "/comments", icon: MessageCircle },
       { name: "Categories", path: "/blog-categories", icon: Tags }
