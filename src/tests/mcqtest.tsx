@@ -60,7 +60,7 @@ export const MockTestCard = ({ test, index }: { test: TestTemplate; index: numbe
     };
 
     const handleAction = () => {
-        if (test.isFree) {
+        if (test.isPurchased === true) {
             const examName = test.exam?.name?.toLowerCase() || "";
             if (examName.includes("gmat")) navigate(`/gmat/tests/${test._id}`);
             else if (examName.includes("pte")) navigate(`/pte/tests/${test._id}`);
@@ -116,9 +116,22 @@ const theme = cardThemes[index % cardThemes.length];
   <div className="relative  p-6  flex flex-col h-full min-h-[320px]">
     {/* Header */}
     <div className="flex items-center justify-between">
-      {test.isFree && (
+      {test?.isPurchased === true ? (
+         <span className="rounded-md bg-green-500 px-3 py-1 text-white font-bold text-lg leading-none">
+          Enrolled
+        </span>
+      ) :
+      test.isFree ? (
         <span className="rounded-md bg-gradient-to-r from-[#FF5B35] to-[#FF7B4D] px-3 py-1 text-white font-bold text-lg leading-none">
           FREE
+        </span>
+      ):(
+         <span className="rounded-md bg-green-500 px-3 py-1 text-white font-bold text-lg leading-none">
+          {Math.round(
+  ((test?.pricing?.price - test?.pricing?.salePrice) /
+    test?.pricing?.price) *
+    100
+)}% off
         </span>
       )}
 
@@ -184,7 +197,21 @@ const theme = cardThemes[index % cardThemes.length];
       onClick={handleAction}
       className="mt-2 w-full rounded-xl bg-gradient-to-r from-[#FF4C2C] via-[#FF613A] to-[#FF7B59] py-2 text-base font-semibold text-white transition-all duration-300 hover:shadow-lg active:scale-[0.98]"
     >
-      {test.isFree ? "Start FREE Test" : `Buy ${getPriceLabel()}`}
+      {test.isPurchased === true ? (
+  "Start Test"
+) : (
+  <>
+    <span>
+      Buy {getPriceLabel()}
+    </span>
+
+    {test.pricing?.salePrice && (
+      <span className="ml-1 text-sm text-white line-through">
+        ₹ {test.pricing.price}
+      </span>
+    )}
+  </>
+)}
     </button>
   </div>
   </div>

@@ -353,10 +353,10 @@ const AppSidebar: React.FC = () => {
                 )}
               </button>
             ) : nav.path ? (
-              <div className={`bg-[#ff764b] rounded-[26px] ${isExpanded ? "pl-[5px]" : "pl-[5px]"} `}>
+              <div className={`border-l-4 border-orange-500 rounded-[26px] `}>
                 <Link
                   to={nav.path}
-                  className={`w-full  flex items-center gap-3 ${isExpanded || isHovered || isMobileOpen ? 'px-4' : 'px-1'} py-2  rounded-[26px]  group relative
+                  className={`w-full  flex items-center gap-3 ${isExpanded || isHovered || isMobileOpen ? 'px-4' : 'px-1'} py-1.5  rounded-[26px]  group relative
                   ${isActive(nav.path) ? "font-semibold" : "font-medium"}
                   ${isActive(nav.path)
                       ? "bg-orange-50 text-orange-500"
@@ -370,7 +370,7 @@ const AppSidebar: React.FC = () => {
                   {showLabels ? (
                     <>
                       {typeof nav.icon === "string" ? (
-                        <span className="text-[22px] ">{nav.icon}</span>
+                        <span className="text-[18px] ">{nav.icon}</span>
                       ) : (
                         <Icon
                           className={`w-[20px] h-[20px]  ${isActive(nav.path)
@@ -384,7 +384,7 @@ const AppSidebar: React.FC = () => {
                   ) : (
                     <div className="relative flex flex-col gap-1 items-center justify-center w-full">
                       {typeof nav.icon === "string" ? (
-                        <span className="text-3xl ">{nav.icon}</span>
+                        <span className="text-lg ">{nav.icon}</span>
                       ) : (
                         <Icon
                           className={`w-6 h-6 stroke-[2.2] ${isActive(nav.path)

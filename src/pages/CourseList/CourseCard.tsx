@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Star, Clock, Users, TrendingUp, Calendar, MapPin, BookOpen, Languages } from 'lucide-react';
+import { Star, Clock, Users, TrendingUp, Calendar, MapPin, BookOpen, Languages, Check } from 'lucide-react';
 import { ImageBaseUrl } from '../../axiosInstance';
 import { useNavigate } from 'react-router';
 
@@ -167,120 +167,244 @@ const CourseCard = ({ course, primaryColor = "#daff02", secondaryColor = "#fe572
         //     </div>
         // </div>
 
-        <div className="p-[1.5px] rounded-2xl overflow-hidden w-full bg-gradient-to-b from-[#686868]/0 via-[#686868]/60 to-[#686868]">
-            <div className="relative rounded-2xl h-full bg-white p-2 overflow-hidden">
-                <div className="absolute top-0 left-0 w-full h-[40%] bg-gradient-to-b from-[#ADADAC] to-[#ADADAC]/0" />
-                <div style={{ borderRadius: "15px 15px 0px 0px" }} className="relative overflow-hidden h-[170px]">
-                   <div> <img
-                        src={
-                            !course.thumbnail?.url
-                                ? "/images/logo.png"
-                                : `${ImageBaseUrl}/${course.thumbnail.url}`
-                        }
-                        alt={course?.title}
-                        className="object-contain h-full w-full"
-                    /></div>
+       <div className="w-full">
+    {/* Outer Gradient Border */}
+    <div className="rounded-3xl p-[1.5px] bg-gradient-to-b from-[#CFCFCF] via-[#ECECEC] to-black overflow-hidden">
+        <div className="relative rounded-3xl bg-white overflow-hidden h-full">
+
+            {/* ================= IMAGE ================= */}
+            <div className="p-2.5">
+                <div className="rounded-2xl p-2.5 bg-gradient-to-b from-[#CFCFCF] via-[#ECECEC] to-white">
+                    <div className="rounded-2xl overflow-hidden h-[180px] sm:h-[200px] lg:h-[180px]">
+                        <img
+                            src={
+                                !course.thumbnail?.url
+                                    ? "/images/logo.png"
+                                    : `${ImageBaseUrl}/${course.thumbnail.url}`
+                            }
+                            alt={course?.title}
+                            className="w-full h-full object-cover"
+                        />
+                    </div>
                 </div>
+            </div>
 
-                <div  onClick={() => navigate(`/course/${course.slug}`)} className="py-2 px-1 space-y-1 cursor-pointer">
-                    <h3 className="text-lg font-medium capitalize text-gray-900">
-                        {course?.title}
-                    </h3>
+            {/* Discount Badge */}
+            {discountPercent > 0 && (
+                <span className="absolute top-5 right-5 z-10 bg-green-500 text-white text-xs font-medium px-3 py-1.5 rounded-full">
+                    {discountPercent}% OFF
+                </span>
+            )}
 
-                    <p className="text-sm text-[#FF6A3D] font-medium">
+            {/* ================= BODY ================= */}
+            <div
+                onClick={() => navigate(`/course/${course.slug}`)}
+                className="px-6 pb-4 cursor-pointer"
+            >
+
+                {/* Title */}
+                <h3 className="text-xl md:text-xl font-bold text-gray-900 leading-tight">
+                    <span className="text-[#FF6736]">
+                        {course?.title?.split(" ")[0]}
+                    </span>{" "}
+                    <span className="text-gray-900">
+                        {course?.title?.split(" ").slice(1).join(" ")}
+                    </span>
+                </h3>
+
+                {/* Description */}
+                <p className="text-[#FF6A3D] text-sm font-medium mt-2 line-clamp-2">
                     {course.shortDescription || course.subtitle}
+                </p>
 
-                    </p>
+                {/* ================= META ================= */}
+                <div className="mt-3  text-gray-600 flex items-center gap-4 ">
 
-                     {discountPercent > 0 && (
-                        <span className="absolute top-3 right-3 bg-green-500 text-white text-xs font-medium px-3 py-1 rounded-full">
-                            {discountPercent}% OFF
-                        </span>
-                    )}
+                    {/* Instructor */}
+                    <div className="flex items-center gap-1 text-base">
+                        <BookOpen
+                            size={20}
+                            className="text-[#FF6736] shrink-0"
+                        />
 
-                    {/* TAGS */}
-                    {/* <div className="flex flex-wrap gap-2">
-                        <span
-                            className="px-3 py-1 rounded-full shadow  bg-[#FFF1EB] text-[#FF6A3D] text-sm uppercase font-medium"
-                        >
-                            {series?.defaultTestType}
-                        </span>
-                        <span
-                            className="px-3 py-1 rounded-full shadow  bg-[#FFF1EB] text-[#FF6A3D] text-sm uppercase font-medium"
-                        >
-                            {series?.category?.name}
-                        </span>
-                    </div> */}
-
-                    {/* META */}
-                    <div className="grid grid-cols-2 gap-y-2 text-sm text-gray-600 pt-2 pb-2">
-
-                        {/* VALIDITY */}
-                        <div className="flex items-center gap-2">
-                            <BookOpen className="h-4 w-4 text-[#FF6A3D]" />
+                        <span className="text-sm">
                             {course.instructors?.length || 1} Instructor
-                        </div>
+                        </span>
+                    </div>
 
-                        {/* TOTAL TESTS */}
-                        <div className="flex items-center gap-2">
-                             <Languages className="h-4 w-4 text-[#FF6A3D]" />
-                          {course.language || "English"}
-                        </div>
+                    {/* Language */}
+                    <div className="flex items-center gap-1 text-base">
+                        <Languages
+                            size={20}
+                            className="text-[#FF6736] shrink-0"
+                        />
 
-                        {/* MEDIUM */}
-                        <div className="flex items-center gap-2">
-                             <Clock className="h-4 w-4 text-[#FF6A3D]" />
-                         {course.level || "Beginner"}
-                        </div>
+                        <span className="text-sm">
+                            {course.language || "English"}
+                        </span>
+                    </div>
 
+                    {/* Level */}
+                    <div className="flex items-center gap-1 text-base">
+                        <Clock
+                            size={20}
+                            className="text-[#FF6736] shrink-0"
+                        />
+
+                        <span className="text-sm">
+                            {course.level || "Beginner"}
+                        </span>
                     </div>
 
                 </div>
 
-                {/* FOOTER */}
-               <div className="flex items-start">
-    <div
-        style={{ borderRadius: "0px 0px 12px 15px" }}
-        className="flex-1 bg-[#FF6A3D] text-center text-white px-4 py-2"
-    >
-        {course?.pricing?.isFree ? (
-            <div className="text-3xl font-bold">
-                Free
-            </div>
-        ) : (
-            <>
-              <div className='flex gap-2 items-center'> 
-                  <div className="text-3xl font-bold">
-                    {formatPrice(finalPrice, course.pricing.currency)}
-                </div>
-                 {discountPercent > 0 && (
-                    <div className="text-sm line-through opacity-70">
-                        {formatPrice(originalPrice, course.pricing.currency)}
-                    </div>
-                )}
+                {/* ================= PRICE ================= */}
+                <div className="mt-3 flex justify-between items-center gap-3">
 
-              
-                </div>
-            </>
-        )}
+                    <div>
+                        {course?.isPurchased === true ? (
+                            <div className="flex items-center gap-1.5">
+        <Check
+            size={16}
+            strokeWidth={3}
+            className="text-green-600"
+        />
+        <span className="text-sm font-semibold text-green-600">
+            Already Enrolled
+        </span>
     </div>
+                        ) : (
+                            <div className="flex flex-wrap items-center gap-1">
 
-    <button
-        style={{ borderRadius: "0px 0px 15px 0px" }}
-        onClick={() => {
-            course?.pricing?.isFree
-                ? navigate(`/courses/${course.slug}`)
-                : navigate(`/checkout/${course.slug}`, {
-                      state: { testSeries: true },
-                  });
-        }}
-        className="flex-1 bg-[#3B3B3B] text-white font-medium py-2 bg-gradient-to-b from-[#545454] via-[#ffffff]/30 to-[#545454] hover:bg-black transition"
-    >
-        {course?.pricing?.isFree ? "Start Course" : "Enroll Now"}
-    </button>
-</div>
+                                <span className="text-gray-900 text-sm">
+                                    {course?.pricing?.currency}
+                                </span>
+
+                                <span className="text-2xl font-bold text-gray-900">
+                                    {formatPrice(
+                                        finalPrice,
+                                        course.pricing.currency
+                                    )}
+                                </span>
+
+                                {discountPercent > 0 && (
+                                    <span className="line-through text-gray-400 text-sm">
+                                        {formatPrice(
+                                            originalPrice,
+                                            course.pricing.currency
+                                        )}
+                                    </span>
+                                )}
+                            </div>
+                        )}
+
+                    
+                    </div>
+
+               <div>
+                     {/* Explore */}
+                 {course?.isPurchased === true ? (
+                    <button
+                        onClick={(e) => {
+                            e.stopPropagation();
+                           navigate(`/courses/${course.slug}`)
+                        }}
+                        className="border border-[#FF6736] rounded-2xl px-5 py-2 text-[#FF6736] text-sm font-medium hover:bg-[#FF6736] hover:text-white transition-all duration-300 whitespace-nowrap"
+                    >
+                        Start Course
+                    </button>
+
+                 ) : (
+                    <button
+                        onClick={(e) => {
+                            e.stopPropagation();
+                            navigate(`/checkout/${course?._id}`, {
+                                      state: { isTest: true },
+                                  })
+                        }}
+                        className="border border-[#FF6736] rounded-2xl px-5 py-2 text-[#FF6736] text-sm font-medium hover:bg-[#FF6736] hover:text-white transition-all duration-300 whitespace-nowrap"
+                    >
+                        Enroll Now
+                    </button>
+                 )   }
+               </div>
+                </div>
             </div>
+
+            {/* ================= FOOTER ================= */}
+            <div className="px-5 pb-2 mt-1 hidden lg:block">
+                <div className="rounded-full bg-[#FCE7D3] flex items-center p-2">
+
+                    <span className="bg-[#FF6D42] text-white rounded-full px-4 py-1 text-xs font-semibold">
+                        Ooshas Prep
+                    </span>
+
+                    <span className="ml-3 text-gray-700 text-xs">
+                        Limited Time Offer
+                    </span>
+
+                </div>
+            </div>
+
+            {/* ================= MOBILE/TABLET CTA ================= */}
+            <div className="flex items-start mt-2 lg:hidden">
+
+                {/* Price */}
+                <div
+                    className="flex-1 bg-[#FF6A3D] text-center text-white px-3 py-2.5"
+                    style={{
+                        borderRadius: "0px 0px 0px 15px",
+                    }}
+                >
+                    {course?.pricing?.isFree ? (
+                        <div className="text-xl font-bold">
+                            Free
+                        </div>
+                    ) : (
+                        <div className="flex flex-col items-center">
+                            <div className="text-xl font-bold">
+                                {formatPrice(
+                                    finalPrice,
+                                    course.pricing.currency
+                                )}
+                            </div>
+
+                            {discountPercent > 0 && (
+                                <div className="text-xs line-through opacity-70">
+                                    {formatPrice(
+                                        originalPrice,
+                                        course.pricing.currency
+                                    )}
+                                </div>
+                            )}
+                        </div>
+                    )}
+                </div>
+
+                {/* CTA */}
+                <button
+                    onClick={() => {
+                        course?.pricing?.isFree
+                            ? navigate(`/courses/${course.slug}`)
+                            : navigate(`/checkout/${course.slug}`, {
+                                  state: { testSeries: true },
+                              });
+                    }}
+                    className="flex-1 text-white font-medium py-2.5 bg-gradient-to-b from-[#545454] via-[#3B3B3B] to-[#222222] hover:from-black hover:to-black transition-all duration-300"
+                    style={{
+                        borderRadius: "0px 0px 15px 0px",
+                    }}
+                >
+                    {course?.pricing?.isFree
+                        ? "Start Course"
+                        : "Enroll Now"}
+                </button>
+
+            </div>
+
         </div>
+    </div>
+</div>
     );
 };
 

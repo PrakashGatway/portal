@@ -293,7 +293,7 @@ const CourseCard = ({
 
                             <div className="flex items-center gap-2 mb-2">
                                 <span className="text-[#FF6B35] font-semibold text-sm">
-                                    {course?.percentage}%
+                                    {course?.progress?.percentage}%
                                 </span>
 
                                 <span className="text-[#666] text-sm">
@@ -304,7 +304,7 @@ const CourseCard = ({
                             <div className="w-full lg:w-120 h-[8px] bg-[#ECECEC] rounded-full overflow-hidden">
                                 <div
                                     className="h-full bg-[#FF6B35] rounded-full transition-all duration-500"
-                                    style={{ width: `${course?.percentage}%` }}
+                                    style={{ width: `${course?.progress?.percentage}%` }}
                                 />
                             </div>
                         </div>
@@ -392,10 +392,15 @@ const FilterPanel = ({
     isOpen: boolean;
     onToggle: () => void;
 }) => {
+    // Logic remains exactly the same
     const hasActiveFilters = Object.values(filters).some(v => v !== '' && v !== false && v !== 1 && v !== 6 && v !== '-enrolledAt');
+    
+    // State for the internal tabs (Sidebar)
+    const [activeTab, setActiveTab] = useState<'status' | 'sort' | 'progress' | 'options'>('status');
 
     return (
-        <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 overflow-hidden transition-all duration-300">
+        <div className="absolute z-10 top-70 right-10 bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 overflow-hidden transition-all duration-300 shadow-sm w-70">
+            {/* Header / Toggle Button */}
             <button
                 onClick={onToggle}
                 className="w-full px-4 py-3 flex items-center justify-between hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors"
@@ -421,69 +426,195 @@ const FilterPanel = ({
                         transition={{ duration: 0.2 }}
                         className="border-t border-gray-200 dark:border-gray-700"
                     >
-                        <div className="p-4 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-                            <div>
-                                <label className="block text-xs font-medium text-gray-500 dark:text-gray-400 mb-1.5">Status</label>
-                                <select
-                                    value={filters.isCompleted}
-                                    onChange={(e) => onFilterChange('isCompleted', e.target.value)}
-                                    className="w-full px-3 py-2 text-sm border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-orange-500 focus:border-transparent"
-                                >
-                                    <option value="">All Status</option>
-                                    <option value="true">Completed</option>
-                                    <option value="false">In Progress</option>
-                                </select>
+                        {/* COMPACT BOX LAYOUT */}
+                        <div className="flex h-[240px]"> {/* Fixed height for stability */}
+                            
+                            {/* LEFT SIDEBAR (Tabs) */}
+                            <div className="w-22 border-r border-gray-100 dark:border-gray-700 bg-gray-50/50 dark:bg-gray-800/50 flex flex-col py-2">
+                                {[
+                                    { id: 'status', label: 'Status' },
+                                    { id: 'sort', label: 'Sort By' },
+                                    { id: 'progress', label: 'Progress' },
+                                    { id: 'options', label: 'Options' },
+                                ].map((tab) => (
+                                    <button
+                                        key={tab.id}
+                                        onClick={() => setActiveTab(tab.id as any)}
+                                        className={`relative w-full text-left px-4 py-2.5 text-sm font-medium transition-colors ${
+                                            activeTab === tab.id
+                                                ? 'text-orange-600 dark:text-orange-400 bg-white dark:bg-gray-800'
+                                                : 'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300'
+                                        }`}
+                                    >
+                                        {/* Active Indicator Line (like in your image) */}
+                                        {activeTab === tab.id && (
+                                            <div className="absolute left-0 top-0 bottom-0 w-1 bg-orange-500 rounded-r-full" />
+                                        )}
+                                        {tab.label}
+                                    </button>
+                                ))}
                             </div>
 
-                            <div>
-                                <label className="block text-xs font-medium text-gray-500 dark:text-gray-400 mb-1.5">Sort By</label>
-                                <select
-                                    value={filters.sort}
-                                    onChange={(e) => onFilterChange('sort', e.target.value)}
-                                    className="w-full px-3 py-2 text-sm border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-orange-500 focus:border-transparent"
-                                >
-                                    {sortOptions.map(opt => (
-                                        <option key={opt.value} value={opt.value}>{opt.label}</option>
-                                    ))}
-                                </select>
-                            </div>
+                            {/* RIGHT CONTENT AREA */}
+                            <div className="flex-1 p-2 flex flex-col">
+                                <div className="flex-1 overflow-y-auto pr-1 custom-scrollbar">
+                                    <AnimatePresence mode="wait">
+                                        
+                                        {/* TAB: STATUS */}
+                                        {activeTab === 'status' && (
+                                            <motion.div
+                                                key="status"
+                                                initial={{ opacity: 0, y: 5 }}
+                                                animate={{ opacity: 1, y: 0 }}
+                                                exit={{ opacity: 0, y: -5 }}
+                                                transition={{ duration: 0.15 }}
+                                                className=""
+                                            >
+                                                {/* Radio-style list matching your image */}
+                                                {[
+                                                    { label: 'All Status', value: '' },
+                                                    { label: 'Completed', value: 'true' },
+                                                    { label: 'In Progress', value: 'false' },
+                                                ].map((opt) => (
+                                                    <label 
+                                                        key={opt.value} 
+                                                        className="flex items-center justify-between p-2 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700/50 cursor-pointer transition-colors group"
+                                                    >
+                                                        <span className={`text-sm ${filters.isCompleted === opt.value ? 'text-gray-900 dark:text-white font-medium' : 'text-gray-600 dark:text-gray-400'}`}>
+                                                            {opt.label}
+                                                        </span>
+                                                        <div className={`w-4 h-4 rounded-full border flex items-center justify-center transition-all ${
+                                                            filters.isCompleted === opt.value 
+                                                                ? 'border-orange-500 bg-orange-500' 
+                                                                : 'border-gray-300 dark:border-gray-600 group-hover:border-orange-300'
+                                                        }`}>
+                                                            {filters.isCompleted === opt.value && (
+                                                                <div className="w-1.5 h-1.5 rounded-full bg-white" />
+                                                            )}
+                                                        </div>
+                                                        <input 
+                                                            type="radio" 
+                                                            className="hidden" 
+                                                            checked={filters.isCompleted === opt.value}
+                                                            onChange={() => onFilterChange('isCompleted', opt.value)}
+                                                        />
+                                                    </label>
+                                                ))}
+                                            </motion.div>
+                                        )}
 
-                            <div>
-                                <label className="block text-xs font-medium text-gray-500 dark:text-gray-400 mb-1.5">Progress Min (%)</label>
-                                <input
-                                    type="number"
-                                    placeholder="0"
-                                    min="0"
-                                    max="100"
-                                    value={filters.minPercentage}
-                                    onChange={(e) => onFilterChange('minPercentage', e.target.value)}
-                                    className="w-full px-3 py-2 text-sm border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-orange-500 focus:border-transparent"
-                                />
-                            </div>
+                                        {/* TAB: SORT */}
+                                        {activeTab === 'sort' && (
+                                            <motion.div
+                                                key="sort"
+                                                initial={{ opacity: 0, y: 5 }}
+                                                animate={{ opacity: 1, y: 0 }}
+                                                exit={{ opacity: 0, y: -5 }}
+                                                transition={{ duration: 0.15 }}
+                                                className=""
+                                            >
+                                                {sortOptions.map((opt) => (
+                                                    <label 
+                                                        key={opt.value} 
+                                                        className="flex gap-4 items-center justify-between p-2 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700/50 cursor-pointer transition-colors group"
+                                                    >
+                                                        <span className={`text-sm ${filters.sort === opt.value ? 'text-gray-900 dark:text-white font-medium' : 'text-gray-600 dark:text-gray-400'}`}>
+                                                            {opt.label}
+                                                        </span>
+                                                        <div className={`w-4 h-4 rounded-full border flex items-center justify-center transition-all ${
+                                                            filters.sort === opt.value 
+                                                                ? 'border-orange-500 bg-orange-500' 
+                                                                : 'border-gray-300 dark:border-gray-600 group-hover:border-orange-300'
+                                                        }`}>
+                                                            {filters.sort === opt.value && (
+                                                                <div className="w-1.5 h-1.5 rounded-full bg-white" />
+                                                            )}
+                                                        </div>
+                                                        <input 
+                                                            type="radio" 
+                                                            className="hidden" 
+                                                            checked={filters.sort === opt.value}
+                                                            onChange={() => onFilterChange('sort', opt.value)}
+                                                        />
+                                                    </label>
+                                                ))}
+                                            </motion.div>
+                                        )}
 
-                            <div>
-                                <label className="block text-xs font-medium text-gray-500 dark:text-gray-400 mb-1.5">Show Expired</label>
-                                <select
-                                    value={filters.includeExpired ? 'true' : 'false'}
-                                    onChange={(e) => onFilterChange('includeExpired', e.target.value === 'true')}
-                                    className="w-full px-3 py-2 text-sm border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-orange-500 focus:border-transparent"
-                                >
-                                    <option value="false">Hide Expired</option>
-                                    <option value="true">Show Expired</option>
-                                </select>
-                            </div>
-                        </div>
+                                        {/* TAB: PROGRESS */}
+                                        {activeTab === 'progress' && (
+                                            <motion.div
+                                                key="progress"
+                                                initial={{ opacity: 0, y: 5 }}
+                                                animate={{ opacity: 1, y: 0 }}
+                                                exit={{ opacity: 0, y: -5 }}
+                                                transition={{ duration: 0.15 }}
+                                                className="flex flex-col w-40 mx-auto justify-center h-full"
+                                            >
+                                                <label className="block text-xs font-medium text-gray-500 dark:text-gray-400 mb-2">Minimum Percentage</label>
+                                                <div className="relative">
+                                                    <input
+                                                        type="number"
+                                                        placeholder="0"
+                                                        min="0"
+                                                        max="100"
+                                                        value={filters.minPercentage}
+                                                        onChange={(e) => onFilterChange('minPercentage', e.target.value)}
+                                                        className="w-full px-4 py-2.5 text-sm border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-orange-500 focus:border-transparent outline-none transition-all"
+                                                    />
+                                                    <span className="absolute right-3 top-2.5 text-gray-400 text-sm">%</span>
+                                                </div>
+                                          
+                                            </motion.div>
+                                        )}
 
-                        <div className="px-4 pb-4 flex items-center justify-end gap-2">
-                            <Button
-                                onClick={onReset}
-                                variant="outline"
-                                size="sm"
-                                className="px-3 py-1.5 text-xs font-medium text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg border border-gray-300 dark:border-gray-600"
-                            >
-                                <X className="h-3.5 w-3.5 mr-1" />
-                                Reset
-                            </Button>
+                                        {/* TAB: OPTIONS */}
+                                        {activeTab === 'options' && (
+                                            <motion.div
+                                                key="options"
+                                                initial={{ opacity: 0, y: 5 }}
+                                                animate={{ opacity: 1, y: 0 }}
+                                                exit={{ opacity: 0, y: -5 }}
+                                                transition={{ duration: 0.15 }}
+                                                className="space-y-2"
+                                            >
+                                                <label 
+                                                    className="grid grid-cols-1 items-center justify-between p-3 rounded-lg border border-gray-200 dark:border-gray-700 cursor-pointer transition-colors hover:border-orange-200 dark:hover:border-orange-900"
+                                                    onClick={() => onFilterChange('includeExpired', !filters.includeExpired)}
+                                                >
+                                                    <div className="flex ">
+                                                        <span className="text-sm font-medium text-gray-900 dark:text-white">Show Expired Items</span>
+                                                       
+                                                    </div>
+
+                                                     <span className="text-xs text-gray-500">Include items that have passed their deadline</span>
+                                                    {/* Toggle Switch Style */}
+                                                    <div className={`w-10 h-6 mt-4 rounded-full relative transition-colors duration-200 ease-in-out ${filters.includeExpired ? 'bg-orange-500' : 'bg-gray-200 dark:bg-gray-600'}`}>
+                                                        <div className={`absolute top-1 left-1 w-4 h-4 bg-white rounded-full shadow transition-transform duration-200 ease-in-out ${filters.includeExpired ? 'translate-x-4' : 'translate-x-0'}`} />
+                                                    </div>
+                                                </label>
+                                            </motion.div>
+                                        )}
+
+                                    </AnimatePresence>
+                                </div>
+
+                                {/* FOOTER (Reset Button) - Only shows if active */}
+                                <div className="mt-4 pt-3 border-t border-gray-100 dark:border-gray-700 flex justify-end">
+                                     <button
+                                        onClick={onReset}
+                                        disabled={!hasActiveFilters}
+                                        className={`flex items-center gap-1.5 px-4 py-1.5 text-xs font-medium rounded-lg transition-all ${
+                                            hasActiveFilters 
+                                                ? 'text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 border border-gray-200 dark:border-gray-600' 
+                                                : 'text-gray-300 dark:text-gray-600 cursor-not-allowed border border-transparent'
+                                        }`}
+                                    >
+                                        <X className="h-3.5 w-3.5" />
+                                        Reset Filters
+                                    </button>
+                                </div>
+                            </div>
                         </div>
                     </motion.div>
                 )}

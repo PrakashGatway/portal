@@ -113,6 +113,8 @@ const SupportPage = () => {
     fetchTickets();
   }, [filters]);
 
+
+
   const fetchTickets = async () => {
     setLoading(true);
     try {
@@ -122,7 +124,7 @@ const SupportPage = () => {
       if (filters.priority !== 'all') params.append('priority', filters.priority);
       if (filters.category !== 'all') params.append('category', filters.category);
 
-      const response = await api.get(`/support?${params.toString()}`);
+      const response = await api.get(`/support`);
       setTickets(response.data.tickets || []);
     } catch (error) {
       toast.error("Failed to load support tickets");
@@ -337,7 +339,7 @@ const supportBenefits = [
   <div className="relative mx-auto w-full max-w-7xl px-5 sm:px-8 lg:px-0">
 
     {/* Content */}
-    <div className="relative z-10 py-8 sm:py-10 lg:pb-5">
+    <div className="relative z-10 py-8 sm:py-10 lg:pb-0">
 
       {/* Heading */}
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
@@ -357,6 +359,7 @@ const supportBenefits = [
   className="
     flex flex-col gap-3
     sm:flex-row sm:items-center
+    -mt-15
   "
 >
   {/* All Support Tickets */}
@@ -402,6 +405,7 @@ const supportBenefits = [
       hover:bg-[#E94F20]
       hover:shadow-[0_6px_16px_rgba(244,91,42,0.22)]
     "
+    onClick={()=>setShowCreateForm(true)}
   >
     <Plus
       size={17}
@@ -523,7 +527,7 @@ const supportBenefits = [
       "
     >
       <img
-        src="/images/support/support-center.png"
+        src="/images/support.png"
         alt="Support Center"
         className="w-full h-auto object-contain"
       />
@@ -532,7 +536,7 @@ const supportBenefits = [
   </div>
 </div>
 
-        <div className="font-semibold text-xl">How can i we help you?</div>
+        <div className="font-semibold text-xl mt-4">How can i we help you?</div>
 
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 my-6">
 
@@ -955,187 +959,28 @@ const supportBenefits = [
 
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
 
-          {/* Tickets List - Left Panel */}
-          <AnimatePresence mode="wait">
-            <motion.div
-              key="tickets-list"
-              initial={{ opacity: 0, x: -20 }}
-              animate={{ opacity: 1, x: 0 }}
-              exit={{ opacity: 0, x: -20 }}
-              className={`lg:col-span-5 xl:col-span-4 space-y-4 ${selectedTicket || showCreateForm ? 'hidden lg:block' : ''}`}
-            >
-              {/* Search & Filters */}
-              <div className="bg-white dark:bg-gray-800 rounded-2xl border border-gray-200/50 dark:border-gray-700 p-4">
-                <div className="relative">
-                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
-                  <input
-                    type="text"
-                    placeholder="Search tickets..."
-                    value={filters.search}
-                    onChange={(e) => setFilters(prev => ({ ...prev, search: e.target.value }))}
-                    className="w-full pl-10 pr-4 py-2.5 bg-gray-50 dark:bg-gray-700/50 border border-gray-200 dark:border-gray-600 rounded-xl focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent text-sm"
-                  />
-                </div>
-
-                <div className="flex items-center gap-2 mt-3">
-                  <button
-                    onClick={() => setShowFilters(!showFilters)}
-                    className="flex items-center gap-1.5 text-xs text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 px-3 py-1.5 bg-gray-50 dark:bg-gray-700/50 rounded-lg transition-colors"
-                  >
-                    <Filter className="h-3.5 w-3.5" />
-                    Filters
-                    <ChevronDown className={`h-3.5 w-3.5 transition-transform ${showFilters ? 'rotate-180' : ''}`} />
-                  </button>
-                  {(filters.status !== 'all' || filters.priority !== 'all' || filters.category !== 'all') && (
-                    <button
-                      onClick={() => setFilters({ search: '', status: 'all', priority: 'all', category: 'all' })}
-                      className="text-xs text-orange-500 hover:text-orange-600 px-2 py-1"
-                    >
-                      Clear all
-                    </button>
-                  )}
-                </div>
-
-                <AnimatePresence>
-                  {showFilters && (
-                    <motion.div
-                      initial={{ opacity: 0, height: 0 }}
-                      animate={{ opacity: 1, height: 'auto' }}
-                      exit={{ opacity: 0, height: 0 }}
-                      className="overflow-hidden"
-                    >
-                      <div className="grid grid-cols-3 gap-2 mt-3 pt-3 border-t border-gray-100 dark:border-gray-700">
-                        <select
-                          value={filters.status}
-                          onChange={(e) => setFilters(prev => ({ ...prev, status: e.target.value }))}
-                          className="px-2 py-1.5 text-xs bg-gray-50 dark:bg-gray-700/50 border border-gray-200 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500"
-                        >
-                          {statusOptions.map(opt => (
-                            <option key={opt.value} value={opt.value}>{opt.label}</option>
-                          ))}
-                        </select>
-                        <select
-                          value={filters.priority}
-                          onChange={(e) => setFilters(prev => ({ ...prev, priority: e.target.value }))}
-                          className="px-2 py-1.5 text-xs bg-gray-50 dark:bg-gray-700/50 border border-gray-200 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500"
-                        >
-                          {priorityOptions.map(opt => (
-                            <option key={opt.value} value={opt.value}>{opt.label}</option>
-                          ))}
-                        </select>
-                        <select
-                          value={filters.category}
-                          onChange={(e) => setFilters(prev => ({ ...prev, category: e.target.value }))}
-                          className="px-2 py-1.5 text-xs bg-gray-50 dark:bg-gray-700/50 border border-gray-200 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500"
-                        >
-                          {categoryOptions.map(opt => (
-                            <option key={opt.value} value={opt.value}>{opt.label}</option>
-                          ))}
-                        </select>
-                      </div>
-                    </motion.div>
-                  )}
-                </AnimatePresence>
-              </div>
-
-              {/* Tickets List */}
-              <div className="space-y-3 max-h-[calc(100vh-400px)] overflow-y-auto pr-1 scrollbar-thin scrollbar-thumb-gray-300 dark:scrollbar-thumb-gray-600">
-                {loading ? (
-                  <div className="flex h-64 items-center justify-center">
-                    <Loader2 className="h-8 w-8 animate-spin text-orange-500" />
-                  </div>
-                ) : tickets.length === 0 ? (
-                  <motion.div
-                    initial={{ opacity: 0 }}
-                    animate={{ opacity: 1 }}
-                    className="bg-white dark:bg-gray-800 rounded-2xl border border-gray-200/50 dark:border-gray-700 p-8 text-center"
-                  >
-                    <MessageSquare className="h-12 w-12 mx-auto mb-3 text-gray-400" />
-                    <p className="text-gray-500 dark:text-gray-400">No tickets found</p>
-                  </motion.div>
-                ) : (
-                  <AnimatePresence mode="popLayout">
-                    {tickets.map((ticket, idx) => {
-                      const statusConfig = getStatusConfig(ticket.status);
-                      const priorityConfig = getPriorityConfig(ticket.priority);
-                      const StatusIcon = statusConfig.icon;
-
-                      return (
-                        <motion.div
-                          key={ticket._id}
-                          layout
-                          initial={{ opacity: 0, y: 20 }}
-                          animate={{ opacity: 1, y: 0 }}
-                          exit={{ opacity: 0, y: -20 }}
-                          transition={{ delay: idx * 0.03 }}
-                          whileHover={{ scale: 1.02 }}
-                          onClick={() => {
-                            setSelectedTicket(ticket);
-                            setShowCreateForm(false);
-                          }}
-                          className={`bg-white dark:bg-gray-800 rounded-2xl border-2 cursor-pointer transition-all p-4 ${selectedTicket?._id === ticket._id
-                            ? 'border-orange-500 ring-4 ring-orange-500/10'
-                            : 'border-gray-200/50 dark:border-gray-700 hover:border-orange-300 dark:hover:border-orange-700'
-                            }`}
-                        >
-                          <div className="space-y-2.5">
-                            <div className="flex items-start justify-between gap-2">
-                              <h3 className="font-semibold text-gray-900 dark:text-white line-clamp-1 flex-1">
-                                {ticket.subject}
-                              </h3>
-                              <span className={`px-2 py-0.5 rounded-full text-xs font-medium ${priorityConfig.bg} ${priorityConfig.color}`}>
-                                {priorityConfig.label}
-                              </span>
-                            </div>
-
-                            <p className="text-sm text-gray-500 dark:text-gray-400 line-clamp-2">
-                              {ticket.description}
-                            </p>
-
-                            <div className="flex items-center justify-between pt-2 border-t border-gray-100 dark:border-gray-700">
-                              <div className="flex items-center gap-2">
-                                <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium ${statusConfig.bg} ${statusConfig.color}`}>
-                                  <StatusIcon className="h-3 w-3" />
-                                  {statusConfig.label}
-                                </span>
-                                <span className={`px-2 py-0.5 rounded-full text-xs font-medium ${getCategoryColor(ticket.category)}`}>
-                                  {ticket.category}
-                                </span>
-                              </div>
-                              <span className="text-xs text-gray-400">{formatDate(ticket.updatedAt)}</span>
-                            </div>
-
-                            {ticket.replies?.length > 0 && (
-                              <div className="flex items-center gap-1 text-xs text-gray-400">
-                                <ReplyAll className="h-3 w-3" />
-                                <span>{ticket.replies.length} {ticket.replies.length === 1 ? 'reply' : 'replies'}</span>
-                              </div>
-                            )}
-                          </div>
-                        </motion.div>
-                      );
-                    })}
-                  </AnimatePresence>
-                )}
-              </div>
-            </motion.div>
-          </AnimatePresence>
+        
 
           {/* Ticket Detail / Create Form - Right Panel */}
-          <AnimatePresence mode="wait">
-            <motion.div
-              key={showCreateForm ? "create-form" : selectedTicket ? "ticket-detail" : "empty"}
-              initial={{ opacity: 0, x: 20 }}
-              animate={{ opacity: 1, x: 0 }}
-              exit={{ opacity: 0, x: 20 }}
-              className={`lg:col-span-7 xl:col-span-8 ${!selectedTicket && !showCreateForm ? 'hidden lg:flex lg:items-center lg:justify-center' : ''}`}
-            >
-              {showCreateForm ? (
+          
+         
+              {showCreateForm && (
                 // Create Ticket Form
+                 <div
+    className="
+      fixed inset-0 z-[9999]
+      flex items-center justify-center
+      bg-black/40
+      px-4 py-6
+      
+       mx-auto
+    "
+   
+  >
                 <motion.div
                   initial={{ opacity: 0, y: 20 }}
                   animate={{ opacity: 1, y: 0 }}
-                  className="bg-white dark:bg-gray-800 rounded-3xl border border-gray-200/50 dark:border-gray-700 p-6 w-full shadow-sm"
+                  className="bg-white dark:bg-gray-800 rounded-3xl border border-gray-200/50 dark:border-gray-700 p-6 w-3xl shadow-sm"
                 >
                   <div className="flex items-center justify-between mb-6">
                     <div className="flex items-center gap-3">
@@ -1229,252 +1074,10 @@ const supportBenefits = [
                       </Button>
                     </div>
                   </div>
-                </motion.div>
-              ) : selectedTicket ? (
-                // Ticket Detail View
-                <div className="space-y-4 w-full">
-                  {/* Ticket Header */}
-                  <motion.div
-                    initial={{ opacity: 0, y: 10 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    className="bg-white dark:bg-gray-800 rounded-3xl border border-gray-200/50 dark:border-gray-700 p-6 shadow-sm"
-                  >
-                    <div className="flex items-start justify-between gap-4">
-                      <div className="flex-1 min-w-0">
-                        <button
-                          onClick={() => setSelectedTicket(null)}
-                          className="lg:hidden p-2 -ml-2 rounded-xl hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors mb-2"
-                        >
-                          <ArrowLeft className="h-5 w-5" />
-                        </button>
-                        <h2 className="text-xl font-bold text-gray-900 dark:text-white mb-2">
-                          {selectedTicket.subject}
-                        </h2>
-                        <div className="flex flex-wrap items-center gap-2">
-                          <span className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-medium ${getStatusConfig(selectedTicket.status).bg} ${getStatusConfig(selectedTicket.status).color}`}>
-                            {(() => {
-                              const Icon = getStatusConfig(selectedTicket.status).icon;
-                              return <Icon className="h-3.5 w-3.5" />;
-                            })()}
-                            {getStatusConfig(selectedTicket.status).label}
-                          </span>
-                          <span className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-medium ${getPriorityConfig(selectedTicket.priority).bg} ${getPriorityConfig(selectedTicket.priority).color}`}>
-                            {getPriorityConfig(selectedTicket.priority).label} Priority
-                          </span>
-                          <span className={`px-3 py-1 rounded-full text-xs font-medium ${getCategoryColor(selectedTicket.category)}`}>
-                            {selectedTicket.category}
-                          </span>
-                        </div>
-                      </div>
-                      <div className="flex-shrink-0">
-                        <div className="w-10 h-10 rounded-full bg-gradient-to-br from-orange-500 to-orange-600 flex items-center justify-center text-white font-bold text-sm shadow-lg shadow-orange-500/25">
-                          {selectedTicket.user?.name?.charAt(0) || 'U'}
-                        </div>
-                      </div>
-                    </div>
-
-                    <div className="grid grid-cols-2 gap-4 mt-4 pt-4 border-t border-gray-100 dark:border-gray-700">
-                      <div>
-                        <p className="text-xs text-gray-400 dark:text-gray-500 mb-0.5">Created</p>
-                        <p className="text-sm font-medium text-gray-700 dark:text-gray-300">{formatFullDate(selectedTicket.createdAt)}</p>
-                      </div>
-                      <div>
-                        <p className="text-xs text-gray-400 dark:text-gray-500 mb-0.5">Last Updated</p>
-                        <p className="text-sm font-medium text-gray-700 dark:text-gray-300">{formatFullDate(selectedTicket.updatedAt)}</p>
-                      </div>
-                    </div>
-                  </motion.div>
-
-                  {/* Conversation */}
-                  <motion.div
-                    initial={{ opacity: 0, y: 10 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ delay: 0.1 }}
-                    className="bg-white dark:bg-gray-800 rounded-3xl border border-gray-200/50 dark:border-gray-700 p-6 shadow-sm"
-                  >
-                    <div className="flex items-center justify-between mb-4">
-                      <h3 className="font-semibold text-gray-900 dark:text-white flex items-center gap-2">
-                        <MessageSquare className="h-4 w-4 text-orange-500" />
-                        Conversation
-                        {selectedTicket.replies?.length > 0 && (
-                          <span className="text-xs text-gray-400 font-normal">
-                            ({selectedTicket.replies.length} {selectedTicket.replies.length === 1 ? 'reply' : 'replies'})
-                          </span>
-                        )}
-                      </h3>
-                    </div>
-
-                    <div className="space-y-4 max-h-[400px] overflow-y-auto pr-2 scrollbar-thin scrollbar-thumb-gray-300 dark:scrollbar-thumb-gray-600">
-                      {/* Initial Message */}
-                      <motion.div
-                        initial={{ opacity: 0, x: -20 }}
-                        animate={{ opacity: 1, x: 0 }}
-                        className="flex gap-3"
-                      >
-                        <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-gray-200 dark:bg-gray-700">
-                          <User className="h-4 w-4 text-gray-500 dark:text-gray-400" />
-                        </div>
-                        <div className="flex-1 space-y-1">
-                          <div className="flex items-center gap-2">
-                            <span className="text-sm font-medium text-gray-900 dark:text-white">You</span>
-                            <span className="text-xs text-gray-400">{formatFullDate(selectedTicket.createdAt)}</span>
-                          </div>
-                          <div className="rounded-2xl bg-gray-50 dark:bg-gray-700/50 p-4">
-                            <p className="text-sm whitespace-pre-line text-gray-700 dark:text-gray-300">
-                              {selectedTicket.description}
-                            </p>
-                          </div>
-                        </div>
-                      </motion.div>
-
-                      {/* Replies */}
-                      <AnimatePresence mode="popLayout">
-                        {selectedTicket.replies?.map((reply, idx) => (
-                          <motion.div
-                            key={reply._id || idx}
-                            layout
-                            initial={{ opacity: 0, x: reply.isSupport ? 20 : -20 }}
-                            animate={{ opacity: 1, x: 0 }}
-                            exit={{ opacity: 0, x: reply.isSupport ? 20 : -20 }}
-                            transition={{ delay: idx * 0.05 }}
-                            className={`flex gap-3 ${reply.isSupport ? 'flex-row-reverse' : ''}`}
-                          >
-                            <div className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-full ${reply.isSupport
-                              ? 'bg-gradient-to-br from-blue-500 to-blue-600 shadow-lg shadow-blue-500/25'
-                              : 'bg-gray-200 dark:bg-gray-700'
-                              }`}>
-                              {reply.isSupport ? (
-                                <Shield className="h-4 w-4 text-white" />
-                              ) : (
-                                <User className="h-4 w-4 text-gray-500 dark:text-gray-400" />
-                              )}
-                            </div>
-                            <div className={`flex-1 space-y-1 ${reply.isSupport ? 'text-right' : ''}`}>
-                              <div className={`flex items-center gap-2 ${reply.isSupport ? 'justify-end' : ''}`}>
-                                <span className="text-sm font-medium text-gray-900 dark:text-white">
-                                  {reply.isSupport ? "Support Team" : "You"}
-                                </span>
-                                <span className="text-xs text-gray-400">{formatFullDate(reply.createdAt)}</span>
-                              </div>
-                              <div className={`rounded-2xl p-4 ${reply.isSupport
-                                ? 'bg-blue-50 dark:bg-blue-900/20'
-                                : 'bg-gray-50 dark:bg-gray-700/50'
-                                }`}>
-                                <p className="text-sm whitespace-pre-line text-gray-700 dark:text-gray-300">
-                                  {reply.message}
-                                </p>
-                              </div>
-                            </div>
-                          </motion.div>
-                        ))}
-                      </AnimatePresence>
-                    </div>
-
-                    {/* Quick Replies */}
-                    {selectedTicket.status !== 'closed' && (
-                      <div className="mt-4 pt-4 border-t border-gray-100 dark:border-gray-700">
-                        <div className="flex flex-wrap gap-2 mb-3">
-                          {quickReplies.map((reply, idx) => (
-                            <button
-                              key={idx}
-                              onClick={() => setReplyMessage(reply)}
-                              className="text-xs px-3 py-1.5 bg-gray-50 dark:bg-gray-700/50 hover:bg-orange-50 dark:hover:bg-orange-900/20 text-gray-600 dark:text-gray-400 hover:text-orange-600 dark:hover:text-orange-400 rounded-full border border-gray-200 dark:border-gray-600 transition-colors"
-                            >
-                              {reply.length > 40 ? reply.substring(0, 40) + '...' : reply}
-                            </button>
-                          ))}
-                        </div>
-
-                        {/* Reply Input */}
-                        <motion.div
-                          initial={{ opacity: 0, y: 10 }}
-                          animate={{ opacity: 1, y: 0 }}
-                          className="space-y-3"
-                        >
-                          <div className="relative">
-                            <textarea
-                              value={replyMessage}
-                              onChange={(e) => setReplyMessage(e.target.value)}
-                              rows={3}
-                              placeholder="Type your reply..."
-                              className="w-full px-4 py-3 bg-gray-50 dark:bg-gray-700/50 border border-gray-200 dark:border-gray-600 rounded-2xl focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent text-sm resize-none"
-                              onKeyDown={(e) => {
-                                if (e.key === 'Enter' && !e.shiftKey) {
-                                  e.preventDefault();
-                                  handleSendReply();
-                                }
-                              }}
-                            />
-                            <div className="absolute bottom-3 right-3 flex items-center gap-1">
-                              <button className="p-1.5 hover:bg-gray-200 dark:hover:bg-gray-600 rounded-lg transition-colors">
-                                <Smile className="h-4 w-4 text-gray-400" />
-                              </button>
-                              <button className="p-1.5 hover:bg-gray-200 dark:hover:bg-gray-600 rounded-lg transition-colors">
-                                <Mic className="h-4 w-4 text-gray-400" />
-                              </button>
-                              <button className="p-1.5 hover:bg-gray-200 dark:hover:bg-gray-600 rounded-lg transition-colors">
-                                <Paperclip className="h-4 w-4 text-gray-400" />
-                              </button>
-                            </div>
-                          </div>
-
-                          <div className="flex justify-end">
-                            <Button
-                              onClick={handleSendReply}
-                              disabled={!replyMessage.trim() || isSending}
-                              className="bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 text-white rounded-xl px-8 shadow-lg shadow-orange-500/25 disabled:opacity-50 disabled:cursor-not-allowed"
-                            >
-                              {isSending ? (
-                                <Loader2 className="h-4 w-4 animate-spin mr-2" />
-                              ) : (
-                                <Send className="h-4 w-4 mr-2" />
-                              )}
-                              Send Reply
-                            </Button>
-                          </div>
-                        </motion.div>
-                      </div>
-                    )}
-
-                    {selectedTicket.status === 'closed' && (
-                      <div className="mt-4 pt-4 border-t border-gray-100 dark:border-gray-700">
-                        <div className="flex items-center gap-2 text-sm text-gray-500 dark:text-gray-400 bg-gray-50 dark:bg-gray-700/50 rounded-xl p-3">
-                          <XCircle className="h-4 w-4" />
-                          This ticket is closed. Please create a new ticket if you need further assistance.
-                        </div>
-                      </div>
-                    )}
-                  </motion.div>
-                </div>
-              ) : (
-                // Empty State
-                <motion.div
-                  initial={{ opacity: 0, scale: 0.95 }}
-                  animate={{ opacity: 1, scale: 1 }}
-                  className="bg-white dark:bg-gray-800 rounded-3xl border border-gray-200/50 dark:border-gray-700 p-12 text-center w-full shadow-sm"
-                >
-                  <motion.div
-                    animate={{ y: [0, -8, 0] }}
-                    transition={{ duration: 2, repeat: Infinity }}
-                    className="w-20 h-20 mx-auto mb-4 rounded-full bg-gradient-to-br from-orange-100 to-orange-200 dark:from-orange-900/30 dark:to-orange-800/30 flex items-center justify-center"
-                  >
-                    <MessageSquare className="h-10 w-10 text-orange-500" />
-                  </motion.div>
-                  <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-2">No ticket selected</h3>
-                  <p className="text-gray-500 dark:text-gray-400 max-w-md mx-auto">
-                    Choose a ticket from the list to view details and conversation, or create a new one.
-                  </p>
-                  <Button
-                    onClick={() => setShowCreateForm(true)}
-                    className="mt-4 bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 text-white rounded-xl shadow-lg shadow-orange-500/25"
-                  >
-                    <Plus className="h-4 w-4 mr-2" />
-                    Create New Ticket
-                  </Button>
-                </motion.div>
-              )}
-            </motion.div>
-          </AnimatePresence>
+                </motion.div></div>
+              ) }
+         
+       
         </div>
       </div>
     </div>

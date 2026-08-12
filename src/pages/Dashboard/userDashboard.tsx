@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { motion } from 'framer-motion';
 import {
     Trophy, TrendingUp, ChevronRight, Target,
@@ -22,7 +22,12 @@ import {
     Search,
     Star,
     Bell,
-    ChevronLeft
+    ChevronLeft,
+    ArrowRight,
+    ArrowLeft,
+    Gift,
+    ShieldCheck,
+    Tag
 } from 'lucide-react';
 import {
     XAxis, Tooltip,
@@ -436,6 +441,8 @@ const GREDashboard = () => {
     const [loading2, setLoading2] = useState(true);
     const [sort, setSort] = useState("-createdAt");
     const [purchase, setPurchase] = useState([])
+    const [notification, setnotification] = useState([])
+    const [promo, setpromo] = useState([])
 
     useEffect(() => {
         // Initialization logic if needed
@@ -447,8 +454,26 @@ const GREDashboard = () => {
                 toast.error("something went wrong...")
             }
         };
+
         fetchPurchases();
     }, []);
+
+
+
+    useEffect(() => {
+
+        const fetchPromo = async () => {
+            try {
+                const response = await api.get("/promo-codes");
+                setpromo(response.data.data)
+            }
+            catch {
+                toast.error("something went wrong..")
+
+            }
+        }
+        fetchPromo()
+    }, [])
 
 
     const SORT_OPTIONS = [
@@ -536,6 +561,51 @@ const GREDashboard = () => {
 
     const [currentSlide, setCurrentSlide] = useState(0);
     const [loaded, setLoaded] = useState(false);
+
+    
+
+const autoplayRef4 = useRef(null);
+
+const startAutoplay4 = () => {
+    if (autoplayRef4.current) {
+        clearInterval(autoplayRef4.current);
+    }
+
+    autoplayRef4.current = setInterval(() => {
+        instanceRef4.current?.next();
+    }, 4000);
+};
+
+const stopAutoplay4 = () => {
+    if (autoplayRef4.current) {
+        clearInterval(autoplayRef4.current);
+        autoplayRef4.current = null;
+    }
+};
+
+const [sliderRef4, instanceRef4] = useKeenSlider({
+    initial: 0,
+    loop: true,
+
+    slideChanged(slider) {
+        setCurrentSlide(slider.track.details.rel);
+    },
+
+    created() {
+        startAutoplay4();
+    },
+
+    slides: {
+        perView: 1,
+        spacing: 0,
+    },
+});
+
+useEffect(() => {
+    return () => {
+        stopAutoplay4();
+    };
+}, []);
 
     const [sliderRef3, instanceRef] = useKeenSlider({
         loop: purchase.length > 1,
@@ -655,6 +725,9 @@ const GREDashboard = () => {
     }
 
 
+    const highPriorityCount = notification.filter(
+        (notification) => notification.priority === "high"
+    ).length;
 
 
     if (!data) {
@@ -687,7 +760,7 @@ const GREDashboard = () => {
                 <HeaderBanner data={data} user={user} />
 
                 {(
-                    <div>
+                    <div className="p-[2px] rounded-3xl bg-gradient-to-b from-orange-500 via-orange-500 to-orange-200/40">
                         <div className=" rounded-3xl  bg-white dark:bg-gray-800 p-4 ">
                             {/* Top */}
                             <div className="flex items-start gap-4">
@@ -709,7 +782,7 @@ const GREDashboard = () => {
                                     </p>
 
                                     <h3 className="text-base leading-none font-bold text-[#222] mt-1 dark:text-white">
-                                        Lavisha
+                                        Prakash
                                     </h3>
 
                                     <div className="flex items-center gap-2 mt-3">
@@ -850,13 +923,13 @@ const GREDashboard = () => {
                                                                             strokeWidth="10"
                                                                             strokeLinecap="round"
                                                                             strokeDasharray={314}
-                                                                            strokeDashoffset={314 - (314 * item?.percentage) / 100}
+                                                                            strokeDashoffset={314 - (314 * item?.progress?.percentage) / 100}
                                                                         />
                                                                     </svg>
 
                                                                     <div className="absolute inset-0 flex flex-col justify-center items-center dark:text-white">
                                                                         <div className="flex items-end gap-1">
-                                                                            <h2 className="text-5xl font-bold">{item?.percentage}</h2><span className='text-2xl'>%</span></div>
+                                                                            <h2 className="text-5xl font-bold">{item?.progress?.percentage}</h2><span className='text-2xl'>%</span></div>
                                                                         <span className="text-sm text-gray-500 dark:text-gray-400 font-semibold mt-1">
                                                                             COMPLETE
                                                                         </span>
@@ -990,85 +1063,273 @@ const GREDashboard = () => {
                             </div>
                         </section>
 
-                        <div className="bg-white dark:bg-gray-800 rounded-2xl overflow-y-auto max-h-[300px]">
-                            {/* Header */}
-                            <div className="px-5 py-4 border-b border-gray-50 flex items-center justify-between">
-                                <div className="flex items-center gap-2">
-                                    <div className="relative">
-                                        <Bell className="w-5 h-5 text-gray-700 dark:text-gray-300" />
-                                        <span className="absolute -top-1 -right-1 w-2.5 h-2.5 bg-rose-500 rounded-full border-2 border-white" />
-                                    </div>
+<div
+    ref={sliderRef4}
+    className="keen-slider w-full overflow-hidden rounded-3xl"
+>
+    {promo?.map((item, index) => (
+        <div
+            key={item?._id || item?.id || index}
+            className="
+                keen-slider__slide
+                relative
+                h-[300px]
+                w-full
+                min-w-0
+                overflow-hidden
+                rounded-2xl
+                border
+                border-white
+                bg-[#f8fbff]
+                shadow-[0_10px_35px_rgba(0,0,0,0.12)]
+            "
+        >
+            {/* ================= TOP ================= */}
 
-                                    <h3 className="text-base font-bold text-gray-900 dark:text-white">
-                                        Alerts
-                                    </h3>
+            <div className="relative z-10 px-4 pt-3 text-center">
 
-                                    <span className="px-2 py-0.5 rounded-full bg-gray-100 text-gray-600 text-[10px] font-bold">
-                                        4
-                                    </span>
-                                </div>
+                <div className="mt-0.5 text-[6px] tracking-[1.5px] text-[#102957]">
+                    ─── Gateway To Your Dreams ───
+                </div>
 
-                                <span className="px-2 py-0.5 rounded-full bg-rose-50 text-rose-600  text-[12px] font-bold border border-rose-100">
-                                    3 Critical
-                                </span>
-                            </div>
+                <div className="mt-3">
+                    <p
+                        className="
+                            text-base
+                            font-medium
+                            italic
+                            leading-none
+                            text-[#ff764b]
+                        "
+                        style={{ fontFamily: "cursive" }}
+                    >
+                        Exclusive Offer!
+                    </p>
 
-                            {/* Alert Items */}
-                            <div className="p-2 space-y-2">
+                    <h2 className="mt-1 text-lg font-extrabold leading-tight text-[#102957]">
+                        Grab Your Discount Now
+                    </h2>
 
-                                {/* Alert 1 */}
-                                <div
-                                    //   onClick={() => router.push("/dashboard/settings")}
-                                    className="rounded-xl bg-[#FFF6F6] dark:bg-gray-800 p-4 cursor-pointer"
-                                >
-                                    <div className="flex items-center gap-2 ">
-                                        <h4 className="text-sm font-semibold text-gray-900 dark:text-white">
-                                            Universities - Missing
-                                        </h4>
+                    <p className="mt-1 text-[9px] text-[#29436e]">
+                        Use the coupon code and{" "}
+                        <span className="font-bold text-[#ff6a00]">
+                            save big
+                        </span>{" "}
+                        on your next booking.
+                    </p>
+                </div>
+            </div>
 
-                                        <span className="px-2 py-0.5 rounded-md bg-rose-100 text-rose-600 text-xs font-semibold">
-                                            Critical
-                                        </span>
-                                    </div>
 
-                                    <p className="text-gray-500 text-sm  dark:text-gray-400">
-                                        No applications submitted. Please submit at least 1 university
-                                        application
-                                    </p>
+            {/* ================= RIBBON ================= */}
 
-                                    <p className="mt-2 text-sm italic text-gray-400">
-                                        Impact: Without applications, you cannot receive offer letters or
-                                        proceed with visa processing
-                                    </p>
-                                </div>
+            <div
+                className="
+                    absolute
+                    right-[-43px]
+                    top-[20px]
+                    z-30
+                    flex
+                    w-[140px]
+                    rotate-45
+                    items-center
+                    justify-center
+                    bg-gradient-to-r
+                    from-[#ff6a00]
+                    to-[#ff764b]
+                    py-2
+                    shadow-md
+                "
+            >
+                <span className="text-[12px] font-extrabold uppercase leading-tight text-white">
+                    LIMITED
+                    <br />
+                    TIME OFFER
+                </span>
+            </div>
 
-                                {/* Alert 2 */}
-                                <div
-                                    //   onClick={() => router.push("/dashboard/settings")}
-                                    className="rounded-xl bg-[#FFF6F6] dark:bg-gray-800 p-4 cursor-pointer"
-                                >
-                                    <div className="flex items-center gap-2 mb-2">
-                                        <h4 className="text-sm font-semibold text-gray-900 dark:text-white">
-                                            Offer Letter - Missing
-                                        </h4>
 
-                                        <span className="px-2 py-0.5 rounded-md bg-rose-100 text-rose-600 text-xs font-semibold">
-                                            Critical
-                                        </span>
-                                    </div>
+            {/* ================= COUPON ================= */}
 
-                                    <p className="text-gray-500 text-sm leading-7 dark:text-gray-400">
-                                        No applications to receive offers.
-                                    </p>
+            <div className="relative z-10 mx-10">
 
-                                    <p className="mt-2 text-sm italic text-gray-400">
-                                        Impact: You cannot proceed with your admission process until you
-                                        receive an offer letter.
-                                    </p>
-                                </div>
+                <div
+                    className="
+                        relative
+                        rounded-xl
+                        bg-white
+                        p-2
+                        shadow-[0_6px_18px_rgba(0,0,0,0.10)]
+                    "
+                >
+                    <div
+                        className="
+                            rounded-lg
+                            border
+                            border-dashed
+                            border-[#ff764b]
+                            px-3
+                            py-2
+                        "
+                    >
 
-                            </div>
+                        {/* Coupon label */}
+                        <div className="flex justify-center">
+                            <span
+                                className="
+                                    rounded-full
+                                    bg-[#102957]
+                                    px-4
+                                    py-1
+                                    text-[9px]
+                                    font-extrabold
+                                    tracking-wide
+                                    text-white
+                                "
+                            >
+                                COUPON CODE
+                            </span>
                         </div>
+
+                        {/* Coupon Code */}
+                        <p
+                            className="
+                                mt-1
+                                text-center
+                                text-xl
+                                font-black
+                                leading-none
+                                tracking-wide
+                                text-[#102957]
+                            "
+                        >
+                            {item?.code?.slice(0, -2)}
+
+                            <span className="text-[#ff6a00]">
+                                {item?.code?.slice(-2)}
+                            </span>
+                        </p>
+
+                        {/* Discount */}
+                        <div className="mt-1 flex items-center justify-center gap-1.5">
+
+                            <span className="text-[#ff764b]">
+                                ≫
+                            </span>
+
+                            <span className="text-sm font-extrabold text-[#102957]">
+                                <span className="text-[#ff764b]">
+                                    {item?.title?.split(" ")[0]}
+                                </span>{" "}
+                                {item?.title
+                                    ?.split(" ")
+                                    .slice(1)
+                                    .join(" ")}
+                            </span>
+
+                            <span className="text-[#ff764b]">
+                                ≪
+                            </span>
+
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+
+            {/* ================= BOTTOM NAVY ================= */}
+
+            <div
+                className="
+                    absolute
+                    bottom-0
+                    left-0
+                    right-0
+                    h-[92px]
+                    rounded-t-[50%]
+                    bg-[#06265d]
+                    px-5
+                    pt-4
+                "
+            >
+
+                <div
+                    className="
+                        absolute
+                        left-0
+                        right-0
+                        top-0
+                        h-[5px]
+                        bg-[#ff764b]
+                    "
+                />
+
+                {/* CTA */}
+                <button
+                    type="button"
+                    className="
+                        absolute
+                        bottom-[28px]
+                        left-1/2
+                        flex
+                        -translate-x-1/2
+                        items-center
+                        gap-2
+                        whitespace-nowrap
+                        rounded-full
+                        bg-gradient-to-r
+                        from-[#ff8a00]
+                        to-[#ff5b00]
+                        px-7
+                        py-2
+                        text-[11px]
+                        font-extrabold
+                        text-white
+                        shadow-lg
+                    "
+                >
+                    Explore
+                    <ArrowRight className="h-3.5 w-3.5" />
+                </button>
+            </div>
+        </div>
+    ))}
+
+
+  
+
+    {/* DOTS */}
+    <div
+        className="
+            absolute
+            bottom-1.5
+            left-1/2
+            z-[100]
+            flex
+            -translate-x-1/2
+            gap-2
+        "
+    >
+        {promo?.map((_, index) => (
+            <button
+                key={index}
+                type="button"
+                onClick={() => {
+                    instanceRef4.current?.moveToIdx(index);
+                }}
+                className={`
+                    h-1.5 rounded-full transition-all duration-300
+                    ${
+                        currentSlide === index
+                            ? "w-4 bg-[#ff764b]"
+                            : "w-1.5 bg-[#3975b9]"
+                    }
+                `}
+            />
+        ))}
+    </div>
+</div>
+                  
 
                     </div>
 
@@ -1130,11 +1391,7 @@ const GREDashboard = () => {
                                                     </div>
                                                 </div>
 
-                                                {/* Count */}
 
-                                                <p className="mt-5 text-[#FF5B1F] text-sm sm:text-base md:text-base font-medium">
-                                                    {item.count}
-                                                </p>
 
                                                 {/* Title */}
 
