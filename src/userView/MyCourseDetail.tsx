@@ -216,6 +216,27 @@ export default function CourseDetailPage() {
     }, [isVideoCardFixed])
 
 
+    const handleItemNavigation = (item, sectionId) => {
+  if (item.isLocked) return;
+
+  // Documents use resource page
+  if (item.type === "document") {
+    if (item?.slug) {
+      navigate(`/resources/${item.slug}`);
+    } else {
+      console.warn("Document slug is missing:", item);
+    }
+
+    return;
+  }
+
+  // All other types use class page
+  navigate(
+    `/class/${item._id}/${course?._id}?module=${sectionId}`
+  );
+};
+
+
     const formatDate = (date: string) => {
         return new Date(date).toLocaleDateString('en-IN', {
             day: 'numeric',
@@ -332,69 +353,183 @@ export default function CourseDetailPage() {
                                                 {curriculum.reduce((acc, section) => acc + section.items.length, 0) || 0} lectures
                                             </p>
 
-                                            <div className="space-y-2">
-                                                {curriculum.map((section, sectionIndex) => (
-                                                    <div
-                                                        key={section._id}
-                                                        className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 overflow-hidden"
-                                                    >
-                                                        <div className="flex items-center justify-between p-5 bg-gray-50 dark:bg-gray-700/50">
-                                                            <h3 className="font-bold text-gray-900 dark:text-white">
-                                                                Section {sectionIndex + 1}: {section.title}
-                                                            </h3>
-                                                            <span className="text-sm text-gray-500 dark:text-gray-400">
-                                                                {section.items.length} lectures
-                                                            </span>
-                                                        </div>
-                                                        <div className="divide-y divide-gray-200 dark:divide-gray-700">
-                                                            {section.items.map((item) => (
-                                                                <div
-                                                                    key={item._id}
-                                                                    className="flex items-center p-3 hover:bg-gray-50 dark:hover:bg-gray-700/30 transition-colors"
-                                                                >
-                                                                    <div className="flex items-center mr-4">
-                                                                        {item.type === "video" && <Video className="h-5 w-5 text-blue-500" />}
-                                                                        {item.type === "document" && <FileText className="h-5 w-5 text-green-500" />}
-                                                                        {item.type === "quiz" && <BarChart3 className="h-5 w-5 text-purple-500" />}
-                                                                        {item.type === "assignment" && <Download className="h-5 w-5 text-orange-500" />}
-                                                                    </div>
-                                                                    <div className="flex-1">
-                                                                        <div onClick={() =>
-                                                                            !item.isLocked && navigate(
-                                                                                `/class/${item._id}/${course?._id}?module=${section._id}`
-                                                                            )
-                                                                        } className="font-medium text-gray-900 dark:text-white cursor-pointer">{item.title}</div>
-                                                                        <div className="text-sm text-gray-500 dark:text-gray-400">{item.duration}</div>
-                                                                    </div>
-                                                                    {item.isPreview && !item.isLocked && (
-                                                                        <Button onClick={() =>
-                                                                            navigate(
-                                                                                `/class/${item._id}/${course?._id}?module=${section._id}`
-                                                                            )
-                                                                        } variant="outline" size="sm" className="text-blue-600 dark:text-blue-400">
-                                                                            Preview
-                                                                        </Button>
-                                                                    )}
-                                                                    {item.isLocked ? (
-                                                                        <Button disabled size="sm" variant="outline" className="text-gray-400 cursor-not-allowed">
-                                                                            Locked
-                                                                        </Button>
-                                                                    ) : (
-                                                                        <>
-                                                                            <ChevronRight onClick={() =>
-                                                                                navigate(
-                                                                                    `/class/${item._id}/${course?._id}?module=${section._id}`
-                                                                                )
-                                                                            } className="h-5 w-5 text-gray-400 ml-2" />
-                                                                        </>
+                                        <div className="space-y-2">
+  {curriculum.map((section, sectionIndex) => (
+    <div
+      key={section._id}
+      className="
+        overflow-hidden
+        border border-gray-200
+        bg-white
+        dark:border-gray-700
+        dark:bg-gray-800
+      "
+    >
+      {/* Section Header */}
+      <div
+        className="
+          flex items-center justify-between
+          bg-gray-50
+          p-5
+          dark:bg-gray-700/50
+        "
+      >
+        <h3 className="font-bold text-gray-900 dark:text-white">
+          Section {sectionIndex + 1}: {section.title}
+        </h3>
 
-                                                                    )}
-                                                                </div>
-                                                            ))}
-                                                        </div>
-                                                    </div>
-                                                ))}
-                                            </div>
+        <span className="text-sm text-gray-500 dark:text-gray-400">
+          {section.items?.length || 0} lectures
+        </span>
+      </div>
+
+      {/* Section Items */}
+      <div className="divide-y divide-gray-200 dark:divide-gray-700">
+        {section.items?.map((item) => {
+            console.log("ITEM:", item);
+console.log("ITEM TYPE:", item.type);
+console.log("ITEM SLUG:", item.slug);
+            return (
+          <div
+            key={item._id}
+            className="
+              flex items-center
+              p-3
+              transition-colors
+              hover:bg-gray-50
+              dark:hover:bg-gray-700/30
+            "
+          >
+            {/* Item Icon */}
+            <div className="mr-4 flex shrink-0 items-center">
+              {item.type === "video" && (
+                <Video
+                  className="h-5 w-5 text-blue-500"
+                />
+              )}
+
+              {item.type === "document" && (
+                <FileText
+                  className="h-5 w-5 text-green-500"
+                />
+              )}
+
+              {item.type === "quiz" && (
+                <BarChart3
+                  className="h-5 w-5 text-purple-500"
+                />
+              )}
+
+              {item.type === "assignment" && (
+                <Download
+                  className="h-5 w-5 text-orange-500"
+                />
+              )}
+            </div>
+
+            {/* Item Content */}
+            <div className="min-w-0 flex-1">
+              <div
+                onClick={() =>
+                  handleItemNavigation(
+                    item,
+                    section._id
+                  )
+                }
+                className={`
+                  truncate
+                  font-medium
+                  text-gray-900
+                  dark:text-white
+                  ${
+                    item.isLocked
+                      ? "cursor-not-allowed opacity-60"
+                      : "cursor-pointer hover:text-[#F26738]"
+                  }
+                `}
+              >
+                {item.title}
+              </div>
+
+              <div className="text-sm text-gray-500 dark:text-gray-400">
+                {item.duration || "—"}
+              </div>
+            </div>
+
+            {/* Preview Button */}
+            {item.isPreview && !item.isLocked && (
+              <Button
+                type="button"
+                onClick={() =>
+                  handleItemNavigation(
+                    item,
+                    section._id
+                  )
+                }
+                variant="outline"
+                size="sm"
+                className="
+                  mr-2
+                  border-blue-200
+                  text-blue-600
+                  hover:bg-blue-50
+                  dark:border-blue-800
+                  dark:text-blue-400
+                  dark:hover:bg-blue-900/20
+                "
+              >
+                Preview
+              </Button>
+            )}
+
+            {/* Locked / Navigation */}
+            {item.isLocked ? (
+              <Button
+                type="button"
+                disabled
+                size="sm"
+                variant="outline"
+                className="
+                  cursor-not-allowed
+                  text-gray-400
+                  dark:text-gray-500
+                "
+              >
+                Locked
+              </Button>
+            ) : (
+              <button
+                type="button"
+                onClick={() =>
+                  handleItemNavigation(
+                    item,
+                    section._id
+                  )
+                }
+                className="
+                  ml-1
+                  flex
+                  h-8
+                  w-8
+                  items-center
+                  justify-center
+                  rounded-full
+                  text-gray-400
+                  transition-all
+                  hover:bg-[#FFF1EB]
+                  hover:text-[#F26738]
+                  dark:hover:bg-gray-700
+                "
+              >
+                <ChevronRight className="h-5 w-5" />
+              </button>
+            )}
+          </div>
+        )})}
+      </div>
+    </div>
+  ))}
+</div>
                                         </>
                                     )}
                                 </div>

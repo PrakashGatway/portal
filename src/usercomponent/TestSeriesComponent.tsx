@@ -107,17 +107,17 @@ export const TestSeriesCard: React.FC<any> = ({ testSeries: series }) => {
 
                                         {/* Banner */}
                                         <div className='p-[6px] rounded-2xl bg-gradient-to-b from-[#CFCFCF] via-[#ECECEC] to-white'>
-                                            <div className="relative  overflow-hidden">
+                                            <div className="relative  overflow-hidden h-40">
                                                 <img
                             src={series?.thumbnailPic || "/images/logo.png"}
                             alt={series?.title}
-                            className="object-contain h-full w-full rounded-2xl"
+                            className="object-cover h-full w-full rounded-2xl"
                         />
                                             </div>
                                         </div>
 
                                         {/* Content */}
-                                        <div className="p-4">
+                                        <div className="p-2">
                                             <h3 className="text-xl font-bold leading-none">
                                                 <span className="text-orange-500">{series.title.split(" ")[0]}</span>{" "}
                                                 <span className="text-black dark:text-white text-base font-semibold">
@@ -143,28 +143,42 @@ export const TestSeriesCard: React.FC<any> = ({ testSeries: series }) => {
                        </div>
 
                                             {/* Price */}
-                                            <div className="mt-4 flex items-center flex-wrap gap-2 ">
-                                                <span className="text-base font-bold text-[#222] dark:text-white">
-                                                    ₹ {series?.pricing?.salePrice}
-                                                </span>
+                                          {series?.pricing?.isFree === true ? (
+    <div className="mt-4 flex justify-center ">
+        <span className="text-base font-bold text-green-600 dark:text-green-400">
+            FREE
+        </span>
+    </div>
+) : series?.isPurchased ? (
+<div className='flex justify-center'>
+    <span className="text-base font-bold text-green-600 dark:text-green-400">
+            Enrolled
+        </span>
+</div>
+): (
+    <div className="mt-4 flex flex-wrap items-center gap-2">
+        <span className="text-base font-bold text-[#222] dark:text-white">
+            ₹ {series?.pricing?.salePrice}
+        </span>
 
-                                                <span className="text-base text-gray-400 line-through dark:text-white">
-                                                    ₹{series.pricing?.price}
-                                                </span>
+        <span className="text-base text-gray-400 line-through dark:text-gray-400">
+            ₹ {series?.pricing?.price}
+        </span>
 
-                                                <span className="text-base font-semibold text-green-600 dark:text-white">
-                                                    {offerPercentage}%
-                                                </span>
-                                            </div>
+        <span className="text-base font-semibold text-green-600 dark:text-green-400">
+            {offerPercentage}%
+        </span>
+    </div>
+)}
 
                                             {/* Button */}
-                                            <div className='flex justify-center'>
+                                         {(series?.isPurchased===false && series?.pricing.isFree===false) &&   <div className='flex justify-center'>
                                              
 
-                                                 <button  onClick={() => { series?.pricing?.isFree ? "" : navigate(`/checkout/${series?.slug}`, { state: { testSeries: true } }) }} className="mt-5 py-2  w-1/2 text-base   rounded-xl border border-[#ff5b2e] text-[#ff5b2e] font-medium transition-all duration-300 hover:bg-[#ff5b2e] hover:text-white">
-                            {series?.pricing?.isFree ? "Start Test" : "Buy Test"}
+                                                 <button  onClick={() => { series?.pricing?.isFree ? navigate(`/checkout/${series?.slug}`, { state: { testSeries: true } }) : navigate(`/checkout/${series?.slug}`, { state: { testSeries: true } }) }} className="mt-5 py-2  w-1/2 text-base   rounded-xl border border-[#ff5b2e] text-[#ff5b2e] font-medium transition-all duration-300 hover:bg-[#ff5b2e] hover:text-white">
+                            { "Buy Test"}
                         </button>
-                                            </div>
+                                            </div>}
                                         </div>
                                     </div>
                                 </div>
@@ -428,7 +442,7 @@ const theme = cardThemes[index % cardThemes.length];
 
         {testItem?.isMandatory=== false || testSeries?.isPurchased === true ? (
           <button
-            onClick={() => navigate(`/gmat/tests/${testItem?._id}`)}
+            onClick={() => navigate(`/gmat/tests/${testItem?.test}`)}
             className="rounded-xl bg-[#FF7046] px-6 py-3 text-white font-semibold transition"
           >
             Start Test

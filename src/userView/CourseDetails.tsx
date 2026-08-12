@@ -26,6 +26,8 @@ import {
     Home,
     PlayCircleIcon,
     Check,
+    GraduationCap,
+    ArrowUpRight,
 } from "lucide-react"
 import Button from "../components/ui/button/Button"
 import api, { ImageBaseUrl } from "../axiosInstance"
@@ -273,6 +275,26 @@ useEffect(() => {
             year: 'numeric'
         });
     };
+
+    const handleItemNavigation = (item, sectionId) => {
+  if (item.isLocked) return;
+
+  const type = String(item?.type || "").trim().toLowerCase();
+
+  if (type === "document") {
+    if (!item?.slug) {
+      console.error("Document slug is missing:", item);
+      return;
+    }
+
+    navigate(`/resources/${item.slug}`);
+    return;
+  }
+
+  navigate(
+    `/class/${item._id}/${course?._id}?module=${sectionId}`
+  );
+};
 
     const getDaysRemaining = (date: string) => {
         const today = new Date();
@@ -556,104 +578,433 @@ useEffect(() => {
                                                         {curriculum.reduce((acc, section) => acc + section.items.length, 0) || 0} lectures
                                                     </p>
 
-                                                    <div className="space-y-2">
-                                                        {curriculum.map((section, sectionIndex) => (
-                                                            <div
-                                                                key={section._id}
-                                                                className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 overflow-hidden"
-                                                            >
-                                                                <div className="flex items-center justify-between p-4 bg-[#FF9A86] dark:bg-gray-700/50">
-                                                                    <h3 className="font-bold text-gray-900 dark:text-white">
-                                                                        Section {sectionIndex + 1}: {section.title}
-                                                                    </h3>
-                                                                    <span className="text-base text-gray-800 dark:text-gray-400">
-                                                                        {section.items.length} lectures
-                                                                    </span>
-                                                                </div>
-                                                                <div className="divide-y divide-gray-200 dark:divide-gray-700">
-                                                                    {section.items.map((item) => (
-                                                                        <div
-                                                                            key={item._id}
-                                                                            className="flex items-start p-3 hover:bg-gray-50 dark:hover:bg-gray-700/30 transition-colors"
-                                                                        >
-                                                                            <div className="flex items-center mr-4 mt-1">
-                                                                                {item.type === "video" && <Video className="h-7 w-7 stroke-[1.4px] text-[#F36E45]" />}
-                                                                                {item.type === "document" && <FileText className="h-5 w-5 text-green-500" />}
-                                                                                {item.type === "quiz" && <BarChart3 className="h-5 w-5 text-purple-500" />}
-                                                                                {item.type === "assignment" && <Download className="h-5 w-5 text-orange-500" />}
-                                                                            </div>
-                                                                            <div className="flex-1">
-                                                                                <div className="font-medium text-gray-900 dark:text-white">{item.title}</div>
-                                                                                <div className="text-sm text-gray-500 dark:text-gray-400">{item.duration}</div>
-                                                                            </div>
-                                                                            {item.isPreview && !item.isLocked && (
-                                                                                <Button onClick={() =>
-                                                                                    navigate(
-                                                                                        `/class/${item._id}/${course?._id}?module=${section._id}`
-                                                                                    )
-                                                                                } variant="outline" size="sm" className="text-blue-600 dark:text-blue-400">
-                                                                                    Preview
-                                                                                </Button>
-                                                                            )}
-                                                                            {item.isLocked && (
-                                                                                <Button disabled size="sm" variant="outline" className="text-gray-400 cursor-not-allowed">
-                                                                                    Locked
-                                                                                </Button>
-                                                                            )}
-                                                                            {/* {item.isPreview && !item.isLocked && (
-                                                                                <Button variant="outline" size="sm" className="text-blue-600 dark:text-blue-400">
-                                                                                    Preview
-                                                                                </Button>
-                                                                            )}
-                                                                            {item.isLocked ? (
-                                                                                <Button disabled size="sm" variant="outline" className="text-gray-400 cursor-not-allowed">
-                                                                                    Locked
-                                                                                </Button>
-                                                                            ) : (
-                                                                                <ChevronRight className="h-5 w-5 text-gray-400 ml-2" />
-                                                                            )} */}
-                                                                        </div>
-                                                                    ))}
-                                                                </div>
-                                                            </div>
-                                                        ))}
-                                                    </div>
+                                                  <div className="space-y-2">
+  {curriculum.map((section, sectionIndex) => (
+    <div
+      key={section._id}
+      className="
+        overflow-hidden
+        border border-gray-200
+        bg-white
+        dark:border-gray-700
+        dark:bg-gray-800
+      "
+    >
+      {/* Section Header */}
+      <div
+        className="
+          flex items-center justify-between
+          bg-[#FF9A86]
+          p-4
+          dark:bg-gray-700/50
+        "
+      >
+        <h3 className="font-bold text-gray-900 dark:text-white">
+          Section {sectionIndex + 1}: {section.title}
+        </h3>
+
+        <span className="text-base text-gray-800 dark:text-gray-400">
+          {section.items?.length || 0} lectures
+        </span>
+      </div>
+
+      {/* Section Items */}
+      <div className="divide-y divide-gray-200 dark:divide-gray-700">
+        {section.items?.map((item) => (
+          <div
+            key={item._id}
+            className="
+              flex items-start
+              p-3
+              transition-colors
+              hover:bg-gray-50
+              dark:hover:bg-gray-700/30
+            "
+          >
+            {/* Icon */}
+            <div className="mr-4 mt-1 flex shrink-0 items-center">
+              {item.type === "video" && (
+                <Video
+                  className="h-7 w-7 text-[#F36E45]"
+                  strokeWidth={1.4}
+                />
+              )}
+
+              {item.type === "document" && (
+                <FileText
+                  className="h-5 w-5 text-green-500"
+                />
+              )}
+
+              {item.type === "quiz" && (
+                <BarChart3
+                  className="h-5 w-5 text-purple-500"
+                />
+              )}
+
+              {item.type === "assignment" && (
+                <Download
+                  className="h-5 w-5 text-orange-500"
+                />
+              )}
+            </div>
+
+            {/* Content */}
+            <div
+              className={`
+                flex-1
+                ${
+                  item.isLocked
+                    ? "cursor-not-allowed opacity-60"
+                    : "cursor-pointer"
+                }
+              `}
+              onClick={() =>
+                handleItemNavigation(item, section._id)
+              }
+            >
+              <div
+                className="
+                  font-medium
+                  text-gray-900
+                  transition-colors
+                  hover:text-[#F36E45]
+                  dark:text-white
+                "
+              >
+                {item.title}
+              </div>
+
+              <div className="text-sm text-gray-500 dark:text-gray-400">
+                {item.duration || "—"}
+              </div>
+            </div>
+
+            {/* Preview */}
+            {item.isPreview && !item.isLocked && (
+              <Button
+                type="button"
+                onClick={() =>
+                  handleItemNavigation(item, section._id)
+                }
+                variant="outline"
+                size="sm"
+                className="
+                  mr-2
+                  text-blue-600
+                  dark:text-blue-400
+                "
+              >
+                Preview
+              </Button>
+            )}
+
+            {/* Locked */}
+            {item.isLocked && (
+              <Button
+                type="button"
+                disabled
+                size="sm"
+                variant="outline"
+                className="
+                  cursor-not-allowed
+                  text-gray-400
+                "
+              >
+                Locked
+              </Button>
+            )}
+
+            {/* Arrow */}
+            {!item.isLocked && (
+              <button
+                type="button"
+                onClick={() =>
+                  handleItemNavigation(item, section._id)
+                }
+                className="
+                  ml-2
+                  flex h-8 w-8
+                  items-center justify-center
+                  rounded-full
+                  text-gray-400
+                  transition-all
+                  hover:bg-[#FFF1EB]
+                  hover:text-[#F36E45]
+                "
+              >
+                <ChevronRight className="h-5 w-5" />
+              </button>
+            )}
+          </div>
+        ))}
+      </div>
+    </div>
+  ))}
+</div>
                                                 </>
                                             )}
                                         </div>
                                     )}
-                                    {activeTab === "instructors" && (
-                                        <div className="space-y-8">
-                                            <h2 className="text-2xl font-bold text-gray-900 dark:text-white">Meet Your Instructors</h2>
-                                            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                                                {course.instructorNames?.map((instructor) => (
-                                                    <div key={instructor._id} className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-6 hover:shadow-md transition-shadow">
-                                                        <div className="flex items-start">
-                                                            <img
-                                                                src={`https://res.cloudinary.com/dd5s7qpsc/image/upload/${instructor.profilePic}` || "https://img.freepik.com/free-vector/blue-circle-with-white-user_78370-4707.jpg?semt=ais_hybrid&w=740"}
-                                                                alt={instructor.name || instructor.email}
-                                                                className="h-16 w-16 rounded-full object-cover mr-4 border-2 border-gray-100 dark:border-gray-700"
-                                                            />
-                                                            <div className="flex-1">
-                                                                <h3 className="text-lg font-bold text-gray-900 dark:text-white">{instructor.name || 'Teacher'}</h3>
-                                                                <div className="flex items-center mt-1">
-                                                                    <Star className="h-4 w-4 text-yellow-400 fill-current" />
-                                                                    <span className="ml-1 text-sm text-gray-600 dark:text-gray-400">
-                                                                        {4.9} ({'5+'} courses)
-                                                                    </span>
-                                                                </div>
-                                                                {instructor.profile && (
-                                                                    <p className="mt-2 text-gray-600 dark:text-gray-400 text-sm">
-                                                                        {instructor?.profile?.bio}
-                                                                    </p>
-                                                                )}
-                                                            </div>
-                                                        </div>
-                                                    </div>
-                                                ))}
-                                            </div>
-                                        </div>
-                                    )}
+                                  {activeTab === "instructors" && (
+  <div className="space-y-8">
+    {/* Section Header */}
+    <div className="flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
+      <div>
+        <div className="mb-2 flex items-center gap-2">
+          <span className="h-1 w-8 rounded-full bg-[#F26738]" />
+          <span className="text-xs font-semibold uppercase tracking-[0.15em] text-[#F26738]">
+            Our Faculty
+          </span>
+        </div>
+
+        <h2 className="text-2xl font-bold tracking-tight text-gray-900 dark:text-white sm:text-xl">
+          Meet Your Instructors
+        </h2>
+
+        <p className="mt-2 max-w-2xl text-sm leading-6 text-gray-500 dark:text-gray-400">
+          Learn from experienced educators and industry professionals
+          dedicated to helping you achieve your academic goals.
+        </p>
+      </div>
+
+      {/* Instructor Count */}
+      <div className="flex w-fit items-center gap-2 rounded-full border border-[#F6D7CA] bg-[#FFF7F3] px-3 py-1.5">
+        <div className="flex -space-x-2">
+          {course.instructorNames?.slice(0, 3).map((instructor, index) => (
+            <div
+              key={instructor._id || index}
+              className="h-7 w-7 overflow-hidden rounded-full border-2 border-white bg-orange-200"
+            >
+              <img
+                src={
+                  instructor.profilePic
+                    ? `https://res.cloudinary.com/dd5s7qpsc/image/upload/${instructor.profilePic}`
+                    : "https://cdn-icons-png.flaticon.com/512/10337/10337609.png"
+                }
+                alt={instructor.name || instructor.email || "Instructor"}
+                className="h-full w-full object-cover"
+              />
+            </div>
+          ))}
+        </div>
+
+        <span className="text-xs font-semibold text-[#D95327]">
+          {course.instructorNames?.length || 0} Instructors
+        </span>
+      </div>
+    </div>
+
+    {/* Instructor Cards */}
+   <div className="grid grid-cols-1 gap-4">
+  {course.instructorNames?.map((instructor) => (
+    <div
+      key={instructor._id}
+      className="
+        group relative overflow-hidden
+        rounded-2xl
+        border border-gray-800
+        bg-white
+        shadow-[0_3px_15px_rgba(0,0,0,0.04)]
+        transition-all duration-300
+      
+        hover:shadow-[0_8px_25px_rgba(242,103,56,0.10)]
+      "
+    >
+      {/* Orange Accent */}
+
+      <div className="flex items-center gap-4 p-4 sm:p-5">
+
+        {/* Profile Image */}
+        <div className="relative shrink-0">
+          <div
+            className="
+              h-[64px] w-[64px]
+              overflow-hidden rounded-xl
+              border-2 border-[#FFF1EB]
+              bg-[#FFF1EB]
+              shadow-[0_4px_12px_rgba(242,103,56,0.12)]
+            "
+          >
+            <img
+              src={
+                instructor.profilePic
+                  ? `https://res.cloudinary.com/dd5s7qpsc/image/upload/${instructor.profilePic}`
+                  : "https://cdn-icons-png.flaticon.com/512/10337/10337609.png"
+              }
+              alt={
+                instructor.name ||
+                instructor.email ||
+                "Instructor"
+              }
+              className="
+                h-full w-full object-cover
+                
+              "
+              onError={(e) => {
+                e.currentTarget.src =
+                  "https://cdn-icons-png.flaticon.com/512/10337/10337609.png";
+              }}
+            />
+          </div>
+
+          {/* Active Indicator */}
+          <span
+            className="
+              absolute -bottom-1 -right-1
+              flex h-5 w-5 items-center justify-center
+              rounded-full
+              border-[3px] border-white
+              bg-[#22C55E]
+            "
+          >
+            <span className="h-1.5 w-1.5 rounded-full bg-white" />
+          </span>
+        </div>
+
+        {/* Instructor Info */}
+        <div className="min-w-0 flex-1">
+          <h3
+            className="
+              truncate
+              text-base
+              font-bold
+              text-gray-900
+              transition-colors
+              group-hover:text-[#F26738]
+            "
+          >
+            {instructor.name || "Expert Instructor"}
+          </h3>
+
+          <p className="mt-0.5 truncate text-xs text-gray-500">
+            {instructor.email || "Education & Academic Expert"}
+          </p>
+
+          {/* Rating */}
+          <div className="mt-2 flex items-center gap-2">
+            <div
+              className="
+                flex items-center gap-1
+                rounded-full
+                bg-[#FFF5F0]
+                px-2 py-1
+              "
+            >
+              <Star
+                size={11}
+                strokeWidth={2}
+                className="fill-[#F5A623] text-[#F5A623]"
+              />
+
+              <span className="text-[10px] font-bold text-[#D95327]">
+                4.9
+              </span>
+            </div>
+
+            <span className="text-[10px] text-gray-400">
+              5+ Courses
+            </span>
+          </div>
+        </div>
+
+        {/* Experience */}
+        <div
+          className="
+            hidden
+            min-w-0
+            flex-1
+            border-l
+            border-[#EEEAE7]
+            pl-5
+            md:block
+          "
+        >
+          {instructor.experience?.length > 0 ? (
+            <div>
+              <p className="mb-1 text-[9px] font-medium uppercase tracking-wide text-[#F26738]">
+                Experience
+              </p>
+
+              <p className="line-clamp-2 text-xs leading-5 text-gray-500">
+                {instructor.experience
+                  .map((item) =>
+                    typeof item === "string"
+                      ? item
+                      : item?.designation ||
+                        item?.title ||
+                        item?.companyName ||
+                        ""
+                  )
+                  .filter(Boolean)
+                  .join(" • ")}
+              </p>
+            </div>
+          ) : (
+            <div>
+              <p className="mb-1 text-sm font-medium uppercase tracking-wide text-[#F26738]">
+                Faculty
+              </p>
+
+              <p className="line-clamp-2 text-xs leading-5 text-gray-400">
+                Experienced educator dedicated to helping students
+                achieve their academic goals.
+              </p>
+            </div>
+          )}
+        </div>
+
+        {/* Teaching */}
+        <div className="hidden shrink-0 items-center gap-2 lg:flex">
+          <div
+            className="
+              flex h-9 w-9
+              items-center justify-center
+              rounded-lg
+              bg-[#FFF1EB]
+              text-[#F26738]
+            "
+          >
+            <GraduationCap
+              size={16}
+              strokeWidth={1.8}
+            />
+          </div>
+
+          <div>
+            <p className="text-sm text-gray-400">
+              Teaching
+            </p>
+
+            <p className="text-[11px] font-semibold text-gray-700">
+              Expert Faculty
+            </p>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  ))}
+</div>
+
+    {/* Empty State */}
+    {!course.instructorNames?.length && (
+      <div className="rounded-2xl border border-dashed border-[#E5E1DE] bg-[#FFFCFA] py-12 text-center">
+        <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-[#FFF1EB] text-[#F26738]">
+          <GraduationCap size={22} />
+        </div>
+
+        <h3 className="mt-4 text-sm font-semibold text-gray-800">
+          No instructors available
+        </h3>
+
+        <p className="mt-1 text-xs text-gray-500">
+          Instructor information will appear here once available.
+        </p>
+      </div>
+    )}
+  </div>
+)}
                                     {activeTab === "reviews" && (
                                         <div className="space-y-8">
                                             <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between">
