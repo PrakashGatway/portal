@@ -204,6 +204,8 @@ export default function App() {
                   />
                 }
               >
+
+                
                 <Route path="/leads" element={<LeadManagement />} />
                 <Route path="/lead-report" element={<DailyReport />} />
               </Route>
