@@ -173,7 +173,7 @@ export default function ArticleManagement() {
         if (!validateForm()) return;
         try {
             const payload = { ...formData };
-            let imageUrl = formData.image;
+            let imageUrl = formData.image;   
 
             if (coverImageFile) {
                 const imageFormData = new FormData();
