@@ -252,7 +252,7 @@ export default function ReferAndEarnPage() {
     }
 
     return (
-        <div className="min-h-screen bg-gradient-to-br from-gray-50 via-blue-50/30 to-purple-50/30 dark:from-gray-900 dark:via-blue-900/10 dark:to-purple-900/10 transition-all duration-300">
+        <div className="min-h-screen  dark:from-gray-900 dark:via-blue-900/10 dark:to-purple-900/10 transition-all duration-300">
             <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
                 {/* Tabs */}
                 <motion.div
@@ -284,75 +284,109 @@ export default function ReferAndEarnPage() {
                     })}
                 </motion.div>
 
-                <AnimatePresence mode="wait">
+                <AnimatePresence mode="wait" >
                     <motion.div
                         key={activeTab}
                         initial={{ opacity: 0, y: 20 }}
                         animate={{ opacity: 1, y: 0 }}
                         exit={{ opacity: 0, y: -20 }}
                         transition={{ duration: 0.3 }}
-                        className="space-y-6"
+                        className="space-y-6 bg-white rounded-3xl px-4"
                     >
                         {activeTab === "refer" && (
                             <>
-                                <div className="lg:h-130 max-w-3xl mx-auto  bg-gray-200/30 p-4 md:p-2 border-2 border-[#E8A38C] rounded-[30px] relative overflow-hidden">
-                                    <div className="mx-auto max-w-2xl">
-                                        {/* Main Container */}
-                                        <div className="rounded-3xl lg:p-6 md:py-2 md:pt-4 ">
-                                            {/* Header */}
-                                            <h1 className="lg:text-center lg:text-3xl md:text-4xl font-bold border-b border-gray-700 w-80 mx-auto">
-                                                <span className="text-[#4A4A4A]">Refer and </span>
-                                                <span className="text-[#FF6B4A]">Earn</span>
-                                            </h1>
-                                        </div>
-                                        <div className="lg:mb-10 w-full lg:w-150 mx-auto">
-                                            {/* Invite Section */}
-                                            <div className="mt-8 rounded-t-[30px] bg-gradient-to-br from-[#FFF0EC] to-[#FFE8E1] border border-[#F5D5CC] p-6 md:p-8 ">
-                                                {/* Invite Text */}
-                                                <p className="text-left text-lg md:text-xl text-[#666666] font-medium mb-3">
-                                                    Invite your friends
-                                                </p>
+                                   <section className="w-full ">
+      <div className="mx-auto w-full max-w-[1400px] px-5 py-8 sm:px-8 lg:px-10 xl:px-1">
 
-                                                {/* Earn Amount */}
-                                                <h2 className="text-left text-xl md:text-4xl font-bold text-[#FF6B4A] lg:mb-6">
-                                                    Earn ₹250* Per Share
-                                                </h2>
+    
 
+        {/* Main Content */}
+        <div className="grid grid-cols-1 items-center justify-center gap-8 lg:grid-cols-[1.3fr_0.7fr] lg:gap-5">
 
-                                            </div>
-                                            {/* Rewards Bar */}
-                                            <div className="rounded-b-[30px] bg-[#3D3D3D] p-5 md:p-6 flex items-center justify-between">
-                                                <div className="flex items-center gap-4">
-                                                    <div className="relative">
-                                                        <div className="lg:w-14 lg:h-14 rounded-full w-8 h-8 bg-gradient-to-br from-[#FFD700] to-[#FFA500] flex items-center justify-center shadow-lg">
-                                                            <div className="lg:text-2xl font-bold text-white">₹</div>
-                                                        </div>
-                                                    </div>
-                                                    <div>
-                                                        <p className="text-white font-semibold text-sm md:text-lg">My rewards</p>
-                                                        <p className="text-[#CCCCCC] text-sm md:text-base">1 Point = ₹1</p>
-                                                    </div>
-                                                </div>
+          {/* Left Card */}
+          <div>
+               <h1 className="mb-6 text-center text-[38px] font-extrabold leading-tight tracking-tight text-[#222222] sm:text-[46px] lg:text-4xl">
+          Refer and
+         {" "}  <span className="text-[#ff7047]">Earn</span>
 
-                                                {/* Rewards Display with Arrow */}
-                                                <div className="flex items-center gap-3">
-                                                    <div className="px-2 py-1 md:px-6 md:py-3 rounded-lg border-2 border-[#FF6B4A] lg:min-w-[80px] text-center">
-                                                        <p className="text-[#FF6B4A] text-2xl md:text-3xl font-bold">₹{wallet?.totalEarned || 0}</p>
-                                                    </div>
-                                                   
-                                                </div>
-                                            </div>
+        </h1>
+          <div className="w-full overflow-hidden rounded-[38px]">
+                {/* Heading */}
+     
 
+            {/* Orange Section */}
+            <div className="flex min-h-[205px] flex-col justify-center bg-[#fb7048] px-8 py-10 sm:px-12 lg:px-16">
+              <h2 className="mb-2 text-[25px] font-bold leading-tight text-white sm:text-[30px] lg:text-3xl">
+                Invite your friends
+              </h2>
 
+              <p className="text-[30px] font-extrabold leading-tight text-white sm:text-[38px] lg:text-3xl">
+                Earn ₹250* Per Share
+              </p>
+            </div>
 
+            {/* Rewards Section */}
+            <div className="flex min-h-[133px] items-center gap-5 bg-[#fff0c5] px-7 py-5 sm:px-12 lg:px-14">
 
+              {/* Coin */}
+              <div className="flex h-[62px] w-[62px] shrink-0 items-center justify-center rounded-full bg-[#ffbd17] shadow-inner sm:h-[68px] sm:w-[68px]">
+                <div className="flex h-[54px] w-[54px] items-center justify-center rounded-full border-[2px] border-[#ffe28a]">
+                  <span className="text-[28px] text-white">♜</span>
+                </div>
+              </div>
 
-                                        </div>
-                                    </div>
-                                </div>
+              {/* Reward Text */}
+              <div className="min-w-0 flex-1">
+                <h3 className="text-[25px] font-extrabold leading-tight text-[#292929] sm:text-[30px]">
+                  My rewards
+                </h3>
+
+                <p className="mt-1 text-[21px] font-bold text-[#292929] sm:text-[27px]">
+                  1 Point = ₹1
+                </p>
+              </div>
+
+              {/* Points */}
+              <div className="flex h-[62px] w-[110px] shrink-0 items-center justify-center rounded-[18px] border-[2px] border-[#ff7047] bg-white sm:h-[82px] sm:w-[138px] sm:rounded-[18px]">
+                <span className="text-[38px] font-bold text-[#ff7047] sm:text-[46px]">
+                  {wallet?.totalEarned || 0}
+                </span>
+              </div>
+
+              {/* Arrow */}
+              <button
+                type="button"
+                className="flex shrink-0 items-center justify-center text-[#ff7047] transition-transform duration-200 hover:translate-x-1"
+              >
+                <ChevronRight
+                  size={48}
+                  strokeWidth={4}
+                  className="sm:h-[52px] sm:w-[52px]"
+                />
+              </button>
+            </div>
+          </div> </div>
+
+          {/* Right Illustration */}
+          <div className="flex items-center justify-center lg:justify-end mt-20">
+            <img
+              src="/images/refer-img.webp"
+              alt="Refer and earn"
+              className="
+                h-full
+                w-full
+                max-w-[540px]
+                object-contain
+                lg:w-[480px]
+              "
+            />
+          </div>
+        </div>
+      </div>
+    </section>
                                 {/* Referral Journey Section */}
-                                <div className="relative w-full max-w-2xl mx-auto lg:-mt-20">
-                                    <div className="bg-white rounded-[28px] shadow-[0_12px_20px_rgba(0,0,0,0.08)] px-6 lg:px-10 py-8">
+                                <div className="relative w-full w-5xl mx-auto ">
+                                    <div className=" px-6 lg:px-10 py-8">
 
                                         {/* Desktop Dashed Line */}
                                         <svg
@@ -463,10 +497,10 @@ export default function ReferAndEarnPage() {
 
                                     <motion.div
                                         whileHover={{ y: -2 }}
-                                        className=" lg:p-8 lg:w-xl mx-auto"
+                                        className=" lg:p-8 lg:w-3xl mx-auto"
                                     >
                                         {/* Heading */}
-                                        <h2 className="text-center text-xl font-bold text-[#5A5A5A]">
+                                        <h2 className="text-center text-2xl font-bold text-[#5A5A5A]">
                                             Share Your Referral Code
                                         </h2>
 
@@ -628,9 +662,8 @@ export default function ReferAndEarnPage() {
                                 </div>
                             </motion.div>
                         )}
-                    </motion.div>
 
-                    {/* How It Works */}
+                           {/* How It Works */}
                     <motion.div
                         whileHover={{ y: -2 }}
                         className="mt-0  p-4  max-w-5xl mx-auto"
@@ -685,6 +718,9 @@ export default function ReferAndEarnPage() {
                         </div>
 
                     </motion.div>
+                    </motion.div>
+
+                 
                 </AnimatePresence>
             </div>
         </div>
