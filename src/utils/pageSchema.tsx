@@ -1,38 +1,48 @@
 // src/utils/pageTypeSchema.js
 
 export const PAGE_TYPES_SCHEMA = {
-  "city_page": {
+  city_page: {
     label: "city_page",
     fields: [
       { name: "heroImage", type: "file", label: "Hero Image", required: false },
     ],
     sections: [
       {
-        type : "statssection",
-        label : "Stats Section",
-        fields : [
+        type: "statssection",
+        label: "Stats Section",
+        fields: [
           {
-            name : "icon",type : "text",label : "Icon"},
-           { name : "title", type : "text", label : "title"},
-           { name : "title", type : "editor", label : "subtile"},
-        ]
-
+            name: "icon",
+            type: "text",
+            label: "Icon",
+          },
+          { name: "title", type: "text", label: "title" },
+          { name: "title", type: "editor", label: "subtile" },
+        ],
       },
       {
-        type : "StudyDestinations",
-        label : "Study Destinations",
-        fields : [  
-          {name : "label",type : "text",label : "Label"},
-          {name : "title",type : "text",label : "Section Title"},
-          {name : "subTitle",type : "editor",label : "Section Sub Title"},
-          {name : "destinations",type : "array",label : "Destinations",itemFields : [
-            {name : "name",type : "text",label : "Destination Name"},
-            {name : "subtitle",type : "editor",label : "Destination Sub Title"},
-            {name : "slug",type : "text",label : "Destination Slug"},
-            {name : "image",type : "file",label : "Destination Image"},
-          ]}
-        ]
-
+        type: "StudyDestinations",
+        label: "Study Destinations",
+        fields: [
+          { name: "label", type: "text", label: "Label" },
+          { name: "title", type: "text", label: "Section Title" },
+          { name: "subTitle", type: "editor", label: "Section Sub Title" },
+          {
+            name: "destinations",
+            type: "array",
+            label: "Destinations",
+            itemFields: [
+              { name: "name", type: "text", label: "Destination Name" },
+              {
+                name: "subtitle",
+                type: "editor",
+                label: "Destination Sub Title",
+              },
+              { name: "slug", type: "text", label: "Destination Slug" },
+              { name: "image", type: "file", label: "Destination Image" },
+            ],
+          },
+        ],
       },
       {
         type: "AcademicPrograms",
@@ -53,28 +63,33 @@ export const PAGE_TYPES_SCHEMA = {
           // },
         ],
       },
-     {
-        type : "whychooseus",
-        label : "Why Choose Us",
-        fields : [
-          {name : "label",type : "text",label : "Label"},
-          {name : "title",type : "text",label : "Section Title"},
-          {name : "subTitle",type : "editor",label : "Section Sub Title"},
-          {name : "cards",type : "array",label : "Cards",itemFields : [
-            {name : "icon",type : "text",label : "Icon"},
-            {name : "title",type : "text",label : "Title"},
-            {name : "description",type : "editor",label : "Description"},
-          ]}
-        ]
+      {
+        type: "whychooseus",
+        label: "Why Choose Us",
+        fields: [
+          { name: "label", type: "text", label: "Label" },
+          { name: "title", type: "text", label: "Section Title" },
+          { name: "subTitle", type: "editor", label: "Section Sub Title" },
+          {
+            name: "cards",
+            type: "array",
+            label: "Cards",
+            itemFields: [
+              { name: "icon", type: "text", label: "Icon" },
+              { name: "title", type: "text", label: "Title" },
+              { name: "description", type: "editor", label: "Description" },
+            ],
+          },
+        ],
       },
       {
-        type  : "servicesection",
-        label : "Service section",
+        type: "servicesection",
+        label: "Service section",
         fields: [
           { name: "label", type: "text", label: "Section Label" },
           { name: "title", type: "text", label: "Section Title" },
           { name: "subtitle", type: "editor", label: "Section Subtitle" },
-           {
+          {
             name: "Cards",
             type: "array",
             label: "Cards",
@@ -82,41 +97,57 @@ export const PAGE_TYPES_SCHEMA = {
               { name: "icon", type: "text", label: "Icon" },
               { name: "title", type: "text", label: "Title" },
               { name: "subtitle", type: "editor", label: "Subtitle" },
-              {name : "btn",type: "text",label : "btn"}
+              { name: "btn", type: "text", label: "btn" },
             ],
           },
-        ]
+        ],
       },
-        {
-        type : "citysection",
-        label : "City Section",
-        fields : [
-          {name : "label",type : "text",label : "Label"},
-          {name : "title",type : "text",label : "Section Title"},
-          {name : "subTitle",type : "editor",label : "Section Sub Title"},
-          {name : "cities",type : "array",label : "Cities",itemFields : [
-            {name : "icon",type : "text",label : "City Icon"},
-            {name : "name",type : "text",label : "City Name"},
-            {name : "slug",type : "text",label : "City Slug"},
-            {name : "description",type : "editor",label : "City Description"},
-          ]},
-          {name : "sectiondescription",type : "editor",label : "Section Description"},
-        ]
+      {
+        type: "citysection",
+        label: "City Section",
+        fields: [
+          { name: "label", type: "text", label: "Label" },
+          { name: "title", type: "text", label: "Section Title" },
+          { name: "subTitle", type: "editor", label: "Section Sub Title" },
+          {
+            name: "cities",
+            type: "array",
+            label: "Cities",
+            itemFields: [
+              { name: "icon", type: "text", label: "City Icon" },
+              { name: "name", type: "text", label: "City Name" },
+              { name: "slug", type: "text", label: "City Slug" },
+              {
+                name: "description",
+                type: "editor",
+                label: "City Description",
+              },
+            ],
+          },
+          {
+            name: "sectiondescription",
+            type: "editor",
+            label: "Section Description",
+          },
+        ],
       },
-       {
-        type : "ctasection",
-        label : "CTA Section",
-        fields : [
-          {name : "title",type : "text",label : "Section Title"},
-          {name : "subTitle",type : "editor",label : "Section Sub Title"},
-          {name : "features",type : "array",label : "Features",itemFields : [
-            {name : "featuretitle",type : "text",label : "Feature Title"},
-          ]
-        }
-        ]
-
+      {
+        type: "ctasection",
+        label: "CTA Section",
+        fields: [
+          { name: "title", type: "text", label: "Section Title" },
+          { name: "subTitle", type: "editor", label: "Section Sub Title" },
+          {
+            name: "features",
+            type: "array",
+            label: "Features",
+            itemFields: [
+              { name: "featuretitle", type: "text", label: "Feature Title" },
+            ],
+          },
+        ],
       },
-       {
+      {
         type: "BestUniversities",
         label: "Best Universities",
         fields: [
@@ -131,11 +162,15 @@ export const PAGE_TYPES_SCHEMA = {
               { name: "qsRank", type: "text", label: "Qsrank" },
               { name: "description", type: "text", label: "Description" },
               { name: "location", type: "text", label: "Location" },
-              { name: "Courses", type: "array", label: "Courses", itemType: "text" },
+              {
+                name: "Courses",
+                type: "array",
+                label: "Courses",
+                itemType: "text",
+              },
               { name: "year", type: "text", label: "Year" },
               { name: "icon", type: "text", label: "Icon" },
-              {name : "slug",type: "text", label : "Slug"}
-            
+              { name: "slug", type: "text", label: "Slug" },
             ],
           },
         ],
@@ -146,7 +181,6 @@ export const PAGE_TYPES_SCHEMA = {
         fields: [
           { name: "title", type: "text", label: "Section Title" },
           { name: "content", type: "editor", label: "Section content" },
-         
         ],
       },
     ],
@@ -156,9 +190,24 @@ export const PAGE_TYPES_SCHEMA = {
     label: "country_page",
     fields: [
       { name: "heroImage", type: "file", label: "Hero Image", required: false },
-      { name: "roadmapImage", type: "file", label: "Roadmap Image", required: false },
-      { name: "mobileRoadMap", type: "file", label: "Mobile Roadmap Image", required: false },
-      { name: "sliderImage", type: "file", label: "Slider Image", required: false },
+      {
+        name: "roadmapImage",
+        type: "file",
+        label: "Roadmap Image",
+        required: false,
+      },
+      {
+        name: "mobileRoadMap",
+        type: "file",
+        label: "Mobile Roadmap Image",
+        required: false,
+      },
+      {
+        name: "sliderImage",
+        type: "file",
+        label: "Slider Image",
+        required: false,
+      },
     ],
     sections: [
       {
@@ -169,9 +218,7 @@ export const PAGE_TYPES_SCHEMA = {
             name: "points",
             type: "array",
             label: "Points",
-            itemFields: [
-              { name: "content", type: "text", label: "Quote" },
-            ],
+            itemFields: [{ name: "content", type: "text", label: "Quote" }],
           },
           {
             name: "stats",
@@ -183,7 +230,12 @@ export const PAGE_TYPES_SCHEMA = {
             ],
           },
           { name: "title", type: "text", label: "form Title" },
-          { name: "subtitle", type: "text", label: "form Sub Title", required: false }
+          {
+            name: "subtitle",
+            type: "text",
+            label: "form Sub Title",
+            required: false,
+          },
         ],
       },
       {
@@ -191,7 +243,12 @@ export const PAGE_TYPES_SCHEMA = {
         label: "Form Section",
         fields: [
           { name: "title", type: "text", label: "Section Title" },
-          { name: "roadmapTitle", type: "text", label: "Roadmap Title", required: false }
+          {
+            name: "roadmapTitle",
+            type: "text",
+            label: "Roadmap Title",
+            required: false,
+          },
         ],
       },
       {
@@ -227,11 +284,15 @@ export const PAGE_TYPES_SCHEMA = {
               { name: "qsRank", type: "text", label: "Qsrank" },
               { name: "description", type: "text", label: "Description" },
               { name: "location", type: "text", label: "Location" },
-              { name: "Courses", type: "array", label: "Courses", itemType: "text" },
+              {
+                name: "Courses",
+                type: "array",
+                label: "Courses",
+                itemType: "text",
+              },
               { name: "year", type: "text", label: "Year" },
               { name: "icon", type: "text", label: "Icon" },
-              {name : "slug",type: "text", label : "Slug"}
-            
+              { name: "slug", type: "text", label: "Slug" },
             ],
           },
         ],
@@ -249,15 +310,15 @@ export const PAGE_TYPES_SCHEMA = {
             itemFields: [
               {
                 name: "iconitem",
-                label: "Icon Item"
+                label: "Icon Item",
               },
               {
                 name: "tableTitle",
                 type: "array",
                 label: "Table Title",
                 itemFields: [
-                  { name: "tabletitle", type: "text", label: "Table Title" }
-                ]
+                  { name: "tabletitle", type: "text", label: "Table Title" },
+                ],
               },
 
               { name: "tablerow", type: "text", label: "Table Row" },
@@ -270,9 +331,9 @@ export const PAGE_TYPES_SCHEMA = {
                   {
                     name: "columnvalue",
                     type: "text",
-                    label: "Column Value"
-                  }
-                ]
+                    label: "Column Value",
+                  },
+                ],
               },
 
               {
@@ -283,9 +344,9 @@ export const PAGE_TYPES_SCHEMA = {
                   {
                     name: "columnvalue",
                     type: "text",
-                    label: "Column Value"
-                  }
-                ]
+                    label: "Column Value",
+                  },
+                ],
               },
 
               {
@@ -296,11 +357,11 @@ export const PAGE_TYPES_SCHEMA = {
                   {
                     name: "columnvalue",
                     type: "text",
-                    label: "Column Value"
-                  }
-                ]
-              }
-            ]
+                    label: "Column Value",
+                  },
+                ],
+              },
+            ],
           },
           {
             name: "educationloan",
@@ -309,8 +370,8 @@ export const PAGE_TYPES_SCHEMA = {
             itemFields: [
               { name: "icon", label: "Icon", type: "text" },
               { name: "title", label: "Title", type: "text" },
-              { name: "educationlist", label: "Education List", type: "text" }
-            ]
+              { name: "educationlist", label: "Education List", type: "text" },
+            ],
           },
           {
             name: "scholarship",
@@ -319,16 +380,24 @@ export const PAGE_TYPES_SCHEMA = {
             itemFields: [
               { name: "icon", label: "Icon", type: "text" },
               { name: "title", label: "Title", type: "text" },
-              { name: "scholarshiplist", label: "Scholarship List", type: "text" },
-              { name: "scholarshipsublist", label: "Scholarship Sub List", type: "text" },
-              { name: "scholarshiptag", label: "Scholarship List Tag", type: "text" }
-
-
-            ]
-          }
-        ]
-
-
+              {
+                name: "scholarshiplist",
+                label: "Scholarship List",
+                type: "text",
+              },
+              {
+                name: "scholarshipsublist",
+                label: "Scholarship Sub List",
+                type: "text",
+              },
+              {
+                name: "scholarshiptag",
+                label: "Scholarship List Tag",
+                type: "text",
+              },
+            ],
+          },
+        ],
       },
       {
         type: "UniversityIntakes",
@@ -337,17 +406,21 @@ export const PAGE_TYPES_SCHEMA = {
           { name: "sectiontitle", label: "Section Title", type: "text" },
           { name: "sectionsubtitle", label: "Section Sub Title", type: "text" },
           {
-            name: "intakecards", label: "Intake Cards", type: "array",
+            name: "intakecards",
+            label: "Intake Cards",
+            type: "array",
             itemFields: [
               { name: "cardtitle", label: "Card Title", type: "text" },
               { name: "cardtag", label: "Card Tag", type: "text" },
               { name: "cardlist", label: "Card List", type: "text" },
-              { name: "cardfeature", label: "Card Feature University", type: "text" },
-            ]
-          }
-
-        ]
-
+              {
+                name: "cardfeature",
+                label: "Card Feature University",
+                type: "text",
+              },
+            ],
+          },
+        ],
       },
       {
         type: "gatewayhelps",
@@ -357,33 +430,37 @@ export const PAGE_TYPES_SCHEMA = {
           { name: "sectionsubtitle", label: "Section Sub Title", type: "text" },
           { name: "sectioncontent", label: "Section Content", type: "editor" },
           {
-            name: "sectioncard", label: "Section Card", type: "array",
+            name: "sectioncard",
+            label: "Section Card",
+            type: "array",
             itemFields: [
               { name: "cardicon", label: "Card Icon", type: "text" },
               { name: "cardbadge", label: "Card Badge", type: "text" },
               { name: "cardtitle", label: "Card Title", type: "text" },
               { name: "cardsubtitle", label: "Card Sub Title", type: "text" },
-            ]
-          }
-
-        ]
+            ],
+          },
+        ],
       },
       {
-        type : "scholarships",
-        label  :"Scholarships",
-        fields : [
-          {name : "sectiontitle",label : "Section Title",type : "text"},
-          {name : "sectionsubtitle",label : "Section Sub Title",type : "text"},
-          {name : "scholarshipcards",label : "Scholarship Cards",type : "array",
-            itemFields : [
-              {name : "cardbadge" , label : "Card Badge" , type : "text"},
-              {name : "cardtitle" , label : "Card Title" , type : "text"},
-              {name : "cardsubtitle" , label : "Card Sub Title" , type : "text"},
-              {name : "cardtags" , label : "Card Tags" , type : "text"},
-              {name : "slug" , label : "Slug" , type : "text"},
-            ]
+        type: "scholarships",
+        label: "Scholarships",
+        fields: [
+          { name: "sectiontitle", label: "Section Title", type: "text" },
+          { name: "sectionsubtitle", label: "Section Sub Title", type: "text" },
+          {
+            name: "scholarshipcards",
+            label: "Scholarship Cards",
+            type: "array",
+            itemFields: [
+              { name: "cardbadge", label: "Card Badge", type: "text" },
+              { name: "cardtitle", label: "Card Title", type: "text" },
+              { name: "cardsubtitle", label: "Card Sub Title", type: "text" },
+              { name: "cardtags", label: "Card Tags", type: "text" },
+              { name: "slug", label: "Slug", type: "text" },
+            ],
           },
-        ]
+        ],
       },
       {
         type: "slider",
@@ -395,12 +472,23 @@ export const PAGE_TYPES_SCHEMA = {
       },
     ],
   },
+
   home_page: {
     label: "home_page",
     fields: [
       { name: "heroImage", type: "file", label: "Hero Image", required: false },
-      { name: "roadmapImage", type: "file", label: "Roadmap Image", required: false },
-      { name: "mobileRoadMap", type: "file", label: "Mobile Roadmap Image", required: false }
+      {
+        name: "roadmapImage",
+        type: "file",
+        label: "Roadmap Image",
+        required: false,
+      },
+      {
+        name: "mobileRoadMap",
+        type: "file",
+        label: "Mobile Roadmap Image",
+        required: false,
+      },
     ],
     sections: [
       {
@@ -408,199 +496,262 @@ export const PAGE_TYPES_SCHEMA = {
         label: "Hero Section",
         fields: [
           { name: "title", type: "text", label: "Title", required: false },
-          { name: "subtitle", type: "editor", label: "Subtitle", required: false },
-          { name: "stats", type: "array", label: "Stats", itemFields: [
-            { name: "value", type: "text", label: "Value" },
-            { name: "content", type: "text", label: "Quote" },
-          ] },
+          {
+            name: "subtitle",
+            type: "editor",
+            label: "Subtitle",
+            required: false,
+          },
+          {
+            name: "stats",
+            type: "array",
+            label: "Stats",
+            itemFields: [
+              { name: "value", type: "text", label: "Value" },
+              { name: "content", type: "text", label: "Quote" },
+            ],
+          },
         ],
       },
       {
-        type : "Testimonial-image",
-        label : "Testinomial Image",
+        type: "Testimonial-image",
+        label: "Testinomial Image",
         fields: [
           {
-            name : "aboutimage",type : "array",label : "Student Image",itemFields : [
-              {name : "image",type : "file",label : "Image"},
-           
-            ]
-          }
-        ]
-
-
+            name: "aboutimage",
+            type: "array",
+            label: "Student Image",
+            itemFields: [{ name: "image", type: "file", label: "Image" }],
+          },
+        ],
       },
       {
-        type : "about-section",
-        label : "About Section",
-        fields : [
-          {name : "label",type : "text",label : "Label"},
-          {name : "title",type : "text",label : "Title"},
-          {name : "subtitle",type : "editor",label : "Subtitle"},
-          {name : "btn1",type : "text",label : "Button 1 Text"},
-          {name : "btn2",type : "text",label : "Button 2 Text"},
-          {name : "service",type : "array",label : "Services",itemFields : [
-            {name : "icon",type : "text",label : "Icon"},
-            {name : "title",type : "text",label : "Title"},
-            {name : "description",type : "editor",label : "Description"},
-          ]
+        type: "about-section",
+        label: "About Section",
+        fields: [
+          { name: "label", type: "text", label: "Label" },
+          { name: "title", type: "text", label: "Title" },
+          { name: "subtitle", type: "editor", label: "Subtitle" },
+          { name: "btn1", type: "text", label: "Button 1 Text" },
+          { name: "btn2", type: "text", label: "Button 2 Text" },
+          {
+            name: "service",
+            type: "array",
+            label: "Services",
+            itemFields: [
+              { name: "icon", type: "text", label: "Icon" },
+              { name: "title", type: "text", label: "Title" },
+              { name: "description", type: "editor", label: "Description" },
+            ],
           },
           {
-            name : "howwehelp",type : "array",label : "How We Help",itemFields : [
-              {name : "tag",type : "text",label : "Tag"},
-              {name : "description",type : "editor",label : "Description"},
-            ]
+            name: "howwehelp",
+            type: "array",
+            label: "How We Help",
+            itemFields: [
+              { name: "tag", type: "text", label: "Tag" },
+              { name: "description", type: "editor", label: "Description" },
+            ],
           },
-          
-        ]
-
+        ],
       },
       {
-        type : "StudyDestinations",
-        label : "Study Destinations",
-        fields : [  
-          {name : "label",type : "text",label : "Label"},
-          {name : "title",type : "text",label : "Section Title"},
-          {name : "subTitle",type : "editor",label : "Section Sub Title"},
-          {name : "destinations",type : "array",label : "Destinations",itemFields : [
-            {name : "name",type : "text",label : "Destination Name"},
-            {name : "subtitle",type : "editor",label : "Destination Sub Title"},
-            {name : "slug",type : "text",label : "Destination Slug"},
-            {name : "image",type : "file",label : "Destination Image"},
-          ]}
-        ]
-
+        type: "StudyDestinations",
+        label: "Study Destinations",
+        fields: [
+          { name: "label", type: "text", label: "Label" },
+          { name: "title", type: "text", label: "Section Title" },
+          { name: "subTitle", type: "editor", label: "Section Sub Title" },
+          {
+            name: "destinations",
+            type: "array",
+            label: "Destinations",
+            itemFields: [
+              { name: "name", type: "text", label: "Destination Name" },
+              {
+                name: "subtitle",
+                type: "editor",
+                label: "Destination Sub Title",
+              },
+              { name: "slug", type: "text", label: "Destination Slug" },
+              { name: "image", type: "file", label: "Destination Image" },
+            ],
+          },
+        ],
       },
       {
-        type : "testprepsection",
-        label : "Test Prep Section",
-        fields : [
-          {name : "label",type : "text",label : "Label"},
-          {name : "title",type : "text",label : "Section Title"},
-          {name : "subTitle",type : "editor",label : "Section Sub Title"},
-          {name : "testprepcourses",type : "array",label : "Test Prep Courses",itemFields : [
-            {name : "coursetitle",type : "text",label : "Course Title"},
-            {name : "coursesubtitle",type : "editor",label : "Course Sub Title"},
-            {name : "slug",type : "text",label : "Course Slug"},
-            {name: "btntext", type: "text", label: "Button Text" },
-          ]}
-        ]
+        type: "testprepsection",
+        label: "Test Prep Section",
+        fields: [
+          { name: "label", type: "text", label: "Label" },
+          { name: "title", type: "text", label: "Section Title" },
+          { name: "subTitle", type: "editor", label: "Section Sub Title" },
+          {
+            name: "testprepcourses",
+            type: "array",
+            label: "Test Prep Courses",
+            itemFields: [
+              { name: "coursetitle", type: "text", label: "Course Title" },
+              {
+                name: "coursesubtitle",
+                type: "editor",
+                label: "Course Sub Title",
+              },
+              { name: "slug", type: "text", label: "Course Slug" },
+              { name: "btntext", type: "text", label: "Button Text" },
+            ],
+          },
+        ],
       },
       {
-        type : "studyabroadcounsultants",
-        label : "Study Abroad Consultants",
-        fields : [
-          {name : "label",type : "text",label : "Label"},
-          {name : "title",type : "text",label : "Section Title"},
-          {name : "subTitle",type : "editor",label : "Section Sub Title"},
-          {name : "abroadconsulting",type : "array",label : "Abroad Consulting",itemFields : [
-            {name : "label",type : "text",label : "Label"},
-            {name : "content",type : "editor",label : "Content"},
-            {name : "buttontext",type : "text",label : "Button Text"},
-           
-           ]
+        type: "studyabroadcounsultants",
+        label: "Study Abroad Consultants",
+        fields: [
+          { name: "label", type: "text", label: "Label" },
+          { name: "title", type: "text", label: "Section Title" },
+          { name: "subTitle", type: "editor", label: "Section Sub Title" },
+          {
+            name: "abroadconsulting",
+            type: "array",
+            label: "Abroad Consulting",
+            itemFields: [
+              { name: "label", type: "text", label: "Label" },
+              { name: "content", type: "editor", label: "Content" },
+              { name: "buttontext", type: "text", label: "Button Text" },
+            ],
           },
           {
-            name : "testprepcourses",type : "array",label : "Test Prep Courses",itemFields : [
-            {name : "label",type : "text",label : "Label"},
-              {name : "content",type : "editor",label : "Content"}, 
-              {name : "buttontext",type : "text",label : "Button Text"},
-            ]
-          }
-        ]
-
-
+            name: "testprepcourses",
+            type: "array",
+            label: "Test Prep Courses",
+            itemFields: [
+              { name: "label", type: "text", label: "Label" },
+              { name: "content", type: "editor", label: "Content" },
+              { name: "buttontext", type: "text", label: "Button Text" },
+            ],
+          },
+        ],
       },
       {
-        type : "whychooseus",
-        label : "Why Choose Us",
-        fields : [
-          {name : "label",type : "text",label : "Label"},
-          {name : "title",type : "text",label : "Section Title"},
-          {name : "subTitle",type : "editor",label : "Section Sub Title"},
-          {name : "cards",type : "array",label : "Cards",itemFields : [
-            {name : "icon",type : "text",label : "Icon"},
-            {name : "title",type : "text",label : "Title"},
-            {name : "description",type : "editor",label : "Description"},
-          ]}
-        ]
+        type: "whychooseus",
+        label: "Why Choose Us",
+        fields: [
+          { name: "label", type: "text", label: "Label" },
+          { name: "title", type: "text", label: "Section Title" },
+          { name: "subTitle", type: "editor", label: "Section Sub Title" },
+          {
+            name: "cards",
+            type: "array",
+            label: "Cards",
+            itemFields: [
+              { name: "icon", type: "text", label: "Icon" },
+              { name: "title", type: "text", label: "Title" },
+              { name: "description", type: "editor", label: "Description" },
+            ],
+          },
+        ],
       },
       {
-        type : "6stepprocess",
-        label : "6 Step Process",
-        fields : [
-          {name : "label",type : "text",label : "Label"},
-          {name : "title",type : "text",label : "Section Title"},
-          {name : "subTitle",type : "editor",label : "Section Sub Title"},
-          {name : "processsteps",type : "array",label : "Process Steps",itemFields : [
-            {name : "icon",type : "text",label : "Icon"},
-            {name : "title",type : "text",label : "Title"},
-            {name : "description",type : "editor",label : "Description"},
-          ]}
-        ]
+        type: "6stepprocess",
+        label: "6 Step Process",
+        fields: [
+          { name: "label", type: "text", label: "Label" },
+          { name: "title", type: "text", label: "Section Title" },
+          { name: "subTitle", type: "editor", label: "Section Sub Title" },
+          {
+            name: "processsteps",
+            type: "array",
+            label: "Process Steps",
+            itemFields: [
+              { name: "icon", type: "text", label: "Icon" },
+              { name: "title", type: "text", label: "Title" },
+              { name: "description", type: "editor", label: "Description" },
+            ],
+          },
+        ],
       },
       {
-        type : "scoreachievements",
-        label : "Score Achievements",
-        fields : [
-          {name : "label",type : "text",label : "Label"},
-          {name : "title",type : "text",label : "Section Title"},
-          {name : "subTitle",type : "editor",label : "Section Sub Title"},
-        ]
+        type: "scoreachievements",
+        label: "Score Achievements",
+        fields: [
+          { name: "label", type: "text", label: "Label" },
+          { name: "title", type: "text", label: "Section Title" },
+          { name: "subTitle", type: "editor", label: "Section Sub Title" },
+        ],
       },
       {
-        type : "testimonials",
-        label : "Testimonials",
-        fields : [
-          {name : "label",type : "text",label : "Label"},
-          {name : "title",type : "text",label : "Section Title"},
-          {name : "subTitle",type : "editor",label : "Section Sub Title"},
-        ]
-
+        type: "testimonials",
+        label: "Testimonials",
+        fields: [
+          { name: "label", type: "text", label: "Label" },
+          { name: "title", type: "text", label: "Section Title" },
+          { name: "subTitle", type: "editor", label: "Section Sub Title" },
+        ],
       },
       {
-        type : "citysection",
-        label : "City Section",
-        fields : [
-          {name : "label",type : "text",label : "Label"},
-          {name : "title",type : "text",label : "Section Title"},
-          {name : "subTitle",type : "editor",label : "Section Sub Title"},
-          {name : "cities",type : "array",label : "Cities",itemFields : [
-            {name : "icon",type : "text",label : "City Icon"},
-            {name : "name",type : "text",label : "City Name"},
-            {name : "slug",type : "text",label : "City Slug"},
-            {name : "description",type : "editor",label : "City Description"},
-          ]},
-          {name : "sectiondescription",type : "editor",label : "Section Description"},
-        ]
+        type: "citysection",
+        label: "City Section",
+        fields: [
+          { name: "label", type: "text", label: "Label" },
+          { name: "title", type: "text", label: "Section Title" },
+          { name: "subTitle", type: "editor", label: "Section Sub Title" },
+          {
+            name: "cities",
+            type: "array",
+            label: "Cities",
+            itemFields: [
+              { name: "icon", type: "text", label: "City Icon" },
+              { name: "name", type: "text", label: "City Name" },
+              { name: "slug", type: "text", label: "City Slug" },
+              {
+                name: "description",
+                type: "editor",
+                label: "City Description",
+              },
+            ],
+          },
+          {
+            name: "sectiondescription",
+            type: "editor",
+            label: "Section Description",
+          },
+        ],
       },
       {
-        type : "ctasection",
-        label : "CTA Section",
-        fields : [
-          {name : "title",type : "text",label : "Section Title"},
-          {name : "subTitle",type : "editor",label : "Section Sub Title"},
-          {name : "features",type : "array",label : "Features",itemFields : [
-            {name : "featuretitle",type : "text",label : "Feature Title"},
-          ]
-        }
-        ]
-
+        type: "ctasection",
+        label: "CTA Section",
+        fields: [
+          { name: "title", type: "text", label: "Section Title" },
+          { name: "subTitle", type: "editor", label: "Section Sub Title" },
+          {
+            name: "features",
+            type: "array",
+            label: "Features",
+            itemFields: [
+              { name: "featuretitle", type: "text", label: "Feature Title" },
+            ],
+          },
+        ],
       },
       {
-        type : "faqsection",
-        label : "FAQ Section",
-        fields : [
-          {name : "label",type : "text",label : "Label"},
-          {name : "title",type : "text",label : "Section Title"},
-        ]
-
+        type: "faqsection",
+        label: "FAQ Section",
+        fields: [
+          { name: "label", type: "text", label: "Label" },
+          { name: "title", type: "text", label: "Section Title" },
+        ],
       },
       {
         type: "form-section",
         label: "Form Section",
         fields: [
           { name: "title", type: "text", label: "Section Title" },
-          { name: "roadmapTitle", type: "text", label: "Roadmap Title", required: false }
+          {
+            name: "roadmapTitle",
+            type: "text",
+            label: "Roadmap Title",
+            required: false,
+          },
         ],
       },
       {
@@ -627,6 +778,592 @@ export const PAGE_TYPES_SCHEMA = {
         fields: [
           { name: "label", type: "text", label: "Label", required: false },
           { name: "title", type: "text", label: "Title", required: false },
+        ],
+      },
+    ],
+  },
+
+  course_page: {
+    label: "course_page",
+
+    fields: [
+      {
+        name: "heroImage",
+        type: "file",
+        label: "Hero Image",
+        required: false,
+      },
+      {
+        name: "WhatIsImage",
+        type: "file",
+        label: "What is Img",
+        required: false,
+      },
+      {
+        name: "Scoresimg",
+        type: "file",
+        label: "Scores Image",
+        required: false,
+      },
+    ],
+
+    sections: [
+      {
+        type: "hero",
+        label: "Hero Section",
+
+        fields: [
+          {
+            name: "title",
+            type: "text",
+            label: "Title",
+            required: false,
+          },
+          {
+            name: "description",
+            type: "editor",
+            label: "Description",
+            required: false,
+          },
+          {
+            name: "highlightText",
+            type: "text",
+            label: "Highlight Text",
+            required: false,
+          }
+        ],
+      },
+
+      {
+        type: "whatIsToefl",
+        label: "What is TOEFL Section",
+
+        fields: [
+          {
+            name: "sectionTitle",
+            type: "text",
+            label: "Section Title",
+          },
+          {
+            name: "description",
+            type: "editor",
+            label: "Description",
+          },
+
+        ],
+      },
+
+          {
+            name: "whatIsOnToefl",
+            type: "editor",
+            label: "What is on TOEFL",
+
+            fields: [
+              {
+                name: "title",
+                type: "text",
+                label: "Title",
+              },
+              
+              {
+                name: "img",
+                type: "file",
+                label: "Section Image",
+              },
+
+              {
+                name: "items",
+                type: "array",
+                label: "TOEFL Sections",
+
+                itemFields: [
+                  {
+                    name: "title",
+                    type: "text",
+                    label: "Title",
+                  },
+                  {
+                    name: "description",
+                    type: "editor",
+                    label: "Description",
+                  },
+                  {
+                    name: "icon",
+                    type: "text",
+                    label: "Icon",
+                  },
+                ],
+              },
+            ],
+          },
+
+           
+      {
+        type: "Scoresection",
+        label: "Score section",
+
+        fields: [
+          {
+            name: "sectionTitle",
+            type: "text",
+            label: "Section Title",
+          },
+          {
+            name: "sectionSubtitle",
+            type: "editor",
+            label: "Section SubTitle",
+          }
+
+        ],
+      },
+
+      {
+        type: "whyChooseUs",
+        label: "Why Choose Us",
+
+        fields: [
+          {
+            name: "sectionTitle",
+            type: "text",
+            label: "Section Title",
+          },
+
+          {
+            name: "items",
+            type: "array",
+            label: "Why Choose Us Items",
+
+            itemFields: [
+              {
+                name: "title",
+                type: "text",
+                label: "Title",
+              },
+              {
+                name: "description",
+                type: "editor",
+                label: "Description",
+              },
+              {
+                name: "icon",
+                type: "text",
+                label: "Icon",
+              },
+            ],
+          },
+        ],
+      },
+
+      
+      {
+        type: "Resources",
+        label: "Free Resources",
+
+        fields: [
+          {
+            name: "sectionTitle",
+            type: "text",
+            label: "Section Title",
+          },
+
+          {
+            name: "items",
+            type: "array",
+            label: "Free Resources Items",
+
+            itemFields: [
+              {
+                name: "title",
+                type: "text",
+                label: "Title",
+              },
+              {
+                name: "description",
+                type: "editor",
+                label: "Description",
+              }
+            ],
+          },
+        ],
+      },
+
+
+      {
+        type: "pricing",
+        label: "Plans & Pricing",
+
+        fields: [
+          {
+            name: "sectionTitle",
+            type: "text",
+            label: "Section Title",
+          },
+          {
+            name: "description",
+            type: "editor",
+            label: "Payment Description",
+          },
+
+          {
+            name: "plans",
+            type: "array",
+            label: "Pricing Plans",
+
+            itemFields: [
+              {
+                name: "type",
+                type: "text",
+                label: "Plan Type",
+              },
+              {
+                name: "title",
+                type: "text",
+                label: "Plan Title",
+              },
+              {
+                name: "badge",
+                type: "text",
+                label: "Badge",
+                required: false,
+              },
+              {
+                name: "price",
+                type: "text",
+                label: "Price",
+                required: false,
+              },
+              {
+                name: "duration",
+                type: "text",
+                label: "Duration",
+                required: false,
+              },
+              {
+                name: "description",
+                type: "editor",
+                label: "Description",
+              },
+              {
+                name: "additionalDescription",
+                type: "editor",
+                label: "Additional Description",
+                required: false,
+              },
+
+              {
+                name: "features",
+                type: "array",
+                label: "Features",
+
+                itemFields: [
+                  {
+                    name: "text",
+                    type: "editor",
+                    label: "Feature",
+                  },
+                ],
+              },
+
+              {
+                name: "buttonText",
+                type: "text",
+                label: "Button Text",
+              },
+              {
+                name: "buttonUrl",
+                type: "text",
+                label: "Button URL",
+              },
+            ],
+          },
+        ],
+      },
+
+      {
+        type: "resources",
+        label: "Free TOEFL Prep Resources",
+
+        fields: [
+          {
+            name: "sectionTitle",
+            type: "text",
+            label: "Section Title",
+          },
+
+          {
+            name: "items",
+            type: "array",
+            label: "Resources",
+
+            itemFields: [
+              {
+                name: "title",
+                type: "text",
+                label: "Resource Title",
+              },
+              {
+                name: "description",
+                type: "editor",
+                label: "Description",
+              },
+              {
+                name: "buttonText",
+                type: "text",
+                label: "Button Text",
+              },
+              {
+                name: "url",
+                type: "text",
+                label: "Resource URL",
+                required: false,
+              },
+              {
+                name: "file",
+                type: "file",
+                label: "Resource File",
+                required: false,
+              },
+              {
+                name: "icon",
+                type: "text",
+                label: "Icon",
+              },
+            ],
+          },
+        ],
+      },
+
+      {
+        type: "counselling",
+        label: "Counselling Section",
+
+        fields: [
+          {
+            name: "title",
+            type: "text",
+            label: "Section Title",
+          },
+          {
+            name: "description",
+            type: "editor",
+            label: "Description",
+            required: false,
+          },
+          {
+            name: "buttonText",
+            type: "text",
+            label: "Button Text",
+          },
+          {
+            name: "buttonUrl",
+            type: "text",
+            label: "Button URL",
+          },
+          {
+            name: "image",
+            type: "file",
+            label: "Counselling Image",
+            required: false,
+          },
+        ],
+      },
+    ],
+  },
+
+  
+  about_page: {
+    label: "about_page",
+
+    fields: [
+      {
+        name: "heroImage",
+        type: "file",
+        label: "Hero Image",
+        required: false,
+      },
+    ],
+
+    sections: [
+      {
+        type: "hero",
+        label: "Hero Section",
+
+        fields: [
+          {
+            name: "title",
+            type: "text",
+            label: "Title",
+            required: false,
+          },
+          {
+            name: "description",
+            type: "editor",
+            label: "Description",
+            required: false,
+          },
+          {
+            name: "highlightText",
+            type: "text",
+            label: "Highlight Text",
+            required: false,
+          }
+        ],
+      },
+
+      // {
+      //   type: "whoarewe",
+      //   label: "Who Are We",
+
+      //   fields: [
+      //     {
+      //       name: "sectionTitle",
+      //       type: "text",
+      //       label: "Section Title",
+      //     },
+      //     {
+      //       name: "description",
+      //       type: "editor",
+      //       label: "Description",
+      //     },
+      //     {
+      //       name: "file",
+      //       type: "file",
+      //       label: "Image",
+      //       required: false,
+      //     },
+      //   ],
+      // },
+
+      {
+        type: "WhoAreWe",
+        label: "Who Are We",
+
+        fields: [
+
+          {
+            name: "items",
+            type: "array",
+            label: "Why Choose Items",
+
+            itemFields: [
+              
+          {
+            name: "sectionTitle",
+            type: "text",
+            label: "Section Title",
+          },
+          {
+            name: "description",
+            type: "editor",
+            label: "Description",
+          },
+          {
+            name: "file",
+            type: "file",
+            label: "Image",
+            required: false,
+          },
+        
+            ],
+          },
+        ],
+      },
+
+
+      {
+        type: "data",
+        label: "Data",
+
+        fields: [
+
+          {
+            name: "items",
+            type: "array",
+            label: "Data Items",
+
+            itemFields: [
+              
+          {
+            name: "sectionTitle",
+            type: "text",
+            label: "Section Title",
+          },
+          {
+            name: "number",
+            type: "number",
+            label: "Number",
+          },
+        
+            ],
+          },
+        ],
+      },
+
+
+      {
+        type: "resources",
+        label: "People behind Gateway Abroad",
+
+        fields: [
+          {
+            name: "sectionTitle",
+            type: "text",
+            label: "Section Title",
+          },
+
+          {
+            name: "items",
+            type: "array",
+            label: "Resources",
+
+            itemFields: [
+              {
+                name: "title",
+                type: "text",
+                label: "Resource Title",
+              },
+              {
+                name: "description",
+                type: "editor",
+                label: "Description",
+              }
+            ],
+          },
+        ],
+      },
+
+      {
+        type: "counselling",
+        label: "Counselling Section",
+
+        fields: [
+          {
+            name: "title",
+            type: "text",
+            label: "Section Title",
+          },
+          {
+            name: "description",
+            type: "textarea",
+            label: "Description",
+            required: false,
+          },
+          {
+            name: "buttonText",
+            type: "text",
+            label: "Button Text",
+          },
+          {
+            name: "buttonUrl",
+            type: "text",
+            label: "Button URL",
+          },
+          {
+            name: "image",
+            type: "file",
+            label: "Counselling Image",
+            required: false,
+          },
         ],
       },
     ],

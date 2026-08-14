@@ -61,7 +61,8 @@ import {
   ChevronLeft,
   SquareStack,
   FileStack,
-  Settings
+  Settings,
+  MessageCircleQuestionMark
 } from "lucide-react";
 
 type IconType = React.ElementType | string;
@@ -136,6 +137,7 @@ const navItems: NavItem[] = [
       { name: "Entities", path: "/entities", icon: Box },
       { name: "Article", path: "/article", icon: PenTool },
       { name: "Blogs", path: "/blogs", icon: PenTool },
+      { name: "Faqs", path: "/faqs", icon: MessageCircleQuestionMark },
       { name: "Comments", path: "/comments", icon: MessageCircle },
       { name: "Categories", path: "/blog-categories", icon: Tags }
     ]

@@ -41,6 +41,7 @@ import SupportPage from "./pages/Support/Supports";
 import BlogCategoryManagement from "./pages/Website/BlogCategories";
 import ArticleManagement from "./pages/Website/Blogs";
 import BlogsManagement from "./pages/Website/Article";
+import FaqsManagement from "./pages/Website/Faq"
 import CommentsManagement from "./pages/Website/BlogComent";
 import MockTest from "./userView/Mocktest";
 import TestQuestionPage from "./userView/Testquestionpage";
@@ -205,7 +206,7 @@ export default function App() {
                 }
               >
 
-                
+
                 <Route path="/leads" element={<LeadManagement />} />
                 <Route path="/lead-report" element={<DailyReport />} />
               </Route>
@@ -221,6 +222,7 @@ export default function App() {
                 />
                 <Route path="/article" element={<ArticleManagement />} />
                 <Route path="/blogs" element={<BlogsManagement />} />
+                <Route path="/faqs" element={<FaqsManagement />} />
                 <Route path="/comments" element={<CommentsManagement />} />
               </Route>
             </Route>

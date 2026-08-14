@@ -169,6 +169,7 @@ export default function ArticleManagement() {
         return Object.keys(newErrors).length === 0;
     };
 
+    
     const handleSave = async () => {
         if (!validateForm()) return;
         try {
@@ -177,13 +178,13 @@ export default function ArticleManagement() {
 
             if (coverImageFile) {
                 const imageFormData = new FormData();
-                imageFormData.append('image', coverImageFile);
-                const uploadResponse = await api.post('/upload/single', imageFormData, {
+                imageFormData.append('file', coverImageFile);
+                const uploadResponse = await api.post('/upload/cloud', imageFormData, {
                     headers: {
                         'Content-Type': 'multipart/form-data',
                     }
                 });
-                imageUrl = uploadResponse.data?.file?.filename;
+                imageUrl = uploadResponse.data?.url;
                 payload.image = imageUrl;
             }
 
