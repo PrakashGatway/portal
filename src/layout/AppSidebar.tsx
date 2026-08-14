@@ -75,76 +75,82 @@ type NavItem = {
 };
 
 const navItems: NavItem[] = [
-  { icon: LayoutDashboard, name: "Dashboard", path: "/" },
-  { icon: FileText, name: "Mock Tests", path: "/mock-tests" },
+  { icon: "📊", name: "Dashboard", path: "/" },
+
+  { icon: "📝", name: "Mock Tests", path: "/mock-tests" },
+
   {
-    icon: GraduationCap,
+    icon: "🎓",
     name: "Courses",
     subItems: [
-      { name: "All Courses", path: "/courses", icon: ClipboardList },
-      { icon: BookOpen, name: "Categories", path: "/categories" },
-      { name: "Modules", path: "/modules", icon: Folder },
-      { name: "Combos", path: "/combos", icon: Package }
-    ]
-  },
-  {
-    icon: HelpCircle,
-    name: "Resources",
-    subItems: [
-      { name: "Live Classes", path: "/live-classes", icon: Video },
-      { name: "Recorded Classes", path: "/recorded-classes", icon: PlayCircle },
-      { icon: FolderOpen, name: "Study Materials", path: "/study-materials" }
-    ]
-  },
-  {
-    icon: ClipboardCheck,
-    name: "Test Series",
-    subItems: [
-      { name: "Exams", path: "/test/exams", icon: FileCheck },
-      { name: "Sections", path: "/test/sections", icon: Layers }
-    ]
-  },
-  {
-    icon: Database,
-    name: "Mcq Bank",
-    subItems: [
-      { name: "Questions", path: "/mcq/questions", icon: CircleHelp },
-      { name: "Tests", path: "/mcq/tests", icon: TestTube },
-      { name: "Test Series", path: "/mcq/test-series", icon: Scroll }
-    ]
-  },
-  {
-    icon: Database,
-    name: "Ielts Bank",
-    subItems: [
-      { name: "Questions", path: "/test/questions", icon: HelpCircle },
-      { name: "Tests", path: "/test-manage", icon: ScrollText },
-      { name: "Packages", path: "/test/packages", icon: ShoppingBag }
-    ]
+      { name: "All Courses", path: "/courses", icon: "📚" },
+      { icon: "🏷️", name: "Categories", path: "/categories" },
+      { name: "Modules", path: "/modules", icon: "📂" },
+      { name: "Combos", path: "/combos", icon: "🎁" },
+    ],
   },
 
-  { icon: UsersRound, name: "Users", path: "/users" },
-  { icon: Rocket, name: "Leads", path: "/leads" },
-  { icon: Tag, name: "Coupons", path: "/promocodes" },
-  { icon: Bell, name: "Notifications", path: "/notifications" },
-  { icon: Phone, name: "Contact", path: "/contacts" },
-  { icon: MessageSquare, name: "Reviews", path: "/reviews" },
   {
-    icon: Globe,
+    icon: "📖",
+    name: "Resources",
+    subItems: [
+      { name: "Live Classes", path: "/live-classes", icon: "🎥" },
+      { name: "Recorded Classes", path: "/recorded-classes", icon: "▶️" },
+      { icon: "📁", name: "Study Materials", path: "/study-materials" },
+    ],
+  },
+
+  {
+    icon: "✅",
+    name: "Test Series",
+    subItems: [
+      { name: "Exams", path: "/test/exams", icon: "📋" },
+      { name: "Sections", path: "/test/sections", icon: "🧩" },
+    ],
+  },
+
+  {
+    icon: "🗃️",
+    name: "Mcq Bank",
+    subItems: [
+      { name: "Questions", path: "/mcq/questions", icon: "❓" },
+      { name: "Tests", path: "/mcq/tests", icon: "🧪" },
+      { name: "Test Series", path: "/mcq/test-series", icon: "📜" },
+    ],
+  },
+
+  {
+    icon: "🌍",
+    name: "Ielts Bank",
+    subItems: [
+      { name: "Questions", path: "/test/questions", icon: "❓" },
+      { name: "Tests", path: "/test-manage", icon: "📜" },
+      { name: "Packages", path: "/test/packages", icon: "🛍️" },
+    ],
+  },
+
+  { icon: "👥", name: "Users", path: "/users" },
+  { icon: "🚀", name: "Leads", path: "/leads" },
+  { icon: "🏷️", name: "Coupons", path: "/promocodes" },
+  { icon: "🔔", name: "Notifications", path: "/notifications" },
+  { icon: "📞", name: "Contact", path: "/contacts" },
+  { icon: "💬", name: "Reviews", path: "/reviews-report" },
+
+  {
+    icon: "🌐",
     name: "Website",
     subItems: [
-      { name: "Pages", path: "/pages", icon: File },
-      { name: "Entities", path: "/entities", icon: Box },
-      { name: "Article", path: "/article", icon: PenTool },
-      { name: "Blogs", path: "/blogs", icon: PenTool },
-      { name: "Faqs", path: "/faqs", icon: MessageCircleQuestionMark },
-      { name: "Comments", path: "/comments", icon: MessageCircle },
-      { name: "Categories", path: "/blog-categories", icon: Tags }
-    ]
+      { name: "Pages", path: "/pages", icon: "📄" },
+      { name: "Entities", path: "/entities", icon: "📦" },
+      { name: "Article", path: "/article", icon: "✍️" },
+      { name: "Blogs", path: "/blogs", icon: "📝" },
+      { name: "Comments", path: "/comments", icon: "💭" },
+      { name: "Categories", path: "/blog-categories", icon: "🏷️" },
+    ],
   },
-  { icon: CreditCard, name: "Orders", path: "/all_transactions" },
-  { icon: Settings, name: "Setting", path: "/setting" }
-  
+
+  { icon: "💳", name: "Orders", path: "/all_transactions" },
+  { icon: "⚙️", name: "Setting", path: "/setting" },
 ];
 
 const navItemsUser: NavItem[] = [
@@ -214,9 +220,9 @@ const navItemsTeacher: NavItem[] = [
 
 const othersItems: NavItem[] = [
   { icon: "👤", name: "My Profile", path: "/profile" },
-  { icon: Headphones, name: "Support", path: "/support" },
-  { icon: Lock, name: "Our Selections", path: "/our-selection" },
-  { icon: Shield, name: "Privacy Policy", path: "/privacy-policy" },
+  { icon: "💬", name: "Support", path: "/support" },
+  { icon: "✨", name: "Our Selections", path: "/our-selection" },
+  { icon: "🔒", name: "Privacy Policy", path: "/privacy-policy" },
 ];
 
 const teacherOthersItems: NavItem[] = [
@@ -301,20 +307,19 @@ const AppSidebar: React.FC = () => {
         const Icon = nav.icon;
 
         return (
-          <li key={nav.name} className="relative ">
+          <li key={nav.name} className="relative">
             {nav.subItems ? (
-              <button
+            <div className="border-l-4 border-orange-500 rounded-[26px]">
+                <button
                 onClick={() => handleSubmenuToggle(index, menuType)}
-                className={`w-full flex items-center gap-3 ${isExpanded || isHovered || isMobileOpen ? 'px-4' : 'px-1'} py-3 rounded-lg ransition-all duration-200 ease-out group relative
+                className={`w-full flex items-center gap-3 ${isExpanded || isHovered || isMobileOpen ? 'px-4' : 'px-1'} py-1 rounded-lg ransition-all duration-200 ease-out group relative
                   ${active ? "font-semibold" : "font-medium"}
                   ${active
                     ? "bg-orange-500/10 text-orange-500"
                     : "text-zinc-600 dark:text-zinc-400 hover:bg-black/[0.04] dark:hover:bg-white/[0.06] hover:text-zinc-900 dark:hover:text-zinc-100"
                   }`}
               >
-                {active && (
-                  <span className="absolute left-0 top-1/2 -translate-y-1/2 w-[3px] h-5 rounded-r-full bg-orange-500" />
-                )}
+             
 
                 {showLabels ? (
                   <>
@@ -337,7 +342,7 @@ const AppSidebar: React.FC = () => {
                     />
                   </>
                 ) : (
-                  <div className="relative flex flex-col gap-1 items-center justify-center w-full">
+                  <div className="relative flex flex-col gap-1 items-center justify-center w-full ">
 
                     {typeof nav.icon === "string" ? (
                       <span className="text-3xl">{nav.icon}</span>
@@ -354,7 +359,7 @@ const AppSidebar: React.FC = () => {
 
                   </div>
                 )}
-              </button>
+              </button></div>
             ) : nav.path ? (
               <div className={`border-l-4 border-orange-500 rounded-[26px] `}>
                 <Link
@@ -406,18 +411,19 @@ const AppSidebar: React.FC = () => {
             {nav.subItems && showLabels && (
               <div
                 ref={(el) => { subMenuRefs.current[`${menuType}-${index}`] = el; }}
-                className="overflow-hidden transition-all duration-400 ease-in-out"
+                className="overflow-hidden transition-all duration-400 ease-in-out "
                 style={{
                   height: isSubmenuOpen ? `${subMenuHeight[`${menuType}-${index}`] || 0}px` : "0px",
                   opacity: isSubmenuOpen ? 1 : 0
                 }}
               >
-                <ul className="pt-1.5 pb-1 space-y-[2px] ml-3 pl-3 border-l border-zinc-100 dark:border-white/[0.06]">
+                <ul className="pt-1.5 pb-1 space-y-[2px] ml-3 pl-3 border-l border-zinc-100 dark:border-white/[0.06] ">
                   {nav.subItems.map((subItem) => {
                     const SubIcon = subItem.icon;
                     const subActive = isActive(subItem.path);
                     return (
                       <li key={subItem.name}>
+                        <div className="border-l-4 border-orange-500 rounded-[26px] ">
                         <Link
                           to={subItem.path}
                           className={`flex items-center justify-between gap-2.5 px-3 py-[9px] rounded-lg text-[14px] transition-all duration-200
@@ -428,7 +434,7 @@ const AppSidebar: React.FC = () => {
                             }`}
                         >
                           <div className="flex items-center gap-2.5">
-                            <SubIcon className="w-3.5 h-3.5 flex-shrink-0" />
+                            <span>{SubIcon}</span>
                             <span>{subItem.name}</span>
                           </div>
                           <div className="flex gap-1.5">
@@ -446,7 +452,7 @@ const AppSidebar: React.FC = () => {
                               </span>
                             )}
                           </div>
-                        </Link>
+                        </Link></div>
                       </li>
                     );
                   })}

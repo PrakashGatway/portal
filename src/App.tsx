@@ -66,6 +66,7 @@ import Setting from "./pages/Dashboard/Setting";
 import Notifications from "./pages/Notifications";
 import SupportTickets from "./pages/Support/Tickets";
 import Privacy from "./pages/privacy"
+import FeedbackPage from "./pages/feedbackPage";
 
 // Define roles
 export const ROLES = {
@@ -144,6 +145,7 @@ export default function App() {
                 <Route path="/categories" element={<CategoryManagement />} />
                 <Route path="/courses" element={<CourseManagement />} />
                 <Route path="/modules" element={<ModuleManagement />} />
+                <Route path="/reviews-report" element={<FeedbackPage/>} />
                 <Route
                   path="/live-classes"
                   element={<ContentManagement type="LiveClasses" />}

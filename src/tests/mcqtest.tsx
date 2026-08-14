@@ -97,125 +97,181 @@ export const MockTestCard = ({ test, index }: { test: TestTemplate; index: numbe
 const theme = cardThemes[index % cardThemes.length];
 
     return (
-     <div className="hover:bg-gradient-to-b from-orange-500 via-orange-500 to-orange-200/50 p-[1px] rounded-[24px] transition-all duration-300"> <div
-  className={`relative rounded-[24px] overflow-hidden transition-all duration-300 
-    ${
-      test.isSelected
-        ? "border border-[#FF6A3D]"
-        : "border border-transparent"
-    }
-    dark:bg-gray-800
-    bg-gradient-to-br ${theme.cardBg}
-    
-    
-  `}
->
-  {/* Top Light Gradient */}
-  <div className={`absolute inset-x-0 top-0 h-36 bg-gradient-to-b ${theme.topGlow}`} />
+    <div className="w-full">
+    {/* Outer Border */}
+    <div className="p-[2px] rounded-[22px] bg-gradient-to-b from-[#686868]/0 via-[#686868]/60 to-[#686868]">
+        <div className="relative overflow-hidden rounded-[20px] bg-white dark:bg-gray-800">
+            <div className="absolute top-0 left-0 w-full h-[40%] bg-gradient-to-b from-[#ADADAC] to-[#ADADAC]/0" />
 
-  <div className="relative  p-6  flex flex-col h-full min-h-[320px]">
-    {/* Header */}
-    <div className="flex items-center justify-between">
-      {test?.isPurchased === true ? (
-         <span className="rounded-md bg-green-500 px-3 py-1 text-white font-bold text-lg leading-none">
-          Enrolled
-        </span>
-      ) :
-      test.isFree ? (
-        <span className="rounded-md bg-gradient-to-r from-[#FF5B35] to-[#FF7B4D] px-3 py-1 text-white font-bold text-lg leading-none">
-          FREE
-        </span>
-      ):(
-         <span className="rounded-md bg-green-500 px-3 py-1 text-white font-bold text-lg leading-none">
-          {Math.round(
-  ((test?.pricing?.price - test?.pricing?.salePrice) /
-    test?.pricing?.price) *
-    100
-)}% off
-        </span>
-      )}
+            {/* ================= IMAGE ================= */}
+            <div  className="relative h-[170px] overflow-hidden rounded-t-[18px] p-2">
+                <div style={{ borderRadius: "15px 15px 0px 0px" }}  className="relative overflow-hidden h-[170px]">
+                <img
+                    src={test?.thumbnailPic || "/images/test-img.jpg"}
+                    alt={test?.title || "Test"}
+                    className="h-full w-full object-cover"
+                />
+                </div>
 
-      <span
-        className={`px-3 py-1 rounded-full text-xs font-medium ${getDifficultyColor(
-          test.difficultyLabel
-        )}`}
-      >
-        {test.difficultyLabel}
-      </span>
-    </div>
+                {/* Image subtle overlay */}
+                <div className="absolute inset-0 bg-gradient-to-t from-black/10 via-transparent to-transparent" />
 
-    {/* Title */}
-    <h3 className="mt-3 text-xl font-bold uppercase text-[#1A1A1A] leading-tight">
-      {test.title}
-    </h3>
+                {/* Offer Badge */}
+                {!test.isPurchased && !test.isFree && (
+                    <span className="
+                        absolute
+                        top-2.5
+                        right-2.5
+                        z-20
+                        rounded-full
+                        bg-green-500
+                        px-4
+                        py-2
+                        text-sm
+                        font-bold
+                        text-white
+                        shadow-md
+                    ">
+                        {Math.round(
+                            ((test?.pricing?.price -
+                                test?.pricing?.salePrice) /
+                                test?.pricing?.price) *
+                                100
+                        )}
+                        % OFF
+                    </span>
+                )}
+            </div>
 
-    {/* Exam */}
-    <p className="mt-1 text-[#FF6A3D] font-medium">
-      {test.exam?.name || "Unknown Exam"}
-    </p>
+            {/* ================= CONTENT ================= */}
+            <div className="px-4 pt-3 pb-0">
 
-    {/* Info Cards */}
-  <div className= "mt-auto">
-      <div className=" grid grid-cols-2 gap-2 lg:gap-8 lg:px-2">
-      {/* Duration */}
-      <div className="rounded-2xl bg-white px-4 py-2 shadow-[0_6px_15px_rgba(0,0,0,0.08)]">
-        <div className="flex items-center gap-3">
-          <Clock className="h-5 w-5 text-[#FF6A3D]" />
+                {/* Title */}
+                <h3 className="
+                    text-[22px]
+                    leading-7
+                    font-medium
+                    text-[#111111]
+                    dark:text-white
+                    line-clamp-2
+                ">
+                    {test.title}
+                </h3>
 
-          <div>
-            <p className="text-xs font-bold text-gray-500">Duration</p>
-            <p className="text-sm lg:text-base font-semibold text-[#FF6A3D]">
-              {test.totalDurationMinutes || 0} Min
-            </p>
-          </div>
+                {/* Description */}
+                <p className="
+                    mt-1
+                    text-[16px]
+                    leading-6
+                    text-[#FF5A3C]
+                    line-clamp-2
+                ">
+                    {test?.description ||
+                        `${test?.exam?.name || "Test"} full test series`}
+                </p>
+
+                {/* ================= META ================= */}
+                <div className="mt-3 grid grid-cols-2 gap-y-2.5 text-[16px] text-gray-600">
+
+                    {/* Validity */}
+                    <div className="flex items-center gap-2">
+                        <Clock className="h-[18px] w-[18px] shrink-0 text-[#FF5A3C]" />
+
+                        <span>
+                         Duration:{" "}   {test?.totalDurationMinutes}
+                        </span>
+                    </div>
+
+                    {/* Total Tests */}
+                    <div className="flex items-center gap-2">
+                        <BookOpen className="h-[18px] w-[18px] shrink-0 text-[#FF5A3C]" />
+
+                        <span>
+                            Questions:{" "}
+                            {test?.totalTests ||
+                                test?.totalQuestions ||
+                                0}{" "}
+                            
+                        </span>
+                    </div>
+
+                   
+
+                </div>
+                 {/* Language */}
+                    <div className="flex items-center gap-2 mt-2">
+                        <TrendingUp className="h-[18px] w-[18px] shrink-0 text-[#FF5A3C]" />
+
+                        <span className="">
+                            Language: English
+                        </span>
+                    </div>
+
+                {/* ================= FOOTER ================= */}
+                <div className="
+                    flex
+                    items-stretch
+                    mt-4
+                    -mx-4
+                    p-2
+                ">
+
+                    {/* Price */}
+                    <div
+                    style={{ borderRadius: "0px 0px 12px 15px" }}
+                       className="flex-1 f bg-[#FF6A3D] text-center text-white text-3xl font-bold px-4 py-2"
+                    >
+                        <span className="text-[36px] font-bold leading-none">
+                            {test.isPurchased === true ? (
+                                "Enrolled"
+                            ) : test.isFree ? (
+                                "Free"
+                            ) : (
+                                <>
+                                    <span className="mr-1 text-[25px] align-middle">
+                                        ₹
+                                    </span>
+                                    {test?.pricing?.salePrice}
+                                </>
+                            )}
+                        </span>
+                    </div>
+
+                    {/* Button */}
+                    <button
+                    style={{ borderRadius: "0px 0px 15px 0px" }}
+                        onClick={handleAction}
+                        className="
+                            flex-1 h-10 bg-[#3B3B3B] text-white font-medium py-2 bg-gradient-to-b from-[#545454] via-[#ffffff]/30 to-[#545454] hover:bg-black transition
+                        "
+                    >
+                        {test.isPurchased === true ? (
+                            "Start Test"
+                        ) : (
+                            <>
+                                <span>
+                                    Buy Test
+                                </span>
+
+                                {test.pricing?.salePrice && (
+                                    <span className="
+                                        ml-2
+                                        text-sm
+                                        text-gray-300
+                                        line-through
+                                    ">
+                                        ₹ {test.pricing.price}
+                                    </span>
+                                )}
+                            </>
+                        )}
+                    </button>
+
+                </div>
+            </div>
         </div>
-      </div>
-
-      {/* Questions */}
-      <div className="rounded-2xl bg-white px-4 py-2 shadow-[0_6px_15px_rgba(0,0,0,0.08)]">
-        <div className="flex items-center gap-3">
-          <BookOpen className="h-5 w-5 text-[#FF6A3D]" />
-
-          <div>
-            <p className="text-xs font-bold text-gray-500">Questions</p>
-            <p className="text-sm lg:text-base font-semibold text-[#FF6A3D]">
-              {test.totalQuestions || 0}
-            </p>
-          </div>
-        </div>
-      </div>
     </div>
-
-    {/* Optional Language */}
-    <div className="mt-5 flex items-center gap-2 text-sm text-gray-500">
-      <TrendingUp className="h-4 w-4 text-[#FF6A3D]" />
-      Language: English
-    </div>
-
-    {/* Button */}
-    <button
-      onClick={handleAction}
-      className="mt-2 w-full rounded-xl bg-gradient-to-r from-[#FF4C2C] via-[#FF613A] to-[#FF7B59] py-2 text-base font-semibold text-white transition-all duration-300 hover:shadow-lg active:scale-[0.98]"
-    >
-      {test.isPurchased === true ? (
-  "Start Test"
-) : (
-  <>
-    <span>
-      Buy {getPriceLabel()}
-    </span>
-
-    {test.pricing?.salePrice && (
-      <span className="ml-1 text-sm text-white line-through">
-        ₹ {test.pricing.price}
-      </span>
-    )}
-  </>
-)}
-    </button>
-  </div>
-  </div>
-</div></div>
+</div>
     );
 };
 
@@ -551,7 +607,7 @@ const active = "reading";
                     initial={{ opacity: 0, y: 20 }}
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ delay: 0.2 }}
-                    className="bg-white p-8 my-6 rounded-2xl dark:bg-gray-800"
+                    className="  my-6 rounded-2xl dark:bg-gray-800"
                 >
                     {loading ? (
                         <div className="grid grid-cols-2 md:grid-cols-2 xl:grid-cols-5 gap-5">
