@@ -895,7 +895,6 @@ export const PAGE_TYPES_SCHEMA = {
           },
         ],
       },
-
       {
         type: "Scoresection",
         label: "Score section",
