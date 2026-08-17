@@ -782,7 +782,7 @@ useEffect(() => {
                                     </p>
 
                                     <h3 className="text-base leading-none font-bold text-[#222] mt-1 dark:text-white">
-                                        Prakash
+                                       Expert Study Abroad Counsellor
                                     </h3>
 
                                     <div className="flex items-center gap-2 mt-3">
@@ -805,7 +805,7 @@ useEffect(() => {
                             </div>
 
                             {/* Description */}
-                            <p className="mt-6 text-[14px] text-[#6B7280] leading-6 dark:text-gray-400">
+                            <p className="mt-2 text-[14px] text-[#6B7280] leading-6 dark:text-gray-400">
                                 Specializes in Canada & UK admissions.
                                 <br />
                                 Available Mon–Fri, 10am–7pm IST.

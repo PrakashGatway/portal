@@ -20,6 +20,7 @@ import Radio from "../../components/form/input/Radio";
 import api from "../../axiosInstance"; // Import your axios instance
 import { VideoWithChat } from "./YoutubeChat";
 import WaitingRoom from "../liveClass/WaitingRoom";
+import { toast } from "react-toastify";
 
 
 export default function VideoPlayerPage() {
@@ -88,19 +89,51 @@ export default function VideoPlayerPage() {
         fetchData();
     }, [moduleId, contentId]);
 
-    const handleReportSubmit = (e) => {
-        e.preventDefault();
+  const handleReportSubmit = async (e) => {
+    e.preventDefault();
+
+    try {
+        const response = await api.post("/feedback", {
+            content: contentId,
+            type: "report_issue",
+            contentref: contentDetails?.contentType,
+            issueType: reportForm.issueType,
+            description: reportForm.description,
+            severity: reportForm.severity,
+            specificIssue: reportForm.specificIssue,
+
+            errorTime: reportForm.errorTime,
+
+            isPresentThroughout: reportForm.isPresentThroughout,
+
+            screenshot: reportForm.screenshot,
+        });
+
+      toast.success("Report Submit Successfully...")
+
         setIsReportModalOpen(false);
+
         setReportForm({
             issueType: "",
             description: "",
             severity: "low",
             specificIssue: "",
-            errorTime: { hours: "", minutes: "", seconds: "" },
+            errorTime: {
+                hours: "",
+                minutes: "",
+                seconds: "",
+            },
             isPresentThroughout: false,
             screenshot: null,
         });
-    };
+
+    } catch (error) {
+        console.log(
+            "Report submit error:",
+            error.response?.data || error.message
+        );
+    }
+};
     useEffect(() => {
         if (contentDetails?.contentType === "LiveClasses") {
             const now = new Date();
@@ -121,11 +154,68 @@ export default function VideoPlayerPage() {
         }
     }, [contentDetails])
 
-    const handleRatingSubmit = (e) => {
-        e.preventDefault();
+ const handleRatingSubmit = async (e) => {
+    e.preventDefault();
+
+    try {
+        // Get only selected feedback
+        const selectedFeedback = feedbackOptions
+            .filter((option) => option.checked)
+            .map((option) => option.label);
+
+        const response = await api.post("/feedback", {
+            content: contentId,
+            contentref: contentDetails?.contentType,
+
+            type: "rate_video",
+
+            rating: rating,
+            description: reportForm.description,
+
+            message: selectedFeedback.join(", "),
+        });
+
+       toast.success("Rating Submit Successfully...")
+
         setIsRatingModalOpen(false);
+
         setRating(0);
-    };
+
+        setFeedbackOptions([
+            {
+                id: "presentation",
+                label: "Good Presentation",
+                checked: true,
+            },
+            {
+                id: "exam_oriented",
+                label: "Content covered is exam oriented",
+                checked: true,
+            },
+            {
+                id: "clear_explanation",
+                label: "Explanation is clear",
+                checked: false,
+            },
+            {
+                id: "engaging",
+                label: "Engaging teaching style",
+                checked: false,
+            },
+            {
+                id: "good_examples",
+                label: "Good examples provided",
+                checked: false,
+            },
+        ]);
+
+    } catch (error) {
+        console.log(
+            "Rating submit error:",
+            error.response?.data || error.message
+        );
+    }
+};
 
     const handleFeedbackChange = (id) => {
         setFeedbackOptions((prev) =>

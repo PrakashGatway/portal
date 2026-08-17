@@ -84,7 +84,7 @@ export const TestSeriesCard = ({ series }: { series: TestSeries }) => {
                     <img
                         src={series?.thumbnailPic || "/images/logo.png"}
                         alt={series?.title}
-                        className="object-cover h-full w-full"
+                        className="object-cover h-50 w-full"
                     />
                 </div>
 

@@ -443,7 +443,7 @@ const StudyMaterialPage = () => {
 //               ))}
 //             </AnimatePresence>
 //           </motion.div>
- <div className="grid lg:grid-cols-[0.5fr_1.5fr] gap-6">
+ <div className="grid lg:grid-cols-[0.6fr_1.4fr] gap-2">
   
    
   <div className="rounded-[28px] h-100 bg-white shadow-md overflow-hidden border border-gray-100">
