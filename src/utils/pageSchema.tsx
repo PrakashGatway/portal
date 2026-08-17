@@ -830,7 +830,7 @@ export const PAGE_TYPES_SCHEMA = {
             type: "text",
             label: "Highlight Text",
             required: false,
-          }
+          },
         ],
       },
 
@@ -849,55 +849,53 @@ export const PAGE_TYPES_SCHEMA = {
             type: "editor",
             label: "Description",
           },
-
         ],
       },
 
-          {
-            name: "whatIsOnToefl",
-            type: "editor",
-            label: "What is on TOEFL",
+      {
+        name: "whatIsOnToefl",
+        type: "editor",
+        label: "What is on TOEFL",
 
-            fields: [
+        fields: [
+          {
+            name: "title",
+            type: "text",
+            label: "Title",
+          },
+
+          {
+            name: "img",
+            type: "file",
+            label: "Section Image",
+          },
+
+          {
+            name: "items",
+            type: "array",
+            label: "TOEFL Sections",
+
+            itemFields: [
               {
                 name: "title",
                 type: "text",
                 label: "Title",
               },
-              
               {
-                name: "img",
-                type: "file",
-                label: "Section Image",
+                name: "description",
+                type: "editor",
+                label: "Description",
               },
-
               {
-                name: "items",
-                type: "array",
-                label: "TOEFL Sections",
-
-                itemFields: [
-                  {
-                    name: "title",
-                    type: "text",
-                    label: "Title",
-                  },
-                  {
-                    name: "description",
-                    type: "editor",
-                    label: "Description",
-                  },
-                  {
-                    name: "icon",
-                    type: "text",
-                    label: "Icon",
-                  },
-                ],
+                name: "icon",
+                type: "text",
+                label: "Icon",
               },
             ],
           },
+        ],
+      },
 
-           
       {
         type: "Scoresection",
         label: "Score section",
@@ -912,8 +910,7 @@ export const PAGE_TYPES_SCHEMA = {
             name: "sectionSubtitle",
             type: "editor",
             label: "Section SubTitle",
-          }
-
+          },
         ],
       },
 
@@ -954,10 +951,9 @@ export const PAGE_TYPES_SCHEMA = {
         ],
       },
 
-      
       {
-        type: "Resources",
-        label: "Free Resources",
+        type: "ComponentsLanguage",
+        label: "Components of the English Language",
 
         fields: [
           {
@@ -967,26 +963,32 @@ export const PAGE_TYPES_SCHEMA = {
           },
 
           {
+            name: "sectionDescription",
+            type: "text",
+            label: "Section Description",
+          },
+
+          {
             name: "items",
             type: "array",
-            label: "Free Resources Items",
+            label: "Language Components",
 
             itemFields: [
               {
-                name: "title",
+                name: "section",
                 type: "text",
-                label: "Title",
+                label: "Tab Name",
               },
+
               {
-                name: "description",
+                name: "content",
                 type: "editor",
-                label: "Description",
-              }
+                label: "Content",
+              },
             ],
           },
         ],
       },
-
 
       {
         type: "pricing",
@@ -1170,7 +1172,6 @@ export const PAGE_TYPES_SCHEMA = {
     ],
   },
 
-  
   about_page: {
     label: "about_page",
 
@@ -1206,7 +1207,7 @@ export const PAGE_TYPES_SCHEMA = {
             type: "text",
             label: "Highlight Text",
             required: false,
-          }
+          },
         ],
       },
 
@@ -1239,66 +1240,58 @@ export const PAGE_TYPES_SCHEMA = {
         label: "Who Are We",
 
         fields: [
-
           {
             name: "items",
             type: "array",
             label: "Why Choose Items",
 
             itemFields: [
-              
-          {
-            name: "sectionTitle",
-            type: "text",
-            label: "Section Title",
-          },
-          {
-            name: "description",
-            type: "editor",
-            label: "Description",
-          },
-          {
-            name: "file",
-            type: "file",
-            label: "Image",
-            required: false,
-          },
-        
+              {
+                name: "sectionTitle",
+                type: "text",
+                label: "Section Title",
+              },
+              {
+                name: "description",
+                type: "editor",
+                label: "Description",
+              },
+              {
+                name: "file",
+                type: "file",
+                label: "Image",
+                required: false,
+              },
             ],
           },
         ],
       },
-
 
       {
         type: "data",
         label: "Data",
 
         fields: [
-
           {
             name: "items",
             type: "array",
             label: "Data Items",
 
             itemFields: [
-              
-          {
-            name: "sectionTitle",
-            type: "text",
-            label: "Section Title",
-          },
-          {
-            name: "number",
-            type: "number",
-            label: "Number",
-          },
-        
+              {
+                name: "sectionTitle",
+                type: "text",
+                label: "Section Title",
+              },
+              {
+                name: "number",
+                type: "number",
+                label: "Number",
+              },
             ],
           },
         ],
       },
-
 
       {
         type: "resources",
@@ -1326,7 +1319,7 @@ export const PAGE_TYPES_SCHEMA = {
                 name: "description",
                 type: "editor",
                 label: "Description",
-              }
+              },
             ],
           },
         ],
