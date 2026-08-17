@@ -67,6 +67,9 @@ import Notifications from "./pages/Notifications";
 import SupportTickets from "./pages/Support/Tickets";
 import Privacy from "./pages/privacy"
 import FeedbackPage from "./pages/feedbackPage";
+import IELTSQuestionManagementPage from "./pages/ielts/ieltsQuestion";
+import IELTSGroupQuestionManagementPage from "./pages/ielts/ieltsGroup";
+import IELTSPassageManagementPage from "./pages/ielts/ieltsPassage";
 
 // Define roles
 export const ROLES = {
@@ -166,10 +169,23 @@ export default function App() {
                 <Route path="/test/exams" element={<ExamManagement />} />
                 <Route path="/test/sections" element={<SectionManagement />} />
                 <Route path="/test-manage" element={<TestSeriesManagement />} />
-                <Route
+                {/* <Route
                   path="/test/questions"
                   element={<QuestionManagement />}
+                /> */}
+                <Route
+                  path="/test/questions"
+                  element={<IELTSQuestionManagementPage />}
                 />
+                <Route
+                  path="/test/groups"
+                  element={<IELTSGroupQuestionManagementPage />}
+                />
+                 <Route
+                  path="/test/passage"
+                  element={<IELTSPassageManagementPage />}
+                />
+
                 <Route path="/test/packages" element={<PackageManagement />} />
                 <Route path="/setting" element={<Setting />} />
               </Route>
