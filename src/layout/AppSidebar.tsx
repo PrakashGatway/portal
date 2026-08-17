@@ -144,6 +144,7 @@ const navItems: NavItem[] = [
       { name: "Entities", path: "/entities", icon: "📦" },
       { name: "Article", path: "/article", icon: "✍️" },
       { name: "Blogs", path: "/blogs", icon: "📝" },
+      { name: "FaQs", path: "/faqs", icon: "📝" },
       { name: "Comments", path: "/comments", icon: "💭" },
       { name: "Categories", path: "/blog-categories", icon: "🏷️" },
     ],
