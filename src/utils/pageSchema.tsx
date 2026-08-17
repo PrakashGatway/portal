@@ -1181,6 +1181,25 @@ export const PAGE_TYPES_SCHEMA = {
         label: "Hero Image",
         required: false,
       },
+      
+              {
+                name: "file",
+                type: "file",
+                label: "Image",
+                required: false,
+              },
+              {
+                name: "file1",
+                type: "file",
+                label: "Image1",
+                required: false,
+              },
+          {
+            name: "image",
+            type: "file",
+            label: "Counselling Image",
+            required: false,
+          },
     ],
 
     sections: [
@@ -1210,30 +1229,6 @@ export const PAGE_TYPES_SCHEMA = {
         ],
       },
 
-      // {
-      //   type: "whoarewe",
-      //   label: "Who Are We",
-
-      //   fields: [
-      //     {
-      //       name: "sectionTitle",
-      //       type: "text",
-      //       label: "Section Title",
-      //     },
-      //     {
-      //       name: "description",
-      //       type: "editor",
-      //       label: "Description",
-      //     },
-      //     {
-      //       name: "file",
-      //       type: "file",
-      //       label: "Image",
-      //       required: false,
-      //     },
-      //   ],
-      // },
-
       {
         type: "WhoAreWe",
         label: "Who Are We",
@@ -1254,12 +1249,6 @@ export const PAGE_TYPES_SCHEMA = {
                 name: "description",
                 type: "editor",
                 label: "Description",
-              },
-              {
-                name: "file",
-                type: "file",
-                label: "Image",
-                required: false,
               },
             ],
           },
@@ -1349,12 +1338,6 @@ export const PAGE_TYPES_SCHEMA = {
             name: "buttonUrl",
             type: "text",
             label: "Button URL",
-          },
-          {
-            name: "image",
-            type: "file",
-            label: "Counselling Image",
-            required: false,
           },
         ],
       },
