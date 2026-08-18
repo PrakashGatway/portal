@@ -6,6 +6,7 @@ import TinyMceEditor from "./TextEditor";
 import api, { ImageBaseUrl } from "../axiosInstance";
 import { toast } from "react-toastify";
 import { Plus, X, ChevronRight, Image as ImageIcon } from "lucide-react";
+import CKEditorComponent from "./CkEditor";
 
 export const DynamicFormFields = ({ formData, setFormData, pageType }) => {
   const schema = pageType ? PAGE_TYPES_SCHEMA[pageType] : null;
@@ -309,6 +310,13 @@ const DynamicField = ({ field, value, onChange }) => {
                     </label>
 
                     {subField.type === "editor" ? (
+                      // <CKEditorComponent
+                      //   initialValue={item[subField.name] || ""}
+                      //   onChange={(content: any) =>
+                      //     updateItem(idx, subField.name, content)
+                      //   }
+                      // />
+
                       <TinyMceEditor
                         initialValue={item[subField.name] || ""}
                         onChange={(content) =>
