@@ -310,21 +310,19 @@ const DynamicField = ({ field, value, onChange }) => {
                     </label>
 
                     {subField.type === "editor" ? (
-                      // <CKEditorComponent
+                      <CKEditorComponent
+  value={item[subField.name] || ""}
+  onChange={(content) =>
+    updateItem(idx, subField.name, content)
+  }
+  placeholder={`Enter ${subField.label?.toLowerCase() || "content"}...`}
+/>
+                      // <TinyMceEditor
                       //   initialValue={item[subField.name] || ""}
-                      //   onChange={(content: any) =>
+                      //   onChange={(content) =>
                       //     updateItem(idx, subField.name, content)
                       //   }
                       // />
-                      
-                               
-
-                      <TinyMceEditor
-                        initialValue={item[subField.name] || ""}
-                        onChange={(content) =>
-                          updateItem(idx, subField.name, content)
-                        }
-                      />
                     ) : subField.type === "file" ? (
                       <FileUploader
                         value={item[subField.name]}
@@ -378,19 +376,35 @@ const DynamicField = ({ field, value, onChange }) => {
 
   // --- Root Level Renderers (Logic unchanged) ---
 
+  // if (type === "editor") {
+  //   return (
+  //     <div className="space-y-1.5">
+  //       <label className="block text-xs font-semibold text-gray-600 dark:text-gray-300 uppercase tracking-wide">
+  //         {label} {required && <span className="text-red-500">*</span>}
+  //       </label>
+  //       <TinyMceEditor
+  //         initialValue={value}
+  //         onChange={(content) => onChange(name, content)}
+  //       />
+  //     </div>
+  //   );
+  // }
+
   if (type === "editor") {
-    return (
-      <div className="space-y-1.5">
-        <label className="block text-xs font-semibold text-gray-600 dark:text-gray-300 uppercase tracking-wide">
-          {label} {required && <span className="text-red-500">*</span>}
-        </label>
-        <TinyMceEditor
-          initialValue={value}
-          onChange={(content) => onChange(name, content)}
-        />
-      </div>
-    );
-  }
+  return (
+    <div className="space-y-1.5 md:col-span-2">
+      <label className="block text-xs font-semibold text-gray-600 dark:text-gray-300 uppercase tracking-wide">
+        {label} {required && <span className="text-red-500">*</span>}
+      </label>
+
+      <CKEditorComponent
+        value={value || ""}
+        onChange={(content) => onChange(name, content)}
+        placeholder={`Enter ${label?.toLowerCase() || "content"}...`}
+      />
+    </div>
+  );
+}
 
   if (type === "file") {
     return (
