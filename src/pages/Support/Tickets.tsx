@@ -211,10 +211,7 @@ const handleBack = () => {
 </button>
            
 
-             <button type="button" className="group flex h-[38px] w-full items-center justify-center gap-2 rounded-[8px] bg-[#F45B2A] px-5 text-[12px] font-semibold text-white shadow-[0_4px_10px_rgba(244,91,42,0.16)] transition-all duration-300 hover:bg-[#E94F20] hover:shadow-[0_6px_16px_rgba(244,91,42,0.22)] sm:w-auto">
-            <Plus size={17} strokeWidth={2} className="transition-transform duration-300 group-hover:rotate-90" />
-            <span>Create New Ticket</span>
-          </button>
+             
  </div>
        
 
@@ -224,379 +221,287 @@ const handleBack = () => {
       </section>
 
       {/* MAIN TABLE SECTION */}
-      <section className="w-full px-3 py-5 sm:px-5 lg:px-7">
-        
-        <div className="mx-auto w-full max-w-[1400px]">
-          
-          <div className="overflow-hidden rounded-[10px] border border-[#E8E7E5] bg-white">
-            
-            
-            {/* FILTER BAR */}
-            <div className="flex flex-col gap-3 border-b border-[#EDEBE9] p-3 sm:p-4 lg:flex-row lg:items-center">
-              {/* Search */}
-              <div className="relative w-full lg:max-w-[373px]">
-                <Search size={17} strokeWidth={1.8} className="absolute left-3 top-1/2 -translate-y-1/2 text-[#747B84]" />
-                <input
-                  type="text"
-                 value={search}
-                    onChange={(e) => setSearch(e.target.value)}
-                  placeholder="Search tickets by subject or ID..."
-                  className="h-[38px] w-full rounded-[7px] border border-[#DFE1E4] bg-white pl-10 pr-3 text-sm text-[#333333] outline-none placeholder:text-[#8A8F96] focus:border-[#F45B2A] focus:ring-2 focus:ring-[#F45B2A]/10"
-                />
-              </div>
+     <section className="w-full px-3 py-5 sm:px-5 lg:px-7">
+  <div className="mx-auto w-full max-w-[1400px]">
+    <div className="overflow-hidden rounded-[10px] border border-[#E8E7E5] bg-white">
 
-              {/* Filters Row */}
-              <div className="flex flex-col gap-3 sm:flex-row lg:ml-auto">
-                  <select
-                  value={filters.priority}
-                  onChange={(e) => setFilters(prev => ({ ...prev, priority: e.target.value }))}
-                  className="h-[38px] w-full rounded-[7px] border border-[#DFE1E4] bg-white px-3 text-sm text-[#333333] outline-none focus:border-[#F45B2A] focus:ring-1 focus:ring-[#F45B2A]/20 sm:w-[150px]"
-                >
-                 
-                  <option value="low">Priority: Low</option>
-                  <option  value="medium">Priority: Medium</option>
-                  <option value="High">Priority: High</option>
-                  <option value="urgent">Priority: Urgent</option>
-                </select>
+      {/* FILTER BAR */}
+      <div className="flex flex-col gap-3 border-b border-[#EDEBE9] p-3 sm:p-4 lg:flex-row lg:items-center">
+        {/* Search */}
+        <div className="relative w-full lg:max-w-[373px]">
+          <Search size={17} strokeWidth={1.8} className="absolute left-3 top-1/2 -translate-y-1/2 text-[#747B84]" />
+          <input
+            type="text"
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            placeholder="Search tickets by subject or ID..."
+            className="h-[38px] w-full rounded-[7px] border border-[#DFE1E4] bg-white pl-10 pr-3 text-sm text-[#333333] outline-none placeholder:text-[#8A8F96] focus:border-[#F45B2A] focus:ring-2 focus:ring-[#F45B2A]/10"
+          />
+        </div>
 
-                <select
-                  value={filters.status}
-                  onChange={(e) => setFilters(prev => ({ ...prev, status: e.target.value }))}
-                  className="h-[38px] w-full rounded-[7px] border border-[#DFE1E4] bg-white px-3 text-sm text-[#333333] outline-none focus:border-[#F45B2A] focus:ring-1 focus:ring-[#F45B2A]/20 sm:w-[150px]"
-                >
-                 
-                  <option value="Open">Status: Open</option>
-                  <option value="in_progress">Status: In Progress</option>
-                  <option value="resolved">Status: Resolved</option>
-                  <option value="closed">Status: Closed</option>
-                </select>
+        {/* Filters Row */}
+        <div className="flex flex-col gap-3 sm:flex-row lg:ml-auto">
+          <select
+            value={filters.priority}
+            onChange={(e) => setFilters(prev => ({ ...prev, priority: e.target.value }))}
+            className="h-[38px] w-full rounded-[7px] border border-[#DFE1E4] bg-white px-3 text-sm text-[#333333] outline-none focus:border-[#F45B2A] focus:ring-1 focus:ring-[#F45B2A]/20 sm:w-[150px]"
+          >
+            <option value="low">Priority: Low</option>
+            <option value="medium">Priority: Medium</option>
+            <option value="High">Priority: High</option>
+            <option value="urgent">Priority: Urgent</option>
+          </select>
 
-                <select
-                  value={filters.category}
-                  onChange={(e) => setFilters(prev => ({ ...prev, category: e.target.value }))}
-                  className="h-[38px] w-full rounded-[7px] border border-[#DFE1E4] bg-white px-3 text-sm text-[#333333] outline-none focus:border-[#F45B2A] focus:ring-1 focus:ring-[#F45B2A]/20 sm:w-[180px]"
-                >
-                  <option value="All">Category: All</option>
-                  <option value="content">Category: Content</option>
-                  <option value="payment">Category: Payments</option>
-                  <option value="technical">Category: Technical</option>
-                  <option value="account">Category: Account</option>
-                  <option value="billing">Billing</option>
-                  <option value="feature_request">Feature Request</option>
-                  <option value="general">General</option>
-                </select>
+          <select
+            value={filters.status}
+            onChange={(e) => setFilters(prev => ({ ...prev, status: e.target.value }))}
+            className="h-[38px] w-full rounded-[7px] border border-[#DFE1E4] bg-white px-3 text-sm text-[#333333] outline-none focus:border-[#F45B2A] focus:ring-1 focus:ring-[#F45B2A]/20 sm:w-[150px]"
+          >
+            <option value="Open">Status: Open</option>
+            <option value="in_progress">Status: In Progress</option>
+            <option value="resolved">Status: Resolved</option>
+            <option value="closed">Status: Closed</option>
+          </select>
 
-              <div className="relative w-full sm:w-[198px]">
-  <button
-    type="button"
-    onClick={() => setShowDateSort((prev) => !prev)}
-    className="
-      flex h-[38px] w-full items-center justify-between
-      rounded-[7px] border border-[#DFE1E4] bg-white
-      px-3 text-[11px] text-[#333333]
-      transition hover:border-[#D4D6D9]
-    "
-  >
-    <span className="flex items-center gap-2">
-      <CalendarDays
-        size={14}
-        strokeWidth={1.8}
-        className="text-[#69717A]"
-      />
+          <select
+            value={filters.category}
+            onChange={(e) => setFilters(prev => ({ ...prev, category: e.target.value }))}
+            className="h-[38px] w-full rounded-[7px] border border-[#DFE1E4] bg-white px-3 text-sm text-[#333333] outline-none focus:border-[#F45B2A] focus:ring-1 focus:ring-[#F45B2A]/20 sm:w-[180px]"
+          >
+            <option value="All">Category: All</option>
+            <option value="content">Category: Content</option>
+            <option value="payment">Category: Payments</option>
+            <option value="technical">Category: Technical</option>
+            <option value="account">Category: Account</option>
+            <option value="billing">Billing</option>
+            <option value="feature_request">Feature Request</option>
+            <option value="general">General</option>
+          </select>
 
-      <span className="text-sm">
-        <span className="font-medium">Date:</span>{" "}
-        {dateSort === "newest" ? "Newest First" : "Oldest First"}
-      </span>
-    </span>
+          <div className="relative w-full sm:w-[198px]">
+            <button
+              type="button"
+              onClick={() => setShowDateSort((prev) => !prev)}
+              className="flex h-[38px] w-full items-center justify-between rounded-[7px] border border-[#DFE1E4] bg-white px-3 text-[11px] text-[#333333] transition hover:border-[#D4D6D9]"
+            >
+              <span className="flex items-center gap-2">
+                <CalendarDays size={14} strokeWidth={1.8} className="text-[#69717A]" />
+                <span className="text-sm">
+                  <span className="font-medium">Date:</span>{" "}
+                  {dateSort === "newest" ? "Newest First" : "Oldest First"}
+                </span>
+              </span>
+              <ChevronDown
+                size={14}
+                className={`text-[#69717A] transition-transform ${showDateSort ? "rotate-180" : ""}`}
+              />
+            </button>
 
-    <ChevronDown
-      size={14}
-      className={`text-[#69717A] transition-transform ${
-        showDateSort ? "rotate-180" : ""
-      }`}
-    />
-  </button>
-
-  {showDateSort && (
-    <div
-      className="
-        absolute left-0 top-[42px] z-50 w-full
-        overflow-hidden rounded-[7px]
-        border border-[#DFE1E4]
-        bg-white p-1
-        shadow-[0_6px_20px_rgba(0,0,0,0.08)]
-      "
-    >
-      <button
-        type="button"
-        onClick={() => {
-          setDateSort("newest");
-          setShowDateSort(false);
-        }}
-        className={`
-          w-full rounded-[5px] px-3 py-2
-          text-left text-[11px]
-          transition hover:bg-[#FFF3EE]
-          ${
-            dateSort === "newest"
-              ? "bg-[#FFF3EE] font-semibold text-[#F26738]"
-              : "text-[#333333]"
-          }
-        `}
-      >
-        Newest First
-      </button>
-
-      <button
-        type="button"
-        onClick={() => {
-          setDateSort("oldest");
-          setShowDateSort(false);
-        }}
-        className={`
-          w-full rounded-[5px] px-3 py-2
-          text-left text-[11px]
-          transition hover:bg-[#FFF3EE]
-          ${
-            dateSort === "oldest"
-              ? "bg-[#FFF3EE] font-semibold text-[#F26738]"
-              : "text-[#333333]"
-          }
-        `}
-      >
-        Oldest First
-      </button>
-    </div>
-  )}
-</div>
-
+            {showDateSort && (
+              <div className="absolute left-0 top-[42px] z-50 w-full overflow-hidden rounded-[7px] border border-[#DFE1E4] bg-white p-1 shadow-[0_6px_20px_rgba(0,0,0,0.08)]">
                 <button
                   type="button"
-                  onClick={clearFilters}
-                  className="flex h-[38px] shrink-0 items-center justify-center gap-1.5 px-2 text-[11px] font-medium text-[#F26738] transition hover:text-[#D94F20]"
+                  onClick={() => { setDateSort("newest"); setShowDateSort(false); }}
+                  className={`w-full rounded-[5px] px-3 py-2 text-left text-[11px] transition hover:bg-[#FFF3EE] ${dateSort === "newest" ? "bg-[#FFF3EE] font-semibold text-[#F26738]" : "text-[#333333]"}`}
                 >
-                  <RotateCcw size={14} strokeWidth={1.8} />
-                  Clear
+                  Newest First
+                </button>
+                <button
+                  type="button"
+                  onClick={() => { setDateSort("oldest"); setShowDateSort(false); }}
+                  className={`w-full rounded-[5px] px-3 py-2 text-left text-[11px] transition hover:bg-[#FFF3EE] ${dateSort === "oldest" ? "bg-[#FFF3EE] font-semibold text-[#F26738]" : "text-[#333333]"}`}
+                >
+                  Oldest First
                 </button>
               </div>
-            </div>
-
-            {/* DESKTOP TABLE */}
-            <div className="hidden overflow-x-auto lg:block">
-              <table className="w-full min-w-[1000px] border-collapse">
-                <thead>
-                  <tr className="border-b border-[#ECEAE8] bg-[#FCFCFC]">
-                    {['Ticket Id', 'Subject', 'Category', 'Status', 'Priority', 'Last Updated', 'Actions'].map((head, i) => (
-                      <th key={i} className={`px-4 py-3 text-left text-sm font-bold text-orange-500 ${i === 6 ? 'text-center' : ''}`}>
-                        {head}
-                      </th>
-                    ))}
-                  </tr>
-                </thead>
-                <tbody>
-                  {loading ? (
-                    <tr><td colSpan={7} className="py-12 text-center text-gray-500">Loading tickets...</td></tr>
-                  ) : sortedTickets.length === 0 ? (
-                    <tr><td colSpan={7} className="py-12 text-center text-gray-500">No tickets found</td></tr>
-                  ) : (
-                    sortedTickets.map((ticket) => {
-                      const pStyle = priorityStyles[ticket.priority] || priorityStyles.Medium;
-                      return (
-                        <tr key={ticket._id} className="border-b border-[#ECEAE8] transition hover:bg-[#FFFCFA]">
-                          <td className="px-4 py-4">
-                            <p className="text-sm font-bold text-[#25292E]">{ticket.ticketId}</p>
-                            <p className="mt-1 whitespace-nowrap text-sm text-[#858A91]">{ticket.created}</p>
-                          </td>
-                          <td className="max-w-[245px] px-4 py-4">
-                            <p className="truncate text-sm font-semibold text-[#30343A]">{ticket.subject}</p>
-                            <p className="mt-1 truncate text-sm text-[#777D84]">{ticket.description}</p>
-                          </td>
-                          <td className="px-4 py-4 text-sm text-[#676D74]">{ticket.category}</td>
-                          <td className="px-4 py-4">
-                            <span className={`inline-flex items-center gap-1.5 rounded-[5px] px-2 py-1 text-sm font-medium ${statusStyles[ticket.status] || 'bg-gray-100 text-gray-600'}`}>
-                              <span className="h-[4px] w-[4px] rounded-full bg-current" />
-                              {ticket.status}
-                            </span>
-                          </td>
-                          <td className="px-4 py-4">
-                            <span className={`flex items-center gap-2 text-sm ${pStyle.text}`}>
-                              {ticket.priority === "High" && <ArrowUpRight size={15} strokeWidth={2} className={pStyle.icon} />}
-                              {ticket.priority}
-                            </span>
-                          </td>
-                          <td className="px-4 py-4">
-                            <p className="whitespace-nowrap text-sm font-semibold text-[#30343A]">
-                              {new Date(ticket.updatedAt).toLocaleDateString("en-IN", { day: "2-digit", month: "short", year: "numeric", timeZone: "Asia/Kolkata" })}
-                            </p>
-                            <p className="mt-1 text-sm text-[#777D84]">
-                              {new Date(ticket.updatedAt).toLocaleTimeString("en-IN", { hour: "2-digit", minute: "2-digit", hour12: true, timeZone: "Asia/Kolkata" })}
-                            </p>
-                          </td>
-                          <td className="px-4 py-4">
-                            <div className="text-center">
-                              <button
-                                onClick={() => setSelectedTicket(ticket)}
-                                className="flex h-[32px] w-[32px] items-center justify-center rounded-[7px] border border-[#E1E3E5] bg-white text-[#69717A] transition-all duration-200 hover:border-[#F45B2A] hover:bg-[#FFF7F3] hover:text-[#F45B2A]"
-                              >
-                                <Eye size={15} strokeWidth={1.8} />
-                              </button>
-                              {
-
-                              }
-                         
-                            </div>
-                          </td>
-                        </tr>
-                      );
-                    })
-                  )}
-                </tbody>
-              </table>
-            </div>
-
-            {/* MOBILE CARDS */}
-            <div className="divide-y divide-[#ECEAE8] lg:hidden">
-              {loading ? (
-                <div className="p-8 text-center text-gray-500">Loading...</div>
-              ) : tickets.length === 0 ? (
-                <div className="p-8 text-center text-gray-500">No tickets found</div>
-              ) : (
-                tickets.map((ticket) => {
-                  const pStyle = priorityStyles[ticket.priority] || priorityStyles.Medium;
-                  return (
-                    <div key={ticket._id} className="p-4">
-                      <div className="flex items-start justify-between gap-3">
-                        <div>
-                          <p className="text-[11px] font-bold text-[#25292E]">{ticket.ticketId || ticket.id}</p>
-                          <p className="mt-1 text-[10px] text-[#858A91]">{ticket.created}</p>
-                        </div>
-                        <span className={`inline-flex items-center gap-1.5 rounded-[5px] px-2 py-1 text-[10px] font-medium ${statusStyles[ticket.status]}`}>
-                          <span className="h-[4px] w-[4px] rounded-full bg-current" />
-                          {ticket.status}
-                        </span>
-                      </div>
-                      <div className="mt-4">
-                        <p className="text-[12px] font-semibold text-[#30343A]">{ticket.subject}</p>
-                        <p className="mt-1 text-[10px] leading-5 text-[#777D84]">{ticket.description}</p>
-                      </div>
-                      <div className="mt-4 grid grid-cols-2 gap-4">
-                        <div>
-                          <p className="text-[9px] font-medium uppercase text-[#999EA4]">Category</p>
-                          <p className="mt-1 text-[11px] text-[#676D74]">{ticket.category}</p>
-                        </div>
-                        <div>
-                          <p className="text-[9px] font-medium uppercase text-[#999EA4]">Priority</p>
-                          <span className={`mt-1 flex items-center gap-2 text-[11px] ${pStyle.text}`}>
-                            {ticket.priority === "High" && <ArrowUpRight size={14} className={pStyle.icon} />}
-                            {ticket.priority}
-                          </span>
-                        </div>
-                        <div>
-                          <p className="text-[9px] font-medium uppercase text-[#999EA4]">Last Updated</p>
-                          <p className="mt-1 text-[11px] font-medium text-[#30343A]">{ticket.updatedDate}</p>
-                          <p className="text-[10px] text-[#777D84]">{ticket.updatedTime}</p>
-                        </div>
-                      </div>
-                      <div className="mt-4 flex justify-end gap-2">
-                        <button onClick={() => setSelectedTicket(ticket)} className="flex h-[32px] w-[32px] items-center justify-center rounded-[7px] border border-[#E1E3E5] bg-white text-[#69717A] hover:border-[#F45B2A] hover:bg-[#FFF7F3] hover:text-[#F45B2A]">
-                          <Eye size={15} />
-                        </button>
-                        <button className="flex h-[32px] w-[32px] items-center justify-center rounded-[7px] border border-[#E1E3E5] bg-white text-[#69717A] hover:border-[#F45B2A] hover:bg-[#FFF7F3] hover:text-[#F45B2A]">
-                          <MoreVertical size={15} />
-                        </button>
-                      </div>
-                    </div>
-                  );
-                })
-              )}
-            </div>
-
-            {/* PAGINATION FOOTER */}
-          <div className="flex flex-col gap-4 border-t border-[#ECEAE8] px-4 py-3 sm:flex-row sm:items-center sm:justify-between sm:px-5">
-
-  {/* Showing */}
-  <p className="text-[11px] text-[#747982]">
-    Showing{" "}
-    {tickets.length === 0
-      ? 0
-      : (currentPage - 1) * 10 + 1}{" "}
-    to{" "}
-    {Math.min(currentPage * 10, totalTickets)}{" "}
-    of {totalTickets} tickets
-  </p>
-
-  <div className="flex items-center justify-between gap-2 sm:justify-end">
-
-    {/* Previous */}
-    <button
-      type="button"
-      disabled={currentPage === 1}
-      onClick={() => setCurrentPage((prev) => prev - 1)}
-      className="
-        flex h-[32px] min-w-[32px] items-center justify-center
-        rounded-[7px] border border-[#E1E3E5]
-        bg-white text-[#59616A]
-        transition-all
-        hover:border-[#F45B2A]
-        hover:text-[#F26738]
-        disabled:cursor-not-allowed
-        disabled:opacity-40
-      "
-    >
-      <ChevronLeft size={15} />
-    </button>
-
-    {/* Page Numbers */}
-    {Array.from(
-      { length: totalPages },
-      (_, index) => index + 1
-    ).map((page) => (
-      <button
-        key={page}
-        type="button"
-        onClick={() => setCurrentPage(page)}
-        className={`
-          flex h-[32px] min-w-[32px] items-center justify-center
-          rounded-[7px] border text-[11px]
-          transition-all
-          ${
-            currentPage === page
-              ? "border-[#F45B2A] bg-[#FFF7F3] text-[#F26738]"
-              : "border-[#E1E3E5] bg-white text-[#59616A] hover:border-[#F45B2A] hover:text-[#F26738]"
-          }
-        `}
-      >
-        {page}
-      </button>
-    ))}
-
-    {/* Next */}
-    <button
-      type="button"
-      disabled={currentPage === totalPages}
-      onClick={() => setCurrentPage((prev) => prev + 1)}
-      className="
-        flex h-[32px] min-w-[32px] items-center justify-center
-        rounded-[7px] border border-[#E1E3E5]
-        bg-white text-[#59616A]
-        transition-all
-        hover:border-[#F45B2A]
-        hover:text-[#F26738]
-        disabled:cursor-not-allowed
-        disabled:opacity-40
-      "
-    >
-      <ChevronRight size={15} />
-    </button>
-
-  
-
-  </div>
-</div>
+            )}
           </div>
+
+          <button
+            type="button"
+            onClick={clearFilters}
+            className="flex h-[38px] shrink-0 items-center justify-center gap-1.5 px-2 text-[11px] font-medium text-[#F26738] transition hover:text-[#D94F20]"
+          >
+            <RotateCcw size={14} strokeWidth={1.8} />
+            Clear
+          </button>
         </div>
-      </section>
+      </div>
+
+      {/* DESKTOP TABLE */}
+      <div className="hidden overflow-x-auto lg:block">
+        <table className="w-full min-w-[1000px] border-collapse">
+          <thead>
+            <tr className="border-b border-[#ECEAE8] bg-[#f6673c]">
+              {['Ticket Id', 'Subject', 'Category', 'Status', 'Priority', 'Last Updated', 'Actions'].map((head, i) => (
+                <th
+                  key={i}
+                  className={`px-4 py-3 text-left text-sm font-bold text-orange-500 text-white border-r border-[#ECEAE8] last:border-r-0 ${i === 6 ? 'text-center' : ''}`}
+                >
+                  {head}
+                </th>
+              ))}
+            </tr>
+          </thead>
+          <tbody>
+            {loading ? (
+              <tr><td colSpan={7} className="py-12 text-center text-gray-500">Loading tickets...</td></tr>
+            ) : sortedTickets.length === 0 ? (
+              <tr><td colSpan={7} className="py-12 text-center text-gray-500">No tickets found</td></tr>
+            ) : (
+              sortedTickets.map((ticket) => {
+                const pStyle = priorityStyles[ticket.priority] || priorityStyles.Medium;
+                return (
+                  <tr key={ticket._id} className="border-b border-[#ECEAE8] transition hover:bg-[#FFFCFA]">
+                    <td className="px-4 py-4 border-r border-[#ECEAE8]">
+                      <p className="text-sm font-bold text-[#25292E]">{ticket.ticketId}</p>
+                      <p className="mt-1 whitespace-nowrap text-sm text-[#858A91]">{ticket.created}</p>
+                    </td>
+                    <td className="max-w-[245px] px-4 py-4 border-r border-[#ECEAE8]">
+                      <p className="truncate text-sm font-semibold text-[#30343A]">{ticket.subject}</p>
+                      <p className="mt-1 truncate text-sm text-[#777D84]">{ticket.description}</p>
+                    </td>
+                    <td className="px-4 py-4 text-sm text-[#676D74] border-r border-[#ECEAE8]">{ticket.category}</td>
+                    <td className="px-4 py-4 border-r border-[#ECEAE8]">
+                      <span className={`inline-flex items-center gap-1.5 rounded-[5px] px-2 py-1 text-sm font-medium ${statusStyles[ticket.status] || 'bg-gray-100 text-gray-600'}`}>
+                        <span className="h-[4px] w-[4px] rounded-full bg-current" />
+                        {ticket.status}
+                      </span>
+                    </td>
+                    <td className="px-4 py-4 border-r border-[#ECEAE8]">
+                      <span className={`flex items-center gap-2 text-sm ${pStyle.text}`}>
+                        {ticket.priority === "High" && <ArrowUpRight size={15} strokeWidth={2} className={pStyle.icon} />}
+                        {ticket.priority}
+                      </span>
+                    </td>
+                    <td className="px-4 py-4 border-r border-[#ECEAE8]">
+                      <p className="whitespace-nowrap text-sm font-semibold text-[#30343A]">
+                        {new Date(ticket.updatedAt).toLocaleDateString("en-IN", { day: "2-digit", month: "short", year: "numeric", timeZone: "Asia/Kolkata" })}
+                      </p>
+                      <p className="mt-1 text-sm text-[#777D84]">
+                        {new Date(ticket.updatedAt).toLocaleTimeString("en-IN", { hour: "2-digit", minute: "2-digit", hour12: true, timeZone: "Asia/Kolkata" })}
+                      </p>
+                    </td>
+                    <td className="px-4 py-4">
+                      <div className="text-center">
+                        <button
+                          onClick={() => setSelectedTicket(ticket)}
+                          className="flex h-[32px] w-[32px] items-center justify-center rounded-[7px] border border-[#E1E3E5] bg-white text-[#69717A] transition-all duration-200 hover:border-[#F45B2A] hover:bg-[#FFF7F3] hover:text-[#F45B2A]"
+                        >
+                          <Eye size={15} strokeWidth={1.8} />
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
+                );
+              })
+            )}
+          </tbody>
+        </table>
+      </div>
+
+      {/* MOBILE CARDS */}
+      <div className="divide-y divide-[#ECEAE8] lg:hidden">
+        {loading ? (
+          <div className="p-8 text-center text-gray-500">Loading...</div>
+        ) : tickets.length === 0 ? (
+          <div className="p-8 text-center text-gray-500">No tickets found</div>
+        ) : (
+          tickets.map((ticket) => {
+            const pStyle = priorityStyles[ticket.priority] || priorityStyles.Medium;
+            return (
+              <div key={ticket._id} className="p-4">
+                <div className="flex items-start justify-between gap-3">
+                  <div>
+                    <p className="text-[11px] font-bold text-[#25292E]">{ticket.ticketId || ticket.id}</p>
+                    <p className="mt-1 text-[10px] text-[#858A91]">{ticket.created}</p>
+                  </div>
+                  <span className={`inline-flex items-center gap-1.5 rounded-[5px] px-2 py-1 text-[10px] font-medium ${statusStyles[ticket.status]}`}>
+                    <span className="h-[4px] w-[4px] rounded-full bg-current" />
+                    {ticket.status}
+                  </span>
+                </div>
+                <div className="mt-4">
+                  <p className="text-[12px] font-semibold text-[#30343A]">{ticket.subject}</p>
+                  <p className="mt-1 text-[10px] leading-5 text-[#777D84]">{ticket.description}</p>
+                </div>
+                <div className="mt-4 grid grid-cols-2 gap-4">
+                  <div>
+                    <p className="text-[9px] font-medium uppercase text-[#999EA4]">Category</p>
+                    <p className="mt-1 text-[11px] text-[#676D74]">{ticket.category}</p>
+                  </div>
+                  <div>
+                    <p className="text-[9px] font-medium uppercase text-[#999EA4]">Priority</p>
+                    <span className={`mt-1 flex items-center gap-2 text-[11px] ${pStyle.text}`}>
+                      {ticket.priority === "High" && <ArrowUpRight size={14} className={pStyle.icon} />}
+                      {ticket.priority}
+                    </span>
+                  </div>
+                  <div>
+                    <p className="text-[9px] font-medium uppercase text-[#999EA4]">Last Updated</p>
+                    <p className="mt-1 text-[11px] font-medium text-[#30343A]">{ticket.updatedDate}</p>
+                    <p className="text-[10px] text-[#777D84]">{ticket.updatedTime}</p>
+                  </div>
+                </div>
+                <div className="mt-4 flex justify-end gap-2">
+                  <button onClick={() => setSelectedTicket(ticket)} className="flex h-[32px] w-[32px] items-center justify-center rounded-[7px] border border-[#E1E3E5] bg-white text-[#69717A] hover:border-[#F45B2A] hover:bg-[#FFF7F3] hover:text-[#F45B2A]">
+                    <Eye size={15} />
+                  </button>
+                  <button className="flex h-[32px] w-[32px] items-center justify-center rounded-[7px] border border-[#E1E3E5] bg-white text-[#69717A] hover:border-[#F45B2A] hover:bg-[#FFF7F3] hover:text-[#F45B2A]">
+                    <MoreVertical size={15} />
+                  </button>
+                </div>
+              </div>
+            );
+          })
+        )}
+      </div>
+
+      {/* PAGINATION FOOTER */}
+      <div className="flex flex-col gap-4 border-t border-[#ECEAE8] px-4 py-3 sm:flex-row sm:items-center sm:justify-between sm:px-5">
+        <p className="text-[11px] text-[#747982]">
+          Showing{" "}
+          {tickets.length === 0 ? 0 : (currentPage - 1) * 10 + 1}{" "}
+          to{" "}
+          {Math.min(currentPage * 10, totalTickets)}{" "}
+          of {totalTickets} tickets
+        </p>
+
+        <div className="flex items-center justify-between gap-2 sm:justify-end">
+          <button
+            type="button"
+            disabled={currentPage === 1}
+            onClick={() => setCurrentPage((prev) => prev - 1)}
+            className="flex h-[32px] min-w-[32px] items-center justify-center rounded-[7px] border border-[#E1E3E5] bg-white text-[#59616A] transition-all hover:border-[#F45B2A] hover:text-[#F26738] disabled:cursor-not-allowed disabled:opacity-40"
+          >
+            <ChevronLeft size={15} />
+          </button>
+
+          {Array.from({ length: totalPages }, (_, index) => index + 1).map((page) => (
+            <button
+              key={page}
+              type="button"
+              onClick={() => setCurrentPage(page)}
+              className={`flex h-[32px] min-w-[32px] items-center justify-center rounded-[7px] border text-[11px] transition-all ${currentPage === page ? "border-[#F45B2A] bg-[#FFF7F3] text-[#F26738]" : "border-[#E1E3E5] bg-white text-[#59616A] hover:border-[#F45B2A] hover:text-[#F26738]"}`}
+            >
+              {page}
+            </button>
+          ))}
+
+          <button
+            type="button"
+            disabled={currentPage === totalPages}
+            onClick={() => setCurrentPage((prev) => prev + 1)}
+            className="flex h-[32px] min-w-[32px] items-center justify-center rounded-[7px] border border-[#E1E3E5] bg-white text-[#59616A] transition-all hover:border-[#F45B2A] hover:text-[#F26738] disabled:cursor-not-allowed disabled:opacity-40"
+          >
+            <ChevronRight size={15} />
+          </button>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</section>
 
       {/* HELP BANNER */}
       <section className="w-full px-3 py-2 sm:px-5 lg:px-7">

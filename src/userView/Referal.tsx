@@ -207,7 +207,7 @@ export default function ReferAndEarnPage() {
         {
             step: 2,
             title: "STEP-2",
-            badgeColor: "#666666",
+            badgeColor: "#FF5B2E",
             image:
                 "https://cdn-icons-png.flaticon.com/512/11488/11488571.png",
             description: "Friends sign up using\nyour unique Referral\ncode",
@@ -224,7 +224,7 @@ export default function ReferAndEarnPage() {
         {
             step: 4,
             title: "STEP-4",
-            badgeColor: "#666666",
+            badgeColor: "#FF5B2E",
             image:
                 "https://cdn3d.iconscout.com/3d/premium/thumb/money-3d-icon-png-download-10033543.png",
             description: "Your Friend gets 100\npoints on Sign up",
@@ -259,7 +259,7 @@ export default function ReferAndEarnPage() {
                     initial={{ opacity: 0, y: 20 }}
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ delay: 0.1 }}
-                    className="flex gap-2 overflow-x-auto scrollbar-hide mb-6 bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm rounded-2xl p-2 border border-gray-200/50 dark:border-gray-700/50 shadow-sm"
+                    className="flex gap-2 overflow-x-auto scrollbar-hide mb-6 bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm rounded-full p-2 border border-gray-200/50 dark:border-gray-700/50 shadow-sm"
                 >
                     {tabs.map((tab) => {
                         const IconComponent = tab.icon;
@@ -272,7 +272,7 @@ export default function ReferAndEarnPage() {
                                     setActiveTab(tab.id);
                                     updateUrlTab(tab.id);
                                 }}
-                                className={`flex items-center px-3 py-2.5 rounded-xl font-medium text-sm transition-all whitespace-nowrap ${activeTab === tab.id
+                                className={`flex items-center px-3 py-2.5 rounded-full border border-gray-200 font-medium text-sm transition-all whitespace-nowrap ${activeTab === tab.id
                                     ? "bg-orange-500 text-white shadow-lg"
                                     : "text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white hover:bg-gray-100 dark:hover:bg-gray-700/50"
                                     }`}
@@ -291,101 +291,72 @@ export default function ReferAndEarnPage() {
                         animate={{ opacity: 1, y: 0 }}
                         exit={{ opacity: 0, y: -20 }}
                         transition={{ duration: 0.3 }}
-                        className="space-y-6 bg-white rounded-3xl px-4"
+                        className="space-y-6 bg-white rounded-3xl px-4 py-8"
                     >
                         {activeTab === "refer" && (
                             <>
-                                   <section className="w-full ">
-      <div className="mx-auto w-full max-w-[1400px] px-5 py-8 sm:px-8 lg:px-10 xl:px-1">
+                                <section className="w-full px-4">
+                                    <div className="mx-auto w-full max-w-[1400px] px-5 pb-8 sm:px-8 lg:px-10 xl:px-1">
 
+
+
+                                        {/* Main Content */}
+                                        <div className="grid grid-cols-1 items-center justify-center gap-8 lg:grid-cols-1 lg:gap-5">
+
+                                            {/* Left Card */}
+                                            <div>
+
+                                                <div className="w-full overflow-hidden rounded-[38px]">
+                                                    {/* Heading */}
+
+                            <div className="flex bg-[#fb7048]">
+                                   {/* Orange Section */}
+                                                    <div className="flex min-h-[205px] flex-col justify-center  px-8 py-10 sm:px-12 lg:px-16">
+                                                        <h2 className="mb-2 text-[25px] font-bold leading-tight text-white sm:text-[30px] lg:text-4xl">
+                                                            Refer & <span className="text-[#fff600]">Earn</span>
+                                                        </h2>
+                                                        <div className="className=
+  bg-gradient-to-b
+  from-gray-300
+  via-gray-500
+  to-black
+  w-60
+  -rotate-1
+  rounded-[7px]
+  p-[1px]
+">
+                                                            <div
+                                                                className="
+  w-60
+    inline-flex
+    items-center
+    justify-center
+    rounded-[7px]
+   
+    bg-[#fff600]
+    px-2.5
+    py-1.5
+    text-[14px]
+    font-extrabold
+    leading-none
+    tracking-[-0.02em]
+    text-black
     
+    
+    whitespace-nowrap
 
-        {/* Main Content */}
-        <div className="grid grid-cols-1 items-center justify-center gap-8 lg:grid-cols-[1.3fr_0.7fr] lg:gap-5">
+    sm:px-3
+    sm:py-3
+    sm:text-xl
+  "
+                                                            >
+                                                                Earn ₹2500* Per Share
+                                                            </div></div>
 
-          {/* Left Card */}
-          <div>
-               <h1 className="mb-6 text-center text-[38px] font-extrabold leading-tight tracking-tight text-[#222222] sm:text-[46px] lg:text-4xl">
-          Refer and
-         {" "}  <span className="text-[#ff7047]">Earn</span>
+                                                        
+                                                    </div>
 
-        </h1>
-          <div className="w-full overflow-hidden rounded-[38px]">
-                {/* Heading */}
-     
-
-            {/* Orange Section */}
-            <div className="flex min-h-[205px] flex-col justify-center bg-[#fb7048] px-8 py-10 sm:px-12 lg:px-16">
-              <h2 className="mb-2 text-[25px] font-bold leading-tight text-white sm:text-[30px] lg:text-3xl">
-                Invite your friends
-              </h2>
-
-              <p className="text-[30px] font-extrabold leading-tight text-white sm:text-[38px] lg:text-3xl">
-                Earn ₹250* Per Share
-              </p>
-            </div>
-
-            {/* Rewards Section */}
-            <div className="flex min-h-[133px] items-center gap-5 bg-[#fff0c5] px-7 py-5 sm:px-12 lg:px-14">
-
-              {/* Coin */}
-              <div className="flex h-[62px] w-[62px] shrink-0 items-center justify-center rounded-full bg-[#ffbd17] shadow-inner sm:h-[68px] sm:w-[68px]">
-                <div className="flex h-[54px] w-[54px] items-center justify-center rounded-full border-[2px] border-[#ffe28a]">
-                  <span className="text-[28px] text-white">♜</span>
-                </div>
-              </div>
-
-              {/* Reward Text */}
-              <div className="min-w-0 flex-1">
-                <h3 className="text-[25px] font-extrabold leading-tight text-[#292929] sm:text-[30px]">
-                  My rewards
-                </h3>
-
-                <p className="mt-1 text-[21px] font-bold text-[#292929] sm:text-[27px]">
-                  1 Point = ₹1
-                </p>
-              </div>
-
-              {/* Points */}
-              <div className="flex h-[62px] w-[110px] shrink-0 items-center justify-center rounded-[18px] border-[2px] border-[#ff7047] bg-white sm:h-[82px] sm:w-[138px] sm:rounded-[18px]">
-                <span className="text-[38px] font-bold text-[#ff7047] sm:text-[46px]">
-                  {wallet?.totalEarned || 0}
-                </span>
-              </div>
-
-              {/* Arrow */}
-              <button
-                type="button"
-                className="flex shrink-0 items-center justify-center text-[#ff7047] transition-transform duration-200 hover:translate-x-1"
-              >
-                <ChevronRight
-                  size={48}
-                  strokeWidth={4}
-                  className="sm:h-[52px] sm:w-[52px]"
-                />
-              </button>
-            </div>
-          </div> </div>
-
-          {/* Right Illustration */}
-          <div className="flex items-center justify-center lg:justify-end mt-20">
-            <img
-              src="/images/refer-img.webp"
-              alt="Refer and earn"
-              className="
-                h-full
-                w-full
-                max-w-[540px]
-                object-contain
-                lg:w-[480px]
-              "
-            />
-          </div>
-        </div>
-      </div>
-    </section>
-                                {/* Referral Journey Section */}
-                                <div className="relative w-full w-5xl mx-auto ">
+                                                          <div className="relative w-full w-5xl mx-auto ">
                                     <div className=" px-6 lg:px-10 py-8">
 
                                         {/* Desktop Dashed Line */}
@@ -399,7 +370,7 @@ export default function ReferAndEarnPage() {
            C120 70 180 10 300 40
            C420 70 480 10 600 40
            C720 70 780 10 900 40"
-                                                stroke="#7d7d7d"
+                                                stroke="#fff"
                                                 strokeWidth="2"
                                                 strokeDasharray="10 12"
                                                 fill="none"
@@ -418,13 +389,11 @@ export default function ReferAndEarnPage() {
                                                 />
 
                                                 <div className="text-left lg:text-center">
-                                                    <p className="font-semibold text-gray-700 lg:text-lg">
+                                                    <p className="font-semibold text-white lg:text-lg">
                                                         Share Link
                                                     </p>
 
-                                                    <p className="text-sm text-gray-500">
-                                                        Share with your friends
-                                                    </p>
+                                                 
                                                 </div>
                                             </div>
 
@@ -433,17 +402,17 @@ export default function ReferAndEarnPage() {
                                                 <div className="absolute left-8 top-16 bottom-[-35px] border-l-2 border-dashed border-gray-300 lg:hidden"></div>
 
                                                 <img
-                                                    src="https://static.vecteezy.com/system/resources/previews/059/023/139/non_2x/3d-render-of-yellow-abstract-user-icon-minimalist-avatar-for-website-free-png.png"
+                                                    src="https://upload.wikimedia.org/wikipedia/commons/thumb/0/0f/Yellow_-_replace_this_image_male.svg/960px-Yellow_-_replace_this_image_male.svg.png?utm_source=commons.wikimedia.org&utm_campaign=index&utm_content=thumbnail"
                                                     className="w-12 h-12 object-contain shrink-0"
                                                 />
 
-                                                <div className="text-left lg:text-center">
-                                                    <p className="mt-1 lg:text-[17px] font-medium text-[#555]">
+                                                <div className="text-left lg:text-center ">
+                                                    <p className="mt-1 text-white lg:text-[17px] font-medium text-[#555]">
                                                         Each Share
                                                     </p>
 
-                                                    <h3 className="text-[22px] font-bold text-[#555]">
-                                                        ₹250
+                                                    <h3 className="text-[22px] text-white font-bold text-[#555]">
+                                                        ₹50
                                                     </h3>
                                                 </div>
                                             </div>
@@ -453,23 +422,20 @@ export default function ReferAndEarnPage() {
                                                 <div className="absolute left-8 top-16 bottom-[-35px] border-l-2 border-dashed border-gray-300 lg:hidden"></div>
 
                                                 <img
-                                                    src="https://static.vecteezy.com/system/resources/previews/059/023/139/non_2x/3d-render-of-yellow-abstract-user-icon-minimalist-avatar-for-website-free-png.png"
+                                                    src="https://cdn3.emoji.gg/emojis/9345-yellow-gift.png"
                                                     className="w-12 h-12 object-contain shrink-0"
                                                 />
 
-                                                <div className="text-left lg:text-center">
-                                                    <p className="mt-1 lg:text-[17px] font-medium text-[#555]">
-                                                        10 Shares
-                                                    </p>
+                                             <div className="text-left lg:text-center">
+    <div className="flex flex-col items-center lg:justify-center">
 
-                                                    <div className="flex items-center gap-1 lg:justify-center">
-                                                        <span className="text-yellow-400 text-xl">🌟</span>
+        <h3 className="text-[15px] font-bold text-white">
+            Earn Unlimited
+        </h3>
+        <span className="text-xl">🌟</span>
 
-                                                        <h3 className="text-[22px] font-bold text-[#ff6b3d]">
-                                                            ₹3600
-                                                        </h3>
-                                                    </div>
-                                                </div>
+    </div>
+</div>
                                             </div>
 
                                             {/* Step 4 */}
@@ -481,7 +447,7 @@ export default function ReferAndEarnPage() {
                                                 />
 
                                                 <div className="text-left lg:text-center">
-                                                    <p className="lg:text-[15px] leading-5 text-[#555] font-medium">
+                                                    <p className="lg:text-[15px] leading-5 text-white font-medium">
                                                         Refer More & Earn
                                                         <br />
                                                         More
@@ -493,19 +459,37 @@ export default function ReferAndEarnPage() {
                                     </div>
                                 </div>
 
-                                <div className="grid grid-cols-1 lg:grid-cols-1 gap-6 overflow-hidden">
+                            </div>
+                                                 
+
+                                                  
+                                                </div> </div>
+
+
+                                        </div>
+                                    </div>
+                                </section>
+                                {/* Referral Journey Section */}
+
+
+                                <div className="grid grid-cols-1 lg:grid-cols-1 gap-6 overflow-hidden w-full px-4">
 
                                     <motion.div
-                                        whileHover={{ y: -2 }}
-                                        className=" lg:p-8 lg:w-3xl mx-auto"
+                                      
+                                        className="  "
                                     >
-                                        {/* Heading */}
+                                       
+                                        {/* Referral Box */}
+                                        <div className=" border border-orange-500 rounded-[22px] px-6 py-2 flex items-center justify-between">
+                                             {/* Heading */}
                                         <h2 className="text-center text-2xl font-bold text-[#5A5A5A]">
                                             Share Your Referral Code
                                         </h2>
 
-                                        {/* Referral Box */}
-                                        <div className="mt-8 border-2 border-dashed border-[#8A8A8A] rounded-[22px] px-6 py-2 flex items-center justify-between">
+                                        <div className="flex gap-6 bg-orange-100/30 p-3 rounded-lg">
+
+                                   
+
 
                                             {/* Referral Code */}
                                             <h3 className="text-[#FF6436] lg:text-[22px] font-extrabold tracking-wide">
@@ -553,11 +537,11 @@ export default function ReferAndEarnPage() {
 
                                             </div>
 
-                                        </div>
+                                                 </div>
 
-                                        {/* WhatsApp */}
+                                                  {/* WhatsApp */}
 
-                                        <div className="flex justify-center mt-8">
+                                        <div className="flex justify-center ">
 
                                             <button
                                                 onClick={
@@ -590,6 +574,10 @@ export default function ReferAndEarnPage() {
                                             </button>
 
                                         </div>
+
+                                        </div>
+
+                                       
 
 
 
@@ -663,64 +651,66 @@ export default function ReferAndEarnPage() {
                             </motion.div>
                         )}
 
-                           {/* How It Works */}
-                    <motion.div
-                        whileHover={{ y: -2 }}
-                        className="mt-0  p-4  max-w-5xl mx-auto"
-                    >
-                        <h2 className="text-center text-xl font-bold text-[#555] mb-12">
-                            How it Works
-                        </h2>
+                        {/* How It Works */}
+                        <div className="px-4 ">
+                        <motion.div
+                            whileHover={{ y: -2 }}
+                            className=" py-3   w-full  bg-orange-200/20 rounded-2xl"
+                        >
+                            <h2 className="text-center text-xl font-bold text-[#555] mb-12">
+                                How it Works
+                            </h2>
 
-                        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
+                            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
 
-                            {referralSteps.map((step) => (
+                                {referralSteps.map((step) => (
 
-                                <motion.div
-                                    whileHover={{ y: -6 }}
-                                    key={step.step}
-                                    className="flex flex-col items-center"
-                                >
+                                    <motion.div
+                                        whileHover={{ y: -6 }}
+                                        key={step.step}
+                                        className="flex flex-col items-center"
+                                    >
 
-                                    {/* Card */}
+                                        {/* Card */}
 
-                                    <div className="relative w-50 h-[175px] rounded-[22px] bg-[#F5F5F5] shadow-sm flex items-center justify-center">
+                                        <div className="relative w-30 h-[105px] rounded-[22px] bg-white shadow-sm flex items-center justify-center">
 
-                                        {/* Step Badge */}
+                                            {/* Step Badge */}
 
-                                        <div
-                                            className="absolute top-0 left-1/2 -translate-x-1/2 px-4 py-2 rounded-b-2xl text-white font-bold text-xs"
-                                            style={{ background: step.badgeColor }}
-                                        >
-                                            STEP-{step.step}
+                                            <div
+                                                className="absolute top-0 left-1/2 -translate-x-1/2 px-2 py-1 rounded-b-2xl text-white font-bold text-xs"
+                                                style={{ background: step.badgeColor }}
+                                            >
+                                                STEP-{step.step}
+                                            </div>
+
+                                            {/* Icon */}
+
+                                            <img
+                                                src={step.image}
+                                                alt=""
+                                                className="w-14 h-14 object-contain"
+                                            />
+
                                         </div>
 
-                                        {/* Icon */}
+                                        {/* Text */}
 
-                                        <img
-                                            src={step.image}
-                                            alt=""
-                                            className="w-24 h-24 object-contain"
-                                        />
+                                        <p className="lg:mt-7 mt-2 text-center text-sm lg:text-base font-medium text-[#555] whitespace-pre-line">
+                                            {step.description}
+                                        </p>
 
-                                    </div>
+                                    </motion.div>
 
-                                    {/* Text */}
+                                ))}
 
-                                    <p className="lg:mt-7 mt-2 text-center text-sm lg:text-[18px] font-medium text-[#555] whitespace-pre-line">
-                                        {step.description}
-                                    </p>
+                            </div>
 
-                                </motion.div>
-
-                            ))}
-
+                        </motion.div>
                         </div>
-
-                    </motion.div>
                     </motion.div>
 
-                 
+
                 </AnimatePresence>
             </div>
         </div>

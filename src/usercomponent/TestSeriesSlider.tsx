@@ -31,7 +31,7 @@ export function LeftSlider() {
     }, []);
 
     return (
-        <div className="p-[1.5px]  h-full lg:col-span-2 h-full relative  overflow-hidden col-span-2 w-full bg-gradient-to-b from-[#686868]/0 via-[#686868]/50 to-[#686868] rounded-4xl">
+        <div className="p-[1.5px]  h-full lg:col-span-2 h-full relative  overflow-hidden col-span-2 w-full bg-gradient-to-b from-[#686868]/0 via-[#686868]/50 to-[#686868] rounded-2xl">
             <div className="w-full relative overflow-hidden">
                 <AnimatePresence mode="wait">
                     <motion.div
@@ -42,8 +42,8 @@ export function LeftSlider() {
                         transition={{ duration: 0.4 }}
                         className="h-full flex items-center"
                     >
-                        <div className="h-[90px] sm:h-[140px] md:h-[150px] lg:h-[160px] w-full">
-                            <img className="h-full w-full lg:object-cover object-center rounded-4xl" src={slides[index].image} alt="" />
+                        <div className="h-[90px] sm:h-[140px] md:h-[150px] lg:h-[240px] w-full">
+                            <img className="h-full w-full lg:object-cover object-center rounded-2xl" src={slides[index].image} alt="" />
                         </div>
 
                     </motion.div>

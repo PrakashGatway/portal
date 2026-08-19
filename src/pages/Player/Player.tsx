@@ -47,6 +47,7 @@ export default function VideoPlayerPage() {
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
     const [showWaitingRoom, setWaitingRoom] = useState(false);
+    const [isSubmitting, setIsSubmitting] = useState(false);
     const [feedbackOptions, setFeedbackOptions] = useState([
         { id: "presentation", label: "Good Presentation", checked: true },
         {
@@ -91,6 +92,7 @@ export default function VideoPlayerPage() {
 
   const handleReportSubmit = async (e) => {
     e.preventDefault();
+    setIsSubmitting(true)
 
     try {
         const response = await api.post("/feedback", {
@@ -133,6 +135,9 @@ export default function VideoPlayerPage() {
             error.response?.data || error.message
         );
     }
+    finally{
+        setIsSubmitting(false)
+    }
 };
     useEffect(() => {
         if (contentDetails?.contentType === "LiveClasses") {
@@ -156,6 +161,7 @@ export default function VideoPlayerPage() {
 
  const handleRatingSubmit = async (e) => {
     e.preventDefault();
+    setIsSubmitting(true)
 
     try {
         // Get only selected feedback
@@ -214,6 +220,9 @@ export default function VideoPlayerPage() {
             "Rating submit error:",
             error.response?.data || error.message
         );
+    }
+    finally{
+        setIsSubmitting(false)
     }
 };
 
@@ -587,10 +596,11 @@ export default function VideoPlayerPage() {
                             </Button>
                             <Button
                                 type="submit"
+                                disabled={isSubmitting}
                                 variant="default"
                                 className="bg-blue-600 text-white hover:bg-blue-700 dark:bg-blue-700 dark:hover:bg-blue-600"
                             >
-                                Submit Report
+                                {isSubmitting ? "Submitting..." : "Submit Report"}
                             </Button>
                         </div>
                     </form>
@@ -667,14 +677,14 @@ export default function VideoPlayerPage() {
                         <Button
                             type="submit"
                             variant="default"
-                            disabled={rating === 0}
+                            disabled={isSubmitting||rating === 0}
                             onClick={handleRatingSubmit}
                             className={`${rating === 0
                                 ? 'bg-gray-300 text-gray-500 cursor-not-allowed dark:bg-gray-700 dark:text-gray-400'
                                 : 'bg-blue-600 text-white hover:bg-blue-700 dark:bg-blue-700 dark:hover:bg-blue-600'
                                 }`}
                         >
-                            Submit Feedback
+                                                           {isSubmitting ? "Submitting..." : "Submit Rating"}
                         </Button>
                     </div>
                 </div>

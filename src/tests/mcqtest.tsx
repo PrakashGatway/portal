@@ -408,7 +408,7 @@ const active = "reading";
                                 placeholder="Search for mock tests..."
                                 value={searchQuery}
                                 onChange={(e) => setSearchQuery(e.target.value)}
-                                className="w-full pl-12 pr-4 py-2.5 border-1 border-[#FD7149]/70 focus:border-[#FD7149] rounded-xl bg-white text-base text-gray-900 placeholder-gray-500 focus:outline-none transition-colors"
+                                className="w-full pl-12 pr-4 py-2.5 border-1 border-[#FD7149]/70 focus:border-[#FD7149] rounded-full bg-white text-base text-gray-900 placeholder-gray-500 focus:outline-none transition-colors"
                             />
                         </div>
                         <div className="relative">
@@ -451,7 +451,7 @@ const active = "reading";
                                             </div>
 
                                             {/* Body */}
-                                            <div className="flex h-[300px]">
+                                            <div className="flex h-[250px]">
                                                 {/* Left Tabs */}
                                                 <div className="w-1/3 border-r bg-gray-50">
                                                     {[
@@ -463,7 +463,7 @@ const active = "reading";
                                                         <button
                                                             key={tab.id}
                                                             onClick={() => setActiveFilterTab(tab.id as any)}
-                                                            className={`w-full px-4 py-3 text-left text-sm font-medium border-l-4 transition-colors ${activeFilterTab === tab.id
+                                                            className={`w-full px-4 py-2 text-left text-sm font-medium border-l-4 transition-colors ${activeFilterTab === tab.id
                                                                     ? "border-[#FF7046] bg-white text-[#FF7046]"
                                                                     : "border-transparent text-gray-600 hover:bg-gray-100"
                                                                 }`}
@@ -474,7 +474,7 @@ const active = "reading";
                                                 </div>
 
                                                 {/* Right Options */}
-                                                <div className="flex-1 px-5 py-4 space-y-3 overflow-y-auto">
+                                                <div className="flex-1 px-5 py-3 overflow-y-auto">
                                                     {/* {activeFilterTab === "type" && (
                                                         <>
                                                             {[

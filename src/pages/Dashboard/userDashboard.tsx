@@ -1427,21 +1427,21 @@ useEffect(() => {
                                     type="text"
                                     placeholder="Search for test series..."
                                     onChange={(e) => setSearchTerm(e.target.value)}
-                                    className="w-full h-12 rounded-2xl border border-[#FF8356] bg-white pl-14 pr-4 outline-none text-base"
+                                    className="w-full h-12 rounded-full border border-[#FF8356] bg-white pl-14 pr-4 outline-none text-base"
                                 />
                             </div>
 
                             <div className="relative group lg:inline-block hidden lg:block">
                                 <button className="h-12 px-4 rounded-2xl border border-[#FF8356] flex items-center justify-center gap-3 bg-white hover:bg-orange-50 transition">
                                     <Filter size={22} />
-                                    <span className="text-base font-medium">Filters</span>
+                                    <span className="text-base font-medium">Sort</span>
                                 </button>
                                 <div className="absolute right-0 top-full mt-2 w-48 rounded-xl border border-gray-200 bg-white shadow-lg opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 z-50">
                                     {/* Dropdown */}
                                     {SORT_OPTIONS.map((option) => (
                                         <button
                                             onClick={() => setSort(option.value)}
-                                            className="w-full text-left px-4 py-3 hover:bg-orange-50 rounded-t-xl"
+                                            className="w-full text-left px-4 py-1 hover:bg-orange-50 rounded-t-xl text-sm font-medium"
                                         >
                                             {option.label}
                                         </button>

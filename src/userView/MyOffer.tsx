@@ -468,13 +468,13 @@ export default function OffersPage() {
                         {/* Search */}
                         <div className="flex-1">
                             <div className="relative group">
-                                <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400 transition-colors duration-300 group-focus-within:text-blue-500" />
+                                <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400 transition-colors duration-300 group-focus-within:text-orange-500" />
                                 <input
                                     type="text"
                                     placeholder="Search offers, courses, or codes..."
                                     value={searchTerm}
                                     onChange={(e) => setSearchTerm(e.target.value)}
-                                    className="w-full pl-12 pr-4 py-3 border border-orange-500 dark:border-gray-700 rounded-xl bg-white dark:bg-gray-800 text-gray-900 dark:text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-base shadow-inner transition-all duration-300"
+                                    className="w-full pl-12 pr-4 py-3 border border-orange-500 dark:border-gray-700 rounded-full bg-white dark:bg-gray-800 text-gray-900 dark:text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent text-base shadow-inner transition-all duration-300"
                                 />
                             </div>
                         </div>
@@ -482,12 +482,12 @@ export default function OffersPage() {
                         {/* Sort */}
                         <div className="relative group">
                             <div className="absolute inset-y-0 left-3 flex items-center pointer-events-none">
-                                <ArrowUpDown className="h-4 w-4 text-gray-400 group-focus-within:text-blue-500 transition-colors duration-300" />
+                                <ArrowUpDown className="h-4 w-4 text-gray-400 group-focus-within:text-orange-500 transition-colors duration-300" />
                             </div>
                             <select
                                 value={sortBy}
                                 onChange={(e) => setSortBy(e.target.value)}
-                                className="pl-10 pr-8 py-3 border border-orange-500 dark:border-gray-700 rounded-xl bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500 text-base appearance-none shadow-inner transition-all duration-300 cursor-pointer"
+                                className="pl-10 pr-8 py-3 border border-orange-500 dark:border-gray-700 rounded-full bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-orange-500 text-base appearance-none shadow-inner transition-all duration-300 cursor-pointer"
                             >
                                 {sortOptions.map(option => (
                                     <option key={option.id} value={option.id}>{option.name}</option>
@@ -505,7 +505,7 @@ export default function OffersPage() {
                                 <button
                                     key={type.id}
                                     onClick={() => handleTypeChange(type.id)}
-                                    className={`flex items-center px-4 py-2.5 rounded-xl border-2 transition-all duration-300 transform hover:scale-105 font-medium text-sm ${selectedType === type.id
+                                    className={`flex items-center px-4 py-2.5 rounded-full border-2 transition-all duration-300 transform hover:scale-105 font-medium text-sm ${selectedType === type.id
                                             ? `${type.color} border-${type.color}-500 text-white shadow-lg scale-105`
                                             : "bg-orange-50 dark:bg-gray-800 text-gray-700 dark:text-gray-300 border-gray-200 dark:border-gray-700 hover:border-gray-300 dark:hover:border-gray-600"
                                         }`}

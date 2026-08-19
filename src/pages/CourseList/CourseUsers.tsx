@@ -414,7 +414,7 @@ export default function CourseListingPage() {
 
         <div ref={searchContainerRef} className="relative">
           <div
-            className="flex items-center w-full rounded-2xl border-2 transition-all duration-300 bg-white"
+            className="flex items-center w-full rounded-full border-2 transition-all duration-300 bg-white"
             style={{ borderColor: showRecentSearches ? COLORS.primary : COLORS.border }}
           >
             <Search className="ml-4 h-5 w-5 flex-shrink-0" style={{ color: COLORS.textSecondary }} />
@@ -425,7 +425,7 @@ export default function CourseListingPage() {
               onKeyDown={(e) => e.key === 'Enter' && handleSearchSubmit(searchQuery)}
               onFocus={() => setShowRecentSearches(true)}
               placeholder="Search courses, categories....."
-              className="w-full px-4 py-3.5 text-base bg-white border-0 rounded-2xl focus:outline-none focus:ring-0"
+              className="w-full px-4 py-3.5 text-base bg-white border-0 rounded-full focus:outline-none focus:ring-0"
               style={{ color: COLORS.textPrimary }}
             />
             {searchQuery && (

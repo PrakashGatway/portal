@@ -60,7 +60,7 @@ const Privacy = () => {
   return (
     <div className=" mx-auto px-4 py-8 bg-white w-full rounded-3xl">
       {/* Header Section */}
-      <div className="mb-8">
+      {/* <div className="mb-8">
         <h1 className="text-3xl font-bold text-gray-900 dark:text-white mb-2">
           { 'Privacy Policy'}
         </h1>
@@ -76,21 +76,69 @@ const Privacy = () => {
             day: 'numeric'
           })}
         </div>
-      </div>
+      </div> */}
 
       {/* Content Section */}
-      <div className="prose prose-lg dark:prose-invert max-w-none ">
-        {privacyData.extraData ? (
-          <div 
-            className="privacy-content"
-            dangerouslySetInnerHTML={{ __html: privacyData.extraData }}
-          />
-        ) : (
-          <p className="text-gray-500 dark:text-gray-400">
-            No content available for this privacy policy.
-          </p>
-        )}
-      </div>
+   <div className="w-full">
+  {privacyData.extraData ? (
+    <div
+      className="
+        w-full
+        text-[15px] leading-7
+        text-gray-700 dark:text-gray-300
+
+        [&_*]:!max-w-full
+        [&_*]:!box-border
+        [&_p]:!mb-4
+        [&_p]:!leading-7
+        [&_h1]:!text-3xl
+        [&_h1]:!font-bold
+        [&_h1]:!mb-5
+        [&_h2]:!text-2xl
+        [&_h2]:!font-bold
+        [&_h2]:!mb-4
+        [&_h3]:!text-xl
+        [&_h3]:!font-semibold
+        [&_h3]:!mb-3
+        [&_strong]:!font-semibold
+        [&_b]:!font-semibold
+        [&_ul]:!list-disc
+        [&_ul]:!pl-6
+        [&_ul]:!mb-4
+        [&_ol]:!list-decimal
+        [&_ol]:!pl-6
+        [&_ol]:!mb-4
+        [&_li]:!mb-2
+        [&_a]:!text-orange-500
+        [&_a]:!underline
+        [&_a]:!break-words
+        [&_img]:!max-w-full
+        [&_img]:!h-auto
+        [&_table]:!w-full
+        [&_table]:!border-collapse
+        [&_table]:!my-5
+        [&_th]:!border
+        [&_th]:!border-gray-300
+        [&_th]:!p-3
+        [&_th]:!font-semibold
+        [&_td]:!border
+        [&_td]:!border-gray-300
+        [&_td]:!p-3
+        [&_blockquote]:!border-l-4
+        [&_blockquote]:!pl-4
+        [&_blockquote]:!italic
+        [&_br]:!leading-7
+      "
+      dangerouslySetInnerHTML={{
+        __html: privacyData.extraData,
+      }}
+    />
+  ) : (
+    <p className="text-gray-500 dark:text-gray-400">
+      No content available for this privacy policy.
+    </p>
+  )}
+</div>
 
       {/* Footer Section */}
       <div className="mt-8 pt-6 border-t border-gray-200 dark:border-gray-700">
