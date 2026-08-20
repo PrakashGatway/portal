@@ -71,7 +71,7 @@ import IELTSQuestionManagementPage from "./pages/ielts/ieltsQuestion";
 import IELTSGroupQuestionManagementPage from "./pages/ielts/ieltsGroup";
 import IELTSPassageManagementPage from "./pages/ielts/ieltsPassage";
 import IeltsTestManagementPage from "./pages/ielts/ieltsTest";
-import IeltsTestResultPage from "./pages/ielts/IeltsResult";
+// import IeltsTestResultPage from "./pages/ielts/IeltsResult";
 import IeltsTestPlatform from "./pages/ielts/ieltsTestAttempt";
 
 // Define roles
@@ -282,10 +282,10 @@ export default function App() {
               path="/ielts/tests/:testId"
               element={<IeltsTestPlatform />}
             />
-            <Route
+            {/* <Route
               path="/ielts/results/:testId"
               element={<IeltsTestResultPage />}
-            />
+            /> */}
             <Route path="*" element={<ComingSoon />} />
           </Route>
           <Route path="/unauthorized" element={<NotFound />} />
