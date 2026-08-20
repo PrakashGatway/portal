@@ -41,7 +41,7 @@ import SupportPage from "./pages/Support/Supports";
 import BlogCategoryManagement from "./pages/Website/BlogCategories";
 import ArticleManagement from "./pages/Website/Blogs";
 import BlogsManagement from "./pages/Website/Article";
-import FaqsManagement from "./pages/Website/Faq"
+import FaqsManagement from "./pages/Website/Faq";
 import CommentsManagement from "./pages/Website/BlogComent";
 import MockTest from "./userView/Mocktest";
 import TestQuestionPage from "./userView/Testquestionpage";
@@ -65,11 +65,14 @@ import SecureMaterialViewer from "./userView/SecureMaterial";
 import Setting from "./pages/Dashboard/Setting";
 import Notifications from "./pages/Notifications";
 import SupportTickets from "./pages/Support/Tickets";
-import Privacy from "./pages/privacy"
+import Privacy from "./pages/privacy";
 import FeedbackPage from "./pages/feedbackPage";
 import IELTSQuestionManagementPage from "./pages/ielts/ieltsQuestion";
 import IELTSGroupQuestionManagementPage from "./pages/ielts/ieltsGroup";
 import IELTSPassageManagementPage from "./pages/ielts/ieltsPassage";
+import IeltsTestManagementPage from "./pages/ielts/ieltsTest";
+import IeltsTestResultPage from "./pages/ielts/IeltsResult";
+import IeltsTestPlatform from "./pages/ielts/ieltsTestAttempt";
 
 // Define roles
 export const ROLES = {
@@ -148,7 +151,7 @@ export default function App() {
                 <Route path="/categories" element={<CategoryManagement />} />
                 <Route path="/courses" element={<CourseManagement />} />
                 <Route path="/modules" element={<ModuleManagement />} />
-                <Route path="/reviews-report" element={<FeedbackPage/>} />
+                <Route path="/reviews-report" element={<FeedbackPage />} />
                 <Route
                   path="/live-classes"
                   element={<ContentManagement type="LiveClasses" />}
@@ -181,10 +184,11 @@ export default function App() {
                   path="/test/groups"
                   element={<IELTSGroupQuestionManagementPage />}
                 />
-                 <Route
+                <Route
                   path="/test/passage"
                   element={<IELTSPassageManagementPage />}
                 />
+                <Route path="/test" element={<IeltsTestManagementPage />} />
 
                 <Route path="/test/packages" element={<PackageManagement />} />
                 <Route path="/setting" element={<Setting />} />
@@ -223,8 +227,6 @@ export default function App() {
                   />
                 }
               >
-
-
                 <Route path="/leads" element={<LeadManagement />} />
                 <Route path="/lead-report" element={<DailyReport />} />
               </Route>
@@ -275,6 +277,14 @@ export default function App() {
             <Route
               path="/pte/tests/:testTemplateId"
               element={<PteExamPage />}
+            />
+            <Route
+              path="/ielts/tests/:testId"
+              element={<IeltsTestPlatform />}
+            />
+            <Route
+              path="/ielts/results/:testId"
+              element={<IeltsTestResultPage />}
             />
             <Route path="*" element={<ComingSoon />} />
           </Route>

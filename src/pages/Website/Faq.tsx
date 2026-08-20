@@ -49,7 +49,7 @@ export default function FaqManagement() {
     } catch (error) {
       console.error("Failed to load categories");
     }
-  };
+  };    
 
   const fetchFaqs = async () => {
     setLoading(true);

@@ -82,11 +82,8 @@ interface Passage {
   updatedAt?: string;
 }
 
-interface GroupQuestion {
-  _id: string;
-  section: string;
-  groupType: string;
-  title: string;
+interface QuestionSet {
+  title?: string;
   instructions?: string;
   questions: Array<{
     _id: string;
@@ -95,20 +92,17 @@ interface GroupQuestion {
     marks: number;
     [key: string]: any;
   }>;
+}
+
+interface GroupQuestion {
+  _id: string;
+  section: string;
+  groupType: string;
+  title: string;
+  instructions?: string;
+  questionSets: QuestionSet[];
   content?: string;
   passage?: string | Passage; // Passage ID or populated passage
-  choices?: Array<{
-    label: string;
-    text: string;
-  }>;
-  media?: {
-    audioUrl?: string;
-    imageUrl?: string;
-  };
-  questionRange?: {
-    from?: number;
-    to?: number;
-  };
   isActive: boolean;
   createdAt?: string;
 }
@@ -118,17 +112,9 @@ interface GroupQuestionFormValues {
   groupType: string;
   title: string;
   instructions: string;
-  questions: string[];
+  questionSets: QuestionSet[];
   content: string;
   passage: string; // Passage ID
-  choices: Array<{
-    label: string;
-    text: string;
-  }>;
-  audioUrl: string;
-  imageUrl: string;
-  questionRangeFrom: number;
-  questionRangeTo: number;
   isActive: boolean;
 }
 
@@ -161,6 +147,9 @@ export default function IELTSGroupQuestionManagementPage() {
   const [questionPickerLimit, setQuestionPickerLimit] = useState(10);
   const [questionPickerTotalPages, setQuestionPickerTotalPages] = useState(1);
   const [questionPickerTotal, setQuestionPickerTotal] = useState(0);
+
+  // Active question set index for adding questions
+  const [activeQuestionSetIndex, setActiveQuestionSetIndex] = useState(0);
 
   // Passage picker states
   const [availablePassages, setAvailablePassages] = useState<Passage[]>([]);
@@ -220,14 +209,9 @@ export default function IELTSGroupQuestionManagementPage() {
       groupType: "",
       title: "",
       instructions: "",
-      questions: [],
+      questionSets: [{ title: "", instructions: "", questions: [] }],
       content: "",
       passage: "",
-      choices: [],
-      audioUrl: "",
-      imageUrl: "",
-      questionRangeFrom: null,
-      questionRangeTo: null,
       isActive: true,
     },
   });
@@ -236,14 +220,9 @@ export default function IELTSGroupQuestionManagementPage() {
   const watchGroupType = watch("groupType");
   const watchTitle = watch("title");
   const watchInstructions = watch("instructions");
-  const watchQuestions = watch("questions");
+  const watchQuestionSets = watch("questionSets");
   const watchContent = watch("content");
   const watchPassage = watch("passage");
-  const watchChoices = watch("choices");
-  const watchAudioUrl = watch("audioUrl");
-  const watchImageUrl = watch("imageUrl");
-  const watchQuestionRangeFrom = watch("questionRangeFrom");
-  const watchQuestionRangeTo = watch("questionRangeTo");
   const watchIsActive = watch("isActive");
 
   const fetchGroupQuestions = async () => {
@@ -457,6 +436,7 @@ export default function IELTSGroupQuestionManagementPage() {
     setQuestionPickerSearch("");
     setQuestionPickerPage(1);
     setQuestionPickerLimit(10);
+    setActiveQuestionSetIndex(0);
 
     setPassagePickerSearch("");
     setPassagePickerDebouncedSearch("");
@@ -469,14 +449,9 @@ export default function IELTSGroupQuestionManagementPage() {
       groupType: "",
       title: "",
       instructions: "",
-      questions: [],
+      questionSets: [{ title: "", instructions: "", questions: [] }],
       content: "",
       passage: "",
-      choices: [],
-      audioUrl: "",
-      imageUrl: "",
-      questionRangeFrom: null,
-      questionRangeTo: null,
       isActive: true,
     });
 
@@ -507,6 +482,7 @@ export default function IELTSGroupQuestionManagementPage() {
 
   const openEditDrawer = (groupQuestion: GroupQuestion) => {
     setEditingGroupQuestion(groupQuestion);
+    setActiveQuestionSetIndex(0);
 
     // Set selected passage if exists
     if (typeof groupQuestion.passage === "object" && groupQuestion.passage) {
@@ -526,17 +502,16 @@ export default function IELTSGroupQuestionManagementPage() {
       groupType: groupQuestion.groupType,
       title: groupQuestion.title || "",
       instructions: groupQuestion.instructions || "",
-      questions: groupQuestion.questions?.map((q) => q._id) || [],
+      questionSets: groupQuestion.questionSets?.map((qs) => ({
+        title: qs.title || "",
+        instructions: qs.instructions || "",
+        questions: qs.questions?.map((q) => q._id) || [],
+      })) || [{ title: "", instructions: "", questions: [] }],
       content: groupQuestion.content || "",
       passage:
         typeof groupQuestion.passage === "object"
           ? (groupQuestion.passage as Passage)._id
           : (groupQuestion.passage as string) || "",
-      choices: groupQuestion.choices || [],
-      audioUrl: groupQuestion.media?.audioUrl || "",
-      imageUrl: groupQuestion.media?.imageUrl || "",
-      questionRangeFrom: groupQuestion.questionRange?.from || null,
-      questionRangeTo: groupQuestion.questionRange?.to || null,
       isActive: groupQuestion.isActive,
     });
     setSideOpen(true);
@@ -563,6 +538,10 @@ export default function IELTSGroupQuestionManagementPage() {
         toast.error("Title is required");
         return;
       }
+      if (!values.questionSets || values.questionSets.length === 0) {
+        toast.error("At least one question set is required");
+        return;
+      }
 
       setSaving(true);
 
@@ -571,18 +550,13 @@ export default function IELTSGroupQuestionManagementPage() {
         groupType: values.groupType,
         title: values.title,
         instructions: values.instructions || undefined,
-        questions: values.questions || [],
+        questionSets: values.questionSets.map((qs) => ({
+          title: qs.title || undefined,
+          instructions: qs.instructions || undefined,
+          questions: qs.questions || [],
+        })),
         content: values.content || undefined,
         passage: values.passage || undefined,
-        choices: values.choices?.length ? values.choices : undefined,
-        media: {
-          audioUrl: values.audioUrl || null,
-          imageUrl: values.imageUrl || null,
-        },
-        questionRange: {
-          from: values.questionRangeFrom || null,
-          to: values.questionRangeTo || null,
-        },
         isActive: values.isActive,
       };
 
@@ -658,8 +632,13 @@ export default function IELTSGroupQuestionManagementPage() {
     return types.find((t) => t.value === groupType)?.label || groupType;
   };
 
-  const getQuestionCount = (gq: GroupQuestion) => {
-    return gq.questions?.length || 0;
+  const getTotalQuestionsCount = (gq: GroupQuestion) => {
+    return (
+      gq.questionSets?.reduce(
+        (total, qs) => total + (qs.questions?.length || 0),
+        0,
+      ) || 0
+    );
   };
 
   const getPassageTitle = (gq: GroupQuestion) => {
@@ -667,6 +646,44 @@ export default function IELTSGroupQuestionManagementPage() {
       return (gq.passage as Passage).title || "Untitled Passage";
     }
     return null;
+  };
+
+  // Question Set Management Functions
+  const addQuestionSet = () => {
+    const currentSets = watchQuestionSets || [];
+    setValue("questionSets", [
+      ...currentSets,
+      { title: "", instructions: "", questions: [] },
+    ]);
+    setActiveQuestionSetIndex(currentSets.length);
+  };
+
+  const removeQuestionSet = (index: number) => {
+    const currentSets = watchQuestionSets || [];
+    const newSets = currentSets.filter((_, i) => i !== index);
+    setValue("questionSets", newSets);
+    if (activeQuestionSetIndex >= newSets.length) {
+      setActiveQuestionSetIndex(Math.max(0, newSets.length - 1));
+    }
+  };
+
+  const isQuestionSelectedInSet = (questionId: string, setIndex: number) => {
+    return (
+      watchQuestionSets?.[setIndex]?.questions?.includes(questionId) || false
+    );
+  };
+
+  const toggleQuestionInSet = (questionId: string, setIndex: number) => {
+    const currentSets = watchQuestionSets || [];
+    const currentQuestions = currentSets[setIndex]?.questions || [];
+    if (currentQuestions.includes(questionId)) {
+      currentSets[setIndex].questions = currentQuestions.filter(
+        (id) => id !== questionId,
+      );
+    } else {
+      currentSets[setIndex].questions = [...currentQuestions, questionId];
+    }
+    setValue("questionSets", [...currentSets]);
   };
 
   return (
@@ -734,8 +751,7 @@ export default function IELTSGroupQuestionManagementPage() {
                       <div className="flex items-center gap-2">
                         <BookOpen className="h-4 w-4 text-purple-600 dark:text-purple-400" />
                         <span className="text-sm font-medium text-purple-800 dark:text-purple-200">
-                          Linked Passage:{" "}
-                          {getPassageTitle(previewGroupQuestion)}
+                          Linked Passage: {getPassageTitle(previewGroupQuestion)}
                         </span>
                       </div>
                     </div>
@@ -751,56 +767,55 @@ export default function IELTSGroupQuestionManagementPage() {
                     </div>
                   )}
 
-                  {previewGroupQuestion.choices &&
-                    previewGroupQuestion.choices.length > 0 && (
-                      <div className="space-y-2">
-                        <h4 className="text-sm font-semibold">Choices:</h4>
-                        {previewGroupQuestion.choices.map((choice, idx) => (
-                          <div
-                            key={idx}
-                            className="flex items-start gap-3 rounded-xl border border-gray-200 p-3 dark:border-gray-700"
-                          >
-                            <span className="flex h-6 w-6 items-center justify-center rounded-full bg-gray-100 text-xs font-bold dark:bg-gray-800">
-                              {choice.label}
-                            </span>
-                            <span className="text-sm">{choice.text}</span>
-                          </div>
-                        ))}
+                  {previewGroupQuestion.questionSets?.map((qs, setIndex) => (
+                    <div
+                      key={setIndex}
+                      className="rounded-xl border border-gray-200 p-4 dark:border-gray-700"
+                    >
+                      <div className="mb-3 flex items-center justify-between">
+                        <h4 className="text-sm font-semibold">
+                          {qs.title || `Question Set ${setIndex + 1}`}
+                        </h4>
+                        <span className="text-xs text-gray-500">
+                          {qs.questions?.length || 0} questions
+                        </span>
                       </div>
-                    )}
 
-                  <div className="rounded-xl border border-gray-200 p-4 dark:border-gray-700">
-                    <h4 className="mb-3 text-sm font-semibold">
-                      Questions ({getQuestionCount(previewGroupQuestion)}):
-                    </h4>
-                    <div className="space-y-2">
-                      {previewGroupQuestion.questions?.map((q, idx) => (
-                        <div
-                          key={idx}
-                          className="flex items-start gap-3 rounded-lg bg-gray-50 p-3 dark:bg-gray-800/50"
-                        >
-                          <span className="flex h-6 w-6 flex-shrink-0 items-center justify-center rounded-full bg-blue-100 text-xs font-bold text-blue-700 dark:bg-blue-900/30 dark:text-blue-300">
-                            {idx + 1}
-                          </span>
-                          <div className="flex-1 min-w-0">
-                            <div
-                              className="text-sm text-gray-900 dark:text-gray-100 line-clamp-2"
-                              dangerouslySetInnerHTML={{ __html: q.content }}
-                            />
-                            <div className="mt-1 flex items-center gap-3 text-xs text-gray-500 dark:text-gray-400">
-                              <span>{q.questionType}</span>
-                              <span>Marks: {q.marks}</span>
-                            </div>
-                          </div>
-                        </div>
-                      ))}
-                      {!previewGroupQuestion.questions?.length && (
-                        <p className="text-sm text-gray-500 dark:text-gray-400">
-                          No questions added yet
+                      {qs.instructions && (
+                        <p className="mb-3 text-xs text-gray-600 dark:text-gray-400">
+                          {qs.instructions}
                         </p>
                       )}
+
+                      <div className="space-y-2">
+                        {qs.questions?.map((q, idx) => (
+                          <div
+                            key={idx}
+                            className="flex items-start gap-3 rounded-lg bg-gray-50 p-3 dark:bg-gray-800/50"
+                          >
+                            <span className="flex h-6 w-6 flex-shrink-0 items-center justify-center rounded-full bg-blue-100 text-xs font-bold text-blue-700 dark:bg-blue-900/30 dark:text-blue-300">
+                              {idx + 1}
+                            </span>
+                            <div className="flex-1 min-w-0">
+                              <div
+                                className="text-sm text-gray-900 dark:text-gray-100 line-clamp-2"
+                                dangerouslySetInnerHTML={{ __html: q.content }}
+                              />
+                              <div className="mt-1 flex items-center gap-3 text-xs text-gray-500 dark:text-gray-400">
+                                <span>{q.questionType}</span>
+                                <span>Marks: {q.marks}</span>
+                              </div>
+                            </div>
+                          </div>
+                        ))}
+                        {!qs.questions?.length && (
+                          <p className="text-sm text-gray-500 dark:text-gray-400">
+                            No questions in this set
+                          </p>
+                        )}
+                      </div>
                     </div>
-                  </div>
+                  ))}
                 </div>
               )}
             </div>
@@ -821,15 +836,6 @@ export default function IELTSGroupQuestionManagementPage() {
                         {previewGroupQuestion.isActive ? "Active" : "Inactive"}
                       </span>
                     </span>
-                    {previewGroupQuestion.questionRange?.from && (
-                      <span>
-                        Range:{" "}
-                        <span className="font-medium text-gray-900 dark:text-gray-100">
-                          {previewGroupQuestion.questionRange.from}-
-                          {previewGroupQuestion.questionRange.to}
-                        </span>
-                      </span>
-                    )}
                   </div>
                   <Button
                     variant="outline"
@@ -1123,6 +1129,7 @@ export default function IELTSGroupQuestionManagementPage() {
               groupQuestions.map((gq) => {
                 const SectionIcon = getSectionIcon(gq.section);
                 const passageTitle = getPassageTitle(gq);
+                const totalQuestions = getTotalQuestionsCount(gq);
                 return (
                   <motion.div
                     key={gq._id}
@@ -1165,7 +1172,13 @@ export default function IELTSGroupQuestionManagementPage() {
                             {/* Question Count Badge */}
                             <span className="inline-flex items-center gap-1 rounded-full bg-purple-50 px-3 py-1 text-xs font-medium text-purple-700 dark:bg-purple-500/20 dark:text-purple-300">
                               <ListOrdered className="h-3 w-3" />
-                              {getQuestionCount(gq)} Questions
+                              {totalQuestions} Questions
+                            </span>
+
+                            {/* Question Sets Badge */}
+                            <span className="inline-flex items-center gap-1 rounded-full bg-orange-50 px-3 py-1 text-xs font-medium text-orange-700 dark:bg-orange-500/20 dark:text-orange-300">
+                              <Layers className="h-3 w-3" />
+                              {gq.questionSets?.length || 0} Sets
                             </span>
 
                             {/* Passage Badge */}
@@ -1191,16 +1204,6 @@ export default function IELTSGroupQuestionManagementPage() {
                               {gq.instructions}
                             </p>
                           )}
-
-                          {/* Question Range */}
-                          {gq.questionRange?.from && gq.questionRange?.to && (
-                            <p className="mb-2 text-xs text-gray-500 dark:text-gray-400">
-                              <span className="font-medium">Questions:</span>{" "}
-                              {gq.questionRange.from} - {gq.questionRange.to}
-                            </p>
-                          )}
-
-                        
                         </div>
 
                         {/* Action Buttons */}
@@ -1381,7 +1384,19 @@ export default function IELTSGroupQuestionManagementPage() {
                         />
                       </div>
 
-                      {/* Passage Picker - Show only for reading section */}
+                      {/* Content */}
+                      {/* <div>
+                        <Label className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                          Content
+                        </Label>
+                        <RichTextEditor
+                          value={watchContent || ""}
+                          onChange={(html) => setValue("content", html)}
+                          placeholder="Enter content for this group"
+                        />
+                      </div> */}
+
+                      {/* Passage Picker - Show for reading section */}
                       {watchSection === "reading" && (
                         <div>
                           <Label className="text-sm font-medium text-gray-700 dark:text-gray-300">
@@ -1518,379 +1533,334 @@ export default function IELTSGroupQuestionManagementPage() {
                           )}
                         </div>
                       )}
+
+                      {/* Question Sets */}
                       <div>
                         <div className="mb-3 flex items-center justify-between">
                           <Label className="text-sm font-medium text-gray-700 dark:text-gray-300">
-                            Choices
+                            Question Sets *
                           </Label>
                           <button
                             type="button"
-                            onClick={() => {
-                              const currentChoices = watchChoices || [];
-                              const nextLabel = String.fromCharCode(
-                                65 + currentChoices.length,
-                              );
-                              setValue("choices", [
-                                ...currentChoices,
-                                { label: nextLabel, text: "" },
-                              ]);
-                            }}
+                            onClick={addQuestionSet}
                             className="flex items-center gap-1 rounded-2xl bg-gradient-to-r from-blue-600 to-indigo-600 px-3 py-1.5 text-xs text-white"
                           >
                             <Plus className="h-3 w-3" />
-                            Add Choice
+                            Add Question Set
                           </button>
                         </div>
-                        <div className="space-y-2">
-                          {(watchChoices || []).map((field, index) => (
-                            <motion.div
-                              key={index}
-                              layout
-                              initial={{ opacity: 0, scale: 0.9 }}
-                              animate={{ opacity: 1, scale: 1 }}
-                              exit={{ opacity: 0, scale: 0.9 }}
-                              transition={{ duration: 0.2 }}
-                              className="flex items-start gap-3 rounded-2xl border border-gray-200 bg-gray-50/50 p-3 dark:border-gray-700 dark:bg-gray-800/50"
-                            >
-                              <div className="mt-2 flex h-6 w-6 items-center justify-center rounded-full bg-gradient-to-r from-blue-600 to-indigo-600 text-xs font-bold text-white">
-                                {String.fromCharCode(65 + index)}
-                              </div>
-                              <div className="flex-1">
+
+                        {/* Question Set Tabs */}
+                        {watchQuestionSets?.length > 0 && (
+                          <div className="mb-3 flex flex-wrap gap-2">
+                            {watchQuestionSets.map((_, index) => (
+                              <button
+                                key={index}
+                                type="button"
+                                onClick={() => setActiveQuestionSetIndex(index)}
+                                className={`flex items-center gap-2 rounded-xl px-3 py-1.5 text-xs font-medium transition ${
+                                  activeQuestionSetIndex === index
+                                    ? "bg-blue-600 text-white"
+                                    : "bg-gray-100 text-gray-600 hover:bg-gray-200 dark:bg-gray-800 dark:text-gray-300 dark:hover:bg-gray-700"
+                                }`}
+                              >
+                                Set {index + 1}
+                                {watchQuestionSets[index]?.questions?.length >
+                                  0 && (
+                                  <span className="rounded-full bg-white/20 px-1.5 py-0.5 text-[10px]">
+                                    {watchQuestionSets[index].questions.length}
+                                  </span>
+                                )}
+                                {watchQuestionSets.length > 1 && (
+                                  <X
+                                    className="h-3 w-3"
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      removeQuestionSet(index);
+                                    }}
+                                  />
+                                )}
+                              </button>
+                            ))}
+                          </div>
+                        )}
+
+                        {/* Active Question Set */}
+                        {watchQuestionSets?.length > 0 &&
+                          activeQuestionSetIndex < watchQuestionSets.length && (
+                            <div className="rounded-2xl border border-gray-200 bg-gray-50/50 p-4 dark:border-gray-700 dark:bg-gray-800/30">
+                              {/* Question Set Title */}
+                              <div className="mb-3">
+                                <Label className="text-xs font-medium text-gray-600 dark:text-gray-400">
+                                  Set Title
+                                </Label>
                                 <Input
                                   type="text"
-                                  placeholder={`Choice ${String.fromCharCode(65 + index)}`}
-                                  value={watch(`choices.${index}.text`)}
-                                  onChange={(e) =>
-                                    setValue(
-                                      `choices.${index}.text`,
-                                      e.target.value,
-                                    )
+                                  placeholder="e.g., Questions 1-5"
+                                  value={
+                                    watchQuestionSets[activeQuestionSetIndex]
+                                      ?.title || ""
                                   }
-                                  className="rounded-xl border-gray-200 dark:border-gray-700"
+                                  onChange={(e) => {
+                                    const currentSets = [...watchQuestionSets];
+                                    currentSets[activeQuestionSetIndex].title =
+                                      e.target.value;
+                                    setValue("questionSets", currentSets);
+                                  }}
+                                  className="mt-1 rounded-xl border-gray-200 dark:border-gray-700"
                                 />
                               </div>
-                              <button
-                                type="button"
-                                onClick={() => {
-                                  const currentChoices = watchChoices || [];
-                                  const newChoices = currentChoices.filter(
-                                    (_, i) => i !== index,
-                                  );
-                                  setValue("choices", newChoices);
-                                }}
-                                className="rounded-full p-1 text-gray-400 transition-colors hover:bg-gray-200 hover:text-gray-600 dark:hover:bg-gray-700"
-                              >
-                                <X className="h-4 w-4" />
-                              </button>
-                            </motion.div>
-                          ))}
-                        </div>
-                      </div>
 
-                      {/* Question Picker */}
-                      <div>
-                        {watchQuestions?.length > 0 && (
-                          <div className="mt-3 rounded-xl bg-blue-50 p-3 dark:bg-blue-900/20">
-                            <div className="flex items-center justify-between">
-                              <span className="text-xs font-semibold text-blue-700 dark:text-blue-300">
-                                {watchQuestions.length} questions selected
-                              </span>
-                              <button
-                                type="button"
-                                onClick={() => setValue("questions", [])}
-                                className="text-xs text-red-500 hover:underline"
-                              >
-                                Clear all
-                              </button>
-                            </div>
-                          </div>
-                        )}
+                              {/* Question Set Instructions */}
+                              <div className="mb-3">
+                                <Label className="text-xs font-medium text-gray-600 dark:text-gray-400">
+                                  Set Instructions
+                                </Label>
+                                <Input
+                                  type="text"
+                                  placeholder="e.g., Answer the following questions"
+                                  value={
+                                    watchQuestionSets[activeQuestionSetIndex]
+                                      ?.instructions || ""
+                                  }
+                                  onChange={(e) => {
+                                    const currentSets = [...watchQuestionSets];
+                                    currentSets[
+                                      activeQuestionSetIndex
+                                    ].instructions = e.target.value;
+                                    setValue("questionSets", currentSets);
+                                  }}
+                                  className="mt-1 rounded-xl border-gray-200 dark:border-gray-700"
+                                />
+                              </div>
 
-                        {/* Question Filters */}
-                        <div className="mt-3 rounded-2xl border border-gray-200 bg-gray-50/50 p-3 dark:border-gray-700 dark:bg-gray-800/30">
-                          {/* Search */}
-                          <div className="relative">
-                            <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" />
-                            <input
-                              type="text"
-                              value={questionPickerFilters.search}
-                              onChange={(e) => {
-                                setQuestionPickerFilters((prev) => ({
-                                  ...prev,
-                                  search: e.target.value,
-                                }));
-                              }}
-                              placeholder="Search questions..."
-                              className="w-full rounded-xl border border-gray-200 bg-white py-2.5 pl-10 pr-3 text-sm outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100"
-                            />
-                          </div>
-
-                          {/* Filters */}
-                          <div className="mt-3 grid gap-2 sm:grid-cols-2">
-                            <Select
-                              options={[
-                                { value: "all", label: "All Question Types" },
-                                ...(IELTS_QUESTION_TYPES[
-                                  watchSection as keyof typeof IELTS_QUESTION_TYPES
-                                ] || []),
-                              ]}
-                              defaultValue={questionPickerFilters.questionType}
-                              onChange={(value: string) => {
-                                setQuestionPickerFilters((prev) => ({
-                                  ...prev,
-                                  questionType: value,
-                                }));
-                                setQuestionPickerPage(1);
-                              }}
-                            />
-                            <Select
-                              options={[
-                                { value: "all", label: "All Difficulty" },
-                                { value: "Easy", label: "Easy" },
-                                { value: "Medium", label: "Medium" },
-                                { value: "Hard", label: "Hard" },
-                              ]}
-                              defaultValue={questionPickerFilters.difficulty}
-                              onChange={(value: string) => {
-                                setQuestionPickerFilters((prev) => ({
-                                  ...prev,
-                                  difficulty: value,
-                                }));
-                                setQuestionPickerPage(1);
-                              }}
-                            />
-                          </div>
-
-                          {/* Clear filters */}
-                          <div className="mt-2 flex justify-end">
-                            <button
-                              type="button"
-                              onClick={() => {
-                                setQuestionPickerFilters({
-                                  search: "",
-                                  questionType: "all",
-                                  difficulty: "all",
-                                  isActive: "true",
-                                  source: "",
-                                  minMarks: "",
-                                  maxMarks: "",
-                                });
-                                setQuestionPickerSearch("");
-                                setQuestionPickerPage(1);
-                              }}
-                              className="text-xs text-blue-600 hover:underline dark:text-blue-400"
-                            >
-                              Clear filters
-                            </button>
-                          </div>
-                        </div>
-
-                        {/* Results count */}
-                        <div className="mt-3 flex items-center justify-between text-xs text-gray-500">
-                          <span>{questionPickerTotal} questions found</span>
-                          <select
-                            value={questionPickerLimit}
-                            onChange={(e) => {
-                              setQuestionPickerLimit(Number(e.target.value));
-                              setQuestionPickerPage(1);
-                            }}
-                            className="rounded-lg border border-gray-200 bg-white px-2 py-1 dark:border-gray-700 dark:bg-gray-800"
-                          >
-                            <option value={10}>10</option>
-                            <option value={20}>20</option>
-                            <option value={50}>50</option>
-                          </select>
-                        </div>
-
-                        {/* Question list */}
-                        <div className="mt-2 max-h-[360px] overflow-y-auto rounded-2xl border border-gray-200 dark:border-gray-700">
-                          {questionsLoading ? (
-                            <div className="flex items-center justify-center p-8">
-                              <Loader2 className="h-5 w-5 animate-spin text-blue-500" />
-                            </div>
-                          ) : availableQuestions.length === 0 ? (
-                            <div className="p-8 text-center text-sm text-gray-500 dark:text-gray-400">
-                              No questions found with the selected filters.
-                            </div>
-                          ) : (
-                            availableQuestions.map((q) => {
-                              const selected = watchQuestions?.includes(q._id);
-                              return (
-                                <label
-                                  key={q._id}
-                                  className={`flex cursor-pointer items-start gap-3 border-b p-3 transition last:border-b-0 ${
-                                    selected
-                                      ? "bg-blue-50 dark:bg-blue-900/20"
-                                      : "hover:bg-gray-50 dark:hover:bg-gray-800/50"
-                                  }`}
+                              {/* Selected Questions Count */}
+                              <div className="mb-3 flex items-center justify-between">
+                                <span className="text-xs font-medium text-gray-600 dark:text-gray-400">
+                                  Questions in this set:{" "}
+                                  <span className="text-blue-600 dark:text-blue-400">
+                                    {watchQuestionSets[activeQuestionSetIndex]
+                                      ?.questions?.length || 0}
+                                  </span>
+                                </span>
+                                <button
+                                  type="button"
+                                  onClick={() => {
+                                    const currentSets = [...watchQuestionSets];
+                                    currentSets[activeQuestionSetIndex].questions =
+                                      [];
+                                    setValue("questionSets", currentSets);
+                                  }}
+                                  className="text-xs text-red-500 hover:underline"
                                 >
+                                  Clear all questions
+                                </button>
+                              </div>
+
+                              {/* Question Picker */}
+                              <div className="mt-3 rounded-2xl border border-gray-200 bg-white p-3 dark:border-gray-700 dark:bg-gray-900">
+                                {/* Search */}
+                                <div className="relative">
+                                  <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" />
                                   <input
-                                    type="checkbox"
-                                    checked={selected}
+                                    type="text"
+                                    value={questionPickerFilters.search}
                                     onChange={(e) => {
-                                      const current = watchQuestions || [];
-                                      if (e.target.checked) {
-                                        setValue(
-                                          "questions",
-                                          Array.from(
-                                            new Set([...current, q._id]),
-                                          ),
-                                        );
-                                      } else {
-                                        setValue(
-                                          "questions",
-                                          current.filter((id) => id !== q._id),
-                                        );
-                                      }
+                                      setQuestionPickerFilters((prev) => ({
+                                        ...prev,
+                                        search: e.target.value,
+                                      }));
                                     }}
-                                    className="mt-1 h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                                    placeholder="Search questions..."
+                                    className="w-full rounded-xl border border-gray-200 bg-white py-2.5 pl-10 pr-3 text-sm outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-100"
                                   />
-                                  <div className="min-w-0 flex-1">
-                                    <div
-                                      className="line-clamp-2 text-sm text-gray-900 dark:text-gray-100"
-                                      dangerouslySetInnerHTML={{
-                                        __html: q.content,
-                                      }}
-                                    />
-                                    <div className="mt-2 flex flex-wrap items-center gap-1.5">
-                                      <span className="rounded-full bg-gray-100 px-2 py-0.5 text-[10px] font-medium text-gray-600 dark:bg-gray-800 dark:text-gray-300">
-                                        {q.questionType}
-                                      </span>
-                                      <span className="rounded-full bg-amber-50 px-2 py-0.5 text-[10px] font-medium text-amber-700 dark:bg-amber-500/10 dark:text-amber-300">
-                                        {q.metadata?.difficulty || "Medium"}
-                                      </span>
-                                      <span className="text-[10px] text-gray-500">
-                                        {q.marks} mark
-                                      </span>
-                                      {q.source && (
-                                        <span className="text-[10px] text-gray-500">
-                                          • {q.source}
-                                        </span>
-                                      )}
+                                </div>
+
+                                {/* Filters */}
+                                <div className="mt-3 grid gap-2 sm:grid-cols-2">
+                                  <Select
+                                    options={[
+                                      {
+                                        value: "all",
+                                        label: "All Question Types",
+                                      },
+                                      ...(IELTS_QUESTION_TYPES[
+                                        watchSection as keyof typeof IELTS_QUESTION_TYPES
+                                      ] || []),
+                                    ]}
+                                    defaultValue={
+                                      questionPickerFilters.questionType
+                                    }
+                                    onChange={(value: string) => {
+                                      setQuestionPickerFilters((prev) => ({
+                                        ...prev,
+                                        questionType: value,
+                                      }));
+                                      setQuestionPickerPage(1);
+                                    }}
+                                  />
+                                  <Select
+                                    options={[
+                                      { value: "all", label: "All Difficulty" },
+                                      { value: "Easy", label: "Easy" },
+                                      { value: "Medium", label: "Medium" },
+                                      { value: "Hard", label: "Hard" },
+                                    ]}
+                                    defaultValue={
+                                      questionPickerFilters.difficulty
+                                    }
+                                    onChange={(value: string) => {
+                                      setQuestionPickerFilters((prev) => ({
+                                        ...prev,
+                                        difficulty: value,
+                                      }));
+                                      setQuestionPickerPage(1);
+                                    }}
+                                  />
+                                </div>
+
+                                {/* Results count */}
+                                <div className="mt-3 flex items-center justify-between text-xs text-gray-500">
+                                  <span>
+                                    {questionPickerTotal} questions found
+                                  </span>
+                                  <select
+                                    value={questionPickerLimit}
+                                    onChange={(e) => {
+                                      setQuestionPickerLimit(
+                                        Number(e.target.value),
+                                      );
+                                      setQuestionPickerPage(1);
+                                    }}
+                                    className="rounded-lg border border-gray-200 bg-white px-2 py-1 dark:border-gray-700 dark:bg-gray-800"
+                                  >
+                                    <option value={10}>10</option>
+                                    <option value={20}>20</option>
+                                    <option value={50}>50</option>
+                                  </select>
+                                </div>
+
+                                {/* Question list */}
+                                <div className="mt-2 max-h-[300px] overflow-y-auto rounded-2xl border border-gray-200 dark:border-gray-700">
+                                  {questionsLoading ? (
+                                    <div className="flex items-center justify-center p-8">
+                                      <Loader2 className="h-5 w-5 animate-spin text-blue-500" />
+                                    </div>
+                                  ) : availableQuestions.length === 0 ? (
+                                    <div className="p-8 text-center text-sm text-gray-500 dark:text-gray-400">
+                                      No questions found with the selected
+                                      filters.
+                                    </div>
+                                  ) : (
+                                    availableQuestions.map((q) => {
+                                      const selected = isQuestionSelectedInSet(
+                                        q._id,
+                                        activeQuestionSetIndex,
+                                      );
+                                      return (
+                                        <label
+                                          key={q._id}
+                                          className={`flex cursor-pointer items-start gap-3 border-b p-3 transition last:border-b-0 ${
+                                            selected
+                                              ? "bg-blue-50 dark:bg-blue-900/20"
+                                              : "hover:bg-gray-50 dark:hover:bg-gray-800/50"
+                                          }`}
+                                        >
+                                          <input
+                                            type="checkbox"
+                                            checked={selected}
+                                            onChange={(e) => {
+                                              toggleQuestionInSet(
+                                                q._id,
+                                                activeQuestionSetIndex,
+                                              );
+                                            }}
+                                            className="mt-1 h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                                          />
+                                          <div className="min-w-0 flex-1">
+                                            <div
+                                              className="line-clamp-2 text-sm text-gray-900 dark:text-gray-100"
+                                              dangerouslySetInnerHTML={{
+                                                __html: q.content,
+                                              }}
+                                            />
+                                            <div className="mt-2 flex flex-wrap items-center gap-1.5">
+                                              <span className="rounded-full bg-gray-100 px-2 py-0.5 text-[10px] font-medium text-gray-600 dark:bg-gray-800 dark:text-gray-300">
+                                                {q.questionType}
+                                              </span>
+                                              <span className="rounded-full bg-amber-50 px-2 py-0.5 text-[10px] font-medium text-amber-700 dark:bg-amber-500/10 dark:text-amber-300">
+                                                {q.metadata?.difficulty ||
+                                                  "Medium"}
+                                              </span>
+                                              <span className="text-[10px] text-gray-500">
+                                                {q.marks} mark
+                                              </span>
+                                              {q.source && (
+                                                <span className="text-[10px] text-gray-500">
+                                                  • {q.source}
+                                                </span>
+                                              )}
+                                            </div>
+                                          </div>
+                                          {selected && (
+                                            <span className="text-xs font-semibold text-blue-600">
+                                              Selected
+                                            </span>
+                                          )}
+                                        </label>
+                                      );
+                                    })
+                                  )}
+                                </div>
+
+                                {/* Pagination */}
+                                {questionPickerTotalPages > 1 && (
+                                  <div className="mt-3 flex items-center justify-between">
+                                    <span className="text-xs text-gray-500">
+                                      Page {questionPickerPage} of{" "}
+                                      {questionPickerTotalPages}
+                                    </span>
+                                    <div className="flex items-center gap-2">
+                                      <Button
+                                        type="button"
+                                        variant="outline"
+                                        size="sm"
+                                        disabled={questionPickerPage <= 1}
+                                        onClick={() =>
+                                          setQuestionPickerPage((p) =>
+                                            Math.max(1, p - 1),
+                                          )
+                                        }
+                                        className="rounded-xl px-3"
+                                      >
+                                        <ChevronLeft className="h-3.5 w-3.5" />
+                                      </Button>
+                                      <Button
+                                        type="button"
+                                        variant="outline"
+                                        size="sm"
+                                        disabled={
+                                          questionPickerPage >=
+                                          questionPickerTotalPages
+                                        }
+                                        onClick={() =>
+                                          setQuestionPickerPage((p) =>
+                                            Math.min(
+                                              questionPickerTotalPages,
+                                              p + 1,
+                                            ),
+                                          )
+                                        }
+                                        className="rounded-xl px-3"
+                                      >
+                                        <ChevronRight className="h-3.5 w-3.5" />
+                                      </Button>
                                     </div>
                                   </div>
-                                  {selected && (
-                                    <span className="text-xs font-semibold text-blue-600">
-                                      Selected
-                                    </span>
-                                  )}
-                                </label>
-                              );
-                            })
-                          )}
-                        </div>
-
-                        {/* Pagination */}
-                        {questionPickerTotalPages > 1 && (
-                          <div className="mt-3 flex items-center justify-between">
-                            <span className="text-xs text-gray-500">
-                              Page {questionPickerPage} of{" "}
-                              {questionPickerTotalPages}
-                            </span>
-                            <div className="flex items-center gap-2">
-                              <Button
-                                type="button"
-                                variant="outline"
-                                size="sm"
-                                disabled={questionPickerPage <= 1}
-                                onClick={() =>
-                                  setQuestionPickerPage((p) =>
-                                    Math.max(1, p - 1),
-                                  )
-                                }
-                                className="rounded-xl px-3"
-                              >
-                                <ChevronLeft className="h-3.5 w-3.5" />
-                              </Button>
-                              <Button
-                                type="button"
-                                variant="outline"
-                                size="sm"
-                                disabled={
-                                  questionPickerPage >= questionPickerTotalPages
-                                }
-                                onClick={() =>
-                                  setQuestionPickerPage((p) =>
-                                    Math.min(questionPickerTotalPages, p + 1),
-                                  )
-                                }
-                                className="rounded-xl px-3"
-                              >
-                                <ChevronRight className="h-3.5 w-3.5" />
-                              </Button>
+                                )}
+                              </div>
                             </div>
-                          </div>
-                        )}
-                      </div>
-
-                      {/* Media URLs */}
-                      <div className="grid gap-4 sm:grid-cols-2">
-                        <div>
-                          <Label className="text-sm font-medium text-gray-700 dark:text-gray-300">
-                            Audio URL
-                          </Label>
-                          <Input
-                            type="text"
-                            placeholder="https://example.com/audio.mp3"
-                            value={watchAudioUrl}
-                            onChange={(e) =>
-                              setValue("audioUrl", e.target.value)
-                            }
-                            className="mt-1 rounded-2xl border-gray-200 dark:border-gray-700"
-                          />
-                        </div>
-                        <div>
-                          <Label className="text-sm font-medium text-gray-700 dark:text-gray-300">
-                            Image URL
-                          </Label>
-                          <Input
-                            type="text"
-                            placeholder="https://example.com/image.png"
-                            value={watchImageUrl}
-                            onChange={(e) =>
-                              setValue("imageUrl", e.target.value)
-                            }
-                            className="mt-1 rounded-2xl border-gray-200 dark:border-gray-700"
-                          />
-                        </div>
-                      </div>
-
-                      {/* Question Range */}
-                      <div className="grid gap-4 sm:grid-cols-2">
-                        <div>
-                          <Label className="text-sm font-medium text-gray-700 dark:text-gray-300">
-                            Question Range From
-                          </Label>
-                          <Input
-                            type="number"
-                            placeholder="e.g., 1"
-                            value={watchQuestionRangeFrom || ""}
-                            onChange={(e) =>
-                              setValue(
-                                "questionRangeFrom",
-                                parseInt(e.target.value) || null,
-                              )
-                            }
-                            className="mt-1 rounded-2xl border-gray-200 dark:border-gray-700"
-                          />
-                        </div>
-                        <div>
-                          <Label className="text-sm font-medium text-gray-700 dark:text-gray-300">
-                            Question Range To
-                          </Label>
-                          <Input
-                            type="number"
-                            placeholder="e.g., 13"
-                            value={watchQuestionRangeTo || ""}
-                            onChange={(e) =>
-                              setValue(
-                                "questionRangeTo",
-                                parseInt(e.target.value) || null,
-                              )
-                            }
-                            className="mt-1 rounded-2xl border-gray-200 dark:border-gray-700"
-                          />
-                        </div>
+                          )}
                       </div>
 
                       {/* Active Status */}
