@@ -437,7 +437,7 @@ export default function ContentManagement({ type }: any) {
                   <th className="px-4 py-3 text-sm font-semibold text-gray-700 dark:text-gray-300">
                     Status
                   </th>
-                  
+
                   <th className="px-4 py-3 text-sm font-semibold text-gray-700 dark:text-gray-300">
                     Created
                   </th>
@@ -882,12 +882,12 @@ export default function ContentManagement({ type }: any) {
         onClose={() => setEditModalOpen(false)}
         className="max-w-[900px] m-4"
       >
-        <div className="no-scrollbar relative w-full max-w-[900px] overflow-y-auto rounded-3xl bg-white p-4 dark:bg-gray-900 lg:p-11">
+        <div className="no-scrollbar relative w-full max-w-[900px] overflow-y-auto rounded-3xl bg-white p-4 sm:p-6 dark:bg-gray-900 ">
           <div className="px-2 pr-14">
-            <h4 className="mb-2 text-2xl font-semibold text-gray-800 dark:text-white/90">
+            <h4 className="mb-px text-2xl font-semibold text-gray-800 dark:text-white/90">
               {selectedContent ? "Edit Content" : "Add New Content"}
             </h4>
-            <p className="mb-6 text-sm text-gray-500 dark:text-gray-400 lg:mb-7">
+            <p className="mb-1 text-sm text-gray-500 dark:text-gray-400 lg:mb-7">
               {selectedContent
                 ? "Update content details below"
                 : "Create a new content for your course"}
@@ -1081,7 +1081,7 @@ const ContentTableRow = ({
             {content.status}
           </span>
         </td>
-       
+
         <td className="px-4 py-3">
           <p className="text-sm text-gray-700 dark:text-gray-300">
             {moment(content.createdAt).format("MMM D, YYYY")}
@@ -1497,7 +1497,7 @@ const ContentForm = ({
             <p className="mt-1 text-sm text-red-600">{errors.title}</p>
           )}
         </div>
-        {formData.__t != "StudyMaterials" && (
+        {formData.__t != "StudyMaterials" && formData.__t != "Tests" && (
           <div className="md:col-span-2">
             <Label>Thumbnail Picture</Label>
             <ContentThumbnailDropzone
@@ -1547,7 +1547,7 @@ const ContentForm = ({
             }
           />
         </div>
-        {formData.__t != "StudyMaterials" && (
+        {formData.__t != "StudyMaterials" && formData.__t != "Tests" && (
           <div>
             <Label>Instructor *</Label>
             <Select
@@ -1601,51 +1601,55 @@ const ContentForm = ({
         </div>
       </div>
 
-      <div>
-        <Label>Description</Label>
-        <textarea
-          name="description"
-          value={formData.description}
-          onChange={handleChange}
-          rows={3}
-          className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-200 focus:border-blue-500 dark:bg-gray-800 dark:border-gray-600 dark:text-white"
-          placeholder="Enter content description"
-        />
-      </div>
-
-      <div>
-        <Label>Tags</Label>
-        <div className="space-y-2">
-          {formData.tags.map((tag, index) => (
-            <div key={index} className="flex items-center gap-2">
-              <Input
-                type="text"
-                value={tag}
-                onChange={(e) =>
-                  handleArrayChange("tags", index, e.target.value)
-                }
-                placeholder="Enter tag"
-              />
-              {formData.tags.length > 1 && (
-                <button
-                  type="button"
-                  onClick={() => removeArrayField("tags", index)}
-                  className="text-red-500 hover:text-red-700 text-sm"
-                >
-                  <DynamicIcon name="Trash" />
-                </button>
-              )}
-            </div>
-          ))}
-          <button
-            type="button"
-            onClick={() => addArrayField("tags")}
-            className="text-blue-500 hover:text-blue-700 text-sm font-medium"
-          >
-            + Add Tag
-          </button>
+      {formData.__t != "Tests" && (
+        <div>
+          <Label>Description</Label>
+          <textarea
+            name="description"
+            value={formData.description}
+            onChange={handleChange}
+            rows={3}
+            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-200 focus:border-blue-500 dark:bg-gray-800 dark:border-gray-600 dark:text-white"
+            placeholder="Enter content description"
+          />
         </div>
-      </div>
+      )}
+
+      {formData.__t != "Tests" && (
+        <div>
+          <Label>Tags</Label>
+          <div className="space-y-2">
+            {formData.tags.map((tag, index) => (
+              <div key={index} className="flex items-center gap-2">
+                <Input
+                  type="text"
+                  value={tag}
+                  onChange={(e) =>
+                    handleArrayChange("tags", index, e.target.value)
+                  }
+                  placeholder="Enter tag"
+                />
+                {formData.tags.length > 1 && (
+                  <button
+                    type="button"
+                    onClick={() => removeArrayField("tags", index)}
+                    className="text-red-500 hover:text-red-700 text-sm"
+                  >
+                    <DynamicIcon name="Trash" />
+                  </button>
+                )}
+              </div>
+            ))}
+            <button
+              type="button"
+              onClick={() => addArrayField("tags")}
+              className="text-blue-500 hover:text-blue-700 text-sm font-medium"
+            >
+              + Add Tag
+            </button>
+          </div>
+        </div>
+      )}
 
       {(formData.__t === "LiveClasses" || formData.__t === "Sessions") && (
         <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
@@ -1692,22 +1696,24 @@ const ContentForm = ({
       )}
 
       {formData.__t === "Tests" && (
-        <div>
-          <Label>Test Type</Label>
-          <Select
-            name="testType"
-            defaultValue={formData.testType}
-            options={[
-              { value: "quiz", label: "Quiz" },
-              { value: "assignment", label: "Assignment" },
-              { value: "exam", label: "Exam" },
-              { value: "practice", label: "Practice" },
-            ]}
-            onChange={(value) =>
-              setFormData((prev) => ({ ...prev, testType: value }))
-            }
-          />
-        </div>
+        <>
+          <div>
+            <Label>Test</Label>
+            <Select
+              value={formData.module}
+              defaultValue={formData.module}
+              options={[
+                ...modules.map((module) => ({
+                  value: module._id,
+                  label: module.title,
+                })),
+              ]}
+              onChange={(value) =>
+                setFormData((prev) => ({ ...prev, module: value }))
+              }
+            />
+          </div>
+        </>
       )}
 
       {formData.__t === "StudyMaterials" && (

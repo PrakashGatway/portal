@@ -29,11 +29,6 @@ const ContentViewPage = () => {
   const [timeRemaining, setTimeRemaining] = useState<any>(null);
   const [canJoin, setCanJoin] = useState(false);
 
-  /**
-   * --------------------------------------------------
-   * FETCH CONTENT
-   * --------------------------------------------------
-   */
   useEffect(() => {
     const fetchContent = async () => {
       try {
@@ -62,44 +57,34 @@ const ContentViewPage = () => {
     }
   }, [slug]);
 
-  /**
-   * --------------------------------------------------
-   * SESSION DATA
-   * --------------------------------------------------
-   */
 
-  // Your API uses meetingId for the Google Meet URL
   const meetingUrl = content?.meetingId || null;
 
-  const scheduledStart = content?.scheduledStart
-    ? new Date(content.scheduledStart)
+  const scheduledStartValue = content?.scheduledStart || null;
+  const scheduledEndValue = content?.scheduledEnd || null;
+
+  const scheduledStart = scheduledStartValue
+    ? new Date(scheduledStartValue)
     : null;
 
-  const scheduledEnd = content?.scheduledEnd
-    ? new Date(content.scheduledEnd)
-    : null;
+  const scheduledEnd = scheduledEndValue ? new Date(scheduledEndValue) : null;
 
   const instructor = content?.instructorInfo;
-
   const course = content?.courseInfo;
-
   const moduleInfo = content?.moduleInfo;
 
-  /**
-   * --------------------------------------------------
-   * TIMER
-   * --------------------------------------------------
-   */
+
   const calculateTimeUntilMeeting = useCallback(() => {
-    if (!scheduledStart || !scheduledEnd) {
+    if (!scheduledStartValue || !scheduledEndValue) {
       setTimeRemaining(null);
       setCanJoin(false);
       return;
     }
 
     const now = Date.now();
-    const startTime = scheduledStart.getTime();
-    const endTime = scheduledEnd.getTime();
+
+    const startTime = new Date(scheduledStartValue).getTime();
+    const endTime = new Date(scheduledEndValue).getTime();
 
     const timeDiff = startTime - now;
 
@@ -125,9 +110,7 @@ const ContentViewPage = () => {
 
       const hours = Math.floor(timeDiff / (1000 * 60 * 60));
 
-      const minutes = Math.floor(
-        (timeDiff % (1000 * 60 * 60)) / (1000 * 60)
-      );
+      const minutes = Math.floor((timeDiff % (1000 * 60 * 60)) / (1000 * 60));
 
       const seconds = Math.floor((timeDiff % (1000 * 60)) / 1000);
 
@@ -147,9 +130,7 @@ const ContentViewPage = () => {
 
       const hours = Math.floor(timeDiff / (1000 * 60 * 60));
 
-      const minutes = Math.floor(
-        (timeDiff % (1000 * 60 * 60)) / (1000 * 60)
-      );
+      const minutes = Math.floor((timeDiff % (1000 * 60 * 60)) / (1000 * 60));
 
       const seconds = Math.floor((timeDiff % (1000 * 60)) / 1000);
 
@@ -172,21 +153,26 @@ const ContentViewPage = () => {
       minutes: 0,
       seconds: 0,
     });
-  }, [scheduledStart, scheduledEnd]);
+  }, [scheduledStartValue, scheduledEndValue]);
 
   useEffect(() => {
+    if (!scheduledStartValue || !scheduledEndValue) {
+      setTimeRemaining(null);
+      setCanJoin(false);
+      return;
+    }
+
     calculateTimeUntilMeeting();
 
-    const timer = setInterval(calculateTimeUntilMeeting, 1000);
+    const timer = setInterval(() => {
+      calculateTimeUntilMeeting();
+    }, 1000);
 
-    return () => clearInterval(timer);
-  }, [calculateTimeUntilMeeting]);
+    return () => {
+      clearInterval(timer);
+    };
+  }, [scheduledStartValue, scheduledEndValue, calculateTimeUntilMeeting]);
 
-  /**
-   * --------------------------------------------------
-   * FORMAT TIMER
-   * --------------------------------------------------
-   */
   const formatTime = (time: any) => {
     if (!time) return null;
 
@@ -198,9 +184,7 @@ const ContentViewPage = () => {
             <span className="relative inline-flex h-4 w-4 rounded-full bg-red-500" />
           </span>
 
-          <span className="text-lg font-bold text-red-600">
-            LIVE NOW
-          </span>
+          <span className="text-lg font-bold text-red-600">LIVE NOW</span>
         </div>
       );
     }
@@ -214,8 +198,7 @@ const ContentViewPage = () => {
       );
     }
 
-    const pad = (num: number) =>
-      String(num).padStart(2, "0");
+    const pad = (num: number) => String(num).padStart(2, "0");
 
     return (
       <div className="flex items-center justify-center gap-2 sm:gap-3">
@@ -256,26 +239,12 @@ const ContentViewPage = () => {
     );
   };
 
-  /**
-   * --------------------------------------------------
-   * JOIN MEETING
-   * --------------------------------------------------
-   */
   const handleJoinMeeting = () => {
     if (!canJoin || !meetingUrl) return;
 
-    window.open(
-      meetingUrl,
-      "_blank",
-      "noopener,noreferrer"
-    );
+    window.open(meetingUrl, "_blank", "noopener,noreferrer");
   };
 
-  /**
-   * --------------------------------------------------
-   * DATE FORMAT
-   * --------------------------------------------------
-   */
   const formatDate = (date: Date | null) => {
     if (!date) return "Not scheduled";
 
@@ -297,12 +266,6 @@ const ContentViewPage = () => {
     });
   };
 
-  /**
-   * --------------------------------------------------
-   * DURATION
-   * API duration = 3600 seconds
-   * --------------------------------------------------
-   */
   const formatDuration = (seconds: number) => {
     if (!seconds) return "0 min";
 
@@ -310,61 +273,42 @@ const ContentViewPage = () => {
     const minutes = Math.floor((seconds % 3600) / 60);
 
     if (hours > 0) {
-      return minutes > 0
-        ? `${hours}h ${minutes}m`
-        : `${hours}h`;
+      return minutes > 0 ? `${hours}h ${minutes}m` : `${hours}h`;
     }
 
     return `${minutes} min`;
   };
 
-  /**
-   * --------------------------------------------------
-   * STATUS
-   * --------------------------------------------------
-   */
   const getSessionStatus = () => {
     if (!scheduledStart || !scheduledEnd) {
       return {
         label: "Scheduled",
-        className:
-          "bg-gray-100 text-gray-700",
+        className: "bg-gray-100 text-gray-700",
       };
     }
 
     const now = Date.now();
 
-    if (
-      now >= scheduledStart.getTime() &&
-      now <= scheduledEnd.getTime()
-    ) {
+    if (now >= scheduledStart.getTime() && now <= scheduledEnd.getTime()) {
       return {
         label: "Live Now",
-        className:
-          "bg-red-100 text-red-700",
+        className: "bg-red-100 text-red-700",
       };
     }
 
     if (now < scheduledStart.getTime()) {
       return {
         label: "Upcoming",
-        className:
-          "bg-amber-100 text-amber-700",
+        className: "bg-amber-100 text-amber-700",
       };
     }
 
     return {
       label: "Completed",
-      className:
-        "bg-gray-100 text-gray-600",
+      className: "bg-gray-100 text-gray-600",
     };
   };
 
-  /**
-   * --------------------------------------------------
-   * LOADING
-   * --------------------------------------------------
-   */
   if (loading) {
     return (
       <div className="flex min-h-screen items-center justify-center bg-gray-50">
@@ -379,11 +323,6 @@ const ContentViewPage = () => {
     );
   }
 
-  /**
-   * --------------------------------------------------
-   * ERROR
-   * --------------------------------------------------
-   */
   if (error || !content) {
     return (
       <div className="flex min-h-screen items-center justify-center bg-gray-50 px-4">
@@ -414,15 +353,9 @@ const ContentViewPage = () => {
 
   const sessionStatus = getSessionStatus();
 
-  /**
-   * --------------------------------------------------
-   * MAIN UI
-   * --------------------------------------------------
-   */
   return (
     <div className="min-h-screen bg-white rounded-3xl">
       <div className="mx-auto max-w-7xl px-4 py-6 sm:px-6 lg:px-8">
-
         {/* BACK BUTTON */}
         <button
           onClick={() => navigate(-1)}
@@ -432,12 +365,8 @@ const ContentViewPage = () => {
           Back to Content
         </button>
 
-        {/* ==================================================
-            HERO
-        ================================================== */}
         <div className="overflow-hidden rounded-2xl border">
           <div className="grid lg:grid-cols-[360px_1fr]">
-
             {/* THUMBNAIL */}
             <div className="relative h-64 overflow-hidden bg-gray-100 lg:h-full lg:min-h-[310px]">
               {content.thumbnailPic ? (
@@ -500,9 +429,7 @@ const ContentViewPage = () => {
                 </div>
 
                 <div>
-                  <p className="text-xs text-gray-500">
-                    Instructor
-                  </p>
+                  <p className="text-xs text-gray-500">Instructor</p>
 
                   <p className="font-semibold text-gray-900">
                     {instructor?.name || "Instructor"}
@@ -535,13 +462,10 @@ const ContentViewPage = () => {
             MAIN CONTENT
         ================================================== */}
         <div className="mt-6 grid grid-cols-1 gap-6 lg:grid-cols-[1fr_340px]">
-
           {/* LEFT */}
           <div className="space-y-6">
-
             {/* LIVE SESSION */}
             <div className="overflow-hidden rounded-2xl bg-white shadow-sm">
-
               {/* Header */}
               <div className="border-b border-gray-100 px-5 py-5 sm:px-7">
                 <div className="flex items-center justify-between gap-4">
@@ -563,7 +487,6 @@ const ContentViewPage = () => {
 
               {/* Timer */}
               <div className="px-5 py-8 text-center sm:px-7">
-
                 <div className="mb-5 flex items-center justify-center gap-2">
                   <Timer className="h-5 w-5 text-gray-400" />
 
@@ -571,8 +494,8 @@ const ContentViewPage = () => {
                     {timeRemaining?.type === "live"
                       ? "Session is currently in progress"
                       : timeRemaining?.type === "ended"
-                      ? "This session has ended"
-                      : "Session starts in"}
+                        ? "This session has ended"
+                        : "Session starts in"}
                   </span>
                 </div>
 
@@ -591,19 +514,18 @@ const ContentViewPage = () => {
                 )}
 
                 {/* Waiting message */}
-                {!canJoin &&
-                  timeRemaining?.type === "waiting" && (
-                    <div className="mx-auto mt-6 max-w-md rounded-xl bg-amber-50 px-4 py-3 text-sm text-amber-700">
-                      <div className="flex items-center justify-center gap-2">
-                        <Clock className="h-4 w-4" />
+                {!canJoin && timeRemaining?.type === "waiting" && (
+                  <div className="mx-auto mt-6 max-w-md rounded-xl bg-amber-50 px-4 py-3 text-sm text-amber-700">
+                    <div className="flex items-center justify-center gap-2">
+                      <Clock className="h-4 w-4" />
 
-                        <span>
-                          The join button will be available
-                          10 minutes before the session starts.
-                        </span>
-                      </div>
+                      <span>
+                        The join button will be available 10 minutes before the
+                        session starts.
+                      </span>
                     </div>
-                  )}
+                  </div>
+                )}
 
                 {/* Ended */}
                 {timeRemaining?.type === "ended" && (
@@ -616,16 +538,13 @@ const ContentViewPage = () => {
               {/* Schedule */}
               <div className="border-t border-gray-100 bg-gray-50/70 px-5 py-5 sm:px-7">
                 <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-
                   <div className="flex items-center gap-3">
                     <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-white shadow-sm">
                       <Calendar className="h-5 w-5 text-blue-600" />
                     </div>
 
                     <div>
-                      <p className="text-xs text-gray-500">
-                        Date
-                      </p>
+                      <p className="text-xs text-gray-500">Date</p>
 
                       <p className="text-sm font-semibold text-gray-900">
                         {formatDate(scheduledStart)}
@@ -639,9 +558,7 @@ const ContentViewPage = () => {
                     </div>
 
                     <div>
-                      <p className="text-xs text-gray-500">
-                        Time
-                      </p>
+                      <p className="text-xs text-gray-500">Time</p>
 
                       <p className="text-sm font-semibold text-gray-900">
                         {formatTimeOnly(scheduledStart)}
@@ -650,7 +567,6 @@ const ContentViewPage = () => {
                       </p>
                     </div>
                   </div>
-
                 </div>
               </div>
             </div>
@@ -679,7 +595,6 @@ const ContentViewPage = () => {
               RIGHT SIDEBAR
           ================================================== */}
           <div className="space-y-6">
-
             {/* COURSE */}
             <div className="overflow-hidden rounded-2xl bg-white shadow-sm">
               {course?.thumbnail?.url && (
@@ -715,7 +630,6 @@ const ContentViewPage = () => {
               </h3>
 
               <div className="space-y-4">
-
                 {/* Instructor */}
                 <div className="flex items-center gap-3">
                   <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-gray-50">
@@ -723,9 +637,7 @@ const ContentViewPage = () => {
                   </div>
 
                   <div>
-                    <p className="text-xs text-gray-400">
-                      Instructor
-                    </p>
+                    <p className="text-xs text-gray-400">Instructor</p>
 
                     <p className="text-sm font-semibold text-gray-800">
                       {instructor?.name || "Not assigned"}
@@ -740,9 +652,7 @@ const ContentViewPage = () => {
                   </div>
 
                   <div>
-                    <p className="text-xs text-gray-400">
-                      Module
-                    </p>
+                    <p className="text-xs text-gray-400">Module</p>
 
                     <p className="text-sm font-semibold text-gray-800">
                       {moduleInfo?.title || "Not assigned"}
@@ -757,9 +667,7 @@ const ContentViewPage = () => {
                   </div>
 
                   <div>
-                    <p className="text-xs text-gray-400">
-                      Duration
-                    </p>
+                    <p className="text-xs text-gray-400">Duration</p>
 
                     <p className="text-sm font-semibold text-gray-800">
                       {formatDuration(content.duration)}
@@ -774,9 +682,7 @@ const ContentViewPage = () => {
                   </div>
 
                   <div>
-                    <p className="text-xs text-gray-400">
-                      Progress
-                    </p>
+                    <p className="text-xs text-gray-400">Progress</p>
 
                     <p className="text-sm font-semibold text-gray-800">
                       {content.progressCount || 0} completed
@@ -791,16 +697,13 @@ const ContentViewPage = () => {
                   </div>
 
                   <div>
-                    <p className="text-xs text-gray-400">
-                      Session Type
-                    </p>
+                    <p className="text-xs text-gray-400">Session Type</p>
 
                     <p className="text-sm font-semibold text-gray-800">
                       {content.contentType || "Session"}
                     </p>
                   </div>
                 </div>
-
               </div>
             </div>
 
@@ -813,13 +716,9 @@ const ContentViewPage = () => {
                   </div>
 
                   <div>
-                    <p className="text-xs text-blue-100">
-                      Your Instructor
-                    </p>
+                    <p className="text-xs text-blue-100">Your Instructor</p>
 
-                    <p className="font-bold">
-                      {instructor.name}
-                    </p>
+                    <p className="font-bold">{instructor.name}</p>
                   </div>
                 </div>
 
@@ -830,7 +729,6 @@ const ContentViewPage = () => {
                 )}
               </div>
             )}
-
           </div>
         </div>
       </div>

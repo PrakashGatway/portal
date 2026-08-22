@@ -115,7 +115,7 @@ export default function App() {
               <Route path="/support" element={<SupportPage />} />
               <Route path="/all-tickets" element={<SupportTickets />} />
               <Route path="/our-selection" element={<JobSelectionsWall />} />
-              <Route path="/events" element={<EventCalendar />} />
+              <Route path="/calendar" element={<EventCalendar />} />
               // my course
               <Route path="/my-courses" element={<MyCoursesPage />} />
               <Route path="/courses/:slug" element={<CourseDetailPageee />} />
@@ -211,6 +211,10 @@ export default function App() {
                 <Route
                   path="/sessions"
                   element={<ContentManagement type="Sessions" />}
+                />
+                 <Route
+                  path="/course-tests"
+                  element={<ContentManagement type="Tests" />}
                 />
                 <Route
                   path="/recorded-classes"
