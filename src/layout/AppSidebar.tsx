@@ -63,6 +63,7 @@ const navItems: NavItem[] = [
     icon: "📖",
     name: "Resources",
     subItems: [
+      { name: "1:1 Sessions", path: "/sessions", icon: "🎥" },
       { name: "Live Classes", path: "/live-classes", icon: "🎥" },
       { name: "Recorded Classes", path: "/recorded-classes", icon: "▶️" },
       { icon: "📁", name: "Study Materials", path: "/study-materials" },
@@ -162,36 +163,24 @@ const navItemsTeacher: NavItem[] = [
     ],
   },
   {
-    icon: GraduationCap,
-    name: "My Courses",
+    icon: "🎓",
+    name: "Courses",
     subItems: [
-      {
-        name: "Create Course",
-        path: "/teacher/create-course",
-        icon: PlusCircle,
-      },
-      { name: "My Courses", path: "/teacher/courses", icon: ClipboardList },
-      {
-        name: "Course Analytics",
-        path: "/teacher/analytics",
-        icon: TrendingUp,
-      },
+      { name: "All Courses", path: "/courses", icon: "📚" },
+      { icon: "🏷️", name: "Categories", path: "/categories" },
+      { name: "Modules", path: "/modules", icon: "📂" },
+      { name: "Combos", path: "/combos", icon: "🎁" },
     ],
   },
+
   {
-    icon: Folder,
-    name: "Content",
+    icon: "📖",
+    name: "Resources",
     subItems: [
-      { name: "Upload Content", path: "/teacher/upload", icon: Upload },
-      { name: "Manage Content", path: "/teacher/content", icon: Database },
-    ],
-  },
-  {
-    icon: ClipboardCheck,
-    name: "Assessments",
-    subItems: [
-      { name: "Create Test", path: "/teacher/create-test", icon: Pencil },
-      { name: "Test Results", path: "/teacher/results", icon: BarChart3 },
+      { name: "1:1 Sessions", path: "/sessions", icon: "🎥" },
+      { name: "Live Classes", path: "/live-classes", icon: "🎥" },
+      { name: "Recorded Classes", path: "/recorded-classes", icon: "▶️" },
+      { icon: "📁", name: "Study Materials", path: "/study-materials" },
     ],
   },
 ];
@@ -445,7 +434,7 @@ const AppSidebar: React.FC = () => {
                             }`}
                           >
                             <div className="flex items-center gap-2.5">
-                              <span>{SubIcon}</span>
+                              {/* <span>{SubIcoon}</span> */}
                               <span>{subItem.name}</span>
                             </div>
                             <div className="flex gap-1.5">

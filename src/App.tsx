@@ -74,6 +74,7 @@ import IeltsTestManagementPage from "./pages/ielts/ieltsTest";
 // import IeltsTestResultPage from "./pages/ielts/IeltsResult";
 
 import IeltsTestPlatform from "./pages/ielts/ieltsTestAttempt";
+import ContentViewPage from "./pages/liveClass/Session";
 
 // Define roles
 export const ROLES = {
@@ -107,6 +108,7 @@ export default function App() {
               <Route path="/coming" element={<ComingSoon />} />
               <Route path="/course" element={<CourseListingPage />} />
               <Route path="/course/:slug" element={<CourseDetailPage />} />
+              <Route path="/sessions/:slug" element={<ContentViewPage />} />
               <Route path="/transactions" element={<TransactionsPage />} />
               <Route path="/referrals" element={<ReferAndEarnPage />} />
               //support
@@ -149,27 +151,15 @@ export default function App() {
               // admin
               <Route element={<ProtectedRoute roles={[ROLES.ADMIN]} />}>
                 <Route path="/users" element={<UserListPage />} />
-                <Route path="/categories" element={<CategoryManagement />} />
-                <Route path="/courses" element={<CourseManagement />} />
-                <Route path="/modules" element={<ModuleManagement />} />
+
                 <Route path="/reviews-report" element={<FeedbackPage />} />
-                <Route
-                  path="/live-classes"
-                  element={<ContentManagement type="LiveClasses" />}
-                />
-                <Route
-                  path="/recorded-classes"
-                  element={<ContentManagement type="RecordedClasses" />}
-                />
+
                 <Route path="/promocodes" element={<PromoCodeManagement />} />
                 <Route
                   path="/all_transactions"
                   element={<AdminTransactionsPage />}
                 />
-                <Route
-                  path="/study-materials"
-                  element={<ContentManagement type="StudyMaterials" />}
-                />
+
                 <Route path="/test/exams" element={<ExamManagement />} />
                 <Route path="/test/sections" element={<SectionManagement />} />
                 <Route path="/test-manage" element={<TestSeriesManagement />} />
@@ -213,6 +203,25 @@ export default function App() {
                 <Route
                   path="/mcq/test-series"
                   element={<TestSeriesManagementPage />}
+                />
+                <Route
+                  path="/live-classes"
+                  element={<ContentManagement type="LiveClasses" />}
+                />
+                <Route
+                  path="/sessions"
+                  element={<ContentManagement type="Sessions" />}
+                />
+                <Route
+                  path="/recorded-classes"
+                  element={<ContentManagement type="RecordedClasses" />}
+                />
+                <Route path="/courses" element={<CourseManagement />} />
+                <Route path="/modules" element={<ModuleManagement />} />
+                <Route path="/categories" element={<CategoryManagement />} />
+                <Route
+                  path="/study-materials"
+                  element={<ContentManagement type="StudyMaterials" />}
                 />
               </Route>
               // Crm

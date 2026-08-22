@@ -1,479 +1,572 @@
-import { useState, useEffect } from "react";
-import { Calendar, momentLocalizer } from "react-big-calendar";
-import moment from "moment";
-import "react-big-calendar/lib/css/react-big-calendar.css";
-import { ChevronLeft, ChevronRight, Calendar as CalendarIcon, Clock, Users, BookOpen, TrendingUp } from "lucide-react";
+// EventCalendar.jsx
+import React, { useState, useEffect, useCallback } from 'react';
+import { Calendar, momentLocalizer, Views } from 'react-big-calendar';
+import moment from 'moment';
+import 'react-big-calendar/lib/css/react-big-calendar.css';
+import 'react-datepicker/dist/react-datepicker.css';
+import './CalendarComponent.css';
 
-// Define event types
-interface Event {
-  id: string;
-  title: string;
-  start: Date;
-  end: Date;
-  description?: string;
-  location?: string;
-  category: "class" | "exam" | "workshop" | "deadline" | "other";
-  instructor?: string;
-  course?: string;
-  isAllDay?: boolean;
-}
-
-// Localizer for date handling
 const localizer = momentLocalizer(moment);
 
-// Custom event component with enhanced styling
-const CustomEvent = ({ event }: { event: Event }) => {
-  const getCategoryColor = (category: string) => {
-    switch (category) {
-      case "class": return "bg-blue-600 border-blue-700";
-      case "exam": return "bg-red-600 border-red-700";
-      case "workshop": return "bg-green-600 border-green-700";
-      case "deadline": return "bg-yellow-600 border-yellow-700";
-      default: return "bg-purple-600 border-purple-700";
+const EventCalendar = () => {
+  const [events, setEvents] = useState([]);
+  const [showEventModal, setShowEventModal] = useState(false);
+  const [editingEvent, setEditingEvent] = useState(null);
+  const [selectedSlot, setSelectedSlot] = useState(null);
+  const [view, setView] = useState(Views.MONTH);
+  const [date, setDate] = useState(new Date());
+  
+  // Event form state
+  const [eventTitle, setEventTitle] = useState('');
+  const [eventStart, setEventStart] = useState(new Date());
+  const [eventEnd, setEventEnd] = useState(new Date());
+  const [eventDescription, setEventDescription] = useState('');
+  const [eventColor, setEventColor] = useState('#3174ad');
+  const [eventAllDay, setEventAllDay] = useState(false);
+  const [eventLocation, setEventLocation] = useState('');
+
+  // Load events from localStorage
+  useEffect(() => {
+    const savedEvents = localStorage.getItem('rbcEvents');
+    if (savedEvents) {
+      const parsedEvents = JSON.parse(savedEvents).map(event => ({
+        ...event,
+        start: new Date(event.start),
+        end: new Date(event.end)
+      }));
+      setEvents(parsedEvents);
+    } else {
+      // Add sample events matching the image
+      const today = new Date();
+      const y = today.getFullYear();
+      const m = today.getMonth();
+      
+      const sampleEvents = [
+        {
+          id: 1,
+          title: 'Live: Grammar Masterclass',
+          start: new Date(y, m, 1, 10, 0),
+          end: new Date(y, m, 1, 11, 0),
+          desc: 'Advanced grammar rules',
+          location: 'Live Class',
+          color: '#dcfce7', 
+          textColor: '#166534',
+          category: 'live'
+        },
+        {
+          id: 2,
+          title: 'IELTS Reading Strategies',
+          start: new Date(y, m, 2, 12, 0),
+          end: new Date(y, m, 2, 13, 30),
+          desc: 'Skimming and scanning techniques',
+          location: 'Skills Class',
+          color: '#e0e7ff',
+          textColor: '#3730a3',
+          category: 'skills'
+        },
+        {
+          id: 3,
+          title: 'Live: IELTS Speaking Practice',
+          start: new Date(y, m, 5, 16, 0),
+          end: new Date(y, m, 5, 17, 0),
+          desc: 'Mock test',
+          location: 'Live Class',
+          color: '#dcfce7',
+          textColor: '#166534',
+          category: 'live'
+        },
+        {
+          id: 4,
+          title: 'Writing Task 2 Workshop',
+          start: new Date(y, m, 6, 11, 0),
+          end: new Date(y, m, 6, 12, 0),
+          desc: 'Essay structure',
+          location: 'Workshop',
+          color: '#fef3c7',
+          textColor: '#92400e',
+          category: 'workshop'
+        },
+        {
+          id: 5,
+          title: 'Live: Listening Practice',
+          start: new Date(y, m, 8, 15, 0),
+          end: new Date(y, m, 8, 16, 0),
+          desc: 'Section 4 practice',
+          location: 'Live Class',
+          color: '#dcfce7',
+          textColor: '#166534',
+          category: 'live'
+        },
+        {
+          id: 6,
+          title: 'Vocabulary Boost Class',
+          start: new Date(y, m, 9, 18, 0),
+          end: new Date(y, m, 9, 19, 0),
+          desc: 'Advanced synonyms',
+          location: 'Skills Class',
+          color: '#e0e7ff',
+          textColor: '#3730a3',
+          category: 'skills'
+        }
+      ];
+      setEvents(sampleEvents);
+    }
+  }, []);
+
+  // Save events to localStorage
+  useEffect(() => {
+    if (events.length > 0) {
+      localStorage.setItem('rbcEvents', JSON.stringify(events));
+    }
+  }, [events]);
+
+  const handleSelectSlot = useCallback((slotInfo) => {
+    setSelectedSlot(slotInfo);
+    setEditingEvent(null);
+    setEventTitle('');
+    setEventDescription('');
+    setEventLocation('');
+    setEventColor('#dcfce7');
+    setEventAllDay(false);
+    
+    const start = slotInfo.start;
+    const end = slotInfo.end || new Date(start.getTime() + 60 * 60 * 1000);
+    setEventStart(start);
+    setEventEnd(end);
+    
+    setShowEventModal(true);
+  }, []);
+
+  const handleSelectEvent = useCallback((event) => {
+    setEditingEvent(event);
+    setEventTitle(event.title);
+    setEventStart(event.start);
+    setEventEnd(event.end);
+    setEventDescription(event.desc || '');
+    setEventLocation(event.location || '');
+    setEventColor(event.color || '#dcfce7');
+    setEventAllDay(event.allDay || false);
+    setShowEventModal(true);
+  }, []);
+
+  const handleSaveEvent = () => {
+    if (!eventTitle.trim()) {
+      alert('Please enter an event title');
+      return;
+    }
+
+    if (eventEnd <= eventStart) {
+      alert('End time must be after start time');
+      return;
+    }
+
+    const eventData = {
+      id: editingEvent ? editingEvent.id : Date.now(),
+      title: eventTitle,
+      start: eventStart,
+      end: eventEnd,
+      desc: eventDescription,
+      location: eventLocation,
+      color: eventColor,
+      textColor: '#000',
+      category: 'custom',
+      allDay: eventAllDay
+    };
+
+    if (editingEvent) {
+      setEvents(events.map(ev => ev.id === editingEvent.id ? eventData : ev));
+    } else {
+      setEvents([...events, eventData]);
+    }
+
+    setShowEventModal(false);
+    setEditingEvent(null);
+    setEventTitle('');
+    setEventDescription('');
+    setEventLocation('');
+  };
+
+  const handleDeleteEvent = (eventId) => {
+    if (window.confirm('Are you sure you want to delete this event?')) {
+      setEvents(events.filter(ev => ev.id !== eventId));
+      setShowEventModal(false);
+      setEditingEvent(null);
     }
   };
 
-  return (
-    <div className={`p-2 rounded-lg ${getCategoryColor(event.category)} text-white text-sm truncate relative overflow-hidden`}>
-      <div className="font-medium truncate">{event.title}</div>
-      <div className="text-xs opacity-90 truncate mt-1">
-        {event.isAllDay ? "All Day" : `${moment(event.start).format("HH:mm")} - ${moment(event.end).format("HH:mm")}`}
+  const handleViewChange = (newView) => {
+    setView(newView);
+  };
+
+  const handleNavigate = (newDate) => {
+    setDate(newDate);
+  };
+
+  // Custom Styling for events to match the image
+  const eventStyleGetter = (event) => {
+    const style = {
+      backgroundColor: event.color || '#dcfce7',
+      color: event.textColor || '#166534',
+      borderRadius: '8px',
+      border: 'none',
+      display: 'block',
+      cursor: 'pointer',
+      fontSize: '11px',
+      padding: '4px 8px',
+      height: '100%',
+      boxShadow: '0 1px 2px rgba(0,0,0,0.1)'
+    };
+    
+    return { style };
+  };
+
+  const dayPropGetter = (date) => {
+    const today = new Date();
+    if (
+      date.getDate() === today.getDate() &&
+      date.getMonth() === today.getMonth() &&
+      date.getFullYear() === today.getFullYear()
+    ) {
+      return {
+        style: {
+          backgroundColor: '#f8fafc'
+        }
+      };
+    }
+    return {};
+  };
+
+  // Custom Toolbar to match the image UI
+  const CustomToolbar = ({ label, onNavigate, onView, view }) => (
+    <div className="custom-toolbar">
+      <div className="toolbar-left">
+        <button className="toolbar-btn today-btn" onClick={() => onNavigate('TODAY')}>
+          Today
+        </button>
+        <button className="toolbar-btn nav-btn" onClick={() => onNavigate('PREV')}>
+          ‹
+        </button>
+        <button className="toolbar-btn nav-btn" onClick={() => onNavigate('NEXT')}>
+          ›
+        </button>
+        <span className="toolbar-label">{label}</span>
       </div>
-      {event.location && (
-        <div className="text-xs opacity-80 mt-1 flex items-center">
-          <Clock className="h-3 w-3 mr-1" />
-          {event.location}
-        </div>
-      )}
-    </div>
-  );
-};
-
-// Custom toolbar component with enhanced design
-const CustomToolbar = ({
-  date,
-  onNavigate,
-  onView,
-  view
-}: {
-  date: Date;
-  onNavigate: (action: "PREV" | "NEXT" | "TODAY") => void;
-  onView: (view: string) => void;
-  view: string;
-}) => {
-  const goToBack = () => onNavigate("PREV");
-  const goToNext = () => onNavigate("NEXT");
-  const goToToday = () => onNavigate("TODAY");
-
-  return (
-    <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 gap-4 p-4 bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700">
-      <div className="flex items-center space-x-3">
-        <div className="p-2 bg-blue-100 dark:bg-blue-900/50 rounded-lg">
-          <CalendarIcon className="h-6 w-6 text-blue-600 dark:text-blue-400" />
-        </div>
-        <div className="flex items-center space-x-2">
-          <button
-            onClick={goToBack}
-            className="p-2 rounded-lg bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 text-gray-700 dark:text-gray-300 transition-colors"
-          >
-            <ChevronLeft className="h-4 w-5" />
-          </button>
-          <button
-            onClick={goToToday}
-            className="px-4 py-1 rounded-lg bg-gradient-to-r from-blue-600 to-indigo-700 hover:from-blue-700 hover:to-indigo-800 text-white font-medium transition-all duration-200 transform hover:scale-105 shadow-md"
-          >
-            Today
-          </button>
-          <button
-            onClick={goToNext}
-            className="p-2 rounded-lg bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 text-gray-700 dark:text-gray-300 transition-colors"
-          >
-            <ChevronRight className="h-4 w-5" />
-          </button>
-        </div>
-      </div>
-
-      <div className="flex flex-wrap items-center gap-3">
-        <div className="text-lg font-semibold text-gray-900 dark:text-white min-w-[180px]">
-          {moment(date).format("MMMM YYYY")}
-        </div>
-        <div className="flex rounded-lg border border-gray-300 dark:border-gray-600 overflow-hidden">
-          {["month", "week", "day", "agenda"].map((viewType) => (
+      <div className="toolbar-right">
+        <div className="view-buttons">
+          {['month', 'week', 'day', 'agenda'].map(viewName => (
             <button
-              key={viewType}
-              className={`px-4 py-2 text-sm capitalize font-medium transition-all duration-200 ${view === viewType
-                ? "bg-blue-600 text-white"
-                : "bg-white dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-600"
-                }`}
-              onClick={() => onView(viewType)}
+              key={viewName}
+              className={`view-btn ${view === viewName ? 'active' : ''}`}
+              onClick={() => onView(viewName)}
             >
-              {viewType}
+              {viewName.charAt(0).toUpperCase() + viewName.slice(1)}
             </button>
           ))}
         </div>
       </div>
     </div>
   );
-};
 
-// Custom agenda row component
-const CustomAgendaRow = ({ event }: { event: Event }) => {
-  const getCategoryColor = (category: string) => {
-    switch (category) {
-      case "class": return "bg-blue-100 dark:bg-blue-900/30 text-blue-800 dark:text-blue-300";
-      case "exam": return "bg-red-100 dark:bg-red-900/30 text-red-800 dark:text-red-300";
-      case "workshop": return "bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-300";
-      case "deadline": return "bg-yellow-100 dark:bg-yellow-900/30 text-yellow-800 dark:text-yellow-300";
-      default: return "bg-purple-100 dark:bg-purple-900/30 text-purple-800 dark:text-purple-300";
-    }
-  };
-
-  return (
-    <div className="border-b border-gray-200 dark:border-gray-700 py-3">
-      <div className="flex items-start">
-        <div className={`w-3 h-3 rounded-full ${getCategoryColor(event.category)} mt-1.5 mr-3`}></div>
-        <div className="flex-1">
-          <div className="flex items-center justify-between mb-1">
-            <h4 className="font-medium text-gray-900 dark:text-white">{event.title}</h4>
-            <span className={`px-2 py-0.5 rounded text-xs ${getCategoryColor(event.category)}`}>
-              {event.category}
-            </span>
-          </div>
-          <div className="text-sm text-gray-600 dark:text-gray-400">
-            <div className="flex items-center">
-              <Clock className="h-4 w-4 mr-1" />
-              {event.isAllDay ? "All Day" : `${moment(event.start).format("HH:mm")} - ${moment(event.end).format("HH:mm")}`}
-            </div>
-            {event.location && (
-              <div className="flex items-center mt-1">
-                <Users className="h-4 w-4 mr-1" />
-                {event.location}
-              </div>
-            )}
-            {event.instructor && (
-              <div className="flex items-center mt-1">
-                <BookOpen className="h-4 w-4 mr-1" />
-                {event.instructor}
-              </div>
-            )}
-          </div>
-        </div>
+  // Custom Event Component to match the image's specific card look
+  const CustomEvent = ({ event }) => (
+    <div className="custom-event">
+      <div className="event-title">
+        {event.title}
+      </div>
+      <div className="event-meta">
+        {!event.allDay && (
+          <span className="event-time">
+            {moment(event.start).format('HH:mm')} - {moment(event.end).format('HH:mm')}
+          </span>
+        )}
+        <span className="event-icon">
+          {event.category === 'live' && '▶'}
+          {event.category === 'skills' && '📘'}
+          {event.category === 'workshop' && '⚒️'}
+        </span>
       </div>
     </div>
   );
-};
 
-const EventCalendar = () => {
-  const [events, setEvents] = useState<Event[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-  const [isDarkMode, setIsDarkMode] = useState(false);
-
-  // Detect dark mode changes
-  useEffect(() => {
-    const checkDarkMode = () => {
-      const darkMode = document.documentElement.classList.contains('dark');
-      setIsDarkMode(darkMode);
-    };
-
-    // Check initial state
-    checkDarkMode();
-
-    // Set up observer for class changes
-    const observer = new MutationObserver(checkDarkMode);
-    observer.observe(document.documentElement, {
-      attributes: true,
-      attributeFilter: ['class']
-    });
-
-    return () => observer.disconnect();
-  }, []);
-
-  // Mock data - replace with your API call
-  useEffect(() => {
-    try {
-      // Simulate API call
-      setTimeout(() => {
-        const mockEvents: Event[] = [
-          {
-            id: "1",
-            title: "Mathematics Lecture",
-            start: new Date(new Date().setHours(10, 0, 0, 0)),
-            end: new Date(new Date().setHours(11, 30, 0, 0)),
-            description: "Calculus fundamentals",
-            location: "Room 201",
-            category: "class",
-            instructor: "Dr. Smith",
-            course: "MATH 101"
-          },
-          {
-            id: "2",
-            title: "Physics Exam",
-            start: new Date(new Date().setDate(new Date().getDate() + 2)),
-            end: new Date(new Date().setDate(new Date().getDate() + 2)),
-            description: "Midterm exam",
-            location: "Main Hall",
-            category: "exam",
-            course: "PHYS 201"
-          },
-          {
-            id: "3",
-            title: "Study Abroad Workshop",
-            start: new Date(new Date().setDate(new Date().getDate() + 5)),
-            end: new Date(new Date().setDate(new Date().getDate() + 5)),
-            description: "Application process overview",
-            location: "Conference Room A",
-            category: "workshop",
-            instructor: "Admissions Team"
-          },
-          {
-            id: "4",
-            title: "Assignment Deadline",
-            start: new Date(new Date().setDate(new Date().getDate() + 7)),
-            end: new Date(new Date().setDate(new Date().getDate() + 7)),
-            description: "Submit final project",
-            category: "deadline",
-            course: "CS 301"
-          },
-          {
-            id: "5",
-            title: "Chemistry Lab",
-            start: new Date(new Date().setDate(new Date().getDate() + 10)),
-            end: new Date(new Date().setDate(new Date().getDate() + 10)),
-            description: "Organic chemistry experiments",
-            location: "Lab 302",
-            category: "class",
-            instructor: "Prof. Johnson",
-            course: "CHEM 202"
-          },
-          {
-            id: "6",
-            title: "Research Seminar",
-            start: new Date(new Date().setDate(new Date().getDate() + 14)),
-            end: new Date(new Date().setDate(new Date().getDate() + 14)),
-            description: "Advanced research methods",
-            location: "Seminar Room B",
-            category: "workshop",
-            instructor: "Dr. Wilson"
-          }
-        ];
-        setEvents(mockEvents);
-        setLoading(false);
-      }, 800);
-    } catch (err) {
-      setError("Failed to load events");
-      setLoading(false);
-    }
-  }, []);
-
-  // Filter events to show only current and future events
-  const currentAndFutureEvents = events.filter(event =>
-    new Date(event.end) >= new Date()
+  const CustomAgendaEvent = ({ event }) => (
+    <div className="agenda-event">
+      <div className="agenda-event-time">
+        {event.allDay 
+          ? 'All Day' 
+          : `${moment(event.start).format('HH:mm')} - ${moment(event.end).format('HH:mm')}`
+        }
+      </div>
+      <div className="agenda-event-content">
+        <div className="agenda-event-title">{event.title}</div>
+        {event.location && (
+          <div className="agenda-event-location">📍 {event.location}</div>
+        )}
+        {event.desc && (
+          <div className="agenda-event-desc">{event.desc}</div>
+        )}
+      </div>
+    </div>
   );
 
-  // Event styling based on category
-  const eventPropGetter = (event: Event) => {
-    const backgroundColor = {
-      class: "#3b82f6", // blue
-      exam: "#ef4444",  // red
-      workshop: "#10b981", // green
-      deadline: "#f59e0b", // yellow
-      other: "#8b5cf6"  // purple
-    }[event.category];
-
-    return {
-      style: {
-        backgroundColor,
-        borderRadius: "4px",
-        border: "none",
-        color: "white",
-        fontSize: "0.85rem",
-        padding: "2px 4px",
-        boxShadow: "0 1px 2px rgba(0,0,0,0.1)"
-      }
-    };
-  };
-
-  // Agenda view customizations
-  const agendaViews = {
-    agenda: {
-      eventComponent: CustomAgendaRow
-    }
-  };
-
-  if (loading) {
-    return (
-      <div className="flex justify-center items-center h-96">
-        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-500"></div>
-      </div>
-    );
-  }
-
-  if (error) {
-    return (
-      <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-xl p-6 text-center">
-        <div className="flex justify-center mb-4">
-          <svg className="h-12 w-12 text-red-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
-          </svg>
-        </div>
-        <p className="text-red-700 dark:text-red-300 text-lg font-medium mb-4">{error}</p>
-        <button
-          onClick={() => window.location.reload()}
-          className="px-6 py-3 bg-red-600 hover:bg-red-700 text-white rounded-lg font-medium transition-colors"
-        >
-          Retry Loading
-        </button>
-      </div>
-    );
-  }
-
   return (
-    <div className="bg-white dark:bg-gray-900 rounded-2xl shadow-lg p-6 md:p-8 border border-gray-200 dark:border-gray-700">
+    <div className="">
 
-      <div className="relative">
-        {/* CSS for both light and dark modes */}
-        <style>{`
-          /* Light mode styles */
-          .rbc-calendar:not(.dark-mode) .rbc-header,
-          .rbc-calendar:not(.dark-mode) .rbc-date-cell,
-          .rbc-calendar:not(.dark-mode) .rbc-day-bg,
-          .rbc-calendar:not(.dark-mode) .rbc-month-row,
-          .rbc-calendar:not(.dark-mode) .rbc-agenda-view table tbody > tr > td,
-          .rbc-calendar:not(.dark-mode) .rbc-agenda-view table thead > tr > th,
-          .rbc-calendar:not(.dark-mode) .rbc-time-header-content,
-          .rbc-calendar:not(.dark-mode) .rbc-time-content,
-          .rbc-calendar:not(.dark-mode) .rbc-timeslot-group,
-          .rbc-calendar:not(.dark-mode) .rbc-time-slot,
-          .rbc-calendar:not(.dark-mode) .rbc-day-slot {
-            color: #374151 !important;
-            border-color: #e5e7eb !important;
-          }
-          
-          .rbc-calendar:not(.dark-mode) .rbc-off-range-bg {
-            background: #f9fafb !important;
-          }
-          
-          .rbc-calendar:not(.dark-mode) .rbc-today {
-            background: #dbeafe !important;
-          }
-          
-          .rbc-calendar:not(.dark-mode) .rbc-current-time-indicator {
-            background-color: #ef4444 !important;
-          }
-          
-          .rbc-calendar:not(.dark-mode) .rbc-show-more {
-            background: transparent !important;
-            color: #2563eb !important;
-          }
-          
-          .rbc-calendar:not(.dark-mode) .rbc-agenda-empty {
-            color: #6b7280 !important;
-          }
-          
-          /* Dark mode styles */
-          .rbc-calendar.dark-mode .rbc-header,
-          .rbc-calendar.dark-mode .rbc-date-cell,
-          .rbc-calendar.dark-mode .rbc-day-bg,
-          .rbc-calendar.dark-mode .rbc-month-row,
-          .rbc-calendar.dark-mode .rbc-agenda-view table tbody > tr > td,
-          .rbc-calendar.dark-mode .rbc-agenda-view table thead > tr > th,
-          .rbc-calendar.dark-mode .rbc-time-header-content,
-          .rbc-calendar.dark-mode .rbc-time-content,
-          .rbc-calendar.dark-mode .rbc-timeslot-group,
-          .rbc-calendar.dark-mode .rbc-time-slot,
-          .rbc-calendar.dark-mode .rbc-day-slot {
-            color: #f3f4f6 !important;
-            border-color: #374151 !important;
-          }
-          
-          .rbc-calendar.dark-mode .rbc-off-range-bg {
-            background: #1f2937 !important;
-          }
-          
-          .rbc-calendar.dark-mode .rbc-today {
-            background: #1e3a8a !important;
-          }
-          
-          .rbc-calendar.dark-mode .rbc-current-time-indicator {
-            background-color: #ef4444 !important;
-          }
-          
-          .rbc-calendar.dark-mode .rbc-show-more {
-            background: transparent !important;
-            color: #93c5fd !important;
-          }
-          
-          .rbc-calendar.dark-mode .rbc-agenda-empty {
-            color: #9ca3af !important;
-          }
-        `}</style>
 
-        <Calendar
-          localizer={localizer}
-          events={currentAndFutureEvents}
-          startAccessor="start"
-          endAccessor="end"
-          style={{ height: "700px" }}
-          className={`bg-transparent ${isDarkMode ? 'dark-mode' : ''}`}
-          components={{
-            event: CustomEvent,
-            toolbar: CustomToolbar,
-            agenda: agendaViews
-          }}
-          eventPropGetter={eventPropGetter}
-          messages={{
-            next: "Next",
-            previous: "Back",
-            today: "Today",
-            month: "Month",
-            week: "Week",
-            day: "Day",
-            agenda: "Agenda",
-            date: "Date",
-            time: "Time",
-            event: "Event"
-          }}
-          formats={{
-            dateFormat: "D",
-            dayFormat: "ddd D",
-            weekdayFormat: "dddd",
-            monthHeaderFormat: "MMMM YYYY",
-            dayHeaderFormat: "dddd, MMMM D",
-            agendaDateFormat: "ddd, MMM D",
-            agendaTimeFormat: "hh:mm A",
-            agendaHeaderFormat: "ddd, MMM D"
-          }}
-          views={{ month: true, week: true, day: true, agenda: true }}
-          defaultView="month"
-          selectable
-          onSelectEvent={(event) => {
-            alert(`Selected: ${event.title}\n${event.description}`);
-          }}
-        />
-      </div>
+      {/* Main Content */}
+      <div className="">
 
-      {/* Legend */}
-      <div className="mt-8 pt-6 border-t border-gray-200 dark:border-gray-700">
-        <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">Event Types</h3>
-        <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
-          {[
-            { category: "class", label: "Class", icon: <BookOpen className="h-4 w-4" />, color: "bg-blue-600" },
-            { category: "exam", label: "Exam", icon: <TrendingUp className="h-4 w-4" />, color: "bg-red-600" },
-            { category: "workshop", label: "Workshop", icon: <Users className="h-4 w-4" />, color: "bg-green-600" },
-            { category: "deadline", label: "Deadline", icon: <Clock className="h-4 w-4" />, color: "bg-yellow-600" },
-            { category: "other", label: "Other", icon: <CalendarIcon className="h-4 w-4" />, color: "bg-purple-600" }
-          ].map(({ category, label, icon, color }) => (
-            <div key={category} className="flex items-center p-3 rounded-lg bg-gray-50 dark:bg-gray-700/50 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors">
-              <div className={`${color} w-3 h-3 rounded-full mr-3`}></div>
-              <div className="flex items-center">
-                <span className="text-sm text-gray-700 dark:text-gray-300">{icon}</span>
-                <span className="ml-2 text-sm font-medium text-gray-900 dark:text-white">{label}</span>
+        <div className="content-layout">
+          {/* Calendar Area */}
+          <div className="calendar-wrapper">
+            <div className="calendar-header">
+              <h2>Class Schedule Calendar</h2>
+              <p>Manage and view your live classes and other scheduled classes.</p>
+              <div className="header-actions-row">
+                <div className="toolbar-left-inner">
+                  <button className="toolbar-btn today-btn" onClick={() => handleNavigate(new Date())}>Today</button>
+                  <button className="toolbar-btn nav-btn" onClick={() => handleNavigate(new Date(date.getFullYear(), date.getMonth() - 1, 1))}>‹</button>
+                  <button className="toolbar-btn nav-btn" onClick={() => handleNavigate(new Date(date.getFullYear(), date.getMonth() + 1, 1))}>›</button>
+                  <h3>{moment(date).format('MMMM YYYY')}</h3>
+                </div>
+                <div className="header-actions-right">
+                  <select className="view-select" value={view} onChange={(e) => handleViewChange(e.target.value)}>
+                    <option value="month">Month</option>
+                    <option value="week">Week</option>
+                    <option value="day">Day</option>
+                  </select>
+                  <button className="new-class-btn" onClick={() => handleSelectSlot({start: new Date(), end: new Date(new Date().getTime() + 3600000)})}>
+                    + Schedule Class
+                  </button>
+                </div>
               </div>
             </div>
-          ))}
+
+            <Calendar
+              localizer={localizer}
+              events={events}
+              startAccessor="start"
+              endAccessor="end"
+              style={{ height: '700px' }}
+              selectable
+              onSelectSlot={handleSelectSlot}
+              onSelectEvent={handleSelectEvent}
+              eventPropGetter={eventStyleGetter}
+              dayPropGetter={dayPropGetter}
+              view={view}
+              onView={handleViewChange}
+              date={date}
+              onNavigate={handleNavigate}
+              views={[Views.MONTH, Views.WEEK, Views.DAY, Views.AGENDA]}
+              components={{
+                event: CustomEvent,
+                agenda: { event: CustomAgendaEvent }
+              }}
+              popup
+              tooltipAccessor={(event) => event.title}
+            />
+
+            {/* Legend */}
+            <div className="calendar-legend">
+              <span><span className="dot green"></span> Live Classes</span>
+              <span><span className="dot blue"></span> Speaking Classes</span>
+              <span><span className="dot purple"></span> Skill Classes</span>
+              <span><span className="dot orange"></span> Workshops & Others</span>
+            </div>
+          </div>
+
+          {/* Right Side Panel */}
+          <aside className="side-panel">
+            {/* Mini Calendar */}
+            <div className="panel-card mini-calendar-card">
+              <h4>Mini Calendar</h4>
+              <div className="mini-calendar">
+                <div className="mini-cal-header">
+                  <button>‹</button>
+                  <span>{moment(date).format('MMMM YYYY')}</span>
+                  <button>›</button>
+                </div>
+                <div className="mini-cal-grid">
+                  {['S','M','T','W','T','F','S'].map(d => <div key={d} className="mini-cal-dayname">{d}</div>)}
+                  {/* Simplified static mini grid for demo */}
+                  {Array.from({length: 35}, (_, i) => {
+                    const dayNum = i - 2;
+                    const isToday = moment().date() === dayNum && moment().month() === date.getMonth();
+                    return <div key={i} className={`mini-cal-day ${isToday ? 'active' : ''}`}>{dayNum > 0 && dayNum <= 31 ? dayNum : ''}</div>;
+                  })}
+                </div>
+              </div>
+            </div>
+
+            {/* Today's Schedule */}
+            <div className="panel-card">
+              <div className="panel-header">
+                <h4>Today's Schedule</h4>
+                <span className="badge-count">2 Classes</span>
+              </div>
+              <div className="schedule-list">
+                <div className="schedule-item" style={{borderLeftColor: '#dcfce7'}}>
+                  <span className="schedule-time">05:00 PM - 06:00 PM</span>
+                  <span className="schedule-title">Live: Pronunciation Clinic</span>
+                  <span className="schedule-type">📘 Speaking Class</span>
+                </div>
+                <div className="schedule-item" style={{borderLeftColor: '#e0e7ff'}}>
+                  <span className="schedule-time">04:00 PM - 05:30 PM</span>
+                  <span className="schedule-title">Business English Class</span>
+                  <span className="schedule-type">📘 Skills Class</span>
+                </div>
+              </div>
+            </div>
+
+            {/* Schedule Overview */}
+            <div className="panel-card">
+              <h4>Schedule Overview</h4>
+              <div className="overview-stats">
+                <div className="stat-box">
+                  <div className="stat-icon blue">📄</div>
+                  <div className="stat-num">14</div>
+                  <div className="stat-label">Total Classes</div>
+                </div>
+                <div className="stat-box">
+                  <div className="stat-icon green">▶</div>
+                  <div className="stat-num">7</div>
+                  <div className="stat-label">Live Classes</div>
+                </div>
+                <div className="stat-box">
+                  <div className="stat-icon orange">⚒️</div>
+                  <div className="stat-num">4</div>
+                  <div className="stat-label">Workshops</div>
+                </div>
+                <div className="stat-box">
+                  <div className="stat-icon purple">📘</div>
+                  <div className="stat-num">3</div>
+                  <div className="stat-label">Skill Classes</div>
+                </div>
+              </div>
+            </div>
+
+            {/* Upcoming Live Class */}
+            <div className="panel-card upcoming-live-card">
+              <div className="live-badge">🔴 LIVE</div>
+              <h4>Upcoming Live Class</h4>
+              <div className="upcoming-live-detail">
+                <div className="user-avatar-small">🧑‍🏫</div>
+                <div>
+                  <span className="class-name">IELTS Speaking Practice</span>
+                  <div className="class-meta">with Emma Watson</div>
+                  <div className="class-time">🕐 Today, 04:00 PM</div>
+                </div>
+              </div>
+              <button className="join-btn full-width">Join Now</button>
+            </div>
+          </aside>
         </div>
       </div>
+
+      {/* Event Modal */}
+      {showEventModal && (
+        <div className="modal-overlay" onClick={() => setShowEventModal(false)}>
+          <div className="event-modal" onClick={(e) => e.stopPropagation()}>
+            <div className="modal-header">
+              <h3>{editingEvent ? 'Edit Event' : 'Create Event'}</h3>
+              <button className="close-btn" onClick={() => setShowEventModal(false)}>×</button>
+            </div>
+            
+            <div className="modal-body">
+              <div className="form-group">
+                <input
+                  type="text"
+                  placeholder="Add title"
+                  value={eventTitle}
+                  onChange={(e) => setEventTitle(e.target.value)}
+                  className="title-input"
+                  autoFocus
+                />
+              </div>
+
+              <div className="form-group">
+                <label className="form-label">Start</label>
+                <input
+                  type="datetime-local"
+                  value={moment(eventStart).format('YYYY-MM-DDTHH:mm')}
+                  onChange={(e) => setEventStart(new Date(e.target.value))}
+                  className="form-input"
+                />
+              </div>
+
+              <div className="form-group">
+                <label className="form-label">End</label>
+                <input
+                  type="datetime-local"
+                  value={moment(eventEnd).format('YYYY-MM-DDTHH:mm')}
+                  onChange={(e) => setEventEnd(new Date(e.target.value))}
+                  className="form-input"
+                />
+              </div>
+
+              <div className="form-group">
+                <label className="form-label">Location</label>
+                <input
+                  type="text"
+                  placeholder="Add location"
+                  value={eventLocation}
+                  onChange={(e) => setEventLocation(e.target.value)}
+                  className="form-input"
+                />
+              </div>
+
+              <div className="form-group">
+                <label className="form-label">Description</label>
+                <textarea
+                  placeholder="Add description"
+                  value={eventDescription}
+                  onChange={(e) => setEventDescription(e.target.value)}
+                  className="form-textarea"
+                  rows="3"
+                />
+              </div>
+
+              <div className="form-group">
+                <label className="form-label">Color Category</label>
+                <div className="color-picker">
+                  {[
+                    {color: '#dcfce7', label: 'Live'},
+                    {color: '#e0e7ff', label: 'Skills'},
+                    {color: '#fef3c7', label: 'Workshop'},
+                    {color: '#fce7f3', label: 'Speaking'},
+                    {color: '#3174ad', label: 'Custom'}
+                  ].map(c => (
+                    <div
+                      key={c.color}
+                      className={`color-option ${eventColor === c.color ? 'active' : ''}`}
+                      style={{ backgroundColor: c.color }}
+                      title={c.label}
+                      onClick={() => setEventColor(c.color)}
+                    />
+                  ))}
+                </div>
+              </div>
+            </div>
+
+            <div className="modal-footer">
+              {editingEvent ? (
+                <button className="delete-btn" onClick={() => handleDeleteEvent(editingEvent.id)}>
+                  Delete
+                </button>
+              ) : (
+                <div></div>
+              )}
+              <div className="footer-right">
+                <button className="cancel-btn" onClick={() => setShowEventModal(false)}>
+                  Cancel
+                </button>
+                <button className="save-btn" onClick={handleSaveEvent}>
+                  {editingEvent ? 'Update' : 'Save'}
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
