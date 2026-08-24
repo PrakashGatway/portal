@@ -60,7 +60,7 @@ export const MockTestCard = ({ test, index }: { test: TestTemplate; index: numbe
     };
 
     const handleAction = () => {
-        if (test.isPurchased === true) {
+        if (test.isPurchased === true|| test.isFree === true) {
             const examName = test.exam?.name?.toLowerCase() || "";
             if (examName.includes("gmat")) navigate(`/gmat/tests/${test._id}`);
             else if (examName.includes("pte")) navigate(`/pte/tests/${test._id}`);
@@ -245,7 +245,7 @@ const theme = cardThemes[index % cardThemes.length];
                             flex-1 h-10 bg-[#3B3B3B] text-white font-medium py-2 bg-gradient-to-b from-[#545454] via-[#ffffff]/30 to-[#545454] hover:bg-black transition
                         "
                     >
-                        {test.isPurchased === true ? (
+                        {test.isPurchased === true || test.isFree === true ? (
                             "Start Test"
                         ) : (
                             <>
