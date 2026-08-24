@@ -227,7 +227,7 @@ export default function CourseDetailPage() {
     { _id: string; title: string; items: any[] }[]
   >([]);
   const [curriculumLoading, setCurriculumLoading] = useState(false);
-  const curriculumRef = useRef(false); // to ensure fetch only once
+  const curriculumRef = useRef(false);
 
   const navigate = useNavigate();
 
@@ -525,6 +525,8 @@ export default function CourseDetailPage() {
                         {[
                           { id: "overview", label: "Overview", icon: BookOpen },
                           { id: "curriculum", label: "Curriculum", icon: Book },
+                          { id: "materials", label: "Materials", icon: Book },
+                          { id: "tests", label: "Tests", icon: Book },
                           {
                             id: "instructors",
                             label: "Instructors",
@@ -532,7 +534,6 @@ export default function CourseDetailPage() {
                           },
                           { id: "faq", label: "FAQ", icon: MessageCircle },
                         ].map((tab) => {
-                          const IconComponent = tab.icon;
                           return (
                             <motion.button
                               key={tab.id}
@@ -558,7 +559,7 @@ export default function CourseDetailPage() {
                                   }}
                                 />
                               )}
-                              <IconComponent className="h-4 w-4 mr-2" />
+                              {/* <IconComponent className="h-4 w-4 mr-2" /> */}
                               {tab.label}
                             </motion.button>
                           );
@@ -651,26 +652,19 @@ export default function CourseDetailPage() {
                     </div>
                   )}
 
-                  
                   {activeTab === "curriculum" && (
-    <div className="space-y-6">
-
-      
-
-
-        {/* ================= LOADING ================= */}
-        {curriculumLoading ? (
-            <CurriculumSkeleton />
-        ) : (
-            <>
-
-                {/* ================= SECTIONS ================= */}
-                <div className="space-y-4">
-
-                    {curriculum?.map((section, sectionIndex) => (
-                        <div
-                            key={section._id}
-                            className="
+                    <div className="space-y-6">
+                      {/* ================= LOADING ================= */}
+                      {curriculumLoading ? (
+                        <CurriculumSkeleton />
+                      ) : (
+                        <>
+                          {/* ================= SECTIONS ================= */}
+                          <div className="space-y-4">
+                            {curriculum?.map((section, sectionIndex) => (
+                              <div
+                                key={section._id}
+                                className="
                                 group
                                 overflow-hidden
                                 rounded-2xl
@@ -684,11 +678,10 @@ export default function CourseDetailPage() {
                                 hover:border-[#FFD2C3]
                                 hover:shadow-[0_12px_35px_rgba(243,110,69,0.10)]
                             "
-                        >
-
-                            {/* ================= SECTION HEADER ================= */}
-                            <div
-                                className="
+                              >
+                                {/* ================= SECTION HEADER ================= */}
+                                <div
+                                  className="
                                     relative
                                     overflow-hidden
                                     bg-gradient-to-r
@@ -700,10 +693,9 @@ export default function CourseDetailPage() {
                                     sm:px-6
                                     sm:py-5
                                 "
-                            >
-
-                                {/* Decorative Background */}
-                                <div
+                                >
+                                  {/* Decorative Background */}
+                                  <div
                                     className="
                                         pointer-events-none
                                         absolute
@@ -714,9 +706,9 @@ export default function CourseDetailPage() {
                                         rounded-full
                                         bg-white/10
                                     "
-                                />
+                                  />
 
-                                <div
+                                  <div
                                     className="
                                         pointer-events-none
                                         absolute
@@ -727,9 +719,9 @@ export default function CourseDetailPage() {
                                         rounded-full
                                         bg-white/10
                                     "
-                                />
+                                  />
 
-                                <div
+                                  <div
                                     className="
                                         relative
                                         flex
@@ -737,11 +729,10 @@ export default function CourseDetailPage() {
                                         justify-between
                                         gap-3
                                     "
-                                >
-
+                                  >
                                     {/* LEFT */}
                                     <div
-                                        className="
+                                      className="
                                             flex
                                             min-w-0
                                             items-center
@@ -749,10 +740,9 @@ export default function CourseDetailPage() {
                                             sm:gap-4
                                         "
                                     >
-
-                                        {/* Section Number */}
-                                        <div
-                                            className="
+                                      {/* Section Number */}
+                                      <div
+                                        className="
                                                 flex
                                                 h-11
                                                 w-11
@@ -771,29 +761,28 @@ export default function CourseDetailPage() {
                                                 sm:h-12
                                                 sm:w-12
                                             "
-                                        >
-                                            {String(sectionIndex + 1).padStart(
-                                                2,
-                                                "0",
-                                            )}
-                                        </div>
+                                      >
+                                        {String(sectionIndex + 1).padStart(
+                                          2,
+                                          "0",
+                                        )}
+                                      </div>
 
-                                        <div className="min-w-0">
-
-                                            <h3
-                                                className="
+                                      <div className="min-w-0">
+                                        <h3
+                                          className="
                                                     truncate
                                                     text-sm
                                                     font-bold
                                                     text-white
                                                     sm:text-lg
                                                 "
-                                            >
-                                                {section.title}
-                                            </h3>
+                                        >
+                                          {section.title}
+                                        </h3>
 
-                                            <div
-                                                className="
+                                        <div
+                                          className="
                                                     mt-1
                                                     flex
                                                     items-center
@@ -802,23 +791,21 @@ export default function CourseDetailPage() {
                                                     text-white/80
                                                     sm:text-xs
                                                 "
-                                            >
-                                                <span>
-                                                    {section.items?.length || 0} lessons
-                                                </span>
+                                        >
+                                          <span>
+                                            {section.items?.length || 0} lessons
+                                          </span>
 
-                                                <span className="h-1 w-1 rounded-full bg-white/60" />
+                                          <span className="h-1 w-1 rounded-full bg-white/60" />
 
-                                                <span>
-                                                    Course Section
-                                                </span>
-                                            </div>
+                                          <span>Course Section</span>
                                         </div>
+                                      </div>
                                     </div>
 
                                     {/* RIGHT COUNT */}
                                     <div
-                                        className="
+                                      className="
                                             shrink-0
                                             rounded-full
                                             border
@@ -834,22 +821,18 @@ export default function CourseDetailPage() {
                                             sm:text-xs
                                         "
                                     >
-                                        {section.items?.length || 0} Lessons
+                                      {section.items?.length || 0} Lessons
                                     </div>
-
+                                  </div>
                                 </div>
-                            </div>
 
-
-                            {/* ================= SECTION ITEMS ================= */}
-                            <div className="bg-[#FCFCFC] p-2 sm:p-3">
-
-                                <div className="space-y-2">
-
-                                    {section.items?.map((item, itemIndex) => (
-                                        <div
-                                            key={item._id}
-                                            className="
+                                {/* ================= SECTION ITEMS ================= */}
+                                <div className="bg-[#FCFCFC] p-2 sm:p-3">
+                                  <div className="space-y-2">
+                                    {section.items?.filter((t)=> t.type != "StudyMaterials")?.map((item, itemIndex) => (
+                                      <div
+                                        key={item._id}
+                                        className="
                                                 group/item
                                                 relative
                                                 flex
@@ -869,11 +852,10 @@ export default function CourseDetailPage() {
                                                 sm:gap-4
                                                 sm:p-4
                                             "
-                                        >
-
-                                            {/* ================= TIMELINE ================= */}
-                                            <div
-                                                className="
+                                      >
+                                        {/* ================= TIMELINE ================= */}
+                                        <div
+                                          className="
                                                     relative
                                                     hidden
                                                     h-full
@@ -883,12 +865,12 @@ export default function CourseDetailPage() {
                                                     justify-center
                                                     sm:flex
                                                 "
-                                            >
-
-                                                {itemIndex !==
-                                                    (section.items?.length || 0) - 1 && (
-                                                    <span
-                                                        className="
+                                        >
+                                          {itemIndex !==
+                                            (section.items?.length || 0) -
+                                              1 && (
+                                            <span
+                                              className="
                                                             absolute
                                                             left-1/2
                                                             top-7
@@ -899,11 +881,11 @@ export default function CourseDetailPage() {
                                                             from-[#FFB199]
                                                             to-gray-200
                                                         "
-                                                    />
-                                                )}
+                                            />
+                                          )}
 
-                                                <span
-                                                    className="
+                                          <span
+                                            className="
                                                         relative
                                                         z-10
                                                         h-3
@@ -914,13 +896,12 @@ export default function CourseDetailPage() {
                                                         bg-white
                                                         shadow-[0_0_0_3px_#FFF1EB]
                                                     "
-                                                />
-                                            </div>
+                                          />
+                                        </div>
 
-
-                                            {/* ================= ICON ================= */}
-                                            <div
-                                                className="
+                                        {/* ================= ICON ================= */}
+                                        <div
+                                          className="
                                                     flex
                                                     h-11
                                                     w-11
@@ -939,99 +920,97 @@ export default function CourseDetailPage() {
                                                     group-hover/item:scale-105
                                                     group-hover/item:shadow-md
                                                 "
-                                            >
+                                        >
+                                          {/* Study Materials */}
+                                          {item.type === "StudyMaterials" &&
+                                            item.materialType === "pdf" && (
+                                              <File
+                                                className="h-5 w-5"
+                                                strokeWidth={1.6}
+                                              />
+                                            )}
 
-                                                {/* Study Materials */}
-                                                {item.type === "StudyMaterials" &&
-                                                    item.materialType === "pdf" && (
-                                                        <File
-                                                            className="h-5 w-5"
-                                                            strokeWidth={1.6}
-                                                        />
-                                                    )}
+                                          {item.type === "StudyMaterials" &&
+                                            item.materialType ===
+                                              "document" && (
+                                              <File
+                                                className="h-5 w-5"
+                                                strokeWidth={1.6}
+                                              />
+                                            )}
 
-                                                {item.type === "StudyMaterials" &&
-                                                    item.materialType === "document" && (
-                                                        <File
-                                                            className="h-5 w-5"
-                                                            strokeWidth={1.6}
-                                                        />
-                                                    )}
+                                          {item.type === "StudyMaterials" &&
+                                            item.materialType === "link" && (
+                                              <LinkIcon
+                                                className="h-5 w-5"
+                                                strokeWidth={1.6}
+                                              />
+                                            )}
 
-                                                {item.type === "StudyMaterials" &&
-                                                    item.materialType === "link" && (
-                                                        <LinkIcon
-                                                            className="h-5 w-5"
-                                                            strokeWidth={1.6}
-                                                        />
-                                                    )}
+                                          {item.type === "StudyMaterials" &&
+                                            item.materialType === "image" && (
+                                              <ImageIcon
+                                                className="h-5 w-5"
+                                                strokeWidth={1.6}
+                                              />
+                                            )}
 
-                                                {item.type === "StudyMaterials" &&
-                                                    item.materialType === "image" && (
-                                                        <ImageIcon
-                                                            className="h-5 w-5"
-                                                            strokeWidth={1.6}
-                                                        />
-                                                    )}
+                                          {item.type === "StudyMaterials" &&
+                                            item.materialType === "audio" && (
+                                              <Headphones
+                                                className="h-5 w-5"
+                                                strokeWidth={1.6}
+                                              />
+                                            )}
 
-                                                {item.type === "StudyMaterials" &&
-                                                    item.materialType === "audio" && (
-                                                        <Headphones
-                                                            className="h-5 w-5"
-                                                            strokeWidth={1.6}
-                                                        />
-                                                    )}
+                                          {/* Live Class */}
+                                          {item.type === "LiveClasses" && (
+                                            <Radio
+                                              className="h-5 w-5"
+                                              strokeWidth={1.6}
+                                            />
+                                          )}
 
-                                                {/* Live Class */}
-                                                {item.type === "LiveClasses" && (
-                                                    <Radio
-                                                        className="h-5 w-5"
-                                                        strokeWidth={1.6}
-                                                    />
-                                                )}
+                                          {/* Recorded Class */}
+                                          {item.type === "RecordedClasses" && (
+                                            <PlayCircle
+                                              className="h-5 w-5"
+                                              strokeWidth={1.6}
+                                            />
+                                          )}
 
-                                                {/* Recorded Class */}
-                                                {item.type === "RecordedClasses" && (
-                                                    <PlayCircle
-                                                        className="h-5 w-5"
-                                                        strokeWidth={1.6}
-                                                    />
-                                                )}
+                                          {/* 1:1 Session */}
+                                          {item.type === "Sessions" && (
+                                            <ScreenShare
+                                              className="h-5 w-5"
+                                              strokeWidth={1.6}
+                                            />
+                                          )}
+                                        </div>
 
-                                                {/* 1:1 Session */}
-                                                {item.type === "Sessions" && (
-                                                    <ScreenShare
-                                                        className="h-5 w-5"
-                                                        strokeWidth={1.6}
-                                                    />
-                                                )}
-                                            </div>
-
-
-                                            {/* ================= CONTENT ================= */}
-                                            <div
-                                                className={`
+                                        {/* ================= CONTENT ================= */}
+                                        <div
+                                          className={`
                                                     min-w-0
                                                     flex-1
                                                     ${
-                                                        item.isLocked
-                                                            ? "cursor-not-allowed opacity-60"
-                                                            : "cursor-pointer"
+                                                      item.isLocked
+                                                        ? "cursor-not-allowed opacity-60"
+                                                        : "cursor-pointer"
                                                     }
                                                 `}
-                                                onClick={() => {
-                                                    if (!item.isLocked) {
-                                                        handleItemNavigation(
-                                                            item,
-                                                            section._id,
-                                                        );
-                                                    }
-                                                }}
-                                            >
-
-                                                {/* TITLE */}
-                                                <div
-                                                    className="
+                                          onClick={() => {
+                                            if (!item.isLocked) {
+                                              handleItemNavigation(
+                                                item,
+                                                section._id,
+                                              );
+                                            }
+                                          }}
+                                        >
+                                          {/* TITLE */}
+                                          <div
+                                            className="
                                                         truncate
                                                         text-sm
                                                         font-bold
@@ -1040,15 +1019,14 @@ export default function CourseDetailPage() {
                                                         group-hover/item:text-[#F36E45]
                                                         sm:text-[15px]
                                                     "
-                                                    title={item.title}
-                                                >
-                                                    {item.title}
-                                                </div>
+                                            title={item.title}
+                                          >
+                                            {item.title}
+                                          </div>
 
-
-                                                {/* TYPE + DURATION */}
-                                                <div
-                                                    className="
+                                          {/* TYPE + DURATION */}
+                                          <div
+                                            className="
                                                         mt-1
                                                         flex
                                                         flex-wrap
@@ -1058,12 +1036,11 @@ export default function CourseDetailPage() {
                                                         text-gray-500
                                                         sm:text-sm
                                                     "
-                                                >
-
-                                                    {/* Study Material */}
-                                                    {item.type === "StudyMaterials" && (
-                                                        <span
-                                                            className="
+                                          >
+                                            {/* Study Material */}
+                                            {item.type === "StudyMaterials" && (
+                                              <span
+                                                className="
                                                                 rounded-md
                                                                 bg-[#FFF5F1]
                                                                 px-2
@@ -1071,56 +1048,51 @@ export default function CourseDetailPage() {
                                                                 capitalize
                                                                 text-[#F36E45]
                                                             "
-                                                        >
-                                                            {item.materialType}
-                                                        </span>
-                                                    )}
+                                              >
+                                                {item.materialType}
+                                              </span>
+                                            )}
 
-                                                    {/* Other Types */}
-                                                    {item.type !== "StudyMaterials" && (
-                                                        <span>
-                                                            {item.type === "LiveClasses"
-                                                                ? "Live Class"
-                                                                : item.type ===
-                                                                    "RecordedClasses"
-                                                                    ? "Recorded Class"
-                                                                    : item.type ===
-                                                                        "Sessions"
-                                                                        ? "1:1 Session"
-                                                                        : item.type}
-                                                        </span>
-                                                    )}
+                                            {/* Other Types */}
+                                            {item.type !== "StudyMaterials" && (
+                                              <span>
+                                                {item.type === "LiveClasses"
+                                                  ? "Live Class"
+                                                  : item.type ===
+                                                      "RecordedClasses"
+                                                    ? "Recorded Class"
+                                                    : item.type === "Sessions"
+                                                      ? "1:1 Session"
+                                                      : item.type}
+                                              </span>
+                                            )}
 
-                                                    {/* Duration */}
-                                                    {item.duration && (
-                                                        <>
-                                                            <span className="text-gray-300">
-                                                                •
-                                                            </span>
+                                            {/* Duration */}
+                                            {item.duration && (
+                                              <>
+                                                <span className="text-gray-300">
+                                                  •
+                                                </span>
 
-                                                            <span>
-                                                                {item.duration}
-                                                            </span>
-                                                        </>
-                                                    )}
+                                                <span>{item.duration}</span>
+                                              </>
+                                            )}
+                                          </div>
+                                        </div>
 
-                                                </div>
-                                            </div>
-
-
-                                            {/* ================= PREVIEW ================= */}
-                                            {(item.isPreview || !item.isLocked) && (
-                                                <Button
-                                                    type="button"
-                                                    onClick={() =>
-                                                        handleItemNavigation(
-                                                            item,
-                                                            section._id,
-                                                        )
-                                                    }
-                                                    variant="outline"
-                                                    size="sm"
-                                                    className="
+                                        {/* ================= PREVIEW ================= */}
+                                        {(item.isPreview || !item.isLocked) && (
+                                          <Button
+                                            type="button"
+                                            onClick={() =>
+                                              handleItemNavigation(
+                                                item,
+                                                section._id,
+                                              )
+                                            }
+                                            variant="outline"
+                                            size="sm"
+                                            className="
                                                         hidden
                                                         rounded-full
                                                         border-[#FFD0C0]
@@ -1136,20 +1108,19 @@ export default function CourseDetailPage() {
                                                         hover:text-[#E85D32]
                                                         sm:inline-flex
                                                     "
-                                                >
-                                                    Start
-                                                </Button>
-                                            )}
+                                          >
+                                            Start
+                                          </Button>
+                                        )}
 
-
-                                            {/* ================= LOCKED ================= */}
-                                            {item.isLocked && (
-                                                <Button
-                                                    type="button"
-                                                    disabled
-                                                    size="sm"
-                                                    variant="outline"
-                                                    className="
+                                        {/* ================= LOCKED ================= */}
+                                        {item.isLocked && (
+                                          <Button
+                                            type="button"
+                                            disabled
+                                            size="sm"
+                                            variant="outline"
+                                            className="
                                                         cursor-not-allowed
                                                         rounded-full
                                                         border-gray-200
@@ -1158,27 +1129,26 @@ export default function CourseDetailPage() {
                                                         text-gray-400
                                                         shadow-none
                                                     "
-                                                >
-                                                    <Lock className="mr-1 h-3.5 w-3.5" />
+                                          >
+                                            <Lock className="mr-1 h-3.5 w-3.5" />
 
-                                                    <span className="hidden sm:inline">
-                                                        Locked
-                                                    </span>
-                                                </Button>
-                                            )}
+                                            <span className="hidden sm:inline">
+                                              Locked
+                                            </span>
+                                          </Button>
+                                        )}
 
-
-                                            {/* ================= ARROW ================= */}
-                                            {!item.isLocked && (
-                                                <button
-                                                    type="button"
-                                                    onClick={() =>
-                                                        handleItemNavigation(
-                                                            item,
-                                                            section._id,
-                                                        )
-                                                    }
-                                                    className="
+                                        {/* ================= ARROW ================= */}
+                                        {!item.isLocked && (
+                                          <button
+                                            type="button"
+                                            onClick={() =>
+                                              handleItemNavigation(
+                                                item,
+                                                section._id,
+                                              )
+                                            }
+                                            className="
                                                         flex
                                                         h-9
                                                         w-9
@@ -1197,26 +1167,21 @@ export default function CourseDetailPage() {
                                                         hover:text-[#F36E45]
                                                         group-hover/item:translate-x-0.5
                                                     "
-                                                >
-                                                    <ChevronRight className="h-4 w-4" />
-                                                </button>
-                                            )}
-
-                                        </div>
+                                          >
+                                            <ChevronRight className="h-4 w-4" />
+                                          </button>
+                                        )}
+                                      </div>
                                     ))}
-
+                                  </div>
                                 </div>
-                            </div>
+                              </div>
+                            ))}
+                          </div>
 
-                        </div>
-                    ))}
-
-                </div>
-
-
-                {/* ================= BOTTOM HIGHLIGHT ================= */}
-                <div
-                    className="
+                          {/* ================= BOTTOM HIGHLIGHT ================= */}
+                          <div
+                            className="
                         relative
                         overflow-hidden
                         rounded-2xl
@@ -1230,11 +1195,10 @@ export default function CourseDetailPage() {
                         shadow-[0_5px_20px_rgba(243,110,69,0.05)]
                         sm:p-6
                     "
-                >
-
-                    {/* Decorative */}
-                    <div
-                        className="
+                          >
+                            {/* Decorative */}
+                            <div
+                              className="
                             pointer-events-none
                             absolute
                             -right-10
@@ -1245,10 +1209,10 @@ export default function CourseDetailPage() {
                             bg-[#FF6B35]/10
                             blur-xl
                         "
-                    />
+                            />
 
-                    <div
-                        className="
+                            <div
+                              className="
                             relative
                             flex
                             flex-col
@@ -1257,13 +1221,11 @@ export default function CourseDetailPage() {
                             sm:items-center
                             sm:justify-between
                         "
-                    >
-
-                        <div className="flex items-center gap-3">
-
-                            {/* Icon */}
-                            <div
-                                className="
+                            >
+                              <div className="flex items-center gap-3">
+                                {/* Icon */}
+                                <div
+                                  className="
                                     flex
                                     h-12
                                     w-12
@@ -1278,24 +1240,24 @@ export default function CourseDetailPage() {
                                     shadow-lg
                                     shadow-orange-200
                                 "
-                            >
-                                <PlayCircle className="h-5 w-5" />
-                            </div>
+                                >
+                                  <PlayCircle className="h-5 w-5" />
+                                </div>
 
-                            <div>
-                                <h3 className="font-bold text-[#172033]">
+                                <div>
+                                  <h3 className="font-bold text-[#172033]">
                                     Keep your learning journey going
-                                </h3>
+                                  </h3>
 
-                                <p className="mt-0.5 text-xs text-gray-500 sm:text-sm">
-                                    Choose any available lesson and continue learning.
-                                </p>
-                            </div>
+                                  <p className="mt-0.5 text-xs text-gray-500 sm:text-sm">
+                                    Choose any available lesson and continue
+                                    learning.
+                                  </p>
+                                </div>
+                              </div>
 
-                        </div>
-
-                        <div
-                            className="
+                              <div
+                                className="
                                 hidden
                                 rounded-full
                                 border
@@ -1309,18 +1271,644 @@ export default function CourseDetailPage() {
                                 shadow-sm
                                 sm:block
                             "
-                        >
-                            Learn • Practice • Grow
-                        </div>
-
+                              >
+                                Learn • Practice • Grow
+                              </div>
+                            </div>
+                          </div>
+                        </>
+                      )}
                     </div>
-                </div>
+                  )}
 
-            </>
-        )}
-    </div>
-)}
+                  {activeTab === "materials" && (
+                    <div className="space-y-6">
+                      {/* ================= LOADING ================= */}
+                      {curriculumLoading ? (
+                        <CurriculumSkeleton />
+                      ) : (
+                        <>
+                          {/* ================= SECTIONS ================= */}
+                          <div className="space-y-4">
+                            {curriculum?.map((section, sectionIndex) => (
+                              <div
+                                key={section._id}
+                                className="
+                                group
+                                overflow-hidden
+                                rounded-2xl
+                                border
+                                border-gray-200/80
+                                bg-white
+                                shadow-[0_4px_20px_rgba(0,0,0,0.035)]
+                                transition-all
+                                duration-300
+                                hover:-translate-y-[1px]
+                                hover:border-[#FFD2C3]
+                                hover:shadow-[0_12px_35px_rgba(243,110,69,0.10)]
+                            "
+                              >
+                                {/* ================= SECTION HEADER ================= */}
+                                <div
+                                  className="
+                                    relative
+                                    overflow-hidden
+                                    bg-gradient-to-r
+                                    from-[#FF6B35]
+                                    via-[#FF805F]
+                                    to-[#FF9A86]
+                                    px-4
+                                    py-4
+                                    sm:px-6
+                                    sm:py-5
+                                "
+                                >
+                                  {/* Decorative Background */}
+                                  <div
+                                    className="
+                                        pointer-events-none
+                                        absolute
+                                        -right-10
+                                        -top-10
+                                        h-32
+                                        w-32
+                                        rounded-full
+                                        bg-white/10
+                                    "
+                                  />
 
+                                  <div
+                                    className="
+                                        pointer-events-none
+                                        absolute
+                                        -bottom-16
+                                        right-24
+                                        h-28
+                                        w-28
+                                        rounded-full
+                                        bg-white/10
+                                    "
+                                  />
+
+                                  <div
+                                    className="
+                                        relative
+                                        flex
+                                        items-center
+                                        justify-between
+                                        gap-3
+                                    "
+                                  >
+                                    {/* LEFT */}
+                                    <div
+                                      className="
+                                            flex
+                                            min-w-0
+                                            items-center
+                                            gap-3
+                                            sm:gap-4
+                                        "
+                                    >
+                                      {/* Section Number */}
+                                      <div
+                                        className="
+                                                flex
+                                                h-11
+                                                w-11
+                                                shrink-0
+                                                items-center
+                                                justify-center
+                                                rounded-xl
+                                                border
+                                                border-white/30
+                                                bg-white/20
+                                                text-sm
+                                                font-extrabold
+                                                text-white
+                                                shadow-inner
+                                                backdrop-blur-sm
+                                                sm:h-12
+                                                sm:w-12
+                                            "
+                                      >
+                                        {String(sectionIndex + 1).padStart(
+                                          2,
+                                          "0",
+                                        )}
+                                      </div>
+
+                                      <div className="min-w-0">
+                                        <h3
+                                          className="
+                                                    truncate
+                                                    text-sm
+                                                    font-bold
+                                                    text-white
+                                                    sm:text-lg
+                                                "
+                                        >
+                                          {section.title}
+                                        </h3>
+
+                                        <div
+                                          className="
+                                                    mt-1
+                                                    flex
+                                                    items-center
+                                                    gap-2
+                                                    text-[11px]
+                                                    text-white/80
+                                                    sm:text-xs
+                                                "
+                                        >
+                                          <span>
+                                            {section.items?.length || 0} lessons
+                                          </span>
+
+                                          <span className="h-1 w-1 rounded-full bg-white/60" />
+
+                                          <span>Course Section</span>
+                                        </div>
+                                      </div>
+                                    </div>
+
+                                    {/* RIGHT COUNT */}
+                                    <div
+                                      className="
+                                            shrink-0
+                                            rounded-full
+                                            border
+                                            border-white/30
+                                            bg-white/15
+                                            px-2.5
+                                            py-1.5
+                                            text-[10px]
+                                            font-bold
+                                            text-white
+                                            backdrop-blur-sm
+                                            sm:px-4
+                                            sm:text-xs
+                                        "
+                                    >
+                                      {section.items?.length || 0} Lessons
+                                    </div>
+                                  </div>
+                                </div>
+
+                                {/* ================= SECTION ITEMS ================= */}
+                                <div className="bg-[#FCFCFC] p-2 sm:p-3">
+                                  <div className="space-y-2">
+                                    {section.items?.filter((t)=> t.type == "StudyMaterials")?.map((item, itemIndex) => (
+                                      <div
+                                        key={item._id}
+                                        className="
+                                                group/item
+                                                relative
+                                                flex
+                                                items-center
+                                                gap-2.5
+                                                rounded-xl
+                                                border
+                                                border-gray-100
+                                                bg-white
+                                                p-3
+                                                shadow-[0_2px_10px_rgba(0,0,0,0.025)]
+                                                transition-all
+                                                duration-200
+                                                hover:border-[#FFD5C8]
+                                                hover:bg-[#FFFCFA]
+                                                hover:shadow-[0_6px_20px_rgba(243,110,69,0.08)]
+                                                sm:gap-4
+                                                sm:p-4
+                                            "
+                                      >
+                                        {/* ================= TIMELINE ================= */}
+                                        <div
+                                          className="
+                                                    relative
+                                                    hidden
+                                                    h-full
+                                                    w-5
+                                                    shrink-0
+                                                    items-center
+                                                    justify-center
+                                                    sm:flex
+                                                "
+                                        >
+                                          {itemIndex !==
+                                            (section.items?.length || 0) -
+                                              1 && (
+                                            <span
+                                              className="
+                                                            absolute
+                                                            left-1/2
+                                                            top-7
+                                                            h-[calc(100%+18px)]
+                                                            w-px
+                                                            -translate-x-1/2
+                                                            bg-gradient-to-b
+                                                            from-[#FFB199]
+                                                            to-gray-200
+                                                        "
+                                            />
+                                          )}
+
+                                          <span
+                                            className="
+                                                        relative
+                                                        z-10
+                                                        h-3
+                                                        w-3
+                                                        rounded-full
+                                                        border-2
+                                                        border-[#FF9A86]
+                                                        bg-white
+                                                        shadow-[0_0_0_3px_#FFF1EB]
+                                                    "
+                                          />
+                                        </div>
+
+                                        {/* ================= ICON ================= */}
+                                        <div
+                                          className="
+                                                    flex
+                                                    h-11
+                                                    w-11
+                                                    shrink-0
+                                                    items-center
+                                                    justify-center
+                                                    rounded-xl
+                                                    border
+                                                    border-[#FFE0D6]
+                                                    bg-gradient-to-br
+                                                    from-[#FFF8F4]
+                                                    to-[#FFF0EA]
+                                                    text-[#F36E45]
+                                                    transition-all
+                                                    duration-200
+                                                    group-hover/item:scale-105
+                                                    group-hover/item:shadow-md
+                                                "
+                                        >
+                                          {/* Study Materials */}
+                                          {item.type === "StudyMaterials" &&
+                                            item.materialType === "pdf" && (
+                                              <File
+                                                className="h-5 w-5"
+                                                strokeWidth={1.6}
+                                              />
+                                            )}
+
+                                          {item.type === "StudyMaterials" &&
+                                            item.materialType ===
+                                              "document" && (
+                                              <File
+                                                className="h-5 w-5"
+                                                strokeWidth={1.6}
+                                              />
+                                            )}
+
+                                          {item.type === "StudyMaterials" &&
+                                            item.materialType === "link" && (
+                                              <LinkIcon
+                                                className="h-5 w-5"
+                                                strokeWidth={1.6}
+                                              />
+                                            )}
+
+                                          {item.type === "StudyMaterials" &&
+                                            item.materialType === "image" && (
+                                              <ImageIcon
+                                                className="h-5 w-5"
+                                                strokeWidth={1.6}
+                                              />
+                                            )}
+
+                                          {item.type === "StudyMaterials" &&
+                                            item.materialType === "audio" && (
+                                              <Headphones
+                                                className="h-5 w-5"
+                                                strokeWidth={1.6}
+                                              />
+                                            )}
+
+                                          {/* Live Class */}
+                                          {item.type === "LiveClasses" && (
+                                            <Radio
+                                              className="h-5 w-5"
+                                              strokeWidth={1.6}
+                                            />
+                                          )}
+
+                                          {/* Recorded Class */}
+                                          {item.type === "RecordedClasses" && (
+                                            <PlayCircle
+                                              className="h-5 w-5"
+                                              strokeWidth={1.6}
+                                            />
+                                          )}
+
+                                          {/* 1:1 Session */}
+                                          {item.type === "Sessions" && (
+                                            <ScreenShare
+                                              className="h-5 w-5"
+                                              strokeWidth={1.6}
+                                            />
+                                          )}
+                                        </div>
+
+                                        {/* ================= CONTENT ================= */}
+                                        <div
+                                          className={`
+                                                    min-w-0
+                                                    flex-1
+                                                    ${
+                                                      item.isLocked
+                                                        ? "cursor-not-allowed opacity-60"
+                                                        : "cursor-pointer"
+                                                    }
+                                                `}
+                                          onClick={() => {
+                                            if (!item.isLocked) {
+                                              handleItemNavigation(
+                                                item,
+                                                section._id,
+                                              );
+                                            }
+                                          }}
+                                        >
+                                          {/* TITLE */}
+                                          <div
+                                            className="
+                                                        truncate
+                                                        text-sm
+                                                        font-bold
+                                                        text-[#172033]
+                                                        transition-colors
+                                                        group-hover/item:text-[#F36E45]
+                                                        sm:text-[15px]
+                                                    "
+                                            title={item.title}
+                                          >
+                                            {item.title}
+                                          </div>
+
+                                          {/* TYPE + DURATION */}
+                                          <div
+                                            className="
+                                                        mt-1
+                                                        flex
+                                                        flex-wrap
+                                                        items-center
+                                                        gap-2
+                                                        text-xs
+                                                        text-gray-500
+                                                        sm:text-sm
+                                                    "
+                                          >
+                                            {/* Study Material */}
+                                            {item.type === "StudyMaterials" && (
+                                              <span
+                                                className="
+                                                                rounded-md
+                                                                bg-[#FFF5F1]
+                                                                px-2
+                                                                py-0.5
+                                                                capitalize
+                                                                text-[#F36E45]
+                                                            "
+                                              >
+                                                {item.materialType}
+                                              </span>
+                                            )}
+
+                                            {/* Other Types */}
+                                            {item.type !== "StudyMaterials" && (
+                                              <span>
+                                                {item.type === "LiveClasses"
+                                                  ? "Live Class"
+                                                  : item.type ===
+                                                      "RecordedClasses"
+                                                    ? "Recorded Class"
+                                                    : item.type === "Sessions"
+                                                      ? "1:1 Session"
+                                                      : item.type}
+                                              </span>
+                                            )}
+
+                                            {/* Duration */}
+                                            {item.duration && (
+                                              <>
+                                                <span className="text-gray-300">
+                                                  •
+                                                </span>
+
+                                                <span>{item.duration}</span>
+                                              </>
+                                            )}
+                                          </div>
+                                        </div>
+
+                                        {/* ================= PREVIEW ================= */}
+                                        {(item.isPreview || !item.isLocked) && (
+                                          <Button
+                                            type="button"
+                                            onClick={() =>
+                                              handleItemNavigation(
+                                                item,
+                                                section._id,
+                                              )
+                                            }
+                                            variant="outline"
+                                            size="sm"
+                                            className="
+                                                        hidden
+                                                        rounded-full
+                                                        border-[#FFD0C0]
+                                                        bg-white
+                                                        px-4
+                                                        font-semibold
+                                                        text-[#F36E45]
+                                                        shadow-sm
+                                                        transition-all
+                                                        duration-200
+                                                        hover:border-[#F36E45]
+                                                        hover:bg-[#FFF1EB]
+                                                        hover:text-[#E85D32]
+                                                        sm:inline-flex
+                                                    "
+                                          >
+                                            Start
+                                          </Button>
+                                        )}
+
+                                        {/* ================= LOCKED ================= */}
+                                        {item.isLocked && (
+                                          <Button
+                                            type="button"
+                                            disabled
+                                            size="sm"
+                                            variant="outline"
+                                            className="
+                                                        cursor-not-allowed
+                                                        rounded-full
+                                                        border-gray-200
+                                                        bg-gray-50
+                                                        px-3
+                                                        text-gray-400
+                                                        shadow-none
+                                                    "
+                                          >
+                                            <Lock className="mr-1 h-3.5 w-3.5" />
+
+                                            <span className="hidden sm:inline">
+                                              Locked
+                                            </span>
+                                          </Button>
+                                        )}
+
+                                        {/* ================= ARROW ================= */}
+                                        {!item.isLocked && (
+                                          <button
+                                            type="button"
+                                            onClick={() =>
+                                              handleItemNavigation(
+                                                item,
+                                                section._id,
+                                              )
+                                            }
+                                            className="
+                                                        flex
+                                                        h-9
+                                                        w-9
+                                                        shrink-0
+                                                        items-center
+                                                        justify-center
+                                                        rounded-full
+                                                        border
+                                                        border-transparent
+                                                        bg-gray-50
+                                                        text-gray-400
+                                                        transition-all
+                                                        duration-200
+                                                        hover:border-[#FFD0C0]
+                                                        hover:bg-[#FFF1EB]
+                                                        hover:text-[#F36E45]
+                                                        group-hover/item:translate-x-0.5
+                                                    "
+                                          >
+                                            <ChevronRight className="h-4 w-4" />
+                                          </button>
+                                        )}
+                                      </div>
+                                    ))}
+                                  </div>
+                                </div>
+                              </div>
+                            ))}
+                          </div>
+
+                          {/* ================= BOTTOM HIGHLIGHT ================= */}
+                          <div
+                            className="
+                        relative
+                        overflow-hidden
+                        rounded-2xl
+                        border
+                        border-[#FFD8CA]
+                        bg-gradient-to-r
+                        from-[#FFF8F4]
+                        via-[#FFF2EC]
+                        to-white
+                        p-5
+                        shadow-[0_5px_20px_rgba(243,110,69,0.05)]
+                        sm:p-6
+                    "
+                          >
+                            {/* Decorative */}
+                            <div
+                              className="
+                            pointer-events-none
+                            absolute
+                            -right-10
+                            -top-10
+                            h-32
+                            w-32
+                            rounded-full
+                            bg-[#FF6B35]/10
+                            blur-xl
+                        "
+                            />
+
+                            <div
+                              className="
+                            relative
+                            flex
+                            flex-col
+                            gap-4
+                            sm:flex-row
+                            sm:items-center
+                            sm:justify-between
+                        "
+                            >
+                              <div className="flex items-center gap-3">
+                                {/* Icon */}
+                                <div
+                                  className="
+                                    flex
+                                    h-12
+                                    w-12
+                                    shrink-0
+                                    items-center
+                                    justify-center
+                                    rounded-2xl
+                                    bg-gradient-to-br
+                                    from-[#FF6B35]
+                                    to-[#FF9A86]
+                                    text-white
+                                    shadow-lg
+                                    shadow-orange-200
+                                "
+                                >
+                                  <PlayCircle className="h-5 w-5" />
+                                </div>
+
+                                <div>
+                                  <h3 className="font-bold text-[#172033]">
+                                    Keep your learning journey going
+                                  </h3>
+
+                                  <p className="mt-0.5 text-xs text-gray-500 sm:text-sm">
+                                    Choose any available lesson and continue
+                                    learning.
+                                  </p>
+                                </div>
+                              </div>
+
+                              <div
+                                className="
+                                hidden
+                                rounded-full
+                                border
+                                border-[#FFE0D5]
+                                bg-white
+                                px-4
+                                py-2
+                                text-xs
+                                font-bold
+                                text-[#F36E45]
+                                shadow-sm
+                                sm:block
+                            "
+                              >
+                                Learn • Practice • Grow
+                              </div>
+                            </div>
+                          </div>
+                        </>
+                      )}
+                    </div>
+                  )}
 
                   {activeTab === "instructors" && (
                     <div className="space-y-8">

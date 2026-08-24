@@ -8,6 +8,7 @@ import Label from "../../components/form/Label";
 import Select from "../../components/form/Select";
 import { toast } from "react-toastify";
 import api, { ImageBaseUrl } from "../../axiosInstance";
+import ReactSelect from "react-select";
 import {
   Eye,
   Pencil,
@@ -44,6 +45,7 @@ export default function ContentManagement({ type }: any) {
   const [isDeleteModalOpen, setDeleteModalOpen] = useState(false);
   const [showFilters, setShowFilters] = useState(false);
   const [expandedRows, setExpandedRows] = useState<string[]>([]);
+
   const [filters, setFilters] = useState({
     page: 1,
     limit: 10,
@@ -776,28 +778,46 @@ export default function ContentManagement({ type }: any) {
                   )}
 
                   {selectedContent.__t === "Tests" && (
-                    <div>
-                      <h5 className="mb-4 text-lg font-medium text-gray-800 dark:text-white/90">
-                        Test Details
-                      </h5>
-                      <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
-                        <div>
-                          <p className="text-sm text-gray-500 dark:text-gray-400">
-                            Test Type
-                          </p>
-                          <p className="text-sm font-medium text-gray-800 dark:text-white/90 capitalize">
-                            {selectedContent.testType || "N/A"}
-                          </p>
-                        </div>
-                        <div>
-                          <p className="text-sm text-gray-500 dark:text-gray-400">
-                            Number of Questions
-                          </p>
-                          <p className="text-sm font-medium text-gray-800 dark:text-white/90">
-                            {selectedContent.questions?.length || 0}
-                          </p>
-                        </div>
+                    <div className="md:col-span-2">
+                      <Label>Test *</Label>
+
+                      {/* Search */}
+                      <div className="relative mb-2">
+                        <Search className="absolute left-3 top-2.5 h-5 w-5 text-gray-400" />
+
+                        <input
+                          type="text"
+                          value={testSearch}
+                          onChange={(e) => setTestSearch(e.target.value)}
+                          placeholder="Search test..."
+                          className="w-full rounded-lg border border-gray-300 bg-white py-2.5 pl-10 pr-3 text-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-200 dark:border-gray-600 dark:bg-gray-800 dark:text-white"
+                        />
                       </div>
+
+                      {/* Test Select */}
+                      <Select
+                        value={formData.test}
+                        defaultValue={formData.test}
+                        placeholder={
+                          testsLoading ? "Loading tests..." : "Select Test"
+                        }
+                        options={tests.map((test) => ({
+                          value: test._id,
+                          label: test.title,
+                        }))}
+                        onChange={(value) => {
+                          setFormData((prev) => ({
+                            ...prev,
+                            test: value,
+                          }));
+                        }}
+                      />
+
+                      {errors.test && (
+                        <p className="mt-1 text-sm text-red-600">
+                          {errors.test}
+                        </p>
+                      )}
                     </div>
                   )}
 
@@ -1218,6 +1238,9 @@ const ContentForm = ({
 }: any) => {
   const [modules, setModules] = useState([]);
   const [thumbnailFile, setThumbnailFile] = useState(null);
+  const [tests, setTests] = useState<any[]>([]);
+  const [testSearch, setTestSearch] = useState("");
+  const [testsLoading, setTestsLoading] = useState(false);
   const [formData, setFormData] = useState({
     title: "",
     description: "",
@@ -1240,7 +1263,8 @@ const ContentForm = ({
     maxParticipants: 100,
     videoUrl: "",
     videoDuration: 0,
-    testType: "quiz",
+    test: "",
+    testType: "",
     materialType: "pdf",
     fileUrl: "",
     meetingId: "",
@@ -1274,6 +1298,7 @@ const ContentForm = ({
           ? moment(content.scheduledEnd).format("YYYY-MM-DDTHH:mm")
           : "",
         maxParticipants: content.maxParticipants || 100,
+        test: content.test || "",
         testType: content.testType || "quiz",
         materialType: content.materialType || "pdf",
         fileUrl: content.file?.url || "",
@@ -1298,7 +1323,8 @@ const ContentForm = ({
         maxParticipants: 100,
         videoUrl: "",
         videoDuration: 0,
-        testType: "quiz",
+        test: "",
+        testType: "",
         materialType: "pdf",
         fileUrl: "",
         thumbnailPic: "",
@@ -1320,6 +1346,53 @@ const ContentForm = ({
       console.error("Failed to fetch modules:", error);
     }
   };
+
+  const fetchTests = async (search = "") => {
+    try {
+      setTestsLoading(true);
+
+      const params: any = {
+        limit: 100,
+        category: formData?.course,
+      };
+
+      if (search.trim()) {
+        params.search = search.trim();
+      }
+
+      const response = await api.get("/mcu/test", { params });
+
+      if (response.data?.success) {
+        const data = response.data?.data || [];
+        setTests(data);
+      } else {
+        setTests([]);
+      }
+    } catch (error: any) {
+      console.error("Failed to fetch tests:", error);
+      toast.error(error?.response?.data?.message || "Failed to load tests");
+      setTests([]);
+    } finally {
+      setTestsLoading(false);
+    }
+  };
+
+  // useEffect(() => {
+  //   if (type !== "Tests") {
+  //     setTests([]);
+  //     return;
+  //   }
+  //   fetchTests();
+  // }, [type]);
+
+  useEffect(() => {
+    if (type !== "Tests") return;
+    const timer = setTimeout(() => {
+      fetchTests(testSearch);
+    }, 400);
+
+    return () => clearTimeout(timer);
+  }, [testSearch, type]);
 
   const handleThumbnailChange = (file) => {
     setThumbnailFile(file); // Store the File object
@@ -1392,6 +1465,10 @@ const ContentForm = ({
       if (!formData.materialType) {
         newErrors.materialType = "Material type is required";
       }
+    } else if (formData.__t === "Tests") {
+      if (!formData.test) {
+        newErrors.test = "Test is required";
+      }
     }
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
@@ -1420,6 +1497,7 @@ const ContentForm = ({
         payload.meetingId = formData?.meetingId || "";
       } else if (formData.__t === "RecordedClasses") {
       } else if (formData.__t === "Tests") {
+        payload.test = formData.test;
         payload.testType = formData.testType;
       } else if (formData.__t === "StudyMaterials") {
         payload.materialType = formData.materialType;
@@ -1694,26 +1772,46 @@ const ContentForm = ({
           </div>
         </div>
       )}
-
       {formData.__t === "Tests" && (
-        <>
-          <div>
-            <Label>Test</Label>
-            <Select
-              value={formData.module}
-              defaultValue={formData.module}
-              options={[
-                ...modules.map((module) => ({
-                  value: module._id,
-                  label: module.title,
-                })),
-              ]}
-              onChange={(value) =>
-                setFormData((prev) => ({ ...prev, module: value }))
+        <div>
+          <Label>Test *</Label>
+
+          <ReactSelect
+            isSearchable
+            isClearable
+            isLoading={testsLoading}
+            placeholder="Search and select test..."
+            value={
+              tests
+                .map((test) => ({
+                  value: test._id,
+                  label: test.title,
+                }))
+                .find((option) => option.value === formData.test) || null
+            }
+            options={tests.map((test) => ({
+              value: test._id,
+              label: test.title,
+            }))}
+            onInputChange={(inputValue, { action }) => {
+              if (action === "input-change") {
+                setTestSearch(inputValue);
               }
-            />
-          </div>
-        </>
+            }}
+            onChange={(selectedOption) => {
+              setFormData((prev) => ({
+                ...prev,
+                test: selectedOption?.value || "",
+              }));
+            }}
+            className="react-select-container"
+            classNamePrefix="react-select"
+          />
+
+          {errors.test && (
+            <p className="mt-1 text-sm text-red-600">{errors.test}</p>
+          )}
+        </div>
       )}
 
       {formData.__t === "StudyMaterials" && (
