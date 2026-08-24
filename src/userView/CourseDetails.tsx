@@ -34,6 +34,7 @@ import {
   Headphones,
   Radio,
   ScreenShare,
+  Lock,
 } from "lucide-react";
 import Button from "../components/ui/button/Button";
 import api, { ImageBaseUrl } from "../axiosInstance";
