@@ -1,5 +1,7 @@
+
+
 // pages/admin/ArticleManagement.jsx
-import { useState, useEffect } from "react";
+import React, { useState, useEffect, lazy, Suspense } from "react";
 import { useModal } from "../../hooks/useModal";
 import { Modal } from "../../components/ui/modal";
 import Button from "../../components/ui/button/Button";
@@ -8,15 +10,10 @@ import Label from "../../components/form/Label";
 import { toast } from "react-toastify";
 import api from "../../axiosInstance";
 import { Eye, Pencil, Trash2 } from "lucide-react";
-import RichTextEditor from "../../components/CkEditor";
+// import RichTextEditor from "../../components/CkEditor";
 
-// import dynamic from 'next/dynamic';
-
-// // Load the problematic component ONLY on the client side
-// const CKEditorComponent = dynamic(
-//   () => import("../../components/ckEditor"),
-//   { ssr: false }
-// );
+// Use React.lazy to load the rich text editor on the client
+const RichTextEditor = lazy(() => import("../../components/CkEditor"));
 
 export default function ArticleManagement() {
     const [articles, setArticles] = useState([]);
@@ -245,10 +242,19 @@ export default function ArticleManagement() {
     };
 
     // CKEditor component has varied prop typings; provide a specific handler and cast to any when using
-    const handleEditorChange = (content) => {
-        setFormData((prev) => ({ ...prev, blogDescription: content }));
-        if (errors.blogDescription) setErrors((prev) => ({ ...prev, blogDescription: "" }));
-    };
+  const handleEditorChange = (content: string) => {
+  setFormData((prev) => ({
+    ...prev,
+    blogDescription: content,
+  }));
+
+  if (errors.blogDescription) {
+    setErrors((prev) => ({
+      ...prev,
+      blogDescription: "",
+    }));
+  }
+};
 
     return (
         <div className="w-full overflow-x-auto">
@@ -567,11 +573,13 @@ export default function ArticleManagement() {
                             {selectedArticle ? "Edit Blog" : "Create New Blog"}
                         </h4>
                     </div>
-                    <form onSubmit={(e) => { e.preventDefault(); handleSave(); }} onKeyDown={(e) => {
-                        if (e.key === 'Enter' && e.target.tagName !== 'TEXTAREA') {
-                            e.preventDefault();
-                        }
-                    }} className="px-2 max-h-[83vh] overflow-y-auto no-scrollbar">
+                    <form onSubmit={(e) => { e.preventDefault(); handleSave(); }} 
+                    onKeyDown={(e) => {
+                        // if (e.key === 'Enter' && e.target.tagName !== 'TEXTAREA') {
+                        //     e.preventDefault();
+                        // }
+                    }
+                    } className="px-2 max-h-[83vh] overflow-y-auto no-scrollbar">
                         <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
                             <div className="md:col-span-2">
                                 <Label>Title *</Label>
@@ -638,8 +646,11 @@ export default function ArticleManagement() {
                                     placeholder="Short description"
                                 /> */}
                                 
-                                        {/* Cast props to any to satisfy differing editor prop typings */}
-                                        <RichTextEditor {...({ value: formData.blogDescription, onChange: handleEditorChange } as any)} />
+                                {/* <RichTextEditor {...({ value: formData.blogDescription, onChange: handleEditorChange } as any)} /> */}
+                                 <RichTextEditor
+                                    value={formData.blogDescription}
+                                    onChange={handleEditorChange}
+                                    />      
                                 {errors.blogDescription && <p className="mt-1 text-sm text-red-600">{errors.blogDescription}</p>}
                             </div>
                             <div className="md:col-span-2">
