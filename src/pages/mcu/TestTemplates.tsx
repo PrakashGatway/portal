@@ -179,7 +179,6 @@ export default function TestTemplateManagementPage() {
         isActive: "all",
     });
     const [showFilters, setShowFilters] = useState(true);
-
     const [questionModalOpen, setQuestionModalOpen] = useState(false);
     const [questionModalSectionIndex, setQuestionModalSectionIndex] = useState<number | null>(null);
     const [questionModalLoading, setQuestionModalLoading] = useState(false);
@@ -301,20 +300,20 @@ export default function TestTemplateManagementPage() {
         }
     };
 
-    const fetchSeries = async () => {
-        try {
-            const res = await api.get("/mcu/test", { params: { isActive: true, limit: 200 } });
-            if (res.data?.success) {
-                setSeriesList(res.data.data || res.data?.data?.data || []);
-            }
-        } catch (err: any) {
-            console.error("Fetch series error:", err);
-        }
-    };
+    // const fetchSeries = async () => {
+    //     try {
+    //         const res = await api.get("/mcu/test", { params: { isActive: true, limit: 200 } });
+    //         if (res.data?.success) {
+    //             setSeriesList(res.data.data || res.data?.data?.data || []);
+    //         }
+    //     } catch (err: any) {
+    //         console.error("Fetch series error:", err);
+    //     }
+    // };
 
     useEffect(() => {
         fetchExams();
-        fetchSeries();
+        // fetchSeries();
     }, []);
 
     useEffect(() => {

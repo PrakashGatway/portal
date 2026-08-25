@@ -17,20 +17,19 @@ import {
   Clock,
   Eye,
   FileText,
-  Layers,
-  Type,
-  AlignLeft,
-  FolderOpen,
+  Headphones,
+  Upload,
+  Link,
 } from "lucide-react";
 import Button from "../../components/ui/button/Button";
 import Input from "../../components/form/input/InputField";
 import Label from "../../components/form/Label";
-import Select from "../../components/form/Select";
 import { toast } from "react-toastify";
 import api from "../../axiosInstance";
 import { motion, AnimatePresence } from "framer-motion";
 import RichTextEditor from "../../components/TextEditor";
 import { Modal } from "../../components/ui/modal";
+import TextArea from "../../components/form/input/TextArea";
 
 const LIMIT_OPTIONS = [
   { value: 10, label: "10" },
@@ -43,6 +42,7 @@ interface Passage {
   _id: string;
   title: string;
   content: string;
+  contentType: "passage" | "audio";
   topic?: string | null;
   createdAt?: string;
   updatedAt?: string;
@@ -51,6 +51,7 @@ interface Passage {
 interface PassageFormValues {
   title: string;
   content: string;
+  contentType: "passage" | "audio";
   topic: string;
 }
 
@@ -77,10 +78,12 @@ export default function IELTSPassageManagementPage() {
   const [preview, setPreview] = useState(false);
   const [previewPassage, setPreviewPassage] = useState<Passage | null>(null);
   const [availableTopics, setAvailableTopics] = useState<string[]>([]);
+  const [uploadingAudio, setUploadingAudio] = useState(false);
 
   const [filters, setFilters] = useState({
     search: "",
     topic: "all",
+    contentType: "all",
     fromDate: "",
     toDate: "",
   });
@@ -98,10 +101,12 @@ export default function IELTSPassageManagementPage() {
     setValue,
     watch,
     formState: { errors },
-  } = useForm<PassageFormValues>({
+  } = useForm<any>({
     defaultValues: {
       title: "",
       content: "",
+      instructions: "",
+      contentType: "passage",
       topic: "",
     },
   });
@@ -109,6 +114,8 @@ export default function IELTSPassageManagementPage() {
   const watchTitle = watch("title");
   const watchContent = watch("content");
   const watchTopic = watch("topic");
+  const watchInstructions = watch("instructions");
+  const watchContentType = watch("contentType");
 
   const wordCount = getWordCount(watchContent);
   const readingTime = getReadingTime(wordCount);
@@ -123,6 +130,7 @@ export default function IELTSPassageManagementPage() {
       };
       if (debouncedSearch) params.search = debouncedSearch;
       if (filters.topic !== "all") params.topic = filters.topic;
+      if (filters.contentType !== "all") params.contentType = filters.contentType;
       if (filters.fromDate) params.fromDate = filters.fromDate;
       if (filters.toDate) params.toDate = filters.toDate;
 
@@ -161,10 +169,25 @@ export default function IELTSPassageManagementPage() {
     limit,
     debouncedSearch,
     filters.topic,
+    filters.contentType,
     filters.fromDate,
     filters.toDate,
   ]);
 
+  useEffect(() => {
+    fetchTopics();
+  }, []);
+
+  const fetchTopics = async () => {
+    try {
+      const res = await api.get("/ielts/passages/topics");
+      if (res.data?.success) {
+        setAvailableTopics(res.data.data || []);
+      }
+    } catch (err) {
+      console.error("Failed to fetch topics:", err);
+    }
+  };
 
   const handleSearchChange = (value: string) => {
     setFilters((prev) => ({ ...prev, search: value }));
@@ -179,6 +202,7 @@ export default function IELTSPassageManagementPage() {
     setFilters({
       search: "",
       topic: "all",
+      contentType: "all",
       fromDate: "",
       toDate: "",
     });
@@ -191,6 +215,7 @@ export default function IELTSPassageManagementPage() {
     reset({
       title: "",
       content: "",
+      contentType: "passage",
       topic: "",
     });
     setSideOpen(true);
@@ -201,6 +226,8 @@ export default function IELTSPassageManagementPage() {
     reset({
       title: passage.title,
       content: passage.content,
+      instructions: passage.instructions,
+      contentType: passage.contentType || "passage",
       topic: passage.topic || "",
     });
     setSideOpen(true);
@@ -213,14 +240,52 @@ export default function IELTSPassageManagementPage() {
     }, 150);
   };
 
+  const handleAudioUpload = async (file: File) => {
+    try {
+      setUploadingAudio(true);
+      const formData = new FormData();
+      formData.append("audio", file);
+
+      const res = await api.post("/ielts/upload-audio", formData, {
+        headers: { "Content-Type": "multipart/form-data" },
+      });
+
+      if (res.data?.success) {
+        const audioUrl = res.data.data?.url || res.data.data?.audioUrl;
+        setValue("content", audioUrl);
+        toast.success("Audio uploaded successfully");
+      } else {
+        toast.error("Failed to upload audio");
+      }
+    } catch (err: any) {
+      console.error("Upload audio error:", err);
+      toast.error(err.response?.data?.message || "Failed to upload audio");
+    } finally {
+      setUploadingAudio(false);
+    }
+  };
+
+  const handleAudioFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      handleAudioUpload(file);
+    }
+  };
+
   const onSubmit = async (values: PassageFormValues) => {
     try {
       if (!values.title.trim()) {
-        toast.error("Passage title is required");
+        toast.error("Title is required");
         return;
       }
-      if (!values.content.trim()) {
+
+      if (values.contentType === "passage" && !values.content.trim()) {
         toast.error("Passage content is required");
+        return;
+      }
+
+      if (values.contentType === "audio" && !values.content.trim()) {
+        toast.error("Audio URL is required");
         return;
       }
 
@@ -228,7 +293,9 @@ export default function IELTSPassageManagementPage() {
 
       const payload = {
         title: values.title.trim(),
-        content: values.content,
+        instructions: values.instructions,
+        content: values.content, // For passage: HTML content, For audio: audio URL
+        contentType: values.contentType,
         topic: values.topic?.trim() || null,
       };
 
@@ -275,11 +342,31 @@ export default function IELTSPassageManagementPage() {
     });
   };
 
-  const getContentPreview = (content: string, maxLength: number = 150) => {
+  const getContentPreview = (content: string, contentType: string, maxLength: number = 150) => {
+    if (contentType === "audio") {
+      return content; // Return URL for audio
+    }
     const plainText = content.replace(/<[^>]*>/g, " ").replace(/&nbsp;/g, " ");
     const normalized = plainText.replace(/\s+/g, " ").trim();
     if (normalized.length <= maxLength) return normalized;
     return normalized.substring(0, maxLength) + "...";
+  };
+
+  const getContentTypeBadge = (contentType: string) => {
+    if (contentType === "audio") {
+      return (
+        <span className="inline-flex items-center gap-1 rounded-full bg-amber-50 px-3 py-1 text-xs font-medium text-amber-700 dark:bg-amber-500/20 dark:text-amber-300">
+          <Headphones className="h-3 w-3" />
+          Audio
+        </span>
+      );
+    }
+    return (
+      <span className="inline-flex items-center gap-1 rounded-full bg-green-50 px-3 py-1 text-xs font-medium text-green-700 dark:bg-green-500/20 dark:text-green-300">
+        <BookOpen className="h-3 w-3" />
+        Passage
+      </span>
+    );
   };
 
   return (
@@ -307,12 +394,18 @@ export default function IELTSPassageManagementPage() {
                     </span>
                     <span className="text-xs text-gray-400">•</span>
                     <span className="text-xs text-gray-500 dark:text-gray-400">
-                      {getWordCount(previewPassage.content)} words
+                      {previewPassage.contentType === "audio"
+                        ? "Audio Content"
+                        : `${getWordCount(previewPassage.content)} words`}
                     </span>
-                    <span className="text-xs text-gray-400">•</span>
-                    <span className="text-xs text-gray-500 dark:text-gray-400">
-                      ~{getReadingTime(getWordCount(previewPassage.content))} min read
-                    </span>
+                    {previewPassage.contentType === "passage" && (
+                      <>
+                        <span className="text-xs text-gray-400">•</span>
+                        <span className="text-xs text-gray-500 dark:text-gray-400">
+                          ~{getReadingTime(getWordCount(previewPassage.content))} min read
+                        </span>
+                      </>
+                    )}
                   </div>
                 )}
               </div>
@@ -334,20 +427,37 @@ export default function IELTSPassageManagementPage() {
                     {previewPassage.title}
                   </h2>
 
-                  {previewPassage.topic && (
-                    <div className="inline-flex items-center gap-1 rounded-full bg-purple-50 px-3 py-1 text-xs font-medium text-purple-700 dark:bg-purple-500/20 dark:text-purple-300">
-                      <Tag className="h-3 w-3" />
-                      {previewPassage.topic}
+                  <div className="flex items-center gap-2">
+                    {getContentTypeBadge(previewPassage.contentType)}
+                    {previewPassage.topic && (
+                      <div className="inline-flex items-center gap-1 rounded-full bg-purple-50 px-3 py-1 text-xs font-medium text-purple-700 dark:bg-purple-500/20 dark:text-purple-300">
+                        <Tag className="h-3 w-3" />
+                        {previewPassage.topic}
+                      </div>
+                    )}
+                  </div>
+
+                  {previewPassage.contentType === "audio" ? (
+                    <div className="space-y-4">
+                      <div className="rounded-xl border border-gray-200 bg-gray-50 p-4 dark:border-gray-700 dark:bg-gray-800">
+                        <audio controls className="w-full">
+                          <source src={previewPassage.content} type="audio/mpeg" />
+                          Your browser does not support the audio element.
+                        </audio>
+                        <p className="mt-2 text-xs text-gray-500 dark:text-gray-400 break-all">
+                          Audio URL: {previewPassage.content}
+                        </p>
+                      </div>
+                    </div>
+                  ) : (
+                    <div className="prose dark:prose-invert max-w-none">
+                      <div
+                        dangerouslySetInnerHTML={{
+                          __html: previewPassage.content,
+                        }}
+                      />
                     </div>
                   )}
-
-                  <div className="prose dark:prose-invert max-w-none">
-                    <div
-                      dangerouslySetInnerHTML={{
-                        __html: previewPassage.content,
-                      }}
-                    />
-                  </div>
                 </div>
               )}
             </div>
@@ -399,7 +509,7 @@ export default function IELTSPassageManagementPage() {
                 </span>
               </h1>
               <p className="text-sm">
-                Create and manage reading passages for IELTS questions
+                Create and manage reading passages and audio content for IELTS questions
               </p>
             </div>
             <Button
@@ -455,9 +565,28 @@ export default function IELTSPassageManagementPage() {
                   </div>
                 </div>
 
+                {/* Content Type Filter */}
+                <div>
+                  <select
+                    value={filters.contentType}
+                    onChange={(e) => {
+                      setFilters((prev) => ({
+                        ...prev,
+                        contentType: e.target.value,
+                      }));
+                      setPage(1);
+                    }}
+                    className="w-full rounded-lg border border-gray-200 bg-white/50 py-2.5 px-3 text-sm text-gray-900 transition-all focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20 dark:border-gray-700 dark:bg-gray-800/50 dark:text-gray-100"
+                  >
+                    <option value="all">All Types</option>
+                    <option value="passage">Passage</option>
+                    <option value="audio">Audio</option>
+                  </select>
+                </div>
+
                 {/* Date filters */}
                 <div className="grid grid-cols-2 gap-2">
-                  <div> 
+                  <div>
                     <Input
                       type="date"
                       value={filters.fromDate}
@@ -593,7 +722,7 @@ export default function IELTSPassageManagementPage() {
               passages.map((passage) => {
                 const passageWordCount = getWordCount(passage.content);
                 const passageReadingTime = getReadingTime(passageWordCount);
-                
+
                 return (
                   <motion.div
                     key={passage._id}
@@ -609,6 +738,9 @@ export default function IELTSPassageManagementPage() {
                         <div className="flex-1 min-w-0">
                           {/* Tags Row */}
                           <div className="mb-2 flex flex-wrap items-center gap-2">
+                            {/* Content Type Badge */}
+                            {getContentTypeBadge(passage.contentType)}
+
                             {/* Topic Badge */}
                             {passage.topic && (
                               <span className="inline-flex items-center gap-1 rounded-full bg-purple-50 px-3 py-1 text-xs font-medium text-purple-700 dark:bg-purple-500/20 dark:text-purple-300">
@@ -617,17 +749,20 @@ export default function IELTSPassageManagementPage() {
                               </span>
                             )}
 
-                            {/* Word Count Badge */}
-                            <span className="inline-flex items-center gap-1 rounded-full bg-blue-50 px-3 py-1 text-xs font-medium text-blue-700 dark:bg-blue-500/20 dark:text-blue-300">
-                              <FileText className="h-3 w-3" />
-                              {passageWordCount} words
-                            </span>
+                            {/* Word Count Badge - only for passages */}
+                            {passage.contentType === "passage" && (
+                              <>
+                                <span className="inline-flex items-center gap-1 rounded-full bg-blue-50 px-3 py-1 text-xs font-medium text-blue-700 dark:bg-blue-500/20 dark:text-blue-300">
+                                  <FileText className="h-3 w-3" />
+                                  {passageWordCount} words
+                                </span>
 
-                            {/* Reading Time Badge */}
-                            <span className="inline-flex items-center gap-1 rounded-full bg-emerald-50 px-3 py-1 text-xs font-medium text-emerald-700 dark:bg-emerald-500/20 dark:text-emerald-300">
-                              <Clock className="h-3 w-3" />
-                              ~{passageReadingTime} min read
-                            </span>
+                                <span className="inline-flex items-center gap-1 rounded-full bg-emerald-50 px-3 py-1 text-xs font-medium text-emerald-700 dark:bg-emerald-500/20 dark:text-emerald-300">
+                                  <Clock className="h-3 w-3" />
+                                  ~{passageReadingTime} min read
+                                </span>
+                              </>
+                            )}
                           </div>
 
                           {/* Title */}
@@ -636,8 +771,8 @@ export default function IELTSPassageManagementPage() {
                           </h3>
 
                           {/* Content Preview */}
-                          <p className="text-xs text-gray-600 dark:text-gray-400 line-clamp-3">
-                            {getContentPreview(passage.content)}
+                          <p className="text-xs text-gray-600 dark:text-gray-400 line-clamp-3 break-all">
+                            {getContentPreview(passage.content, passage.contentType)}
                           </p>
                         </div>
 
@@ -720,7 +855,9 @@ export default function IELTSPassageManagementPage() {
                         {editingPassage ? "Edit Passage" : "Create New Passage"}
                       </h3>
                       <p className="text-xs text-gray-500 dark:text-gray-400">
-                        {wordCount} words • ~{readingTime} min read
+                        {watchContentType === "audio"
+                          ? "Audio Content"
+                          : `${wordCount} words • ~${readingTime} min read`}
                       </p>
                     </div>
                     <button
@@ -751,6 +888,80 @@ export default function IELTSPassageManagementPage() {
                         />
                       </div>
 
+                      {/* Content Type */}
+                      <div>
+                        <Label className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                          Content Type *
+                        </Label>
+                        <div className="mt-2 grid grid-cols-2 gap-3">
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setValue("contentType", "passage");
+                              if (watchContentType === "audio") {
+                                setValue("content", "");
+                              }
+                            }}
+                            className={`flex items-center justify-center gap-2 rounded-2xl border-2 p-4 transition-all ${
+                              watchContentType === "passage"
+                                ? "border-blue-500 bg-blue-50 dark:bg-blue-500/10"
+                                : "border-gray-200 hover:border-gray-300 dark:border-gray-700"
+                            }`}
+                          >
+                            <BookOpen className={`h-5 w-5 ${
+                              watchContentType === "passage"
+                                ? "text-blue-600"
+                                : "text-gray-400"
+                            }`} />
+                            <span className={`text-sm font-medium ${
+                              watchContentType === "passage"
+                                ? "text-blue-600"
+                                : "text-gray-600 dark:text-gray-400"
+                            }`}>
+                              Passage
+                            </span>
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setValue("contentType", "audio");
+                              if (watchContentType === "passage") {
+                                setValue("content", "");
+                              }
+                            }}
+                            className={`flex items-center justify-center gap-2 rounded-2xl border-2 p-4 transition-all ${
+                              watchContentType === "audio"
+                                ? "border-amber-500 bg-amber-50 dark:bg-amber-500/10"
+                                : "border-gray-200 hover:border-gray-300 dark:border-gray-700"
+                            }`}
+                          >
+                            <Headphones className={`h-5 w-5 ${
+                              watchContentType === "audio"
+                                ? "text-amber-600"
+                                : "text-gray-400"
+                            }`} />
+                            <span className={`text-sm font-medium ${
+                              watchContentType === "audio"
+                                ? "text-amber-600"
+                                : "text-gray-600 dark:text-gray-400"
+                            }`}>
+                              Audio
+                            </span>
+                          </button>
+                        </div>
+                      </div>
+                      <div>
+                        <Label className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                          Instructions
+                        </Label>
+                        <TextArea
+                          placeholder="e.g., Environment, Technology, Education"
+                          value={watchInstructions}
+                          onChange={(e) => setValue("instructions", e)}
+                          className="mt-1 rounded-2xl border-gray-200 dark:border-gray-700"
+                        />
+                      </div>
+
                       {/* Topic */}
                       <div>
                         <Label className="text-sm font-medium text-gray-700 dark:text-gray-300">
@@ -762,52 +973,83 @@ export default function IELTSPassageManagementPage() {
                           value={watchTopic}
                           onChange={(e) => setValue("topic", e.target.value)}
                           className="mt-1 rounded-2xl border-gray-200 dark:border-gray-700"
-                          list="passage-topics"
                         />
-                        <datalist id="passage-topics">
-                          {availableTopics.map((topic) => (
-                            <option key={topic} value={topic} />
-                          ))}
-                        </datalist>
-                        {availableTopics.length > 0 && (
-                          <div className="mt-2 flex flex-wrap gap-1">
-                            {availableTopics.slice(0, 8).map((topic) => (
-                              <button
-                                key={topic}
-                                type="button"
-                                onClick={() => setValue("topic", topic)}
-                                className="rounded-full bg-gray-100 px-2 py-1 text-xs text-gray-600 hover:bg-gray-200 dark:bg-gray-800 dark:text-gray-400 dark:hover:bg-gray-700"
-                              >
-                                {topic}
-                              </button>
-                            ))}
+                      </div>
+
+                      {/* Content - Conditional based on contentType */}
+                      {watchContentType === "passage" ? (
+                        <div>
+                          <Label className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                            Content *
+                          </Label>
+                          <RichTextEditor
+                            header={true}
+                            initialValue={watchContent}
+                            onChange={(html) => setValue("content", html)}
+                          />
+                        </div>
+                      ) : (
+                        <div>
+                          <Label className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                            Audio *
+                          </Label>
+                          <div className="mt-2 space-y-3">
+                            {/* Audio URL Input */}
+                            <div className="relative">
+                              <Link className="pointer-events-none absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" />
+                              <Input
+                                type="text"
+                                placeholder="Enter audio URL or upload a file"
+                                value={watchContent}
+                                onChange={(e) => setValue("content", e.target.value)}
+                                className="mt-1 rounded-2xl border-gray-200 dark:border-gray-700 pl-10"
+                              />
+                            </div>
+
+                            {/* Audio Upload */}
+                            <div className="flex items-center gap-3">
+                              <label className="flex items-center gap-2 rounded-2xl border-2 border-dashed border-gray-300 px-4 py-2 text-sm text-gray-600 cursor-pointer hover:border-amber-500 hover:text-amber-600 dark:border-gray-700 dark:text-gray-400 dark:hover:border-amber-500 dark:hover:text-amber-400">
+                                <Upload className="h-4 w-4" />
+                                {uploadingAudio ? "Uploading..." : "Upload Audio"}
+                                <input
+                                  type="file"
+                                  accept="audio/*"
+                                  onChange={handleAudioFileChange}
+                                  className="hidden"
+                                  disabled={uploadingAudio}
+                                />
+                              </label>
+                              {uploadingAudio && (
+                                <Loader2 className="h-4 w-4 animate-spin text-amber-600" />
+                              )}
+                            </div>
+
+                            {/* Audio Preview */}
+                            {watchContent && (
+                              <div className="rounded-xl border border-gray-200 bg-gray-50 p-4 dark:border-gray-700 dark:bg-gray-800">
+                                <audio controls className="w-full">
+                                  <source src={watchContent} type="audio/mpeg" />
+                                  Your browser does not support the audio element.
+                                </audio>
+                              </div>
+                            )}
                           </div>
-                        )}
-                      </div>
+                        </div>
+                      )}
 
-                      {/* Content */}
-                      <div>
-                        <Label className="text-sm font-medium text-gray-700 dark:text-gray-300">
-                          Content *
-                        </Label>
-                        <RichTextEditor
-                          header={true}
-                          initialValue={watchContent}
-                          onChange={(html) => setValue("content", html)}
-                        />
-                      </div>
-
-                      {/* Word Count Info */}
-                      <div className="flex items-center gap-4 text-xs text-gray-500 dark:text-gray-400">
-                        <span className="inline-flex items-center gap-1">
-                          <FileText className="h-3.5 w-3.5" />
-                          {wordCount} words
-                        </span>
-                        <span className="inline-flex items-center gap-1">
-                          <Clock className="h-3.5 w-3.5" />
-                          ~{readingTime} min read
-                        </span>
-                      </div>
+                      {/* Word Count Info - only for passages */}
+                      {watchContentType === "passage" && (
+                        <div className="flex items-center gap-4 text-xs text-gray-500 dark:text-gray-400">
+                          <span className="inline-flex items-center gap-1">
+                            <FileText className="h-3.5 w-3.5" />
+                            {wordCount} words
+                          </span>
+                          <span className="inline-flex items-center gap-1">
+                            <Clock className="h-3.5 w-3.5" />
+                            ~{readingTime} min read
+                          </span>
+                        </div>
+                      )}
                     </div>
 
                     {/* Action Buttons */}
@@ -824,7 +1066,7 @@ export default function IELTSPassageManagementPage() {
                       <Button
                         type="submit"
                         size="sm"
-                        disabled={saving}
+                        disabled={saving || uploadingAudio}
                         isLoading={saving}
                         className="rounded-2xl bg-gradient-to-r from-blue-600 to-indigo-600 px-6 font-medium py-2.5 text-white"
                       >

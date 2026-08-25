@@ -12,57 +12,20 @@ import {
   Folder,
   Package,
   ClipboardCheck,
-  FileCheck,
-  Layers,
-  HelpCircle,
-  ScrollText,
-  ShoppingBag,
   Database,
   CircleHelp,
   TestTube,
   Scroll,
-  Video,
-  PlayCircle,
-  FolderOpen,
   Rocket,
-  Tag,
-  Bell,
-  Phone,
-  MessageSquare,
-  Globe,
-  File,
-  Box,
-  PenTool,
-  MessageCircle,
-  Tags,
-  CreditCard,
-  Target,
-  TestTube2,
-  Sparkles,
-  Calendar,
   PhoneCall,
-  User,
-  Gift,
-  Handshake,
-  History,
-  Headphones,
-  Lock,
-  Shield,
   UserCircle,
   PlusCircle,
   TrendingUp,
   Upload,
   BarChart3,
   Pencil,
-  Book,
-  UsersRound,
-  ArrowBigLeft,
   ChevronRight,
   ChevronLeft,
-  SquareStack,
-  FileStack,
-  Settings,
-  MessageCircleQuestionMark
 } from "lucide-react";
 
 type IconType = React.ElementType | string;
@@ -71,7 +34,13 @@ type NavItem = {
   name: string;
   icon: IconType;
   path?: string;
-  subItems?: { name: string; path: string; icon: IconType; pro?: boolean; new?: boolean }[];
+  subItems?: {
+    name: string;
+    path: string;
+    icon: IconType;
+    pro?: boolean;
+    new?: boolean;
+  }[];
 };
 
 const navItems: NavItem[] = [
@@ -94,9 +63,12 @@ const navItems: NavItem[] = [
     icon: "📖",
     name: "Resources",
     subItems: [
+      { name: "1:1 Sessions", path: "/sessions", icon: "🎥" },
       { name: "Live Classes", path: "/live-classes", icon: "🎥" },
       { name: "Recorded Classes", path: "/recorded-classes", icon: "▶️" },
       { icon: "📁", name: "Study Materials", path: "/study-materials" },
+      { icon: "📁", name: "Tests", path: "/course-tests" },
+
     ],
   },
 
@@ -123,8 +95,10 @@ const navItems: NavItem[] = [
     icon: "🌍",
     name: "Ielts Bank",
     subItems: [
+      { name: "Passages", path: "/test/passage", icon: "📜" },
       { name: "Questions", path: "/test/questions", icon: "❓" },
-      { name: "Tests", path: "/test-manage", icon: "📜" },
+      { name: "Question Groups", path: "/test/groups", icon: "🧩" },
+      { name: "Tests", path: "/test", icon: "🧪" },
       { name: "Packages", path: "/test/packages", icon: "🛍️" },
     ],
   },
@@ -166,19 +140,17 @@ const navItemsUser: NavItem[] = [
   { icon: "🎉", name: "Offers", path: "/offers" },
   { icon: "🔔", name: "Notifications", path: "/notifications" },
   { icon: "💰", name: "Refer & Earn", path: "/referrals" },
-  { icon: "🧾", name: "Orders History", path: "/transactions" }
+  { icon: "🧾", name: "Orders History", path: "/transactions" },
 ];
 
-
-
 const navItemsCoun: NavItem[] = [
-  { icon: LayoutDashboard, name: "Dashboard", path: "/" }
+  { icon: LayoutDashboard, name: "Dashboard", path: "/" },
 ];
 
 const navItemsMan: NavItem[] = [
   { icon: LayoutDashboard, name: "Dashboard", path: "/" },
   { icon: PhoneCall, name: "Call Reports", path: "/lead-report" },
-  { icon: Rocket, name: "Leads", path: "/leads" }
+  { icon: Rocket, name: "Leads", path: "/leads" },
 ];
 
 const navItemsTeacher: NavItem[] = [
@@ -189,34 +161,30 @@ const navItemsTeacher: NavItem[] = [
     subItems: [
       { name: "Questions", path: "/mcq/questions", icon: CircleHelp },
       { name: "Tests", path: "/mcq/tests", icon: TestTube },
-      { name: "Test Series", path: "/mcq/test-series", icon: Scroll }
-    ]
+      { name: "Test Series", path: "/mcq/test-series", icon: Scroll },
+    ],
   },
   {
-    icon: GraduationCap,
-    name: "My Courses",
+    icon: "🎓",
+    name: "Courses",
     subItems: [
-      { name: "Create Course", path: "/teacher/create-course", icon: PlusCircle },
-      { name: "My Courses", path: "/teacher/courses", icon: ClipboardList },
-      { name: "Course Analytics", path: "/teacher/analytics", icon: TrendingUp }
-    ]
+      { name: "All Courses", path: "/courses", icon: "📚" },
+      { icon: "🏷️", name: "Categories", path: "/categories" },
+      { name: "Modules", path: "/modules", icon: "📂" },
+      { name: "Combos", path: "/combos", icon: "🎁" },
+    ],
   },
+
   {
-    icon: Folder,
-    name: "Content",
+    icon: "📖",
+    name: "Resources",
     subItems: [
-      { name: "Upload Content", path: "/teacher/upload", icon: Upload },
-      { name: "Manage Content", path: "/teacher/content", icon: Database }
-    ]
+      { name: "1:1 Sessions", path: "/sessions", icon: "🎥" },
+      { name: "Live Classes", path: "/live-classes", icon: "🎥" },
+      { name: "Recorded Classes", path: "/recorded-classes", icon: "▶️" },
+      { icon: "📁", name: "Study Materials", path: "/study-materials" },
+    ],
   },
-  {
-    icon: ClipboardCheck,
-    name: "Assessments",
-    subItems: [
-      { name: "Create Test", path: "/teacher/create-test", icon: Pencil },
-      { name: "Test Results", path: "/teacher/results", icon: BarChart3 }
-    ]
-  }
 ];
 
 const othersItems: NavItem[] = [
@@ -227,26 +195,34 @@ const othersItems: NavItem[] = [
 ];
 
 const teacherOthersItems: NavItem[] = [
-  { icon: UserCircle, name: "Profile", path: "/profile" }
+  { icon: UserCircle, name: "Profile", path: "/profile" },
 ];
 
 const AppSidebar: React.FC = () => {
-  const { isExpanded, isMobileOpen, isHovered, setIsHovered, toggleSidebar, toggleMobileSidebar } = useSidebar();
+  const {
+    isExpanded,
+    isMobileOpen,
+    isHovered,
+    setIsHovered,
+    toggleSidebar,
+    toggleMobileSidebar,
+  } = useSidebar();
   const location = useLocation();
   const { user } = useAuth() as any;
   const navigate = useNavigate();
-
 
   const [openSubmenu, setOpenSubmenu] = useState<{
     type: "main" | "others";
     index: number;
   } | null>(null);
-  const [subMenuHeight, setSubMenuHeight] = useState<Record<string, number>>({});
+  const [subMenuHeight, setSubMenuHeight] = useState<Record<string, number>>(
+    {},
+  );
   const subMenuRefs = useRef<Record<string, HTMLDivElement | null>>({});
 
   const isActive = useCallback(
     (path: string) => location.pathname === path,
-    [location.pathname]
+    [location.pathname],
   );
 
   useEffect(() => {
@@ -263,7 +239,10 @@ const AppSidebar: React.FC = () => {
                 : user?.role === "manager" || user?.role === "leader"
                   ? navItemsMan
                   : navItemsUser
-          : user?.role === "teacher" || user?.role === "counselor" || user?.role === "manager" || user?.role === "leader"
+          : user?.role === "teacher" ||
+              user?.role === "counselor" ||
+              user?.role === "manager" ||
+              user?.role === "leader"
             ? teacherOthersItems
             : othersItems;
 
@@ -286,14 +265,16 @@ const AppSidebar: React.FC = () => {
       const key = `${openSubmenu.type}-${openSubmenu.index}`;
       const el = subMenuRefs.current[key];
       if (el) {
-        setSubMenuHeight(prev => ({ ...prev, [key]: el.scrollHeight }));
+        setSubMenuHeight((prev) => ({ ...prev, [key]: el.scrollHeight }));
       }
     }
   }, [openSubmenu]);
 
   const handleSubmenuToggle = (index: number, menuType: "main" | "others") => {
-    setOpenSubmenu(prev =>
-      prev?.type === menuType && prev.index === index ? null : { type: menuType, index }
+    setOpenSubmenu((prev) =>
+      prev?.type === menuType && prev.index === index
+        ? null
+        : { type: menuType, index },
     );
   };
 
@@ -302,75 +283,84 @@ const AppSidebar: React.FC = () => {
   const renderMenuItems = (items: NavItem[], menuType: "main" | "others") => (
     <ul className="flex flex-col gap-3 ml-2 mt-6">
       {items.map((nav, index) => {
-        const isSubmenuOpen = openSubmenu?.type === menuType && openSubmenu?.index === index;
-        const hasActiveSubItem = nav.subItems?.some(subItem => isActive(subItem.path));
+        const isSubmenuOpen =
+          openSubmenu?.type === menuType && openSubmenu?.index === index;
+        const hasActiveSubItem = nav.subItems?.some((subItem) =>
+          isActive(subItem.path),
+        );
         const active = isSubmenuOpen || hasActiveSubItem;
         const Icon = nav.icon;
 
         return (
           <li key={nav.name} className="relative">
             {nav.subItems ? (
-            <div className="border-l-4 border-orange-500 rounded-[26px]">
+              <div className="border-l-4 border-orange-500 rounded-[26px]">
                 <button
-                onClick={() => handleSubmenuToggle(index, menuType)}
-                className={`w-full flex items-center gap-3 ${isExpanded || isHovered || isMobileOpen ? 'px-4' : 'px-1'} py-1 rounded-lg ransition-all duration-200 ease-out group relative
+                  onClick={() => handleSubmenuToggle(index, menuType)}
+                  className={`w-full flex items-center gap-3 ${isExpanded || isHovered || isMobileOpen ? "px-4" : "px-1"} py-1 rounded-lg ransition-all duration-200 ease-out group relative
                   ${active ? "font-semibold" : "font-medium"}
-                  ${active
-                    ? "bg-orange-500/10 text-orange-500"
-                    : "text-zinc-600 dark:text-zinc-400 hover:bg-black/[0.04] dark:hover:bg-white/[0.06] hover:text-zinc-900 dark:hover:text-zinc-100"
+                  ${
+                    active
+                      ? "bg-orange-500/10 text-orange-500"
+                      : "text-zinc-600 dark:text-zinc-400 hover:bg-black/[0.04] dark:hover:bg-white/[0.06] hover:text-zinc-900 dark:hover:text-zinc-100"
                   }`}
-              >
-             
-
-                {showLabels ? (
-                  <>
-                    {typeof nav.icon === "string" ? (
-                      <span className="text-[22px]">{nav.icon}</span>
-                    ) : (
-                      <Icon
-                        className={`w-[20px] h-[20px] stroke-[2.2] flex-shrink-0 transition-colors duration-200 ${active ? "text-orange-500" : "text-zinc-500 dark:text-zinc-500"
+                >
+                  {showLabels ? (
+                    <>
+                      {typeof nav.icon === "string" ? (
+                        <span className="text-[22px]">{nav.icon}</span>
+                      ) : (
+                        <Icon
+                          className={`w-[20px] h-[20px] stroke-[2.2] flex-shrink-0 transition-colors duration-200 ${
+                            active
+                              ? "text-orange-500"
+                              : "text-zinc-500 dark:text-zinc-500"
                           }`}
-                      />
-                    )}
+                        />
+                      )}
 
-                    <span className="flex-1 text-left text-[15px] tracking-wide">
-                      {nav.name}
-                    </span>
+                      <span className="flex-1 text-left text-[15px] tracking-wide">
+                        {nav.name}
+                      </span>
 
-                    <ChevronDown
-                      className={`w-3.5 h-3.5 flex-shrink-0 transition-transform duration-300 text-zinc-300 dark:text-zinc-600 ${isSubmenuOpen ? "rotate-180" : ""
+                      <ChevronDown
+                        className={`w-3.5 h-3.5 flex-shrink-0 transition-transform duration-300 text-zinc-300 dark:text-zinc-600 ${
+                          isSubmenuOpen ? "rotate-180" : ""
                         }`}
-                    />
-                  </>
-                ) : (
-                  <div className="relative flex flex-col gap-1 items-center justify-center w-full ">
-
-                    {typeof nav.icon === "string" ? (
-                      <span className="text-3xl">{nav.icon}</span>
-                    ) : (
-                      <Icon
-                        className={`w-6 h-6 stroke-[1.7] transition-colors duration-200 ${active ? "text-orange-600" : "text-zinc-500 dark:text-zinc-500"
-                          }`}
                       />
-                    )}
+                    </>
+                  ) : (
+                    <div className="relative flex flex-col gap-1 items-center justify-center w-full ">
+                      {typeof nav.icon === "string" ? (
+                        <span className="text-3xl">{nav.icon}</span>
+                      ) : (
+                        <Icon
+                          className={`w-6 h-6 stroke-[1.7] transition-colors duration-200 ${
+                            active
+                              ? "text-orange-600"
+                              : "text-zinc-500 dark:text-zinc-500"
+                          }`}
+                        />
+                      )}
 
-                    <span className="text-left font-medium text-[10px] tracking-wide">
-                      {nav.name}
-                    </span>
-
-                  </div>
-                )}
-              </button></div>
+                      <span className="text-left font-medium text-[10px] tracking-wide">
+                        {nav.name}
+                      </span>
+                    </div>
+                  )}
+                </button>
+              </div>
             ) : nav.path ? (
               <div className={`border-l-4 border-orange-500 rounded-[26px] `}>
                 <Link
                   to={nav.path}
-                  className={`w-full  flex items-center gap-3 ${isExpanded || isHovered || isMobileOpen ? 'px-4' : 'px-1'} py-1.5  rounded-[26px]  group relative
+                  className={`w-full  flex items-center gap-3 ${isExpanded || isHovered || isMobileOpen ? "px-4" : "px-1"} py-1.5  rounded-[26px]  group relative
                   ${isActive(nav.path) ? "font-semibold" : "font-medium"}
-                  ${isActive(nav.path)
+                  ${
+                    isActive(nav.path)
                       ? "bg-orange-50 text-orange-500"
                       : "text-zinc-600 dark:text-zinc-400 hover:bg-black/[0.04] bg-white dark:hover:bg-white/[0.06] hover:text-zinc-900 dark:hover:text-zinc-100 hover:bg-orange-50"
-                    }`}
+                  }`}
                 >
                   {/* {isActive(nav.path) && (
                   <span className="absolute left-0 top-1/2 -translate-y-1/2 w-[8px] h-12 rounded-r-full bg-orange-500" />
@@ -382,13 +372,16 @@ const AppSidebar: React.FC = () => {
                         <span className="text-[18px] ">{nav.icon}</span>
                       ) : (
                         <Icon
-                          className={`w-[20px] h-[20px]  ${isActive(nav.path)
+                          className={`w-[20px] h-[20px]  ${
+                            isActive(nav.path)
                               ? "text-orange-500"
                               : "text-zinc-500 dark:text-zinc-500"
-                            }`}
+                          }`}
                         />
                       )}
-                      <span className="text-[15px] tracking-wide">{nav.name}</span>
+                      <span className="text-[15px] tracking-wide">
+                        {nav.name}
+                      </span>
                     </>
                   ) : (
                     <div className="relative flex flex-col gap-1 items-center justify-center w-full">
@@ -396,13 +389,16 @@ const AppSidebar: React.FC = () => {
                         <span className="text-lg ">{nav.icon}</span>
                       ) : (
                         <Icon
-                          className={`w-6 h-6 stroke-[2.2] ${isActive(nav.path)
+                          className={`w-6 h-6 stroke-[2.2] ${
+                            isActive(nav.path)
                               ? "text-orange-600"
                               : "text-zinc-500 dark:text-zinc-500"
-                            }`}
+                          }`}
                         />
                       )}
-                      <span className=" text-center font-semibold text-[11px]">{nav.name}</span>
+                      <span className=" text-center font-semibold text-[11px]">
+                        {nav.name}
+                      </span>
                     </div>
                   )}
                 </Link>
@@ -411,11 +407,15 @@ const AppSidebar: React.FC = () => {
 
             {nav.subItems && showLabels && (
               <div
-                ref={(el) => { subMenuRefs.current[`${menuType}-${index}`] = el; }}
+                ref={(el) => {
+                  subMenuRefs.current[`${menuType}-${index}`] = el;
+                }}
                 className="overflow-hidden transition-all duration-400 ease-in-out "
                 style={{
-                  height: isSubmenuOpen ? `${subMenuHeight[`${menuType}-${index}`] || 0}px` : "0px",
-                  opacity: isSubmenuOpen ? 1 : 0
+                  height: isSubmenuOpen
+                    ? `${subMenuHeight[`${menuType}-${index}`] || 0}px`
+                    : "0px",
+                  opacity: isSubmenuOpen ? 1 : 0,
                 }}
               >
                 <ul className="pt-1.5 pb-1 space-y-[2px] ml-3 pl-3 border-l border-zinc-100 dark:border-white/[0.06] ">
@@ -425,35 +425,40 @@ const AppSidebar: React.FC = () => {
                     return (
                       <li key={subItem.name}>
                         <div className="border-l-4 border-orange-500 rounded-[26px] ">
-                        <Link
-                          to={subItem.path}
-                          className={`flex items-center justify-between gap-2.5 px-3 py-[9px] rounded-lg text-[14px] transition-all duration-200
+                          <Link
+                            to={subItem.path}
+                            className={`flex items-center justify-between gap-2.5 px-3 py-[9px] rounded-lg text-[14px] transition-all duration-200
                             ${subActive ? "font-medium" : "font-medium"}
-                            ${subActive
-                              ? "bg-orange-500/10 text-orange-500"
-                              : "text-zinc-600 dark:text-zinc-400 hover:bg-black/[0.04] dark:hover:bg-white/[0.06] hover:text-zinc-900 dark:hover:text-zinc-100"
+                            ${
+                              subActive
+                                ? "bg-orange-500/10 text-orange-500"
+                                : "text-zinc-600 dark:text-zinc-400 hover:bg-black/[0.04] dark:hover:bg-white/[0.06] hover:text-zinc-900 dark:hover:text-zinc-100"
                             }`}
-                        >
-                          <div className="flex items-center gap-2.5">
-                            <span>{SubIcon}</span>
-                            <span>{subItem.name}</span>
-                          </div>
-                          <div className="flex gap-1.5">
-                            {subItem.new && (
-                              <span className={`px-1.5 py-[1px] text-[10px] rounded-md font-semibold uppercase tracking-wide ${subActive
-                                ? "bg-orange-500 text-white"
-                                : "bg-green-500/10 text-green-600 dark:text-green-400"
-                                }`}>
-                                New
-                              </span>
-                            )}
-                            {subItem.pro && (
-                              <span className="px-1.5 py-[1px] text-[10px] rounded-md font-semibold uppercase tracking-wide bg-purple-500/10 text-purple-600 dark:text-purple-400">
-                                Pro
-                              </span>
-                            )}
-                          </div>
-                        </Link></div>
+                          >
+                            <div className="flex items-center gap-2.5">
+                              {/* <span>{SubIcoon}</span> */}
+                              <span>{subItem.name}</span>
+                            </div>
+                            <div className="flex gap-1.5">
+                              {subItem.new && (
+                                <span
+                                  className={`px-1.5 py-[1px] text-[10px] rounded-md font-semibold uppercase tracking-wide ${
+                                    subActive
+                                      ? "bg-orange-500 text-white"
+                                      : "bg-green-500/10 text-green-600 dark:text-green-400"
+                                  }`}
+                                >
+                                  New
+                                </span>
+                              )}
+                              {subItem.pro && (
+                                <span className="px-1.5 py-[1px] text-[10px] rounded-md font-semibold uppercase tracking-wide bg-purple-500/10 text-purple-600 dark:text-purple-400">
+                                  Pro
+                                </span>
+                              )}
+                            </div>
+                          </Link>
+                        </div>
                       </li>
                     );
                   })}
@@ -478,11 +483,17 @@ const AppSidebar: React.FC = () => {
     if (menuType === "main") {
       if (user?.role === "admin") return navItems;
       if (user?.role === "counselor") return navItemsCoun;
-      if (user?.role === "manager" || user?.role === "leader") return navItemsMan;
+      if (user?.role === "manager" || user?.role === "leader")
+        return navItemsMan;
       if (user?.role === "teacher") return navItemsTeacher;
       return navItemsUser;
     } else {
-      if (user?.role === "teacher" || user?.role === "counselor" || user?.role === "manager" || user?.role === "leader")
+      if (
+        user?.role === "teacher" ||
+        user?.role === "counselor" ||
+        user?.role === "manager" ||
+        user?.role === "leader"
+      )
         return teacherOthersItems;
       return othersItems;
     }
@@ -490,7 +501,6 @@ const AppSidebar: React.FC = () => {
 
   return (
     <div className="relative">
-
       <style>{`
         .sidebar-scroll::-webkit-scrollbar { width: 4px; }
         .sidebar-scroll::-webkit-scrollbar-track { background: transparent; }

@@ -237,7 +237,7 @@ export default function TestSeriesPage() {
         <div className="min-h-[85vh] ">
             <div className="max-w-7xl p-0 mx-auto sm:p-4 rounded-xl min-h-[87vh]">
 
-                <div className="grid max-h-[170px] grid-cols-1 lg:grid-cols-[1.4fr_0.6fr] gap-1 items-center rounded-3xl space-x-2 mb-4">
+                <div className="grid h-full grid-cols-1 lg:grid-cols-[1.4fr_0.6fr] gap-1 items-center rounded-3xl space-x-2 mb-4">
                     <div className="h-fit">
                         <LeftSlider />
                     </div>
@@ -286,7 +286,7 @@ export default function TestSeriesPage() {
                 </div>
 
 
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-[1.4fr_0.6fr] gap-6 mb-4 ">
+                <div className=" gap-6  ">
                     {/* Controls */}
                     <motion.div
                         initial={{ opacity: 0, y: 20 }}
@@ -294,7 +294,7 @@ export default function TestSeriesPage() {
                         transition={{ delay: 0.1 }}
                         className="mb-4"
                     >
-                        <div className="flex lg:items-center lg:justify-between gap-2">
+                        <div className="flex lg:items-center lg:justify-between gap-2 mt-4">
                             <div className="relative flex-1">
                                 <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-6 w-6 text-gray-600" />
                                 <input
@@ -302,7 +302,7 @@ export default function TestSeriesPage() {
                                     placeholder="Search for test series..."
                                     value={searchQuery}
                                     onChange={(e) => setSearchQuery(e.target.value)}
-                                    className="w-full pl-12 pr-4 py-2.5 border-2 border-[#FD7149]/70 focus:border-[#FD7149] rounded-2xl bg-white text-base text-gray-900 placeholder-gray-500 focus:outline-none "
+                                    className="w-full pl-12 pr-4 py-2.5 border-2 border-[#FD7149]/70 focus:border-[#FD7149] rounded-full bg-white text-base text-gray-900 placeholder-gray-500 focus:outline-none "
                                 />
                             </div>
                             <div className="relative">

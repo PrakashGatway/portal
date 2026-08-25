@@ -300,15 +300,7 @@ const SupportPage = () => {
     iconBg: "bg-[#FFF0F2]",
     iconColor: "text-[#F43F5E]",
   },
-  {
-    title: "Technical Help",
-    description:
-      "App issues, login problems, video playback and other technical queries.",
-    articles: "9 Articles",
-    icon: Settings,
-    iconBg: "bg-[#FFF3E8]",
-    iconColor: "text-[#F97316]",
-  },
+
 ];
 
 
@@ -650,13 +642,13 @@ const supportBenefits = [
       <div className="mx-auto w-full max-w-[1400px]">
         {/* Header */}
         <div className="mb-4 flex items-center justify-between gap-4">
-          <h2 className="text-[17px] font-bold tracking-[-0.2px] text-[#171717] sm:text-[18px]">
+          <h2 className="text-lg font-semibold tracking-[-0.2px] text-[#171717] sm:text-xl">
             Browse Help Topics
           </h2>
 
           <button
             type="button"
-            className="group flex shrink-0 items-center gap-1.5 text-[12px] font-medium text-[#E87545] transition-colors hover:text-[#D95F32] sm:text-[13px]"
+            className="group flex shrink-0 items-center gap-1.5 text-[12px] font-medium text-[#E87545] transition-colors hover:text-[#D95F32] sm:text-base"
           >
             <span>View All Articles</span>
 
@@ -674,7 +666,7 @@ const supportBenefits = [
             grid grid-cols-1 gap-3
             sm:grid-cols-2
             lg:grid-cols-3
-            xl:grid-cols-5
+            xl:grid-cols-4
           "
         >
           {helpTopics.map((topic, index) => {
@@ -721,7 +713,7 @@ const supportBenefits = [
                     <h3
                       className="
                         pt-[1px]
-                        text-[13px]
+                        text-base
                         font-semibold
                         leading-[18px]
                         text-[#242424]
@@ -733,7 +725,7 @@ const supportBenefits = [
                     <p
                       className="
                         mt-2
-                        text-[11px]
+                        text-sm
                         font-normal
                         leading-[18px]
                         text-[#777777]
@@ -745,8 +737,8 @@ const supportBenefits = [
                 </div>
 
                 {/* Article count */}
-                <div className="mt-4 pl-[55px]">
-                  <span className="text-[11px] font-medium text-[#666666]">
+                <div className="mt-2 pl-[55px]">
+                  <span className="text-sm font-medium text-[#666666]">
                     {topic.articles}
                   </span>
                 </div>
@@ -759,8 +751,8 @@ const supportBenefits = [
 
 
 
-     <section className="w-full px-4 py-6 sm:px-6 lg:px-8">
-      <div className="mx-auto w-full max-w-[1400px] space-y-6">
+     <section className="w-full px-4 py-6 sm:px-6 lg:px-0">
+      <div className="mx-auto w-full  space-y-6">
 
         {/* ================= SUPPORT CTA ================= */}
         <div
@@ -929,7 +921,7 @@ const supportBenefits = [
                 <div className="min-w-0">
                   <h3
                     className="
-                      text-[13px]
+                      text-base
                       font-semibold
                       leading-[18px]
                       text-[#353535]
@@ -941,7 +933,7 @@ const supportBenefits = [
                   <p
                     className="
                       mt-0.5
-                      text-[11px]
+                      text-sm
                       leading-[17px]
                       text-[#858585]
                     "

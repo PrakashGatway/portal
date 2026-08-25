@@ -23,6 +23,9 @@ import {
   PenTool,
   Mic,
   FileText,
+  Upload,
+  FileAudio,
+  Video,
 } from "lucide-react";
 import Button from "../../components/ui/button/Button";
 import Input from "../../components/form/input/InputField";
@@ -149,10 +152,21 @@ interface Question {
   createdAt?: string;
 }
 
+interface SpeakingContent {
+  question: string;
+  followUpQuestions?: string[];
+  audioUrl?: string;
+  videoUrl?: string;
+  transcript?: string;
+  sampleAnswer?: string;
+  tips?: string[];
+}
+
 interface QuestionFormValues {
   section: string;
   questionType: string;
   content: string;
+  speakingContent: SpeakingContent;
   instructions: string;
   choices: Array<{
     label: string;
@@ -204,12 +218,19 @@ const isCompletionType = (questionType: string) => {
   return [
     "sentence_completion",
     "summary_completion",
+    "map_labeling",
     "note_completion",
     "table_completion",
     "flow_chart_completion",
     "diagram_labeling",
     "form_completion",
     "short_answer",
+    "matching_headings",
+    "matching_information",
+    "matching_features",
+    "matching",
+    "matching_sentence_endings",
+    "classification",
   ].includes(questionType);
 };
 
@@ -232,6 +253,15 @@ const isSpeakingType = (questionType: string) => {
   );
 };
 
+const isJsonString = (str: string) => {
+  try {
+    JSON.parse(str);
+    return true;
+  } catch (e) {
+    return false;
+  }
+};
+
 export default function IELTSQuestionManagementPage() {
   const [questions, setQuestions] = useState<Question[]>([]);
   const [loading, setLoading] = useState(true);
@@ -241,6 +271,23 @@ export default function IELTSQuestionManagementPage() {
   const [saving, setSaving] = useState(false);
   const [preview, setPreview] = useState(false);
   const [previewQuestion, setPreviewQuestion] = useState<Question | null>(null);
+
+  // Speaking states
+  const [speakingQuestion, setSpeakingQuestion] = useState("");
+  const [speakingFollowUpQuestions, setSpeakingFollowUpQuestions] = useState([
+    {
+      text: "",
+      mediaType: "none",
+      mediaUrl: "",
+    },
+  ]);
+  const [speakingAudioUrl, setSpeakingAudioUrl] = useState("");
+  const [speakingVideoUrl, setSpeakingVideoUrl] = useState("");
+  const [speakingTranscript, setSpeakingTranscript] = useState("");
+  const [speakingSampleAnswer, setSpeakingSampleAnswer] = useState("");
+  const [speakingTips, setSpeakingTips] = useState<string[]>([""]);
+  const [audioUploading, setAudioUploading] = useState(false);
+  const [videoUploading, setVideoUploading] = useState(false);
 
   const [filters, setFilters] = useState({
     search: "",
@@ -254,7 +301,9 @@ export default function IELTSQuestionManagementPage() {
   });
 
   const [debouncedSearch, setDebouncedSearch] = useState("");
-  const [searchTimeout, setSearchTimeout] = useState(null);
+  const [searchTimeout, setSearchTimeout] = useState<NodeJS.Timeout | null>(
+    null,
+  );
   const [page, setPage] = useState(1);
   const [limit, setLimit] = useState(10);
   const [totalPages, setTotalPages] = useState(1);
@@ -272,6 +321,7 @@ export default function IELTSQuestionManagementPage() {
       section: "reading",
       questionType: "",
       content: "",
+      speakingContent: {},
       instructions: "",
       choices: [],
       correctAnswer: "",
@@ -317,6 +367,75 @@ export default function IELTSQuestionManagementPage() {
   const watchMarks = watch("marks");
   const watchSource = watch("source");
   const watchIsActive = watch("isActive");
+
+  const updateSpeakingContent = () => {
+    const speakingContent: SpeakingContent = {
+      question: speakingQuestion,
+
+      followUpQuestions: speakingFollowUpQuestions.filter(
+        (q) => q.text?.trim() || q.mediaUrl,
+      ),
+
+      audioUrl: speakingAudioUrl || undefined,
+      videoUrl: speakingVideoUrl || undefined,
+      transcript: speakingTranscript || undefined,
+      sampleAnswer: speakingSampleAnswer || undefined,
+      tips: speakingTips.filter((t) => t.trim()),
+    };
+
+    setValue("content", JSON.stringify(speakingContent));
+    setValue("speakingContent", speakingContent);
+  };
+
+  const handleAudioUpload = async (file: File) => {
+    try {
+      setAudioUploading(true);
+      const formData = new FormData();
+      formData.append("file", file);
+
+      const res = await api.post("/upload/audio", formData, {
+        headers: {
+          "Content-Type": "multipart/form-data",
+        },
+      });
+
+      if (res.data?.success) {
+        setSpeakingAudioUrl(res.data.data.url);
+        toast.success("Audio uploaded successfully");
+        updateSpeakingContent();
+      }
+    } catch (err: any) {
+      console.error("Audio upload error:", err);
+      toast.error(err.response?.data?.message || "Failed to upload audio");
+    } finally {
+      setAudioUploading(false);
+    }
+  };
+
+  const handleVideoUpload = async (file: File) => {
+    try {
+      setVideoUploading(true);
+      const formData = new FormData();
+      formData.append("file", file);
+
+      const res = await api.post("/upload/video", formData, {
+        headers: {
+          "Content-Type": "multipart/form-data",
+        },
+      });
+
+      if (res.data?.success) {
+        setSpeakingVideoUrl(res.data.data.url);
+        toast.success("Video uploaded successfully");
+        updateSpeakingContent();
+      }
+    } catch (err: any) {
+      console.error("Video upload error:", err);
+      toast.error(err.response?.data?.message || "Failed to upload video");
+    } finally {
+      setVideoUploading(false);
+    }
+  };
 
   const fetchQuestions = async () => {
     try {
@@ -405,10 +524,25 @@ export default function IELTSQuestionManagementPage() {
 
   const openCreateDrawer = () => {
     setEditingQuestion(null);
+    setSpeakingQuestion("");
+    setSpeakingFollowUpQuestions([
+      {
+        text: "",
+        mediaType: "none",
+        mediaUrl: "",
+      },
+    ]);
+    setSpeakingAudioUrl("");
+    setSpeakingVideoUrl("");
+    setSpeakingTranscript("");
+    setSpeakingSampleAnswer("");
+    setSpeakingTips([""]);
+
     reset({
       section: "reading",
       questionType: "",
       content: "",
+      speakingContent: {},
       instructions: "",
       choices: [
         { label: "A", text: "", isCorrect: false },
@@ -438,10 +572,61 @@ export default function IELTSQuestionManagementPage() {
 
   const openEditDrawer = (question: Question) => {
     setEditingQuestion(question);
+
+    // Parse speaking content if it's JSON
+    if (question.section === "speaking" && question.content) {
+      try {
+        const parsedContent = JSON.parse(question.content);
+        setSpeakingQuestion(parsedContent.question || "");
+        setSpeakingFollowUpQuestions(
+          parsedContent.followUpQuestions?.length
+            ? parsedContent.followUpQuestions.map((q: any) => {
+                // Backward compatibility with old string questions
+                if (typeof q === "string") {
+                  return {
+                    text: q,
+                    mediaType: "none",
+                    mediaUrl: "",
+                  };
+                }
+
+                return {
+                  text: q.text || "",
+                  mediaType: q.mediaType || "none",
+                  mediaUrl: q.mediaUrl || "",
+                };
+              })
+            : [
+                {
+                  text: "",
+                  mediaType: "none",
+                  mediaUrl: "",
+                },
+              ],
+        );
+        setSpeakingAudioUrl(parsedContent.audioUrl || "");
+        setSpeakingVideoUrl(parsedContent.videoUrl || "");
+        setSpeakingTranscript(parsedContent.transcript || "");
+        setSpeakingSampleAnswer(parsedContent.sampleAnswer || "");
+        setSpeakingTips(parsedContent.tips?.length ? parsedContent.tips : [""]);
+      } catch (e) {
+        setSpeakingQuestion(question.content || "");
+        setSpeakingFollowUpQuestions([""]);
+        setSpeakingAudioUrl("");
+        setSpeakingVideoUrl("");
+        setSpeakingTranscript("");
+        setSpeakingSampleAnswer("");
+        setSpeakingTips([""]);
+      }
+    }
+
     reset({
       section: question.section,
       questionType: question.questionType,
       content: question.content,
+      speakingContent: isJsonString(question.content)
+        ? JSON.parse(question.content)
+        : {},
       instructions: question.instructions || "",
       choices: question.choices?.length
         ? question.choices
@@ -491,9 +676,35 @@ export default function IELTSQuestionManagementPage() {
         toast.error("Please select question type");
         return;
       }
-      if (!values.content.trim()) {
-        toast.error("Question content is required");
-        return;
+
+      // For speaking questions, validate speaking content
+      if (isSpeakingType(values.questionType)) {
+        if (!speakingQuestion.trim()) {
+          toast.error("Speaking question is required");
+          return;
+        }
+        // Ensure content is updated with latest speaking data
+        updateSpeakingContent();
+        values.content = JSON.stringify({
+          question: speakingQuestion,
+          followUpQuestions: speakingFollowUpQuestions
+            .filter((q) => q.text?.trim() || q.mediaUrl)
+            .map((q) => ({
+              text: q.text?.trim() || "",
+              mediaType: q.mediaType || "none",
+              mediaUrl: q.mediaUrl || undefined,
+            })),
+          audioUrl: speakingAudioUrl || undefined,
+          videoUrl: speakingVideoUrl || undefined,
+          transcript: speakingTranscript || undefined,
+          sampleAnswer: speakingSampleAnswer || undefined,
+          tips: speakingTips.filter((t) => t.trim()),
+        });
+      } else {
+        if (!values.content?.trim()) {
+          toast.error("Question content is required");
+          return;
+        }
       }
 
       if (isMCQType(values.questionType)) {
@@ -537,7 +748,9 @@ export default function IELTSQuestionManagementPage() {
           allowNumbers: values.allowNumbers,
         },
         media: {
-          audioUrl: values.audioUrl || null,
+          audioUrl: isSpeakingType(values.questionType)
+            ? speakingAudioUrl || null
+            : values.audioUrl || null,
           imageUrl: values.imageUrl || null,
         },
         metadata: {
@@ -575,7 +788,6 @@ export default function IELTSQuestionManagementPage() {
           },
           { label: "Not Given", text: "Not Given", isCorrect: false },
         ];
-        // Set correct answer based on user input
         const correctAnswer = values.correctAnswer?.toLowerCase();
         if (correctAnswer) {
           payload.choices = payload.choices.map((choice: any) => ({
@@ -691,6 +903,7 @@ export default function IELTSQuestionManagementPage() {
   return (
     <>
       <div className="relative min-h-screen dark:from-gray-950 dark:via-gray-900 dark:to-blue-950/20">
+        {/* Preview Modal */}
         <Modal
           isOpen={preview}
           onClose={() => {
@@ -744,11 +957,144 @@ export default function IELTSQuestionManagementPage() {
                   )}
 
                   <div className="prose dark:prose-invert max-w-none">
-                    <div
-                      dangerouslySetInnerHTML={{
-                        __html: previewQuestion.content,
-                      }}
-                    />
+                    {previewQuestion.section === "speaking" ? (
+                      <div className="space-y-4">
+                        {(() => {
+                          try {
+                            const speakingData = JSON.parse(
+                              previewQuestion.content,
+                            );
+                            return (
+                              <>
+                                <h3 className="text-lg font-semibold">
+                                  {speakingData.question ||
+                                    previewQuestion.content}
+                                </h3>
+
+                                {speakingData.followUpQuestions?.length > 0 && (
+                                  <div>
+                                    <h4 className="text-sm font-semibold">
+                                      Follow-up Questions:
+                                    </h4>
+
+                                    <div className="mt-2 space-y-3">
+                                      {speakingData.followUpQuestions.map(
+                                        (
+                                          q: SpeakingFollowUpQuestion,
+                                          idx: number,
+                                        ) => (
+                                          <div
+                                            key={idx}
+                                            className="rounded-xl border border-gray-200 p-3 dark:border-gray-700"
+                                          >
+                                            <p className="text-sm font-medium">
+                                              {idx + 1}.{" "}
+                                              {q.text || "Media question"}
+                                            </p>
+
+                                            {/* Audio */}
+                                            {q.mediaType === "audio" &&
+                                              q.mediaUrl && (
+                                                <audio
+                                                  controls
+                                                  className="mt-2 w-full"
+                                                  src={q.mediaUrl}
+                                                />
+                                              )}
+
+                                            {/* Video */}
+                                            {q.mediaType === "video" &&
+                                              q.mediaUrl && (
+                                                <video
+                                                  controls
+                                                  className="mt-2 w-full rounded-xl"
+                                                  src={q.mediaUrl}
+                                                />
+                                              )}
+                                          </div>
+                                        ),
+                                      )}
+                                    </div>
+                                  </div>
+                                )}
+
+                                {speakingData.audioUrl && (
+                                  <div>
+                                    <h4 className="text-sm font-semibold">
+                                      Audio:
+                                    </h4>
+                                    <audio controls className="w-full">
+                                      <source src={speakingData.audioUrl} />
+                                    </audio>
+                                  </div>
+                                )}
+
+                                {speakingData.videoUrl && (
+                                  <div>
+                                    <h4 className="text-sm font-semibold">
+                                      Video:
+                                    </h4>
+                                    <video
+                                      controls
+                                      className="w-full rounded-xl"
+                                    >
+                                      <source src={speakingData.videoUrl} />
+                                    </video>
+                                  </div>
+                                )}
+
+                                {speakingData.transcript && (
+                                  <div>
+                                    <h4 className="text-sm font-semibold">
+                                      Transcript:
+                                    </h4>
+                                    <p className="text-sm">
+                                      {speakingData.transcript}
+                                    </p>
+                                  </div>
+                                )}
+
+                                {speakingData.sampleAnswer && (
+                                  <div>
+                                    <h4 className="text-sm font-semibold">
+                                      Sample Answer:
+                                    </h4>
+                                    <p className="text-sm">
+                                      {speakingData.sampleAnswer}
+                                    </p>
+                                  </div>
+                                )}
+
+                                {speakingData.tips?.length > 0 && (
+                                  <div>
+                                    <h4 className="text-sm font-semibold">
+                                      Tips:
+                                    </h4>
+                                    <ul className="list-disc pl-5 space-y-1">
+                                      {speakingData.tips.map(
+                                        (tip: string, idx: number) => (
+                                          <li key={idx} className="text-sm">
+                                            {tip}
+                                          </li>
+                                        ),
+                                      )}
+                                    </ul>
+                                  </div>
+                                )}
+                              </>
+                            );
+                          } catch (e) {
+                            return <p>{previewQuestion.content}</p>;
+                          }
+                        })()}
+                      </div>
+                    ) : (
+                      <div
+                        dangerouslySetInnerHTML={{
+                          __html: previewQuestion.content,
+                        }}
+                      />
+                    )}
                   </div>
 
                   {previewQuestion.choices &&
@@ -902,7 +1248,6 @@ export default function IELTSQuestionManagementPage() {
               </div>
 
               <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6">
-                {/* Search */}
                 <div className="xl:col-span-2">
                   <div className="relative">
                     <Search className="pointer-events-none absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" />
@@ -916,7 +1261,6 @@ export default function IELTSQuestionManagementPage() {
                   </div>
                 </div>
 
-                {/* Section filter */}
                 <div>
                   <Select
                     options={[
@@ -939,7 +1283,6 @@ export default function IELTSQuestionManagementPage() {
                   />
                 </div>
 
-                {/* Question Type filter */}
                 <div>
                   <Select
                     options={[
@@ -960,7 +1303,6 @@ export default function IELTSQuestionManagementPage() {
                   />
                 </div>
 
-                {/* Difficulty filter */}
                 <div>
                   <Select
                     options={[
@@ -976,7 +1318,6 @@ export default function IELTSQuestionManagementPage() {
                   />
                 </div>
 
-                {/* Status filter */}
                 <div>
                   <Select
                     options={[
@@ -994,7 +1335,6 @@ export default function IELTSQuestionManagementPage() {
                 </div>
               </div>
 
-              {/* Meta line */}
               <div className="mt-4 flex flex-wrap items-center justify-between gap-3">
                 <div className="flex items-center gap-4 text-xs text-gray-500 dark:text-gray-400">
                   <div className="flex items-center gap-1">
@@ -1111,21 +1451,17 @@ export default function IELTSQuestionManagementPage() {
                     <div className="relative p-5">
                       <div className="flex flex-col gap-3 lg:flex-row lg:items-start lg:justify-between">
                         <div className="flex-1 min-w-0">
-                          {/* Tags Row */}
                           <div className="mb-2 flex flex-wrap items-center gap-2">
-                            {/* Section Badge */}
                             <span className="inline-flex items-center gap-1 rounded-full bg-gradient-to-r from-blue-500/10 to-indigo-500/10 px-3 py-1 text-xs font-medium text-blue-700 dark:from-blue-500/20 dark:to-indigo-500/20 dark:text-blue-300">
                               <SectionIcon className="h-3 w-3" />
                               {q.section.charAt(0).toUpperCase() +
                                 q.section.slice(1)}
                             </span>
 
-                            {/* Question Type Badge */}
                             <span className="inline-flex items-center gap-1 rounded-full bg-cyan-50 px-3 py-1 text-xs font-medium text-cyan-700 dark:bg-cyan-500/20 dark:text-cyan-300">
                               {getQuestionTypeLabel(q.section, q.questionType)}
                             </span>
 
-                            {/* Difficulty Badge */}
                             <span
                               className={`inline-flex items-center gap-1 rounded-full border px-3 py-1 text-xs font-medium ${getDifficultyColor(q.metadata?.difficulty || "Medium")}`}
                             >
@@ -1133,7 +1469,6 @@ export default function IELTSQuestionManagementPage() {
                               {q.metadata?.difficulty || "Medium"}
                             </span>
 
-                            {/* Status Badge */}
                             <span
                               className={`inline-flex items-center gap-1 rounded-full px-3 py-1 text-xs font-medium ${
                                 q.isActive
@@ -1144,7 +1479,6 @@ export default function IELTSQuestionManagementPage() {
                               {q.isActive ? "Active" : "Inactive"}
                             </span>
 
-                            {/* Topic Badge */}
                             {q.metadata?.topic && (
                               <span className="inline-flex items-center gap-1 rounded-full bg-purple-50 px-3 py-1 text-xs font-medium text-purple-700 dark:bg-purple-500/20 dark:text-purple-300">
                                 <Tag className="h-3 w-3" />
@@ -1153,7 +1487,6 @@ export default function IELTSQuestionManagementPage() {
                             )}
                           </div>
 
-                          {/* Instructions */}
                           {q.instructions && (
                             <p className="mb-2 text-xs text-gray-500 line-clamp-1 dark:text-gray-400">
                               <span className="font-medium">Instructions:</span>{" "}
@@ -1161,14 +1494,20 @@ export default function IELTSQuestionManagementPage() {
                             </p>
                           )}
 
-                          {/* Content */}
                           <div
                             className="text-sm font-medium text-gray-900 line-clamp-1 dark:text-gray-100"
-                            dangerouslySetInnerHTML={{ __html: q.content }}
+                            dangerouslySetInnerHTML={{
+                              __html:
+                                q.section === "speaking"
+                                  ? isJsonString(q.content)
+                                    ? JSON.parse(q.content).question ||
+                                      q.content
+                                    : q.content
+                                  : q.content,
+                            }}
                           />
                         </div>
 
-                        {/* Action Buttons */}
                         <div className="flex flex-col items-center gap-2 lg:flex-shrink-0">
                           <div className="flex items-center gap-2 lg:flex-shrink-0">
                             <Button
@@ -1351,16 +1690,526 @@ export default function IELTSQuestionManagementPage() {
                         />
                       </div>
 
-                      {/* Content */}
+                      {/* Content - Different for Speaking vs Other sections */}
                       <div>
                         <Label className="text-sm font-medium text-gray-700 dark:text-gray-300">
-                          Question Content *
+                          {isSpeakingType(watchQuestionType)
+                            ? watchQuestionType === "speaking_part_2"
+                              ? "Cue Card Topic *"
+                              : "Question *"
+                            : "Question Content *"}
                         </Label>
-                        <RichTextEditor
-                          header={true}
-                          initialValue={watchContent}
-                          onChange={(html) => setValue("content", html)}
-                        />
+
+                        {isSpeakingType(watchQuestionType) ? (
+                          <div className="space-y-4">
+                            {/* Main Question */}
+                            <Input
+                              type="text"
+                              placeholder={
+                                watchQuestionType === "speaking_part_2"
+                                  ? "e.g., Describe a memorable trip you took"
+                                  : watchQuestionType === "speaking_part_1"
+                                    ? "e.g., Do you like reading books?"
+                                    : "e.g., Why do people prefer to live in cities?"
+                              }
+                              value={speakingQuestion}
+                              onChange={(e) => {
+                                setSpeakingQuestion(e.target.value);
+                                updateSpeakingContent();
+                              }}
+                              className="mt-1 rounded-2xl border-gray-200 dark:border-gray-700"
+                            />
+
+                            {/* Follow-up Questions */}
+                            {/* Follow-up Questions */}
+                            <div>
+                              <Label className="text-xs font-medium text-gray-600 dark:text-gray-400">
+                                Follow-up Questions
+                              </Label>
+
+                              <div className="mt-2 space-y-3">
+                                {speakingFollowUpQuestions.map(
+                                  (item, index) => (
+                                    <div
+                                      key={index}
+                                      className="rounded-xl border border-gray-200 p-3 dark:border-gray-700"
+                                    >
+                                      {/* Header */}
+                                      <div className="mb-2 flex items-center justify-between">
+                                        <span className="text-xs font-medium text-gray-500">
+                                          Follow-up Question {index + 1}
+                                        </span>
+
+                                        {speakingFollowUpQuestions.length >
+                                          1 && (
+                                          <button
+                                            type="button"
+                                            onClick={() => {
+                                              const newQuestions =
+                                                speakingFollowUpQuestions.filter(
+                                                  (_, i) => i !== index,
+                                                );
+
+                                              setSpeakingFollowUpQuestions(
+                                                newQuestions,
+                                              );
+                                              updateSpeakingContent();
+                                            }}
+                                            className="text-rose-500 hover:text-rose-700"
+                                          >
+                                            <X className="h-4 w-4" />
+                                          </button>
+                                        )}
+                                      </div>
+                                      
+                                      <Input
+                                        type="text"
+                                        placeholder="Enter follow-up question"
+                                        value={item.text || ""}
+                                        onChange={(e) => {
+                                          const newQuestions = [
+                                            ...speakingFollowUpQuestions,
+                                          ];
+
+                                          newQuestions[index] = {
+                                            ...newQuestions[index],
+                                            text: e.target.value,
+                                          };
+
+                                          setSpeakingFollowUpQuestions(
+                                            newQuestions,
+                                          );
+                                          updateSpeakingContent();
+                                        }}
+                                        className="rounded-xl border-gray-200 dark:border-gray-700"
+                                      />
+
+                                      {/* Media Type */}
+                                      <div className="mt-3">
+                                        <Label className="text-xs text-gray-500">
+                                          Question Media
+                                        </Label>
+
+                                        <Select
+                                          options={[
+                                            {
+                                              value: "none",
+                                              label: "Text Only",
+                                            },
+                                            { value: "audio", label: "Audio" },
+                                            { value: "video", label: "Video" },
+                                          ]}
+                                          defaultValue={item.mediaType}
+                                          onChange={(value: string) => {
+                                            const newQuestions = [
+                                              ...speakingFollowUpQuestions,
+                                            ];
+
+                                            newQuestions[index] = {
+                                              ...newQuestions[index],
+                                              mediaType: value as
+                                                | "none"
+                                                | "audio"
+                                                | "video",
+                                              mediaUrl:
+                                                value === "none"
+                                                  ? ""
+                                                  : newQuestions[index]
+                                                      .mediaUrl,
+                                            };
+
+                                            setSpeakingFollowUpQuestions(
+                                              newQuestions,
+                                            );
+                                            updateSpeakingContent();
+                                          }}
+                                          className="mt-1 rounded-xl border-gray-200 dark:border-gray-700"
+                                        />
+                                      </div>
+
+                                      {/* Audio Upload */}
+                                      {item.mediaType === "audio" && (
+                                        <div className="mt-3">
+                                          <Label className="text-xs text-gray-500">
+                                            Audio File
+                                          </Label>
+
+                                          <input
+                                            type="file"
+                                            accept="audio/*"
+                                            className="mt-1 block w-full text-xs border border-gray-300 rounded-lg cursor-pointer bg-gray-50 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500 p-2"
+                                            onChange={async (e) => {
+                                              const file = e.target.files?.[0];
+
+                                              if (!file) return;
+
+                                              try {
+                                                const formData = new FormData();
+                                                formData.append("file", file);
+
+                                                const res = await api.post(
+                                                  "/upload/audio",
+                                                  formData,
+                                                  {
+                                                    headers: {
+                                                      "Content-Type":
+                                                        "multipart/form-data",
+                                                    },
+                                                  },
+                                                );
+
+                                                if (res.data?.success) {
+                                                  const newQuestions = [
+                                                    ...speakingFollowUpQuestions,
+                                                  ];
+
+                                                  newQuestions[index] = {
+                                                    ...newQuestions[index],
+                                                    mediaUrl: res.data.data.url,
+                                                  };
+
+                                                  setSpeakingFollowUpQuestions(
+                                                    newQuestions,
+                                                  );
+                                                  updateSpeakingContent();
+
+                                                  toast.success(
+                                                    "Audio uploaded successfully",
+                                                  );
+                                                }
+                                              } catch (err: any) {
+                                                console.error(
+                                                  "Follow-up audio upload error:",
+                                                  err,
+                                                );
+
+                                                toast.error(
+                                                  err.response?.data?.message ||
+                                                    "Failed to upload audio",
+                                                );
+                                              }
+                                            }}
+                                          />
+
+                                          {item.mediaUrl && (
+                                            <audio
+                                              controls
+                                              className="mt-2 w-full"
+                                              src={item.mediaUrl}
+                                            />
+                                          )}
+                                        </div>
+                                      )}
+
+                                      {/* Video Upload */}
+                                      {item.mediaType === "video" && (
+                                        <div className="mt-3">
+                                          <Label className="text-xs text-gray-500">
+                                            Video File
+                                          </Label>
+
+                                          <input
+                                            type="file"
+                                            accept="video/*"
+                                            className="mt-1 block w-full text-xs"
+                                            onChange={async (e) => {
+                                              const file = e.target.files?.[0];
+
+                                              if (!file) return;
+
+                                              try {
+                                                const formData = new FormData();
+                                                formData.append("file", file);
+
+                                                const res = await api.post(
+                                                  "/upload/video",
+                                                  formData,
+                                                  {
+                                                    headers: {
+                                                      "Content-Type":
+                                                        "multipart/form-data",
+                                                    },
+                                                  },
+                                                );
+
+                                                if (res.data?.success) {
+                                                  const newQuestions = [
+                                                    ...speakingFollowUpQuestions,
+                                                  ];
+
+                                                  newQuestions[index] = {
+                                                    ...newQuestions[index],
+                                                    mediaUrl: res.data.data.url,
+                                                  };
+
+                                                  setSpeakingFollowUpQuestions(
+                                                    newQuestions,
+                                                  );
+                                                  updateSpeakingContent();
+
+                                                  toast.success(
+                                                    "Video uploaded successfully",
+                                                  );
+                                                }
+                                              } catch (err: any) {
+                                                console.error(
+                                                  "Follow-up video upload error:",
+                                                  err,
+                                                );
+
+                                                toast.error(
+                                                  err.response?.data?.message ||
+                                                    "Failed to upload video",
+                                                );
+                                              }
+                                            }}
+                                          />
+
+                                          {item.mediaUrl && (
+                                            <video
+                                              controls
+                                              className="mt-2 w-full rounded-xl"
+                                              src={item.mediaUrl}
+                                            />
+                                          )}
+                                        </div>
+                                      )}
+                                    </div>
+                                  ),
+                                )}
+
+                                {/* Add */}
+                                <button
+                                  type="button"
+                                  onClick={() => {
+                                    setSpeakingFollowUpQuestions([
+                                      ...speakingFollowUpQuestions,
+                                      {
+                                        text: "",
+                                        mediaType: "none",
+                                        mediaUrl: "",
+                                      },
+                                    ]);
+                                  }}
+                                  className="flex items-center gap-1 rounded-xl bg-blue-50 px-3 py-1.5 text-xs text-blue-600 hover:bg-blue-100 dark:bg-blue-500/20 dark:text-blue-300"
+                                >
+                                  <Plus className="h-3 w-3" />
+                                  Add Follow-up Question
+                                </button>
+                              </div>
+                            </div>
+
+                            {/* Audio Upload */}
+                            {/* <div>
+                              <Label className="text-xs font-medium text-gray-600 dark:text-gray-400">
+                                Audio File
+                              </Label>
+                              <div className="mt-1 flex items-center gap-3">
+                                <input
+                                  type="file"
+                                  accept="audio/*"
+                                  onChange={(e) => {
+                                    const file = e.target.files?.[0];
+                                    if (file) handleAudioUpload(file);
+                                  }}
+                                  className="hidden"
+                                  id="speaking-audio-upload"
+                                />
+                                <label
+                                  htmlFor="speaking-audio-upload"
+                                  className="flex items-center gap-2 rounded-xl border border-gray-200 px-4 py-2 text-xs cursor-pointer hover:bg-gray-50 dark:border-gray-700 dark:hover:bg-gray-800"
+                                >
+                                  <FileAudio className="h-4 w-4" />
+                                  {audioUploading
+                                    ? "Uploading..."
+                                    : "Upload Audio"}
+                                </label>
+                                {speakingAudioUrl && (
+                                  <div className="flex items-center gap-2 flex-1">
+                                    <audio controls className="h-8 flex-1">
+                                      <source src={speakingAudioUrl} />
+                                    </audio>
+                                    <button
+                                      type="button"
+                                      onClick={() => {
+                                        setSpeakingAudioUrl("");
+                                        updateSpeakingContent();
+                                      }}
+                                      className="text-rose-500 hover:text-rose-700"
+                                    >
+                                      <X className="h-4 w-4" />
+                                    </button>
+                                  </div>
+                                )}
+                              </div>
+                              {speakingAudioUrl && (
+                                <Input
+                                  type="text"
+                                  placeholder="Or enter audio URL manually"
+                                  value={speakingAudioUrl}
+                                  onChange={(e) => {
+                                    setSpeakingAudioUrl(e.target.value);
+                                    updateSpeakingContent();
+                                  }}
+                                  className="mt-2 rounded-xl border-gray-200 dark:border-gray-700"
+                                />
+                              )}
+                            </div> */}
+
+                            {/* Video Upload */}
+                            {/* <div>
+                              <Label className="text-xs font-medium text-gray-600 dark:text-gray-400">
+                                Video File
+                              </Label>
+                              <div className="mt-1 flex items-center gap-3">
+                                <input
+                                  type="file"
+                                  accept="video/*"
+                                  onChange={(e) => {
+                                    const file = e.target.files?.[0];
+                                    if (file) handleVideoUpload(file);
+                                  }}
+                                  className="hidden"
+                                  id="speaking-video-upload"
+                                />
+                                <label
+                                  htmlFor="speaking-video-upload"
+                                  className="flex items-center gap-2 rounded-xl border border-gray-200 px-4 py-2 text-xs cursor-pointer hover:bg-gray-50 dark:border-gray-700 dark:hover:bg-gray-800"
+                                >
+                                  <Video className="h-4 w-4" />
+                                  {videoUploading
+                                    ? "Uploading..."
+                                    : "Upload Video"}
+                                </label>
+                                {speakingVideoUrl && (
+                                  <div className="flex items-center gap-2 flex-1">
+                                    <video
+                                      controls
+                                      className="h-20 flex-1 rounded-xl"
+                                    >
+                                      <source src={speakingVideoUrl} />
+                                    </video>
+                                    <button
+                                      type="button"
+                                      onClick={() => {
+                                        setSpeakingVideoUrl("");
+                                        updateSpeakingContent();
+                                      }}
+                                      className="text-rose-500 hover:text-rose-700"
+                                    >
+                                      <X className="h-4 w-4" />
+                                    </button>
+                                  </div>
+                                )}
+                              </div>
+                              {speakingVideoUrl && (
+                                <Input
+                                  type="text"
+                                  placeholder="Or enter video URL manually"
+                                  value={speakingVideoUrl}
+                                  onChange={(e) => {
+                                    setSpeakingVideoUrl(e.target.value);
+                                    updateSpeakingContent();
+                                  }}
+                                  className="mt-2 rounded-xl border-gray-200 dark:border-gray-700"
+                                />
+                              )}
+                            </div> */}
+
+                            {/* Transcript */}
+                            {/* <div>
+                              <Label className="text-xs font-medium text-gray-600 dark:text-gray-400">
+                                Transcript
+                              </Label>
+                              <textarea
+                                placeholder="Enter the transcript of the audio/video"
+                                value={speakingTranscript}
+                                onChange={(e) => {
+                                  setSpeakingTranscript(e.target.value);
+                                  updateSpeakingContent();
+                                }}
+                                rows={3}
+                                className="mt-1 w-full rounded-2xl border border-gray-200 p-3 text-sm dark:border-gray-700 dark:bg-gray-800"
+                              />
+                            </div> */}
+
+                            {/* Sample Answer */}
+                            {/* <div>
+                              <Label className="text-xs font-medium text-gray-600 dark:text-gray-400">
+                                Sample Answer
+                              </Label>
+                              <textarea
+                                placeholder="Enter a sample answer"
+                                value={speakingSampleAnswer}
+                                onChange={(e) => {
+                                  setSpeakingSampleAnswer(e.target.value);
+                                  updateSpeakingContent();
+                                }}
+                                rows={4}
+                                className="mt-1 w-full rounded-2xl border border-gray-200 p-3 text-sm dark:border-gray-700 dark:bg-gray-800"
+                              />
+                            </div> */}
+
+                            {/* Tips */}
+                            <div>
+                              <Label className="text-xs font-medium text-gray-600 dark:text-gray-400">
+                                Tips
+                              </Label>
+                              <div className="space-y-2 mt-1">
+                                {speakingTips.map((tip, index) => (
+                                  <div
+                                    key={index}
+                                    className="flex items-start gap-2"
+                                  >
+                                    <Input
+                                      type="text"
+                                      placeholder={`Tip ${index + 1}`}
+                                      value={tip}
+                                      onChange={(e) => {
+                                        const newTips = [...speakingTips];
+                                        newTips[index] = e.target.value;
+                                        setSpeakingTips(newTips);
+                                        updateSpeakingContent();
+                                      }}
+                                      className="rounded-xl border-gray-200 dark:border-gray-700"
+                                    />
+                                    {speakingTips.length > 1 && (
+                                      <button
+                                        type="button"
+                                        onClick={() => {
+                                          const newTips = speakingTips.filter(
+                                            (_, i) => i !== index,
+                                          );
+                                          setSpeakingTips(newTips);
+                                          updateSpeakingContent();
+                                        }}
+                                        className="mt-2 text-rose-500 hover:text-rose-700"
+                                      >
+                                        <X className="h-4 w-4" />
+                                      </button>
+                                    )}
+                                  </div>
+                                ))}
+                                <button
+                                  type="button"
+                                  onClick={() => {
+                                    setSpeakingTips([...speakingTips, ""]);
+                                  }}
+                                  className="flex items-center gap-1 rounded-xl bg-blue-50 px-3 py-1.5 text-xs text-blue-600 hover:bg-blue-100 dark:bg-blue-500/20 dark:text-blue-300"
+                                >
+                                  <Plus className="h-3 w-3" />
+                                  Add Tip
+                                </button>
+                              </div>
+                            </div>
+                          </div>
+                        ) : (
+                          <RichTextEditor
+                            header={true}
+                            initialValue={watchContent}
+                            onChange={(html) => setValue("content", html)}
+                          />
+                        )}
                       </div>
 
                       {/* MCQ Choices */}
@@ -1611,102 +2460,101 @@ export default function IELTSQuestionManagementPage() {
                         </div>
                       )}
 
-                      {/* Speaking specific fields */}
-                      {isSpeakingType(watchQuestionType) && (
-                        <div className="space-y-3">
-                          {watchQuestionType === "speaking_part_2" && (
-                            <>
+                      {/* Speaking Part 2 specific fields */}
+                      {isSpeakingType(watchQuestionType) &&
+                        watchQuestionType === "speaking_part_2" && (
+                          <div className="space-y-3">
+                            <div>
+                              <Label className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                                Cue Card Points{" "}
+                                <span className="text-xs text-gray-400">
+                                  (one per line)
+                                </span>
+                              </Label>
+                              <textarea
+                                placeholder={
+                                  "Describe a memorable trip you took\n\nYou should say:\n- Where you went\n- Who you went with\n- What you did there\n- And explain why it was memorable"
+                                }
+                                value={watchCueCardPoints}
+                                onChange={(e) =>
+                                  setValue("cueCardPoints", e.target.value)
+                                }
+                                rows={6}
+                                className="mt-1 w-full rounded-2xl border border-gray-200 p-3 text-sm dark:border-gray-700 dark:bg-gray-800"
+                              />
+                            </div>
+                            <div className="grid gap-4 sm:grid-cols-2">
                               <div>
                                 <Label className="text-sm font-medium text-gray-700 dark:text-gray-300">
-                                  Cue Card Points{" "}
-                                  <span className="text-xs text-gray-400">
-                                    (one per line)
-                                  </span>
+                                  Preparation Time (seconds)
                                 </Label>
-                                <textarea
-                                  placeholder={
-                                    "Describe a memorable trip you took\n\nYou should say:\n- Where you went\n- Who you went with\n- What you did there\n- And explain why it was memorable"
-                                  }
-                                  value={watchCueCardPoints}
+                                <Input
+                                  type="number"
+                                  placeholder="e.g., 60"
+                                  value={watchPreparationTime || ""}
                                   onChange={(e) =>
-                                    setValue("cueCardPoints", e.target.value)
+                                    setValue(
+                                      "preparationTime",
+                                      parseInt(e.target.value) || null,
+                                    )
                                   }
-                                  rows={6}
-                                  className="mt-1 w-full rounded-2xl border border-gray-200 p-3 text-sm dark:border-gray-700 dark:bg-gray-800"
+                                  className="mt-1 rounded-2xl border-gray-200 dark:border-gray-700"
                                 />
                               </div>
-                              <div className="grid gap-4 sm:grid-cols-2">
-                                <div>
-                                  <Label className="text-sm font-medium text-gray-700 dark:text-gray-300">
-                                    Preparation Time (seconds)
-                                  </Label>
-                                  <Input
-                                    type="number"
-                                    placeholder="e.g., 60"
-                                    value={watchPreparationTime || ""}
-                                    onChange={(e) =>
-                                      setValue(
-                                        "preparationTime",
-                                        parseInt(e.target.value) || null,
-                                      )
-                                    }
-                                    className="mt-1 rounded-2xl border-gray-200 dark:border-gray-700"
-                                  />
-                                </div>
-                                <div>
-                                  <Label className="text-sm font-medium text-gray-700 dark:text-gray-300">
-                                    Response Time (seconds)
-                                  </Label>
-                                  <Input
-                                    type="number"
-                                    placeholder="e.g., 120"
-                                    value={watchResponseTime || ""}
-                                    onChange={(e) =>
-                                      setValue(
-                                        "responseTime",
-                                        parseInt(e.target.value) || null,
-                                      )
-                                    }
-                                    className="mt-1 rounded-2xl border-gray-200 dark:border-gray-700"
-                                  />
-                                </div>
+                              <div>
+                                <Label className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                                  Response Time (seconds)
+                                </Label>
+                                <Input
+                                  type="number"
+                                  placeholder="e.g., 120"
+                                  value={watchResponseTime || ""}
+                                  onChange={(e) =>
+                                    setValue(
+                                      "responseTime",
+                                      parseInt(e.target.value) || null,
+                                    )
+                                  }
+                                  className="mt-1 rounded-2xl border-gray-200 dark:border-gray-700"
+                                />
                               </div>
-                            </>
-                          )}
+                            </div>
+                          </div>
+                        )}
+
+                      {/* Media URLs for non-speaking questions */}
+                      {!isSpeakingType(watchQuestionType) && (
+                        <div className="grid gap-4 sm:grid-cols-2">
+                          <div>
+                            <Label className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                              Audio URL
+                            </Label>
+                            <Input
+                              type="text"
+                              placeholder="https://example.com/audio.mp3"
+                              value={watchAudioUrl}
+                              onChange={(e) =>
+                                setValue("audioUrl", e.target.value)
+                              }
+                              className="mt-1 rounded-2xl border-gray-200 dark:border-gray-700"
+                            />
+                          </div>
+                          <div>
+                            <Label className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                              Image URL
+                            </Label>
+                            <Input
+                              type="text"
+                              placeholder="https://example.com/image.png"
+                              value={watchImageUrl}
+                              onChange={(e) =>
+                                setValue("imageUrl", e.target.value)
+                              }
+                              className="mt-1 rounded-2xl border-gray-200 dark:border-gray-700"
+                            />
+                          </div>
                         </div>
                       )}
-
-                      {/* Media URLs */}
-                      <div className="grid gap-4 sm:grid-cols-2">
-                        <div>
-                          <Label className="text-sm font-medium text-gray-700 dark:text-gray-300">
-                            Audio URL
-                          </Label>
-                          <Input
-                            type="text"
-                            placeholder="https://example.com/audio.mp3"
-                            value={watchAudioUrl}
-                            onChange={(e) =>
-                              setValue("audioUrl", e.target.value)
-                            }
-                            className="mt-1 rounded-2xl border-gray-200 dark:border-gray-700"
-                          />
-                        </div>
-                        <div>
-                          <Label className="text-sm font-medium text-gray-700 dark:text-gray-300">
-                            Image URL
-                          </Label>
-                          <Input
-                            type="text"
-                            placeholder="https://example.com/image.png"
-                            value={watchImageUrl}
-                            onChange={(e) =>
-                              setValue("imageUrl", e.target.value)
-                            }
-                            className="mt-1 rounded-2xl border-gray-200 dark:border-gray-700"
-                          />
-                        </div>
-                      </div>
 
                       {/* Metadata */}
                       <div className="grid gap-4 sm:grid-cols-2">

@@ -1,479 +1,818 @@
-import { useState, useEffect } from "react";
-import { Calendar, momentLocalizer } from "react-big-calendar";
-import moment from "moment";
-import "react-big-calendar/lib/css/react-big-calendar.css";
-import { ChevronLeft, ChevronRight, Calendar as CalendarIcon, Clock, Users, BookOpen, TrendingUp } from "lucide-react";
+// EventCalendar.jsx
+import React, { useState, useEffect, useCallback, useMemo } from 'react';
+import { Calendar, momentLocalizer, Views } from 'react-big-calendar';
+import moment from 'moment';
+import 'react-big-calendar/lib/css/react-big-calendar.css';
+import './CalendarComponent.css';
+import api from '../axiosInstance';
+import {
+  Calendar as CalendarIcon,
+  Clock,
+  MapPin,
+  User,
+  Plus,
+  ChevronLeft,
+  ChevronRight,
+  Video,
+  BookOpen,
+  Award,
+  MessageCircle,
+  MoreVertical,
+  X,
+  Trash2,
+  Edit2
+} from 'lucide-react';
 
-// Define event types
-interface Event {
-  id: string;
-  title: string;
-  start: Date;
-  end: Date;
-  description?: string;
-  location?: string;
-  category: "class" | "exam" | "workshop" | "deadline" | "other";
-  instructor?: string;
-  course?: string;
-  isAllDay?: boolean;
-}
-
-// Localizer for date handling
 const localizer = momentLocalizer(moment);
 
-// Custom event component with enhanced styling
-const CustomEvent = ({ event }: { event: Event }) => {
-  const getCategoryColor = (category: string) => {
-    switch (category) {
-      case "class": return "bg-blue-600 border-blue-700";
-      case "exam": return "bg-red-600 border-red-700";
-      case "workshop": return "bg-green-600 border-green-700";
-      case "deadline": return "bg-yellow-600 border-yellow-700";
-      default: return "bg-purple-600 border-purple-700";
-    }
-  };
-
-  return (
-    <div className={`p-2 rounded-lg ${getCategoryColor(event.category)} text-white text-sm truncate relative overflow-hidden`}>
-      <div className="font-medium truncate">{event.title}</div>
-      <div className="text-xs opacity-90 truncate mt-1">
-        {event.isAllDay ? "All Day" : `${moment(event.start).format("HH:mm")} - ${moment(event.end).format("HH:mm")}`}
-      </div>
-      {event.location && (
-        <div className="text-xs opacity-80 mt-1 flex items-center">
-          <Clock className="h-3 w-3 mr-1" />
-          {event.location}
-        </div>
-      )}
-    </div>
-  );
-};
-
-// Custom toolbar component with enhanced design
-const CustomToolbar = ({
-  date,
-  onNavigate,
-  onView,
-  view
-}: {
-  date: Date;
-  onNavigate: (action: "PREV" | "NEXT" | "TODAY") => void;
-  onView: (view: string) => void;
-  view: string;
-}) => {
-  const goToBack = () => onNavigate("PREV");
-  const goToNext = () => onNavigate("NEXT");
-  const goToToday = () => onNavigate("TODAY");
-
-  return (
-    <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 gap-4 p-4 bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700">
-      <div className="flex items-center space-x-3">
-        <div className="p-2 bg-blue-100 dark:bg-blue-900/50 rounded-lg">
-          <CalendarIcon className="h-6 w-6 text-blue-600 dark:text-blue-400" />
-        </div>
-        <div className="flex items-center space-x-2">
-          <button
-            onClick={goToBack}
-            className="p-2 rounded-lg bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 text-gray-700 dark:text-gray-300 transition-colors"
-          >
-            <ChevronLeft className="h-4 w-5" />
-          </button>
-          <button
-            onClick={goToToday}
-            className="px-4 py-1 rounded-lg bg-gradient-to-r from-blue-600 to-indigo-700 hover:from-blue-700 hover:to-indigo-800 text-white font-medium transition-all duration-200 transform hover:scale-105 shadow-md"
-          >
-            Today
-          </button>
-          <button
-            onClick={goToNext}
-            className="p-2 rounded-lg bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 text-gray-700 dark:text-gray-300 transition-colors"
-          >
-            <ChevronRight className="h-4 w-5" />
-          </button>
-        </div>
-      </div>
-
-      <div className="flex flex-wrap items-center gap-3">
-        <div className="text-lg font-semibold text-gray-900 dark:text-white min-w-[180px]">
-          {moment(date).format("MMMM YYYY")}
-        </div>
-        <div className="flex rounded-lg border border-gray-300 dark:border-gray-600 overflow-hidden">
-          {["month", "week", "day", "agenda"].map((viewType) => (
-            <button
-              key={viewType}
-              className={`px-4 py-2 text-sm capitalize font-medium transition-all duration-200 ${view === viewType
-                ? "bg-blue-600 text-white"
-                : "bg-white dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-600"
-                }`}
-              onClick={() => onView(viewType)}
-            >
-              {viewType}
-            </button>
-          ))}
-        </div>
-      </div>
-    </div>
-  );
-};
-
-// Custom agenda row component
-const CustomAgendaRow = ({ event }: { event: Event }) => {
-  const getCategoryColor = (category: string) => {
-    switch (category) {
-      case "class": return "bg-blue-100 dark:bg-blue-900/30 text-blue-800 dark:text-blue-300";
-      case "exam": return "bg-red-100 dark:bg-red-900/30 text-red-800 dark:text-red-300";
-      case "workshop": return "bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-300";
-      case "deadline": return "bg-yellow-100 dark:bg-yellow-900/30 text-yellow-800 dark:text-yellow-300";
-      default: return "bg-purple-100 dark:bg-purple-900/30 text-purple-800 dark:text-purple-300";
-    }
-  };
-
-  return (
-    <div className="border-b border-gray-200 dark:border-gray-700 py-3">
-      <div className="flex items-start">
-        <div className={`w-3 h-3 rounded-full ${getCategoryColor(event.category)} mt-1.5 mr-3`}></div>
-        <div className="flex-1">
-          <div className="flex items-center justify-between mb-1">
-            <h4 className="font-medium text-gray-900 dark:text-white">{event.title}</h4>
-            <span className={`px-2 py-0.5 rounded text-xs ${getCategoryColor(event.category)}`}>
-              {event.category}
-            </span>
-          </div>
-          <div className="text-sm text-gray-600 dark:text-gray-400">
-            <div className="flex items-center">
-              <Clock className="h-4 w-4 mr-1" />
-              {event.isAllDay ? "All Day" : `${moment(event.start).format("HH:mm")} - ${moment(event.end).format("HH:mm")}`}
-            </div>
-            {event.location && (
-              <div className="flex items-center mt-1">
-                <Users className="h-4 w-4 mr-1" />
-                {event.location}
-              </div>
-            )}
-            {event.instructor && (
-              <div className="flex items-center mt-1">
-                <BookOpen className="h-4 w-4 mr-1" />
-                {event.instructor}
-              </div>
-            )}
-          </div>
-        </div>
-      </div>
-    </div>
-  );
-};
-
 const EventCalendar = () => {
-  const [events, setEvents] = useState<Event[]>([]);
+  const [events, setEvents] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-  const [isDarkMode, setIsDarkMode] = useState(false);
+  const [showEventModal, setShowEventModal] = useState(false);
+  const [viewingEvent, setViewingEvent] = useState(null);
+  const [editingEvent, setEditingEvent] = useState(null);
+  const [selectedSlot, setSelectedSlot] = useState(null);
+  const [view, setView] = useState(Views.MONTH);
+  const [date, setDate] = useState(new Date());
+  const [sidebarOpen, setSidebarOpen] = useState(true);
 
-  // Detect dark mode changes
+  // Event form state
+  const [eventTitle, setEventTitle] = useState('');
+  const [eventStart, setEventStart] = useState(new Date());
+  const [eventEnd, setEventEnd] = useState(new Date());
+  const [eventDescription, setEventDescription] = useState('');
+  const [eventCategory, setEventCategory] = useState('session');
+  const [eventInstructor, setEventInstructor] = useState('');
+
+  // Color map with orange theme
+  const colorMap = {
+    session: {
+      bg: '#fff7ed',
+      text: '#c2410c',
+      border: '#f97316',
+      gradient: 'from-orange-400 to-orange-600',
+      label: 'Session',
+      icon: Video
+    },
+    liveClass: {
+      bg: '#ffedd5',
+      text: '#9a3412',
+      border: '#ea580c',
+      gradient: 'from-orange-500 to-red-500',
+      label: 'Live Class',
+      icon: BookOpen
+    },
+    speaking: {
+      bg: '#fef3c7',
+      text: '#b45309',
+      border: '#f59e0b',
+      gradient: 'from-amber-400 to-orange-500',
+      label: 'Speaking',
+      icon: MessageCircle
+    },
+    skills: {
+      bg: '#ffedd5',
+      text: '#c2410c',
+      border: '#fb923c',
+      gradient: 'from-orange-400 to-amber-500',
+      label: 'Skills',
+      icon: Award
+    },
+    custom: {
+      bg: '#fff7ed',
+      text: '#9a3412',
+      border: '#f97316',
+      gradient: 'from-orange-300 to-orange-500',
+      label: 'Custom',
+      icon: CalendarIcon
+    }
+  };
+
+  // Fetch events from API
   useEffect(() => {
-    const checkDarkMode = () => {
-      const darkMode = document.documentElement.classList.contains('dark');
-      setIsDarkMode(darkMode);
+    const fetchEventsFromApi = async () => {
+      try {
+        setLoading(true);
+        const response = await api.get('/content/schedule');
+
+        if (response.data && response.data.data) {
+          const mappedEvents = response.data.data.map(item => {
+            // Determine category based on contentType or type
+            let category = 'session';
+            if (item.contentType?.toLowerCase().includes('liveClass')) category = 'liveClass';
+            else if (item.type?.toLowerCase().includes('speaking')) category = 'speaking';
+            else if (item.contentType?.toLowerCase().includes('skills')) category = 'skills';
+
+            const colors = colorMap[category] || colorMap.custom;
+
+            return {
+              id: item._id,
+              title: item.title,
+              start: new Date(item.scheduledStart),
+              end: new Date(item.scheduledEnd),
+              instructor: item.instructor,
+              category: category,
+              contentType: item.contentType,
+              slug: item.slug,
+              status: item.status,
+              color: colors.bg,
+              textColor: colors.text,
+              borderColor: colors.border,
+              gradient: colors.gradient,
+              icon: colors.icon
+            };
+          });
+
+          setEvents(mappedEvents);
+        }
+      } catch (error) {
+        console.error('Error fetching events:', error);
+      } finally {
+        setLoading(false);
+      }
     };
 
-    // Check initial state
-    checkDarkMode();
-
-    // Set up observer for class changes
-    const observer = new MutationObserver(checkDarkMode);
-    observer.observe(document.documentElement, {
-      attributes: true,
-      attributeFilter: ['class']
-    });
-
-    return () => observer.disconnect();
+    fetchEventsFromApi();
   }, []);
 
-  // Mock data - replace with your API call
-  useEffect(() => {
-    try {
-      // Simulate API call
-      setTimeout(() => {
-        const mockEvents: Event[] = [
-          {
-            id: "1",
-            title: "Mathematics Lecture",
-            start: new Date(new Date().setHours(10, 0, 0, 0)),
-            end: new Date(new Date().setHours(11, 30, 0, 0)),
-            description: "Calculus fundamentals",
-            location: "Room 201",
-            category: "class",
-            instructor: "Dr. Smith",
-            course: "MATH 101"
-          },
-          {
-            id: "2",
-            title: "Physics Exam",
-            start: new Date(new Date().setDate(new Date().getDate() + 2)),
-            end: new Date(new Date().setDate(new Date().getDate() + 2)),
-            description: "Midterm exam",
-            location: "Main Hall",
-            category: "exam",
-            course: "PHYS 201"
-          },
-          {
-            id: "3",
-            title: "Study Abroad Workshop",
-            start: new Date(new Date().setDate(new Date().getDate() + 5)),
-            end: new Date(new Date().setDate(new Date().getDate() + 5)),
-            description: "Application process overview",
-            location: "Conference Room A",
-            category: "workshop",
-            instructor: "Admissions Team"
-          },
-          {
-            id: "4",
-            title: "Assignment Deadline",
-            start: new Date(new Date().setDate(new Date().getDate() + 7)),
-            end: new Date(new Date().setDate(new Date().getDate() + 7)),
-            description: "Submit final project",
-            category: "deadline",
-            course: "CS 301"
-          },
-          {
-            id: "5",
-            title: "Chemistry Lab",
-            start: new Date(new Date().setDate(new Date().getDate() + 10)),
-            end: new Date(new Date().setDate(new Date().getDate() + 10)),
-            description: "Organic chemistry experiments",
-            location: "Lab 302",
-            category: "class",
-            instructor: "Prof. Johnson",
-            course: "CHEM 202"
-          },
-          {
-            id: "6",
-            title: "Research Seminar",
-            start: new Date(new Date().setDate(new Date().getDate() + 14)),
-            end: new Date(new Date().setDate(new Date().getDate() + 14)),
-            description: "Advanced research methods",
-            location: "Seminar Room B",
-            category: "workshop",
-            instructor: "Dr. Wilson"
-          }
-        ];
-        setEvents(mockEvents);
-        setLoading(false);
-      }, 800);
-    } catch (err) {
-      setError("Failed to load events");
-      setLoading(false);
+  const handleSelectSlot = useCallback((slotInfo) => {
+    setSelectedSlot(slotInfo);
+    setEditingEvent(null);
+    setViewingEvent(null);
+    setEventTitle('');
+    setEventDescription('');
+    setEventInstructor('');
+    setEventCategory('session');
+
+    const start = slotInfo.start;
+    const end = slotInfo.end || new Date(start.getTime() + 60 * 60 * 1000);
+    setEventStart(start);
+    setEventEnd(end);
+
+    setShowEventModal(true);
+  }, []);
+
+  const handleSelectEvent = useCallback((event) => {
+    setViewingEvent(event);
+    setEditingEvent(null);
+    setShowEventModal(true);
+  }, []);
+
+  const handleEditEvent = (event) => {
+    setEditingEvent(event);
+    setViewingEvent(null);
+    setEventTitle(event.title);
+    setEventStart(event.start);
+    setEventEnd(event.end);
+    setEventDescription(event.instructor?.name || '');
+    setEventInstructor(event.instructor?.name || '');
+    setEventCategory(event.category || 'session');
+    setShowEventModal(true);
+  };
+
+  const handleSaveEvent = () => {
+    if (!eventTitle.trim()) {
+      alert('Please enter an event title');
+      return;
     }
-  }, []);
 
-  // Filter events to show only current and future events
-  const currentAndFutureEvents = events.filter(event =>
-    new Date(event.end) >= new Date()
-  );
+    if (eventEnd <= eventStart) {
+      alert('End time must be after start time');
+      return;
+    }
 
-  // Event styling based on category
-  const eventPropGetter = (event: Event) => {
-    const backgroundColor = {
-      class: "#3b82f6", // blue
-      exam: "#ef4444",  // red
-      workshop: "#10b981", // green
-      deadline: "#f59e0b", // yellow
-      other: "#8b5cf6"  // purple
-    }[event.category];
+    const colors = colorMap[eventCategory] || colorMap.custom;
 
+    const eventData = {
+      id: editingEvent ? editingEvent.id : Date.now(),
+      title: eventTitle,
+      start: eventStart,
+      end: eventEnd,
+      instructor: { name: eventInstructor },
+      category: eventCategory,
+      color: colors.bg,
+      textColor: colors.text,
+      borderColor: colors.border,
+      gradient: colors.gradient
+    };
+
+    if (editingEvent) {
+      setEvents(events.map(ev => ev.id === editingEvent.id ? eventData : ev));
+    } else {
+      setEvents([...events, eventData]);
+    }
+
+    setShowEventModal(false);
+    resetForm();
+  };
+
+  const handleDeleteEvent = (eventId) => {
+    if (window.confirm('Are you sure you want to delete this event?')) {
+      setEvents(events.filter(ev => ev.id !== eventId));
+      setShowEventModal(false);
+      setEditingEvent(null);
+      setViewingEvent(null);
+    }
+  };
+
+  const resetForm = () => {
+    setEventTitle('');
+    setEventDescription('');
+    setEventInstructor('');
+    setEventCategory('session');
+    setEditingEvent(null);
+    setViewingEvent(null);
+  };
+
+  const handleViewChange = (newView) => {
+    setView(newView);
+  };
+
+  const handleNavigate = (newDate) => {
+    setDate(newDate);
+  };
+
+  const eventStyleGetter = (event) => {
     return {
       style: {
-        backgroundColor,
-        borderRadius: "4px",
-        border: "none",
-        color: "white",
-        fontSize: "0.85rem",
-        padding: "2px 4px",
-        boxShadow: "0 1px 2px rgba(0,0,0,0.1)"
+        backgroundColor: 'transparent',
+        backgroundImage: 'none',
+        borderRadius: '6px',
+        border: `2px solid #f97316`,
+        display: 'flex',
+        alignItems: 'center',
+        padding: '4px 6px',
+        fontSize: '11px',
+        fontWeight: '600',
+        color: '#c2410c',
+        boxShadow: '0 2px 4px rgba(249, 115, 22, 0.15)',
+        cursor: 'pointer',
+        overflow: 'hidden',
+        textOverflow: 'ellipsis',
+        whiteSpace: 'nowrap',
+        minHeight: '24px'
       }
     };
   };
 
-  // Agenda view customizations
-  const agendaViews = {
-    agenda: {
-      eventComponent: CustomAgendaRow
-    }
+  const dayPropGetter = (date) => {
+    const today = new Date();
+    const isToday =
+      date.getDate() === today.getDate() &&
+      date.getMonth() === today.getMonth() &&
+      date.getFullYear() === today.getFullYear();
+
+    return {
+      style: {
+        backgroundColor: isToday ? '#fff7ed' : 'transparent'
+      },
+      className: isToday ? 'today-cell rounded-lg' : ''
+    };
   };
 
-  if (loading) {
-    return (
-      <div className="flex justify-center items-center h-96">
-        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-500"></div>
-      </div>
-    );
-  }
+  const CustomEvent = ({ event }) => {
+    const Icon = event.icon || Video;
+    const startTime = moment(event.start).format('HH:mm');
+    const endTime = moment(event.end).format('HH:mm');
 
-  if (error) {
     return (
-      <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-xl p-6 text-center">
-        <div className="flex justify-center mb-4">
-          <svg className="h-12 w-12 text-red-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
-          </svg>
+      <div className="flex items-center gap-1.5 w-full">
+        <div className="flex items-center gap-1 flex-1 min-w-0">
+          <Icon className="h-3 w-3 flex-shrink-0 text-orange-600" />
+          <span className="truncate font-semibold text-orange-700 text-xs">
+            {event.title}
+          </span>
         </div>
-        <p className="text-red-700 dark:text-red-300 text-lg font-medium mb-4">{error}</p>
-        <button
-          onClick={() => window.location.reload()}
-          className="px-6 py-3 bg-red-600 hover:bg-red-700 text-white rounded-lg font-medium transition-colors"
-        >
-          Retry Loading
-        </button>
+        <span className="text-xs text-orange-600 font-medium flex-shrink-0">
+          {startTime}
+        </span>
       </div>
     );
-  }
+  };
+
+  const CustomMonthEvent = ({ event }) => {
+    const Icon = event.icon || Video;
+
+    return (
+      <div className="bg-gradient-to-r from-orange-100 to-amber-100 border-l-4 border-orange-500 rounded-md px-2 py-1.5 mb-1 hover:shadow-md transition-shadow cursor-pointer">
+        <div className="flex items-center gap-1.5">
+          <Icon className="h-3.5 w-3.5 text-orange-600 flex-shrink-0" />
+          <div className="min-w-0 flex-1">
+            <div className="text-xs font-bold text-orange-800 truncate">
+              {event.title}
+            </div>
+            <div className="text-[10px] text-orange-600 font-medium">
+              {moment(event.start).format('HH:mm')} - {moment(event.end).format('HH:mm')}
+            </div>
+            {event.instructor && (
+              <div className="text-[10px] text-orange-500 truncate">
+                {event.instructor.name}
+              </div>
+            )}
+          </div>
+        </div>
+      </div>
+    );
+  };
+
+  const CustomAgendaEvent = ({ event }) => {
+    const Icon = event.icon || Video;
+    return (
+      <div className="flex items-center gap-4 p-3 hover:bg-orange-50 rounded-lg transition-colors">
+        <div className={`flex h-12 w-12 items-center justify-center rounded-xl bg-gradient-to-br ${event.gradient || 'from-orange-400 to-orange-600'} text-white shadow-lg`}>
+          <Icon className="h-6 w-6" />
+        </div>
+        <div className="flex-1 min-w-0">
+          <div className="font-bold text-gray-900 truncate">{event.title}</div>
+          <div className="flex items-center gap-3 text-sm text-gray-600 mt-1">
+            <span className="flex items-center gap-1">
+              <Clock className="h-3.5 w-3.5 text-orange-500" />
+              {moment(event.start).format('HH:mm')} - {moment(event.end).format('HH:mm')}
+            </span>
+            {event.instructor && (
+              <span className="flex items-center gap-1">
+                <User className="h-3.5 w-3.5 text-orange-500" />
+                {event.instructor.name}
+              </span>
+            )}
+          </div>
+        </div>
+      </div>
+    );
+  };
+
+  const CustomTimeSlotWrapper = ({ children }) => {
+    return <div className="hover:bg-orange-50/30 transition-colors">{children}</div>;
+  };
+
+  const filteredEvents = useMemo(() => {
+    return events;
+  }, [events]);
+
+  const todayEvents = useMemo(() => {
+    const today = moment();
+    return events.filter(event =>
+      moment(event.start).isSame(today, 'day')
+    ).sort((a, b) => a.start - b.start);
+  }, [events]);
+
+  const upcomingEvents = useMemo(() => {
+    const now = moment();
+    return events.filter(event =>
+      moment(event.start).isAfter(now)
+    ).sort((a, b) => a.start - b.start).slice(0, 5);
+  }, [events]);
+
+  const stats = useMemo(() => {
+    return {
+      total: events.length,
+      today: todayEvents.length,
+      thisWeek: events.filter(e =>
+        moment(e.start).isSame(moment(), 'week')
+      ).length,
+      sessions: events.filter(e => e.category === 'session').length,
+      liveClass: events.filter(e => e.category === 'liveClass').length
+    };
+  }, [events, todayEvents]);
+
+  const navigateCalendar = (direction) => {
+    const newDate = moment(date).clone();
+    if (direction === 'prev') {
+      if (view === Views.MONTH) newDate.subtract(1, 'month');
+      else if (view === Views.WEEK) newDate.subtract(1, 'week');
+      else if (view === Views.DAY) newDate.subtract(1, 'day');
+    } else {
+      if (view === Views.MONTH) newDate.add(1, 'month');
+      else if (view === Views.WEEK) newDate.add(1, 'week');
+      else if (view === Views.DAY) newDate.add(1, 'day');
+    }
+    setDate(newDate.toDate());
+  };
 
   return (
-    <div className="bg-white dark:bg-gray-900 rounded-2xl shadow-lg p-6 md:p-8 border border-gray-200 dark:border-gray-700">
+    <div className="min-h-screen bg-gradient-to-br from-orange-50 via-white to-amber-50">
+      <div className="flex h-screen overflow-hidden">
+        {/* Left Sidebar */}
+        <aside className={`${sidebarOpen ? 'w-80' : 'w-0'} transition-all duration-300 bg-white border-r border-orange-100 overflow-hidden flex flex-col`}>
+          <div className="p-6 flex-1 overflow-y-auto">
+            {/* Header */}
+            <div className="mb-8">
+              <h1 className="text-2xl font-bold text-gray-900 mb-1">Calendar</h1>
+              <p className="text-sm text-gray-500">Manage your schedule</p>
+            </div>
 
-      <div className="relative">
-        {/* CSS for both light and dark modes */}
-        <style>{`
-          /* Light mode styles */
-          .rbc-calendar:not(.dark-mode) .rbc-header,
-          .rbc-calendar:not(.dark-mode) .rbc-date-cell,
-          .rbc-calendar:not(.dark-mode) .rbc-day-bg,
-          .rbc-calendar:not(.dark-mode) .rbc-month-row,
-          .rbc-calendar:not(.dark-mode) .rbc-agenda-view table tbody > tr > td,
-          .rbc-calendar:not(.dark-mode) .rbc-agenda-view table thead > tr > th,
-          .rbc-calendar:not(.dark-mode) .rbc-time-header-content,
-          .rbc-calendar:not(.dark-mode) .rbc-time-content,
-          .rbc-calendar:not(.dark-mode) .rbc-timeslot-group,
-          .rbc-calendar:not(.dark-mode) .rbc-time-slot,
-          .rbc-calendar:not(.dark-mode) .rbc-day-slot {
-            color: #374151 !important;
-            border-color: #e5e7eb !important;
-          }
-          
-          .rbc-calendar:not(.dark-mode) .rbc-off-range-bg {
-            background: #f9fafb !important;
-          }
-          
-          .rbc-calendar:not(.dark-mode) .rbc-today {
-            background: #dbeafe !important;
-          }
-          
-          .rbc-calendar:not(.dark-mode) .rbc-current-time-indicator {
-            background-color: #ef4444 !important;
-          }
-          
-          .rbc-calendar:not(.dark-mode) .rbc-show-more {
-            background: transparent !important;
-            color: #2563eb !important;
-          }
-          
-          .rbc-calendar:not(.dark-mode) .rbc-agenda-empty {
-            color: #6b7280 !important;
-          }
-          
-          /* Dark mode styles */
-          .rbc-calendar.dark-mode .rbc-header,
-          .rbc-calendar.dark-mode .rbc-date-cell,
-          .rbc-calendar.dark-mode .rbc-day-bg,
-          .rbc-calendar.dark-mode .rbc-month-row,
-          .rbc-calendar.dark-mode .rbc-agenda-view table tbody > tr > td,
-          .rbc-calendar.dark-mode .rbc-agenda-view table thead > tr > th,
-          .rbc-calendar.dark-mode .rbc-time-header-content,
-          .rbc-calendar.dark-mode .rbc-time-content,
-          .rbc-calendar.dark-mode .rbc-timeslot-group,
-          .rbc-calendar.dark-mode .rbc-time-slot,
-          .rbc-calendar.dark-mode .rbc-day-slot {
-            color: #f3f4f6 !important;
-            border-color: #374151 !important;
-          }
-          
-          .rbc-calendar.dark-mode .rbc-off-range-bg {
-            background: #1f2937 !important;
-          }
-          
-          .rbc-calendar.dark-mode .rbc-today {
-            background: #1e3a8a !important;
-          }
-          
-          .rbc-calendar.dark-mode .rbc-current-time-indicator {
-            background-color: #ef4444 !important;
-          }
-          
-          .rbc-calendar.dark-mode .rbc-show-more {
-            background: transparent !important;
-            color: #93c5fd !important;
-          }
-          
-          .rbc-calendar.dark-mode .rbc-agenda-empty {
-            color: #9ca3af !important;
-          }
-        `}</style>
+            {/* Create Button */}
+            <button
+              onClick={() => handleSelectSlot({ start: new Date(), end: new Date(new Date().getTime() + 3600000) })}
+              className="w-full mb-8 px-4 py-3 bg-gradient-to-r from-orange-500 to-orange-600 text-white rounded-xl hover:shadow-lg hover:shadow-orange-500/30 transition-all font-semibold flex items-center justify-center gap-2"
+            >
+              <Plus className="h-5 w-5" />
+              Schedule Class
+            </button>
 
-        <Calendar
-          localizer={localizer}
-          events={currentAndFutureEvents}
-          startAccessor="start"
-          endAccessor="end"
-          style={{ height: "700px" }}
-          className={`bg-transparent ${isDarkMode ? 'dark-mode' : ''}`}
-          components={{
-            event: CustomEvent,
-            toolbar: CustomToolbar,
-            agenda: agendaViews
-          }}
-          eventPropGetter={eventPropGetter}
-          messages={{
-            next: "Next",
-            previous: "Back",
-            today: "Today",
-            month: "Month",
-            week: "Week",
-            day: "Day",
-            agenda: "Agenda",
-            date: "Date",
-            time: "Time",
-            event: "Event"
-          }}
-          formats={{
-            dateFormat: "D",
-            dayFormat: "ddd D",
-            weekdayFormat: "dddd",
-            monthHeaderFormat: "MMMM YYYY",
-            dayHeaderFormat: "dddd, MMMM D",
-            agendaDateFormat: "ddd, MMM D",
-            agendaTimeFormat: "hh:mm A",
-            agendaHeaderFormat: "ddd, MMM D"
-          }}
-          views={{ month: true, week: true, day: true, agenda: true }}
-          defaultView="month"
-          selectable
-          onSelectEvent={(event) => {
-            alert(`Selected: ${event.title}\n${event.description}`);
-          }}
-        />
-      </div>
-
-      {/* Legend */}
-      <div className="mt-8 pt-6 border-t border-gray-200 dark:border-gray-700">
-        <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">Event Types</h3>
-        <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
-          {[
-            { category: "class", label: "Class", icon: <BookOpen className="h-4 w-4" />, color: "bg-blue-600" },
-            { category: "exam", label: "Exam", icon: <TrendingUp className="h-4 w-4" />, color: "bg-red-600" },
-            { category: "workshop", label: "Workshop", icon: <Users className="h-4 w-4" />, color: "bg-green-600" },
-            { category: "deadline", label: "Deadline", icon: <Clock className="h-4 w-4" />, color: "bg-yellow-600" },
-            { category: "other", label: "Other", icon: <CalendarIcon className="h-4 w-4" />, color: "bg-purple-600" }
-          ].map(({ category, label, icon, color }) => (
-            <div key={category} className="flex items-center p-3 rounded-lg bg-gray-50 dark:bg-gray-700/50 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors">
-              <div className={`${color} w-3 h-3 rounded-full mr-3`}></div>
-              <div className="flex items-center">
-                <span className="text-sm text-gray-700 dark:text-gray-300">{icon}</span>
-                <span className="ml-2 text-sm font-medium text-gray-900 dark:text-white">{label}</span>
+            {/* Stats Cards */}
+            <div className="grid grid-cols-2 gap-3 mb-8">
+              <div className="bg-gradient-to-br from-orange-500 to-orange-600 rounded-xl p-4 text-white">
+                <div className="text-2xl font-bold">{stats.today}</div>
+                <div className="text-xs opacity-90">Today</div>
+              </div>
+              <div className="bg-white border-2 border-orange-200 rounded-xl p-4">
+                <div className="text-2xl font-bold text-orange-600">{stats.thisWeek}</div>
+                <div className="text-xs text-gray-600">This Week</div>
               </div>
             </div>
-          ))}
-        </div>
+
+            {/* Today's Schedule */}
+            <div className="mb-6">
+              <h3 className="font-bold text-gray-900 mb-4 flex items-center gap-2">
+                <Clock className="h-4 w-4 text-orange-500" />
+                Today's Schedule
+              </h3>
+              <div className="space-y-3">
+                {todayEvents.length > 0 ? (
+                  todayEvents.map(event => {
+                    const Icon = event.icon || Video;
+                    return (
+                      <div
+                        key={event.id}
+                        onClick={() => handleSelectEvent(event)}
+                        className="group p-3 rounded-xl bg-gradient-to-br from-orange-50 to-amber-50 border border-orange-200 cursor-pointer hover:shadow-md hover:shadow-orange-500/10 transition-all"
+                      >
+                        <div className="flex items-start gap-3">
+                          <div className={`flex h-10 w-10 items-center justify-center rounded-lg bg-gradient-to-br ${event.gradient || 'from-orange-400 to-orange-600'} text-white flex-shrink-0`}>
+                            <Icon className="h-5 w-5" />
+                          </div>
+                          <div className="flex-1 min-w-0">
+                            <div className="font-bold text-gray-900 text-sm truncate">{event.title}</div>
+                            <div className="text-xs text-gray-600 mt-1">
+                              {moment(event.start).format('HH:mm')} - {moment(event.end).format('HH:mm')}
+                            </div>
+                            {event.instructor && (
+                              <div className="text-xs text-orange-600 mt-1 font-medium">
+                                {event.instructor.name}
+                              </div>
+                            )}
+                          </div>
+                        </div>
+                      </div>
+                    );
+                  })
+                ) : (
+                  <div className="text-center py-8 text-gray-400">
+                    <CalendarIcon className="h-12 w-12 mx-auto mb-2 opacity-50" />
+                    <p className="text-sm">No classes today</p>
+                  </div>
+                )}
+              </div>
+            </div>
+
+            {/* Upcoming Events */}
+            <div>
+              <h3 className="font-bold text-gray-900 mb-4 flex items-center gap-2">
+                <Award className="h-4 w-4 text-orange-500" />
+                Upcoming
+              </h3>
+              <div className="space-y-2">
+                {upcomingEvents.map(event => (
+                  <div
+                    key={event.id}
+                    onClick={() => handleSelectEvent(event)}
+                    className="flex items-center gap-3 p-2 rounded-lg hover:bg-orange-50 cursor-pointer transition-colors"
+                  >
+                    <div className="text-center min-w-[40px]">
+                      <div className="text-xs font-bold text-orange-600">
+                        {moment(event.start).format('MMM')}
+                      </div>
+                      <div className="text-lg font-bold text-gray-900">
+                        {moment(event.start).format('DD')}
+                      </div>
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <div className="text-sm font-semibold text-gray-900 truncate">{event.title}</div>
+                      <div className="text-xs text-gray-500">
+                        {moment(event.start).format('HH:mm')}
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+        </aside>
+
+        {/* Main Content */}
+        <main className="flex-1 flex flex-col overflow-hidden">
+          {/* Top Bar */}
+          <div className="bg-white border-b border-orange-100 px-6 py-4">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-4">
+                <button
+                  onClick={() => setSidebarOpen(!sidebarOpen)}
+                  className="p-2 hover:bg-orange-50 rounded-lg transition-colors"
+                >
+                  <MoreVertical className="h-5 w-5 text-gray-600" />
+                </button>
+
+                <div className="flex items-center gap-2">
+                  <button
+                    onClick={() => navigateCalendar('prev')}
+                    className="p-2 hover:bg-orange-50 rounded-lg transition-colors"
+                  >
+                    <ChevronLeft className="h-5 w-5 text-gray-600" />
+                  </button>
+                  <button
+                    onClick={() => navigateCalendar('next')}
+                    className="p-2 hover:bg-orange-50 rounded-lg transition-colors"
+                  >
+                    <ChevronRight className="h-5 w-5 text-gray-600" />
+                  </button>
+                  <h2 className="text-xl font-bold text-gray-900 ml-2">
+                    {moment(date).format('MMMM YYYY')}
+                  </h2>
+                </div>
+              </div>
+
+              <div className="flex items-center gap-3">
+                <button
+                  onClick={() => handleNavigate(new Date())}
+                  className="px-4 py-2 text-sm font-semibold text-orange-600 bg-orange-50 hover:bg-orange-100 rounded-lg transition-colors"
+                >
+                  Today
+                </button>
+
+                <div className="flex bg-gray-100 rounded-lg p-1">
+                  {['month', 'week', 'day', 'agenda'].map(viewName => (
+                    <button
+                      key={viewName}
+                      onClick={() => handleViewChange(viewName)}
+                      className={`px-4 py-1.5 text-sm font-medium rounded-md transition-all ${view === viewName
+                          ? 'bg-white text-orange-600 shadow-sm'
+                          : 'text-gray-600 hover:text-gray-900'
+                        }`}
+                    >
+                      {viewName.charAt(0).toUpperCase() + viewName.slice(1)}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Calendar */}
+          <div className="flex-1 overflow-hidden bg-white m-6 rounded-2xl border border-orange-100 shadow-sm">
+            {loading ? (
+              <div className="flex items-center justify-center h-full">
+                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-orange-500"></div>
+              </div>
+            ) : (
+              <Calendar
+                localizer={localizer}
+                events={filteredEvents}
+                startAccessor="start"
+                endAccessor="end"
+                style={{ height: '100%' }}
+                selectable
+                onSelectSlot={handleSelectSlot}
+                onSelectEvent={handleSelectEvent}
+                eventPropGetter={eventStyleGetter}
+                dayPropGetter={dayPropGetter}
+                view={view}
+                onView={handleViewChange}
+                date={date}
+                onNavigate={handleNavigate}
+                views={[Views.MONTH, Views.WEEK, Views.DAY, Views.AGENDA]}
+                components={{
+                  month: {
+                    event: CustomMonthEvent
+                  },
+                  week: {
+                    event: CustomEvent
+                  },
+                  day: {
+                    event: CustomEvent
+                  },
+                  agenda: {
+                    event: CustomAgendaEvent
+                  },
+                  timeSlotWrapper: CustomTimeSlotWrapper
+                }}
+                popup
+                popupComponent={({ event, date }) => (
+                  <div className="p-2">
+                    <div className="font-bold text-orange-800">{event.title}</div>
+                    <div className="text-sm text-orange-600">
+                      {moment(event.start).format('HH:mm')} - {moment(event.end).format('HH:mm')}
+                    </div>
+                  </div>
+                )}
+                tooltipAccessor={(event) => `${event.title}\n${moment(event.start).format('HH:mm')} - ${moment(event.end).format('HH:mm')}`}
+                step={30}
+                timeslots={2}
+                min={new Date(2025, 1, 1, 6, 0)}
+                max={new Date(2025, 1, 1, 22, 0)}
+              />
+
+            )}
+          </div>
+        </main>
       </div>
+
+      {/* Event Modal */}
+      {showEventModal && (
+        <div
+          className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4"
+          onClick={() => setShowEventModal(false)}
+        >
+          <div
+            className="bg-white rounded-2xl shadow-2xl w-full max-w-2xl max-h-[90vh] overflow-y-auto animate-in fade-in zoom-in duration-200"
+            onClick={(e) => e.stopPropagation()}
+          >
+            {/* Modal Header */}
+            <div className="sticky top-0 bg-gradient-to-r from-orange-500 to-orange-600 text-white px-6 py-4 flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                {viewingEvent ? (
+                  <>
+                    <div className="h-10 w-10 rounded-full bg-white/20 flex items-center justify-center">
+                      {viewingEvent.icon && <viewingEvent.icon className="h-5 w-5" />}
+                    </div>
+                    <div>
+                      <h3 className="text-xl font-bold">Event Details</h3>
+                      <p className="text-sm text-orange-100">View event information</p>
+                    </div>
+                  </>
+                ) : (
+                  <>
+                    <div className="h-10 w-10 rounded-full bg-white/20 flex items-center justify-center">
+                      <Plus className="h-5 w-5" />
+                    </div>
+                    <div>
+                      <h3 className="text-xl font-bold">{editingEvent ? 'Edit Event' : 'Create New Event'}</h3>
+                      <p className="text-sm text-orange-100">Fill in the details below</p>
+                    </div>
+                  </>
+                )}
+              </div>
+              <button
+                onClick={() => setShowEventModal(false)}
+                className="p-2 hover:bg-white/20 rounded-full transition-colors"
+              >
+                <X className="h-6 w-6" />
+              </button>
+            </div>
+
+            {/* Modal Content */}
+            <div className="p-6 space-y-6">
+              {viewingEvent ? (
+                // View Mode
+                <div className="space-y-6">
+                  <div>
+                    <h4 className="text-2xl font-bold text-gray-900 mb-2">{viewingEvent.title}</h4>
+                    <span className={`inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-gradient-to-r ${viewingEvent.gradient || 'from-orange-400 to-orange-600'} text-white`}>
+                      {viewingEvent.category}
+                    </span>
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="p-4 bg-orange-50 rounded-xl border border-orange-100">
+                      <div className="flex items-center gap-2 text-orange-600 mb-1">
+                        <Clock className="h-4 w-4" />
+                        <span className="text-sm font-semibold">Start Time</span>
+                      </div>
+                      <p className="font-bold text-gray-900">{moment(viewingEvent.start).format('MMMM DD, YYYY')}</p>
+                      <p className="text-sm text-gray-600">{moment(viewingEvent.start).format('HH:mm')}</p>
+                    </div>
+
+                    <div className="p-4 bg-orange-50 rounded-xl border border-orange-100">
+                      <div className="flex items-center gap-2 text-orange-600 mb-1">
+                        <Clock className="h-4 w-4" />
+                        <span className="text-sm font-semibold">End Time</span>
+                      </div>
+                      <p className="font-bold text-gray-900">{moment(viewingEvent.end).format('MMMM DD, YYYY')}</p>
+                      <p className="text-sm text-gray-600">{moment(viewingEvent.end).format('HH:mm')}</p>
+                    </div>
+                  </div>
+
+                  {viewingEvent.instructor && (
+                    <div className="p-4 bg-gray-50 rounded-xl border border-gray-200">
+                      <div className="flex items-center gap-2 text-gray-600 mb-2">
+                        <User className="h-4 w-4" />
+                        <span className="text-sm font-semibold">Instructor</span>
+                      </div>
+                      <p className="font-bold text-gray-900">{viewingEvent.instructor.name}</p>
+                      {viewingEvent.instructor.email && (
+                        <p className="text-sm text-gray-600">{viewingEvent.instructor.email}</p>
+                      )}
+                    </div>
+                  )}
+
+                  <div className="flex gap-3 pt-4">
+                    <button
+                      onClick={() => handleEditEvent(viewingEvent)}
+                      className="flex-1 px-4 py-3 bg-gradient-to-r from-orange-500 to-orange-600 text-white rounded-xl hover:shadow-lg hover:shadow-orange-500/30 transition-all font-semibold flex items-center justify-center gap-2"
+                    >
+                      <Edit2 className="h-4 w-4" />
+                      Edit Event
+                    </button>
+                    <button
+                      onClick={() => handleDeleteEvent(viewingEvent.id)}
+                      className="px-4 py-3 bg-red-50 text-red-600 rounded-xl hover:bg-red-100 transition-colors font-semibold flex items-center gap-2"
+                    >
+                      <Trash2 className="h-4 w-4" />
+                    </button>
+                  </div>
+                </div>
+              ) : (
+                // Edit/Create Mode
+                <div className="space-y-5">
+                  <div>
+                    <label className="block text-sm font-semibold text-gray-700 mb-2">Event Title *</label>
+                    <input
+                      type="text"
+                      placeholder="Enter event title"
+                      value={eventTitle}
+                      onChange={(e) => setEventTitle(e.target.value)}
+                      className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:border-orange-500 focus:ring-4 focus:ring-orange-500/10 outline-none transition-all"
+                      autoFocus
+                    />
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <label className="block text-sm font-semibold text-gray-700 mb-2">Start Time</label>
+                      <input
+                        type="datetime-local"
+                        value={moment(eventStart).format('YYYY-MM-DDTHH:mm')}
+                        onChange={(e) => setEventStart(new Date(e.target.value))}
+                        className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:border-orange-500 focus:ring-4 focus:ring-orange-500/10 outline-none transition-all"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-semibold text-gray-700 mb-2">End Time</label>
+                      <input
+                        type="datetime-local"
+                        value={moment(eventEnd).format('YYYY-MM-DDTHH:mm')}
+                        onChange={(e) => setEventEnd(new Date(e.target.value))}
+                        className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:border-orange-500 focus:ring-4 focus:ring-orange-500/10 outline-none transition-all"
+                      />
+                    </div>
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-semibold text-gray-700 mb-2">Instructor</label>
+                    <input
+                      type="text"
+                      placeholder="Enter instructor name"
+                      value={eventInstructor}
+                      onChange={(e) => setEventInstructor(e.target.value)}
+                      className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:border-orange-500 focus:ring-4 focus:ring-orange-500/10 outline-none transition-all"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-semibold text-gray-700 mb-3">Category</label>
+                    <div className="grid grid-cols-3 gap-3">
+                      {Object.entries(colorMap).map(([key, value]) => {
+                        const Icon = value.icon;
+                        return (
+                          <button
+                            key={key}
+                            onClick={() => setEventCategory(key)}
+                            className={`p-3 rounded-xl border-2 transition-all flex flex-col items-center gap-2 ${eventCategory === key
+                                ? `border-orange-500 bg-gradient-to-br ${value.gradient} text-white shadow-lg`
+                                : 'border-gray-200 hover:border-orange-300 hover:bg-orange-50'
+                              }`}
+                          >
+                            <Icon className="h-5 w-5" />
+                            <span className="text-sm font-semibold">{value.label}</span>
+                          </button>
+                        );
+                      })}
+                    </div>
+                  </div>
+                </div>
+              )}
+            </div>
+
+            {/* Modal Footer */}
+            {!viewingEvent && (
+              <div className="sticky bottom-0 bg-gray-50 px-6 py-4 border-t border-gray-200 flex justify-end gap-3">
+                <button
+                  onClick={() => setShowEventModal(false)}
+                  className="px-6 py-2.5 text-gray-700 bg-white border-2 border-gray-200 hover:bg-gray-50 rounded-xl transition-all font-semibold"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={handleSaveEvent}
+                  className="px-6 py-2.5 bg-gradient-to-r from-orange-500 to-orange-600 text-white rounded-xl hover:shadow-lg hover:shadow-orange-500/30 transition-all font-semibold"
+                >
+                  {editingEvent ? 'Update Event' : 'Create Event'}
+                </button>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
     </div>
   );
 };
