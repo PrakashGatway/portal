@@ -75,6 +75,7 @@ import IeltsTestManagementPage from "./pages/ielts/ieltsTest";
 
 import IeltsTestPlatform from "./pages/ielts/ieltsTestAttempt";
 import ContentViewPage from "./pages/liveClass/Session";
+import CourseContentManagement from "./pages/Courses/CourseContent";
 
 // Define roles
 export const ROLES = {
@@ -220,13 +221,17 @@ export default function App() {
                   path="/recorded-classes"
                   element={<ContentManagement type="RecordedClasses" />}
                 />
-                <Route path="/courses" element={<CourseManagement />} />
-                <Route path="/modules" element={<ModuleManagement />} />
-                <Route path="/categories" element={<CategoryManagement />} />
                 <Route
                   path="/study-materials"
                   element={<ContentManagement type="StudyMaterials" />}
                 />
+
+                <Route path="/courses" element={<CourseManagement />} />
+                <Route path="/courses/content/:courseId" element={<CourseContentManagement />} />
+
+                <Route path="/modules" element={<ModuleManagement />} />
+                <Route path="/categories" element={<CategoryManagement />} />
+
               </Route>
               // Crm
               <Route

@@ -777,50 +777,6 @@ export default function ContentManagement({ type }: any) {
                     </div>
                   )}
 
-                  {selectedContent.__t === "Tests" && (
-                    <div className="md:col-span-2">
-                      <Label>Test *</Label>
-
-                      {/* Search */}
-                      <div className="relative mb-2">
-                        <Search className="absolute left-3 top-2.5 h-5 w-5 text-gray-400" />
-
-                        <input
-                          type="text"
-                          value={testSearch}
-                          onChange={(e) => setTestSearch(e.target.value)}
-                          placeholder="Search test..."
-                          className="w-full rounded-lg border border-gray-300 bg-white py-2.5 pl-10 pr-3 text-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-200 dark:border-gray-600 dark:bg-gray-800 dark:text-white"
-                        />
-                      </div>
-
-                      {/* Test Select */}
-                      <Select
-                        value={formData.test}
-                        defaultValue={formData.test}
-                        placeholder={
-                          testsLoading ? "Loading tests..." : "Select Test"
-                        }
-                        options={tests.map((test) => ({
-                          value: test._id,
-                          label: test.title,
-                        }))}
-                        onChange={(value) => {
-                          setFormData((prev) => ({
-                            ...prev,
-                            test: value,
-                          }));
-                        }}
-                      />
-
-                      {errors.test && (
-                        <p className="mt-1 text-sm text-red-600">
-                          {errors.test}
-                        </p>
-                      )}
-                    </div>
-                  )}
-
                   {selectedContent.__t === "StudyMaterials" && (
                     <div>
                       <h5 className="mb-4 text-lg font-medium text-gray-800 dark:text-white/90">
@@ -857,6 +813,8 @@ export default function ContentManagement({ type }: any) {
                       </div>
                     </div>
                   )}
+
+                  
 
                   <div>
                     <h5 className="mb-4 text-lg font-medium text-gray-800 dark:text-white/90">
@@ -1298,7 +1256,7 @@ const ContentForm = ({
           ? moment(content.scheduledEnd).format("YYYY-MM-DDTHH:mm")
           : "",
         maxParticipants: content.maxParticipants || 100,
-        test: content.test || "",
+        test: content.testId || "",
         testType: content.testType || "quiz",
         materialType: content.materialType || "pdf",
         fileUrl: content.file?.url || "",
@@ -1350,10 +1308,21 @@ const ContentForm = ({
   const fetchTests = async (search = "") => {
     try {
       setTestsLoading(true);
+      const selectedCourse = courses.find(
+        (course) => course._id === formData.course,
+      );
+
+      const categoryId =
+        selectedCourse?.category || selectedCourse?.category || "";
+
+      if (!categoryId) {
+        setTests([]);
+        return;
+      }
 
       const params: any = {
         limit: 100,
-        category: formData?.course,
+        category: categoryId,
       };
 
       if (search.trim()) {
@@ -1392,7 +1361,7 @@ const ContentForm = ({
     }, 400);
 
     return () => clearTimeout(timer);
-  }, [testSearch, type]);
+  }, [testSearch, type, formData.course]);
 
   const handleThumbnailChange = (file) => {
     setThumbnailFile(file); // Store the File object
@@ -1497,7 +1466,7 @@ const ContentForm = ({
         payload.meetingId = formData?.meetingId || "";
       } else if (formData.__t === "RecordedClasses") {
       } else if (formData.__t === "Tests") {
-        payload.test = formData.test;
+        payload.testId = formData.test;
         payload.testType = formData.testType;
       } else if (formData.__t === "StudyMaterials") {
         payload.materialType = formData.materialType;
@@ -1776,37 +1745,49 @@ const ContentForm = ({
         <div>
           <Label>Test *</Label>
 
-          <ReactSelect
-            isSearchable
-            isClearable
-            isLoading={testsLoading}
-            placeholder="Search and select test..."
-            value={
-              tests
-                .map((test) => ({
-                  value: test._id,
-                  label: test.title,
-                }))
-                .find((option) => option.value === formData.test) || null
-            }
-            options={tests.map((test) => ({
-              value: test._id,
-              label: test.title,
-            }))}
-            onInputChange={(inputValue, { action }) => {
-              if (action === "input-change") {
-                setTestSearch(inputValue);
-              }
-            }}
-            onChange={(selectedOption) => {
-              setFormData((prev) => ({
-                ...prev,
-                test: selectedOption?.value || "",
-              }));
-            }}
-            className="react-select-container"
-            classNamePrefix="react-select"
-          />
+        <ReactSelect
+  isSearchable
+  isClearable
+  isLoading={testsLoading}
+  placeholder="Search and select test..."
+  value={
+    tests
+      .map((test) => ({
+        value: test._id,
+        label: test.title,
+      }))
+      .find((option) => option.value === formData.test) || null
+  }
+  options={tests.map((test) => ({
+    value: test._id,
+    label: test.title,
+  }))}
+  onInputChange={(inputValue, { action }) => {
+    if (action === "input-change") {
+      setTestSearch(inputValue);
+    }
+  }}
+  onChange={(selectedOption) => {
+    setFormData((prev) => ({
+      ...prev,
+      test: selectedOption?.value || "",
+    }));
+  }}
+  menuPortalTarget={document.body}
+  menuPosition="fixed"
+  styles={{
+    menuPortal: (base) => ({
+      ...base,
+      zIndex: 99999,
+    }),
+    menu: (base) => ({
+      ...base,
+      zIndex: 99999,
+    }),
+  }}
+  className="react-select-container"
+  classNamePrefix="react-select"
+/>
 
           {errors.test && (
             <p className="mt-1 text-sm text-red-600">{errors.test}</p>

@@ -67,6 +67,8 @@ const navItems: NavItem[] = [
       { name: "Live Classes", path: "/live-classes", icon: "🎥" },
       { name: "Recorded Classes", path: "/recorded-classes", icon: "▶️" },
       { icon: "📁", name: "Study Materials", path: "/study-materials" },
+      { icon: "📁", name: "Tests", path: "/course-tests" },
+
     ],
   },
 
