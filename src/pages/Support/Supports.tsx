@@ -108,10 +108,19 @@ const SupportPage = () => {
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [isSending, setIsSending] = useState(false);
   const [showFilters, setShowFilters] = useState(false);
+  const [support,setsupport] = useState([])
 
   useEffect(() => {
     fetchTickets();
   }, [filters]);
+
+  useEffect(()=>{
+    const fetchSupport = async ()=>{
+      const res = await api.get("/support")
+
+    }
+    fetchSupport()
+  },[])
 
 
 

@@ -8,11 +8,12 @@ import {
 } from "lucide-react"
 
 // NOTE: Adjust these imports to match your actual project structure
-import api from "../../axiosInstance"
+import api, { ImageBaseUrl } from "../../axiosInstance"
 import { useAuth } from "../../context/UserContext"
-import { useNavigate } from "react-router"
+import { useLocation, useNavigate } from "react-router"
 import CourseCard from "./CourseCard"
 import CourseSupportFooter from "../../components/SupportFooter"
+import { UseBanner } from "../../context/BannerContext"
 
 // ==========================================
 // 1. TYPES & CONSTANTS
@@ -124,41 +125,140 @@ const SORT_OPTIONS = [
   { value: '-pricing.discount', label: 'Best Discount' },
 ]
 
-const ImageSlider = ({ images, autoPlay = true, interval = 5000, height = "h-40 md:h-[250px]" }: any) => {
-  const [currentIndex, setCurrentIndex] = useState(0)
-  const [direction, setDirection] = useState(0)
+const ImageSlider = ({
+  autoPlay = true,
+  interval = 5000,
+  height = "h-40 md:h-[250px]",
+}) => {
+  const [currentIndex, setCurrentIndex] = useState(0);
+  const [direction, setDirection] = useState(1);
+  const [sliderImages, setSliderImages] = useState<
+    {
+      url: string;
+      title: string;
+      alt: string;
+    }[]
+  >([]);
 
+  const { banner } = UseBanner();
+  const { pathname } = useLocation();
+
+  // Find banner for current route
+  const filterBanner = banner?.find(
+    (item) =>  {
+     return item.key === pathname}
+  );
+
+
+  // Convert API Banners array into slider images
   useEffect(() => {
-    if (!autoPlay || images.length <= 1) return
+    if (!filterBanner?.Banners?.length) {
+      setSliderImages([]);
+      setCurrentIndex(0);
+      return;
+    }
+
+    const images = filterBanner.Banners
+      .filter((item) => item?.Banner?.file)
+      .map((item) => ({
+        url: `${ImageBaseUrl}/${item.Banner.file}`,
+        title: filterBanner.name || "Banner",
+        alt: item.Banner.alt || "Banner Image",
+      }));
+
+    setSliderImages(images);
+    setCurrentIndex(0);
+    setDirection(1);
+  }, [filterBanner]);
+
+  // Autoplay
+  useEffect(() => {
+    if (!autoPlay || sliderImages.length <= 1) {
+      return;
+    }
+
     const timer = setInterval(() => {
-      setDirection(1)
-      setCurrentIndex((prev) => (prev + 1) % images.length)
-    }, interval)
-    return () => clearInterval(timer)
-  }, [autoPlay, images.length, interval])
+      setDirection(1);
+
+      setCurrentIndex((prev) =>
+        (prev + 1) % sliderImages.length
+      );
+    }, interval);
+
+    return () => {
+      clearInterval(timer);
+    };
+  }, [autoPlay, interval, sliderImages.length]);
 
   const goToPrevious = () => {
-    setDirection(-1)
-    setCurrentIndex((prev) => (prev - 1 + images.length) % images.length)
-  }
+    if (sliderImages.length <= 1) return;
+
+    setDirection(-1);
+
+    setCurrentIndex((prev) =>
+      prev === 0
+        ? sliderImages.length - 1
+        : prev - 1
+    );
+  };
 
   const goToNext = () => {
-    setDirection(1)
-    setCurrentIndex((prev) => (prev + 1) % images.length)
-  }
+    if (sliderImages.length <= 1) return;
+
+    setDirection(1);
+
+    setCurrentIndex(
+      (prev) => (prev + 1) % sliderImages.length
+    );
+  };
 
   const slideVariants = {
-    enter: (dir: number) => ({ x: dir > 0 ? 300 : -300, opacity: 0, scale: 0.95 }),
-    center: { x: 0, opacity: 1, scale: 1, transition: { type: "spring", stiffness: 300, damping: 30 } },
-    exit: (dir: number) => ({ x: dir < 0 ? 300 : -300, opacity: 0, scale: 0.95 }),
+    enter: (dir: number) => ({
+      x: dir > 0 ? "100%" : "-100%",
+      opacity: 0,
+    }),
+
+    center: {
+      x: 0,
+      opacity: 1,
+      transition: {
+        duration: 0.5,
+        ease: "easeInOut",
+      },
+    },
+
+    exit: (dir: number) => ({
+      x: dir > 0 ? "-100%" : "100%",
+      opacity: 0,
+      transition: {
+        duration: 0.5,
+        ease: "easeInOut",
+      },
+    }),
+  };
+
+  if (!sliderImages.length) {
+    return null;
   }
 
-  if (!images || images.length === 0) return null
-  const currentSlide = images[currentIndex]
+  const currentSlide = sliderImages[currentIndex];
 
   return (
-    <div className={`relative ${height} overflow-hidden rounded-2xl bg-gray-100 `}>
-      <AnimatePresence initial={false} custom={direction}>
+    <div
+      className={`
+        relative
+        ${height}
+        w-full
+        overflow-hidden
+        rounded-2xl
+        bg-gray-100
+      `}
+    >
+      <AnimatePresence
+        initial={false}
+        custom={direction}
+        mode="popLayout"
+      >
         <motion.div
           key={currentIndex}
           custom={direction}
@@ -166,66 +266,126 @@ const ImageSlider = ({ images, autoPlay = true, interval = 5000, height = "h-40 
           initial="enter"
           animate="center"
           exit="exit"
-          className="absolute inset-0"
+          className="absolute inset-0 h-full w-full"
         >
           <img
-            src={currentSlide.url || "https://static.pw.live/5eb393ee95fab7468a79d189/ADMIN/6b6f3cf1-090a-4705-9bd8-bbc0311260af.jpg"}
-            alt={currentSlide.title}
-            className="w-full h-full object-cover"
-            loading="lazy"
+            src={currentSlide.url}
+            alt={currentSlide.alt}
+            className="h-full w-full object-cover"
+            loading={currentIndex === 0 ? "eager" : "lazy"}
           />
-          {/* <div className="absolute inset-0 bg-gradient-to-r from-black/60 via-black/30 to-transparent" /> */}
-          {/* <div className="absolute inset-0 flex items-center p-6 md:p-10">
-            <div className="max-w-xl text-white">
-              <motion.h2 
-                initial={{ y: 20, opacity: 0 }} animate={{ y: 0, opacity: 1 }} transition={{ delay: 0.1 }}
-                className="text-2xl md:text-4xl font-bold mb-2"
-              >
-                {currentSlide.title}
-              </motion.h2>
-              <motion.p 
-                initial={{ y: 20, opacity: 0 }} animate={{ y: 0, opacity: 1 }} transition={{ delay: 0.2 }}
-                className="text-lg md:text-xl font-medium mb-2 text-orange-300"
-              >
-                {currentSlide.subtitle}
-              </motion.p>
-              <motion.p 
-                initial={{ y: 20, opacity: 0 }} animate={{ y: 0, opacity: 1 }} transition={{ delay: 0.3 }}
-                className="text-sm md:text-base mb-4 line-clamp-2 text-gray-200"
-              >
-                {currentSlide.description}
-              </motion.p>
-              {currentSlide.ctaText && (
-                <motion.button
-                  initial={{ y: 20, opacity: 0 }} animate={{ y: 0, opacity: 1 }} transition={{ delay: 0.4 }}
-                  whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.98 }}
-                  className="px-6 py-2.5 rounded-xl font-bold text-white shadow-lg"
-                  style={{ backgroundColor: COLORS.primary }}
-                >
-                  {currentSlide.ctaText}
-                </motion.button>
-              )}
-            </div>
-          </div> */}
         </motion.div>
       </AnimatePresence>
 
-      {images.length > 1 && (
+      {/* Navigation */}
+      {sliderImages.length > 1 && (
         <>
-          <button onClick={goToPrevious} className="absolute left-4 top-1/2 -translate-y-1/2 bg-black/40 hover:bg-black/60 text-white p-2 rounded-full backdrop-blur-sm transition-colors">
+          <button
+            type="button"
+            onClick={goToPrevious}
+            className="
+              absolute
+              left-3
+              top-1/2
+              z-20
+              -translate-y-1/2
+              rounded-full
+              bg-black/40
+              p-2
+              text-white
+              backdrop-blur-sm
+              transition
+              hover:bg-black/60
+            "
+          >
             <ChevronLeft className="h-5 w-5" />
           </button>
-          <button onClick={goToNext} className="absolute right-4 top-1/2 -translate-y-1/2 bg-black/40 hover:bg-black/60 text-white p-2 rounded-full backdrop-blur-sm transition-colors">
+
+          <button
+            type="button"
+            onClick={goToNext}
+            className="
+              absolute
+              right-3
+              top-1/2
+              z-20
+              -translate-y-1/2
+              rounded-full
+              bg-black/40
+              p-2
+              text-white
+              backdrop-blur-sm
+              transition
+              hover:bg-black/60
+            "
+          >
             <ChevronRight className="h-5 w-5" />
           </button>
-          <div className="absolute bottom-4 right-4 bg-black/50 backdrop-blur-sm text-white text-xs px-3 py-1.5 rounded-full font-mono">
-            {String(currentIndex + 1).padStart(2, "0")} / {String(images.length).padStart(2, "0")}
+
+          {/* Counter */}
+          <div
+            className="
+              absolute
+              bottom-3
+              right-3
+              z-20
+              rounded-full
+              bg-black/50
+              px-3
+              py-1.5
+              text-xs
+              font-medium
+              text-white
+              backdrop-blur-sm
+            "
+          >
+            {String(currentIndex + 1).padStart(2, "0")}
+            {" / "}
+            {String(sliderImages.length).padStart(2, "0")}
+          </div>
+
+          {/* Dots */}
+          <div
+            className="
+              absolute
+              bottom-3
+              left-1/2
+              z-20
+              flex
+              -translate-x-1/2
+              gap-1.5
+            "
+          >
+            {sliderImages.map((_, index) => (
+              <button
+                key={index}
+                type="button"
+                onClick={() => {
+                  setDirection(
+                    index > currentIndex ? 1 : -1
+                  );
+                  setCurrentIndex(index);
+                }}
+                className={`
+                  h-1.5
+                  rounded-full
+                  transition-all
+                  duration-300
+                  ${
+                    currentIndex === index
+                      ? "w-5 bg-white"
+                      : "w-1.5 bg-white/50"
+                  }
+                `}
+              />
+            ))}
           </div>
         </>
       )}
     </div>
-  )
-}
+  );
+};
+
 
 export default function CourseListingPage() {
   const { user } = useAuth() as any

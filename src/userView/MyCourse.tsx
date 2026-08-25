@@ -27,7 +27,10 @@ import {
     CalendarDays,
     Clock3,
     Play,
-    MoreVertical
+    MoreVertical,
+    LoaderCircle,
+    Activity,
+    Files
 } from "lucide-react";
 import Button from "../components/ui/button/Button";
 import api, { ImageBaseUrl } from "../axiosInstance";
@@ -138,7 +141,7 @@ const CourseCard = ({
     onContinue
 }: {
     course: PurchasedCourse;
-    viewMode: "grid" | "list";
+
     onContinue: (course: PurchasedCourse) => void;
 }) => {
     const progress = course.progress?.percentage || 0;
@@ -172,179 +175,316 @@ const CourseCard = ({
         return h > 0 ? `${h}h ${m}m` : `${m}m`;
     };
 
+    const handleAction = () => {
+      
+            const examName = course.exam?.name?.toLowerCase() || "";
+            if (examName.includes("gmat")) navigate(`/gmat/tests/${course?.item._id}`);
+            else if (examName.includes("pte")) navigate(`/pte/tests/${course?.item._id}`);
+            else if (examName.includes("gre")) navigate(`/gre/tests/${course?.item._id}`);
+            else navigate(`/mcq/tests/${course?.item._id}`);
+        } 
+    
+
+
     // Grid View
     return (
-        // <motion.div
-        //     initial={{ opacity: 0, scale: 0.98 }}
-        //     animate={{ opacity: 1, scale: 1 }}
-        //     exit={{ opacity: 0, scale: 0.98 }}
-        //     className={`group relative bg-white dark:bg-gray-800 rounded-xl border ${isExpired ? 'border-red-200 dark:border-red-800/50' : 'border-gray-200 dark:border-gray-700'} hover:border-orange-300 dark:hover:border-orange-700 hover:shadow-lg transition-all duration-300 overflow-hidden flex flex-col`}
-        // >
-        //     {/* Header Image / Icon */}
-        //     <div className="relative h-40 bg-gray-100 dark:bg-gray-700 overflow-hidden">
-        //         {course.item?.thumbnail?.url ? (
-        //             <img
-        //                 src={`${ImageBaseUrl}/${course.item.thumbnail.url}`}
-        //                 alt={course.item?.title}
-        //                 className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
-        //             />
-        //         ) : (
-        //             <div className={`w-full h-full flex flex-col items-center justify-center gap-2 ${typeStyle.bg}`}>
-        //                 <TypeIcon className={`h-10 w-10 ${typeStyle.iconColor}`} />
-        //                 <span className={`text-xs font-medium ${typeStyle.text}`}>{course.itemType}</span>
-        //             </div>
-        //         )}
+        <>
 
-        //         {isExpired && (
-        //             <div className="absolute inset-0 bg-red-900/60 backdrop-blur-[1px] flex items-center justify-center">
-        //                 <span className="text-white text-sm font-bold px-3 py-1.5 bg-red-600 rounded-lg shadow-sm">EXPIRED</span>
-        //             </div>
-        //         )}
 
-        //         <div className="absolute top-3 left-3">
-        //             <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-xs font-medium border backdrop-blur-md bg-white/90 dark:bg-gray-900/90 ${typeStyle.text} ${typeStyle.border}`}>
-        //                 <TypeIcon className="h-3 w-3" />
-        //                 {course.itemType}
-        //             </span>
-        //         </div>
-        //     </div>
 
-        //     {/* Body */}
-        //     <div className="p-4 flex flex-col flex-1">
-        //         <h3
-        //             onClick={handleContinue}
-        //             className="text-base font-semibold text-gray-900 dark:text-white line-clamp-2 cursor-pointer hover:text-orange-600 dark:hover:text-orange-400 transition-colors mb-1"
-        //         >
-        //             {course.item?.title || 'Untitled Material'}
-        //         </h3>
-        //         <p className="text-xs text-gray-500 dark:text-gray-400 line-clamp-2 mb-4 flex-1">
-        //             {course.item?.shortDescription || course.item?.description || 'No description available'}
-        //         </p>
-
-        //         {/* Progress */}
-        //         <div className="mb-4">
-        //             <div className="flex items-center justify-between text-xs text-gray-500 dark:text-gray-400 mb-1.5">
-        //                 <span className="flex items-center gap-1">
-        //                     <Timer className="h-3 w-3" />
-        //                     {formatTime(course.totalTimeSpent)}
-        //                 </span>
-        //                 <span className="font-medium">{Math.round(progress)}%</span>
-        //             </div>
-        //             <div className="h-1.5 bg-gray-200 dark:bg-gray-700 rounded-full overflow-hidden">
-        //                 <div
-        //                     className={`h-full rounded-full transition-all duration-500 ${progress >= 80 ? 'bg-emerald-500' : progress >= 50 ? 'bg-blue-500' : 'bg-amber-500'}`}
-        //                     style={{ width: `${Math.min(progress, 100)}%` }}
-        //                 />
-        //             </div>
-        //         </div>
-
-        //         {/* Action Button */}
-        //         <Button
-        //             onClick={handleContinue}
-        //             size="sm"
-        //             disabled={!course.isActive || isExpired}
-        //             className={`w-full py-2 rounded-lg text-sm font-medium transition-all flex items-center justify-center gap-1.5 ${isExpired || !course.isActive
-        //                 ? 'bg-gray-100 text-gray-400 cursor-not-allowed dark:bg-gray-700 dark:text-gray-500'
-        //                 : isCompleted
-        //                     ? 'bg-emerald-600 hover:bg-emerald-700 text-white'
-        //                     : 'bg-orange-600 hover:bg-orange-700 text-white'
-        //                 }`}
-        //         >
-        //             {isExpired ? 'Expired' : isCompleted ? 'View Certificate' : progress === 0 ? 'Start Learning' : 'Continue'}
-        //             <ChevronRight className="h-3.5 w-3.5" />
-        //         </Button>
-        //     </div>
-        // </motion.div>
-
-        <div className="bg-gradient-to-r from-black via-[#FAFAFA] to-white p-[1px] rounded-[22px] ">
-            <div className="bg-[linear-gradient(90deg,#CFCFCF_0px,#F5F5F5_18px,#FFFFFF_40px,#FFFFFF_100%)] dark:bg-gray-800 rounded-[22px] border border-[#EFEFEF] overflow-hidden shadow-sm hover:shadow-md transition-all duration-300">
-                <div className="flex flex-col lg:flex-row items-center">
-
-                    {/* LEFT IMAGE */}
-                    <div className="relative w-full lg:w-[360px] h-full lg:h-full flex-shrink-0 p-2">
-                        <div className="rounded-2xl overflow-hidden h-full">
-                            <img
-                                src={`${ImageBaseUrl}/${course?.item?.thumbnail?.url}`}
-                                alt={course?.item?.title}
-                                className="w-full h-full object-contain "
-                            />
-                        </div>
-                    </div>
-
-                    {/* CENTER */}
-                    <div className="flex-1 pl-4 lg:pl-16 py-4 lg:py-5">
-
-                        <div className="flex justify-between w-full">
-                            <div className="w-full">
-                                <h2 className="text-xl lg:text-2xl font-bold text-[#111827] dark:text-white leading-tight">
-                                    {course?.item?.title}
-                                </h2>
-
-                                <p className="text-[#6B7280] text-[14px] lg:text-[15px] mt-2 max-w-[520px] leading-6 lg:leading-7">
-                                    {course?.item?.shortDescription?.length > 120
-                                        ? course?.item?.shortDescription.substring(0, 120) + "..."
-                                        : course?.item?.shortDescription}
-                                </p>
-                            </div>
-                        </div>
-
-                        {/* Progress */}
-                        <div className="mt-5 lg:mt-6">
-
-                            <div className="flex items-center gap-2 mb-2">
-                                <span className="text-[#FF6B35] font-semibold text-sm">
-                                    {course?.progress?.percentage}%
-                                </span>
-
-                                <span className="text-[#666] text-sm">
-                                    Completed
-                                </span>
-                            </div>
-
-                            <div className="w-full lg:w-120 h-[8px] bg-[#ECECEC] rounded-full overflow-hidden">
-                                <div
-                                    className="h-full bg-[#FF6B35] rounded-full transition-all duration-500"
-                                    style={{ width: `${course?.progress?.percentage}%` }}
-                                />
-                            </div>
-                        </div>
-
-                        {/* Days Left */}
-                        <div className="flex mt-3 gap-2 items-center text-[#FF6B35]">
-                            <CalendarDays size={18} />
-
-                            <span className="text-[14px] lg:text-[15px]">
-                                {Math.max(
-                                    0,
-                                    Math.ceil(
-                                        (new Date(course?.accessExpiresAt) - new Date()) /
-                                        (1000 * 60 * 60 * 24)
-                                    )
-                                )}{" "}
-                                <span className="text-black dark:text-white">
-                                    Days Left
-                                </span>
-                            </span>
-                        </div>
-                    </div>
-
-                    {/* RIGHT */}
-                    <div className="flex flex-col mt-0 lg:mt-auto my-4 justify-center items-stretch lg:items-end px-4 lg:px-6 pb-0 lg:pb-0 gap-6 min-w-0 lg:min-w-[220px]">
-
-                        <Link
-                            to={`/course/${course?.item?.slug}?isCurriculum=true`}
-                            className="bg-[#FF6B35] hover:bg-[#f95d26] text-white px-3 py-3 text-sm rounded-xl font-medium transition text-center whitespace-nowrap"
-                        >
-                            Continue Learning &gt;
-                        </Link>
-
-                    </div>
-
+            {course.itemType === "TestTemplate" ? (
+                <div className="bg-gradient-to-r from-black via-[#FAFAFA] to-white p-[1px] rounded-[18px] h-full">
+        <div className="bg-[linear-gradient(90deg,#CFCFCF_0px,#F5F5F5_18px,#FFFFFF_40px,#FFFFFF_100%)] dark:bg-gray-800 rounded-[17px] border border-[#EFEFEF] overflow-hidden shadow-sm hover:shadow-lg transition-all duration-300 h-full flex flex-col">
+            <div className="flex flex-col p-4 lg:p-5 gap-3 h-full">
+                
+                {/* Header */}
+                <div className="flex items-start justify-between gap-2">
+                    <h3 className="text-base lg:text-lg font-bold text-[#111827] dark:text-white leading-snug line-clamp-2">
+                        {course?.item?.title}
+                    </h3>
+                    <span className="flex-shrink-0 bg-orange-500/10 text-orange-600 dark:text-orange-400 text-[10px] lg:text-[11px] font-semibold px-2 py-1 rounded-md border border-orange-500/20 whitespace-nowrap">
+                        {course?.item?.testType || "Test"}
+                    </span>
                 </div>
+
+                {/* Description */}
+                <p className="text-[#6B7280] dark:text-gray-400 text-xs lg:text-[13px] leading-relaxed line-clamp-2 min-h-[36px] lg:h-full">
+                    {course?.item?.shortDescription?.length > 90
+                        ? course?.item?.shortDescription.substring(0, 90) + "..."
+                        : course?.item?.shortDescription}
+                </p>
+
+                {/* Difficulty Level */}
+                <div className="flex items-center gap-2  pt-2 border-t border-gray-100 dark:border-gray-700">
+                    <span className="text-[10px] lg:text-[11px] text-[#6B7280] dark:text-gray-400 font-medium uppercase tracking-wide">
+                        Diff:
+                    </span>
+                    <div className="flex items-center gap-1">
+                        {[1, 2, 3, 4, 5].map((level) => (
+                            <div
+                                key={level}
+                                className={`h-1.5 w-3 lg:w-4 rounded-full transition-all ${
+                                    level <= (course?.item?.difficultyLevel || 1)
+                                        ? "bg-orange-500"
+                                        : "bg-gray-200 dark:bg-gray-700"
+                                }`}
+                            />
+                        ))}
+                    </div>
+                    <span className="text-[10px] lg:text-[11px] font-semibold text-orange-600 dark:text-orange-400 ml-auto">
+                        {course?.item?.difficultyLevel === 1 && "Easy"}
+                        {course?.item?.difficultyLevel === 2 && "Med"}
+                        {course?.item?.difficultyLevel === 3 && "Hard"}
+                        {course?.item?.difficultyLevel === 4 && "Exp"}
+                        {course?.item?.difficultyLevel === 5 && "Mstr"}
+                        {!course?.item?.difficultyLevel && "Easy"}
+                    </span>
+                </div>
+
+                {/* Action Button */}
+                <button
+                    onClick={handleAction}
+                    className="mt-2 bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 text-white text-xs lg:text-sm font-medium px-4 py-2.5 rounded-xl text-center transition-all duration-300 shadow-sm hover:shadow-md w-full"
+                >
+                    Start Test →
+                </button>
+            </div>
+        </div>
+    </div>
+            ) : course.itemType === "Course" ? (
+                <div className="bg-gradient-to-r from-black via-[#FAFAFA] to-white p-[1px] rounded-[22px] h-full">
+        <div className="bg-[linear-gradient(90deg,#CFCFCF_0px,#F5F5F5_18px,#FFFFFF_40px,#FFFFFF_100%)] dark:bg-gray-800 rounded-[22px] border border-[#EFEFEF] overflow-hidden shadow-sm hover:shadow-md transition-all duration-300 relative flex flex-col lg:flex-row h-full">
+            
+            {/* Badge */}
+            {course?.item?.featured === true && (
+                <div className="absolute right-3 top-3 z-9">
+                    <span className="inline-flex items-center gap-1.5 rounded-full border border-orange-200 bg-white/95 px-2.5 py-1 text-[10px] font-bold uppercase tracking-wide text-[#FF6B35] shadow-sm backdrop-blur-sm">
+                        <span className="h-1.5 w-1.5 rounded-full bg-[#FF6B35]" />
+                        Featured
+                    </span>
+                </div>
+            )}
+
+            {/* LEFT IMAGE - Responsive Height */}
+            <div className="relative w-full lg:w-[360px] h-48 lg:h-auto flex-shrink-0 p-2 bg-gray-50 dark:bg-gray-900">
+                <div className="rounded-2xl overflow-hidden h-full w-full">
+                    <img
+                        src={
+                            course?.item?.thumbnailPic?.includes("res.cloudinary.com")
+                                ? course.item.thumbnailPic
+                                : `${ImageBaseUrl}/${course?.item?.thumbnail?.url}`
+                        }
+                        alt={course?.item?.title || "Course thumbnail"}
+                        className="w-full h-full object-cover lg:object-contain"
+                    />
+                </div>
+            </div>
+
+            {/* CENTER CONTENT */}
+            <div className="flex-1 flex flex-col justify-between p-4 lg:p-5 lg:pl-16">
+                <div>
+                    <h2 className="text-lg lg:text-xl xl:text-2xl font-bold text-[#111827] dark:text-white leading-tight mb-2">
+                        {course?.item?.title}
+                    </h2>
+
+                    <p className="text-[#6B7280] text-sm lg:text-[14px] xl:text-[15px] leading-relaxed line-clamp-2 lg:line-clamp-none max-w-full lg:max-w-[520px]">
+                        {course?.item?.shortDescription?.length > 120
+                            ? course?.item?.shortDescription.substring(0, 120) + "..."
+                            : course?.item?.shortDescription}
+                    </p>
+
+                    {/* Tags */}
+                    <div className="flex flex-wrap items-center gap-2 my-3">
+                        {course?.item?.tags?.slice(0, 12).map((item: string, index: number) => (
+                            <span
+                                key={`${item}-${index}`}
+                                className="inline-flex items-center rounded-full border border-orange-200 bg-orange-50 px-2 py-0.5 text-[10px] lg:text-xs font-medium text-orange-600"
+                            >
+                                {item}
+                            </span>
+                        ))}
+                    </div>
+                </div>
+
+                {/* Meta Info Row */}
+                <div className="flex flex-wrap gap-x-4 gap-y-2 mt-2 pt-3 border-t border-gray-100 dark:border-gray-700">
+                    <div className="flex items-center gap-2 text-[#FF6B35]">
+                        <CalendarDays size={16} className="lg:w-[18px] lg:h-[18px]" />
+                        <span className="text-xs lg:text-[14px] font-medium">
+                            {Math.max(
+                                0,
+                                Math.ceil(
+                                    (new Date(course?.accessExpiresAt) - new Date()) /
+                                    (1000 * 60 * 60 * 24)
+                                )
+                            )}{" "}
+                            <span className="text-[#6B7280] dark:text-gray-400 font-normal">Days Left</span>
+                        </span>
+                    </div>
+
+                    <div className="flex items-center gap-2 text-[#FF6B35]">
+                        <Activity className="w-4 h-4" />
+                        <span className="text-xs lg:text-[14px] font-medium capitalize">
+                           {course.item.status}
+                        </span>
+                    </div>
+                </div>
+            </div>
+
+            {/* RIGHT BUTTON - Stacked on Mobile, Side on Desktop */}
+            <div className="p-4 lg:p-6 lg:pt-0 lg:pb-3 lg:pl-0 flex items-center lg:items-end justify-center lg:justify-end min-w-0 lg:min-w-[220px]">
+                <Link
+                    to={`/course/${course?.item?.slug}?isCurriculum=true`}
+                    className="w-full lg:w-auto bg-[#FF6B35] hover:bg-[#f95d26] text-white px-4 py-3 text-sm rounded-xl font-medium transition text-center whitespace-nowrap shadow-sm hover:shadow-md"
+                >
+                    Continue Learning &gt;
+                </Link>
+            </div>
+        </div>
+    </div>
+            ) : course.itemType === "McuTestSeries" ? (
+              <div className="bg-gradient-to-r from-black via-[#FAFAFA] to-white p-[1px] rounded-[18px]">
+    <div
+        className="
+            relative
+            overflow-hidden
+            rounded-[18px]
+            border border-[#EFEFEF]
+            bg-white
+            shadow-sm
+            transition-all duration-300
+            hover:shadow-md
+            dark:bg-gray-800
+        "
+    >
+        {/* TEST TYPE */}
+        {course?.item?.defaultTestType && (
+            <div className="absolute right-3 top-3 z-9">
+                <span
+                    className="
+                        inline-flex items-center gap-1.5
+                        rounded-full
+                        border border-orange-200
+                        bg-white/95
+                        px-2.5 py-1
+                        text-[10px] font-bold
+                        uppercase tracking-wide
+                        text-[#FF6B35]
+                        shadow-sm
+                        backdrop-blur-sm
+                    "
+                >
+                    <span className="h-1.5 w-1.5 rounded-full bg-[#FF6B35]" />
+                    {course?.item?.defaultTestType}
+                </span>
+            </div>
+        )}
+
+        {/* IMAGE */}
+        <div className="w-full h-[220px] p-2">
+            <div className="w-full h-full overflow-hidden rounded-xl bg-gray-50">
+                <img
+                    src={
+                        course?.item?.thumbnailPic?.includes(
+                            "res.cloudinary.com"
+                        )
+                            ? course.item.thumbnailPic
+                            : `${ImageBaseUrl}/${course?.item?.thumbnail?.url}`
+                    }
+                    alt={course?.item?.title || "Course thumbnail"}
+                    className="w-full h-full object-cover"
+                />
             </div>
         </div>
 
+        {/* CONTENT */}
+        <div className="px-3.5 pb-3.5 pt-1">
 
+            {/* TITLE */}
+            <h2
+                className="
+                    text-lg
+                    font-bold
+                    leading-tight
+                    text-[#111827]
+                    dark:text-white
+                    line-clamp-1
+                "
+            >
+                {course?.item?.title}
+            </h2>
+
+            {/* DESCRIPTION */}
+            <p
+                className="
+                    mt-1.5
+                    text-[13px]
+                    leading-5
+                    text-[#6B7280]
+                    line-clamp-2
+                "
+            >
+                {course?.item?.description}
+            </p>
+
+            {/* META */}
+            <div className="mt-2.5 flex flex-wrap items-center gap-3">
+
+                <div className="inline-flex items-center gap-1.5">
+                    <Files className="h-4 w-4 text-[#FF6B35]" />
+
+                    <span className="text-xs font-medium text-gray-600">
+                        {course?.item?.totalTests} Tests
+                    </span>
+                </div>
+
+                {course?.item?.difficultyLevel && (
+                    <div className="inline-flex items-center gap-1.5">
+                        <span className="h-1.5 w-1.5 rounded-full bg-[#FF6B35]" />
+
+                        <span className="text-xs font-medium text-gray-600">
+                            {course.item.difficultyLevel}
+                        </span>
+                    </div>
+                )}
+
+            </div>
+
+            {/* BUTTON */}
+            <div className="mt-3 flex justify-end">
+                <Link
+                    to={
+                        course.itemType === "Course"
+                            ? `/course/${course?.item?.slug}?isCurriculum=true`
+                            : course.itemType === "McuTestSeries"
+                                ? `/test-series/${course?.item?.slug}?isCurriculum=true`
+                                : "#"
+                    }
+                    className="
+                        inline-flex
+                        items-center
+                        justify-center
+                        rounded-xl
+                        bg-[#FF6B35]
+                        px-4 py-2.5
+                        text-xs
+                        font-semibold
+                        text-white
+                        whitespace-nowrap
+                        transition-all
+                        hover:bg-[#f95d26]
+                        active:scale-[0.98]
+                    "
+                >
+                    Continue Learning →
+                </Link>
+            </div>
+
+        </div>
+    </div>
+</div>
+            ) : null }
+        </>
 
     );
 };
@@ -394,7 +534,7 @@ const FilterPanel = ({
 }) => {
     // Logic remains exactly the same
     const hasActiveFilters = Object.values(filters).some(v => v !== '' && v !== false && v !== 1 && v !== 6 && v !== '-enrolledAt');
-    
+
     // State for the internal tabs (Sidebar)
     const [activeTab, setActiveTab] = useState<'status' | 'sort' | 'progress' | 'options'>('status');
 
@@ -428,7 +568,7 @@ const FilterPanel = ({
                     >
                         {/* COMPACT BOX LAYOUT */}
                         <div className="flex h-[240px]"> {/* Fixed height for stability */}
-                            
+
                             {/* LEFT SIDEBAR (Tabs) */}
                             <div className="w-22 border-r border-gray-100 dark:border-gray-700 bg-gray-50/50 dark:bg-gray-800/50 flex flex-col py-2">
                                 {[
@@ -440,11 +580,10 @@ const FilterPanel = ({
                                     <button
                                         key={tab.id}
                                         onClick={() => setActiveTab(tab.id as any)}
-                                        className={`relative w-full text-left px-4 py-2.5 text-sm font-medium transition-colors ${
-                                            activeTab === tab.id
-                                                ? 'text-orange-600 dark:text-orange-400 bg-white dark:bg-gray-800'
-                                                : 'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300'
-                                        }`}
+                                        className={`relative w-full text-left px-4 py-2.5 text-sm font-medium transition-colors ${activeTab === tab.id
+                                            ? 'text-orange-600 dark:text-orange-400 bg-white dark:bg-gray-800'
+                                            : 'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300'
+                                            }`}
                                     >
                                         {/* Active Indicator Line (like in your image) */}
                                         {activeTab === tab.id && (
@@ -459,7 +598,7 @@ const FilterPanel = ({
                             <div className="flex-1 p-2 flex flex-col">
                                 <div className="flex-1 overflow-y-auto pr-1 custom-scrollbar">
                                     <AnimatePresence mode="wait">
-                                        
+
                                         {/* TAB: STATUS */}
                                         {activeTab === 'status' && (
                                             <motion.div
@@ -476,25 +615,24 @@ const FilterPanel = ({
                                                     { label: 'Completed', value: 'true' },
                                                     { label: 'In Progress', value: 'false' },
                                                 ].map((opt) => (
-                                                    <label 
-                                                        key={opt.value} 
+                                                    <label
+                                                        key={opt.value}
                                                         className="flex items-center justify-between p-2 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700/50 cursor-pointer transition-colors group"
                                                     >
                                                         <span className={`text-sm ${filters.isCompleted === opt.value ? 'text-gray-900 dark:text-white font-medium' : 'text-gray-600 dark:text-gray-400'}`}>
                                                             {opt.label}
                                                         </span>
-                                                        <div className={`w-4 h-4 rounded-full border flex items-center justify-center transition-all ${
-                                                            filters.isCompleted === opt.value 
-                                                                ? 'border-orange-500 bg-orange-500' 
-                                                                : 'border-gray-300 dark:border-gray-600 group-hover:border-orange-300'
-                                                        }`}>
+                                                        <div className={`w-4 h-4 rounded-full border flex items-center justify-center transition-all ${filters.isCompleted === opt.value
+                                                            ? 'border-orange-500 bg-orange-500'
+                                                            : 'border-gray-300 dark:border-gray-600 group-hover:border-orange-300'
+                                                            }`}>
                                                             {filters.isCompleted === opt.value && (
                                                                 <div className="w-1.5 h-1.5 rounded-full bg-white" />
                                                             )}
                                                         </div>
-                                                        <input 
-                                                            type="radio" 
-                                                            className="hidden" 
+                                                        <input
+                                                            type="radio"
+                                                            className="hidden"
                                                             checked={filters.isCompleted === opt.value}
                                                             onChange={() => onFilterChange('isCompleted', opt.value)}
                                                         />
@@ -514,25 +652,24 @@ const FilterPanel = ({
                                                 className=""
                                             >
                                                 {sortOptions.map((opt) => (
-                                                    <label 
-                                                        key={opt.value} 
+                                                    <label
+                                                        key={opt.value}
                                                         className="flex gap-4 items-center justify-between p-2 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700/50 cursor-pointer transition-colors group"
                                                     >
                                                         <span className={`text-sm ${filters.sort === opt.value ? 'text-gray-900 dark:text-white font-medium' : 'text-gray-600 dark:text-gray-400'}`}>
                                                             {opt.label}
                                                         </span>
-                                                        <div className={`w-4 h-4 rounded-full border flex items-center justify-center transition-all ${
-                                                            filters.sort === opt.value 
-                                                                ? 'border-orange-500 bg-orange-500' 
-                                                                : 'border-gray-300 dark:border-gray-600 group-hover:border-orange-300'
-                                                        }`}>
+                                                        <div className={`w-4 h-4 rounded-full border flex items-center justify-center transition-all ${filters.sort === opt.value
+                                                            ? 'border-orange-500 bg-orange-500'
+                                                            : 'border-gray-300 dark:border-gray-600 group-hover:border-orange-300'
+                                                            }`}>
                                                             {filters.sort === opt.value && (
                                                                 <div className="w-1.5 h-1.5 rounded-full bg-white" />
                                                             )}
                                                         </div>
-                                                        <input 
-                                                            type="radio" 
-                                                            className="hidden" 
+                                                        <input
+                                                            type="radio"
+                                                            className="hidden"
                                                             checked={filters.sort === opt.value}
                                                             onChange={() => onFilterChange('sort', opt.value)}
                                                         />
@@ -564,7 +701,7 @@ const FilterPanel = ({
                                                     />
                                                     <span className="absolute right-3 top-2.5 text-gray-400 text-sm">%</span>
                                                 </div>
-                                          
+
                                             </motion.div>
                                         )}
 
@@ -578,16 +715,16 @@ const FilterPanel = ({
                                                 transition={{ duration: 0.15 }}
                                                 className="space-y-2"
                                             >
-                                                <label 
+                                                <label
                                                     className="grid grid-cols-1 items-center justify-between p-3 rounded-lg border border-gray-200 dark:border-gray-700 cursor-pointer transition-colors hover:border-orange-200 dark:hover:border-orange-900"
                                                     onClick={() => onFilterChange('includeExpired', !filters.includeExpired)}
                                                 >
                                                     <div className="flex ">
                                                         <span className="text-sm font-medium text-gray-900 dark:text-white">Show Expired Items</span>
-                                                       
+
                                                     </div>
 
-                                                     <span className="text-xs text-gray-500">Include items that have passed their deadline</span>
+                                                    <span className="text-xs text-gray-500">Include items that have passed their deadline</span>
                                                     {/* Toggle Switch Style */}
                                                     <div className={`w-10 h-6 mt-4 rounded-full relative transition-colors duration-200 ease-in-out ${filters.includeExpired ? 'bg-orange-500' : 'bg-gray-200 dark:bg-gray-600'}`}>
                                                         <div className={`absolute top-1 left-1 w-4 h-4 bg-white rounded-full shadow transition-transform duration-200 ease-in-out ${filters.includeExpired ? 'translate-x-4' : 'translate-x-0'}`} />
@@ -601,14 +738,13 @@ const FilterPanel = ({
 
                                 {/* FOOTER (Reset Button) - Only shows if active */}
                                 <div className="mt-4 pt-3 border-t border-gray-100 dark:border-gray-700 flex justify-end">
-                                     <button
+                                    <button
                                         onClick={onReset}
                                         disabled={!hasActiveFilters}
-                                        className={`flex items-center gap-1.5 px-4 py-1.5 text-xs font-medium rounded-lg transition-all ${
-                                            hasActiveFilters 
-                                                ? 'text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 border border-gray-200 dark:border-gray-600' 
-                                                : 'text-gray-300 dark:text-gray-600 cursor-not-allowed border border-transparent'
-                                        }`}
+                                        className={`flex items-center gap-1.5 px-4 py-1.5 text-xs font-medium rounded-lg transition-all ${hasActiveFilters
+                                            ? 'text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 border border-gray-200 dark:border-gray-600'
+                                            : 'text-gray-300 dark:text-gray-600 cursor-not-allowed border border-transparent'
+                                            }`}
                                     >
                                         <X className="h-3.5 w-3.5" />
                                         Reset Filters
@@ -826,22 +962,31 @@ export default function MyCoursesPage() {
                     </motion.div>
                 ) : (
                     <>
-                        <div className=" gap-5">
+                        <div className="">
 
                             <motion.div
                                 layout
-                                className={viewMode === "grid" ? "grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-1 gap-5" : "space-y-4"}
                             >
-                                <AnimatePresence mode="popLayout">
-                                    {filteredCourses.map((course) => (
-                                        <CourseCard
-                                            key={course._id}
-                                            course={course}
-                                            viewMode={viewMode}
-                                            onContinue={() => { }}
-                                        />
-                                    ))}
-                                </AnimatePresence>
+                               <AnimatePresence mode="popLayout">
+    <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+        {filteredCourses.map((course) => (
+            <motion.div
+                key={course._id}
+                layout
+                className={
+                    course.itemType === "Course"
+                        ? "lg:col-span-3"
+                        : "lg:col-span-1"
+                }
+            >
+                <CourseCard
+                    course={course}
+                    onContinue={() => {}}
+                />
+            </motion.div>
+        ))}
+    </div>
+</AnimatePresence>
                             </motion.div>
                             <div>
 
