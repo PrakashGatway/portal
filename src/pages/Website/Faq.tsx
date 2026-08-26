@@ -192,7 +192,7 @@ export default function FaqManagement() {
       const payload = {
         title: formData.title.trim(),
         content: formData.content,
-        category: formData.category.trim(),
+        category: formData.category.toLowerCase().trim(),
       };
 
       if (selectedFaq) {
