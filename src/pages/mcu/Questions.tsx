@@ -38,7 +38,6 @@ import QuestionRenderer from "../SatTest/SatComponents";
 import { QuestionPreviewRenderer } from "./GreComponents";
 import { PteQuestionPreviewRenderer } from "../PTEtest/Components";
 
-
 interface Exam {
   _id: string;
   name: string;
@@ -92,8 +91,14 @@ interface QuestionFormValues {
 }
 
 const QUESTION_TYPE_OPTIONS = [
-  { value: "gmat_quant_problem_solving", label: "GMAT – Quant Problem Solving" },
-  { value: "gmat_quant_data_sufficiency", label: "GMAT – Quant Data Sufficiency" },
+  {
+    value: "gmat_quant_problem_solving",
+    label: "GMAT – Quant Problem Solving",
+  },
+  {
+    value: "gmat_quant_data_sufficiency",
+    label: "GMAT – Quant Data Sufficiency",
+  },
   { value: "gmat_verbal_sc", label: "GMAT – Sentence Correction" },
   { value: "gmat_verbal_cr", label: "GMAT – Critical Reasoning" },
   { value: "gmat_verbal_rc", label: "GMAT – Reading Comprehension" },
@@ -101,11 +106,20 @@ const QUESTION_TYPE_OPTIONS = [
 
   { value: "gre_analytical_writing", label: "GRE – Analytical Writing" },
   { value: "gre_verbal_text_completion", label: "GRE – Text Completion" },
-  { value: "gre_verbal_sentence_equivalence", label: "GRE – Sentence Equivalence" },
+  {
+    value: "gre_verbal_sentence_equivalence",
+    label: "GRE – Sentence Equivalence",
+  },
   { value: "gre_verbal_reading_comp", label: "GRE – Reading Comprehension" },
-  { value: "gre_verbal_reading_multi", label: "GRE – Reading Comprehension (Multiple Choice)" },
+  {
+    value: "gre_verbal_reading_multi",
+    label: "GRE – Reading Comprehension (Multiple Choice)",
+  },
   { value: "gre_quantitative", label: "GRE – Quantitative" },
-  { value: "gre_quantitative_multi", label: "GRE – Quantitative (Multiple Choice)" },
+  {
+    value: "gre_quantitative_multi",
+    label: "GRE – Quantitative (Multiple Choice)",
+  },
   { value: "gre_quantitative_value", label: "GRE – Quantitative (Value)" },
 
   { value: "sat_reading_writing", label: "SAT – Reading & Writing" },
@@ -117,7 +131,10 @@ const QUESTION_TYPE_OPTIONS = [
   { value: "describe_image", label: "PTE-Describe Image" },
   { value: "retell_lesson", label: "PTE-Retell Lecture" },
   { value: "short_answer", label: "PTE-Short Question" },
-  { value: "summarize_group_discussions", label: "PTE-Summarize Group Discussion" },
+  {
+    value: "summarize_group_discussions",
+    label: "PTE-Summarize Group Discussion",
+  },
   { value: "pte_situational", label: "PTE-Respond to a Situational" },
   { value: "pte_writing", label: "PTE-Writing" },
   { value: "pte_fill_in_blanks", label: "PTE-Fill in the Blanks (Dropdown)" },
@@ -126,13 +143,31 @@ const QUESTION_TYPE_OPTIONS = [
   { value: "pte_fill_drag", label: "PTE-Fill in the Blanks (Drag and Drop)" },
   { value: "pte_mcq_single", label: "PTE-Multiple Choice (Single)" },
   { value: "pte_summarize_spoken", label: "PTE-Summarize Spoken Text" },
-  { value: "pte_mcq_multiple_listening", label: "PTE-Multiple Choice (Multiple) listening" },
-  { value: "pte_fill_listening", label: "PTE-Fill in the Blanks (Type In) listening" },
+  {
+    value: "pte_mcq_multiple_listening",
+    label: "PTE-Multiple Choice (Multiple) listening",
+  },
+  {
+    value: "pte_fill_listening",
+    label: "PTE-Fill in the Blanks (Type In) listening",
+  },
   { value: "pte_highlight", label: "PTE-Highlight Incorrect Words" },
-  { value: "pte_mcq_single_listening", label: "PTE-Multiple Choice (Single) listening" },
-  { value: "pte_mcq_single_listening", label: "PTE-Select Missing Word listening" },
-  { value: "pte_summarize_listening", label: "PTE-Highlight Correct Summary listening" },
-  { value: "pte_writing_listening", label: "PTE-Write from Dictation on listening" },
+  {
+    value: "pte_mcq_single_listening",
+    label: "PTE-Multiple Choice (Single) listening",
+  },
+  {
+    value: "pte_mcq_single_listening",
+    label: "PTE-Select Missing Word listening",
+  },
+  {
+    value: "pte_summarize_listening",
+    label: "PTE-Highlight Correct Summary listening",
+  },
+  {
+    value: "pte_writing_listening",
+    label: "PTE-Write from Dictation on listening",
+  },
   { value: "pte_summarize_writing", label: "PTE-Summarize Written Text" },
   { value: "essay", label: "PTE-Write Essay" },
   { value: "other", label: "Other" },
@@ -152,15 +187,62 @@ const LIMIT_OPTIONS = [
 ];
 
 const isPTEType = (questionType: string) => {
-  return questionType && ["repeat_sentence", "retell_lesson", "pte_writing_listening", "summarize_group_discussions", "pte_summarize_listening", "pte_summarize_spoken"].includes(questionType);
+  return (
+    questionType &&
+    [
+      "repeat_sentence",
+      "retell_lesson",
+      "pte_writing_listening",
+      "summarize_group_discussions",
+      "pte_summarize_listening",
+      "pte_summarize_spoken",
+    ].includes(questionType)
+  );
 };
 
 const isNewFeild = (questionType: string) => {
-  return questionType && ["pte_situational", "pte_reorder", "pte_highlight", "pte_summarize_listening", "pte_mcq_single_listening", "pte_fill_listening", "pte_fill_drag", "pte_mcq_multiple_listening"].includes(questionType);
+  return (
+    questionType &&
+    [
+      "pte_situational",
+      "pte_reorder",
+      "pte_highlight",
+      "pte_summarize_listening",
+      "pte_mcq_single_listening",
+      "pte_fill_listening",
+      "pte_fill_drag",
+      "pte_mcq_multiple_listening",
+    ].includes(questionType)
+  );
 };
 
 const isMCQType = (questionType: string) => {
-  return questionType && !["essay", "other", "pte_reorder", "pte_fill_listening", "pte_writing_listening", "summarize_group_discussions", "pte_summarize_listening", "pte_highlight", "pte_summarize_spoken", "pte_fill_drag", "pte_situational", "pte_fill_in_blanks", "pte_summarize_writing", "retell_lesson", "describe_image", "sat_value", "repeat_sentence", "read_aloud", "gre_analytical_writing", "gre_quantitative_value", "gre_verbal_text_completion"].includes(questionType);
+  return (
+    questionType &&
+    ![
+      "essay",
+      "other",
+      "pte_reorder",
+      "pte_fill_listening",
+      "pte_writing_listening",
+      "summarize_group_discussions",
+      "pte_summarize_listening",
+      "pte_highlight",
+      "pte_summarize_spoken",
+      "pte_fill_drag",
+      "pte_situational",
+      "pte_fill_in_blanks",
+      "pte_summarize_writing",
+      "retell_lesson",
+      "describe_image",
+      "sat_value",
+      "repeat_sentence",
+      "read_aloud",
+      "gre_analytical_writing",
+      "gre_quantitative_value",
+      "gre_verbal_text_completion",
+    ].includes(questionType)
+  );
 };
 
 export default function QuestionManagementPage() {
@@ -168,7 +250,6 @@ export default function QuestionManagementPage() {
   const [exams, setExams] = useState<Exam[]>([]);
   const [sections, setSections] = useState<Section[]>([]);
   const [sections1, setSections1] = useState<Section[]>([]);
-
 
   const [searchParams, setSearchParams] = useSearchParams();
 
@@ -183,7 +264,9 @@ export default function QuestionManagementPage() {
     difficulty: "all",
   });
   const [debouncedSearch, setDebouncedSearch] = useState("");
-  const [searchTimeout, setSearchTimeout] = useState<NodeJS.Timeout | null>(null);
+  const [searchTimeout, setSearchTimeout] = useState<NodeJS.Timeout | null>(
+    null,
+  );
   const [page, setPage] = useState(1);
   const [limit, setLimit] = useState(10);
   const [totalPages, setTotalPages] = useState(1);
@@ -194,8 +277,8 @@ export default function QuestionManagementPage() {
   const [sideOpen, setSideOpen] = useState(false);
   const [editingQuestion, setEditingQuestion] = useState<any | null>(null);
   const [saving, setSaving] = useState(false);
-  const [preview, setPreview] = useState(false)
-  const [previewQuestion, setPreviewQuestion] = useState<any>(null)
+  const [preview, setPreview] = useState(false);
+  const [previewQuestion, setPreviewQuestion] = useState<any>(null);
 
   const {
     handleSubmit,
@@ -222,7 +305,11 @@ export default function QuestionManagementPage() {
     },
   });
 
-  const { fields: optionFields, append, remove } = useFieldArray({
+  const {
+    fields: optionFields,
+    append,
+    remove,
+  } = useFieldArray({
     control,
     name: "options",
   });
@@ -243,9 +330,13 @@ export default function QuestionManagementPage() {
   const fetchExams = async () => {
     try {
       setLoadingExams(true);
-      const res = await api.get("/test/exams", { params: { isActive: true, limit: 100 } });
+      const res = await api.get("/test/exams", {
+        params: { isActive: true, limit: 100 },
+      });
       if (res.data?.success) {
-        let examsData = res?.data?.data?.filter((i) => !i.name.toLowerCase().includes("ielt"));
+        let examsData = res?.data?.data?.filter(
+          (i) => !i.name.toLowerCase().includes("ielt"),
+        );
         setExams(examsData || []);
       } else {
         setExams([]);
@@ -268,8 +359,7 @@ export default function QuestionManagementPage() {
       return;
     }
 
-    const sectionsData =
-      exams.find((e) => e._id === watchExam)?.sections || [];
+    const sectionsData = exams.find((e) => e._id === watchExam)?.sections || [];
 
     setSections(sectionsData);
   }, [watchExam, exams]);
@@ -285,7 +375,8 @@ export default function QuestionManagementPage() {
       if (debouncedSearch) params.search = debouncedSearch;
       if (filters.examId !== "all") params.examId = filters.examId;
       if (filters.sectionId !== "all") params.sectionId = filters.sectionId;
-      if (filters.questionType !== "all") params.questionType = filters.questionType;
+      if (filters.questionType !== "all")
+        params.questionType = filters.questionType;
       if (filters.difficulty !== "all") params.difficulty = filters.difficulty;
 
       const res = await api.get("/mcu/questions", { params });
@@ -319,7 +410,7 @@ export default function QuestionManagementPage() {
   useEffect(() => {
     if (examId) {
       let sectionsData = exams.find((e) => e._id === examId)?.sections || [];
-      setSections1(sectionsData)
+      setSections1(sectionsData);
     }
   }, [examId, exams]);
 
@@ -338,7 +429,16 @@ export default function QuestionManagementPage() {
     if (examId) {
       fetchQuestions();
     }
-  }, [page, limit, debouncedSearch, filters.examId, filters.sectionId, filters.questionType, filters.difficulty]);
+  }, [
+    page,
+    limit,
+    debouncedSearch,
+    filters.examId,
+    filters.sectionId,
+    filters.questionType,
+    filters.difficulty,
+    examId
+  ]);
 
   const handleSearchChange = (value: string) => {
     setFilters((prev) => ({ ...prev, search: value }));
@@ -363,7 +463,8 @@ export default function QuestionManagementPage() {
 
   const diSubtype = watch("dataInsights.subtype");
   const isDataInsights = watchQuestionType === "gmat_data_insights";
-  const isMultiSource = isDataInsights && diSubtype === "multi_source_reasoning";
+  const isMultiSource =
+    isDataInsights && diSubtype === "multi_source_reasoning";
   const isTwoPart = isDataInsights && diSubtype === "two_part_analysis";
   const isTable = isDataInsights && diSubtype === "table_analysis";
   const isGraphics = isDataInsights && diSubtype === "graphics_interpretation";
@@ -401,16 +502,17 @@ export default function QuestionManagementPage() {
       stimulus: question.stimulus || "",
       questionText: question.questionText || "",
       typeSpecific: question.typeSpecific || undefined,
-      options: question.options && question.options.length > 0
-        ? question.options.map((opt, idx) => ({
-          label: opt.label || String.fromCharCode(65 + idx),
-          text: opt.text,
-          isCorrect: !!opt.isCorrect,
-        }))
-        : [
-          { label: "A", text: "", isCorrect: false },
-          { label: "B", text: "", isCorrect: false },
-        ],
+      options:
+        question.options && question.options.length > 0
+          ? question.options.map((opt, idx) => ({
+              label: opt.label || String.fromCharCode(65 + idx),
+              text: opt.text,
+              isCorrect: !!opt.isCorrect,
+            }))
+          : [
+              { label: "A", text: "", isCorrect: false },
+              { label: "B", text: "", isCorrect: false },
+            ],
       correctAnswerText: question.correctAnswerText || "",
       marks: question.marks ?? 1,
       negativeMarks: question.negativeMarks ?? 0,
@@ -425,71 +527,103 @@ export default function QuestionManagementPage() {
       let dataInsights: any = { subtype };
 
       if (subtype === "multi_source_reasoning") {
-        const tabs = di.multiSource?.tabs?.map(t => ({
+        const tabs = di.multiSource?.tabs?.map((t) => ({
           id: t.id || crypto.randomUUID(),
           title: t.title || "",
           contentHtml: t.contentHtml || "",
         })) || [{ id: crypto.randomUUID(), title: "", contentHtml: "" }];
 
-        const statements = di.multiSource?.statements?.map(s => ({
+        const statements = di.multiSource?.statements?.map((s) => ({
           id: s.id || crypto.randomUUID(),
           text: s.text || "",
           correct: s.correct || "yes",
           yesLabel: s.yesLabel || "Yes",
           noLabel: s.noLabel || "No",
-        })) || [{ id: crypto.randomUUID(), text: "", correct: "yes", yesLabel: "Yes", noLabel: "No" }];
+        })) || [
+          {
+            id: crypto.randomUUID(),
+            text: "",
+            correct: "yes",
+            yesLabel: "Yes",
+            noLabel: "No",
+          },
+        ];
 
         dataInsights.multiSource = { tabs, statements };
-      }
-
-      else if (subtype === "two_part_analysis") {
-        const cols = di.twoPart?.columns?.map(c => ({
+      } else if (subtype === "two_part_analysis") {
+        const cols = di.twoPart?.columns?.map((c) => ({
           id: c.id || crypto.randomUUID(),
           title: c.title || "",
           correctOptionId: c.correctOptionId || "",
         })) || [{ id: crypto.randomUUID(), title: "", correctOptionId: "" }];
 
-        const opts = di.twoPart?.options?.map(o => ({
+        const opts = di.twoPart?.options?.map((o) => ({
           id: o.id || crypto.randomUUID(),
           label: o.label || "",
         })) || [{ id: crypto.randomUUID(), label: "" }];
 
-        if (opts.length > 0 && cols.some(c => !c.correctOptionId)) {
-          cols.forEach(c => {
+        if (opts.length > 0 && cols.some((c) => !c.correctOptionId)) {
+          cols.forEach((c) => {
             if (!c.correctOptionId) c.correctOptionId = opts[0].id;
           });
         }
 
-        dataInsights.twoPart = { stem: di.twoPart?.stem || "", columns: cols, options: opts };
-      }
-
-      else if (subtype === "table_analysis") {
+        dataInsights.twoPart = {
+          stem: di.twoPart?.stem || "",
+          columns: cols,
+          options: opts,
+        };
+      } else if (subtype === "table_analysis") {
         const tableCols = di.tableAnalysis?.table?.columns || ["Column 1"];
-        const rows = di.tableAnalysis?.table?.rows?.map(r => ({
+        const rows = di.tableAnalysis?.table?.rows?.map((r) => ({
           id: r.id || crypto.randomUUID(),
-          cells: r.cells?.length === tableCols.length ? r.cells : Array(tableCols.length).fill(""),
-        })) || [{ id: crypto.randomUUID(), cells: Array(tableCols.length).fill("") }];
+          cells:
+            r.cells?.length === tableCols.length
+              ? r.cells
+              : Array(tableCols.length).fill(""),
+        })) || [
+          { id: crypto.randomUUID(), cells: Array(tableCols.length).fill("") },
+        ];
 
-        const statements = di.tableAnalysis?.statements?.map(s => ({
+        const statements = di.tableAnalysis?.statements?.map((s) => ({
           id: s.id || crypto.randomUUID(),
           text: s.text || "",
           correct: s.correct || "true",
           trueLabel: s.trueLabel || "True",
           falseLabel: s.falseLabel || "False",
-        })) || [{ id: crypto.randomUUID(), text: "", correct: "true", trueLabel: "True", falseLabel: "False" }];
+        })) || [
+          {
+            id: crypto.randomUUID(),
+            text: "",
+            correct: "true",
+            trueLabel: "True",
+            falseLabel: "False",
+          },
+        ];
 
-        dataInsights.tableAnalysis = { table: { columns: tableCols, rows }, statements };
-      }
-
-      else if (subtype === "graphics_interpretation") {
-        const dropdowns = di.graphics?.dropdowns?.map(d => ({
+        dataInsights.tableAnalysis = {
+          table: { columns: tableCols, rows },
+          statements,
+        };
+      } else if (subtype === "graphics_interpretation") {
+        const dropdowns = di.graphics?.dropdowns?.map((d) => ({
           id: d.id || crypto.randomUUID(),
           label: d.label || "",
           options: d.options || [""],
           correctIndex: d.correctIndex ?? 0,
-        })) || [{ id: crypto.randomUUID(), label: "", options: [""], correctIndex: 0 }];
+        })) || [
+          {
+            id: crypto.randomUUID(),
+            label: "",
+            options: [""],
+            correctIndex: 0,
+          },
+        ];
 
-        dataInsights.graphics = { prompt: di.graphics?.prompt || "", dropdowns };
+        dataInsights.graphics = {
+          prompt: di.graphics?.prompt || "",
+          dropdowns,
+        };
       }
 
       reset({ ...baseValues, dataInsights });
@@ -535,7 +669,6 @@ export default function QuestionManagementPage() {
     return false;
   });
 
-
   const onSubmit = async (values: any) => {
     try {
       if (!values.exam) {
@@ -571,7 +704,9 @@ export default function QuestionManagementPage() {
         const blanks = values.typeSpecific?.blanks || 1;
         const options = values.typeSpecific?.options || [];
         for (let i = 0; i < blanks; i++) {
-          const correctInBlank = options.filter(opt => opt.blankIndex === i && opt.isCorrect);
+          const correctInBlank = options.filter(
+            (opt) => opt.blankIndex === i && opt.isCorrect,
+          );
           if (correctInBlank.length !== 1) {
             toast.error(`Blank ${i + 1} must have exactly one correct option`);
             return;
@@ -582,9 +717,9 @@ export default function QuestionManagementPage() {
       setSaving(true);
       const tagsArray = values.tags
         ? values.tags
-          .split(",")
-          .map((t) => t.trim())
-          .filter(Boolean)
+            .split(",")
+            .map((t) => t.trim())
+            .filter(Boolean)
         : [];
 
       const payload: any = {
@@ -638,7 +773,12 @@ export default function QuestionManagementPage() {
   };
 
   const handleDelete = async (q: Question) => {
-    if (!window.confirm("Are you sure you want to delete this question? This action cannot be undone.")) return;
+    if (
+      !window.confirm(
+        "Are you sure you want to delete this question? This action cannot be undone.",
+      )
+    )
+      return;
     try {
       await api.delete(`/mcu/questions/${q._id}`);
       toast.success("Question deleted successfully");
@@ -654,7 +794,7 @@ export default function QuestionManagementPage() {
       QUESTION_TYPE_OPTIONS.find((x) => x.value === watchQuestionType)?.label ||
       watchQuestionType ||
       "",
-    [watchQuestionType]
+    [watchQuestionType],
   );
 
   const isMCQ = isMCQType(watchQuestionType);
@@ -662,173 +802,114 @@ export default function QuestionManagementPage() {
   // Helper function to format date
   const formatDate = (dateString: string) => {
     const date = new Date(dateString);
-    return date.toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' });
+    return date.toLocaleDateString("en-US", {
+      year: "numeric",
+      month: "short",
+      day: "numeric",
+    });
   };
 
   // Get difficulty color
   const getDifficultyColor = (difficulty: string) => {
     switch (difficulty) {
-      case 'Easy':
-        return 'bg-emerald-50 text-emerald-700 border-emerald-200 dark:bg-emerald-500/20 dark:text-emerald-300 dark:border-emerald-500/30';
-      case 'Medium':
-        return 'bg-amber-50 text-amber-700 border-amber-200 dark:bg-amber-500/20 dark:text-amber-300 dark:border-amber-500/30';
-      case 'Hard':
-        return 'bg-rose-50 text-rose-700 border-rose-200 dark:bg-rose-500/20 dark:text-rose-300 dark:border-rose-500/30';
+      case "Easy":
+        return "bg-emerald-50 text-emerald-700 border-emerald-200 dark:bg-emerald-500/20 dark:text-emerald-300 dark:border-emerald-500/30";
+      case "Medium":
+        return "bg-amber-50 text-amber-700 border-amber-200 dark:bg-amber-500/20 dark:text-amber-300 dark:border-amber-500/30";
+      case "Hard":
+        return "bg-rose-50 text-rose-700 border-rose-200 dark:bg-rose-500/20 dark:text-rose-300 dark:border-rose-500/30";
       default:
-        return 'bg-gray-50 text-gray-700 border-gray-200 dark:bg-gray-500/20 dark:text-gray-300 dark:border-gray-500/30';
+        return "bg-gray-50 text-gray-700 border-gray-200 dark:bg-gray-500/20 dark:text-gray-300 dark:border-gray-500/30";
     }
   };
 
   // Get difficulty icon
   const getDifficultyIcon = (difficulty: string) => {
     switch (difficulty) {
-      case 'Easy':
+      case "Easy":
         return <TrendingUp className="h-3 w-3" />;
-      case 'Medium':
+      case "Medium":
         return <Layers className="h-3 w-3" />;
-      case 'Hard':
+      case "Hard":
         return <Award className="h-3 w-3" />;
       default:
         return null;
     }
   };
 
-  if (!examId) return (
-    <>
-      <div className="relative min-h-[80vh]  dark:from-gray-950 dark:via-gray-900 dark:to-blue-950/20">
-        <div>
-          <div className="flex items-center gap-3">
-            <div>
-              <h1 className="text-xl font-semibold sm:text-2xl flex items-center gap-2">
-                Question Management
-                <span className="rounded-full bg-black/20 px-3 py-0.5 text-xs font-medium ">
-                  {totalQuestions}
-                </span>
-              </h1>
-              <p className="text-sm">
-                Create, edit and filter questions for GMAT, GRE, SAT, and PTE
-              </p>
+  if (!examId)
+    return (
+      <>
+        <div className="relative min-h-[80vh]  dark:from-gray-950 dark:via-gray-900 dark:to-blue-950/20">
+          <div>
+            <div className="flex items-center gap-3">
+              <div>
+                <h1 className="text-xl font-semibold sm:text-2xl flex items-center gap-2">
+                  Question Management
+                  <span className="rounded-full bg-black/20 px-3 py-0.5 text-xs font-medium ">
+                    {totalQuestions}
+                  </span>
+                </h1>
+                <p className="text-sm">
+                  Create, edit and filter questions for GMAT, GRE, SAT, and PTE
+                </p>
+              </div>
+            </div>
+          </div>
+          <div className="mt-6">
+            <div className="mb-6">
+              <h3 className="font-semibold text-lg border-2 bg-gray-100 p-2">
+                Select an Exam
+              </h3>
+            </div>
+            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-2">
+              {exams.map((exam) => (
+                <div
+                  key={exam._id}
+                  onClick={() => {
+                    let sectionsData =
+                      exams.find((e) => e._id === exam._id)?.sections || [];
+                    setSections1(sectionsData);
+
+                    setFilters((prev) => ({
+                      ...prev,
+                      examId: exam._id,
+                      sectionId: "all",
+                      questionType: "all",
+                    }));
+                 
+                    setPage(1);
+                  }}
+                  className={`cursor-pointer p-2 px-4 hover:outline-1 hover:bg-gray-200 outline-gray-300 rounded-2xl `}
+                >
+                  <div className="flex flex-col ">
+                    <img
+                      className="w-full px-3 h-full"
+                      alt="svgImg"
+                      src="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciICB2aWV3Qm94PSIwIDAgNDggNDgiIHdpZHRoPSI0OHB4IiBoZWlnaHQ9IjQ4cHgiPjxsaW5lYXJHcmFkaWVudCBpZD0iV1FFZnZvUUFjcFFnUWd5alFRNEhxYSIgeDE9IjI0IiB4Mj0iMjQiIHkxPSI2LjcwOCIgeTI9IjE0Ljk3NyIgZ3JhZGllbnRVbml0cz0idXNlclNwYWNlT25Vc2UiPjxzdG9wIG9mZnNldD0iMCIgc3RvcC1jb2xvcj0iI2ViYTYwMCIvPjxzdG9wIG9mZnNldD0iMSIgc3RvcC1jb2xvcj0iI2MyODIwMCIvPjwvbGluZWFyR3JhZGllbnQ+PHBhdGggZmlsbD0idXJsKCNXUUVmdm9RQWNwUWdRZ3lqUVE0SHFhKSIgZD0iTTI0LjQxNCwxMC40MTRsLTIuNTM2LTIuNTM2QzIxLjMxNiw3LjMxNiwyMC41NTMsNywxOS43NTcsN0w1LDdDMy44OTUsNywzLDcuODk1LDMsOWwwLDMwCWMwLDEuMTA1LDAuODk1LDIsMiwybDM4LDBjMS4xMDUsMCwyLTAuODk1LDItMlYxM2MwLTEuMTA1LTAuODk1LTItMi0ybC0xNy4xNzIsMEMyNS4yOTgsMTEsMjQuNzg5LDEwLjc4OSwyNC40MTQsMTAuNDE0eiIvPjxsaW5lYXJHcmFkaWVudCBpZD0iV1FFZnZvUUFjcFFnUWd5alFRNEhxYiIgeDE9IjI0IiB4Mj0iMjQiIHkxPSIxMC44NTQiIHkyPSI0MC45ODMiIGdyYWRpZW50VW5pdHM9InVzZXJTcGFjZU9uVXNlIj48c3RvcCBvZmZzZXQ9IjAiIHN0b3AtY29sb3I9IiNmZmQ4NjkiLz48c3RvcCBvZmZzZXQ9IjEiIHN0b3AtY29sb3I9IiNmZWM1MmIiLz48L2xpbmVhckdyYWRpZW50PjxwYXRoIGZpbGw9InVybCgjV1FFZnZvUUFjcFFnUWd5alFRNEhxYikiIGQ9Ik0yMS41ODYsMTQuNDE0bDMuMjY4LTMuMjY4QzI0Ljk0NywxMS4wNTMsMjUuMDc0LDExLDI1LjIwNywxMUg0M2MxLjEwNSwwLDIsMC44OTUsMiwydjI2CWMwLDEuMTA1LTAuODk1LDItMiwySDVjLTEuMTA1LDAtMi0wLjg5NS0yLTJWMTUuNUMzLDE1LjIyNCwzLjIyNCwxNSwzLjUsMTVoMTYuNjcyQzIwLjcwMiwxNSwyMS4yMTEsMTQuNzg5LDIxLjU4NiwxNC40MTR6Ii8+PC9zdmc+"
+                    />
+
+                    <div className="flex-1 min-w-0">
+                      <h3 className="truncate text-sm font-medium text-gray-900">
+                        {exam.name}
+                      </h3>
+
+                      <p className="text-xs text-gray-500">
+                        {exam.sections?.length || 0} Sections
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              ))}
             </div>
           </div>
         </div>
-        <div className="mt-6">
-          <div className="mb-6">
-            <h3 className="font-semibold text-lg border-2 bg-gray-100 p-2">Select an Exam</h3>
-
-          </div>
-          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-2">
-            {exams.map((exam) => (
-              <div
-                key={exam._id}
-                onClick={() => {
-                  let sectionsData = exams.find((e) => e._id === exam._id)?.sections || [];
-                  setSections1(sectionsData);
-
-                  setFilters((prev) => ({
-                    ...prev,
-                    examId: exam._id,
-                    sectionId: "all",
-                    questionType: "all",
-                  }));
-                  setPage(1);
-                }}
-                className={`cursor-pointer p-2 px-4 hover:outline-1 hover:bg-gray-200 outline-gray-300 rounded-2xl `}
-              >
-                <div className="flex flex-col ">
-                  <img className="w-full px-3 h-full" alt="svgImg" src="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciICB2aWV3Qm94PSIwIDAgNDggNDgiIHdpZHRoPSI0OHB4IiBoZWlnaHQ9IjQ4cHgiPjxsaW5lYXJHcmFkaWVudCBpZD0iV1FFZnZvUUFjcFFnUWd5alFRNEhxYSIgeDE9IjI0IiB4Mj0iMjQiIHkxPSI2LjcwOCIgeTI9IjE0Ljk3NyIgZ3JhZGllbnRVbml0cz0idXNlclNwYWNlT25Vc2UiPjxzdG9wIG9mZnNldD0iMCIgc3RvcC1jb2xvcj0iI2ViYTYwMCIvPjxzdG9wIG9mZnNldD0iMSIgc3RvcC1jb2xvcj0iI2MyODIwMCIvPjwvbGluZWFyR3JhZGllbnQ+PHBhdGggZmlsbD0idXJsKCNXUUVmdm9RQWNwUWdRZ3lqUVE0SHFhKSIgZD0iTTI0LjQxNCwxMC40MTRsLTIuNTM2LTIuNTM2QzIxLjMxNiw3LjMxNiwyMC41NTMsNywxOS43NTcsN0w1LDdDMy44OTUsNywzLDcuODk1LDMsOWwwLDMwCWMwLDEuMTA1LDAuODk1LDIsMiwybDM4LDBjMS4xMDUsMCwyLTAuODk1LDItMlYxM2MwLTEuMTA1LTAuODk1LTItMi0ybC0xNy4xNzIsMEMyNS4yOTgsMTEsMjQuNzg5LDEwLjc4OSwyNC40MTQsMTAuNDE0eiIvPjxsaW5lYXJHcmFkaWVudCBpZD0iV1FFZnZvUUFjcFFnUWd5alFRNEhxYiIgeDE9IjI0IiB4Mj0iMjQiIHkxPSIxMC44NTQiIHkyPSI0MC45ODMiIGdyYWRpZW50VW5pdHM9InVzZXJTcGFjZU9uVXNlIj48c3RvcCBvZmZzZXQ9IjAiIHN0b3AtY29sb3I9IiNmZmQ4NjkiLz48c3RvcCBvZmZzZXQ9IjEiIHN0b3AtY29sb3I9IiNmZWM1MmIiLz48L2xpbmVhckdyYWRpZW50PjxwYXRoIGZpbGw9InVybCgjV1FFZnZvUUFjcFFnUWd5alFRNEhxYikiIGQ9Ik0yMS41ODYsMTQuNDE0bDMuMjY4LTMuMjY4QzI0Ljk0NywxMS4wNTMsMjUuMDc0LDExLDI1LjIwNywxMUg0M2MxLjEwNSwwLDIsMC44OTUsMiwydjI2CWMwLDEuMTA1LTAuODk1LDItMiwySDVjLTEuMTA1LDAtMi0wLjg5NS0yLTJWMTUuNUMzLDE1LjIyNCwzLjIyNCwxNSwzLjUsMTVoMTYuNjcyQzIwLjcwMiwxNSwyMS4yMTEsMTQuNzg5LDIxLjU4NiwxNC40MTR6Ii8+PC9zdmc+" />
-
-                  <div className="flex-1 min-w-0">
-                    <h3 className="truncate text-sm font-medium text-gray-900">
-                      {exam.name}
-                    </h3>
-
-                    <p className="text-xs text-gray-500">
-                      {exam.sections?.length || 0} Sections
-                    </p>
-                  </div>
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
-
-      </div>
-    </>
-  )
-
-  if (examId && !sectionId) {
-    return (
-      <div className="relative min-h-[80vh]">
-        {/* Header */}
-        <div>
-          <h1 className="text-xl font-semibold sm:text-2xl flex items-center gap-2">
-            Question Management
-          </h1>
-          <div className="mt-2 flex items-center gap-2 text-sm">
-            <button
-              onClick={() => {
-                setFilters(prev => ({
-                  ...prev,
-                  examId: "all",
-                  sectionId: "all",
-                  questionType: "all",
-                }));
-                setSearchParams({});
-              }}
-            >
-              Exams
-            </button>
-            <span>/</span>
-          </div>
-        </div>
-
-        <div className="mt-6">
-          <div className="mb-6">
-            <h3 className="font-semibold text-lg border-2 bg-gray-100 p-2">
-              Select a Section
-            </h3>
-          </div>
-
-          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-2">
-            {sections1.map((section) => (
-              <div
-                key={section._id}
-                onClick={() => {
-                  setFilters(prev => ({
-                    ...prev,
-                    sectionId: section._id,
-                  }));
-                  setSearchParams({
-                    exam: examId,
-                    section: section._id,
-                  });
-                }}
-                className="cursor-pointer p-2 px-4 hover:outline hover:bg-gray-200 outline-gray-300 rounded-2xl transition"
-              >
-                <div className="flex flex-col">
-                  <img className="w-full px-3 h-full" alt="svgImg" src="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciICB2aWV3Qm94PSIwIDAgNDggNDgiIHdpZHRoPSI0OHB4IiBoZWlnaHQ9IjQ4cHgiPjxsaW5lYXJHcmFkaWVudCBpZD0iV1FFZnZvUUFjcFFnUWd5alFRNEhxYSIgeDE9IjI0IiB4Mj0iMjQiIHkxPSI2LjcwOCIgeTI9IjE0Ljk3NyIgZ3JhZGllbnRVbml0cz0idXNlclNwYWNlT25Vc2UiPjxzdG9wIG9mZnNldD0iMCIgc3RvcC1jb2xvcj0iI2ViYTYwMCIvPjxzdG9wIG9mZnNldD0iMSIgc3RvcC1jb2xvcj0iI2MyODIwMCIvPjwvbGluZWFyR3JhZGllbnQ+PHBhdGggZmlsbD0idXJsKCNXUUVmdm9RQWNwUWdRZ3lqUVE0SHFhKSIgZD0iTTI0LjQxNCwxMC40MTRsLTIuNTM2LTIuNTM2QzIxLjMxNiw3LjMxNiwyMC41NTMsNywxOS43NTcsN0w1LDdDMy44OTUsNywzLDcuODk1LDMsOWwwLDMwCWMwLDEuMTA1LDAuODk1LDIsMiwybDM4LDBjMS4xMDUsMCwyLTAuODk1LDItMlYxM2MwLTEuMTA1LTAuODk1LTItMi0ybC0xNy4xNzIsMEMyNS4yOTgsMTEsMjQuNzg5LDEwLjc4OSwyNC40MTQsMTAuNDE0eiIvPjxsaW5lYXJHcmFkaWVudCBpZD0iV1FFZnZvUUFjcFFnUWd5alFRNEhxYiIgeDE9IjI0IiB4Mj0iMjQiIHkxPSIxMC44NTQiIHkyPSI0MC45ODMiIGdyYWRpZW50VW5pdHM9InVzZXJTcGFjZU9uVXNlIj48c3RvcCBvZmZzZXQ9IjAiIHN0b3AtY29sb3I9IiNmZmQ4NjkiLz48c3RvcCBvZmZzZXQ9IjEiIHN0b3AtY29sb3I9IiNmZWM1MmIiLz48L2xpbmVhckdyYWRpZW50PjxwYXRoIGZpbGw9InVybCgjV1FFZnZvUUFjcFFnUWd5alFRNEhxYikiIGQ9Ik0yMS41ODYsMTQuNDE0bDMuMjY4LTMuMjY4QzI0Ljk0NywxMS4wNTMsMjUuMDc0LDExLDI1LjIwNywxMUg0M2MxLjEwNSwwLDIsMC44OTUsMiwydjI2CWMwLDEuMTA1LTAuODk1LDItMiwySDVjLTEuMTA1LDAtMi0wLjg5NS0yLTJWMTUuNUMzLDE1LjIyNCwzLjIyNCwxNSwzLjUsMTVoMTYuNjcyQzIwLjcwMiwxNSwyMS4yMTEsMTQuNzg5LDIxLjU4NiwxNC40MTR6Ii8+PC9zdmc+" />
-                  <div className="flex-1 min-w-0">
-                    <h3 className="truncate text-sm font-medium text-gray-900">
-                      {section.name}
-                    </h3>
-                    <p className="text-xs text-gray-500">
-                      Click to open
-                    </p>
-                  </div>
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
-      </div>
+      </>
     );
-  }
-
 
   return (
     <>
       <div className="relative min-h-screen  dark:from-gray-950 dark:via-gray-900 dark:to-blue-950/20">
-
         <Modal
           isOpen={preview}
           onClose={() => {
@@ -851,7 +932,9 @@ export default function QuestionManagementPage() {
                     </span>
                     <span className="text-xs text-gray-400">•</span>
                     <span className="text-xs text-gray-500 dark:text-gray-400">
-                      {QUESTION_TYPE_OPTIONS.find(t => t.value === previewQuestion.questionType)?.label || previewQuestion.questionType}
+                      {QUESTION_TYPE_OPTIONS.find(
+                        (t) => t.value === previewQuestion.questionType,
+                      )?.label || previewQuestion.questionType}
                     </span>
                   </div>
                 )}
@@ -869,66 +952,72 @@ export default function QuestionManagementPage() {
 
             {/* Preview Content */}
             <div className="flex-1 p-6 relative overflow-y-auto">
-              {previewQuestion && previewQuestion?.exam?.name?.toLowerCase()?.includes("sat") && (
-                <QuestionRenderer
-                  mode="preview"
-                  qDoc={previewQuestion}
-                  currentQuestion={{
-                    answerOptionIndexes: [],
-                    answerText: "",
-                  }}
-                  isCompleted={false}
-                  onOptionClick={(index: number) => null}
-                  onTextAnswerChange={(e: any) => null}
-                  getDiAnswers={() => ({})}
-                  updateDiAnswers={() => { }}
-                />
-              )}
-              {previewQuestion && previewQuestion?.exam?.name?.toLowerCase()?.includes("gmat") && (
-                <QuestionBody
-                  mode="preview"
-                  qDoc={previewQuestion}
-                  currentQuestion={{
-                    answerOptionIndexes: [],
-                    answerText: "",
-                  }}
-                  isCompleted={false}
-                  onOptionClick={(index: number) => null}
-                  onTextAnswerChange={(e: any) => null}
-                  getDiAnswers={() => ({})}
-                  updateDiAnswers={() => { }}
-                />
-              )}
-              {previewQuestion && previewQuestion?.exam?.name?.toLowerCase()?.includes("gre") && (
-                <QuestionPreviewRenderer
-                  mode="preview"
-                  qDoc={previewQuestion}
-                  currentQuestion={{
-                    answerOptionIndexes: [],
-                    answerText: "",
-                  }}
-                  isCompleted={false}
-                  onOptionClick={(index: number) => null}
-                  onTextAnswerChange={(e: any) => null}
-                  getDiAnswers={() => ({})}
-                  updateDiAnswers={() => { }}
-                />
-              )}
-              {previewQuestion && previewQuestion?.exam?.name?.toLowerCase()?.includes("pte") && (
-                <PteQuestionPreviewRenderer
-                  mode="preview"
-                  qDoc={previewQuestion}
-                  currentQuestion={{
-                    answerOptionIndexes: [],
-                    answerText: "",
-                  }}
-                  isCompleted={false}
-                  onOptionClick={(index: number) => null}
-                  onTextAnswerChange={(e: any) => null}
-                  getDiAnswers={() => ({})}
-                  updateDiAnswers={() => { }}
-                />
-              )}
+              {previewQuestion &&
+                previewQuestion?.exam?.name?.toLowerCase()?.includes("sat") && (
+                  <QuestionRenderer
+                    mode="preview"
+                    qDoc={previewQuestion}
+                    currentQuestion={{
+                      answerOptionIndexes: [],
+                      answerText: "",
+                    }}
+                    isCompleted={false}
+                    onOptionClick={(index: number) => null}
+                    onTextAnswerChange={(e: any) => null}
+                    getDiAnswers={() => ({})}
+                    updateDiAnswers={() => {}}
+                  />
+                )}
+              {previewQuestion &&
+                previewQuestion?.exam?.name
+                  ?.toLowerCase()
+                  ?.includes("gmat") && (
+                  <QuestionBody
+                    mode="preview"
+                    qDoc={previewQuestion}
+                    currentQuestion={{
+                      answerOptionIndexes: [],
+                      answerText: "",
+                    }}
+                    isCompleted={false}
+                    onOptionClick={(index: number) => null}
+                    onTextAnswerChange={(e: any) => null}
+                    getDiAnswers={() => ({})}
+                    updateDiAnswers={() => {}}
+                  />
+                )}
+              {previewQuestion &&
+                previewQuestion?.exam?.name?.toLowerCase()?.includes("gre") && (
+                  <QuestionPreviewRenderer
+                    mode="preview"
+                    qDoc={previewQuestion}
+                    currentQuestion={{
+                      answerOptionIndexes: [],
+                      answerText: "",
+                    }}
+                    isCompleted={false}
+                    onOptionClick={(index: number) => null}
+                    onTextAnswerChange={(e: any) => null}
+                    getDiAnswers={() => ({})}
+                    updateDiAnswers={() => {}}
+                  />
+                )}
+              {previewQuestion &&
+                previewQuestion?.exam?.name?.toLowerCase()?.includes("pte") && (
+                  <PteQuestionPreviewRenderer
+                    mode="preview"
+                    qDoc={previewQuestion}
+                    currentQuestion={{
+                      answerOptionIndexes: [],
+                      answerText: "",
+                    }}
+                    isCompleted={false}
+                    onOptionClick={(index: number) => null}
+                    onTextAnswerChange={(e: any) => null}
+                    getDiAnswers={() => ({})}
+                    updateDiAnswers={() => {}}
+                  />
+                )}
             </div>
 
             {/* Preview Footer */}
@@ -967,12 +1056,9 @@ export default function QuestionManagementPage() {
           </div>
         </Modal>
         <div className="container mx-auto px-4">
-
-
           <div className="relative flex flex-col gap-4 mb-4 sm:flex-row sm:items-center sm:justify-between">
             <div>
               <div className="flex items-center gap-3">
-
                 <div>
                   <h1 className="text-xl font-semibold sm:text-2xl flex items-center gap-2">
                     Question Management
@@ -981,7 +1067,8 @@ export default function QuestionManagementPage() {
                     </span>
                   </h1>
                   <p className="text-sm">
-                    Create, edit and filter questions for GMAT, GRE, SAT, and PTE
+                    Create, edit and filter questions for GMAT, GRE, SAT, and
+                    PTE
                   </p>
                 </div>
               </div>
@@ -1006,7 +1093,13 @@ export default function QuestionManagementPage() {
                   </div>
                   <span>Filters</span>
                   <span className="text-xs text-gray-500 dark:text-gray-400">
-                    ({Object.values(filters).filter(v => v !== "all" && v !== "").length} active)
+                    (
+                    {
+                      Object.values(filters).filter(
+                        (v) => v !== "all" && v !== "",
+                      ).length
+                    }{" "}
+                    active)
                   </span>
                 </div>
                 <button
@@ -1035,13 +1128,17 @@ export default function QuestionManagementPage() {
 
                 {/* Exam filter */}
                 <div>
-                 <Select
+                  <Select
                     options={[
                       ...exams.map((e) => ({ value: e._id, label: e.name })),
                     ]}
                     defaultValue={filters.examId}
                     onChange={(value: string) => {
-                      setFilters((prev) => ({ ...prev, examId: value, sectionId: "all" }));
+                      setFilters((prev) => ({
+                        ...prev,
+                        examId: value,
+                        sectionId: "all",
+                      }));
                       setPage(1);
                     }}
                     className="rounded-2xl border-gray-200 dark:border-gray-700"
@@ -1052,7 +1149,10 @@ export default function QuestionManagementPage() {
                 <div>
                   <Select
                     options={[
-                      ...sections1.map((s) => ({ value: s._id, label: s.name })),
+                      ...sections1.map((s) => ({
+                        value: s._id,
+                        label: s.name,
+                      })),
                     ]}
                     defaultValue={filters.sectionId}
                     onChange={(value: string) => {
@@ -1069,7 +1169,10 @@ export default function QuestionManagementPage() {
                     placeholder="false"
                     options={[
                       { value: "all", label: "All" },
-                      ...filteredQuestionTypes.map((t) => ({ value: t.value, label: t.label })),
+                      ...filteredQuestionTypes.map((t) => ({
+                        value: t.value,
+                        label: t.label,
+                      })),
                     ]}
                     defaultValue={filters.questionType}
                     onChange={(value: string) => {
@@ -1090,7 +1193,10 @@ export default function QuestionManagementPage() {
                     ]}
                     defaultValue={filters.difficulty}
                     onChange={(value: string) => {
-                      setFilters((prev) => ({ ...prev, difficulty: value as any }));
+                      setFilters((prev) => ({
+                        ...prev,
+                        difficulty: value as any,
+                      }));
                       setPage(1);
                     }}
                     className="rounded-2xl border-gray-200 dark:border-gray-700"
@@ -1102,12 +1208,16 @@ export default function QuestionManagementPage() {
               <div className="mt-4 flex flex-wrap items-center justify-between gap-3 :border-gray-700/50">
                 <div className="flex items-center gap-4 text-xs text-gray-500 dark:text-gray-400">
                   <div className="flex items-center gap-1">
-                    <span className="font-semibold text-gray-700 dark:text-gray-300">{totalQuestions}</span>
+                    <span className="font-semibold text-gray-700 dark:text-gray-300">
+                      {totalQuestions}
+                    </span>
                     <span>questions found</span>
                   </div>
                   <div className="hidden sm:flex items-center gap-1">
                     <span>Page</span>
-                    <span className="font-semibold text-blue-600 dark:text-blue-400">{page}</span>
+                    <span className="font-semibold text-blue-600 dark:text-blue-400">
+                      {page}
+                    </span>
                     <span>of</span>
                     <span className="font-semibold">{totalPages}</span>
                   </div>
@@ -1159,7 +1269,9 @@ export default function QuestionManagementPage() {
             {loading && (
               <div className="flex flex-col items-center justify-center border border-gray-200/50 bg-white/80 p-12 text-center  backdrop-blur-sm dark:border-gray-800/50 dark:bg-gray-900/80">
                 <Loader2 className="mb-3 h-8 w-8 animate-spin text-blue-600" />
-                <p className="text-sm text-gray-500 dark:text-gray-400">Loading questions...</p>
+                <p className="text-sm text-gray-500 dark:text-gray-400">
+                  Loading questions...
+                </p>
               </div>
             )}
 
@@ -1193,120 +1305,131 @@ export default function QuestionManagementPage() {
               </div>
             )}
 
-            {!loading && !error && questions.map((q) => (
-              <motion.div
-                key={q._id}
-                layout
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: -20 }}
-                transition={{ duration: 0.3, ease: "easeOut" }}
-                className="group relative overflow-hidden border border-gray-200 bg-white  backdrop-blur-sm transition-all hover: hover:-translate-y-1 dark:border-gray-800/50 dark:bg-gray-900/80"
-              >
-                <div className="absolute inset-0 bg-gradient-to-r from-blue-600/0 via-indigo-600/0 to-purple-600/0 transition-all duration-500 group-hover:from-blue-600/5 group-hover:via-indigo-600/5 group-hover:to-purple-600/5"></div>
+            {!loading &&
+              !error &&
+              questions.map((q) => (
+                <motion.div
+                  key={q._id}
+                  layout
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -20 }}
+                  transition={{ duration: 0.3, ease: "easeOut" }}
+                  className="group relative overflow-hidden border border-gray-200 bg-white  backdrop-blur-sm transition-all hover: hover:-translate-y-1 dark:border-gray-800/50 dark:bg-gray-900/80"
+                >
+                  <div className="absolute inset-0 bg-gradient-to-r from-blue-600/0 via-indigo-600/0 to-purple-600/0 transition-all duration-500 group-hover:from-blue-600/5 group-hover:via-indigo-600/5 group-hover:to-purple-600/5"></div>
 
-                <div className="relative p-5">
-                  <div className="flex flex-col gap-3 lg:flex-row lg:items-start lg:justify-between">
-                    <div className="flex-1 min-w-0">
-                      {/* Tags Row */}
-                      <div className="mb-2 flex flex-wrap items-center gap-2">
-                        {/* Exam Badge */}
-                        <span className="inline-flex items-center gap-1 rounded-full bg-gradient-to-r from-blue-500/10 to-indigo-500/10 px-3 py-1 text-xs font-medium text-blue-700 dark:from-blue-500/20 dark:to-indigo-500/20 dark:text-blue-300">
-                          <Layers className="h-3 w-3" />
-                          {q.exam?.name || "Unknown"}
-                        </span>
-
-                        {/* Section Badge */}
-                        <span className="inline-flex items-center gap-1 rounded-full bg-purple-50 px-3 py-1 text-xs font-medium text-purple-700 dark:bg-purple-500/20 dark:text-purple-300">
-                          <BookOpen className="h-3 w-3" />
-                          {q.section?.name || "Unknown"}
-                        </span>
-
-                        {/* Question Type Badge */}
-                        <span className="inline-flex items-center gap-1 rounded-full bg-cyan-50 px-3 py-1 text-xs font-medium text-cyan-700 dark:bg-cyan-500/20 dark:text-cyan-300">
-                          {QUESTION_TYPE_OPTIONS.find((t) => t.value === q.questionType)?.label || q.questionType}
-                        </span>
-
-                        {/* Difficulty Badge */}
-                        <span className={`inline-flex items-center gap-1 rounded-full border px-3 py-1 text-xs font-medium ${getDifficultyColor(q.difficulty)}`}>
-                          {getDifficultyIcon(q.difficulty)}
-                          {q.difficulty}
-                        </span>
-
-                        {/* Tags */}
-                        {q.tags && q.tags.length > 0 && (
-                          <span className="inline-flex items-center gap-1 rounded-full bg-emerald-50 px-3 py-1 text-xs font-medium text-emerald-700 dark:bg-emerald-500/20 dark:text-emerald-300">
-                            <Tag className="h-3 w-3" />
-                            {q.tags.slice(0, 3).join(", ")}
-                            {q.tags.length > 3 && ` +${q.tags.length - 3}`}
+                  <div className="relative p-5">
+                    <div className="flex flex-col gap-3 lg:flex-row lg:items-start lg:justify-between">
+                      <div className="flex-1 min-w-0">
+                        {/* Tags Row */}
+                        <div className="mb-2 flex flex-wrap items-center gap-2">
+                          {/* Exam Badge */}
+                          <span className="inline-flex items-center gap-1 rounded-full bg-gradient-to-r from-blue-500/10 to-indigo-500/10 px-3 py-1 text-xs font-medium text-blue-700 dark:from-blue-500/20 dark:to-indigo-500/20 dark:text-blue-300">
+                            <Layers className="h-3 w-3" />
+                            {q.exam?.name || "Unknown"}
                           </span>
-                        )}
-                      </div>
 
-                      {/* Stimulus */}
-                      {q.stimulus && (
+                          {/* Section Badge */}
+                          <span className="inline-flex items-center gap-1 rounded-full bg-purple-50 px-3 py-1 text-xs font-medium text-purple-700 dark:bg-purple-500/20 dark:text-purple-300">
+                            <BookOpen className="h-3 w-3" />
+                            {q.section?.name || "Unknown"}
+                          </span>
+
+                          {/* Question Type Badge */}
+                          <span className="inline-flex items-center gap-1 rounded-full bg-cyan-50 px-3 py-1 text-xs font-medium text-cyan-700 dark:bg-cyan-500/20 dark:text-cyan-300">
+                            {QUESTION_TYPE_OPTIONS.find(
+                              (t) => t.value === q.questionType,
+                            )?.label || q.questionType}
+                          </span>
+
+                          {/* Difficulty Badge */}
+                          <span
+                            className={`inline-flex items-center gap-1 rounded-full border px-3 py-1 text-xs font-medium ${getDifficultyColor(q.difficulty)}`}
+                          >
+                            {getDifficultyIcon(q.difficulty)}
+                            {q.difficulty}
+                          </span>
+
+                          {/* Tags */}
+                          {q.tags && q.tags.length > 0 && (
+                            <span className="inline-flex items-center gap-1 rounded-full bg-emerald-50 px-3 py-1 text-xs font-medium text-emerald-700 dark:bg-emerald-500/20 dark:text-emerald-300">
+                              <Tag className="h-3 w-3" />
+                              {q.tags.slice(0, 3).join(", ")}
+                              {q.tags.length > 3 && ` +${q.tags.length - 3}`}
+                            </span>
+                          )}
+                        </div>
+
+                        {/* Stimulus */}
+                        {q.stimulus && (
+                          <div
+                            className="mb-2 text-xs text-gray-500 line-clamp-1 dark:text-gray-400"
+                            dangerouslySetInnerHTML={{ __html: q.stimulus }}
+                          />
+                        )}
                         <div
-                          className="mb-2 text-xs text-gray-500 line-clamp-1 dark:text-gray-400"
-                          dangerouslySetInnerHTML={{ __html: q.stimulus }}
+                          className="text-sm font-medium text-gray-900 line-clamp-1 dark:text-gray-100"
+                          dangerouslySetInnerHTML={{ __html: q.questionText }}
                         />
-                      )}
-                      <div
-                        className="text-sm font-medium text-gray-900 line-clamp-1 dark:text-gray-100"
-                        dangerouslySetInnerHTML={{ __html: q.questionText }}
-                      />
-                    </div>
-
-                    {/* Action Buttons */}
-                    <div className="flex flex-col items-center gap-2 lg:flex-shrink-0">
-                      <div className="flex items-center gap-2 lg:flex-shrink-0">
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          className="rounded-2xl px-4 py-2 text-xs border-gray-200 hover:border-green-500 hover:bg-green-50 hover:text-green-600 dark:border-gray-700 dark:hover:border-green-500 dark:hover:bg-green-500/10"
-                          onClick={() => {
-                            setPreviewQuestion(q);
-                            setPreview(true);
-                          }}
-                        >
-                          <Eye className="mr-1 h-3.5 w-3.5" />
-                          Preview
-                        </Button>
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          className="rounded-2xl px-4 py-2 text-xs border-gray-200 hover:border-blue-500 hover:bg-blue-50 hover:text-blue-600 dark:border-gray-700 dark:hover:border-blue-500 dark:hover:bg-blue-500/10"
-                          onClick={() => openEditDrawer(q)}
-                        >
-                          <Edit3 className="mr-1 h-3.5 w-3.5" />
-                          Edit
-                        </Button>
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          className="rounded-2xl px-4 py-2 text-xs border-gray-200 text-rose-600 hover:border-rose-500 hover:bg-rose-50 hover:text-rose-700 dark:border-gray-700 dark:hover:border-rose-500 dark:hover:bg-rose-500/10"
-                          onClick={() => handleDelete(q)}
-                        >
-                          <Trash2 className="mr-1 h-3.5 w-3.5" />
-                          Delete
-                        </Button>
                       </div>
-                      <div className="flex flex-wrap items-center gap-4 text-xs text-gray-500 dark:text-gray-400">
-                        {q.createdAt && (
+
+                      {/* Action Buttons */}
+                      <div className="flex flex-col items-center gap-2 lg:flex-shrink-0">
+                        <div className="flex items-center gap-2 lg:flex-shrink-0">
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            className="rounded-2xl px-4 py-2 text-xs border-gray-200 hover:border-green-500 hover:bg-green-50 hover:text-green-600 dark:border-gray-700 dark:hover:border-green-500 dark:hover:bg-green-500/10"
+                            onClick={() => {
+                              setPreviewQuestion(q);
+                              setPreview(true);
+                            }}
+                          >
+                            <Eye className="mr-1 h-3.5 w-3.5" />
+                            Preview
+                          </Button>
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            className="rounded-2xl px-4 py-2 text-xs border-gray-200 hover:border-blue-500 hover:bg-blue-50 hover:text-blue-600 dark:border-gray-700 dark:hover:border-blue-500 dark:hover:bg-blue-500/10"
+                            onClick={() => openEditDrawer(q)}
+                          >
+                            <Edit3 className="mr-1 h-3.5 w-3.5" />
+                            Edit
+                          </Button>
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            className="rounded-2xl px-4 py-2 text-xs border-gray-200 text-rose-600 hover:border-rose-500 hover:bg-rose-50 hover:text-rose-700 dark:border-gray-700 dark:hover:border-rose-500 dark:hover:bg-rose-500/10"
+                            onClick={() => handleDelete(q)}
+                          >
+                            <Trash2 className="mr-1 h-3.5 w-3.5" />
+                            Delete
+                          </Button>
+                        </div>
+                        <div className="flex flex-wrap items-center gap-4 text-xs text-gray-500 dark:text-gray-400">
+                          {q.createdAt && (
+                            <div className="flex items-center gap-1">
+                              <Calendar className="h-3 w-3" />
+                              <span>{formatDate(q.createdAt)}</span>
+                            </div>
+                          )}
                           <div className="flex items-center gap-1">
-                            <Calendar className="h-3 w-3" />
-                            <span>{formatDate(q.createdAt)}</span>
+                            <Award className="h-3 w-3" />
+                            <span>
+                              Marks:{" "}
+                              <span className="font-medium text-gray-700 dark:text-gray-300">
+                                {q.marks ?? 1}
+                              </span>
+                            </span>
                           </div>
-                        )}
-                        <div className="flex items-center gap-1">
-                          <Award className="h-3 w-3" />
-                          <span>Marks: <span className="font-medium text-gray-700 dark:text-gray-300">{q.marks ?? 1}</span></span>
                         </div>
                       </div>
                     </div>
                   </div>
-                </div>
-              </motion.div>
-            ))}
+                </motion.div>
+              ))}
           </div>
 
           {/* Side Drawer - Enhanced UI */}
@@ -1341,13 +1464,15 @@ export default function QuestionManagementPage() {
                   <div className="flex items-center justify-between border-b border-gray-100 px-6 py-3 dark:border-gray-800">
                     <div>
                       <div className="flex items-center gap-2">
-
                         <div>
                           <h3 className="text-xl font-medium text-gray-900 dark:text-gray-100">
-                            {editingQuestion ? "Edit Question" : "Create New Question"}
+                            {editingQuestion
+                              ? "Edit Question"
+                              : "Create New Question"}
                           </h3>
                           <p className="text-xs text-gray-500 dark:text-gray-400">
-                            {currentQuestionTypeLabel || "Select a question type"}
+                            {currentQuestionTypeLabel ||
+                              "Select a question type"}
                           </p>
                         </div>
                       </div>
@@ -1370,27 +1495,45 @@ export default function QuestionManagementPage() {
                       {/* Basic Info */}
                       <div className="grid gap-4 sm:grid-cols-2">
                         <div>
-                          <Label className="text-sm font-medium text-gray-700 dark:text-gray-300">Exam</Label>
+                          <Label className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                            Exam
+                          </Label>
                           <Select
-                            options={exams.map((e) => ({ value: e._id, label: e.name }))}
+                            options={exams.map((e) => ({
+                              value: e._id,
+                              label: e.name,
+                            }))}
                             defaultValue={watch("exam")}
-                            onChange={(value: string) => setValue("exam", value)}
+                            onChange={(value: string) =>
+                              setValue("exam", value)
+                            }
                             className="mt-1 rounded border-gray-200 dark:border-gray-700"
                           />
                           {errors.exam && (
-                            <p className="mt-1 text-xs text-rose-500">{errors.exam.message}</p>
+                            <p className="mt-1 text-xs text-rose-500">
+                              {errors.exam.message}
+                            </p>
                           )}
                         </div>
                         <div>
-                          <Label className="text-sm font-medium text-gray-700 dark:text-gray-300">Section</Label>
+                          <Label className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                            Section
+                          </Label>
                           <Select
-                            options={sections.map((s) => ({ value: s._id, label: s.name }))}
+                            options={sections.map((s) => ({
+                              value: s._id,
+                              label: s.name,
+                            }))}
                             defaultValue={watch("section")}
-                            onChange={(value: string) => setValue("section", value)}
+                            onChange={(value: string) =>
+                              setValue("section", value)
+                            }
                             className="mt-1 rounded-2xl border-gray-200 dark:border-gray-700"
                           />
                           {errors.section && (
-                            <p className="mt-1 text-xs text-rose-500">{errors.section.message}</p>
+                            <p className="mt-1 text-xs text-rose-500">
+                              {errors.section.message}
+                            </p>
                           )}
                         </div>
                       </div>
@@ -1398,7 +1541,9 @@ export default function QuestionManagementPage() {
                       {/* Question Type & Difficulty */}
                       <div className="grid gap-4 sm:grid-cols-2">
                         <div>
-                          <Label className="text-sm font-medium text-gray-700 dark:text-gray-300">Question Type</Label>
+                          <Label className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                            Question Type
+                          </Label>
                           <Select
                             key={`question-type-${watchExam}`}
                             defaultValue={watchQuestionType || ""}
@@ -1414,15 +1559,21 @@ export default function QuestionManagementPage() {
                             }}
                           />
                           {errors.questionType && (
-                            <p className="mt-1 text-xs text-rose-500">{errors.questionType.message}</p>
+                            <p className="mt-1 text-xs text-rose-500">
+                              {errors.questionType.message}
+                            </p>
                           )}
                         </div>
                         <div>
-                          <Label className="text-sm font-medium text-gray-700 dark:text-gray-300">Difficulty</Label>
+                          <Label className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                            Difficulty
+                          </Label>
                           <Select
                             options={DIFFICULTY_OPTIONS}
                             defaultValue={watch("difficulty")}
-                            onChange={(value: string) => setValue("difficulty", value as any)}
+                            onChange={(value: string) =>
+                              setValue("difficulty", value as any)
+                            }
                             className="mt-1 rounded-2xl border-gray-200 dark:border-gray-700"
                           />
                         </div>
@@ -1431,16 +1582,32 @@ export default function QuestionManagementPage() {
                       {/* DI Subtype */}
                       {isDataInsights && (
                         <div>
-                          <Label className="text-sm font-medium text-gray-700 dark:text-gray-300">Data Insights Subtype</Label>
+                          <Label className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                            Data Insights Subtype
+                          </Label>
                           <Select
                             options={[
-                              { value: "multi_source_reasoning", label: "Multi-Source Reasoning" },
-                              { value: "two_part_analysis", label: "Two-Part Analysis" },
-                              { value: "table_analysis", label: "Table Analysis" },
-                              { value: "graphics_interpretation", label: "Graphics Interpretation" },
+                              {
+                                value: "multi_source_reasoning",
+                                label: "Multi-Source Reasoning",
+                              },
+                              {
+                                value: "two_part_analysis",
+                                label: "Two-Part Analysis",
+                              },
+                              {
+                                value: "table_analysis",
+                                label: "Table Analysis",
+                              },
+                              {
+                                value: "graphics_interpretation",
+                                label: "Graphics Interpretation",
+                              },
                             ]}
                             defaultValue={diSubtype}
-                            onChange={(v: string) => setValue("dataInsights.subtype", v)}
+                            onChange={(v: string) =>
+                              setValue("dataInsights.subtype", v)
+                            }
                             className="mt-1 rounded-2xl border-gray-200 dark:border-gray-700"
                           />
                         </div>
@@ -1449,7 +1616,10 @@ export default function QuestionManagementPage() {
                       {/* Tags */}
                       <div>
                         <Label className="text-sm font-medium text-gray-700 dark:text-gray-300">
-                          Tags <span className="text-xs text-gray-400">(comma separated)</span>
+                          Tags{" "}
+                          <span className="text-xs text-gray-400">
+                            (comma separated)
+                          </span>
                         </Label>
                         <Input
                           type="text"
@@ -1462,7 +1632,9 @@ export default function QuestionManagementPage() {
 
                       {/* Stimulus */}
                       <div>
-                        <Label className="text-sm font-medium text-gray-700 dark:text-gray-300">Stimulus / Passage</Label>
+                        <Label className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                          Stimulus / Passage
+                        </Label>
                         <RichTextEditor
                           header={true}
                           initialValue={watchStimulus}
@@ -1472,13 +1644,17 @@ export default function QuestionManagementPage() {
 
                       {/* Question Text */}
                       <div>
-                        <Label className="text-sm font-medium text-gray-700 dark:text-gray-300">Question Text *</Label>
+                        <Label className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                          Question Text *
+                        </Label>
                         {isPTEType(watchQuestionType) ? (
                           <Input
                             type="text"
                             placeholder="Enter the question"
                             value={watchQuestionText}
-                            onChange={(e) => setValue("questionText", e.target.value)}
+                            onChange={(e) =>
+                              setValue("questionText", e.target.value)
+                            }
                             className="mt-1 rounded-2xl border-gray-200 dark:border-gray-700"
                           />
                         ) : (
@@ -1489,19 +1665,28 @@ export default function QuestionManagementPage() {
                           />
                         )}
                         {errors.questionText && (
-                          <p className="mt-1 text-xs text-rose-500">{errors.questionText.message}</p>
+                          <p className="mt-1 text-xs text-rose-500">
+                            {errors.questionText.message}
+                          </p>
                         )}
                       </div>
 
                       {/* Extra Text for PTE */}
                       {isNewFeild(watchQuestionType) && (
                         <div>
-                          <Label className="text-sm font-medium text-gray-700 dark:text-gray-300">Extratext</Label>
+                          <Label className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                            Extratext
+                          </Label>
                           <Input
                             type="text"
                             placeholder="Enter the listening text"
                             value={watch("typeSpecific.listeningText")}
-                            onChange={(e) => setValue("typeSpecific.listeningText", e.target.value)}
+                            onChange={(e) =>
+                              setValue(
+                                "typeSpecific.listeningText",
+                                e.target.value,
+                              )
+                            }
                             className="mt-1 rounded-2xl border-gray-200 dark:border-gray-700"
                           />
                         </div>
@@ -1510,7 +1695,9 @@ export default function QuestionManagementPage() {
                       {/* PTE Fill in Blanks */}
                       {watchQuestionType === "pte_fill_in_blanks" && (
                         <div>
-                          <Label className="text-sm font-medium text-gray-700 dark:text-gray-300">Number of Blanks</Label>
+                          <Label className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                            Number of Blanks
+                          </Label>
                           <Select
                             options={[
                               { value: "1", label: "1 Blank" },
@@ -1523,30 +1710,50 @@ export default function QuestionManagementPage() {
                               { value: "8", label: "8 Blanks" },
                               { value: "9", label: "9 Blanks" },
                             ]}
-                            defaultValue={(watch("typeSpecific.blanks")?.toString() || "1")}
-                            onChange={(value: string) => setValue("typeSpecific.blanks", value)}
+                            defaultValue={
+                              watch("typeSpecific.blanks")?.toString() || "1"
+                            }
+                            onChange={(value: string) =>
+                              setValue("typeSpecific.blanks", value)
+                            }
                             className="mt-1 rounded-2xl border-gray-200 dark:border-gray-700"
                           />
-                          {watch("typeSpecific.blanks") && Array.from({ length: Number(watch("typeSpecific.blanks")) }).map((_, index) => (
-                            <div key={index} className="mt-3">
-                              <Label className="text-xs text-gray-600 dark:text-gray-400">Blank {index + 1} Options</Label>
-                              <Input
-                                type="text"
-                                placeholder={`Options for Blank ${index + 1} (comma separated)`}
-                                value={watch(`typeSpecific.options.${index}`)}
-                                onChange={(e) => setValue(`typeSpecific.options.${index}`, e.target.value)}
-                                className="mt-1 rounded-2xl border-gray-200 dark:border-gray-700"
-                              />
-                            </div>
-                          ))}
+                          {watch("typeSpecific.blanks") &&
+                            Array.from({
+                              length: Number(watch("typeSpecific.blanks")),
+                            }).map((_, index) => (
+                              <div key={index} className="mt-3">
+                                <Label className="text-xs text-gray-600 dark:text-gray-400">
+                                  Blank {index + 1} Options
+                                </Label>
+                                <Input
+                                  type="text"
+                                  placeholder={`Options for Blank ${index + 1} (comma separated)`}
+                                  value={watch(`typeSpecific.options.${index}`)}
+                                  onChange={(e) =>
+                                    setValue(
+                                      `typeSpecific.options.${index}`,
+                                      e.target.value,
+                                    )
+                                  }
+                                  className="mt-1 rounded-2xl border-gray-200 dark:border-gray-700"
+                                />
+                              </div>
+                            ))}
                         </div>
                       )}
 
-                      {(isPTEType(watchQuestionType) || isNewFeild(watchQuestionType)) && (
+                      {(isPTEType(watchQuestionType) ||
+                        isNewFeild(watchQuestionType)) && (
                         <div>
                           <AudioUploadComponent
-                            questionText={watch("typeSpecific.listeningText") || watchQuestionText}
-                            initialAudioUrl={editingQuestion?.typeSpecific?.audio || ""}
+                            questionText={
+                              watch("typeSpecific.listeningText") ||
+                              watchQuestionText
+                            }
+                            initialAudioUrl={
+                              editingQuestion?.typeSpecific?.audio || ""
+                            }
                             onAudioChange={(audioData) => {
                               setAudioData(audioData);
                               setValue("typeSpecific.audio", audioData);
@@ -1572,13 +1779,16 @@ export default function QuestionManagementPage() {
                         <div>
                           <div className="mb-3 flex items-center justify-between">
                             <Label className="text-sm font-medium text-gray-700 dark:text-gray-300">
-                              Options <HelpCircle className="inline h-3 w-3 text-gray-400" />
+                              Options{" "}
+                              <HelpCircle className="inline h-3 w-3 text-gray-400" />
                             </Label>
                             <button
                               type="button"
                               onClick={() =>
                                 append({
-                                  label: String.fromCharCode(65 + optionFields.length),
+                                  label: String.fromCharCode(
+                                    65 + optionFields.length,
+                                  ),
                                   text: "",
                                   isCorrect: false,
                                 })
@@ -1613,16 +1823,26 @@ export default function QuestionManagementPage() {
                                   /> */}
                                   <RichTextEditor
                                     header={true}
-                                    initialValue={watch(`options.${index}.text`)}
-                                    onChange={(html) => setValue(`options.${index}.text`, html)}
+                                    initialValue={watch(
+                                      `options.${index}.text`,
+                                    )}
+                                    onChange={(html) =>
+                                      setValue(`options.${index}.text`, html)
+                                    }
                                   />
                                   <label className="inline-flex items-center gap-2 text-xs text-gray-600 dark:text-gray-300">
-
                                     <input
                                       type="checkbox"
                                       className="h-3.5 w-3.5 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
-                                      checked={watch(`options.${index}.isCorrect`)}
-                                      onChange={(e) => setValue(`options.${index}.isCorrect`, e.target.checked)}
+                                      checked={watch(
+                                        `options.${index}.isCorrect`,
+                                      )}
+                                      onChange={(e) =>
+                                        setValue(
+                                          `options.${index}.isCorrect`,
+                                          e.target.checked,
+                                        )
+                                      }
                                     />
                                     Correct answer
                                   </label>
@@ -1642,11 +1862,15 @@ export default function QuestionManagementPage() {
                         </div>
                       ) : (
                         <div>
-                          <Label className="text-sm font-medium text-gray-700 dark:text-gray-300">Correct Answer</Label>
+                          <Label className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                            Correct Answer
+                          </Label>
                           <RichTextEditor
                             header={true}
                             initialValue={watchCorrectAnswerText}
-                            onChange={(html) => setValue("correctAnswerText", html)}
+                            onChange={(html) =>
+                              setValue("correctAnswerText", html)
+                            }
                           />
                           {/* <Input
                             type="text"
@@ -1661,23 +1885,38 @@ export default function QuestionManagementPage() {
                       {/* Text Completion */}
                       {watchQuestionType === "gre_verbal_text_completion" && (
                         <div>
-                          <Label className="text-sm font-medium text-gray-700 dark:text-gray-300">Number of Blanks</Label>
+                          <Label className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                            Number of Blanks
+                          </Label>
                           <Select
                             options={[
                               { value: "1", label: "1 Blank" },
                               { value: "2", label: "2 Blanks" },
                               { value: "3", label: "3 Blanks" },
                             ]}
-                            defaultValue={(watch("typeSpecific.blanks")?.toString() || "1")}
+                            defaultValue={
+                              watch("typeSpecific.blanks")?.toString() || "1"
+                            }
                             onChange={(v) => {
                               const num = Number(v);
                               setValue("typeSpecific.blanks", num);
-                              const currentOpts = watch("typeSpecific.options") || [];
+                              const currentOpts =
+                                watch("typeSpecific.options") || [];
                               if (currentOpts.length === 0) {
                                 const newOpts = [];
                                 for (let i = 0; i < num; i++) {
-                                  newOpts.push({ blankIndex: i, label: "A", text: "", isCorrect: true });
-                                  newOpts.push({ blankIndex: i, label: "B", text: "", isCorrect: false });
+                                  newOpts.push({
+                                    blankIndex: i,
+                                    label: "A",
+                                    text: "",
+                                    isCorrect: true,
+                                  });
+                                  newOpts.push({
+                                    blankIndex: i,
+                                    label: "B",
+                                    text: "",
+                                    isCorrect: false,
+                                  });
                                 }
                                 setValue("typeSpecific.options", newOpts);
                               }
@@ -1685,114 +1924,176 @@ export default function QuestionManagementPage() {
                             className="mt-1 rounded-2xl border-gray-200 dark:border-gray-700"
                           />
 
-                          {[...Array(watch("typeSpecific.blanks") || 1)].map((_, blankIndex) => {
-                            const blankOptions = (watch("typeSpecific.options") || [])
-                              .filter(opt => opt.blankIndex === blankIndex);
+                          {[...Array(watch("typeSpecific.blanks") || 1)].map(
+                            (_, blankIndex) => {
+                              const blankOptions = (
+                                watch("typeSpecific.options") || []
+                              ).filter((opt) => opt.blankIndex === blankIndex);
 
-                            return (
-                              <div key={blankIndex} className="mt-4 rounded-2xl border border-gray-200 bg-gray-50/50 p-4 dark:border-gray-700 dark:bg-gray-800/50">
-                                <div className="mb-3 flex items-center justify-between">
-                                  <Label className="text-sm font-medium text-gray-700 dark:text-gray-300">Blank {blankIndex + 1}</Label>
-                                  <button
-                                    type="button"
-                                    onClick={() => {
-                                      const opts = watch("typeSpecific.options") || [];
-                                      const nextLabel = String.fromCharCode(65 + blankOptions.length);
-                                      setValue("typeSpecific.options", [
-                                        ...opts,
-                                        { blankIndex, label: nextLabel, text: "", isCorrect: false }
-                                      ]);
-                                    }}
-                                    className="flex items-center gap-1 rounded-xl bg-blue-50 px-3 py-1 text-xs text-blue-600 hover:bg-blue-100 dark:bg-blue-500/20 dark:text-blue-300"
-                                  >
-                                    <Plus className="h-3 w-3" />
-                                    Add Option
-                                  </button>
-                                </div>
+                              return (
+                                <div
+                                  key={blankIndex}
+                                  className="mt-4 rounded-2xl border border-gray-200 bg-gray-50/50 p-4 dark:border-gray-700 dark:bg-gray-800/50"
+                                >
+                                  <div className="mb-3 flex items-center justify-between">
+                                    <Label className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                                      Blank {blankIndex + 1}
+                                    </Label>
+                                    <button
+                                      type="button"
+                                      onClick={() => {
+                                        const opts =
+                                          watch("typeSpecific.options") || [];
+                                        const nextLabel = String.fromCharCode(
+                                          65 + blankOptions.length,
+                                        );
+                                        setValue("typeSpecific.options", [
+                                          ...opts,
+                                          {
+                                            blankIndex,
+                                            label: nextLabel,
+                                            text: "",
+                                            isCorrect: false,
+                                          },
+                                        ]);
+                                      }}
+                                      className="flex items-center gap-1 rounded-xl bg-blue-50 px-3 py-1 text-xs text-blue-600 hover:bg-blue-100 dark:bg-blue-500/20 dark:text-blue-300"
+                                    >
+                                      <Plus className="h-3 w-3" />
+                                      Add Option
+                                    </button>
+                                  </div>
 
-                                {blankOptions.map((opt, idx) => {
-                                  const globalIndex = (watch("typeSpecific.options") || []).findIndex(
-                                    o => o.blankIndex === blankIndex && o.label === opt.label
-                                  );
-                                  return (
-                                    <div key={`${blankIndex}-${opt.label}`} className="mb-2 flex items-start gap-3">
-                                      <div className="mt-2 flex h-6 w-6 items-center justify-center rounded-full bg-gray-200 text-xs font-mono font-bold dark:bg-gray-700">
-                                        {opt.label}
-                                      </div>
-                                      <div className="flex-1">
-                                        <Input
-                                          value={opt.text}
-                                          onChange={(e) => {
-                                            const opts = [...(watch("typeSpecific.options") || [])];
-                                            opts[globalIndex] = { ...opts[globalIndex], text: e.target.value };
-                                            setValue("typeSpecific.options", opts);
-                                          }}
-                                          placeholder={`Option text for Blank ${blankIndex + 1}`}
-                                          className="rounded-xl border-gray-200 dark:border-gray-700"
-                                        />
-                                      </div>
-                                      <div className="mt-2">
-                                        <label className="flex items-center gap-1.5 text-sm">
-                                          <input
-                                            type="checkbox"
-                                            checked={opt.isCorrect}
+                                  {blankOptions.map((opt, idx) => {
+                                    const globalIndex = (
+                                      watch("typeSpecific.options") || []
+                                    ).findIndex(
+                                      (o) =>
+                                        o.blankIndex === blankIndex &&
+                                        o.label === opt.label,
+                                    );
+                                    return (
+                                      <div
+                                        key={`${blankIndex}-${opt.label}`}
+                                        className="mb-2 flex items-start gap-3"
+                                      >
+                                        <div className="mt-2 flex h-6 w-6 items-center justify-center rounded-full bg-gray-200 text-xs font-mono font-bold dark:bg-gray-700">
+                                          {opt.label}
+                                        </div>
+                                        <div className="flex-1">
+                                          <Input
+                                            value={opt.text}
                                             onChange={(e) => {
-                                              const opts = [...(watch("typeSpecific.options") || [])];
-                                              opts.forEach(o => {
-                                                if (o.blankIndex === blankIndex) {
-                                                  o.isCorrect = false;
-                                                }
-                                              });
-                                              opts[globalIndex] = { ...opts[globalIndex], isCorrect: e.target.checked };
-                                              setValue("typeSpecific.options", opts);
+                                              const opts = [
+                                                ...(watch(
+                                                  "typeSpecific.options",
+                                                ) || []),
+                                              ];
+                                              opts[globalIndex] = {
+                                                ...opts[globalIndex],
+                                                text: e.target.value,
+                                              };
+                                              setValue(
+                                                "typeSpecific.options",
+                                                opts,
+                                              );
                                             }}
-                                            className="h-3.5 w-3.5 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                                            placeholder={`Option text for Blank ${blankIndex + 1}`}
+                                            className="rounded-xl border-gray-200 dark:border-gray-700"
                                           />
-                                          Correct
-                                        </label>
+                                        </div>
+                                        <div className="mt-2">
+                                          <label className="flex items-center gap-1.5 text-sm">
+                                            <input
+                                              type="checkbox"
+                                              checked={opt.isCorrect}
+                                              onChange={(e) => {
+                                                const opts = [
+                                                  ...(watch(
+                                                    "typeSpecific.options",
+                                                  ) || []),
+                                                ];
+                                                opts.forEach((o) => {
+                                                  if (
+                                                    o.blankIndex === blankIndex
+                                                  ) {
+                                                    o.isCorrect = false;
+                                                  }
+                                                });
+                                                opts[globalIndex] = {
+                                                  ...opts[globalIndex],
+                                                  isCorrect: e.target.checked,
+                                                };
+                                                setValue(
+                                                  "typeSpecific.options",
+                                                  opts,
+                                                );
+                                              }}
+                                              className="h-3.5 w-3.5 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                                            />
+                                            Correct
+                                          </label>
+                                        </div>
+                                        {blankOptions.length > 2 && (
+                                          <button
+                                            type="button"
+                                            onClick={() => {
+                                              const opts = (
+                                                watch("typeSpecific.options") ||
+                                                []
+                                              ).filter(
+                                                (_, i) => i !== globalIndex,
+                                              );
+                                              setValue(
+                                                "typeSpecific.options",
+                                                opts,
+                                              );
+                                            }}
+                                            className="mt-2 text-rose-500 hover:text-rose-700"
+                                          >
+                                            <X className="h-4 w-4" />
+                                          </button>
+                                        )}
                                       </div>
-                                      {blankOptions.length > 2 && (
-                                        <button
-                                          type="button"
-                                          onClick={() => {
-                                            const opts = (watch("typeSpecific.options") || []).filter(
-                                              (_, i) => i !== globalIndex
-                                            );
-                                            setValue("typeSpecific.options", opts);
-                                          }}
-                                          className="mt-2 text-rose-500 hover:text-rose-700"
-                                        >
-                                          <X className="h-4 w-4" />
-                                        </button>
-                                      )}
-                                    </div>
-                                  );
-                                })}
-                              </div>
-                            );
-                          })}
+                                    );
+                                  })}
+                                </div>
+                              );
+                            },
+                          )}
                         </div>
                       )}
 
                       {/* Marks */}
                       <div className="grid gap-4 sm:grid-cols-2">
                         <div>
-                          <Label className="text-sm font-medium text-gray-700 dark:text-gray-300">Marks</Label>
+                          <Label className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                            Marks
+                          </Label>
                           <Input
                             type="number"
                             step="0.25"
                             value={watchMarks}
-                            onChange={(e) => setValue("marks", parseFloat(e.target.value) || 0)}
+                            onChange={(e) =>
+                              setValue("marks", parseFloat(e.target.value) || 0)
+                            }
                             className="mt-1 rounded-2xl border-gray-200 dark:border-gray-700"
                           />
                         </div>
                         <div>
-                          <Label className="text-sm font-medium text-gray-700 dark:text-gray-300">Negative Marks</Label>
+                          <Label className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                            Negative Marks
+                          </Label>
                           <Input
                             type="number"
                             step="0.25"
                             value={watchNegativeMarks}
-                            onChange={(e) => setValue("negativeMarks", parseFloat(e.target.value) || 0)}
+                            onChange={(e) =>
+                              setValue(
+                                "negativeMarks",
+                                parseFloat(e.target.value) || 0,
+                              )
+                            }
                             className="mt-1 rounded-2xl border-gray-200 dark:border-gray-700"
                           />
                         </div>
@@ -1800,7 +2101,9 @@ export default function QuestionManagementPage() {
 
                       {/* Explanation & Source */}
                       <div>
-                        <Label className="text-sm font-medium text-gray-700 dark:text-gray-300">Explanation</Label>
+                        <Label className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                          Explanation
+                        </Label>
                         <RichTextEditor
                           header={true}
                           initialValue={watchExplanation}
@@ -1815,7 +2118,9 @@ export default function QuestionManagementPage() {
                         /> */}
                       </div>
                       <div>
-                        <Label className="text-sm font-medium text-gray-700 dark:text-gray-300">Source</Label>
+                        <Label className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                          Source
+                        </Label>
                         <Input
                           type="text"
                           placeholder="e.g., Official Guide 2024"

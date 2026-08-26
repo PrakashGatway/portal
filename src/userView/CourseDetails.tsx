@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useMemo } from "react";
 import {
   Star,
   BookOpen,
@@ -27,6 +27,9 @@ import {
   Radio,
   ScreenShare,
   Lock,
+  ChevronDown,
+  Film,
+  Play,
 } from "lucide-react";
 import Button from "../components/ui/button/Button";
 import api, { ImageBaseUrl } from "../axiosInstance";
@@ -36,9 +39,14 @@ import {
   useParams,
   useSearchParams,
 } from "react-router";
-import { motion, LayoutGroup } from "framer-motion";
+import { motion, LayoutGroup, AnimatePresence } from "framer-motion";
 import { SkeletonCard } from "../pages/Dashboard/userDashboard";
 import CourseSupportFooter from "../components/SupportFooter";
+import {
+  CourseMaterials,
+  CourseTests,
+  TodaySessionsBanner,
+} from "./CourseComponents/courseTests";
 
 interface Instructor {
   _id: string;
@@ -240,6 +248,34 @@ export default function CourseDetailPage() {
 
   const location = useLocation();
 
+  const [openSections, setOpenSections] = useState(() => {
+    // Open first section by default
+    return curriculum?.length ? [curriculum[0]?._id] : [];
+  });
+
+  const [expandedLessons, setExpandedLessons] = useState({});
+
+  const toggleSection = (sectionId) => {
+    setOpenSections((prev) =>
+      prev.includes(sectionId)
+        ? prev.filter((id) => id !== sectionId)
+        : [...prev, sectionId],
+    );
+  };
+
+  const toggleLessons = (sectionId) => {
+    setExpandedLessons((prev) => ({
+      ...prev,
+      [sectionId]: !prev[sectionId],
+    }));
+  };
+
+  useEffect(() => {
+    if (curriculum?.length) {
+      setOpenSections([curriculum[0]._id]);
+    }
+  }, [curriculum]);
+
   useEffect(() => {
     const searchParams = new URLSearchParams(location.search);
 
@@ -249,7 +285,7 @@ export default function CourseDetailPage() {
   }, [location.search]);
 
   useEffect(() => {
-    if ( course && !curriculumRef.current) {
+    if (course && !curriculumRef.current) {
       const fetchCurriculum = async () => {
         setCurriculumLoading(true);
         try {
@@ -300,6 +336,18 @@ export default function CourseDetailPage() {
     });
   };
 
+  const sessions = useMemo(() => {
+    return (
+      curriculum?.flatMap((section) =>
+        (section.items || [])
+          .filter((item: any) => item.type === "Sessions")
+          .map((item: any) => ({
+            ...item,
+          })),
+      ) || []
+    );
+  }, [curriculum]);
+
   const handleItemNavigation = (item, sectionId) => {
     if (item.isLocked) return;
 
@@ -319,8 +367,10 @@ export default function CourseDetailPage() {
     if (type == "tests") {
       const examName = course.categoryInfo?.slug?.toLowerCase() || "";
       if (examName.includes("gmat")) navigate(`/gmat/tests/${item.test?._id}`);
-      else if (examName.includes("pte")) navigate(`/pte/tests/${item.test?._id}`);
-      else if (examName.includes("gre")) navigate(`/gre/tests/${item.test?._id}`);
+      else if (examName.includes("pte"))
+        navigate(`/pte/tests/${item.test?._id}`);
+      else if (examName.includes("gre"))
+        navigate(`/gre/tests/${item.test?._id}`);
       else navigate(`/mcq/tests/${item.test?._id}`);
       return;
     }
@@ -445,6 +495,23 @@ export default function CourseDetailPage() {
             {course.title}
           </span>
         </nav>
+        {
+          course?.isPurchased && (
+            <div className="pb-4">
+          <TodaySessionsBanner
+            sessions={sessions}
+            onJoin={(session) => {
+              handleItemNavigation(session, "");
+            }}
+            onCalendar={(session) => {
+              console.log("Add to calendar:", session);
+            }}
+          />
+        </div>
+          )
+        }
+        
+
         <motion.div ref={courseHeaderRef} className="relative">
           <div className="relative">
             <div className="grid grid-cols-1 lg:grid-cols-6 gap-6">
@@ -520,48 +587,50 @@ export default function CourseDetailPage() {
                   </Card>
                 </div>
                 <div className="mb-8">
-                  <nav className="relative">
+                  <nav className="border-b border-gray-200 dark:border-gray-700">
                     <LayoutGroup>
-                      <div className="flex flex-wrap gap-2 bg-zinc-200 dark:bg-gray-800 rounded-xl p-1">
+                      <div className="flex items-center gap-6 scrollbar-hide">
                         {[
-                          { id: "overview", label: "Overview", icon: BookOpen },
-                          { id: "curriculum", label: "Curriculum", icon: Book },
-                          { id: "materials", label: "Materials", icon: Book },
-                          { id: "tests", label: "Tests", icon: Book },
-                          {
-                            id: "instructors",
-                            label: "Instructors",
-                            icon: Users2,
-                          },
-                          { id: "faq", label: "FAQ", icon: MessageCircle },
+                          { id: "overview", label: "Overview" },
+                          { id: "curriculum", label: "Curriculum" },
+                          { id: "materials", label: "Materials" },
+                          { id: "tests", label: "Tests" },
+                          { id: "instructors", label: "Instructors" },
+                          // { id: "faq", label: "FAQ" },
                         ].map((tab) => {
+                          const isActive = activeTab === tab.id;
+
                           return (
                             <motion.button
                               key={tab.id}
-                              layout
                               onClick={() => setActiveTab(tab.id)}
-                              className={`relative py-2.5 px-4 font-semibold text-sm flex items-center rounded-lg transition-all duration-200
-                                                        ${
-                                                          activeTab === tab.id
-                                                            ? "text-gray-600 font-semibold bg-white shadow-sm dark:bg-gray-900 dark:text-blue-400"
-                                                            : "text-gray-600 hover:text-gray-900 dark:text-gray-400 dark:hover:text-gray-300"
-                                                        }`}
+                              className={`
+                relative shrink-0
+                px-1 pb-3 pt-1
+                text-[16px] font-medium
+                transition-colors duration-200
+                ${
+                  isActive
+                    ? "text-orange-600 dark:text-orange-500"
+                    : "text-gray-500 hover:text-gray-700 dark:text-gray-500 dark:hover:text-gray-300"
+                }
+              `}
                               whileHover={{ y: -1 }}
                               whileTap={{ y: 0 }}
                             >
-                              {activeTab === tab.id && (
+                              {tab.label}
+
+                              {isActive && (
                                 <motion.div
-                                  layoutId="tabBackground"
-                                  className="absolute inset-0 bg-white dark:bg-gray-900 rounded-lg shadow-sm -z-10"
+                                  layoutId="activeTab"
+                                  className="absolute bottom-[-1px] left-0 right-0 h-[3px] rounded-t-full bg-orange-500"
                                   transition={{
                                     type: "spring",
-                                    stiffness: 300,
+                                    stiffness: 400,
                                     damping: 30,
                                   }}
                                 />
                               )}
-                              {/* <IconComponent className="h-4 w-4 mr-2" /> */}
-                              {tab.label}
                             </motion.button>
                           );
                         })}
@@ -654,114 +723,80 @@ export default function CourseDetailPage() {
                   )}
 
                   {activeTab === "curriculum" && (
-                    <div className="space-y-6">
-                      {/* ================= LOADING ================= */}
+                    <div className="space-y-5">
                       {curriculumLoading ? (
                         <CurriculumSkeleton />
                       ) : (
                         <>
-                          {/* ================= SECTIONS ================= */}
                           <div className="space-y-4">
-                            {curriculum?.map((section, sectionIndex) => (
-                              <div
-                                key={section._id}
-                                className="
-                                group
-                                overflow-hidden
-                                rounded-2xl
-                                border
-                                border-gray-200/80
-                                bg-white
-                                shadow-[0_4px_20px_rgba(0,0,0,0.035)]
-                                transition-all
-                                duration-300
-                                hover:-translate-y-[1px]
-                                hover:border-[#FFD2C3]
-                                hover:shadow-[0_12px_35px_rgba(243,110,69,0.10)]
-                            "
-                              >
-                                {/* ================= SECTION HEADER ================= */}
+                            {curriculum?.map((section, sectionIndex) => {
+                              const isOpen = openSections.includes(section._id);
+
+                              const lessons =
+                                section.items?.filter(
+                                  (item) =>
+                                    item.type !== "StudyMaterials" &&
+                                    item.type !== "Tests",
+                                ) || [];
+
+                              const isLessonsExpanded =
+                                expandedLessons[section._id] || false;
+
+                              const visibleLessons = isLessonsExpanded
+                                ? lessons
+                                : lessons.slice(0, 5);
+
+                              return (
                                 <div
+                                  key={section._id}
                                   className="
-                                    relative
-                                    overflow-hidden
-                                    bg-gradient-to-r
-                                    from-[#FF6B35]
-                                    via-[#FF805F]
-                                    to-[#FF9A86]
-                                    px-4
-                                    py-4
-                                    sm:px-6
-                                    sm:py-5
-                                "
+                  overflow-hidden
+                  rounded-xl
+                  border
+                  transition-all
+                  duration-300
+                "
                                 >
-                                  {/* Decorative Background */}
-                                  <div
+                                  <button
+                                    type="button"
+                                    onClick={() => toggleSection(section._id)}
                                     className="
-                                        pointer-events-none
-                                        absolute
-                                        -right-10
-                                        -top-10
-                                        h-32
-                                        w-32
-                                        rounded-full
-                                        bg-white/10
-                                    "
-                                  />
-
-                                  <div
-                                    className="
-                                        pointer-events-none
-                                        absolute
-                                        -bottom-16
-                                        right-24
-                                        h-28
-                                        w-28
-                                        rounded-full
-                                        bg-white/10
-                                    "
-                                  />
-
-                                  <div
-                                    className="
-                                        relative
-                                        flex
-                                        items-center
-                                        justify-between
-                                        gap-3
-                                    "
+                    group
+                    relative
+                    flex
+                    w-full
+                    items-center
+                    justify-between
+                    gap-3
+                    bg-[#FDE8D8]
+                    p-2
+                    text-left
+                    transition-all
+                    duration-300
+                    hover:bg-[#FCE3D2]
+                  "
                                   >
-                                    {/* LEFT */}
-                                    <div
-                                      className="
-                                            flex
-                                            min-w-0
-                                            items-center
-                                            gap-3
-                                            sm:gap-4
-                                        "
-                                    >
-                                      {/* Section Number */}
+                                    {/* LEFT SIDE */}
+                                    <div className="flex min-w-0 items-center gap-4">
+                                      {/* SECTION NUMBER */}
                                       <div
                                         className="
-                                                flex
-                                                h-11
-                                                w-11
-                                                shrink-0
-                                                items-center
-                                                justify-center
-                                                rounded-xl
-                                                border
-                                                border-white/30
-                                                bg-white/20
-                                                text-sm
-                                                font-extrabold
-                                                text-white
-                                                shadow-inner
-                                                backdrop-blur-sm
-                                                sm:h-12
-                                                sm:w-12
-                                            "
+                        flex
+                        h-10
+                        w-10
+                        shrink-0
+                        items-center
+                        justify-center
+                        border-r
+                        border-[#EAB9A5]
+                        pr-4
+                        text-lg
+                        font-bold
+                        text-[#F04F23]
+                        sm:h-12
+                        sm:w-12
+                        sm:text-xl
+                      "
                                       >
                                         {String(sectionIndex + 1).padStart(
                                           2,
@@ -769,521 +804,545 @@ export default function CourseDetailPage() {
                                         )}
                                       </div>
 
+                                      {/* TITLE */}
                                       <div className="min-w-0">
                                         <h3
                                           className="
-                                                    truncate
-                                                    text-sm
-                                                    font-bold
-                                                    text-white
-                                                    sm:text-lg
-                                                "
+                          truncate
+                          text-base
+                          font-bold
+                          text-[#111827]
+                          sm:text-base
+                        "
                                         >
                                           {section.title}
                                         </h3>
 
                                         <div
                                           className="
-                                                    mt-1
-                                                    flex
-                                                    items-center
-                                                    gap-2
-                                                    text-[11px]
-                                                    text-white/80
-                                                    sm:text-xs
-                                                "
+                          flex
+                          items-center
+                          gap-2
+                          text-xs
+                          font-medium
+                          text-[#8B6F61]
+                          sm:text-xs
+                        "
                                         >
-                                          <span>
-                                            {section.items?.length || 0} lessons
-                                          </span>
+                                          <span>{lessons.length} Lessons</span>
 
-                                          <span className="h-1 w-1 rounded-full bg-white/60" />
+                                          <span className="text-[#C5A99B]">
+                                            •
+                                          </span>
 
                                           <span>Course Section</span>
                                         </div>
                                       </div>
                                     </div>
 
-                                    {/* RIGHT COUNT */}
-                                    <div
-                                      className="
-                                            shrink-0
-                                            rounded-full
-                                            border
-                                            border-white/30
-                                            bg-white/15
-                                            px-2.5
-                                            py-1.5
-                                            text-[10px]
-                                            font-bold
-                                            text-white
-                                            backdrop-blur-sm
-                                            sm:px-4
-                                            sm:text-xs
-                                        "
-                                    >
-                                      {section.items?.length || 0} Lessons
-                                    </div>
-                                  </div>
-                                </div>
-
-                                {/* ================= SECTION ITEMS ================= */}
-                                <div className="bg-[#FCFCFC] p-2 sm:p-3">
-                                  <div className="space-y-2">
-                                    {section.items
-                                      ?.filter(
-                                        (t) => t.type != "StudyMaterials",
-                                      )
-                                      ?.map((item, itemIndex) => (
-                                        <div
-                                          key={item._id}
-                                          className="
-                                                group/item
-                                                relative
-                                                flex
-                                                items-center
-                                                gap-2.5
-                                                rounded-xl
-                                                border
-                                                border-gray-100
-                                                bg-white
-                                                p-3
-                                                shadow-[0_2px_10px_rgba(0,0,0,0.025)]
-                                                transition-all
-                                                duration-200
-                                                hover:border-[#FFD5C8]
-                                                hover:bg-[#FFFCFA]
-                                                hover:shadow-[0_6px_20px_rgba(243,110,69,0.08)]
-                                                sm:gap-4
-                                                sm:p-4
-                                            "
-                                        >
-                                          {/* ================= TIMELINE ================= */}
-                                          <div
-                                            className="
-                                                    relative
-                                                    hidden
-                                                    h-full
-                                                    w-5
-                                                    shrink-0
-                                                    items-center
-                                                    justify-center
-                                                    sm:flex
-                                                "
-                                          >
-                                            {itemIndex !==
-                                              (section.items?.length || 0) -
-                                                1 && (
-                                              <span
-                                                className="
-                                                            absolute
-                                                            left-1/2
-                                                            top-7
-                                                            h-[calc(100%+18px)]
-                                                            w-px
-                                                            -translate-x-1/2
-                                                            bg-gradient-to-b
-                                                            from-[#FFB199]
-                                                            to-gray-200
-                                                        "
-                                              />
-                                            )}
-
-                                            <span
-                                              className="
-                                                        relative
-                                                        z-10
-                                                        h-3
-                                                        w-3
-                                                        rounded-full
-                                                        border-2
-                                                        border-[#FF9A86]
-                                                        bg-white
-                                                        shadow-[0_0_0_3px_#FFF1EB]
-                                                    "
-                                            />
-                                          </div>
-
-                                          {/* ================= ICON ================= */}
-                                          <div
-                                            className="
-                                                    flex
-                                                    h-11
-                                                    w-11
-                                                    shrink-0
-                                                    items-center
-                                                    justify-center
-                                                    rounded-xl
-                                                    border
-                                                    border-[#FFE0D6]
-                                                    bg-gradient-to-br
-                                                    from-[#FFF8F4]
-                                                    to-[#FFF0EA]
-                                                    text-[#F36E45]
-                                                    transition-all
-                                                    duration-200
-                                                    group-hover/item:scale-105
-                                                    group-hover/item:shadow-md
-                                                "
-                                          >
-                                            {/* Study Materials */}
-                                            {item.type === "StudyMaterials" &&
-                                              item.materialType === "pdf" && (
-                                                <File
-                                                  className="h-5 w-5"
-                                                  strokeWidth={1.6}
-                                                />
-                                              )}
-
-                                            {item.type === "StudyMaterials" &&
-                                              item.materialType ===
-                                                "document" && (
-                                                <File
-                                                  className="h-5 w-5"
-                                                  strokeWidth={1.6}
-                                                />
-                                              )}
-
-                                            {item.type === "StudyMaterials" &&
-                                              item.materialType === "link" && (
-                                                <LinkIcon
-                                                  className="h-5 w-5"
-                                                  strokeWidth={1.6}
-                                                />
-                                              )}
-
-                                            {item.type === "StudyMaterials" &&
-                                              item.materialType === "image" && (
-                                                <ImageIcon
-                                                  className="h-5 w-5"
-                                                  strokeWidth={1.6}
-                                                />
-                                              )}
-
-                                            {item.type === "StudyMaterials" &&
-                                              item.materialType === "audio" && (
-                                                <Headphones
-                                                  className="h-5 w-5"
-                                                  strokeWidth={1.6}
-                                                />
-                                              )}
-
-                                            {/* Live Class */}
-                                            {item.type === "LiveClasses" && (
-                                              <Radio
-                                                className="h-5 w-5"
-                                                strokeWidth={1.6}
-                                              />
-                                            )}
-
-                                            {/* Recorded Class */}
-                                            {item.type ===
-                                              "RecordedClasses" && (
-                                              <PlayCircle
-                                                className="h-5 w-5"
-                                                strokeWidth={1.6}
-                                              />
-                                            )}
-
-                                            {/* 1:1 Session */}
-                                            {item.type === "Sessions" && (
-                                              <ScreenShare
-                                                className="h-5 w-5"
-                                                strokeWidth={1.6}
-                                              />
-                                            )}
-                                          </div>
-
-                                          {/* ================= CONTENT ================= */}
-                                          <div
-                                            className={`
-                                                    min-w-0
-                                                    flex-1
-                                                    ${
-                                                      item.isLocked
-                                                        ? "cursor-not-allowed opacity-60"
-                                                        : "cursor-pointer"
-                                                    }
-                                                `}
-                                            onClick={() => {
-                                              if (!item.isLocked) {
-                                                handleItemNavigation(
-                                                  item,
-                                                  section._id,
-                                                );
-                                              }
-                                            }}
-                                          >
-                                            {/* TITLE */}
-                                            <div
-                                              className="
-                                                        truncate
-                                                        text-sm
-                                                        font-bold
-                                                        text-[#172033]
-                                                        transition-colors
-                                                        group-hover/item:text-[#F36E45]
-                                                        sm:text-[15px]
-                                                    "
-                                              title={item.title}
-                                            >
-                                              {item.title}
-                                            </div>
-
-                                            {/* TYPE + DURATION */}
-                                            <div
-                                              className="
-                                                        mt-1
-                                                        flex
-                                                        flex-wrap
-                                                        items-center
-                                                        gap-2
-                                                        text-xs
-                                                        text-gray-500
-                                                        sm:text-sm
-                                                    "
-                                            >
-                                              {/* Study Material */}
-                                              {item.type ===
-                                                "StudyMaterials" && (
-                                                <span
-                                                  className="
-                                                                rounded-md
-                                                                bg-[#FFF5F1]
-                                                                px-2
-                                                                py-0.5
-                                                                capitalize
-                                                                text-[#F36E45]
-                                                            "
-                                                >
-                                                  {item.materialType}
-                                                </span>
-                                              )}
-
-                                              {/* Other Types */}
-                                              {item.type !==
-                                                "StudyMaterials" && (
-                                                <span>
-                                                  {item.type === "LiveClasses"
-                                                    ? "Live Class"
-                                                    : item.type ===
-                                                        "RecordedClasses"
-                                                      ? "Recorded Class"
-                                                      : item.type === "Sessions"
-                                                        ? "1:1 Session"
-                                                        : item.type}
-                                                </span>
-                                              )}
-
-                                              {/* Duration */}
-                                              {item.duration && (
-                                                <>
-                                                  <span className="text-gray-300">
-                                                    •
-                                                  </span>
-
-                                                  <span>{item.duration}</span>
-                                                </>
-                                              )}
-                                            </div>
-                                          </div>
-
-                                          {/* ================= PREVIEW ================= */}
-                                          {(item.isPreview ||
-                                            !item.isLocked) && (
-                                            <Button
-                                              type="button"
-                                              onClick={() =>
-                                                handleItemNavigation(
-                                                  item,
-                                                  section._id,
-                                                )
-                                              }
-                                              variant="outline"
-                                              size="sm"
-                                              className="
-                                                        hidden
-                                                        rounded-full
-                                                        border-[#FFD0C0]
-                                                        bg-white
-                                                        px-4
-                                                        font-semibold
-                                                        text-[#F36E45]
-                                                        shadow-sm
-                                                        transition-all
-                                                        duration-200
-                                                        hover:border-[#F36E45]
-                                                        hover:bg-[#FFF1EB]
-                                                        hover:text-[#E85D32]
-                                                        sm:inline-flex
-                                                    "
-                                            >
-                                              Start
-                                            </Button>
-                                          )}
-
-                                          {/* ================= LOCKED ================= */}
-                                          {item.isLocked && (
-                                            <Button
-                                              type="button"
-                                              disabled
-                                              size="sm"
-                                              variant="outline"
-                                              className="
-                                                        cursor-not-allowed
-                                                        rounded-full
-                                                        border-gray-200
-                                                        bg-gray-50
-                                                        px-3
-                                                        text-gray-400
-                                                        shadow-none
-                                                    "
-                                            >
-                                              <Lock className="mr-1 h-3.5 w-3.5" />
-
-                                              <span className="hidden sm:inline">
-                                                Locked
-                                              </span>
-                                            </Button>
-                                          )}
-
-                                          {/* ================= ARROW ================= */}
-                                          {!item.isLocked && (
-                                            <button
-                                              type="button"
-                                              onClick={() =>
-                                                handleItemNavigation(
-                                                  item,
-                                                  section._id,
-                                                )
-                                              }
-                                              className="
-                                                        flex
-                                                        h-9
-                                                        w-9
-                                                        shrink-0
-                                                        items-center
-                                                        justify-center
-                                                        rounded-full
-                                                        border
-                                                        border-transparent
-                                                        bg-gray-50
-                                                        text-gray-400
-                                                        transition-all
-                                                        duration-200
-                                                        hover:border-[#FFD0C0]
-                                                        hover:bg-[#FFF1EB]
-                                                        hover:text-[#F36E45]
-                                                        group-hover/item:translate-x-0.5
-                                                    "
-                                            >
-                                              <ChevronRight className="h-4 w-4" />
-                                            </button>
-                                          )}
-                                        </div>
-                                      ))}
-                                  </div>
-                                </div>
-                              </div>
-                            ))}
-                          </div>
-
-                          {/* ================= BOTTOM HIGHLIGHT ================= */}
-                          <div
-                            className="
-                        relative
-                        overflow-hidden
-                        rounded-2xl
+                                    {/* RIGHT SIDE */}
+                                    <div className="flex shrink-0 items-center gap-3">
+                                      {/* LESSON COUNT */}
+                                      <div
+                                        className="
+                        hidden
+                        rounded-full
                         border
-                        border-[#FFD8CA]
-                        bg-gradient-to-r
-                        from-[#FFF8F4]
-                        via-[#FFF2EC]
-                        to-white
-                        p-5
-                        shadow-[0_5px_20px_rgba(243,110,69,0.05)]
-                        sm:p-6
-                    "
-                          >
-                            {/* Decorative */}
-                            <div
-                              className="
-                            pointer-events-none
-                            absolute
-                            -right-10
-                            -top-10
-                            h-32
-                            w-32
-                            rounded-full
-                            bg-[#FF6B35]/10
-                            blur-xl
-                        "
-                            />
+                        border-[#EBC5B3]
+                        bg-white/80
+                        px-3
+                        py-1
+                        text-xs
+                        font-semibold
+                        text-[#F04F23]
+                        sm:block
+                      "
+                                      >
+                                        {lessons.length} Lessons
+                                      </div>
 
-                            <div
-                              className="
-                            relative
-                            flex
-                            flex-col
-                            gap-4
-                            sm:flex-row
-                            sm:items-center
-                            sm:justify-between
-                        "
-                            >
-                              <div className="flex items-center gap-3">
-                                {/* Icon */}
-                                <div
-                                  className="
+                                      {/* CHEVRON */}
+                                      <div
+                                        className="
+                        flex
+                        h-8
+                        w-8
+                        items-center
+                        justify-center
+                        rounded-full
+                        transition-all
+                        duration-300
+                      "
+                                      >
+                                        <ChevronDown
+                                          className={`
+                          h-5
+                          w-5
+                          text-[#F04F23]
+                          transition-transform
+                          duration-300
+                          ${isOpen ? "rotate-180" : ""}
+                        `}
+                                        />
+                                      </div>
+                                    </div>
+                                  </button>
+
+                                  <AnimatePresence initial={false}>
+                                    {isOpen && (
+                                      <motion.div
+                                        initial={{
+                                          height: 0,
+                                          opacity: 0,
+                                        }}
+                                        animate={{
+                                          height: "auto",
+                                          opacity: 1,
+                                        }}
+                                        exit={{
+                                          height: 0,
+                                          opacity: 0,
+                                        }}
+                                        transition={{
+                                          duration: 0.3,
+                                          ease: "easeInOut",
+                                        }}
+                                        className="overflow-hidden"
+                                      >
+                                        <div className="bg-white px-4 pb-2">
+                                          <div className="relative">
+                                            <div className="relative">
+                                              {visibleLessons.map(
+                                                (item, itemIndex) => {
+                                                  const isCompleted =
+                                                    item.isCompleted === true;
+
+                                                  const isCurrent =
+                                                    item.isCurrent === true ||
+                                                    (!isCompleted &&
+                                                      itemIndex === 0);
+
+                                                  return (
+                                                    <div
+                                                      key={item._id}
+                                                      className="
+                                      group/lesson
+                                      relative
+                                      flex
+                                      items-center
+                                      gap-3
+                                      border-b
+                                      border-[#F1E7E2]
+                                      py-4
+                                      last:border-b-0
+                                      sm:gap-4
+                                    "
+                                                    >
+                                                      <div
+                                                        className="
+                                relative
+                                h-[58px]
+                                w-[82px]
+                                shrink-0
+                                overflow-hidden
+                                rounded-xl
+                                bg-[#F5ECE7]
+                                sm:h-[68px]
+                                sm:w-[100px]
+                              "
+                                                      >
+                                                        {item.thumbnailPic ? (
+                                                          <img
+                                                            src={`${ImageBaseUrl}/${item.thumbnailPic}`}
+                                                            alt={item.title}
+                                                            loading="lazy"
+                                                            onError={(e) => {
+                                                              e.currentTarget.src =
+                                                                "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSzZItwLsuYvbDFTqu2u1MmCBR3dT1X0DAEWwXgo88c4FW8_WArEm7TQFFP&s=10";
+                                                            }}
+                                                            className="
+    h-full
+    w-full
+    object-cover
+    transition-transform
+    duration-300
+    group-hover/lesson:scale-105
+  "
+                                                          />
+                                                        ) : (
+                                                          <div
+                                                            className="
                                     flex
-                                    h-12
-                                    w-12
-                                    shrink-0
+                                    h-full
+                                    w-full
                                     items-center
                                     justify-center
-                                    rounded-2xl
-                                    bg-gradient-to-br
-                                    from-[#FF6B35]
-                                    to-[#FF9A86]
+                                    bg-[#F7EEE9]
+                                  "
+                                                          >
+                                                            {item.type ===
+                                                            "LiveClasses" ? (
+                                                              <Radio className="h-6 w-6 text-[#F4511E]" />
+                                                            ) : (
+                                                              <Film className="h-6 w-6 text-[#A99288]" />
+                                                            )}
+                                                          </div>
+                                                        )}
+
+                                                        {/* IMAGE DARK OVERLAY */}
+
+                                                        {item.thumbnailPic && (
+                                                          <div
+                                                            className="
+                                    absolute
+                                    inset-0
+                                    flex
+                                    items-center
+                                    justify-center
+                                    bg-black/10
+                                    transition-all
+                                    group-hover/lesson:bg-black/25
+                                  "
+                                                          >
+                                                            <div
+                                                              className="
+                                      flex
+                                      h-6
+                                      w-6
+                                      items-center
+                                      justify-center
+                                      rounded-full
+                                      bg-white/95
+                                      text-[#F4511E]
+                                      shadow-md
+                                      transition-transform
+                                      duration-200
+                                    "
+                                                            >
+                                                              <Play
+                                                                className="
+                                        ml-0.5
+                                        h-3
+                                        w-3
+                                        fill-current
+                                      "
+                                                              />
+                                                            </div>
+                                                          </div>
+                                                        )}
+
+                                                        {/* LIVE BADGE */}
+
+                                                        {(item.type ===
+                                                          "LiveClasses" ||
+                                                          item.type ===
+                                                            "Sessions") && (
+                                                          <span
+                                                            className="
+                                    absolute
+                                    left-1
+                                    top-1
+                                    rounded-md
+                                    bg-[#F4511E]
+                                    px-1.5
+                                    py-0.5
+                                    text-[9px]
+                                    font-bold
+                                    uppercase
+                                    tracking-wide
                                     text-white
-                                    shadow-lg
-                                    shadow-orange-200
-                                "
-                                >
-                                  <PlayCircle className="h-5 w-5" />
+                                  "
+                                                          >
+                                                            Live
+                                                          </span>
+                                                        )}
+
+                                                        {/* DURATION */}
+
+                                                        {item.duration && (
+                                                          <span
+                                                            className="
+                                    absolute
+                                    bottom-1.5
+                                    right-1.5
+                                    rounded-md
+                                    bg-black/75
+                                    px-1.5
+                                    py-0.5
+                                    text-[9px]
+                                    font-medium
+                                    text-white
+                                  "
+                                                          >
+                                                            {item.duration}
+                                                          </span>
+                                                        )}
+                                                      </div>
+
+                                                      <div
+                                                        className={`
+                                        min-w-0
+                                        flex-1
+                                        ${
+                                          item.isLocked
+                                            ? "cursor-not-allowed opacity-50"
+                                            : "cursor-pointer"
+                                        }
+                                      `}
+                                                        onClick={() => {
+                                                          if (!item.isLocked) {
+                                                            handleItemNavigation(
+                                                              item,
+                                                              section._id,
+                                                            );
+                                                          }
+                                                        }}
+                                                      >
+                                                        <h4
+                                                          className={`
+                                          truncate
+                                          text-sm
+                                          font-semibold
+                                          transition-colors
+                                          sm:text-base
+                                          ${
+                                            item.isLocked
+                                              ? "text-[#B9B0AC]"
+                                              : isCurrent
+                                                ? "text-[#111827]"
+                                                : "text-[#111827] group-hover/lesson:text-[#F04F23]"
+                                          }
+                                        `}
+                                                        >
+                                                          {item.title}
+                                                        </h4>
+
+                                                        {/* TYPE + DURATION */}
+
+                                                        <div
+                                                          className="
+                                          mt-1
+                                          flex
+                                          flex-wrap
+                                          items-center
+                                          gap-2
+                                          text-xs
+                                          text-[#9B8277]
+                                          sm:text-sm
+                                        "
+                                                        >
+                                                          <span
+                                                            className={
+                                                              isCurrent
+                                                                ? "font-medium text-[#F04F23]"
+                                                                : ""
+                                                            }
+                                                          >
+                                                            {item.type ===
+                                                            "LiveClasses"
+                                                              ? "Live Class"
+                                                              : item.type ===
+                                                                  "RecordedClasses"
+                                                                ? "Recorded Class"
+                                                                : item.type ===
+                                                                    "Sessions"
+                                                                  ? "1:1 Session"
+                                                                  : item.materialType ||
+                                                                    item.type}
+                                                          </span>
+
+                                                          {item.duration && (
+                                                            <>
+                                                              <span className="text-[#D8C5BC]">
+                                                                •
+                                                              </span>
+
+                                                              <span>
+                                                                {item.duration}
+                                                              </span>
+                                                            </>
+                                                          )}
+                                                          {item.scheduledStart && (
+                                                            <>
+                                                              <span className="text-[#D8C5BC]">
+                                                                •
+                                                              </span>
+                                                              <span>
+                                                                {new Date(
+                                                                  item.scheduledStart,
+                                                                ).toLocaleDateString(
+                                                                  "en-IN",
+                                                                  {
+                                                                    day: "2-digit",
+                                                                    month:
+                                                                      "short",
+                                                                    year: "numeric",
+                                                                  },
+                                                                )}{" "}
+                                                                {new Date(
+                                                                  item.scheduledStart,
+                                                                ).toLocaleTimeString(
+                                                                  "en-IN",
+                                                                  {
+                                                                    hour: "2-digit",
+                                                                    minute:
+                                                                      "2-digit",
+                                                                    hour12: true,
+                                                                  },
+                                                                )}
+                                                              </span>
+                                                            </>
+                                                          )}
+                                                        </div>
+                                                      </div>
+
+                                                      {/* ================================= */}
+                                                      {/* ACTION */}
+                                                      {/* ================================= */}
+
+                                                      <div className="shrink-0">
+                                                        {item.isLocked ? (
+                                                          <Button
+                                                            type="button"
+                                                            disabled
+                                                            variant="outline"
+                                                            size="sm"
+                                                            className="
+                                            hidden
+                                            rounded-full
+                                            border-[#E8E0DC]
+                                            bg-[#FAF8F7]
+                                            px-4
+                                            text-[#B5AAA5]
+                                            sm:inline-flex
+                                          "
+                                                          >
+                                                            <Lock className="mr-1.5 h-3.5 w-3.5" />
+                                                            Locked
+                                                          </Button>
+                                                        ) : (
+                                                          <button
+                                                            type="button"
+                                                            onClick={() =>
+                                                              handleItemNavigation(
+                                                                item,
+                                                                section._id,
+                                                              )
+                                                            }
+                                                            className="
+                                            flex
+                                            h-9
+                                            w-9
+                                            items-center
+                                            justify-center
+                                            rounded-full
+                                            bg-[#FAF7F5]
+                                            text-[#9B8A82]
+                                            transition-all
+                                            hover:bg-[#FFF0E9]
+                                            hover:text-[#F4511E]
+                                          "
+                                                          >
+                                                            <ChevronRight className="h-4 w-4" />
+                                                          </button>
+                                                        )}
+                                                      </div>
+                                                    </div>
+                                                  );
+                                                },
+                                              )}
+                                            </div>
+                                          </div>
+
+                                          {/* ======================================= */}
+                                          {/* VIEW ALL LESSONS */}
+                                          {/* ======================================= */}
+
+                                          {lessons.length > 5 && (
+                                            <div className="border-t border-[#F1E7E2]">
+                                              <button
+                                                type="button"
+                                                onClick={() =>
+                                                  toggleLessons(section._id)
+                                                }
+                                                className="
+                                flex
+                                w-full
+                                items-center
+                                justify-center
+                                gap-2
+                                py-4
+                                text-sm
+                                font-semibold
+                                text-[#F4511E]
+                                transition-colors
+                                hover:text-[#D93F0D]
+                              "
+                                              >
+                                                {isLessonsExpanded
+                                                  ? "Show less"
+                                                  : `View all ${lessons.length} lessons`}
+
+                                                <ChevronDown
+                                                  className={`
+                                  h-4
+                                  w-4
+                                  transition-transform
+                                  duration-200
+                                  ${isLessonsExpanded ? "rotate-180" : ""}
+                                `}
+                                                />
+                                              </button>
+                                            </div>
+                                          )}
+                                        </div>
+                                      </motion.div>
+                                    )}
+                                  </AnimatePresence>
                                 </div>
+                              );
+                            })}
+                          </div>
 
-                                <div>
-                                  <h3 className="font-bold text-[#172033]">
-                                    Keep your learning journey going
-                                  </h3>
+                          {/* ============================================= */}
+                          {/* BOTTOM MESSAGE */}
+                          {/* ============================================= */}
 
-                                  <p className="mt-0.5 text-xs text-gray-500 sm:text-sm">
-                                    Choose any available lesson and continue
-                                    learning.
-                                  </p>
-                                </div>
-                              </div>
-
-                              <div
-                                className="
-                                hidden
-                                rounded-full
-                                border
-                                border-[#FFE0D5]
-                                bg-white
-                                px-4
-                                py-2
-                                text-xs
-                                font-bold
-                                text-[#F36E45]
-                                shadow-sm
-                                sm:block
-                            "
-                              >
-                                Learn • Practice • Grow
-                              </div>
+                          <div
+                            className="
+            rounded-2xl
+            border
+            border-[#F2DDD4]
+            bg-[#FFF9F6]
+            px-5
+            py-5
+            text-center
+            sm:px-6
+          "
+                          >
+                            <div
+                              className="
+              mx-auto
+              flex
+              h-11
+              w-11
+              items-center
+              justify-center
+              rounded-full
+              bg-[#FFE9DF]
+              text-[#F4511E]
+            "
+                            >
+                              <PlayCircle className="h-5 w-5" />
                             </div>
+
+                            <h3 className="mt-3 text-sm font-bold text-[#172033] sm:text-base">
+                              Keep your learning journey going
+                            </h3>
+
+                            <p className="mt-1 text-xs text-gray-500 sm:text-sm">
+                              Choose any available lesson and continue learning.
+                            </p>
                           </div>
                         </>
                       )}
@@ -1291,1275 +1350,18 @@ export default function CourseDetailPage() {
                   )}
 
                   {activeTab === "materials" && (
-                    <div className="space-y-6">
-                      {/* ================= LOADING ================= */}
-                      {curriculumLoading ? (
-                        <CurriculumSkeleton />
-                      ) : (
-                        <>
-                          {/* ================= SECTIONS ================= */}
-                          <div className="space-y-4">
-                            {curriculum?.map((section, sectionIndex) => (
-                              <div
-                                key={section._id}
-                                className="
-                                group
-                                overflow-hidden
-                                rounded-2xl
-                                border
-                                border-gray-200/80
-                                bg-white
-                                shadow-[0_4px_20px_rgba(0,0,0,0.035)]
-                                transition-all
-                                duration-300
-                                hover:-translate-y-[1px]
-                                hover:border-[#FFD2C3]
-                                hover:shadow-[0_12px_35px_rgba(243,110,69,0.10)]
-                            "
-                              >
-                                {/* ================= SECTION HEADER ================= */}
-                                <div
-                                  className="
-                                    relative
-                                    overflow-hidden
-                                    bg-gradient-to-r
-                                    from-[#FF6B35]
-                                    via-[#FF805F]
-                                    to-[#FF9A86]
-                                    px-4
-                                    py-4
-                                    sm:px-6
-                                    sm:py-5
-                                "
-                                >
-                                  {/* Decorative Background */}
-                                  <div
-                                    className="
-                                        pointer-events-none
-                                        absolute
-                                        -right-10
-                                        -top-10
-                                        h-32
-                                        w-32
-                                        rounded-full
-                                        bg-white/10
-                                    "
-                                  />
-
-                                  <div
-                                    className="
-                                        pointer-events-none
-                                        absolute
-                                        -bottom-16
-                                        right-24
-                                        h-28
-                                        w-28
-                                        rounded-full
-                                        bg-white/10
-                                    "
-                                  />
-
-                                  <div
-                                    className="
-                                        relative
-                                        flex
-                                        items-center
-                                        justify-between
-                                        gap-3
-                                    "
-                                  >
-                                    {/* LEFT */}
-                                    <div
-                                      className="
-                                            flex
-                                            min-w-0
-                                            items-center
-                                            gap-3
-                                            sm:gap-4
-                                        "
-                                    >
-                                      {/* Section Number */}
-                                      <div
-                                        className="
-                                                flex
-                                                h-11
-                                                w-11
-                                                shrink-0
-                                                items-center
-                                                justify-center
-                                                rounded-xl
-                                                border
-                                                border-white/30
-                                                bg-white/20
-                                                text-sm
-                                                font-extrabold
-                                                text-white
-                                                shadow-inner
-                                                backdrop-blur-sm
-                                                sm:h-12
-                                                sm:w-12
-                                            "
-                                      >
-                                        {String(sectionIndex + 1).padStart(
-                                          2,
-                                          "0",
-                                        )}
-                                      </div>
-
-                                      <div className="min-w-0">
-                                        <h3
-                                          className="
-                                                    truncate
-                                                    text-sm
-                                                    font-bold
-                                                    text-white
-                                                    sm:text-lg
-                                                "
-                                        >
-                                          {section.title}
-                                        </h3>
-
-                                        <div
-                                          className="
-                                                    mt-1
-                                                    flex
-                                                    items-center
-                                                    gap-2
-                                                    text-[11px]
-                                                    text-white/80
-                                                    sm:text-xs
-                                                "
-                                        >
-                                          <span>
-                                            {section.items?.length || 0} lessons
-                                          </span>
-
-                                          <span className="h-1 w-1 rounded-full bg-white/60" />
-
-                                          <span>Course Section</span>
-                                        </div>
-                                      </div>
-                                    </div>
-
-                                    {/* RIGHT COUNT */}
-                                    <div
-                                      className="
-                                            shrink-0
-                                            rounded-full
-                                            border
-                                            border-white/30
-                                            bg-white/15
-                                            px-2.5
-                                            py-1.5
-                                            text-[10px]
-                                            font-bold
-                                            text-white
-                                            backdrop-blur-sm
-                                            sm:px-4
-                                            sm:text-xs
-                                        "
-                                    >
-                                      {section.items?.length || 0} Lessons
-                                    </div>
-                                  </div>
-                                </div>
-
-                                {/* ================= SECTION ITEMS ================= */}
-                                <div className="bg-[#FCFCFC] p-2 sm:p-3">
-                                  <div className="space-y-2">
-                                    {section.items
-                                      ?.filter(
-                                        (t) => t.type == "StudyMaterials",
-                                      )
-                                      ?.map((item, itemIndex) => (
-                                        <div
-                                          key={item._id}
-                                          className="
-                                                group/item
-                                                relative
-                                                flex
-                                                items-center
-                                                gap-2.5
-                                                rounded-xl
-                                                border
-                                                border-gray-100
-                                                bg-white
-                                                p-3
-                                                shadow-[0_2px_10px_rgba(0,0,0,0.025)]
-                                                transition-all
-                                                duration-200
-                                                hover:border-[#FFD5C8]
-                                                hover:bg-[#FFFCFA]
-                                                hover:shadow-[0_6px_20px_rgba(243,110,69,0.08)]
-                                                sm:gap-4
-                                                sm:p-4
-                                            "
-                                        >
-                                          {/* ================= TIMELINE ================= */}
-                                          <div
-                                            className="
-                                                    relative
-                                                    hidden
-                                                    h-full
-                                                    w-5
-                                                    shrink-0
-                                                    items-center
-                                                    justify-center
-                                                    sm:flex
-                                                "
-                                          >
-                                            {itemIndex !==
-                                              (section.items?.length || 0) -
-                                                1 && (
-                                              <span
-                                                className="
-                                                            absolute
-                                                            left-1/2
-                                                            top-7
-                                                            h-[calc(100%+18px)]
-                                                            w-px
-                                                            -translate-x-1/2
-                                                            bg-gradient-to-b
-                                                            from-[#FFB199]
-                                                            to-gray-200
-                                                        "
-                                              />
-                                            )}
-
-                                            <span
-                                              className="
-                                                        relative
-                                                        z-10
-                                                        h-3
-                                                        w-3
-                                                        rounded-full
-                                                        border-2
-                                                        border-[#FF9A86]
-                                                        bg-white
-                                                        shadow-[0_0_0_3px_#FFF1EB]
-                                                    "
-                                            />
-                                          </div>
-
-                                          {/* ================= ICON ================= */}
-                                          <div
-                                            className="
-                                                    flex
-                                                    h-11
-                                                    w-11
-                                                    shrink-0
-                                                    items-center
-                                                    justify-center
-                                                    rounded-xl
-                                                    border
-                                                    border-[#FFE0D6]
-                                                    bg-gradient-to-br
-                                                    from-[#FFF8F4]
-                                                    to-[#FFF0EA]
-                                                    text-[#F36E45]
-                                                    transition-all
-                                                    duration-200
-                                                    group-hover/item:scale-105
-                                                    group-hover/item:shadow-md
-                                                "
-                                          >
-                                            {/* Study Materials */}
-                                            {item.type === "StudyMaterials" &&
-                                              item.materialType === "pdf" && (
-                                                <File
-                                                  className="h-5 w-5"
-                                                  strokeWidth={1.6}
-                                                />
-                                              )}
-
-                                            {item.type === "StudyMaterials" &&
-                                              item.materialType ===
-                                                "document" && (
-                                                <File
-                                                  className="h-5 w-5"
-                                                  strokeWidth={1.6}
-                                                />
-                                              )}
-
-                                            {item.type === "StudyMaterials" &&
-                                              item.materialType === "link" && (
-                                                <LinkIcon
-                                                  className="h-5 w-5"
-                                                  strokeWidth={1.6}
-                                                />
-                                              )}
-
-                                            {item.type === "StudyMaterials" &&
-                                              item.materialType === "image" && (
-                                                <ImageIcon
-                                                  className="h-5 w-5"
-                                                  strokeWidth={1.6}
-                                                />
-                                              )}
-
-                                            {item.type === "StudyMaterials" &&
-                                              item.materialType === "audio" && (
-                                                <Headphones
-                                                  className="h-5 w-5"
-                                                  strokeWidth={1.6}
-                                                />
-                                              )}
-
-                                            {/* Live Class */}
-                                            {item.type === "LiveClasses" && (
-                                              <Radio
-                                                className="h-5 w-5"
-                                                strokeWidth={1.6}
-                                              />
-                                            )}
-
-                                            {/* Recorded Class */}
-                                            {item.type ===
-                                              "RecordedClasses" && (
-                                              <PlayCircle
-                                                className="h-5 w-5"
-                                                strokeWidth={1.6}
-                                              />
-                                            )}
-
-                                            {/* 1:1 Session */}
-                                            {item.type === "Sessions" && (
-                                              <ScreenShare
-                                                className="h-5 w-5"
-                                                strokeWidth={1.6}
-                                              />
-                                            )}
-                                          </div>
-
-                                          {/* ================= CONTENT ================= */}
-                                          <div
-                                            className={`
-                                                    min-w-0
-                                                    flex-1
-                                                    ${
-                                                      item.isLocked
-                                                        ? "cursor-not-allowed opacity-60"
-                                                        : "cursor-pointer"
-                                                    }
-                                                `}
-                                            onClick={() => {
-                                              if (!item.isLocked) {
-                                                handleItemNavigation(
-                                                  item,
-                                                  section._id,
-                                                );
-                                              }
-                                            }}
-                                          >
-                                            {/* TITLE */}
-                                            <div
-                                              className="
-                                                        truncate
-                                                        text-sm
-                                                        font-bold
-                                                        text-[#172033]
-                                                        transition-colors
-                                                        group-hover/item:text-[#F36E45]
-                                                        sm:text-[15px]
-                                                    "
-                                              title={item.title}
-                                            >
-                                              {item.title}
-                                            </div>
-
-                                            {/* TYPE + DURATION */}
-                                            <div
-                                              className="
-                                                        mt-1
-                                                        flex
-                                                        flex-wrap
-                                                        items-center
-                                                        gap-2
-                                                        text-xs
-                                                        text-gray-500
-                                                        sm:text-sm
-                                                    "
-                                            >
-                                              {/* Study Material */}
-                                              {item.type ===
-                                                "StudyMaterials" && (
-                                                <span
-                                                  className="
-                                                                rounded-md
-                                                                bg-[#FFF5F1]
-                                                                px-2
-                                                                py-0.5
-                                                                capitalize
-                                                                text-[#F36E45]
-                                                            "
-                                                >
-                                                  {item.materialType}
-                                                </span>
-                                              )}
-
-                                              {/* Other Types */}
-                                              {item.type !==
-                                                "StudyMaterials" && (
-                                                <span>
-                                                  {item.type === "LiveClasses"
-                                                    ? "Live Class"
-                                                    : item.type ===
-                                                        "RecordedClasses"
-                                                      ? "Recorded Class"
-                                                      : item.type === "Sessions"
-                                                        ? "1:1 Session"
-                                                        : item.type}
-                                                </span>
-                                              )}
-
-                                              {/* Duration */}
-                                              {item.duration && (
-                                                <>
-                                                  <span className="text-gray-300">
-                                                    •
-                                                  </span>
-
-                                                  <span>{item.duration}</span>
-                                                </>
-                                              )}
-                                            </div>
-                                          </div>
-
-                                          {/* ================= PREVIEW ================= */}
-                                          {(item.isPreview ||
-                                            !item.isLocked) && (
-                                            <Button
-                                              type="button"
-                                              onClick={() =>
-                                                handleItemNavigation(
-                                                  item,
-                                                  section._id,
-                                                )
-                                              }
-                                              variant="outline"
-                                              size="sm"
-                                              className="
-                                                        hidden
-                                                        rounded-full
-                                                        border-[#FFD0C0]
-                                                        bg-white
-                                                        px-4
-                                                        font-semibold
-                                                        text-[#F36E45]
-                                                        shadow-sm
-                                                        transition-all
-                                                        duration-200
-                                                        hover:border-[#F36E45]
-                                                        hover:bg-[#FFF1EB]
-                                                        hover:text-[#E85D32]
-                                                        sm:inline-flex
-                                                    "
-                                            >
-                                              Start
-                                            </Button>
-                                          )}
-
-                                          {/* ================= LOCKED ================= */}
-                                          {item.isLocked && (
-                                            <Button
-                                              type="button"
-                                              disabled
-                                              size="sm"
-                                              variant="outline"
-                                              className="
-                                                        cursor-not-allowed
-                                                        rounded-full
-                                                        border-gray-200
-                                                        bg-gray-50
-                                                        px-3
-                                                        text-gray-400
-                                                        shadow-none
-                                                    "
-                                            >
-                                              <Lock className="mr-1 h-3.5 w-3.5" />
-
-                                              <span className="hidden sm:inline">
-                                                Locked
-                                              </span>
-                                            </Button>
-                                          )}
-
-                                          {/* ================= ARROW ================= */}
-                                          {!item.isLocked && (
-                                            <button
-                                              type="button"
-                                              onClick={() =>
-                                                handleItemNavigation(
-                                                  item,
-                                                  section._id,
-                                                )
-                                              }
-                                              className="
-                                                        flex
-                                                        h-9
-                                                        w-9
-                                                        shrink-0
-                                                        items-center
-                                                        justify-center
-                                                        rounded-full
-                                                        border
-                                                        border-transparent
-                                                        bg-gray-50
-                                                        text-gray-400
-                                                        transition-all
-                                                        duration-200
-                                                        hover:border-[#FFD0C0]
-                                                        hover:bg-[#FFF1EB]
-                                                        hover:text-[#F36E45]
-                                                        group-hover/item:translate-x-0.5
-                                                    "
-                                            >
-                                              <ChevronRight className="h-4 w-4" />
-                                            </button>
-                                          )}
-                                        </div>
-                                      ))}
-                                  </div>
-                                </div>
-                              </div>
-                            ))}
-                          </div>
-
-                          {/* ================= BOTTOM HIGHLIGHT ================= */}
-                          <div
-                            className="
-                        relative
-                        overflow-hidden
-                        rounded-2xl
-                        border
-                        border-[#FFD8CA]
-                        bg-gradient-to-r
-                        from-[#FFF8F4]
-                        via-[#FFF2EC]
-                        to-white
-                        p-5
-                        shadow-[0_5px_20px_rgba(243,110,69,0.05)]
-                        sm:p-6
-                    "
-                          >
-                            {/* Decorative */}
-                            <div
-                              className="
-                            pointer-events-none
-                            absolute
-                            -right-10
-                            -top-10
-                            h-32
-                            w-32
-                            rounded-full
-                            bg-[#FF6B35]/10
-                            blur-xl
-                        "
-                            />
-
-                            <div
-                              className="
-                            relative
-                            flex
-                            flex-col
-                            gap-4
-                            sm:flex-row
-                            sm:items-center
-                            sm:justify-between
-                        "
-                            >
-                              <div className="flex items-center gap-3">
-                                {/* Icon */}
-                                <div
-                                  className="
-                                    flex
-                                    h-12
-                                    w-12
-                                    shrink-0
-                                    items-center
-                                    justify-center
-                                    rounded-2xl
-                                    bg-gradient-to-br
-                                    from-[#FF6B35]
-                                    to-[#FF9A86]
-                                    text-white
-                                    shadow-lg
-                                    shadow-orange-200
-                                "
-                                >
-                                  <PlayCircle className="h-5 w-5" />
-                                </div>
-
-                                <div>
-                                  <h3 className="font-bold text-[#172033]">
-                                    Keep your learning journey going
-                                  </h3>
-
-                                  <p className="mt-0.5 text-xs text-gray-500 sm:text-sm">
-                                    Choose any available lesson and continue
-                                    learning.
-                                  </p>
-                                </div>
-                              </div>
-
-                              <div
-                                className="
-                                hidden
-                                rounded-full
-                                border
-                                border-[#FFE0D5]
-                                bg-white
-                                px-4
-                                py-2
-                                text-xs
-                                font-bold
-                                text-[#F36E45]
-                                shadow-sm
-                                sm:block
-                            "
-                              >
-                                Learn • Practice • Grow
-                              </div>
-                            </div>
-                          </div>
-                        </>
-                      )}
-                    </div>
+                    <CourseMaterials
+                      curriculum={curriculum}
+                      loading={curriculumLoading}
+                      onItemClick={handleItemNavigation}
+                    />
                   )}
-
                   {activeTab === "tests" && (
-                    <div className="space-y-6">
-                      {/* ================= LOADING ================= */}
-                      {curriculumLoading ? (
-                        <CurriculumSkeleton />
-                      ) : (
-                        <>
-                          {/* ================= SECTIONS ================= */}
-                          <div className="space-y-4">
-                            {curriculum?.map((section, sectionIndex) => (
-                              <div
-                                key={section._id}
-                                className="
-                                group
-                                overflow-hidden
-                                rounded-2xl
-                                border
-                                border-gray-200/80
-                                bg-white
-                                shadow-[0_4px_20px_rgba(0,0,0,0.035)]
-                                transition-all
-                                duration-300
-                                hover:-translate-y-[1px]
-                                hover:border-[#FFD2C3]
-                                hover:shadow-[0_12px_35px_rgba(243,110,69,0.10)]
-                            "
-                              >
-                                {/* ================= SECTION HEADER ================= */}
-                                <div
-                                  className="
-                                    relative
-                                    overflow-hidden
-                                    bg-gradient-to-r
-                                    from-[#FF6B35]
-                                    via-[#FF805F]
-                                    to-[#FF9A86]
-                                    px-4
-                                    py-4
-                                    sm:px-6
-                                    sm:py-5
-                                "
-                                >
-                                  {/* Decorative Background */}
-                                  <div
-                                    className="
-                                        pointer-events-none
-                                        absolute
-                                        -right-10
-                                        -top-10
-                                        h-32
-                                        w-32
-                                        rounded-full
-                                        bg-white/10
-                                    "
-                                  />
-
-                                  <div
-                                    className="
-                                        pointer-events-none
-                                        absolute
-                                        -bottom-16
-                                        right-24
-                                        h-28
-                                        w-28
-                                        rounded-full
-                                        bg-white/10
-                                    "
-                                  />
-
-                                  <div
-                                    className="
-                                        relative
-                                        flex
-                                        items-center
-                                        justify-between
-                                        gap-3
-                                    "
-                                  >
-                                    {/* LEFT */}
-                                    <div
-                                      className="
-                                            flex
-                                            min-w-0
-                                            items-center
-                                            gap-3
-                                            sm:gap-4
-                                        "
-                                    >
-                                      {/* Section Number */}
-                                      <div
-                                        className="
-                                                flex
-                                                h-11
-                                                w-11
-                                                shrink-0
-                                                items-center
-                                                justify-center
-                                                rounded-xl
-                                                border
-                                                border-white/30
-                                                bg-white/20
-                                                text-sm
-                                                font-extrabold
-                                                text-white
-                                                shadow-inner
-                                                backdrop-blur-sm
-                                                sm:h-12
-                                                sm:w-12
-                                            "
-                                      >
-                                        {String(sectionIndex + 1).padStart(
-                                          2,
-                                          "0",
-                                        )}
-                                      </div>
-
-                                      <div className="min-w-0">
-                                        <h3
-                                          className="
-                                                    truncate
-                                                    text-sm
-                                                    font-bold
-                                                    text-white
-                                                    sm:text-lg
-                                                "
-                                        >
-                                          {section.title}
-                                        </h3>
-
-                                        <div
-                                          className="
-                                                    mt-1
-                                                    flex
-                                                    items-center
-                                                    gap-2
-                                                    text-[11px]
-                                                    text-white/80
-                                                    sm:text-xs
-                                                "
-                                        >
-                                          <span>
-                                            {section.items?.length || 0} lessons
-                                          </span>
-
-                                          <span className="h-1 w-1 rounded-full bg-white/60" />
-
-                                          <span>Course Section</span>
-                                        </div>
-                                      </div>
-                                    </div>
-
-                                    {/* RIGHT COUNT */}
-                                    <div
-                                      className="
-                                            shrink-0
-                                            rounded-full
-                                            border
-                                            border-white/30
-                                            bg-white/15
-                                            px-2.5
-                                            py-1.5
-                                            text-[10px]
-                                            font-bold
-                                            text-white
-                                            backdrop-blur-sm
-                                            sm:px-4
-                                            sm:text-xs
-                                        "
-                                    >
-                                      {section.items?.length || 0} Lessons
-                                    </div>
-                                  </div>
-                                </div>
-
-                                {/* ================= SECTION ITEMS ================= */}
-                                <div className="bg-[#FCFCFC] p-2 sm:p-3">
-                                  <div className="space-y-2">
-                                    {section.items
-                                      ?.filter((t) => t.type == "Tests")
-                                      ?.map((item, itemIndex) => (
-                                        <div
-                                          key={item._id}
-                                          className="
-                                                group/item
-                                                relative
-                                                flex
-                                                items-center
-                                                gap-2.5
-                                                rounded-xl
-                                                border
-                                                border-gray-100
-                                                bg-white
-                                                p-3
-                                                shadow-[0_2px_10px_rgba(0,0,0,0.025)]
-                                                transition-all
-                                                duration-200
-                                                hover:border-[#FFD5C8]
-                                                hover:bg-[#FFFCFA]
-                                                hover:shadow-[0_6px_20px_rgba(243,110,69,0.08)]
-                                                sm:gap-4
-                                                sm:p-4
-                                            "
-                                        >
-                                          {/* ================= TIMELINE ================= */}
-                                          <div
-                                            className="
-                                                    relative
-                                                    hidden
-                                                    h-full
-                                                    w-5
-                                                    shrink-0
-                                                    items-center
-                                                    justify-center
-                                                    sm:flex
-                                                "
-                                          >
-                                            {itemIndex !==
-                                              (section.items?.length || 0) -
-                                                1 && (
-                                              <span
-                                                className="
-                                                            absolute
-                                                            left-1/2
-                                                            top-7
-                                                            h-[calc(100%+18px)]
-                                                            w-px
-                                                            -translate-x-1/2
-                                                            bg-gradient-to-b
-                                                            from-[#FFB199]
-                                                            to-gray-200
-                                                        "
-                                              />
-                                            )}
-
-                                            <span
-                                              className="
-                                                        relative
-                                                        z-10
-                                                        h-3
-                                                        w-3
-                                                        rounded-full
-                                                        border-2
-                                                        border-[#FF9A86]
-                                                        bg-white
-                                                        shadow-[0_0_0_3px_#FFF1EB]
-                                                    "
-                                            />
-                                          </div>
-
-                                          {/* ================= ICON ================= */}
-                                          <div
-                                            className="
-                                                    flex
-                                                    h-11
-                                                    w-11
-                                                    shrink-0
-                                                    items-center
-                                                    justify-center
-                                                    rounded-xl
-                                                    border
-                                                    border-[#FFE0D6]
-                                                    bg-gradient-to-br
-                                                    from-[#FFF8F4]
-                                                    to-[#FFF0EA]
-                                                    text-[#F36E45]
-                                                    transition-all
-                                                    duration-200
-                                                    group-hover/item:scale-105
-                                                    group-hover/item:shadow-md
-                                                "
-                                          >
-                                            {/* Study Materials */}
-                                            {item.type === "StudyMaterials" &&
-                                              item.materialType === "pdf" && (
-                                                <File
-                                                  className="h-5 w-5"
-                                                  strokeWidth={1.6}
-                                                />
-                                              )}
-
-                                            {item.type === "StudyMaterials" &&
-                                              item.materialType ===
-                                                "document" && (
-                                                <File
-                                                  className="h-5 w-5"
-                                                  strokeWidth={1.6}
-                                                />
-                                              )}
-
-                                            {item.type === "StudyMaterials" &&
-                                              item.materialType === "link" && (
-                                                <LinkIcon
-                                                  className="h-5 w-5"
-                                                  strokeWidth={1.6}
-                                                />
-                                              )}
-
-                                            {item.type === "StudyMaterials" &&
-                                              item.materialType === "image" && (
-                                                <ImageIcon
-                                                  className="h-5 w-5"
-                                                  strokeWidth={1.6}
-                                                />
-                                              )}
-
-                                            {item.type === "StudyMaterials" &&
-                                              item.materialType === "audio" && (
-                                                <Headphones
-                                                  className="h-5 w-5"
-                                                  strokeWidth={1.6}
-                                                />
-                                              )}
-
-                                            {/* Live Class */}
-                                            {item.type === "LiveClasses" && (
-                                              <Radio
-                                                className="h-5 w-5"
-                                                strokeWidth={1.6}
-                                              />
-                                            )}
-
-                                            {/* Recorded Class */}
-                                            {item.type ===
-                                              "RecordedClasses" && (
-                                              <PlayCircle
-                                                className="h-5 w-5"
-                                                strokeWidth={1.6}
-                                              />
-                                            )}
-
-                                            {/* 1:1 Session */}
-                                            {item.type === "Sessions" && (
-                                              <ScreenShare
-                                                className="h-5 w-5"
-                                                strokeWidth={1.6}
-                                              />
-                                            )}
-                                          </div>
-
-                                          {/* ================= CONTENT ================= */}
-                                          <div
-                                            className={`
-                                                    min-w-0
-                                                    flex-1
-                                                    ${
-                                                      item.isLocked
-                                                        ? "cursor-not-allowed opacity-60"
-                                                        : "cursor-pointer"
-                                                    }
-                                                `}
-                                            onClick={() => {
-                                              if (!item.isLocked) {
-                                                handleItemNavigation(
-                                                  item,
-                                                  section._id,
-                                                );
-                                              }
-                                            }}
-                                          >
-                                            {/* TITLE */}
-                                            <div
-                                              className="
-                                                        truncate
-                                                        text-sm
-                                                        font-bold
-                                                        text-[#172033]
-                                                        transition-colors
-                                                        group-hover/item:text-[#F36E45]
-                                                        sm:text-[15px]
-                                                    "
-                                              title={item.title}
-                                            >
-                                              {item.title}
-                                            </div>
-
-                                            {/* TYPE + DURATION */}
-                                            <div
-                                              className="
-                                                        mt-1
-                                                        flex
-                                                        flex-wrap
-                                                        items-center
-                                                        gap-2
-                                                        text-xs
-                                                        text-gray-500
-                                                        sm:text-sm
-                                                    "
-                                            >
-                                              {/* Study Material */}
-                                              {item.type ===
-                                                "StudyMaterials" && (
-                                                <span
-                                                  className="
-                                                                rounded-md
-                                                                bg-[#FFF5F1]
-                                                                px-2
-                                                                py-0.5
-                                                                capitalize
-                                                                text-[#F36E45]
-                                                            "
-                                                >
-                                                  {item.materialType}
-                                                </span>
-                                              )}
-
-                                              {/* Other Types */}
-                                              {item.type !==
-                                                "StudyMaterials" && (
-                                                <span>
-                                                  {item.type === "LiveClasses"
-                                                    ? "Live Class"
-                                                    : item.type ===
-                                                        "RecordedClasses"
-                                                      ? "Recorded Class"
-                                                      : item.type === "Sessions"
-                                                        ? "1:1 Session"
-                                                        : item.type}
-                                                </span>
-                                              )}
-
-                                              {/* Duration */}
-                                              {item.duration && (
-                                                <>
-                                                  <span className="text-gray-300">
-                                                    •
-                                                  </span>
-
-                                                  <span>{item.duration}</span>
-                                                </>
-                                              )}
-                                            </div>
-                                          </div>
-
-                                          {/* ================= PREVIEW ================= */}
-                                          {(item.isPreview ||
-                                            !item.isLocked) && (
-                                            <Button
-                                              type="button"
-                                              onClick={() =>
-                                                handleItemNavigation(
-                                                  item,
-                                                  section._id,
-                                                )
-                                              }
-                                              variant="outline"
-                                              size="sm"
-                                              className="
-                                                        hidden
-                                                        rounded-full
-                                                        border-[#FFD0C0]
-                                                        bg-white
-                                                        px-4
-                                                        font-semibold
-                                                        text-[#F36E45]
-                                                        shadow-sm
-                                                        transition-all
-                                                        duration-200
-                                                        hover:border-[#F36E45]
-                                                        hover:bg-[#FFF1EB]
-                                                        hover:text-[#E85D32]
-                                                        sm:inline-flex
-                                                    "
-                                            >
-                                              Start
-                                            </Button>
-                                          )}
-
-                                          {/* ================= LOCKED ================= */}
-                                          {item.isLocked && (
-                                            <Button
-                                              type="button"
-                                              disabled
-                                              size="sm"
-                                              variant="outline"
-                                              className="
-                                                        cursor-not-allowed
-                                                        rounded-full
-                                                        border-gray-200
-                                                        bg-gray-50
-                                                        px-3
-                                                        text-gray-400
-                                                        shadow-none
-                                                    "
-                                            >
-                                              <Lock className="mr-1 h-3.5 w-3.5" />
-
-                                              <span className="hidden sm:inline">
-                                                Locked
-                                              </span>
-                                            </Button>
-                                          )}
-
-                                          {/* ================= ARROW ================= */}
-                                          {!item.isLocked && (
-                                            <button
-                                              type="button"
-                                              onClick={() =>
-                                                handleItemNavigation(
-                                                  item,
-                                                  section._id,
-                                                )
-                                              }
-                                              className="
-                                                        flex
-                                                        h-9
-                                                        w-9
-                                                        shrink-0
-                                                        items-center
-                                                        justify-center
-                                                        rounded-full
-                                                        border
-                                                        border-transparent
-                                                        bg-gray-50
-                                                        text-gray-400
-                                                        transition-all
-                                                        duration-200
-                                                        hover:border-[#FFD0C0]
-                                                        hover:bg-[#FFF1EB]
-                                                        hover:text-[#F36E45]
-                                                        group-hover/item:translate-x-0.5
-                                                    "
-                                            >
-                                              <ChevronRight className="h-4 w-4" />
-                                            </button>
-                                          )}
-                                        </div>
-                                      ))}
-                                  </div>
-                                </div>
-                              </div>
-                            ))}
-                          </div>
-
-                          {/* ================= BOTTOM HIGHLIGHT ================= */}
-                          <div
-                            className="
-                        relative
-                        overflow-hidden
-                        rounded-2xl
-                        border
-                        border-[#FFD8CA]
-                        bg-gradient-to-r
-                        from-[#FFF8F4]
-                        via-[#FFF2EC]
-                        to-white
-                        p-5
-                        shadow-[0_5px_20px_rgba(243,110,69,0.05)]
-                        sm:p-6
-                    "
-                          >
-                            {/* Decorative */}
-                            <div
-                              className="
-                            pointer-events-none
-                            absolute
-                            -right-10
-                            -top-10
-                            h-32
-                            w-32
-                            rounded-full
-                            bg-[#FF6B35]/10
-                            blur-xl
-                        "
-                            />
-
-                            <div
-                              className="
-                            relative
-                            flex
-                            flex-col
-                            gap-4
-                            sm:flex-row
-                            sm:items-center
-                            sm:justify-between
-                        "
-                            >
-                              <div className="flex items-center gap-3">
-                                {/* Icon */}
-                                <div
-                                  className="
-                                    flex
-                                    h-12
-                                    w-12
-                                    shrink-0
-                                    items-center
-                                    justify-center
-                                    rounded-2xl
-                                    bg-gradient-to-br
-                                    from-[#FF6B35]
-                                    to-[#FF9A86]
-                                    text-white
-                                    shadow-lg
-                                    shadow-orange-200
-                                "
-                                >
-                                  <PlayCircle className="h-5 w-5" />
-                                </div>
-
-                                <div>
-                                  <h3 className="font-bold text-[#172033]">
-                                    Keep your learning journey going
-                                  </h3>
-
-                                  <p className="mt-0.5 text-xs text-gray-500 sm:text-sm">
-                                    Choose any available lesson and continue
-                                    learning.
-                                  </p>
-                                </div>
-                              </div>
-
-                              <div
-                                className="
-                                hidden
-                                rounded-full
-                                border
-                                border-[#FFE0D5]
-                                bg-white
-                                px-4
-                                py-2
-                                text-xs
-                                font-bold
-                                text-[#F36E45]
-                                shadow-sm
-                                sm:block
-                            "
-                              >
-                                Learn • Practice • Grow
-                              </div>
-                            </div>
-                          </div>
-                        </>
-                      )}
-                    </div>
+                    <CourseTests
+                      curriculum={curriculum}
+                      loading={curriculumLoading}
+                      onItemClick={handleItemNavigation}
+                    />
                   )}
 
                   {activeTab === "instructors" && (
@@ -2825,195 +1627,99 @@ export default function CourseDetailPage() {
                       )}
                     </div>
                   )}
-                  {activeTab === "reviews" && (
-                    <div className="space-y-8">
-                      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between">
-                        <h2 className="text-2xl font-bold text-gray-900 dark:text-white">
-                          Student Reviews
-                        </h2>
-                        <div className="mt-4 sm:mt-0">
-                          <Button>Write a Review</Button>
-                        </div>
-                      </div>
-                      <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-6">
-                        <div className="flex items-center mb-6">
-                          <div className="text-5xl font-bold text-gray-900 dark:text-white mr-6">
-                            {course.rating}
-                          </div>
-                          <div>
-                            <div className="flex items-center">
-                              {[...Array(5)].map((_, i) => (
-                                <Star
-                                  key={i}
-                                  className={`h-5 w-5 ${
-                                    i < Math.floor(course.rating)
-                                      ? "text-yellow-400 fill-current"
-                                      : "text-gray-300 dark:text-gray-600"
-                                  }`}
-                                />
-                              ))}
-                            </div>
-                            <p className="mt-1 text-gray-600 dark:text-gray-400">
-                              Based on {course.reviews} reviews
+                </div>
+                <div className="space-y-6 mt-6">
+                  <h2 className="text-2xl font-bold text-gray-900 dark:text-white">
+                    Frequently Asked Questions
+                  </h2>
+                  <div className="space-y-1">
+                    {[
+                      {
+                        question: "What do your study abroad courses include?",
+                        answer:
+                          "Our courses cover everything from English language prep, IELTS/TOEFL training, and subject-specific coaching to application guidance, interview prep, and cultural orientation.",
+                      },
+                      {
+                        question: "Are these courses suitable for beginners?",
+                        answer:
+                          "Yes! Whether you’re just starting or already advanced, we have beginner, intermediate, and advanced-level courses tailored to your needs.",
+                      },
+                      {
+                        question:
+                          "How do these courses help with my study abroad application?",
+                        answer:
+                          "We focus on strengthening your academic profile, language skills, and test performance so that you can meet admission requirements at top universities abroad.",
+                      },
+                      {
+                        question:
+                          "Do you provide guidance for visa and admissions along with courses?",
+                        answer:
+                          "Absolutely. Along with coaching, we guide you through application essays, SOPs, LORs, and visa interview preparation.",
+                      },
+                      {
+                        question:
+                          "Are the courses conducted online or offline?",
+                        answer:
+                          "We offer both flexible online classes and offline sessions (depending on your location). You can choose what fits you best.",
+                      },
+                      {
+                        question:
+                          "What makes your study abroad courses different from others?",
+                        answer:
+                          "Our trainers have years of experience helping students secure admissions abroad. We provide personalized feedback, mock tests, and one-on-one mentoring.",
+                      },
+                      {
+                        question: "How long does it take to complete a course?",
+                        answer:
+                          "Course duration ranges from 4 weeks to 6 months, depending on the program and your target university requirements.",
+                      },
+                      {
+                        question:
+                          "Will these courses improve my chances of getting scholarships?",
+                        answer:
+                          "Yes, stronger academic and language skills increase your chances of securing merit-based scholarships abroad.",
+                      },
+                      {
+                        question:
+                          "Do you provide practice tests and study materials?",
+                        answer:
+                          "Yes, we provide updated study guides, sample papers, mock exams, and practice sessions for standardized tests like IELTS, TOEFL, GRE, and GMAT.",
+                      },
+                      {
+                        question: "How do I enroll in a course?",
+                        answer:
+                          "Simply click on the “Enroll Now” button, fill in your details, and our team will contact you with the next steps.",
+                      },
+                    ]?.map((faq, index) => (
+                      <div
+                        key={index}
+                        className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 overflow-hidden"
+                      >
+                        <button
+                          onClick={() =>
+                            setExpandedFaq(expandedFaq === index ? null : index)
+                          }
+                          className="flex justify-between items-center w-full p-4 text-left hover:bg-gray-50 dark:hover:bg-gray-700/30 transition-colors"
+                        >
+                          <h3 className="font-medium text-gray-900 dark:text-white">
+                            {faq.question}
+                          </h3>
+                          <ChevronRight
+                            className={`h-5 w-5 text-gray-500 dark:text-gray-400 transition-transform ${
+                              expandedFaq === index ? "rotate-90" : ""
+                            }`}
+                          />
+                        </button>
+                        {expandedFaq === index && (
+                          <div className="px-6 pb-6 pt-4 border-t border-gray-200 dark:border-gray-700">
+                            <p className="text-gray-600 dark:text-gray-400 leading-relaxed">
+                              {faq.answer}
                             </p>
                           </div>
-                        </div>
-                        <div className="space-y-6">
-                          {course.reviewsData?.slice(0, 5).map((review) => (
-                            <div
-                              key={review._id}
-                              className="border-b border-gray-200 dark:border-gray-700 pb-6 last:border-0 last:pb-0"
-                            >
-                              <div className="flex items-center mb-3">
-                                <img
-                                  src={
-                                    review.user.avatar ||
-                                    "/placeholder-avatar.jpg"
-                                  }
-                                  alt={review.user.name}
-                                  className="h-10 w-10 rounded-full object-cover mr-3 border border-gray-200 dark:border-gray-700"
-                                />
-                                <div>
-                                  <h4 className="font-medium text-gray-900 dark:text-white">
-                                    {review.user.name}
-                                  </h4>
-                                  <div className="flex items-center mt-1">
-                                    {[...Array(5)].map((_, i) => (
-                                      <Star
-                                        key={i}
-                                        className={`h-4 w-4 ${
-                                          i < review.rating
-                                            ? "text-yellow-400 fill-current"
-                                            : "text-gray-300 dark:text-gray-600"
-                                        }`}
-                                      />
-                                    ))}
-                                    <span className="ml-2 text-sm text-gray-500 dark:text-gray-400">
-                                      {formatDate(review.date)}
-                                    </span>
-                                  </div>
-                                </div>
-                              </div>
-                              <p className="text-gray-700 dark:text-gray-300 leading-relaxed">
-                                {review.comment}
-                              </p>
-                              <div className="flex items-center mt-3 text-sm text-gray-500 dark:text-gray-400">
-                                <button className="flex items-center hover:text-gray-700 dark:hover:text-gray-300">
-                                  <MessageCircle className="h-4 w-4 mr-1" />
-                                  Reply
-                                </button>
-                                <span className="mx-2">•</span>
-                                <button className="flex items-center hover:text-gray-700 dark:hover:text-gray-300">
-                                  <span className="mr-1">👍</span>
-                                  Helpful ({review.helpful})
-                                </button>
-                              </div>
-                            </div>
-                          ))}
-                        </div>
+                        )}
                       </div>
-                    </div>
-                  )}
-                  {activeTab === "faq" && (
-                    <div className="space-y-6">
-                      <h2 className="text-2xl font-bold text-gray-900 dark:text-white">
-                        Frequently Asked Questions
-                      </h2>
-                      <div className="space-y-1">
-                        {[
-                          {
-                            question:
-                              "What do your study abroad courses include?",
-                            answer:
-                              "Our courses cover everything from English language prep, IELTS/TOEFL training, and subject-specific coaching to application guidance, interview prep, and cultural orientation.",
-                          },
-                          {
-                            question:
-                              "Are these courses suitable for beginners?",
-                            answer:
-                              "Yes! Whether you’re just starting or already advanced, we have beginner, intermediate, and advanced-level courses tailored to your needs.",
-                          },
-                          {
-                            question:
-                              "How do these courses help with my study abroad application?",
-                            answer:
-                              "We focus on strengthening your academic profile, language skills, and test performance so that you can meet admission requirements at top universities abroad.",
-                          },
-                          {
-                            question:
-                              "Do you provide guidance for visa and admissions along with courses?",
-                            answer:
-                              "Absolutely. Along with coaching, we guide you through application essays, SOPs, LORs, and visa interview preparation.",
-                          },
-                          {
-                            question:
-                              "Are the courses conducted online or offline?",
-                            answer:
-                              "We offer both flexible online classes and offline sessions (depending on your location). You can choose what fits you best.",
-                          },
-                          {
-                            question:
-                              "What makes your study abroad courses different from others?",
-                            answer:
-                              "Our trainers have years of experience helping students secure admissions abroad. We provide personalized feedback, mock tests, and one-on-one mentoring.",
-                          },
-                          {
-                            question:
-                              "How long does it take to complete a course?",
-                            answer:
-                              "Course duration ranges from 4 weeks to 6 months, depending on the program and your target university requirements.",
-                          },
-                          {
-                            question:
-                              "Will these courses improve my chances of getting scholarships?",
-                            answer:
-                              "Yes, stronger academic and language skills increase your chances of securing merit-based scholarships abroad.",
-                          },
-                          {
-                            question:
-                              "Do you provide practice tests and study materials?",
-                            answer:
-                              "Yes, we provide updated study guides, sample papers, mock exams, and practice sessions for standardized tests like IELTS, TOEFL, GRE, and GMAT.",
-                          },
-                          {
-                            question: "How do I enroll in a course?",
-                            answer:
-                              "Simply click on the “Enroll Now” button, fill in your details, and our team will contact you with the next steps.",
-                          },
-                        ]?.map((faq, index) => (
-                          <div
-                            key={index}
-                            className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 overflow-hidden"
-                          >
-                            <button
-                              onClick={() =>
-                                setExpandedFaq(
-                                  expandedFaq === index ? null : index,
-                                )
-                              }
-                              className="flex justify-between items-center w-full p-4 text-left hover:bg-gray-50 dark:hover:bg-gray-700/30 transition-colors"
-                            >
-                              <h3 className="font-medium text-gray-900 dark:text-white">
-                                {faq.question}
-                              </h3>
-                              <ChevronRight
-                                className={`h-5 w-5 text-gray-500 dark:text-gray-400 transition-transform ${
-                                  expandedFaq === index ? "rotate-90" : ""
-                                }`}
-                              />
-                            </button>
-                            {expandedFaq === index && (
-                              <div className="px-6 pb-6 pt-4 border-t border-gray-200 dark:border-gray-700">
-                                <p className="text-gray-600 dark:text-gray-400 leading-relaxed">
-                                  {faq.answer}
-                                </p>
-                              </div>
-                            )}
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-                  )}
+                    ))}
+                  </div>
                 </div>
               </div>
 
@@ -3184,51 +1890,3 @@ export default function CourseDetailPage() {
     </>
   );
 }
-
-// <div className="max-w-7xl mx-auto px-4 py-8 sm:px-6 lg:px-8">
-//             <div className="grid grid-cols-1 lg:grid-cols-6 gap-8">
-//                 {/* LEFT COLUMN — Main Content (3/4 width) */}
-//                 <div className="lg:col-span-4">
-
-//                 </div>
-
-//                 {/* RIGHT COLUMN — Fixed Preview Video Card (1/4 width) */}
-//                 <div className="lg:col-span-2">
-//                     <div
-//                         ref={videoCardRef}
-//                         className={`bg-white dark:bg-gray-800 rounded-lg dark:border-gray-700 p-4 transition-all duration-300 ease-in-out ${isVideoCardFixed
-//                             ? 'fixed top-22 right-8 w-72 lg:w-96 z-30 shadow-xl'
-//                             : 'sticky top-22'
-//                             }`}
-//                     >
-//                         <h3 className="text-lg font-bold text-gray-900 dark:text-white mb-4 flex items-center">
-//                             {course.title}
-//                         </h3>
-//                         <div className="aspect-video bg-gray-100 dark:bg-gray-700 rounded-xl overflow-hidden mb-4 relative group">
-//                             {course.thumbnail && (
-//                                 <img
-//                                     src={course.thumbnail?.url ? `${ImageBaseUrl}/${course.thumbnail.url}` : "/placeholder-course.jpg"}
-//                                     className="w-full h-full object-cover"
-//                                 />
-//                             )}
-//                         </div>
-//                         <div className="space-y-3">
-//                             <Button
-//                                 size="sm"
-//                                 onClick={() => navigate(`/checkout/${slug}`)}
-//                                 className="w-full bg-blue-600 hover:bg-blue-700 text-white font-medium"
-//                             >
-//                                 Enroll Now
-//                             </Button>
-//                         </div>
-//                         <div className="mt-4 pb-3 pt-3 border-gray-200 dark:border-gray-700">
-//                             <div className="space-y-2 text-sm">
-//                                 <div className="flex justify-between">
-//                                     <span className="text-gray-500 dark:text-gray-400">{course.shortDescription}</span>
-//                                 </div>
-//                             </div>
-//                         </div>
-//                     </div>
-//                 </div>
-//             </div>
-//         </div>
