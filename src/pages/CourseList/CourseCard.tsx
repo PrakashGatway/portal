@@ -175,7 +175,7 @@ const CourseCard = ({ course, primaryColor = "#daff02", secondaryColor = "#fe572
             {/* ================= IMAGE ================= */}
             <div className="p-2.5">
                 <div className="rounded-2xl p-2.5 bg-gradient-to-b from-[#CFCFCF] via-[#ECECEC] to-white">
-                    <div className="rounded-2xl overflow-hidden h-[180px] sm:h-[200px] lg:h-[180px]">
+                    <div className="rounded-2xl overflow-hidden h-full sm:h-full lg:h-[180px]">
                         <img
                             src={
                                 !course.thumbnail?.url
@@ -183,7 +183,7 @@ const CourseCard = ({ course, primaryColor = "#daff02", secondaryColor = "#fe572
                                     : `${ImageBaseUrl}/${course.thumbnail.url}`
                             }
                             alt={course?.title}
-                            className="w-full h-full object-cover"
+                            className="w-full h-full object-contain lg:object-cover"
                         />
                     </div>
                 </div>
@@ -344,61 +344,6 @@ const CourseCard = ({ course, primaryColor = "#daff02", secondaryColor = "#fe572
                 </div>
             </div>
 
-            {/* ================= MOBILE/TABLET CTA ================= */}
-            <div className="flex items-start mt-2 lg:hidden">
-
-                {/* Price */}
-                <div
-                    className="flex-1 bg-[#FF6A3D] text-center text-white px-3 py-2.5"
-                    style={{
-                        borderRadius: "0px 0px 0px 15px",
-                    }}
-                >
-                    {course?.pricing?.isFree ? (
-                        <div className="text-xl font-bold">
-                            Free
-                        </div>
-                    ) : (
-                        <div className="flex flex-col items-center">
-                            <div className="text-xl font-bold">
-                                {formatPrice(
-                                    finalPrice,
-                                    course.pricing.currency
-                                )}
-                            </div>
-
-                            {discountPercent > 0 && (
-                                <div className="text-xs line-through opacity-70">
-                                    {formatPrice(
-                                        originalPrice,
-                                        course.pricing.currency
-                                    )}
-                                </div>
-                            )}
-                        </div>
-                    )}
-                </div>
-
-                {/* CTA */}
-                <button
-                    onClick={() => {
-                        course?.pricing?.isFree
-                            ? navigate(`/course/${course.slug}`)
-                            : navigate(`/checkout/${course.slug}`, {
-                                  state: { testSeries: true },
-                              });
-                    }}
-                    className="flex-1 text-white font-medium py-2.5 bg-gradient-to-b from-[#545454] via-[#3B3B3B] to-[#222222] hover:from-black hover:to-black transition-all duration-300"
-                    style={{
-                        borderRadius: "0px 0px 15px 0px",
-                    }}
-                >
-                    {course?.pricing?.isFree
-                        ? "Start Course"
-                        : "Enroll Now"}
-                </button>
-
-            </div>
 
         </div>
     </div>

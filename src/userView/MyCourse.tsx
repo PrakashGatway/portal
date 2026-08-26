@@ -30,7 +30,8 @@ import {
     MoreVertical,
     LoaderCircle,
     Activity,
-    Files
+    Files,
+    TrendingUp
 } from "lucide-react";
 import Button from "../components/ui/button/Button";
 import api, { ImageBaseUrl } from "../axiosInstance";
@@ -193,26 +194,82 @@ const CourseCard = ({
 
 
             {course.itemType === "TestTemplate" ? (
-                <div className="bg-gradient-to-r from-black via-[#FAFAFA] to-white p-[1px] rounded-[18px] h-full">
-        <div className="bg-[linear-gradient(90deg,#CFCFCF_0px,#F5F5F5_18px,#FFFFFF_40px,#FFFFFF_100%)] dark:bg-gray-800 rounded-[17px] border border-[#EFEFEF] overflow-hidden shadow-sm hover:shadow-lg transition-all duration-300 h-full flex flex-col">
-            <div className="flex flex-col p-4 lg:p-5 gap-3 h-full">
-                
-                {/* Header */}
-                <div className="flex items-start justify-between gap-2">
-                    <h3 className="text-base lg:text-lg font-bold text-[#111827] dark:text-white leading-snug line-clamp-2">
-                        {course?.item?.title}
-                    </h3>
-                    <span className="flex-shrink-0 bg-orange-500/10 text-orange-600 dark:text-orange-400 text-[10px] lg:text-[11px] font-semibold px-2 py-1 rounded-md border border-orange-500/20 whitespace-nowrap">
-                        {course?.item?.testType || "Test"}
-                    </span>
-                </div>
+                 <div className="p-[2px] rounded-[22px] bg-gradient-to-b from-[#686868]/0 via-[#686868]/60 to-[#686868]">
+        <div className="bg-white dark:bg-gray-800 rounded-[17px] border border-[#EFEFEF] overflow-hidden shadow-sm hover:shadow-lg transition-all duration-300 h-full flex flex-col">
+            <div className="relative h-[170px] overflow-hidden rounded-t-[18px] p-2">
+                   <div className="absolute top-0 left-0 w-full h-[40%] bg-gradient-to-b from-[#ADADAC] to-[#ADADAC]/0" />
 
-                {/* Description */}
-                <p className="text-[#6B7280] dark:text-gray-400 text-xs lg:text-[13px] leading-relaxed line-clamp-2 min-h-[36px] lg:h-full">
-                    {course?.item?.shortDescription?.length > 90
-                        ? course?.item?.shortDescription.substring(0, 90) + "..."
-                        : course?.item?.shortDescription}
-                </p>
+
+            <div
+              style={{ borderRadius: "15px 15px 0px 0px" }}
+              className="relative overflow-hidden h-[170px]"
+            >
+              <img
+                src={course?.thumbnailPic || "/images/test-img.jpg"}
+                alt={course?.title || "Test"}
+                className="h-full w-full object-cover"
+              />
+            </div>
+
+            {/* Image subtle overlay */}
+           
+         
+          </div>
+            <div className=" p-4 lg:p-5 gap-3 h-full">
+                
+                {/* Title */}
+            <h3
+              className="
+                    text-[22px]
+                    leading-7
+                    font-medium
+                    text-[#111111]
+                    dark:text-white
+                    line-clamp-2
+                "
+            >
+              {course?.item?.title}
+            </h3>
+
+            {/* Description */}
+            <p
+              className="
+                    mt-1
+                    text-[16px]
+                    leading-6
+                    text-[#FF5A3C]
+                    line-clamp-2
+                "
+            >
+              {course?.item?.description ||
+                `${course?.exam?.name || "Test"} full test series`}
+            </p>
+
+            {/* ================= META ================= */}
+            <div className="mt-3 grid grid-cols-2 gap-y-2.5 text-[16px] text-gray-600">
+              {/* Validity */}
+              <div className="flex items-center gap-2">
+                <Clock className="h-[18px] w-[18px] shrink-0 text-[#FF5A3C]" />
+
+                <span>Duration: {course?.item?.totalDurationMinutes}</span>
+              </div>
+
+              {/* Total Tests */}
+              <div className="flex items-center gap-2">
+                <BookOpen className="h-[18px] w-[18px] shrink-0 text-[#FF5A3C]" />
+
+                <span>
+                  Questions:{" "}
+                  {course?.item?.totalTests || course?.item?.totalQuestions || 0}{" "}
+                </span>
+              </div>
+            </div>
+            {/* Language */}
+            <div className="flex items-center gap-2 mt-2">
+              <TrendingUp className="h-[18px] w-[18px] shrink-0 text-[#FF5A3C]" />
+
+              <span className="">Language: English</span>
+            </div>
 
                 {/* Difficulty Level */}
                 <div className="flex items-center gap-2  pt-2 border-t border-gray-100 dark:border-gray-700">
@@ -244,7 +301,7 @@ const CourseCard = ({
                 {/* Action Button */}
                 <button
                     onClick={handleAction}
-                    className="mt-2 bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 text-white text-xs lg:text-sm font-medium px-4 py-2.5 rounded-xl text-center transition-all duration-300 shadow-sm hover:shadow-md w-full"
+                    className="mt-2 bg-[#ff7247] hover:to-orange-700 text-white text-xs lg:text-sm font-medium px-4 py-2.5 rounded-xl text-center transition-all duration-300 shadow-sm hover:shadow-md w-full"
                 >
                     Start Test →
                 </button>
@@ -252,96 +309,312 @@ const CourseCard = ({
         </div>
     </div>
             ) : course.itemType === "Course" ? (
-                <div className="bg-gradient-to-r from-black via-[#FAFAFA] to-white p-[1px] rounded-[22px] h-full">
-        <div className="bg-[linear-gradient(90deg,#CFCFCF_0px,#F5F5F5_18px,#FFFFFF_40px,#FFFFFF_100%)] dark:bg-gray-800 rounded-[22px] border border-[#EFEFEF] overflow-hidden shadow-sm hover:shadow-md transition-all duration-300 relative flex flex-col lg:flex-row h-full">
-            
-            {/* Badge */}
-            {course?.item?.featured === true && (
-                <div className="absolute right-3 top-3 z-9">
-                    <span className="inline-flex items-center gap-1.5 rounded-full border border-orange-200 bg-white/95 px-2.5 py-1 text-[10px] font-bold uppercase tracking-wide text-[#FF6B35] shadow-sm backdrop-blur-sm">
-                        <span className="h-1.5 w-1.5 rounded-full bg-[#FF6B35]" />
-                        Featured
-                    </span>
-                </div>
-            )}
+               <div className="bg-gradient-to-r from-black via-[#FAFAFA] to-white p-[1px] rounded-[22px] h-full">
+    <div
+        className="
+            bg-[linear-gradient(90deg,#CFCFCF_0px,#F5F5F5_18px,#FFFFFF_40px,#FFFFFF_100%)]
+            dark:bg-gray-800
+            rounded-[22px]
+            border border-[#EFEFEF]
+            overflow-hidden
+            shadow-sm
+            hover:shadow-md
+            transition-all
+            duration-300
+            relative
+            flex
+            flex-col
+            xl:flex-row
+            h-full
+        "
+    >
 
-            {/* LEFT IMAGE - Responsive Height */}
-            <div className="relative w-full lg:w-[360px] h-48 lg:h-auto flex-shrink-0 p-2 bg-gray-50 dark:bg-gray-900">
-                <div className="rounded-2xl overflow-hidden h-full w-full">
-                    <img
-                        src={
-                            course?.item?.thumbnailPic?.includes("res.cloudinary.com")
-                                ? course.item.thumbnailPic
-                                : `${ImageBaseUrl}/${course?.item?.thumbnail?.url}`
-                        }
-                        alt={course?.item?.title || "Course thumbnail"}
-                        className="w-full h-full object-cover lg:object-contain"
-                    />
-                </div>
+        {/* ================= BADGE ================= */}
+        {course?.item?.featured === true && (
+            <div className="absolute right-2.5 top-2.5 sm:right-3 sm:top-3 z-20">
+                <span
+                    className="
+                        inline-flex
+                        items-center
+                        gap-1
+                        sm:gap-1.5
+                        rounded-full
+                        border
+                        border-orange-200
+                        bg-white/95
+                        px-2
+                        sm:px-2.5
+                        py-1
+                        text-[9px]
+                        sm:text-[10px]
+                        font-bold
+                        uppercase
+                        tracking-wide
+                        text-[#FF6B35]
+                        shadow-sm
+                        backdrop-blur-sm
+                        whitespace-nowrap
+                    "
+                >
+                    <span className="h-1.5 w-1.5 rounded-full bg-[#FF6B35]" />
+                    Featured
+                </span>
             </div>
+        )}
 
-            {/* CENTER CONTENT */}
-            <div className="flex-1 flex flex-col justify-between p-4 lg:p-5 lg:pl-16">
-                <div>
-                    <h2 className="text-lg lg:text-xl xl:text-2xl font-bold text-[#111827] dark:text-white leading-tight mb-2">
-                        {course?.item?.title}
-                    </h2>
+        {/* ================= IMAGE ================= */}
+        <div
+            className="
+                relative
+                w-full
+                h-[180px]
+                sm:h-[210px]
+                md:h-[230px]
+                lg:h-[240px]
+                xl:w-[360px]
+                xl:h-auto
+                flex-shrink-0
+                p-2
+                bg-gray-50
+                dark:bg-gray-900
+            "
+        >
+            <div className="rounded-2xl overflow-hidden h-full w-full">
+                <img
+                    src={
+                        course?.item?.thumbnailPic?.includes(
+                            "res.cloudinary.com"
+                        )
+                            ? course.item.thumbnailPic
+                            : `${ImageBaseUrl}/${course?.item?.thumbnail?.url}`
+                    }
+                    alt={course?.item?.title || "Course thumbnail"}
+                    className="
+                        w-full
+                        h-full
+                        object-cover
+                        xl:object-contain
+                    "
+                />
+            </div>
+        </div>
 
-                    <p className="text-[#6B7280] text-sm lg:text-[14px] xl:text-[15px] leading-relaxed line-clamp-2 lg:line-clamp-none max-w-full lg:max-w-[520px]">
-                        {course?.item?.shortDescription?.length > 120
-                            ? course?.item?.shortDescription.substring(0, 120) + "..."
-                            : course?.item?.shortDescription}
-                    </p>
+        {/* ================= CENTER CONTENT ================= */}
+        <div
+            className="
+                flex-1
+                min-w-0
+                flex
+                flex-col
+                justify-between
+                p-3
+                sm:p-4
+                md:p-5
+                lg:p-5
+                xl:p-5
+                xl:pl-16
+            "
+        >
+            <div className="min-w-0">
 
-                    {/* Tags */}
-                    <div className="flex flex-wrap items-center gap-2 my-3">
-                        {course?.item?.tags?.slice(0, 12).map((item: string, index: number) => (
+                {/* TITLE */}
+                <h2
+                    className="
+                        text-base
+                        sm:text-lg
+                        md:text-xl
+                        lg:text-xl
+                        xl:text-2xl
+                        font-bold
+                        text-[#111827]
+                        dark:text-white
+                        leading-tight
+                        mb-2
+                        line-clamp-2
+                    "
+                >
+                    {course?.item?.title}
+                </h2>
+
+                {/* DESCRIPTION */}
+                <p
+                    className="
+                        text-[#6B7280]
+                        dark:text-gray-400
+                        text-xs
+                        sm:text-sm
+                        lg:text-[14px]
+                        xl:text-[15px]
+                        leading-relaxed
+                        line-clamp-2
+                        xl:line-clamp-none
+                        max-w-full
+                        xl:max-w-[520px]
+                    "
+                >
+                    {course?.item?.shortDescription?.length > 120
+                        ? course?.item?.shortDescription.substring(0, 120) + "..."
+                        : course?.item?.shortDescription}
+                </p>
+
+                {/* TAGS */}
+                <div
+                    className="
+                        flex
+                        flex-wrap
+                        items-center
+                        gap-1.5
+                        sm:gap-2
+                        my-2.5
+                        sm:my-3
+                        max-h-[48px]
+                        overflow-hidden
+                    "
+                >
+                    {course?.item?.tags
+                        ?.slice(0, 12)
+                        .map((item: string, index: number) => (
                             <span
                                 key={`${item}-${index}`}
-                                className="inline-flex items-center rounded-full border border-orange-200 bg-orange-50 px-2 py-0.5 text-[10px] lg:text-xs font-medium text-orange-600"
+                                className="
+                                    inline-flex
+                                    items-center
+                                    rounded-full
+                                    border
+                                    border-orange-200
+                                    bg-orange-50
+                                    px-2
+                                    py-0.5
+                                    text-[9px]
+                                    sm:text-[10px]
+                                    lg:text-xs
+                                    font-medium
+                                    text-orange-600
+                                    whitespace-nowrap
+                                "
                             >
                                 {item}
                             </span>
                         ))}
-                    </div>
-                </div>
-
-                {/* Meta Info Row */}
-                <div className="flex flex-wrap gap-x-4 gap-y-2 mt-2 pt-3 border-t border-gray-100 dark:border-gray-700">
-                    <div className="flex items-center gap-2 text-[#FF6B35]">
-                        <CalendarDays size={16} className="lg:w-[18px] lg:h-[18px]" />
-                        <span className="text-xs lg:text-[14px] font-medium">
-                            {Math.max(
-                                0,
-                                Math.ceil(
-                                    (new Date(course?.accessExpiresAt) - new Date()) /
-                                    (1000 * 60 * 60 * 24)
-                                )
-                            )}{" "}
-                            <span className="text-[#6B7280] dark:text-gray-400 font-normal">Days Left</span>
-                        </span>
-                    </div>
-
-                    <div className="flex items-center gap-2 text-[#FF6B35]">
-                        <Activity className="w-4 h-4" />
-                        <span className="text-xs lg:text-[14px] font-medium capitalize">
-                           {course.item.status}
-                        </span>
-                    </div>
                 </div>
             </div>
 
-            {/* RIGHT BUTTON - Stacked on Mobile, Side on Desktop */}
-            <div className="p-4 lg:p-6 lg:pt-0 lg:pb-3 lg:pl-0 flex items-center lg:items-end justify-center lg:justify-end min-w-0 lg:min-w-[220px]">
-                <Link
-                    to={`/course/${course?.item?.slug}?isCurriculum=true`}
-                    className="w-full lg:w-auto bg-[#FF6B35] hover:bg-[#f95d26] text-white px-4 py-3 text-sm rounded-xl font-medium transition text-center whitespace-nowrap shadow-sm hover:shadow-md"
-                >
-                    Continue Learning &gt;
-                </Link>
+            {/* ================= META ================= */}
+            <div
+                className="
+                    flex
+                    flex-wrap
+                    gap-x-4
+                    gap-y-2
+                    mt-2
+                    pt-3
+                    border-t
+                    border-gray-100
+                    dark:border-gray-700
+                "
+            >
+                {/* Days Left */}
+                <div className="flex items-center gap-1.5 sm:gap-2 text-[#FF6B35] min-w-0">
+                    <CalendarDays
+                        size={16}
+                        className="sm:w-[18px] sm:h-[18px] shrink-0"
+                    />
+
+                    <span
+                        className="
+                            text-[11px]
+                            sm:text-xs
+                            lg:text-[14px]
+                            font-medium
+                            whitespace-nowrap
+                        "
+                    >
+                        {Math.max(
+                            0,
+                            Math.ceil(
+                                (new Date(course?.accessExpiresAt) -
+                                    new Date()) /
+                                    (1000 * 60 * 60 * 24)
+                            )
+                        )}{" "}
+                        <span className="text-[#6B7280] dark:text-gray-400 font-normal">
+                            Days Left
+                        </span>
+                    </span>
+                </div>
+
+                {/* Status */}
+                <div className="flex items-center gap-1.5 sm:gap-2 text-[#FF6B35] min-w-0">
+                    <Activity className="w-4 h-4 shrink-0" />
+
+                    <span
+                        className="
+                            text-[11px]
+                            sm:text-xs
+                            lg:text-[14px]
+                            font-medium
+                            capitalize
+                            truncate
+                        "
+                    >
+                        {course?.item?.status}
+                    </span>
+                </div>
             </div>
         </div>
+
+        {/* ================= RIGHT BUTTON ================= */}
+        <div
+            className="
+                w-full
+                xl:w-auto
+                xl:min-w-[220px]
+                p-3
+                sm:p-4
+                md:p-5
+                lg:p-5
+                xl:p-6
+                xl:pt-0
+                xl:pb-3
+                xl:pl-0
+                flex
+                items-center
+                justify-center
+                xl:items-end
+                xl:justify-end
+            "
+        >
+            <Link
+                to={`/course/${course?.item?.slug}?isCurriculum=true`}
+                className="
+                    w-full
+                    sm:w-auto
+                    min-w-0
+                    xl:w-auto
+                    bg-[#FF6B35]
+                    hover:bg-[#f95d26]
+                    text-white
+                    px-5
+                    sm:px-6
+                    xl:px-4
+                    py-2.5
+                    sm:py-3
+                    text-xs
+                    sm:text-sm
+                    rounded-xl
+                    font-medium
+                    transition
+                    text-center
+                    whitespace-nowrap
+                    shadow-sm
+                    hover:shadow-md
+                "
+            >
+                Continue Learning &gt;
+            </Link>
+        </div>
     </div>
+</div>
             ) : course.itemType === "McuTestSeries" ? (
               <div className="bg-gradient-to-r from-black via-[#FAFAFA] to-white p-[1px] rounded-[18px]">
     <div
@@ -968,7 +1241,7 @@ export default function MyCoursesPage() {
                                 layout
                             >
                                <AnimatePresence mode="popLayout">
-    <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 xl:grid-cols-3 gap-4">
         {filteredCourses.map((course) => (
             <motion.div
                 key={course._id}

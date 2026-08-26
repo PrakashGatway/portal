@@ -19,6 +19,7 @@ import {
   Trophy,
   Mail,
   Bookmark,
+  User,
 } from "lucide-react";
 import api, { ImageBaseUrl } from "../../axiosInstance";
 
@@ -32,6 +33,15 @@ const ContentViewPage = () => {
 
   const [timeRemaining, setTimeRemaining] = useState<any>(null);
   const [canJoin, setCanJoin] = useState(false);
+
+  const session = {
+    time: "10:00 AM",
+    date: "June 12",
+    description: "Follow-up Pte Exam and prescription review",
+    instructorName: "Sidney Yates",
+    instructorRole: "Pte expert",
+    instructorImage: "/images/sidney.png",
+};
 
   useEffect(() => {
     const fetchContent = async () => {
@@ -359,7 +369,7 @@ const ContentViewPage = () => {
 
   return (
   <div className="min-h-screen">
-  <div className="mx-auto max-w-7xl px-4 py-6 sm:px-6 lg:px-8">
+  <div className="mx-auto max-w-7xl px-4 py-0 sm:px-6 lg:px-8">
     {/* BACK BUTTON */}
     <button
       onClick={() => navigate(-1)}
@@ -372,120 +382,250 @@ const ContentViewPage = () => {
     {/* ==================================================
         HERO SECTION
     ================================================== */}
-    <div className="overflow-hidden rounded-2xl border border-gray-200 bg-white">
-      <div className="grid lg:grid-cols-[340px_1fr]">
-        {/* THUMBNAIL */}
-        <div className="relative h-64 overflow-hidden bg-gradient-to-br from-orange-300 via-orange-400 to-orange-500 lg:h-full lg:min-h-[320px]">
-          {content.thumbnailPic ? (
-            <img
-              src={`${ImageBaseUrl}/${content.thumbnailPic}`}
-              alt={content.title}
-              className="h-full w-full object-cover"
-            />
-          ) : (
-            <div className="flex h-full items-center justify-center">
-              {/* Decorative circles */}
-              <div className="absolute inset-0 opacity-20">
-                <div className="absolute -left-10 top-10 h-40 w-40 rounded-full border border-white/40" />
-                <div className="absolute -right-10 bottom-10 h-60 w-60 rounded-full border border-white/30" />
-              </div>
+    <div className="overflow-hidden rounded-2xl ">
+      <UpcomingSessionCard
+    session={session}
+  
+/>
+      <div className="w-full px-3 sm:px-4 lg:px-0">
 
-              {/* Video icon circle */}
-              <div className="relative flex h-28 w-28 items-center justify-center rounded-full bg-white shadow-lg">
-                <div className="flex h-20 w-20 items-center justify-center rounded-full bg-orange-500">
-                  <Video className="h-10 w-10 text-white" />
-                </div>
-              </div>
-            </div>
-          )}
+    {/* ================= PAGE TITLE ================= */}
+    <div className="mb-3 sm:mb-4">
+        <h1
+            className="
+                text-xl
+                sm:text-2xl
+                font-semibold
+                leading-tight
+                text-[#111827]
+            "
+        >
+            <span className="text-[#FF5A3C]">
+                Live Session
+            </span>{" "}
+            Detail
+        </h1>
+    </div>
 
-          {/* Session badges */}
-          <div className="absolute left-4 top-4 flex flex-wrap gap-2">
-            <span
-              className={`inline-flex items-center gap-1.5 rounded-full bg-white px-3 py-1.5 text-xs font-bold text-gray-700 shadow-sm ${sessionStatus.className}`}
+    {/* ================= MAIN CARD ================= */}
+    <div
+        className="
+            relative
+            w-full
+            overflow-hidden
+            rounded-[22px]
+            sm:rounded-[26px]
+            border
+            border-[#E5E5E5]
+            bg-gradient-to-r
+            from-[#FFF8F4]
+            via-white
+            to-[#FAFAFA]
+            shadow-sm
+        "
+    >
+
+        <div
+            className="
+                flex
+                flex-col
+                lg:flex-row
+                justify-center
+                items-center
+                gap-0
+                p-2
+                sm:p-3
+                lg:p-2
+                bg-gradient-to-r from-gray-200 via-white to-white
+            "
+        >
+
+            {/* ================================================= */}
+            {/* LEFT : SESSION IMAGE */}
+            {/* ================================================= */}
+          
+
+            {/* ================================================= */}
+{/* LEFT : SESSION IMAGE */}
+{/* ================================================= */}
+
+<div
+    className="
+        relative
+        w-full
+        lg:w-[46%]
+        xl:w-[44%]
+        h-[220px]
+        sm:h-[260px]
+        md:h-[280px]
+        lg:h-[220px]
+        xl:h-[230px]
+        shrink-0
+        overflow-hidden
+        rounded-[18px]
+    "
+>
+    <img
+        src={`${ImageBaseUrl}/${content.thumbnailPic}`}
+        alt={content?.title || "Live Session"}
+        className="
+            absolute
+            inset-0
+            w-full
+            h-full
+            object-cover
+            object-center
+            rounded-[18px]
+        "
+    />
+</div>
+
+            {/* ================================================= */}
+            {/* RIGHT : SESSION INFORMATION */}
+            {/* ================================================= */}
+
+            <div
+                className="
+                    flex
+                    min-w-0
+                    flex-1
+                    flex-col
+                    justify-center
+                    px-3
+                    py-4
+                    sm:px-5
+                    sm:py-5
+                    lg:px-8
+                    lg:py-4
+                    xl:px-10
+                "
             >
-              <CheckCircle className="h-3.5 w-3.5 text-orange-500" />
-              {sessionStatus.label}
-            </span>
 
-            {content.isFree && (
-              <span className="rounded-full bg-green-500 px-3 py-1.5 text-xs font-bold text-white">
-                FREE
-              </span>
-            )}
-          </div>
+                {/* TITLE */}
+                <div>
+                    <h2
+                        className="
+                            text-xl
+                            sm:text-2xl
+                            lg:text-xl
+                            xl:text-[22px]
+                            font-bold
+                            leading-tight
+                            text-[#111827]
+                        "
+                    >
+                        <span className="text-[#FF5A3C]">
+                           {content.title.split(" ")[0]}
+                        </span>
+                     {" "}
+                        {content.title.split(" ").slice(1).join(" ")}
+                    </h2>
+                </div>
 
-          {/* Session number */}
-          <div className="absolute bottom-4 left-4 rounded-full bg-white px-4 py-2 text-xs font-bold text-orange-600 shadow-sm">
-            Session #{content.order || 1}
-          </div>
+                {/* ================= INSTRUCTOR ================= */}
+                <div
+                    className="
+                        mt-3
+                        flex
+                        items-center
+                        gap-2.5
+                        sm:gap-3
+                    "
+                >
+                    <div
+                        className="
+                            h-10
+                            w-10
+                            shrink-0
+                            flex items-center
+                            justify-center
+                            overflow-hidden
+                            rounded-full
+                            border-2
+                            border-[#FF5A3C]
+                            bg-[#FFF1EB]
+                        "
+                    >
+                      <User/>
+                    </div>
+
+                    <div className="min-w-0">
+                        <p
+                            className="
+                                text-sm
+                                sm:text-lg
+                                font-bold
+                                leading-tight
+                                text-[#111827]
+                            "
+                        >
+                            Instructor:{" "}
+                            <span className="text-[#FF5A3C]">
+                                {content?.instructorInfo?.name}
+                            </span>
+                        </p>
+
+                        <p
+                            className="
+                                mt-0.5
+                                text-[10px]
+                                sm:text-base
+                                text-[#6B7280]
+                            "
+                        >
+                            PTE Expert & English Language Trainer
+                        </p>
+                    </div>
+                </div>
+
+                {/* ================= META ================= */}
+                <div
+                    className="
+                        mt-3
+                        flex
+                        flex-wrap
+                        items-center
+                        gap-x-3
+                        gap-y-1.5
+                        text-[10px]
+                        sm:text-base
+                        text-[#737373]
+                    "
+                >
+                    <span>
+                        Session #11:1
+                    </span>
+
+                    <span>
+                        Live Session
+                    </span>
+
+                    <span>
+                        {content?.duration/60} Minutes Completed
+                    </span>
+                </div>
+
+                {/* DESCRIPTION */}
+                <p
+                    className="
+                        mt-2
+                        max-w-[700px]
+                        text-sm
+                        sm:text-base
+                        leading-relaxed
+                        text-[#6B7280]
+                        line-clamp-2
+                    "
+                >
+                    {content?.description}
+                </p>
+
+              
+
+            </div>
         </div>
-
-        {/* HERO CONTENT */}
-        <div className="flex flex-col justify-center p-6 sm:p-8 lg:p-10">
-          <div className="mb-3 flex items-center gap-2 text-sm font-bold text-orange-600">
-            <Video className="h-4 w-4" />
-            1:1 Live Session
-          </div>
-
-          <h1 className="text-2xl font-bold leading-tight text-gray-900 sm:text-3xl lg:text-4xl">
-            {content.title}
-          </h1>
-
-          {content.description && (
-            <p className="mt-3 max-w-3xl text-sm leading-6 text-gray-500 sm:text-base">
-              {content.description}
-            </p>
-          )}
-
-          {/* Instructor */}
-          <div className="mt-5 flex items-center gap-3">
-            <div className="flex h-11 w-11 items-center justify-center rounded-full bg-orange-100">
-              <GraduationCap className="h-5 w-5 text-orange-600" />
-            </div>
-
-            <div>
-              <p className="text-xs text-gray-500">Instructor</p>
-              <p className="font-bold text-orange-600">
-                {instructor?.name || "Instructor"}
-              </p>
-            </div>
-          </div>
-
-          {/* Meta row */}
-          <div className="mt-6 grid grid-cols-1 divide-y divide-gray-200 rounded-xl border border-gray-200 sm:grid-cols-3 sm:divide-x sm:divide-y-0">
-            <div className="flex items-center gap-3 px-4 py-3">
-              <Clock className="h-5 w-5 text-orange-500" />
-              <div>
-                <p className="text-xs text-gray-500">Duration</p>
-                <p className="text-sm font-bold text-gray-900">
-                  {formatDuration(content.duration)}
-                </p>
-              </div>
-            </div>
-
-            <div className="flex items-center gap-3 px-4 py-3">
-              <Calendar className="h-5 w-5 text-orange-500" />
-              <div>
-                <p className="text-xs text-gray-500">Date</p>
-                <p className="text-sm font-bold text-gray-900">
-                  {formatDate(scheduledStart)}
-                </p>
-              </div>
-            </div>
-
-            <div className="flex items-center gap-3 px-4 py-3">
-              <Layers className="h-5 w-5 text-orange-500" />
-              <div>
-                <p className="text-xs text-gray-500">Modules</p>
-                <p className="text-sm font-bold text-gray-900">
-                  {moduleInfo?.title || "Session"}
-                </p>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
+    </div>
+</div>
     </div>
 
     {/* ==================================================
@@ -854,5 +994,431 @@ const ContentViewPage = () => {
 </div>
   );
 };
+
+
+
+
+import { MessageSquare, MoreVertical } from "lucide-react";
+
+export const UpcomingSessionCard = ({
+    session,
+    countdown = {
+        days: "04",
+        hours: "56",
+        minutes: "17",
+    },
+}) => {
+    return (
+        <div className="w-full px-2 sm:px-0 mb-4">
+            <div
+                className="
+                    relative
+                    w-full
+                    overflow-hidden
+                    rounded-[22px]
+                    sm:rounded-[24px]
+                    bg-gradient-to-br
+                    from-[#FF754F]
+                    via-[#FF633F]
+                    to-[#FF7048]
+                    shadow-[0_5px_15px_rgba(255,99,63,0.20)]
+                    min-h-[250px]
+                    sm:min-h-[220px]
+                    md:min-h-[205px]
+                    xl:min-h-[122px]
+                "
+            >
+
+                {/* ================= TOP SOFT HIGHLIGHT ================= */}
+                <div
+                    className="
+                        pointer-events-none
+                        absolute
+                        left-0
+                        top-0
+                        h-4
+                        w-full
+                        bg-white/10
+                    "
+                />
+
+                {/* ================= BOTTOM WAVE ================= */}
+                <div
+                    className="
+                        pointer-events-none
+                        absolute
+                        bottom-[-45px]
+                        left-[20%]
+                        h-[80px]
+                        w-[70%]
+                        rounded-[50%]
+                        bg-[#FF8A68]/60
+                        blur-[1px]
+                    "
+                />
+
+                <div
+                    className="
+                        pointer-events-none
+                        absolute
+                        bottom-[-65px]
+                        left-[45%]
+                        h-[100px]
+                        w-[65%]
+                        rounded-[50%]
+                        bg-[#FF9678]/40
+                    "
+                />
+
+                {/* ================= CONTENT ================= */}
+                <div
+                    className="
+                        relative
+                        z-10
+                        flex
+                        h-full
+                        min-h-[250px]
+                        flex-col
+                        p-4
+                        sm:p-5
+                        md:p-6
+                        xl:min-h-[122px]
+                        xl:flex-row
+                        xl:items-center
+                        xl:px-10
+                        xl:py-4
+                    "
+                >
+
+                    {/* ================= TOP / SESSION INFO ================= */}
+                    <div
+                        className="
+                            flex
+                            min-w-0
+                            flex-1
+                            flex-col
+                        "
+                    >
+
+                        {/* Title + Actions */}
+                        <div
+                            className="
+                                flex
+                                items-start
+                                justify-between
+                                gap-3
+                                xl:block
+                            "
+                        >
+                            <div className="min-w-0">
+
+                                <h2
+                                    className="
+                                        text-[20px]
+                                        font-bold
+                                        leading-tight
+                                        text-white
+                                        sm:text-[22px]
+                                        md:text-[24px]
+                                        xl:text-[19px]
+                                    "
+                                >
+                                    {session?.time || "10:00 AM"}, {session?.date || "June 12"}
+                                </h2>
+
+                                <p
+                                    className="
+                                        mt-1
+                                        max-w-[430px]
+                                        truncate
+                                        text-xs
+                                        font-medium
+                                        text-white/95
+                                        sm:text-[13px]
+                                        md:text-sm
+                                        xl:text-[12px]
+                                    "
+                                >
+                                    {session?.description ||
+                                        "Follow-up Pte Exam and prescription review"}
+                                </p>
+
+                            </div>
+
+                            {/* MOBILE ACTIONS */}
+                            <div
+                                className="
+                                    flex
+                                    shrink-0
+                                    items-center
+                                    gap-2
+                                    xl:absolute
+                                    xl:right-7
+                                    xl:top-1/2
+                                    xl:-translate-y-1/2
+                                "
+                            >
+                                {/* Chat */}
+                                <button
+                                    type="button"
+                                    className="
+                                        flex
+                                        h-10
+                                        w-10
+                                        items-center
+                                        justify-center
+                                        rounded-xl
+                                        bg-white
+                                        text-[#1F2937]
+                                        shadow-sm
+                                        transition
+                                        hover:bg-gray-50
+                                        hover:scale-105
+                                        active:scale-95
+                                        sm:h-11
+                                        sm:w-11
+                                    "
+                                >
+                                    <MessageSquare
+                                        size={20}
+                                        strokeWidth={1.8}
+                                    />
+                                </button>
+
+                                {/* More */}
+                                <button
+                                    type="button"
+                                    className="
+                                        flex
+                                        h-10
+                                        w-10
+                                        items-center
+                                        justify-center
+                                        rounded-xl
+                                        bg-white
+                                        text-[#1F2937]
+                                        shadow-sm
+                                        transition
+                                        hover:bg-gray-50
+                                        hover:scale-105
+                                        active:scale-95
+                                        sm:h-11
+                                        sm:w-11
+                                    "
+                                >
+                                    <MoreVertical
+                                        size={21}
+                                        strokeWidth={2}
+                                    />
+                                </button>
+                            </div>
+                        </div>
+
+                        {/* ================= INSTRUCTOR ================= */}
+                        <div
+                            className="
+                                mt-5
+                                flex
+                                items-center
+                                gap-3
+                                sm:mt-6
+                                md:mt-5
+                                xl:mt-3
+                            "
+                        >
+
+                            {/* Avatar */}
+                            <div
+                                className="
+                                    h-12
+                                    w-12
+                                    shrink-0
+                                    overflow-hidden
+                                    rounded-full
+                                    border-2
+                                    border-white/80
+                                    bg-white/30
+                                    sm:h-14
+                                    sm:w-14
+                                    xl:h-10
+                                    xl:w-10
+                                "
+                            >
+                                <img
+                                    src={
+                                        session?.instructorImage ||
+                                        "/images/avatar.png"
+                                    }
+                                    alt={session?.instructorName || "Instructor"}
+                                    className="h-full w-full object-cover"
+                                />
+                            </div>
+
+                            <div className="min-w-0">
+                                <h3
+                                    className="
+                                        truncate
+                                        text-base
+                                        font-bold
+                                        leading-tight
+                                        text-white
+                                        sm:text-lg
+                                        xl:text-[16px]
+                                    "
+                                >
+                                    {session?.instructorName || "Sidney Yates"}
+                                </h3>
+
+                                <p
+                                    className="
+                                        mt-0.5
+                                        text-xs
+                                        font-medium
+                                        text-white/90
+                                        sm:text-sm
+                                        xl:text-[12px]
+                                    "
+                                >
+                                    {session?.instructorRole || "Pte expert"}
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+
+                    {/* ================= STATUS + COUNTDOWN ================= */}
+                    <div
+                        className="
+                            mt-6
+                            flex
+                            flex-col
+                            items-center
+                            justify-center
+                            gap-5
+                            sm:flex-row
+                            sm:gap-8
+                            md:mt-5
+                            xl:mt-0
+                            xl:mr-32
+                            xl:flex-row
+                            xl:gap-8
+                        "
+                    >
+
+                        {/* Status */}
+                        <div
+                            className="
+                                rounded-xl
+                                bg-[#202B2D]
+                                px-4
+                                py-2.5
+                                text-center
+                                text-sm
+                                font-bold
+                                text-white
+                                shadow-md
+                                sm:px-5
+                                sm:py-3
+                                sm:text-base
+                                xl:px-3
+                                xl:py-2
+                                xl:text-[15px]
+                            "
+                        >
+                            Upcoming Session
+                        </div>
+
+                        {/* ================= COUNTDOWN ================= */}
+                        <div
+                            className="
+                                flex
+                                items-start
+                                justify-center
+                                gap-3
+                                sm:gap-4
+                                xl:gap-2
+                            "
+                        >
+                            <CountdownBlock
+                                value={countdown.days}
+                                label="DAYS"
+                            />
+
+                            <CountdownBlock
+                                value={countdown.hours}
+                                label="HOURS"
+                            />
+
+                            <CountdownBlock
+                                value={countdown.minutes}
+                                label="MINUTE"
+                            />
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+        </div>
+    );
+};
+
+
+/* ================= COUNTDOWN BLOCK ================= */
+
+const CountdownBlock = ({ value, label }) => {
+    const digits = String(value).padStart(2, "0").split("");
+
+    return (
+        <div className="flex flex-col items-center">
+
+            <div className="flex gap-1">
+                {digits.map((digit, index) => (
+                    <div
+                        key={`${digit}-${index}`}
+                        className="
+                            flex
+                            h-8
+                            w-6
+                            items-center
+                            justify-center
+                            rounded-[6px]
+                            bg-gradient-to-b
+                            from-[#303030]
+                            to-[#050505]
+                            text-lg
+                            font-bold
+                            leading-none
+                            text-white
+                            shadow-[inset_0_1px_1px_rgba(255,255,255,0.25)]
+                            sm:h-9
+                            sm:w-7
+                            sm:text-xl
+                            xl:h-8
+                            xl:w-6
+                            xl:text-lg
+                        "
+                    >
+                        {digit}
+                    </div>
+                ))}
+            </div>
+
+            <span
+                className="
+                    mt-1
+                    text-[8px]
+                    font-bold
+                    tracking-wide
+                    text-white
+                    sm:text-[9px]
+                "
+            >
+                {label}
+            </span>
+
+        </div>
+    );
+};
+
+
 
 export default ContentViewPage;

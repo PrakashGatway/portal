@@ -717,7 +717,7 @@ export default function MockTests({ testType }: any) {
             </motion.div>
           ) : (
             <>
-              <div className="grid grid-cols-1 md:grid-cols-3 xl:grid-cols-3 gap-1 gap-4 sm:gap-8 py-0">
+              <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-1 gap-4 sm:gap-8 py-0">
                 <AnimatePresence>
                   {filteredTests.map((test, index) => (
                     <motion.div
