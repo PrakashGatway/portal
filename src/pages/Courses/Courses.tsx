@@ -6,8 +6,9 @@ import { Modal } from "../../components/ui/modal";
 import Button from "../../components/ui/button/Button";
 import { toast } from "react-toastify";
 import api from "../../axiosInstance";
-import { Eye, Pencil, Trash2 } from "lucide-react";
+import { Book, Eye, Pencil, Trash2 } from "lucide-react";
 import CourseSteppedForm from "./CourseSteps";
+import { useNavigate } from "react-router";
 
 
 export default function CourseManagement() {
@@ -922,75 +923,8 @@ export default function CourseManagement() {
     );
 }
 
-const CourseCa = ({ course, onView, onEdit, onDelete }) => {
-    return (
-        <div className="border border-gray-200 dark:border-gray-700 rounded-lg shadow-sm overflow-hidden bg-white dark:bg-gray-800 hover:shadow-md transition-shadow duration-200">
-            <div className="p-4">
-                <div className="flex justify-between items-start">
-                    <h3 className="text-lg font-semibold text-gray-800 dark:text-white truncate">
-                        {course.title}
-                    </h3>
-                    <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${course.status === "upcoming"
-                        ? "bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200"
-                        : course.status === "ongoing"
-                            ? "bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200"
-                            : course.status === "completed"
-                                ? "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200"
-                                : "bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200"
-                        }`}>
-                        {course.status}
-                    </span>
-                </div>
-                <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
-                    {course.code}
-                </p>
-                <p className="mt-2 text-sm text-gray-600 dark:text-gray-300 line-clamp-2">
-                    {course.shortDescription || course.description || "No description provided."}
-                </p>
-                <div className="mt-4 flex flex-wrap gap-2">
-                    <span className="bg-blue-100 text-blue-800 text-xs font-medium px-2 py-1 rounded dark:bg-blue-900 dark:text-blue-200 capitalize">
-                        {course.level}
-                    </span>
-                    <span className="bg-purple-100 text-purple-800 text-xs font-medium px-2 py-1 rounded dark:bg-purple-900 dark:text-purple-200 capitalize">
-                        {course.mode}
-                    </span>
-                    <span className="bg-gray-100 text-gray-800 text-xs font-medium px-2 py-1 rounded dark:bg-gray-700 dark:text-gray-200">
-                        {course.categoryInfo?.name || "N/A"}
-                    </span>
-                </div>
-                <div className="mt-4 flex justify-between items-center text-xs text-gray-500 dark:text-gray-400">
-                    <span>Start: {course.schedule?.startDate ? moment(course.schedule.startDate).format("MMM D, YYYY") : "N/A"}</span>
-                    <span>{course.pricing?.currency} {course.pricing?.amount || "N/A"}</span>
-                </div>
-            </div>
-            <div className="bg-gray-50 dark:bg-gray-700 px-4 py-3 flex justify-end space-x-2">
-                <button
-                    onClick={() => onView(course)}
-                    className="p-2 text-gray-500 hover:text-indigo-600 dark:text-gray-400 dark:hover:text-indigo-400 rounded-full hover:bg-gray-100 dark:hover:bg-gray-600"
-                    aria-label="View"
-                >
-                    <Eye className="h-4 w-4" />
-                </button>
-                <button
-                    onClick={onEdit}
-                    className="p-2 text-gray-500 hover:text-blue-600 dark:text-gray-400 dark:hover:text-blue-400 rounded-full hover:bg-gray-100 dark:hover:bg-gray-600"
-                    aria-label="Edit"
-                >
-                    <Pencil className="h-4 w-4" />
-                </button>
-                <button
-                    onClick={onDelete}
-                    className="p-2 text-gray-500 hover:text-red-600 dark:text-gray-400 dark:hover:text-red-400 rounded-full hover:bg-gray-100 dark:hover:bg-gray-600"
-                    aria-label="Delete"
-                >
-                    <Trash2 className="h-4 w-4" />
-                </button>
-            </div>
-        </div>
-    );
-};
-
 const CourseCard = ({ course, onView, onEdit, onDelete }) => {
+    const navigate = useNavigate();
     return (
         <div className="border border-gray-200 dark:border-gray-700 rounded-xl shadow-sm overflow-hidden bg-white dark:bg-gray-800 hover:shadow-md transition-shadow duration-200">
             <div className="p-4">
@@ -1133,7 +1067,15 @@ const CourseCard = ({ course, onView, onEdit, onDelete }) => {
 
                     {/* Actions Section */}
                     <div className="mt-4">
-                        <div className="flex space-x-2 gap-2">
+                        <div className="flex space-x-1 gap-0">
+                            <button
+                                onClick={() => navigate(`/courses/content/${course._id}`)}
+                                className="flex-1 flex items-center justify-center gap-1 px-3 py-1.5 text-sm font-medium rounded-md border border-gray-300 text-gray-700 bg-white hover:bg-gray-50 dark:border-gray-600 dark:text-gray-300 dark:bg-gray-700 dark:hover:bg-gray-600"
+                                aria-label="View"
+                            >
+                                <Book className="h-4 w-4" />
+                                <span className="hidden md:inline">Content</span>
+                            </button>
                             <button
                                 onClick={() => onView(course)}
                                 className="flex-1 flex items-center justify-center gap-1 px-3 py-1.5 text-sm font-medium rounded-md border border-gray-300 text-gray-700 bg-white hover:bg-gray-50 dark:border-gray-600 dark:text-gray-300 dark:bg-gray-700 dark:hover:bg-gray-600"
