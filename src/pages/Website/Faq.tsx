@@ -338,7 +338,7 @@ export default function FaqManagement() {
           >
             <option value="">Select Option</option>
             {allCategories.map((ele, idx) => (
-              <option key={idx} value={ele.name}>
+              <option key={idx} value={ele.name.toLowerCase()}>
                 {ele.name}
               </option>
             ))}
@@ -657,7 +657,7 @@ export default function FaqManagement() {
                 >
                   <option value="">Select Option</option>
                   {allCategories.map((ele, idx) => (
-                    <option key={idx} value={ele?.name}>
+                    <option key={idx} value={ele?.name.toLowerCase()}>
                       {ele?.name}
                     </option>
                   ))}
