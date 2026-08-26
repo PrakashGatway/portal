@@ -8,7 +8,8 @@ import Label from "../../components/form/Label";
 import { toast } from "react-toastify";
 import api from "../../axiosInstance";
 import { Eye, Pencil, Trash2 } from "lucide-react";
-import RichTextEditor from "../../components/TextEditor";
+// import RichTextEditor from "../../components/TextEditor";
+import RichTextEditor from "../../components/CkEditor";
 
 export default function ArticleManagement() {
     const [articles, setArticles] = useState([]);
@@ -564,9 +565,9 @@ export default function ArticleManagement() {
                         </h4>
                     </div>
                     <form onSubmit={(e) => { e.preventDefault(); handleSave(); }} onKeyDown={(e) => {
-                        if (e.key === 'Enter' && e.target.tagName !== 'TEXTAREA') {
-                            e.preventDefault();
-                        }
+                        // if (e.key === 'Enter' && e.target.tagName !== 'TEXTAREA') {
+                        //     e.preventDefault();
+                        // }
                     }} className="px-2 max-h-[83vh] overflow-y-auto no-scrollbar">
                         <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
                             <div className="md:col-span-2">
@@ -696,10 +697,19 @@ export default function ArticleManagement() {
 
                         <div className="mt-6">
                             <Label>Content *</Label>
-                            <RichTextEditor
+                            
+                            {/* <RichTextEditor
                                 initialValue={formData.content}
                                 onChange={handleContentChange}
-                            />
+                            /> */}
+
+                            <RichTextEditor
+                                value={formData.content}
+                                onChange={(content)=> { setFormData((prev) => ({
+                                    ...prev,
+                                    content: content,
+                                }));}}
+                            />     
                             {errors.content && <p className="mt-1 text-sm text-red-600">{errors.content}</p>}
                         </div>
 

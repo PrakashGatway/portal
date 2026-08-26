@@ -318,9 +318,7 @@ const CourseCard = ({ course, primaryColor = "#daff02", secondaryColor = "#fe572
                     <button
                         onClick={(e) => {
                             e.stopPropagation();
-                            navigate(`/checkout/${course?._id}`, {
-                                      state: { isTest: true },
-                                  })
+                            navigate(`/checkout/${course?.slug}`)
                         }}
                         className="border border-[#FF6736] rounded-2xl px-5 py-2 text-[#FF6736] text-sm font-medium hover:bg-[#FF6736] hover:text-white transition-all duration-300 whitespace-nowrap"
                     >

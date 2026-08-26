@@ -28,19 +28,13 @@ import {
   ChevronLeft,
 } from "lucide-react";
 
-type IconType = React.ElementType | string;
+
 
 type NavItem = {
   name: string;
-  icon: IconType;
+  icon: any;
   path?: string;
-  subItems?: {
-    name: string;
-    path: string;
-    icon: IconType;
-    pro?: boolean;
-    new?: boolean;
-  }[];
+  subItems?: { name: string; path: string; icon: any; pro?: boolean; new?: boolean }[];
 };
 
 const navItems: NavItem[] = [
@@ -136,7 +130,7 @@ const navItemsUser: NavItem[] = [
   { icon: "📖", name: "Tests Series", path: "/test-series" },
   { icon: "📁", name: "Resources", path: "/resources" },
   { icon: "🎓", name: "My Courses", path: "/my-courses" },
-  { icon: "✨", name: "Free Quiz", path: "/Quiz" },
+  { icon: "✨", name: "Free Quiz", path: "/quiz" },
   { icon: "🎉", name: "Offers", path: "/offers" },
   { icon: "🔔", name: "Notifications", path: "/notifications" },
   { icon: "💰", name: "Refer & Earn", path: "/referrals" },
@@ -148,30 +142,76 @@ const navItemsCoun: NavItem[] = [
 ];
 
 const navItemsMan: NavItem[] = [
-  { icon: LayoutDashboard, name: "Dashboard", path: "/" },
-  { icon: PhoneCall, name: "Call Reports", path: "/lead-report" },
-  { icon: Rocket, name: "Leads", path: "/leads" },
+  {
+    icon: "🏠",
+    name: "Dashboard",
+    path: "/",
+  },
+  {
+    icon: "📞",
+    name: "Call Reports",
+    path: "/lead-report",
+  },
+  {
+    icon: "🚀",
+    name: "Leads",
+    path: "/leads",
+  },
 ];
 
 const navItemsTeacher: NavItem[] = [
-  { icon: LayoutDashboard, name: "Dashboard", path: "/" },
   {
-    icon: Database,
-    name: "Mcq Bank",
+    icon: "🏠",
+    name: "Dashboard",
+    path: "/",
+  },
+
+  {
+    icon: "🗄️",
+    name: "MCQ Bank",
     subItems: [
-      { name: "Questions", path: "/mcq/questions", icon: CircleHelp },
-      { name: "Tests", path: "/mcq/tests", icon: TestTube },
-      { name: "Test Series", path: "/mcq/test-series", icon: Scroll },
+      {
+        name: "Questions",
+        path: "/mcq/questions",
+        icon: "❓",
+      },
+      {
+        name: "Tests",
+        path: "/mcq/tests",
+        icon: "📝",
+      },
+      {
+        name: "Test Series",
+        path: "/mcq/test-series",
+        icon: "📚",
+      },
     ],
   },
+
   {
     icon: "🎓",
     name: "Courses",
     subItems: [
-      { name: "All Courses", path: "/courses", icon: "📚" },
-      { icon: "🏷️", name: "Categories", path: "/categories" },
-      { name: "Modules", path: "/modules", icon: "📂" },
-      { name: "Combos", path: "/combos", icon: "🎁" },
+      {
+        name: "All Courses",
+        path: "/courses",
+        icon: "📚",
+      },
+      {
+        name: "Categories",
+        path: "/categories",
+        icon: "🏷️",
+      },
+      {
+        name: "Modules",
+        path: "/modules",
+        icon: "📂",
+      },
+      {
+        name: "Combos",
+        path: "/combos",
+        icon: "🎁",
+      },
     ],
   },
 
@@ -179,10 +219,26 @@ const navItemsTeacher: NavItem[] = [
     icon: "📖",
     name: "Resources",
     subItems: [
-      { name: "1:1 Sessions", path: "/sessions", icon: "🎥" },
-      { name: "Live Classes", path: "/live-classes", icon: "🎥" },
-      { name: "Recorded Classes", path: "/recorded-classes", icon: "▶️" },
-      { icon: "📁", name: "Study Materials", path: "/study-materials" },
+      {
+        name: "1:1 Sessions",
+        path: "/sessions",
+        icon: "🎥",
+      },
+      {
+        name: "Live Classes",
+        path: "/live-classes",
+        icon: "🔴",
+      },
+      {
+        name: "Recorded Classes",
+        path: "/recorded-classes",
+        icon: "▶️",
+      },
+      {
+        name: "Study Materials",
+        path: "/study-materials",
+        icon: "📁",
+      },
     ],
   },
 ];
@@ -195,7 +251,7 @@ const othersItems: NavItem[] = [
 ];
 
 const teacherOthersItems: NavItem[] = [
-  { icon: UserCircle, name: "Profile", path: "/profile" },
+  { icon: "👤", name: "Profile", path: "/profile" },
 ];
 
 const AppSidebar: React.FC = () => {
@@ -421,6 +477,7 @@ const AppSidebar: React.FC = () => {
                 <ul className="pt-1.5 pb-1 space-y-[2px] ml-3 pl-3 border-l border-zinc-100 dark:border-white/[0.06] ">
                   {nav.subItems.map((subItem) => {
                     const SubIcon = subItem.icon;
+                    console.log(subItem.icon,"ghjk")
                     const subActive = isActive(subItem.path);
                     return (
                       <li key={subItem.name}>

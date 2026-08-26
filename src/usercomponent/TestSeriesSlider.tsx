@@ -1,56 +1,74 @@
 import { motion, AnimatePresence } from "framer-motion";
 import { useEffect, useState } from "react";
+import { UseBanner } from "../context/BannerContext";
+import { useLocation } from "react-router";
+import { ImageBaseUrl } from "../axiosInstance";
 
-const slides = [
-    {
-        small: "Firiday",
-        title: "BIG SALE",
-        highlight: "UPTO",
-        percent: "50%",
-        suffix: "OFF",
-        image: "https://res.cloudinary.com/dd5s7qpsc/image/upload/v1768026204/thumbnails/xpewnxseduwwcdnpqfyj.png"
-    },
-    {
-        small: "Limited Time",
-        title: "MEGA DEAL",
-        highlight: "FLAT",
-        percent: "40%",
-        suffix: "OFF",
-        image: "https://res.cloudinary.com/dd5s7qpsc/image/upload/v1767951357/thumbnails/apiohjybynjzdrxu6x0d.png"
-    },
-];
+
 
 export function LeftSlider() {
-    const [index, setIndex] = useState(0);
+  const [index, setIndex] = useState(0);
+  const { banner } = UseBanner();
+  const { pathname } = useLocation();
 
-    useEffect(() => {
-        const t = setInterval(() => {
-            setIndex((p) => (p + 1) % slides.length);
-        }, 4000);
-        return () => clearInterval(t);
-    }, []);
+  // Normalize pathname to handle trailing slashes
+  const cleanPath = pathname.replace(/\/+$/, '') || '/';
 
-    return (
-        <div className="p-[1.5px]  h-full lg:col-span-2 h-full relative  overflow-hidden col-span-2 w-full bg-gradient-to-b from-[#686868]/0 via-[#686868]/50 to-[#686868] rounded-2xl">
-            <div className="w-full relative overflow-hidden">
-                <AnimatePresence mode="wait">
-                    <motion.div
-                        key={index}
-                        initial={{ opacity: 0, x: 40 }}
-                        animate={{ opacity: 1, x: 0 }}
-                        exit={{ opacity: 0, x: -40 }}
-                        transition={{ duration: 0.4 }}
-                        className="h-full flex items-center"
-                    >
-                        <div className="h-[90px] sm:h-[140px] md:h-[150px] lg:h-[240px] w-full">
-                            <img className="h-full w-full lg:object-cover object-center rounded-2xl" src={slides[index].image} alt="" />
-                        </div>
+  // Find matching banner safely
+  const filterBanner = banner?.find((item) => {
+    const dbKey = item.key?.replace(/\/+$/, '') || '/';
+    return dbKey === cleanPath;
+  });
 
-                    </motion.div>
-                </AnimatePresence>
+  // ✅ CORRECTED: Map over the Banners array (not a single Banner object)
+  const slides = filterBanner?.Banners?.length > 0
+    ? filterBanner.Banners.map((item) => ({
+        image: `${ImageBaseUrl}/${item.Banner.file}`,
+        alt: item.Banner.alt || 'Banner',
+      }))
+    : [];
+
+  // Auto-play interval
+  useEffect(() => {
+    if (slides.length <= 1) return;
+    const t = setInterval(() => {
+      setIndex((p) => (p + 1) % slides.length);
+    }, 4000);
+    return () => clearInterval(t);
+  }, [slides.length]);
+
+  // Reset index when route changes
+  useEffect(() => {
+    setIndex(0);
+  }, [cleanPath]);
+
+  // Don't render if no banners found
+  if (!slides.length) return null;
+
+  return (
+    <div className="p-[1.5px] h-full lg:col-span-2 relative overflow-hidden col-span-2 w-full bg-gradient-to-b from-[#686868]/0 via-[#686868]/50 to-[#686868] rounded-2xl">
+      <div className="w-full relative overflow-hidden h-full">
+        <AnimatePresence mode="wait">
+          <motion.div
+            key={index}
+            initial={{ opacity: 0, x: 40 }}
+            animate={{ opacity: 1, x: 0 }}
+            exit={{ opacity: 0, x: -40 }}
+            transition={{ duration: 0.4 }}
+            className="h-full flex items-center"
+          >
+            <div className="h-[90px] sm:h-[140px] md:h-[150px] lg:h-[240px] w-full">
+              <img
+                className="h-full w-full object-cover rounded-2xl"
+                src={slides[index].image}
+                alt={slides[index].alt}
+              />
             </div>
-        </div>
-    );
+          </motion.div>
+        </AnimatePresence>
+      </div>
+    </div>
+  );
 }
 
 export function RightOffer({ content }) {
