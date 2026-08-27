@@ -28,13 +28,17 @@ import {
   ChevronLeft,
 } from "lucide-react";
 
-
-
 type NavItem = {
   name: string;
   icon: any;
   path?: string;
-  subItems?: { name: string; path: string; icon: any; pro?: boolean; new?: boolean }[];
+  subItems?: {
+    name: string;
+    path: string;
+    icon: any;
+    pro?: boolean;
+    new?: boolean;
+  }[];
 };
 
 const navItems: NavItem[] = [
@@ -62,7 +66,6 @@ const navItems: NavItem[] = [
       { name: "Recorded Classes", path: "/recorded-classes", icon: "▶️" },
       { icon: "📁", name: "Study Materials", path: "/study-materials" },
       { icon: "📁", name: "Tests", path: "/course-tests" },
-
     ],
   },
 
@@ -124,17 +127,36 @@ const navItems: NavItem[] = [
 
 const navItemsUser: NavItem[] = [
   { icon: "📊", name: "Dashboard", path: "/" },
+  { icon: "📅", name: "Calendar", path: "/calendar" },
   { icon: "📚", name: "Batches", path: "/course" },
+  { icon: "📖", name: "Tests Series", path: "/test-series" },
+  // {
+  //   icon: "🧪",
+  //   name: "Tests",
+  //   subItems: [
+  //     {
+  //       name: "Full Mock Tests",
+  //       path: "/tests",
+  //       icon: "❓",
+  //     },
+  //       {
+  //       name: "Mock Tests",
+  //       path: "/practice-tests",
+  //       icon: "❓",
+  //     },
+  //     {
+  //       name: "Test Series",
+  //       path: "/mcq/test-series",
+  //       icon: "📚",
+  //     },
+  //   ],
+  // },
   { icon: "🧪", name: "Mock Tests", path: "/tests" },
   { icon: "📝", name: "Practice Tests", path: "/practice-tests" },
-  { icon: "📖", name: "Tests Series", path: "/test-series" },
+  { icon: "✨", name: "Quiz", path: "/quiz" },
   { icon: "📁", name: "Resources", path: "/resources" },
-  { icon: "🎓", name: "My Courses", path: "/my-courses" },
-  { icon: "✨", name: "Free Quiz", path: "/quiz" },
-  { icon: "🎉", name: "Offers", path: "/offers" },
-  { icon: "🔔", name: "Notifications", path: "/notifications" },
+  { icon: "🔔", name: "Message", path: "/notifications" },
   { icon: "💰", name: "Refer & Earn", path: "/referrals" },
-  { icon: "🧾", name: "Orders History", path: "/transactions" },
 ];
 
 const navItemsCoun: NavItem[] = [
@@ -165,7 +187,16 @@ const navItemsTeacher: NavItem[] = [
     name: "Dashboard",
     path: "/",
   },
-
+  {
+    name: "Calendar",
+    path: "/calendar",
+    icon: "📅",
+  },
+  // {
+  //   name: "Categories",
+  //   path: "/categories",
+  //   icon: "🏷️",
+  // },
   {
     icon: "🗄️",
     name: "MCQ Bank",
@@ -189,69 +220,65 @@ const navItemsTeacher: NavItem[] = [
   },
 
   {
-    icon: "🎓",
-    name: "Courses",
-    subItems: [
-      {
-        name: "All Courses",
-        path: "/courses",
-        icon: "📚",
-      },
-      {
-        name: "Categories",
-        path: "/categories",
-        icon: "🏷️",
-      },
-      {
-        name: "Modules",
-        path: "/modules",
-        icon: "📂",
-      },
-      {
-        name: "Combos",
-        path: "/combos",
-        icon: "🎁",
-      },
-    ],
+    name: "My Courses",
+    path: "/courses",
+    icon: "📚",
   },
 
-  {
-    icon: "📖",
-    name: "Resources",
-    subItems: [
-      {
-        name: "1:1 Sessions",
-        path: "/sessions",
-        icon: "🎥",
-      },
-      {
-        name: "Live Classes",
-        path: "/live-classes",
-        icon: "🔴",
-      },
-      {
-        name: "Recorded Classes",
-        path: "/recorded-classes",
-        icon: "▶️",
-      },
-      {
-        name: "Study Materials",
-        path: "/study-materials",
-        icon: "📁",
-      },
-    ],
-  },
+  // {
+  //   icon: "🎓",
+  //   name: "Courses",
+  //   subItems: [
+  //     {
+  //       name: "Modules",
+  //       path: "/modules",
+  //       icon: "📂",
+  //     },
+  //   ],
+  // },
+
+  // {
+  //   icon: "📖",
+  //   name: "Resources",
+  //   subItems: [
+  //     {
+  //       name: "1:1 Sessions",
+  //       path: "/sessions",
+  //       icon: "🎥",
+  //     },
+  //     {
+  //       name: "Live Classes",
+  //       path: "/live-classes",
+  //       icon: "🔴",
+  //     },
+  //     {
+  //       name: "Recorded Classes",
+  //       path: "/recorded-classes",
+  //       icon: "▶️",
+  //     },
+  //     {
+  //       name: "Study Materials",
+  //       path: "/study-materials",
+  //       icon: "📁",
+  //     },
+  //   ],
+  // },
 ];
 
 const othersItems: NavItem[] = [
   { icon: "👤", name: "My Profile", path: "/profile" },
+  { icon: "🎓", name: "My Courses", path: "/my-courses" },
+  { icon: "🎉", name: "My Offers", path: "/offers" },
+  { icon: "🧾", name: "Orders", path: "/transactions" },
   { icon: "💬", name: "Support", path: "/support" },
-  { icon: "✨", name: "Our Selections", path: "/our-selection" },
+  { icon: "✨", name: "Our Selection", path: "/our-selection" },
   { icon: "🔒", name: "Privacy Policy", path: "/privacy-policy" },
 ];
 
 const teacherOthersItems: NavItem[] = [
   { icon: "👤", name: "Profile", path: "/profile" },
+  { icon: "🔒", name: "Privacy", path: "/privacy-policy" },
+  { icon: "💬", name: "Support", path: "/support" },
 ];
 
 const AppSidebar: React.FC = () => {
@@ -477,7 +504,7 @@ const AppSidebar: React.FC = () => {
                 <ul className="pt-1.5 pb-1 space-y-[2px] ml-3 pl-3 border-l border-zinc-100 dark:border-white/[0.06] ">
                   {nav.subItems.map((subItem) => {
                     const SubIcon = subItem.icon;
-                    console.log(subItem.icon,"ghjk")
+                    console.log(subItem.icon, "ghjk");
                     const subActive = isActive(subItem.path);
                     return (
                       <li key={subItem.name}>

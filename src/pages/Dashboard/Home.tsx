@@ -3,6 +3,7 @@ import { useAuth } from '../../context/UserContext';
 import api from '../../axiosInstance';
 import LeadManagement from '../Leads/LeadManagement';
 import GREDashboard from './userDashboard';
+import TeacherDashboard from './TeacherDashboard';
 
 const EducationAnalytics = () => {
   const { user } = useAuth();
@@ -10,6 +11,10 @@ const EducationAnalytics = () => {
   const [analytics, setAnalytics] = useState(null);
   const [timeRange, setTimeRange] = useState('7d');
   const [counselors, setAllCounselors] = useState([]);
+
+    if (user.role == "teacher") {
+    return (< TeacherDashboard/>)
+  }
 
 
   const fetchAnalytics = async () => {
