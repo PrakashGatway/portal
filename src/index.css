@@ -788,6 +788,10 @@ span.flatpickr-weekday,
 }
 
 
-/*  ck ck-form ck-link-form ck-responsive-form{
-  z-index: 999;
- } */
+.ck.ck-balloon-panel.ck-balloon-panel_arrow_se.ck-balloon-panel_visible.ck-balloon-panel_with-arrow {
+  z-index: 99999;
+}
+
+.ck.ck-balloon-panel.ck-balloon-panel_visible{
+  z-index: 999999999999;
+}
