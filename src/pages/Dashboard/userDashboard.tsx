@@ -505,25 +505,25 @@ const HeaderBanner = ({ data, user, filterBanner }) => {
                 onMouseLeave={startAutoplay}
             >
                 {/* Slider Container */}
-                <div ref={sliderRef} className="keen-slider w-full h-full">
+                <div ref={sliderRef} className="keen-slider w-full h-full rounded-3xl">
                     {filterBanner.Banners.map((item, index) => {
                         // Safe URL construction
                         // Adjust this path logic if your backend returns full URLs or just filenames
                         const fileName = item.Banner?.file;
-                        const imageUrl = fileName 
+                        const imageUrl = fileName
                             ? (fileName.startsWith('http') ? fileName : `${ImageBaseUrl}/${fileName}`)
-                            : ''; 
+                            : '';
 
                         return (
                             <div
                                 key={item._id || index}
-                                className="keen-slider__slide w-full h-full overflow-hidden relative"
+                                className="keen-slider__slide w-full h-full overflow-hidden relative rounded-3xl"
                             >
                                 {imageUrl ? (
                                     <img
                                         src={imageUrl}
                                         alt={item.Banner?.alt || `Banner ${index + 1}`}
-                                        className="w-full h-full object-cover"
+                                        className="w-full h-full object-cover rounded-3xl"
                                         onError={(e) => {
                                             // Fallback if image fails to load
                                             e.target.style.display = 'none';
@@ -567,11 +567,10 @@ const HeaderBanner = ({ data, user, filterBanner }) => {
                                 <button
                                     key={index}
                                     onClick={() => goToSlide(index)}
-                                    className={`h-2 rounded-full transition-all duration-300 ${
-                                        currentSlide === index
+                                    className={`h-2 rounded-full transition-all duration-300 ${currentSlide === index
                                             ? "w-6 bg-white"
                                             : "w-2 bg-white/50"
-                                    }`}
+                                        }`}
                                 />
                             ))}
                         </div>
@@ -595,7 +594,7 @@ const GREDashboard = () => {
     const [data, setData] = useState(null);
     const { user } = useAuth() as any
     const { banner } = UseBanner()
-    const {pathname} = useLocation()
+    const { pathname } = useLocation()
 
 
     const [courses, setcourses] = useState([])
@@ -611,9 +610,9 @@ const GREDashboard = () => {
 
 
 
-  const filterBanner = banner.find((item) => {
-  return item.key === pathname;
-});
+    const filterBanner = banner.find((item) => {
+        return item.key === pathname;
+    });
 
 
 
@@ -794,7 +793,7 @@ const GREDashboard = () => {
         if (promo.length > 0 && instanceRef4.current) {
             // Force update when data arrives
             instanceRef4.current.update();
-            
+
             // Ensure autoplay is running after data load
             startAutoplay();
         }
@@ -1264,7 +1263,7 @@ const GREDashboard = () => {
                             </div>
                         </section>
 
-                                                <div
+                        <div
                             ref={sliderRef4}
                             className="keen-slider min-w-0 w-full relative overflow-hidden rounded-3xl h-[300px]"
                         >
@@ -1479,14 +1478,13 @@ const GREDashboard = () => {
                                                 if (instanceRef4.current) {
                                                     instanceRef4.current.moveToIdx(index);
                                                     // Reset timer when manually clicking a dot
-                                                    startAutoplay(); 
+                                                    startAutoplay();
                                                 }
                                             }}
-                                            className={`h-1.5 rounded-full transition-all duration-300 ${
-                                                currentSlide4 === index
+                                            className={`h-1.5 rounded-full transition-all duration-300 ${currentSlide4 === index
                                                     ? "w-4 bg-[#ff764b]"
                                                     : "w-1.5 bg-[#3975b9]"
-                                            }`}
+                                                }`}
                                         />
                                     ))}
                                 </div>
@@ -1751,7 +1749,7 @@ const GREDashboard = () => {
                                     )
                                 })}
                             </div>) : (
-                            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mt-10">
+                            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 xl:grid-cols-3 gap-6 mt-10">
                                 {courses.map((course) => {
                                     const realPrice = course?.pricing?.amount;
 
@@ -1952,7 +1950,7 @@ const GREDashboard = () => {
                     })}
                 </div>
                 ) : (
-                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 sm:grid-cols-3 lg:grid-cols-3 xl:grid-cols-4 gap-6">
                         {allCourses.map((item) => {
                             const realPrice = item?.pricing?.amount;
 
@@ -1966,63 +1964,241 @@ const GREDashboard = () => {
 
                             const price = realPrice - (realPrice * discount) / 100;
                             return (
-                                <div className='bg-gradient-to-b from-[#CFCFCF] via-[#ECECEC] to-black dark:bg-gray-800 p-[1px] rounded-[22px] relative overflow-hidden h-full'>
-                                    {item?.pricing?.earlyBird && new Date(item.pricing.earlyBird.deadline) > new Date() && (
-                                        <div className="absolute top-0 left-0 z-10">
-                                            <span className="inline-flex items-center gap-1 rounded-tl-[22px] rounded-br-[22px] bg-gradient-to-r from-[#FF6B35] to-[#FF8A3D] px-3 py-1 text-xs font-bold text-white shadow-lg">
-                                                Early Bird
-                                            </span>
-                                        </div>
-                                    )}
-                                    <div
-                                        key={item.id}
-                                        className="overflow-hidden rounded-[22px] border border-[#d8d8d8] bg-white dark:bg-gray-800 shadow-sm h-full"
-                                    >
+                               <div
+    className="
+        bg-gradient-to-b
+        from-[#CFCFCF]
+        via-[#ECECEC]
+        to-black
+        dark:bg-gray-800
+        p-[1px]
+        rounded-[22px]
+        relative
+        overflow-hidden
+        h-full
+    "
+>
+    {/* Early Bird */}
+    {item?.pricing?.earlyBird &&
+        new Date(item.pricing.earlyBird.deadline) > new Date() && (
+            <div className="absolute top-0 left-0 z-10">
+                <span
+                    className="
+                        inline-flex
+                        items-center
+                        gap-1
+                        rounded-tl-[22px]
+                        rounded-br-[22px]
+                        bg-gradient-to-r
+                        from-[#FF6B35]
+                        to-[#FF8A3D]
+                        px-2.5
+                        lg:px-3
+                        py-1
+                        text-[10px]
+                        lg:text-xs
+                        font-bold
+                        text-white
+                        shadow-lg
+                    "
+                >
+                    Early Bird
+                </span>
+            </div>
+        )}
 
-                                        {/* Banner */}
-                                        <div className='p-[6px] rounded-2xl bg-gradient-to-b from-[#CFCFCF] via-[#ECECEC] to-white'>
-                                            <div className="relative  overflow-hidden">
-                                                <img
-                                                    src={item?.thumbnail?.url && `${ImageBaseUrl}/${item?.thumbnail?.url}`}
-                                                    alt={item.title}
-                                                    className="h-35 w-full rounded-2xl object-cover"
-                                                />
-                                            </div>
-                                        </div>
+    <div
+        key={item.id}
+        className="
+            overflow-hidden
+            rounded-[22px]
+            border
+            border-[#d8d8d8]
+            bg-white
+            dark:bg-gray-800
+            shadow-sm
+            h-full
+        "
+    >
 
-                                        {/* Content */}
-                                        <div className="p-4">
-                                            <h3 className="text-xl font-bold leading-none">
-                                                <span className="text-orange-500">{item.title.split(" ")[0]}</span>{" "}
-                                                <span className="text-black dark:text-white text-base font-semibold">
-                                                    {item.title.split(" ").slice(1).join(" ")}
-                                                </span>
-                                            </h3>
+        {/* ================= BANNER ================= */}
+        <div
+            className="
+                p-[4px]
+                lg:p-[5px]
+                xl:p-[6px]
+                rounded-2xl
+                bg-gradient-to-b
+                from-[#CFCFCF]
+                via-[#ECECEC]
+                to-white
+            "
+        >
+            <div className="relative overflow-hidden">
+                <img
+                    src={
+                        item?.thumbnail?.url &&
+                        `${ImageBaseUrl}/${item?.thumbnail?.url}`
+                    }
+                    alt={item.title}
+                    className="
+                        h-full
+                        sm:h-full
+                        md:h-[150px]
+                        lg:h-[145px]
+                        xl:h-35
+                        w-full
+                        rounded-2xl
+                        object-cover
+                    "
+                />
+            </div>
+        </div>
 
-                                            {/* Price */}
-                                            <div className="mt-4 flex items-center flex-wrap gap-2 ">
-                                                <span className="text-base font-bold text-[#222] dark:text-white">
-                                                    ₹ {price}
-                                                </span>
+        {/* ================= CONTENT ================= */}
+        <div
+            className="
+                p-3
+                sm:p-3.5
+                md:p-4
+                lg:p-3.5
+                xl:p-4
+            "
+        >
 
-                                                <span className="text-base text-gray-400 line-through dark:text-white">
-                                                    ₹{item.pricing?.amount}
-                                                </span>
+            {/* TITLE */}
+            <h3
+                className="
+                    text-lg
+                    sm:text-lg
+                    md:text-xl
+                    lg:text-lg
+                    xl:text-xl
+                    font-bold
+                    leading-tight
+                    line-clamp-2
+                    min-h-[44px]
+                    lg:min-h-[42px]
+                    xl:min-h-0
+                "
+            >
+                <span className="text-orange-500">
+                    {item.title.split(" ")[0]}
+                </span>{" "}
 
-                                                <span className="text-base font-semibold text-green-600 dark:text-white">
-                                                    {discount}%
-                                                </span>
-                                            </div>
+                <span
+                    className="
+                        text-black
+                        dark:text-white
+                        text-sm
+                        sm:text-base
+                        md:text-base
+                        lg:text-sm
+                        xl:text-base
+                        font-semibold
+                    "
+                >
+                    {item.title
+                        .split(" ")
+                        .slice(1)
+                        .join(" ")}
+                </span>
+            </h3>
 
-                                            {/* Button */}
-                                            <Link to={`/course/${item.slug}`} className='flex justify-center'>
-                                                <button className="mt-5 py-2  w-1/2 text-base   rounded-xl border border-[#ff5b2e] text-[#ff5b2e] font-medium transition-all duration-300 hover:bg-[#ff5b2e] hover:text-white">
-                                                    Explore
-                                                </button>
-                                            </Link>
-                                        </div>
-                                    </div>
-                                </div>
+            {/* ================= PRICE ================= */}
+            <div
+                className="
+                    mt-3
+                    lg:mt-3
+                    xl:mt-4
+                    flex
+                    items-center
+                    flex-wrap
+                    gap-1.5
+                    lg:gap-1.5
+                    xl:gap-2
+                "
+            >
+                <span
+                    className="
+                        text-sm
+                        sm:text-base
+                        lg:text-sm
+                        xl:text-base
+                        font-bold
+                        text-[#222]
+                        dark:text-white
+                    "
+                >
+                    ₹ {price}
+                </span>
+
+                <span
+                    className="
+                        text-sm
+                        sm:text-base
+                        lg:text-sm
+                        xl:text-base
+                        text-gray-400
+                        line-through
+                        dark:text-white
+                    "
+                >
+                    ₹{item.pricing?.amount}
+                </span>
+
+                <span
+                    className="
+                        text-sm
+                        sm:text-base
+                        lg:text-sm
+                        xl:text-base
+                        font-semibold
+                        text-green-600
+                        dark:text-white
+                    "
+                >
+                    {discount}%
+                </span>
+            </div>
+
+            {/* ================= BUTTON ================= */}
+            <Link
+                to={`/course/${item.slug}`}
+                className="flex justify-center"
+            >
+                <button
+                    className="
+                        mt-4
+                        lg:mt-4
+                        xl:mt-5
+                        py-2
+                        w-full
+                        sm:w-3/4
+                        md:w-2/3
+                        lg:w-full
+                        xl:w-1/2
+                        text-sm
+                        sm:text-base
+                        lg:text-sm
+                        xl:text-base
+                        rounded-xl
+                        border
+                        border-[#ff5b2e]
+                        text-[#ff5b2e]
+                        font-medium
+                        transition-all
+                        duration-300
+                        hover:bg-[#ff5b2e]
+                        hover:text-white
+                    "
+                >
+                    Explore
+                </button>
+            </Link>
+        </div>
+    </div>
+</div>
                             )
                         })}
                     </div>

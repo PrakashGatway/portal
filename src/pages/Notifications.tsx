@@ -593,9 +593,8 @@ const Notifications = () => {
           </div>
 
           {/* Right Column: Settings & Promo */}
-          <div className="space-y-6">
+          {/* <div className="space-y-6">
             
-            {/* Notification Settings Card */}
             <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
               <div className="flex items-start gap-3 mb-6">
                 <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-orange-50 text-orange-600">
@@ -637,9 +636,7 @@ const Notifications = () => {
               </button>
             </div>
 
-            {/* Promo Card */}
             <div className="bg-gradient-to-br from-orange-50 to-orange-100/50 rounded-2xl shadow-sm border border-orange-100 p-6 text-center relative overflow-hidden">
-              {/* Decorative dots */}
               <div className="absolute top-4 left-4 flex gap-1 opacity-30">
                 <div className="h-1 w-1 rounded-full bg-orange-400"></div>
                 <div className="h-1 w-1 rounded-full bg-orange-400"></div>
@@ -675,7 +672,7 @@ const Notifications = () => {
               </button>
             </div>
 
-          </div>
+          </div> */}
         </div>
       </div>
     </div>

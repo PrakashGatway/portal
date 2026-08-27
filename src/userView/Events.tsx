@@ -9,11 +9,12 @@ import {
   Video, BookOpen, Award, MessageCircle, MoreVertical, X, Trash2, Edit2
 } from 'lucide-react';
 import { useAuth } from '../context/UserContext';
+import { createPortal } from 'react-dom';
 
 const localizer = momentLocalizer(moment);
 
 const EventCalendar = () => {
-  const {user} = useAuth()
+  const { user } = useAuth()
   const [events, setEvents] = useState([]);
   const [loading, setLoading] = useState(true);
   const [showEventModal, setShowEventModal] = useState(false);
@@ -41,7 +42,7 @@ const EventCalendar = () => {
     custom: { bg: '#fff7ed', text: '#9a3412', border: '#f97316', gradient: 'from-orange-300 to-orange-500', label: 'Custom', icon: CalendarIcon }
   };
 
- 
+
 
   useEffect(() => {
     const fetchEventsFromApi = async () => {
@@ -88,7 +89,7 @@ const EventCalendar = () => {
   const navigateToday = () => setDate(new Date());
 
   const handleSelectSlot = useCallback((slotInfo) => {
-    if(user.role !=="admin") return
+    if (user.role !== "admin") return
     setSelectedSlot(slotInfo); setEditingEvent(null); setViewingEvent(null);
     setEventTitle(''); setEventDescription(''); setEventInstructor(''); setEventCategory('session');
     setEventStart(slotInfo.start); setEventEnd(slotInfo.end || new Date(slotInfo.start.getTime() + 60 * 60 * 1000));
@@ -98,7 +99,7 @@ const EventCalendar = () => {
   const handleSelectEvent = useCallback((event) => { setViewingEvent(event); setEditingEvent(null); setShowEventModal(true); }, []);
 
   const handleEditEvent = (event) => {
-    if(user.role !=="admin") return
+    if (user.role !== "admin") return
     setEditingEvent(event); setViewingEvent(null); setEventTitle(event.title);
     setEventStart(event.start); setEventEnd(event.end);
     setEventDescription(event.instructor?.name || ''); setEventInstructor(event.instructor?.name || '');
@@ -142,30 +143,224 @@ const EventCalendar = () => {
     return {
       className: `rbc-day-bg-custom ${isToday ? 'rbc-today-custom' : ''}`,
       style: {
-        backgroundColor: bgColor, borderRadius: '16px', margin: '4px',
+        backgroundColor: isToday ? "#fff" : bgColor, borderRadius: '16px', margin: '4px',
         border: isToday ? '2px solid #FB923C' : '1px solid transparent',
-        opacity: isCurrentMonth ? 1 : 0.6, paddingBottom: '8px'
+        opacity: isCurrentMonth ? 1 : 0.6
       }
     };
   };
 
-  const CustomMonthEvent = ({ event }) => (
-    <div className="bg-white/90 backdrop-blur-sm border border-orange-200 text-orange-800 text-[10px] font-bold px-2 py-[2px] rounded-lg shadow-sm truncate w-full ">
-      {event.title}
+ const CustomMonthEvent = ({ event }) => {
+    const sameDateEvents = event.sameDateEvents || [event];
+
+    const [showPopup, setShowPopup] = useState(false);
+
+    const [popupPosition, setPopupPosition] = useState({
+        left: 0,
+        top: 0,
+    });
+
+  const updatePopupPosition = (e) => {
+    const popupWidth = 290;
+    const popupHeight = 220;
+    const offset = 20;
+
+    // Always start BELOW + RIGHT of cursor
+    let left = e.clientX + offset;
+    let top = e.clientY + offset;
+
+    // Keep popup inside right edge
+    if (left + popupWidth > window.innerWidth - 10) {
+        left = window.innerWidth - popupWidth - 10;
+    }
+
+    // Keep popup inside left edge
+    if (left < 10) {
+        left = 10;
+    }
+
+    // IMPORTANT:
+    // Keep popup BELOW cursor.
+    // If there isn't enough room at the bottom,
+    // place it at the lowest possible position,
+    // but NEVER above the cursor.
+    const maxTop = window.innerHeight - popupHeight - 10;
+
+    if (top > maxTop) {
+        top = Math.max(e.clientY + 5, maxTop);
+    }
+
+    // Safety
+    if (top < 10) {
+        top = 10;
+    }
+
+    setPopupPosition({
+        left,
+        top,
+    });
+};
+
+    return (
+        <>
+            {/* Calendar Event */}
+            <div
+                className="relative w-full"
+                onMouseEnter={(e) => {
+                    if (sameDateEvents.length > 1) {
+                        updatePopupPosition(e);
+                        setShowPopup(true);
+                    }
+                }}
+                onMouseMove={(e) => {
+                    if (sameDateEvents.length > 1) {
+                        updatePopupPosition(e);
+                    }
+                }}
+                onMouseLeave={() => {
+                    setShowPopup(false);
+                }}
+            >
+                <div
+                    className="
+                        bg-white/90
+                        backdrop-blur-sm
+                        border border-orange-200
+                        text-orange-800
+                        text-[10px]
+                        font-bold
+                        px-2
+                        py-[3px]
+                        rounded-lg
+                        shadow-sm
+                        truncate
+                        w-full
+                        cursor-pointer
+                    "
+                >
+                    {event.title}
+                </div>
+            </div>
+
+            {/* Hover Card */}
+            {showPopup &&
+                sameDateEvents.length > 1 &&
+                createPortal(
+                    <div
+                        style={{
+                            position: 'fixed',
+                            left: `${popupPosition.left}px`,
+                            top: `${popupPosition.top}px`,
+                            zIndex: 2147483647,
+                            pointerEvents: 'none',
+                        }}
+                        className="
+                            w-72
+                            bg-white
+                            rounded-xl
+                            p-3
+                            border
+                            border-orange-200
+                            shadow-2xl
+                        "
+                    >
+                        <div className="text-xs font-bold text-orange-600 mb-2">
+                            {moment(event.start).format(
+                                'MMMM DD, YYYY'
+                            )}
+                        </div>
+
+                        <div className="space-y-2">
+                            {sameDateEvents.map((item) => (
+                                <div
+                                    key={item.id}
+                                    className="
+                                        p-2
+                                        rounded-lg
+                                        bg-orange-50
+                                        hover:bg-orange-100
+                                    "
+                                >
+                                    <div className="text-xs font-semibold text-gray-800">
+                                        {item.title}
+                                    </div>
+
+                                    <div className="text-[10px] text-orange-500 mt-1">
+                                        {moment(item.start).format('HH:mm')}
+                                        {' - '}
+                                        {moment(item.end).format('HH:mm')}
+                                    </div>
+                                </div>
+                            ))}
+                        </div>
+                    </div>,
+                    document.body
+                )}
+        </>
+    );
+};
+
+ const CustomEvent = ({ event }) => (
+    <div className="w-full min-w-0 overflow-hidden">
+        <div
+            className="
+                w-full
+                min-w-0
+                overflow-hidden
+                text-ellipsis
+                whitespace-nowrap
+                text-[11px]
+                font-semibold
+                text-orange-800
+                leading-tight
+            "
+        >
+          
+            {event.title}
+        </div>
     </div>
-  );
+);
 
-  const CustomEvent = ({ event }) => (
-    <div className="flex items-center gap-1 text-xs font-semibold text-orange-800 truncate">{event.title}</div>
-  );
+  const filteredEvents = useMemo(() => {
+    if (view !== Views.MONTH) {
+      return events;
+    }
 
-  const filteredEvents = useMemo(() => events, [events]);
+    const grouped = new Map();
+
+    events.forEach((event) => {
+      const dateKey = moment(event.start).format('YYYY-MM-DD');
+
+      if (!grouped.has(dateKey)) {
+        grouped.set(dateKey, []);
+      }
+
+      grouped.get(dateKey).push(event);
+    });
+
+    return Array.from(grouped.values()).map((dateEvents) => {
+      const sortedEvents = dateEvents.sort(
+        (a, b) =>
+          new Date(a.start).getTime() -
+          new Date(b.start).getTime()
+      );
+
+      const firstEvent = sortedEvents[0];
+
+      return {
+        ...firstEvent,
+
+        // Keep ALL events belonging to this date
+        sameDateEvents: sortedEvents,
+      };
+    });
+  }, [events, view]);
   const todayEvents = useMemo(() => events.filter(e => moment(e.start).isSame(moment(), 'day')).sort((a, b) => a.start - b.start), [events]);
   const upcomingEvents = useMemo(() => events.filter(e => moment(e.start).isAfter(moment())).sort((a, b) => a.start - b.start).slice(0, 5), [events]);
   const stats = useMemo(() => ({ total: events.length, today: todayEvents.length, thisWeek: events.filter(e => moment(e.start).isSame(moment(), 'week')).length }), [events, todayEvents]);
 
   return (
-    <div className=" via-white to-amber-50 p-4 md:p-6 flex flex-col gap-4 md:gap-6">
+    <div className="  p-4 md:p-6 flex flex-col gap-4 md:gap-6">
 
       {/* TOP BAR */}
       <div className="bg-white/80 backdrop-blur-md border border-orange-100 rounded-2xl px-4 md:px-6 py-3 shadow-sm flex flex-wrap items-center justify-between gap-3">
@@ -191,7 +386,7 @@ const EventCalendar = () => {
         </div>
       </div>
 
-      <div className="flex flex-1 gap-4 md:gap-6 bg-white rounded-3xl p-2 md:p-4 overflow-hidden h-[calc(100vh-100px)] md:h-[calc(100vh-140px)] relative">
+      <div className="flex flex-1 flex-col lg:flex-col xl:flex-row gap-4 md:gap-6 bg-white rounded-3xl p-2 md:p-4 overflow-visible h-[calc(100vh-100px)] md:h-[calc(100vh-140px)] relative">
 
         {/* MAIN CALENDAR AREA */}
         <main className={`flex-1   relative transition-all duration-300 ${sidebarOpen ? 'lg:mr-0' : ''}`}>
@@ -200,7 +395,12 @@ const EventCalendar = () => {
               .rbc-calendar { height: 100%; font-family: inherit; display: flex; flex-direction: column; }
               .rbc-toolbar { display: none !important; }
               
-              .rbc-month-view { border: none; border-radius: 24px; overflow: hidden; flex: 1; }
+              .rbc-month-view {
+    border: none;
+    border-radius: 24px;
+    overflow: visible !important;
+    flex: 1;
+}
               .rbc-header { border: none; padding: 15px 0; color: #1F2937; font-weight: 700; text-transform: uppercase; font-size: 0.85rem; letter-spacing: 0.05em; }
               .rbc-header:nth-child(1) { color: #EA580C; }
               .rbc-header:nth-child(7) { color: #EA580C; }
@@ -210,10 +410,53 @@ const EventCalendar = () => {
               .rbc-date-cell > a { color: #1F2937; font-weight: 600; font-size: 0.9rem; }
               .rbc-day-bg + .rbc-day-bg { border-left: none; }
               .rbc-month-row + .rbc-month-row { border-top: none; }
-              .rbc-row-segment { padding: 2px 4px; overflow: hidden; }
-              .rbc-off-range-bg { background: #fdf3e7 !important; }
-              .rbc-today { background-color: transparent !important; } 
+     /* MONTH VIEW HOVER SUPPORT */
 
+.rbc-month-view {
+    border: none !important;
+    border-radius: 24px;
+    overflow: visible !important;
+    flex: 1;
+}
+
+.rbc-month-row {
+    display: flex;
+    flex-direction: column;
+    flex: 1;
+    overflow: visible !important;
+}
+
+.rbc-row {
+    overflow: visible !important;
+}
+
+.rbc-row-content {
+    flex: 1;
+    z-index: 1;
+    overflow: visible !important;
+}
+
+.rbc-row-segment {
+    padding: 2px 4px;
+    overflow: visible !important;
+    position: relative;
+}
+
+.rbc-event {
+    overflow: visible !important;
+}
+
+.rbc-event-content {
+    overflow: visible !important;
+}
+
+.rbc-month-view .rbc-event {
+    z-index: 100 !important;
+}
+
+.rbc-month-view .rbc-row-segment:hover {
+    z-index: 9999 !important;
+}
 
              /* --- WEEK/DAY VIEW FIXES --- */
 .rbc-time-view {
@@ -259,26 +502,22 @@ const EventCalendar = () => {
 }
   /* ✅ Events in Week/Day View ONLY */
 .rbc-time-view .rbc-event {
-  border: none !important;
-  border-radius: 8px;
-  padding: 4px 8px;
-  font-size: 0.75rem;
-  font-weight: 600;
-  
-  /* Visible Background for White/Peach Columns */
-  background: #FFEDD5 !important; /* Light Orange */
-  color: #9A3412 !important;      /* Dark Orange Text */
-  border-left: 3px solid #EA580C !important; /* Accent Bar */
-  
-  box-shadow: 0 2px 4px rgba(0,0,0,0.08);
-  overflow: hidden;
+    overflow: hidden !important;
+    white-space: normal !important;
+    min-width: 0 !important;
+}
+
+.rbc-time-view .rbc-event-content {
+    overflow: hidden !important;
+    min-width: 0 !important;
+    width: 100% !important;
 }
 
 /* Ensure event label is also visible */
 .rbc-time-view .rbc-event-label {
-  color: #9A3412 !important;
-  font-size: 0.7rem;
+    display: none !important;
 }
+
 define width 
 date cut 
 
@@ -350,12 +589,11 @@ date cut
 
 
 
-/* Default Peach Background for Time Slots */
-.rbc-time-slot {
+/* Light orange background for Week/Day time slots */
+.rbc-time-view .rbc-time-slot {
   border: none !important;
-  background: #FED7AA !important; /* Orange-200 */
+  background: #FFF7ED !important;
 }
-
 
 .rbc-day-slot.rbc-today .rbc-time-slot {
   background: white !important;
@@ -374,7 +612,7 @@ date cut
   padding: 2px 6px;
   font-size: 0.75rem;
   font-weight: 600;
-  box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+ 
 }
 
 /* Custom Scrollbar */
@@ -395,7 +633,7 @@ date cut
               
               /* Today Highlight */
               .rbc-time-header-content .rbc-header.rbc-today > span {
-                background: white; border: 2px solid #FB923C; color: #EA580C;
+                background: #fff; border: 2px solid #FB923C; color: #EA580C;
               }
               
               /* Scrollable Content */
@@ -421,7 +659,7 @@ date cut
               
               .rbc-timeslot-group { border-bottom: 1px solid rgba(251, 146, 60, 0.15) !important; border: none !important; }
               
-              .rbc-event { border: none !important; border-radius: 6px; padding: 2px 6px; font-size: 0.7rem; md:font-size: 0.75rem; font-weight: 600; box-shadow: 0 2px 4px rgba(0,0,0,0.05); }
+              .rbc-event { border: none !important; border-radius: 6px; padding: 2px 6px; font-size: 0.7rem; md:font-size: 0.75rem; font-weight: 600; }
               
               .rbc-time-content::-webkit-scrollbar { width: 6px; }
               .rbc-time-content::-webkit-scrollbar-track { background: transparent; }
@@ -439,47 +677,80 @@ date cut
             <div className="flex items-center justify-center h-full"><div className="animate-spin rounded-full h-12 w-12 border-b-2 border-orange-500"></div></div>
           ) : (
             <Calendar
-              localizer={localizer} events={filteredEvents} startAccessor="start" endAccessor="end"
+              localizer={localizer}
+              events={filteredEvents}
+              startAccessor="start"
+              endAccessor="end"
+
               style={{
-                height: view === Views.MONTH ? '100%' : '600px',
+                height: view === Views.MONTH ? '100%' : '709px',
                 minHeight: view === Views.MONTH ? '100%' : '600px'
-              }} selectable onSelectSlot={handleSelectSlot} onSelectEvent={handleSelectEvent}
-              eventPropGetter={eventStyleGetter} dayPropGetter={dayPropGetter}
-              view={view} onView={handleViewChange} date={date} onNavigate={handleNavigate}
-              views={[Views.MONTH, Views.WEEK, Views.DAY, Views.AGENDA]}
-              components={{ toolbar: () => null, month: { event: CustomMonthEvent }, week: { event: CustomEvent }, day: { event: CustomEvent }, agenda: { event: CustomEvent } }}
-              popup popupComponent={({ event }) => (
-                <div className="p-3 bg-white rounded-xl shadow-xl border border-orange-100">
-                  <div className="font-bold text-orange-900">{event.title}</div>
-                  <div className="text-xs text-orange-600 mt-1">{moment(event.start).format('HH:mm')} - {moment(event.end).format('HH:mm')}</div>
-                </div>
-              )}
+              }}
+
+              selectable
+              onSelectSlot={handleSelectSlot}
+              onSelectEvent={handleSelectEvent}
+
+              eventPropGetter={eventStyleGetter}
+              dayPropGetter={dayPropGetter}
+
+              view={view}
+              onView={handleViewChange}
+              date={date}
+              onNavigate={handleNavigate}
+
+              views={[
+                Views.MONTH,
+                Views.WEEK,
+                Views.DAY,
+                Views.AGENDA
+              ]}
+
+              components={{
+                toolbar: () => null,
+
+                month: {
+                  event: CustomMonthEvent
+                },
+
+                week: {
+                  event: CustomEvent
+                },
+
+                day: {
+                  event: CustomEvent
+                },
+
+                agenda: {
+                  event: CustomEvent
+                }
+              }}
             />
           )}
         </main>
 
         {/* RIGHT SIDEBAR - Hidden on mobile unless toggled */}
-        <aside className={`${sidebarOpen ? 'w-96' : 'w-0'} transition-all duration-300 overflow-hidden`}>
+        <aside className={`lg:w-80 w-full transition-all duration-300 overflow-hidden`}>
           <div className='flex flex-col gap-3'>
             <div className="bg-orange-50 rounded-3xl   h-full p-6 ">
 
               {/* Date Header */}
               <div className="mb-6">
-                <div className="flex items-end justify-between mb-6">
+                <div className="flex flex-col lg:flex-row lg:items-end justify-between mb-6">
                   <div>
-                    <h1 className="text-4xl font-bold text-[#ff5321] leading-none">
+                    <h1 className="text-xl font-bold text-[#ff5321] leading-none">
                       {moment(date).format('dddd')}
                     </h1>
                     <p className="text-sm text-[#ff5321] mt-2 font-medium">
                       {moment(date).format('MMMM DD, YYYY')}
                     </p>
                   </div>
-                  <div className="text-7xl font-black text-[#ff5321] leading-none opacity-90">
+                  <div className="text-7xl font-black text-[#ff5321] leading-none opacity-90 font-medium">
                     {moment(date).format('DD')}
                   </div>
                 </div>
 
-               {user.role=== "admin" && <button
+                {user.role === "admin" && <button
                   onClick={() => handleSelectSlot({ start: new Date(), end: new Date(new Date().getTime() + 3600000) })}
                   className="w-full mb-6 px-4 py-3.5 bg-[#ff5321] text-white rounded-xl hover:shadow-lg hover:shadow-orange-500/30 transition-all font-bold flex items-center justify-center gap-2 active:scale-95"
                 >
@@ -505,12 +776,12 @@ date cut
             {/* Lists */}
             <div className="flex-1 overflow-y-auto pr-2  scrollbar-hide">
               <div>
-                <div className="bg-orange-100/50 rounded-xl p-3 mb-3 ">
+                <div className="bg-orange-100/50 rounded-xl p-3 mb-3 lg:h-55 overflow-y-auto ">
                   <h3 className="font-bold text-orange-700 text-sm flex items-center gap-2">
                     <Clock className="h-4 w-4" /> Today's Schedule
                   </h3>
 
-                  <div className="space-y-3 my-3">
+                  <div className="space-y-3 mt-3">
                     {todayEvents.length > 0 ? (
                       todayEvents.map(event => (
                         <div key={event.id} onClick={() => handleSelectEvent(event)} className="group p-3 rounded-xl bg-white border border-orange-100 cursor-pointer hover:border-orange-300 hover:shadow-md transition-all">
@@ -538,12 +809,12 @@ date cut
               </div>
 
               <div>
-                <div className="bg-orange-100/50 rounded-xl p-3 mb-3 ">
+                <div className="bg-orange-100/50 rounded-xl p-3 mb-3 overflow-y-auto lg:h-54">
                   <h3 className="font-bold text-orange-700 text-sm flex items-center gap-2">
                     <Award className="h-4 w-4" /> Upcoming
                   </h3>
 
-                  <div className="space-y-2">
+                  <div className="space-y-2 my-3">
                     {upcomingEvents.map(event => (
                       <div key={event.id} onClick={() => handleSelectEvent(event)} className="flex items-center gap-3 p-2.5 rounded-xl bg-white border border-transparent hover:border-orange-200 hover:bg-orange-50 cursor-pointer transition-all">
                         <div className="text-center min-w-[45px] bg-orange-50 rounded-lg py-1.5 border border-orange-100">
@@ -566,111 +837,110 @@ date cut
         </aside>
 
         {/* Overlay for mobile sidebar */}
-        {sidebarOpen && <div className="fixed inset-0 bg-black/20 z-30 lg:hidden" onClick={() => setSidebarOpen(false)} />}
       </div>
 
-     {/* MODAL - Viewable by all, Editable/Createable by admin only */}
-{showEventModal && (viewingEvent || user.role === "admin") && (
-  <div 
-    className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4" 
-    onClick={() => setShowEventModal(false)}
-  >
-    <div 
-      className="bg-white rounded-2xl shadow-2xl w-full max-w-120 max-h-[90vh] overflow-y-auto" 
-      onClick={(e) => e.stopPropagation()}
-    >
-      {/* Header */}
-      <div className="sticky top-0 bg-orange-500 text-white px-6 py-4 flex items-center justify-between rounded-t-2xl">
-        <h3 className="text-xl font-bold">
-          {viewingEvent 
-            ? 'Event Details' 
-            : (editingEvent ? 'Edit Event' : 'Create New Event')
-          }
-        </h3>
-        <button 
-          onClick={() => setShowEventModal(false)} 
-          className="p-1 hover:bg-white/20 rounded-full transition-colors"
+      {/* MODAL - Viewable by all, Editable/Createable by admin only */}
+      {showEventModal && (viewingEvent || user.role === "admin") && (
+        <div
+          className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4"
+          onClick={() => setShowEventModal(false)}
         >
-          <X className="h-6 w-6" />
-        </button>
-      </div>
-
-      {/* Content */}
-      <div className="p-6 space-y-6">
-        {viewingEvent ? (
-          /* ✅ VIEW MODE - ACCESSIBLE BY ALL ROLES */
-          <div className="space-y-4">
-            <h4 className="text-2xl font-bold text-gray-900">{viewingEvent.title}</h4>
-            
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              <div className="p-4 bg-orange-50 rounded-xl border border-orange-100">
-                <div className="text-xs text-orange-600 font-bold uppercase mb-1">Start</div>
-                <div className="font-semibold text-gray-800">
-                  {moment(viewingEvent.start).format('MMM DD, YYYY HH:mm')}
-                </div>
-              </div>
-              <div className="p-4 bg-orange-50 rounded-xl border border-orange-100">
-                <div className="text-xs text-orange-600 font-bold uppercase mb-1">End</div>
-                <div className="font-semibold text-gray-800">
-                  {moment(viewingEvent.end).format('MMM DD, YYYY HH:mm')}
-                </div>
-              </div>
+          <div
+            className="bg-white rounded-2xl shadow-2xl w-full max-w-120 max-h-[90vh] overflow-y-auto"
+            onClick={(e) => e.stopPropagation()}
+          >
+            {/* Header */}
+            <div className="sticky top-0 bg-[#f6673c] text-white px-6 py-4 flex items-center justify-between rounded-t-2xl">
+              <h3 className="text-xl font-bold">
+                {viewingEvent
+                  ? 'Event Details'
+                  : (editingEvent ? 'Edit Event' : 'Create New Event')
+                }
+              </h3>
+              <button
+                onClick={() => setShowEventModal(false)}
+                className="p-1 hover:bg-white/20 rounded-full transition-colors"
+              >
+                <X className="h-6 w-6" />
+              </button>
             </div>
 
-            {/* Only show Edit/Delete buttons for Admin */}
-            {user.role === "admin" && (
-              <div className="flex gap-3 pt-4 border-t border-gray-100">
-                <button 
-                  onClick={() => handleEditEvent(viewingEvent)} 
-                  className="flex-1 py-3 bg-orange-500 text-white rounded-xl font-bold hover:bg-orange-600 transition-colors"
-                >
-                  Edit
-                </button>
-                <button 
-                  onClick={() => handleDeleteEvent(viewingEvent.id)} 
-                  className="px-6 py-3 bg-red-50 text-red-600 rounded-xl font-bold hover:bg-red-100 transition-colors"
-                >
-                  Delete
-                </button>
-              </div>
-            )}
-          </div>
-        ) : (
-          /* ✅ CREATE/EDIT MODE - ADMIN ONLY (Protected by handler guard) */
-          <div className="space-y-4">
-            <input 
-              type="text" 
-              placeholder="Event Title" 
-              value={eventTitle} 
-              onChange={e => setEventTitle(e.target.value)} 
-              className="w-full p-3 border-2 border-gray-200 rounded-xl focus:border-orange-500 outline-none transition-all" 
-            />
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              <input 
-                type="datetime-local" 
-                value={moment(eventStart).format('YYYY-MM-DDTHH:mm')} 
-                onChange={e => setEventStart(new Date(e.target.value))} 
-                className="w-full p-3 border-2 border-gray-200 rounded-xl focus:border-orange-500 outline-none transition-all" 
-              />
-              <input 
-                type="datetime-local" 
-                value={moment(eventEnd).format('YYYY-MM-DDTHH:mm')} 
-                onChange={e => setEventEnd(new Date(e.target.value))} 
-                className="w-full p-3 border-2 border-gray-200 rounded-xl focus:border-orange-500 outline-none transition-all" 
-              />
+            {/* Content */}
+            <div className="p-6 space-y-6">
+              {viewingEvent ? (
+                /* ✅ VIEW MODE - ACCESSIBLE BY ALL ROLES */
+                <div className="space-y-4">
+                  <h4 className="text-2xl font-bold text-gray-900">{viewingEvent.title}</h4>
+
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div className="p-4 bg-orange-50 rounded-xl border border-orange-100">
+                      <div className="text-xs text-orange-600 font-bold uppercase mb-1">Start</div>
+                      <div className="font-semibold text-gray-800">
+                        {moment(viewingEvent.start).format('MMM DD, YYYY HH:mm')}
+                      </div>
+                    </div>
+                    <div className="p-4 bg-orange-50 rounded-xl border border-orange-100">
+                      <div className="text-xs text-orange-600 font-bold uppercase mb-1">End</div>
+                      <div className="font-semibold text-gray-800">
+                        {moment(viewingEvent.end).format('MMM DD, YYYY HH:mm')}
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Only show Edit/Delete buttons for Admin */}
+                  {user.role === "admin" && (
+                    <div className="flex gap-3 pt-4 border-t border-gray-100">
+                      <button
+                        onClick={() => handleEditEvent(viewingEvent)}
+                        className="flex-1 py-3 bg-orange-500 text-white rounded-xl font-bold hover:bg-orange-600 transition-colors"
+                      >
+                        Edit
+                      </button>
+                      <button
+                        onClick={() => handleDeleteEvent(viewingEvent.id)}
+                        className="px-6 py-3 bg-red-50 text-red-600 rounded-xl font-bold hover:bg-red-100 transition-colors"
+                      >
+                        Delete
+                      </button>
+                    </div>
+                  )}
+                </div>
+              ) : (
+                /* ✅ CREATE/EDIT MODE - ADMIN ONLY (Protected by handler guard) */
+                <div className="space-y-4">
+                  <input
+                    type="text"
+                    placeholder="Event Title"
+                    value={eventTitle}
+                    onChange={e => setEventTitle(e.target.value)}
+                    className="w-full p-3 border-2 border-gray-200 rounded-xl focus:border-orange-500 outline-none transition-all"
+                  />
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <input
+                      type="datetime-local"
+                      value={moment(eventStart).format('YYYY-MM-DDTHH:mm')}
+                      onChange={e => setEventStart(new Date(e.target.value))}
+                      className="w-full p-3 border-2 border-gray-200 rounded-xl focus:border-orange-500 outline-none transition-all"
+                    />
+                    <input
+                      type="datetime-local"
+                      value={moment(eventEnd).format('YYYY-MM-DDTHH:mm')}
+                      onChange={e => setEventEnd(new Date(e.target.value))}
+                      className="w-full p-3 border-2 border-gray-200 rounded-xl focus:border-orange-500 outline-none transition-all"
+                    />
+                  </div>
+                  <button
+                    onClick={handleSaveEvent}
+                    className="w-full py-3 bg-orange-500 text-white rounded-xl font-bold hover:bg-orange-600 shadow-lg shadow-orange-500/30 transition-all"
+                  >
+                    {editingEvent ? 'Update Event' : 'Create Event'}
+                  </button>
+                </div>
+              )}
             </div>
-            <button 
-              onClick={handleSaveEvent} 
-              className="w-full py-3 bg-orange-500 text-white rounded-xl font-bold hover:bg-orange-600 shadow-lg shadow-orange-500/30 transition-all"
-            >
-              {editingEvent ? 'Update Event' : 'Create Event'}
-            </button>
           </div>
-        )}
-      </div>
-    </div>
-  </div>
-)}
+        </div>
+      )}
     </div>
   );
 };

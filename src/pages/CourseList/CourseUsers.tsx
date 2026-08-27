@@ -710,7 +710,7 @@ export default function CourseListingPage() {
         </div>
 
         {/* 5. Course Grid (with Skeleton on Search/Filter) */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 mt-4">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 xl:grid-cols-3 gap-6 mt-4">
           {isSearching ? (
             Array.from({ length: filters.limit }).map((_, i) => (
               <div key={i} className="bg-white rounded-2xl border border-gray-100 overflow-hidden animate-pulse">

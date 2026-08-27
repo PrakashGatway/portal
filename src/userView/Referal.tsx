@@ -295,296 +295,605 @@ export default function ReferAndEarnPage() {
                     >
                         {activeTab === "refer" && (
                             <>
-                                <section className="w-full px-4">
-                                    <div className="mx-auto w-full max-w-[1400px] px-5 pb-8 sm:px-8 lg:px-10 xl:px-1">
+                               <section className="w-full px-4">
+    <div
+        className="
+            mx-auto
+            w-full
+            max-w-[1400px]
+            px-2
+            sm:px-4
+            lg:px-10
+            xl:px-1
+            pb-8
+        "
+    >
+        {/* Main Content */}
+        <div className="grid grid-cols-1 items-center justify-center gap-8 lg:gap-5">
 
+            {/* Main Referral Card */}
+            <div className="w-full">
 
+                <div className="w-full overflow-hidden rounded-[28px] sm:rounded-[34px] lg:rounded-[38px]">
 
-                                        {/* Main Content */}
-                                        <div className="grid grid-cols-1 items-center justify-center gap-8 lg:grid-cols-1 lg:gap-5">
+                    {/* ================= MAIN FLEX ================= */}
+                    <div
+                        className="
+                            flex
+                            flex-col
+                            lg:flex-row
+                            bg-[#fb7048]
+                        "
+                    >
 
-                                            {/* Left Card */}
-                                            <div>
+                        {/* ================= ORANGE HEADING ================= */}
+                        <div
+                            className="
+                                flex
+                                min-h-[180px]
+                                sm:min-h-[190px]
+                                lg:min-h-[205px]
+                                w-full
+                                lg:w-auto
+                                lg:min-w-[300px]
+                                xl:min-w-[340px]
+                                flex-col
+                                justify-center
+                                px-5
+                                sm:px-8
+                                lg:px-16
+                                py-8
+                                sm:py-10
+                            "
+                        >
+                            <h2
+                                className="
+                                    mb-2
+                                    text-[24px]
+                                    sm:text-[28px]
+                                    lg:text-4xl
+                                    font-bold
+                                    leading-tight
+                                    text-white
+                                "
+                            >
+                                Refer &{" "}
+                                <span className="text-[#fff600]">
+                                    Earn
+                                </span>
+                            </h2>
 
-                                                <div className="w-full overflow-hidden rounded-[38px]">
-                                                    {/* Heading */}
-
-                            <div className="flex bg-[#fb7048]">
-                                   {/* Orange Section */}
-                                                    <div className="flex min-h-[205px] flex-col justify-center  px-8 py-10 sm:px-12 lg:px-16">
-                                                        <h2 className="mb-2 text-[25px] font-bold leading-tight text-white sm:text-[30px] lg:text-4xl">
-                                                            Refer & <span className="text-[#fff600]">Earn</span>
-                                                        </h2>
-                                                        <div className="className=
-  bg-gradient-to-b
-  from-gray-300
-  via-gray-500
-  to-black
-  w-60
-  -rotate-1
-  rounded-[7px]
-  p-[1px]
-">
-                                                            <div
-                                                                className="
-  w-60
-    inline-flex
-    items-center
-    justify-center
-    rounded-[7px]
-   
-    bg-[#fff600]
-    px-2.5
-    py-1.5
-    text-[14px]
-    font-extrabold
-    leading-none
-    tracking-[-0.02em]
-    text-black
-    
-    
-    whitespace-nowrap
-
-    sm:px-3
-    sm:py-3
-    sm:text-xl
-  "
-                                                            >
-                                                                Earn ₹2500* Per Share
-                                                            </div></div>
-
-                                                        
-                                                    </div>
-
-                                                          <div className="relative w-full w-5xl mx-auto ">
-                                    <div className=" px-6 lg:px-10 py-8">
-
-                                        {/* Desktop Dashed Line */}
-                                        <svg
-                                            className="hidden lg:block absolute top-[58px] left-[110px] right-[110px] w-[calc(100%-220px)] h-12"
-                                            viewBox="0 0 900 80"
-                                            preserveAspectRatio="none"
-                                        >
-                                            <path
-                                                d="M0 40
-           C120 70 180 10 300 40
-           C420 70 480 10 600 40
-           C720 70 780 10 900 40"
-                                                stroke="#fff"
-                                                strokeWidth="2"
-                                                strokeDasharray="10 12"
-                                                fill="none"
-                                            />
-                                        </svg>
-
-                                        <div className="relative z-10 grid grid-cols-1 lg:grid-cols-4 gap-8 lg:gap-0">
-
-                                            {/* Step 1 */}
-                                            <div className="relative flex lg:flex-col items-center lg:items-center gap-4">
-                                                <div className="absolute left-8 top-16 bottom-[-35px] border-l-2 border-dashed border-gray-300 lg:hidden"></div>
-
-                                                <img
-                                                    src="https://png.pngtree.com/png-vector/20250217/ourmid/pngtree-red-megaphone-3d-icon-speaker-png-image_15469706.png"
-                                                    className="w-16 h-16 object-contain shrink-0"
-                                                />
-
-                                                <div className="text-left lg:text-center">
-                                                    <p className="font-semibold text-white lg:text-lg">
-                                                        Share Link
-                                                    </p>
-
-                                                 
-                                                </div>
-                                            </div>
-
-                                            {/* Step 2 */}
-                                            <div className="relative flex lg:flex-col items-center lg:items-center gap-4">
-                                                <div className="absolute left-8 top-16 bottom-[-35px] border-l-2 border-dashed border-gray-300 lg:hidden"></div>
-
-                                                <img
-                                                    src="https://upload.wikimedia.org/wikipedia/commons/thumb/0/0f/Yellow_-_replace_this_image_male.svg/960px-Yellow_-_replace_this_image_male.svg.png?utm_source=commons.wikimedia.org&utm_campaign=index&utm_content=thumbnail"
-                                                    className="w-12 h-12 object-contain shrink-0"
-                                                />
-
-                                                <div className="text-left lg:text-center ">
-                                                    <p className="mt-1 text-white lg:text-[17px] font-medium text-[#555]">
-                                                        Each Share
-                                                    </p>
-
-                                                    <h3 className="text-[22px] text-white font-bold text-[#555]">
-                                                        ₹50
-                                                    </h3>
-                                                </div>
-                                            </div>
-
-                                            {/* Step 3 */}
-                                            <div className="relative flex lg:flex-col items-center lg:items-center gap-4">
-                                                <div className="absolute left-8 top-16 bottom-[-35px] border-l-2 border-dashed border-gray-300 lg:hidden"></div>
-
-                                                <img
-                                                    src="https://cdn3.emoji.gg/emojis/9345-yellow-gift.png"
-                                                    className="w-12 h-12 object-contain shrink-0"
-                                                />
-
-                                             <div className="text-left lg:text-center">
-    <div className="flex flex-col items-center lg:justify-center">
-
-        <h3 className="text-[15px] font-bold text-white">
-            Earn Unlimited
-        </h3>
-        <span className="text-xl">🌟</span>
-
-    </div>
-</div>
-                                            </div>
-
-                                            {/* Step 4 */}
-                                            <div className="relative flex lg:flex-col items-center lg:items-center gap-4">
-
-                                                <img
-                                                    src="https://static.vecteezy.com/system/resources/thumbnails/049/025/475/small_2x/cartoon-mountain-with-trees-and-grass-png.png"
-                                                    className="w-16 h-16 object-contain shrink-0"
-                                                />
-
-                                                <div className="text-left lg:text-center">
-                                                    <p className="lg:text-[15px] leading-5 text-white font-medium">
-                                                        Refer More & Earn
-                                                        <br />
-                                                        More
-                                                    </p>
-                                                </div>
-                                            </div>
-
-                                        </div>
-                                    </div>
+                            {/* Earnings Badge */}
+                            <div
+                                className="
+                                    w-fit
+                                    max-w-full
+                                    -rotate-1
+                                    rounded-[7px]
+                                    bg-gradient-to-b
+                                    from-gray-300
+                                    via-gray-500
+                                    to-black
+                                    p-[1px]
+                                "
+                            >
+                                <div
+                                    className="
+                                        inline-flex
+                                        w-fit
+                                        max-w-full
+                                        items-center
+                                        justify-center
+                                        rounded-[7px]
+                                        bg-[#fff600]
+                                        px-2.5
+                                        py-2
+                                        sm:px-3
+                                        sm:py-2.5
+                                        lg:py-3
+                                        text-[13px]
+                                        sm:text-[16px]
+                                        lg:text-xl
+                                        font-extrabold
+                                        leading-none
+                                        tracking-[-0.02em]
+                                        text-black
+                                        whitespace-nowrap
+                                    "
+                                >
+                                    Earn ₹50* Per Share
                                 </div>
-
                             </div>
-                                                 
+                        </div>
 
-                                                  
-                                                </div> </div>
+                        {/* ================= STEPS SECTION ================= */}
+                        <div
+                            className="
+                                relative
+                                w-full
+                                flex-1
+                                min-w-0
+                            "
+                        >
+                            <div
+                                className="
+                                    relative
+                                    px-5
+                                    py-7
+                                    sm:px-8
+                                    sm:py-8
+                                    lg:px-10
+                                    lg:py-8
+                                "
+                            >
 
+                                {/* ================= DESKTOP DASHED LINE ================= */}
+                                <svg
+                                    className="
+                                        hidden
+                                        lg:block
+                                        absolute
+                                        top-[58px]
+                                        left-[110px]
+                                        right-[110px]
+                                        w-[calc(100%-220px)]
+                                        h-12
+                                    "
+                                    viewBox="0 0 900 80"
+                                    preserveAspectRatio="none"
+                                >
+                                    <path
+                                        d="
+                                            M0 40
+                                            C120 70 180 10 300 40
+                                            C420 70 480 10 600 40
+                                            C720 70 780 10 900 40
+                                        "
+                                        stroke="#fff"
+                                        strokeWidth="2"
+                                        strokeDasharray="10 12"
+                                        fill="none"
+                                    />
+                                </svg>
 
+                                {/* ================= STEPS ================= */}
+                                <div
+                                    className="
+                                        relative
+                                        z-10
+                                        grid
+                                        grid-cols-1
+                                        sm:grid-cols-2
+                                        lg:grid-cols-4
+                                        gap-6
+                                        sm:gap-8
+                                        lg:gap-0
+                                    "
+                                >
+
+                                    {/* ================= STEP 1 ================= */}
+                                    <div
+                                        className="
+                                            relative
+                                            flex
+                                            items-center
+                                            lg:flex-col
+                                            lg:items-center
+                                            gap-4
+                                            min-w-0
+                                        "
+                                    >
+                                        {/* Mobile connector */}
+                                        <div
+                                            className="
+                                                absolute
+                                                left-[31px]
+                                                top-[64px]
+                                                bottom-[-24px]
+                                                border-l-2
+                                                border-dashed
+                                                border-white/50
+                                                sm:hidden
+                                            "
+                                        />
+
+                                        <img
+                                            src="https://png.pngtree.com/png-vector/20250217/ourmid/pngtree-red-megaphone-3d-icon-speaker-png-image_15469706.png"
+                                            alt="Share Link"
+                                            className="
+                                                w-14
+                                                h-14
+                                                sm:w-16
+                                                sm:h-16
+                                                object-contain
+                                                shrink-0
+                                            "
+                                        />
+
+                                        <div className="text-left lg:text-center">
+                                            <p
+                                                className="
+                                                    font-semibold
+                                                    text-white
+                                                    text-sm
+                                                    sm:text-base
+                                                    lg:text-lg
+                                                "
+                                            >
+                                                Share Link
+                                            </p>
                                         </div>
                                     </div>
-                                </section>
+
+                                    {/* ================= STEP 2 ================= */}
+                                    <div
+                                        className="
+                                            relative
+                                            flex
+                                            items-center
+                                            lg:flex-col
+                                            lg:items-center
+                                            gap-4
+                                            min-w-0
+                                        "
+                                    >
+                                        <div
+                                            className="
+                                                absolute
+                                                left-[31px]
+                                                top-[64px]
+                                                bottom-[-24px]
+                                                border-l-2
+                                                border-dashed
+                                                border-white/50
+                                                sm:hidden
+                                            "
+                                        />
+
+                                        <img
+                                            src="https://upload.wikimedia.org/wikipedia/commons/thumb/0/0f/Yellow_-_replace_this_image_male.svg/960px-Yellow_-_replace_this_image_male.svg.png?utm_source=commons.wikimedia.org&utm_campaign=index&utm_content=thumbnail"
+                                            alt="Each Share"
+                                            className="
+                                                w-12
+                                                h-12
+                                                sm:w-14
+                                                sm:h-14
+                                                lg:w-12
+                                                lg:h-12
+                                                object-contain
+                                                shrink-0
+                                            "
+                                        />
+
+                                        <div className="text-left lg:text-center">
+                                            <p
+                                                className="
+                                                    mt-1
+                                                    text-sm
+                                                    sm:text-base
+                                                    lg:text-[17px]
+                                                    font-medium
+                                                    text-white
+                                                "
+                                            >
+                                                Each Share
+                                            </p>
+
+                                            <h3
+                                                className="
+                                                    text-xl
+                                                    sm:text-[22px]
+                                                    text-white
+                                                    font-bold
+                                                "
+                                            >
+                                                ₹50
+                                            </h3>
+                                        </div>
+                                    </div>
+
+                                    {/* ================= STEP 3 ================= */}
+                                    <div
+                                        className="
+                                            relative
+                                            flex
+                                            items-center
+                                            lg:flex-col
+                                            lg:items-center
+                                            gap-4
+                                            min-w-0
+                                        "
+                                    >
+                                        <div
+                                            className="
+                                                absolute
+                                                left-[31px]
+                                                top-[64px]
+                                                bottom-[-24px]
+                                                border-l-2
+                                                border-dashed
+                                                border-white/50
+                                                sm:hidden
+                                            "
+                                        />
+
+                                        <img
+                                            src="https://cdn3.emoji.gg/emojis/9345-yellow-gift.png"
+                                            alt="Earn Unlimited"
+                                            className="
+                                                w-12
+                                                h-12
+                                                sm:w-14
+                                                sm:h-14
+                                                lg:w-12
+                                                lg:h-12
+                                                object-contain
+                                                shrink-0
+                                            "
+                                        />
+
+                                        <div className="text-left lg:text-center">
+                                            <div className="flex flex-col items-start lg:items-center">
+                                                <h3
+                                                    className="
+                                                        text-sm
+                                                        sm:text-[15px]
+                                                        font-bold
+                                                        text-white
+                                                    "
+                                                >
+                                                    Earn Unlimited
+                                                </h3>
+
+                                                <span className="text-lg sm:text-xl">
+                                                    🌟
+                                                </span>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    {/* ================= STEP 4 ================= */}
+                                    <div
+                                        className="
+                                            relative
+                                            flex
+                                            items-center
+                                            lg:flex-col
+                                            lg:items-center
+                                            gap-4
+                                            min-w-0
+                                        "
+                                    >
+                                        <img
+                                            src="https://static.vecteezy.com/system/resources/thumbnails/049/025/475/small_2x/cartoon-mountain-with-trees-and-grass-png.png"
+                                            alt="Refer More"
+                                            className="
+                                                w-14
+                                                h-14
+                                                sm:w-16
+                                                sm:h-16
+                                                object-contain
+                                                shrink-0
+                                            "
+                                        />
+
+                                        <div className="text-left lg:text-center">
+                                            <p
+                                                className="
+                                                    text-sm
+                                                    sm:text-[15px]
+                                                    lg:text-[15px]
+                                                    leading-5
+                                                    text-white
+                                                    font-medium
+                                                "
+                                            >
+                                                Refer More & Earn
+                                                <br />
+                                                More
+                                            </p>
+                                        </div>
+                                    </div>
+
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
                                 {/* Referral Journey Section */}
 
 
-                                <div className="grid grid-cols-1 lg:grid-cols-1 gap-6 overflow-hidden w-full px-4">
+                              <div className="grid grid-cols-1 lg:grid-cols-1 gap-6 overflow-hidden w-full px-2 sm:px-4">
 
-                                    <motion.div
-                                      
-                                        className="  "
-                                    >
-                                       
-                                        {/* Referral Box */}
-                                        <div className=" border border-orange-500 rounded-[22px] px-6 py-2 flex items-center justify-between">
-                                             {/* Heading */}
-                                        <h2 className="text-center text-2xl font-bold text-[#5A5A5A]">
-                                            Share Your Referral Code
-                                        </h2>
+    <motion.div className="w-full">
 
-                                        <div className="flex gap-6 bg-orange-100/30 p-3 rounded-lg">
+        {/* Referral Box */}
+        <div
+            className="
+                border
+                border-orange-500
+                rounded-[22px]
+                px-3
+                sm:px-5
+                lg:px-6
+                py-4
+                lg:py-2
+                flex
+                flex-col
+                lg:flex-row
+                items-center
+                justify-between
+                gap-4
+                lg:gap-6
+                w-full
+            "
+        >
 
-                                   
+            {/* Heading */}
+            <h2
+                className="
+                    text-center
+                    text-xl
+                    sm:text-2xl
+                    font-bold
+                    text-[#5A5A5A]
+                    whitespace-nowrap
+                "
+            >
+                Share Your Referral Code
+            </h2>
 
+            {/* Referral Code + Icons */}
+            <div
+                className="
+                    flex
+                    items-center
+                    justify-center
+                    gap-4
+                    sm:gap-6
+                    bg-orange-100/30
+                    p-2.5
+                    sm:p-3
+                    rounded-lg
+                    min-w-0
+                    max-w-full
+                "
+            >
 
-                                            {/* Referral Code */}
-                                            <h3 className="text-[#FF6436] lg:text-[22px] font-extrabold tracking-wide">
-                                                {referralCode || "------"}
-                                            </h3>
+                {/* Referral Code */}
+                <h3
+                    className="
+                        text-[#FF6436]
+                        text-lg
+                        sm:text-xl
+                        lg:text-[22px]
+                        font-extrabold
+                        tracking-wide
+                        truncate
+                    "
+                >
+                    {referralCode || "------"}
+                </h3>
 
-                                            {/* Icons */}
-                                            <div className="flex items-center gap-8">
+                {/* Icons */}
+                <div
+                    className="
+                        flex
+                        items-center
+                        gap-5
+                        sm:gap-7
+                        lg:gap-8
+                        shrink-0
+                    "
+                >
 
-                                                {/* Copy */}
-                                                <button
-                                                    onClick={copyReferralCode}
-                                                    className="transition hover:scale-110"
-                                                >
-                                                    {codeCopied ? (
-                                                        <CheckCircle
-                                                            size={22}
-                                                            className="text-green-500"
-                                                        />
-                                                    ) : (
-                                                        <Copy
-                                                            size={22}
-                                                            className="text-[#444]"
-                                                        />
-                                                    )}
-                                                </button>
+                    {/* Copy */}
+                    <button
+                        onClick={copyReferralCode}
+                        className="
+                            transition
+                            hover:scale-110
+                            active:scale-95
+                        "
+                    >
+                        {codeCopied ? (
+                            <CheckCircle
+                                size={22}
+                                className="text-green-500"
+                            />
+                        ) : (
+                            <Copy
+                                size={22}
+                                className="text-[#444]"
+                            />
+                        )}
+                    </button>
 
-                                                {/* Gmail Share */}
+                    {/* Gmail Share */}
+                    <button
+                        onClick={() =>
+                            window.open(
+                                `https://mail.google.com/mail/?view=cm&body=${encodeURIComponent(
+                                    shareLink
+                                )}`
+                            )
+                        }
+                        className="
+                            transition
+                            hover:scale-110
+                            active:scale-95
+                        "
+                    >
+                        <Mail
+                            size={22}
+                            className="text-[#EA4335]"
+                        />
+                    </button>
 
-                                                <button
-                                                    onClick={() =>
-                                                        window.open(
-                                                            `https://mail.google.com/mail/?view=cm&body=${encodeURIComponent(
-                                                                shareLink
-                                                            )}`
-                                                        )
-                                                    }
-                                                    className="transition hover:scale-110"
-                                                >
-                                                    <Mail
-                                                        size={22}
-                                                        className="text-[#EA4335]"
-                                                    />
-                                                </button>
+                </div>
+            </div>
 
-                                            </div>
+            {/* WhatsApp */}
+            <div className="flex justify-center w-full lg:w-auto">
 
-                                                 </div>
+                <button
+                    onClick={
+                        shareOptions.find(
+                            (item) =>
+                                item.platform === "whatsapp"
+                        )?.onClick
+                    }
+                    className="
+                        flex
+                        items-center
+                        justify-center
+                        gap-3
+                        sm:gap-4
+                        bg-[#25D366]
+                        hover:bg-[#22C45A]
+                        rounded-2xl
+                        px-6
+                        sm:px-8
+                        lg:px-10
+                        h-[48px]
+                        sm:h-[52px]
+                        shadow-lg
+                        transition
+                        w-full
+                        sm:w-auto
+                        whitespace-nowrap
+                    "
+                >
+                    <MessageCircle
+                        size={22}
+                        fill="white"
+                        className="text-white shrink-0"
+                    />
 
-                                                  {/* WhatsApp */}
+                    <span
+                        className="
+                            text-white
+                            text-sm
+                            font-semibold
+                            sm:text-[16px]
+                        "
+                    >
+                        Refer Via WhatsApp
+                    </span>
+                </button>
 
-                                        <div className="flex justify-center ">
+            </div>
 
-                                            <button
-                                                onClick={
-                                                    shareOptions.find(
-                                                        (item) => item.platform === "whatsapp"
-                                                    )?.onClick
-                                                }
-                                                className="
-      flex
-      items-center
-      gap-4
-      bg-[#25D366]
-      hover:bg-[#22C45A]
-      rounded-2xl
-      px-10
-      h-[52px]
-      shadow-lg
-      transition
-      "
-                                            >
-                                                <MessageCircle
-                                                    size={22}
-                                                    fill="white"
-                                                    className="text-white"
-                                                />
+        </div>
 
-                                                <span className="text-white text-sm font-semibold lg:text-[16px]">
-                                                    Refer Via WhatsApp
-                                                </span>
-                                            </button>
+    </motion.div>
 
-                                        </div>
-
-                                        </div>
-
-                                       
-
-
-
-                                    </motion.div>
-
-
-                                </div>
+</div>
 
 
 

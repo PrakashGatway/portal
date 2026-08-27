@@ -365,13 +365,6 @@ export default function CourseContentManagement() {
               >
                 <Icon className="w-4 h-4" />
                 {tab.label}
-                <span className={`ml-1 px-2 py-0.5 rounded-full text-xs ${
-                  isActive
-                    ? "bg-blue-100 text-blue-700 dark:bg-blue-800 dark:text-blue-200"
-                    : "bg-gray-100 text-gray-600 dark:bg-gray-700 dark:text-gray-300"
-                }`}>
-                  {getContentCounts()[tab.id] || 0}
-                </span>
               </button>
             );
           })}
