@@ -7,7 +7,8 @@ import Label from "../../components/form/Label";
 import { toast } from "react-toastify";
 import api from "../../axiosInstance";
 import { Eye, Pencil, Trash2 } from "lucide-react";
-import RichTextEditor from "../../components/TextEditor";
+// import RichTextEditor from "../../components/TextEditor";
+import RichTextEditor from "../../components/CkEditor";
 
 export default function FaqManagement() {
   const [faqs, setFaqs] = useState([]);
@@ -673,9 +674,17 @@ export default function FaqManagement() {
               <div>
                 <Label>Answer *</Label>
 
-                <RichTextEditor
+                {/* <RichTextEditor
                   initialValue={formData.content}
                   onChange={handleContentChange}
+                /> */}
+
+                <RichTextEditor
+                  value={formData.content}
+                  onChange={(content)=> { setFormData((prev) => ({
+                      ...prev,
+                      content: content,
+                  }));}}
                 />
 
                 {errors.content && (
