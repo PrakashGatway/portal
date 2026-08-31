@@ -34,7 +34,7 @@ import RecordedVideoUploadModal from "./UploadClass";
 import { ContentThumbnailDropzone } from "./CotentThumbnail";
 import DynamicIcon from "../../components/DynamicIcon";
 
-export default function ContentManagement({ type }: any) {
+export default function ContentManagement({ type, from, course }: any) {
   const [contents, setContents] = useState([]) as any;
   const [loading, setLoading] = useState(true);
   const [total, setTotal] = useState(0);
@@ -53,7 +53,7 @@ export default function ContentManagement({ type }: any) {
     contentType: type || "",
     status: "",
     search: "",
-    course: "",
+    course: from ? course._id : "",
   });
   const [courses, setCourses] = useState([]);
   const [modules, setModules] = useState([]);
@@ -149,7 +149,9 @@ export default function ContentManagement({ type }: any) {
   ]);
 
   useEffect(() => {
-    fetchCourses();
+    if (!from) {
+      fetchCourses();
+    }
     fetchInstructors();
   }, [fetchCourses, fetchInstructors]);
 
@@ -261,8 +263,8 @@ export default function ContentManagement({ type }: any) {
       {/* Header */}
       <div className="p-4 border border-gray-200 rounded-2xl dark:border-gray-800 lg:p-4 mb-3 bg-white dark:border-gray-700 dark:bg-gray-800 dark:text-gray-400">
         <div className="flex flex-col gap-5 xl:flex-row xl:items-center xl:justify-between">
-          <div className="flex flex-col items-center w-full gap-6 xl:flex-row">
-            <div className="w-16 h-16 overflow-hidden border border-gray-200 rounded-full dark:border-gray-800 flex items-center justify-center bg-gradient-to-br from-blue-50 to-indigo-50">
+          <div className="flex flex-col items-center w-full gap-3 xl:flex-row">
+            <div className="p-2 overflow-hidden border border-gray-200 rounded-full dark:border-gray-800 flex items-center justify-center bg-gradient-to-br from-blue-50 to-indigo-50">
               <svg
                 width="32"
                 height="32"
@@ -277,10 +279,10 @@ export default function ContentManagement({ type }: any) {
               </svg>
             </div>
             <div className="order-3 xl:order-2">
-              <h4 className="mb-2 text-lg font-semibold text-center text-gray-800 dark:text-white/90 xl:text-left">
+              <h4 className=" text-lg font-semibold text-center text-gray-800 dark:text-white/90 xl:text-left">
                 Content Management
               </h4>
-              <div className="flex flex-col items-center gap-1 text-center xl:flex-row xl:gap-3 xl:text-left">
+              <div className="flex flex-col items-center gap-1 font-medium text-center xl:flex-row xl:gap-3 xl:text-left">
                 <p className="text-sm text-gray-500 dark:text-gray-400">
                   Manage your course content
                 </p>
@@ -294,7 +296,7 @@ export default function ContentManagement({ type }: any) {
           <div className="flex w-full flex-col gap-3 sm:flex-row sm:items-center sm:justify-end xl:gap-4">
             <button
               onClick={() => setShowFilters(!showFilters)}
-              className="flex w-full items-center justify-center gap-2 rounded-full border border-gray-300 bg-white px-4 py-3 text-sm font-medium text-gray-700 shadow-theme-xs hover:bg-gray-50 hover:text-gray-800 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-400 dark:hover:bg-white/[0.03] dark:hover:text-gray-200 lg:inline-flex lg:w-auto"
+              className="flex w-full items-center justify-center gap-1 rounded-full border border-gray-300 bg-white px-3 py-2.5 text-sm font-medium text-gray-700 shadow-theme-xs hover:bg-gray-50 hover:text-gray-800 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-400 dark:hover:bg-white/[0.03] dark:hover:text-gray-200 lg:inline-flex lg:w-auto"
             >
               <Filter className="h-5 w-5" />
               Filters
@@ -306,7 +308,7 @@ export default function ContentManagement({ type }: any) {
             </button>
             <button
               onClick={openCreateModal}
-              className="flex w-full items-center justify-center gap-2 rounded-full bg-blue-600 px-4 py-3 text-sm font-medium text-white shadow-theme-xs hover:bg-blue-700 lg:inline-flex lg:w-auto"
+              className="flex w-full items-center justify-center gap-1 rounded-full bg-blue-600 px-3 py-2.5 text-sm font-medium text-white shadow-theme-xs hover:bg-blue-700 lg:inline-flex lg:w-auto"
             >
               <Plus className="h-5 w-5" />
               Add Content
@@ -317,7 +319,7 @@ export default function ContentManagement({ type }: any) {
 
       {/* Filters Panel */}
       {showFilters && (
-        <div className="mb-6 rounded-2xl border border-gray-200 bg-white p-4 dark:border-gray-800 dark:bg-white/[0.03]">
+        <div className="mb-3 rounded-2xl border border-gray-200 bg-white p-4 dark:border-gray-800 dark:bg-white/[0.03]">
           <div className="mb-6 grid grid-cols-1 gap-4 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4">
             <div>
               <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
@@ -335,24 +337,26 @@ export default function ContentManagement({ type }: any) {
                 />
               </div>
             </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                Course
-              </label>
-              <select
-                name="course"
-                value={filters.course}
-                onChange={handleFilterChange}
-                className="w-full rounded-md border border-gray-300 bg-white py-2 px-3 text-sm focus:border-indigo-500 focus:outline-none focus:ring-indigo-500 dark:border-gray-600 dark:bg-gray-800 dark:text-white"
-              >
-                <option value="">All Courses</option>
-                {courses.map((course) => (
-                  <option key={course._id} value={course._id}>
-                    {course.title}
-                  </option>
-                ))}
-              </select>
-            </div>
+            {!from && (
+              <div>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                  Course
+                </label>
+                <select
+                  name="course"
+                  value={filters.course}
+                  onChange={handleFilterChange}
+                  className="w-full rounded-md border border-gray-300 bg-white py-2 px-3 text-sm focus:border-indigo-500 focus:outline-none focus:ring-indigo-500 dark:border-gray-600 dark:bg-gray-800 dark:text-white"
+                >
+                  <option value="">All Courses</option>
+                  {courses.map((course) => (
+                    <option key={course._id} value={course._id}>
+                      {course.title}
+                    </option>
+                  ))}
+                </select>
+              </div>
+            )}
             <div>
               <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                 Status
@@ -424,12 +428,9 @@ export default function ContentManagement({ type }: any) {
                   <th className="px-4 py-3 text-sm font-semibold text-gray-700 dark:text-gray-300">
                     Content
                   </th>
-                  <th className="px-4 py-3 text-sm font-semibold text-gray-700 dark:text-gray-300">
+                  {/* <th className="px-4 py-3 text-sm font-semibold text-gray-700 dark:text-gray-300">
                     Type
-                  </th>
-                  <th className="px-4 py-3 text-sm font-semibold text-gray-700 dark:text-gray-300">
-                    Course
-                  </th>
+                  </th> */}
                   <th className="px-4 py-3 text-sm font-semibold text-gray-700 dark:text-gray-300">
                     Module
                   </th>
@@ -439,7 +440,6 @@ export default function ContentManagement({ type }: any) {
                   <th className="px-4 py-3 text-sm font-semibold text-gray-700 dark:text-gray-300">
                     Status
                   </th>
-
                   <th className="px-4 py-3 text-sm font-semibold text-gray-700 dark:text-gray-300">
                     Created
                   </th>
@@ -814,8 +814,6 @@ export default function ContentManagement({ type }: any) {
                     </div>
                   )}
 
-                  
-
                   <div>
                     <h5 className="mb-4 text-lg font-medium text-gray-800 dark:text-white/90">
                       Dates
@@ -858,14 +856,18 @@ export default function ContentManagement({ type }: any) {
       <Modal
         isOpen={editModalOpen}
         onClose={() => setEditModalOpen(false)}
-        className="max-w-[900px] m-4"
+        className="max-w-[900px] m-2"
       >
-        <div className="no-scrollbar relative w-full max-w-[900px] overflow-y-auto rounded-3xl bg-white p-4 sm:p-6 dark:bg-gray-900 ">
+        <div className="no-scrollbar relative w-full max-w-[900px] overflow-y-auto rounded-3xl bg-white p-4 sm:p-5 dark:bg-gray-900 ">
           <div className="px-2 pr-14">
-            <h4 className="mb-px text-2xl font-semibold text-gray-800 dark:text-white/90">
+            <h4 className="mb-px text-xl font-bold text-gray-800 dark:text-white/90">
               {selectedContent ? "Edit Content" : "Add New Content"}
+              <span className="text-sm border-2 border-black rounded-full px-1 bg-black text-white mx-2">
+                {" "}
+                {type}
+              </span>
             </h4>
-            <p className="mb-1 text-sm text-gray-500 dark:text-gray-400 lg:mb-7">
+            <p className="mb-4 text-xs text-gray-500 dark:text-gray-400">
               {selectedContent
                 ? "Update content details below"
                 : "Create a new content for your course"}
@@ -880,6 +882,8 @@ export default function ContentManagement({ type }: any) {
               modules={modules}
               instructors={instructors}
               type={type}
+              course={course}
+              from={from}
             />
           </div>
         </div>
@@ -950,24 +954,9 @@ const ContentTableRow = ({
   let navigate = useNavigate();
   const [isUploadModalOpen, setIsUploadModalOpen] = useState(false);
 
-  const getContentTypeLabel = (type) => {
-    switch (type) {
-      case "LiveClasses":
-        return "Live Class";
-      case "RecordedClasses":
-        return "Recorded Class";
-      case "Tests":
-        return "Test";
-      case "StudyMaterials":
-        return "Study Material";
-      default:
-        return "1:1 Session";
-    }
-  };
-
   return (
     <>
-      <tr className="border-b border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-800/50 transition-colors">
+      <tr className="border-b !font-medium border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-800/50 transition-colors">
         <td className="px-4 py-3">
           {/* {content.__t === "RecordedClasses" &&
                             content.video?.publicId && (
@@ -1014,47 +1003,49 @@ const ContentTableRow = ({
               <img
                 src={`${ImageBaseUrl}/${content.thumbnailPic}`}
                 alt={content.title}
-                className="w-10 h-10 rounded-lg object-cover"
+                className="h-10 w-10 rounded-lg object-cover"
+                onError={(e) => {
+                  e.currentTarget.onerror = null;
+                  e.currentTarget.src =
+                    "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRBF52Tho9MYOQfIEpjvyqZYtejVZ_JOlqMCKmGVfCtUdfIMZ91FxQqGp0&s=10";
+                }}
               />
             ) : (
-              <div className="w-10 h-10 rounded-lg bg-gray-100 dark:bg-gray-700 flex items-center justify-center">
-                {getContentTypeIcon(content.__t)}
-              </div>
+              <img
+                src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRBF52Tho9MYOQfIEpjvyqZYtejVZ_JOlqMCKmGVfCtUdfIMZ91FxQqGp0&s=10"
+                alt="Default thumbnail"
+                className="h-10 w-10 rounded-lg object-cover"
+              />
             )}
             <div>
               <p className="text-sm font-medium text-gray-900 dark:text-white line-clamp-1">
                 {content.title}
               </p>
               <p className="text-xs text-gray-500 dark:text-gray-400">
-                {content.description?.substring(0, 50)}...
+                {content.courseInfo?.title}
               </p>
             </div>
           </div>
         </td>
-        <td className="px-4 py-3">
+        {/* <td className="px-4 py-3">
           <span className="inline-flex items-center gap-1 text-xs font-medium text-gray-700 dark:text-gray-300">
-            {getContentTypeIcon(content.__t)}
             {getContentTypeLabel(content.__t)}
           </span>
-        </td>
-        <td className="px-4 py-3">
-          <p className="text-sm text-gray-700 dark:text-gray-300 line-clamp-1">
-            {content.courseInfo?.title || "N/A"}
-          </p>
-        </td>
+        </td> */}
+
         <td className="px-4 py-3">
           <p className="text-sm text-gray-700 dark:text-gray-300 line-clamp-1">
             {content.moduleInfo?.title || "N/A"}
           </p>
         </td>
         <td className="px-4 py-3">
-          <p className="text-sm text-gray-700 dark:text-gray-300">
+          <p className="text-sm font-medium text-gray-700 dark:text-gray-300">
             {content.instructorInfo?.name || "N/A"}
           </p>
         </td>
         <td className="px-4 py-3">
           <span
-            className={`inline-flex rounded-full px-2 py-1 text-xs font-semibold ${getStatusColor(content.status)}`}
+            className={`inline-flex capitalize items-center rounded-full px-2 py-1 text-xs font-semibold ${getStatusColor(content.status)}`}
           >
             {content.status}
           </span>
@@ -1078,14 +1069,14 @@ const ContentTableRow = ({
             )}
             <button
               onClick={() => onView(content)}
-              className="p-2 rounded-lg bg-indigo-50 hover:bg-indigo-100 text-indigo-600 transition-colors"
+              className="p-2 rounded-lg bg-indigo-50 hover:bg-indigo-100  transition-colors"
               title="View Details"
             >
               <Eye size={16} />
             </button>
             <button
               onClick={() => onEdit()}
-              className="p-2 rounded-lg bg-blue-50 hover:bg-blue-100 text-blue-600 transition-colors"
+              className="p-2 rounded-lg bg-blue-50 hover:bg-blue-100  transition-colors"
               title="Edit"
             >
               <Pencil size={16} />
@@ -1108,7 +1099,7 @@ const ContentTableRow = ({
         </td>
       </tr>
       {isExpanded && (
-        <tr className="border-b border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800/30">
+        <tr className="border-b font-medium border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800/30">
           <td colSpan={9} className="px-6 py-4">
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               <div>
@@ -1123,7 +1114,7 @@ const ContentTableRow = ({
                 <p className="text-xs text-gray-500 dark:text-gray-400 mb-1">
                   Tags
                 </p>
-                <div className="flex flex-wrap gap-1">
+                <div className="flex flex-wrap w-50 gap-px">
                   {content.tags?.length > 0
                     ? content.tags.map((tag, idx) => (
                         <span
@@ -1143,7 +1134,7 @@ const ContentTableRow = ({
                 <div className="space-y-1">
                   <p className="text-sm text-gray-700 dark:text-gray-300">
                     Duration:{" "}
-                    {content.duration ? `${content.duration}s` : "N/A"}
+                    {content.duration ? `${content.duration / 60} min` : "N/A"}
                   </p>
                   <p className="text-sm text-gray-700 dark:text-gray-300">
                     Free: {content.isFree ? "Yes" : "No"}
@@ -1193,6 +1184,8 @@ const ContentForm = ({
   courses,
   type,
   instructors,
+  course,
+  from,
 }: any) => {
   const [modules, setModules] = useState([]);
   const [thumbnailFile, setThumbnailFile] = useState(null);
@@ -1202,7 +1195,7 @@ const ContentForm = ({
   const [formData, setFormData] = useState({
     title: "",
     description: "",
-    course: "",
+    course: from ? course._id : "",
     module: "",
     instructor: "",
     order: 0,
@@ -1234,7 +1227,7 @@ const ContentForm = ({
       setFormData({
         title: content.title || "",
         description: content.description || "",
-        course: content.course || "",
+        course: from ? course._id : content.course || "",
         module: content.module || "",
         instructor: content.instructor || "",
         order: content.order || 0,
@@ -1267,7 +1260,7 @@ const ContentForm = ({
       setFormData({
         title: "",
         description: "",
-        course: "",
+        course: from ? course._id : "",
         module: "",
         instructor: "",
         order: 0,
@@ -1312,10 +1305,12 @@ const ContentForm = ({
         (course) => course._id === formData.course,
       );
 
-      const categoryId =
+      let categoryId =
         selectedCourse?.category || selectedCourse?.category || "";
 
-      if (!categoryId) {
+      if (from) {
+        categoryId = course.category;
+      } else if (!categoryId) {
         setTests([]);
         return;
       }
@@ -1450,7 +1445,7 @@ const ContentForm = ({
       const payload = {
         title: formData.title,
         description: formData.description,
-        course: formData.course,
+        course: from ? course._id : formData.course,
         module: formData.module,
         instructor: formData.instructor,
         // order: parseInt(formData.order, 10) || 0,
@@ -1560,24 +1555,26 @@ const ContentForm = ({
           </div>
         )}
 
-        <div>
-          <Label>Course *</Label>
-          <Select
-            defaultValue={formData.course}
-            options={[
-              ...courses.map((course) => ({
-                value: course._id,
-                label: course.title,
-              })),
-            ]}
-            onChange={(value) =>
-              setFormData((prev) => ({ ...prev, course: value, module: "" }))
-            }
-          />
-          {errors.course && (
-            <p className="mt-1 text-sm text-red-600">{errors.course}</p>
-          )}
-        </div>
+        {!from && (
+          <div>
+            <Label>Course *</Label>
+            <Select
+              defaultValue={formData.course}
+              options={[
+                ...courses.map((course) => ({
+                  value: course._id,
+                  label: course.title,
+                })),
+              ]}
+              onChange={(value) =>
+                setFormData((prev) => ({ ...prev, course: value, module: "" }))
+              }
+            />
+            {errors.course && (
+              <p className="mt-1 text-sm text-red-600">{errors.course}</p>
+            )}
+          </div>
+        )}
         <div>
           <Label>Module</Label>
           <Select
@@ -1745,49 +1742,49 @@ const ContentForm = ({
         <div>
           <Label>Test *</Label>
 
-        <ReactSelect
-  isSearchable
-  isClearable
-  isLoading={testsLoading}
-  placeholder="Search and select test..."
-  value={
-    tests
-      .map((test) => ({
-        value: test._id,
-        label: test.title,
-      }))
-      .find((option) => option.value === formData.test) || null
-  }
-  options={tests.map((test) => ({
-    value: test._id,
-    label: test.title,
-  }))}
-  onInputChange={(inputValue, { action }) => {
-    if (action === "input-change") {
-      setTestSearch(inputValue);
-    }
-  }}
-  onChange={(selectedOption) => {
-    setFormData((prev) => ({
-      ...prev,
-      test: selectedOption?.value || "",
-    }));
-  }}
-  menuPortalTarget={document.body}
-  menuPosition="fixed"
-  styles={{
-    menuPortal: (base) => ({
-      ...base,
-      zIndex: 99999,
-    }),
-    menu: (base) => ({
-      ...base,
-      zIndex: 99999,
-    }),
-  }}
-  className="react-select-container"
-  classNamePrefix="react-select"
-/>
+          <ReactSelect
+            isSearchable
+            isClearable
+            isLoading={testsLoading}
+            placeholder="Search and select test..."
+            value={
+              tests
+                .map((test) => ({
+                  value: test._id,
+                  label: test.title,
+                }))
+                .find((option) => option.value === formData.test) || null
+            }
+            options={tests.map((test) => ({
+              value: test._id,
+              label: test.title,
+            }))}
+            onInputChange={(inputValue, { action }) => {
+              if (action === "input-change") {
+                setTestSearch(inputValue);
+              }
+            }}
+            onChange={(selectedOption) => {
+              setFormData((prev) => ({
+                ...prev,
+                test: selectedOption?.value || "",
+              }));
+            }}
+            menuPortalTarget={document.body}
+            menuPosition="fixed"
+            styles={{
+              menuPortal: (base) => ({
+                ...base,
+                zIndex: 99999,
+              }),
+              menu: (base) => ({
+                ...base,
+                zIndex: 99999,
+              }),
+            }}
+            className="react-select-container"
+            classNamePrefix="react-select"
+          />
 
           {errors.test && (
             <p className="mt-1 text-sm text-red-600">{errors.test}</p>

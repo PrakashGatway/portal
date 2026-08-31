@@ -13,7 +13,7 @@ import { Eye, Pencil, Trash2, Plus } from "lucide-react";
 import { useDropzone } from "react-dropzone";
 import DynamicIcon from "../../components/DynamicIcon";
 
-export default function ModuleManagement() {
+export default function ModuleManagement({ course, from }) {
   const [modules, setModules] = useState([]);
   const [loading, setLoading] = useState(true);
   const [total, setTotal] = useState(0);
@@ -27,14 +27,16 @@ export default function ModuleManagement() {
     sortBy: "-createdAt",
     isPublished: "",
     search: "",
-    course: ""
+    course: from == "content" ? course._id : "",
   });
 
   const [courses, setCourses] = useState([]);
 
   useEffect(() => {
     fetchModules();
-    fetchCourses();
+    if (!from) {
+      fetchCourses();
+    }
   }, [filters]);
 
   const fetchModules = async () => {
@@ -44,8 +46,11 @@ export default function ModuleManagement() {
         ...filters,
         page: filters.page,
         limit: filters.limit,
-        sort: filters.sortBy
+        sort: filters.sortBy,
       };
+      if (from == "content") {
+        params.course = course._id;
+      }
       const response = await api.get("/modules", { params });
       setModules(response.data?.data || []);
       setTotal(response.data?.total || 0);
@@ -67,17 +72,17 @@ export default function ModuleManagement() {
 
   const handleFilterChange = (e) => {
     const { name, value } = e.target;
-    setFilters(prev => ({
+    setFilters((prev) => ({
       ...prev,
       [name]: value,
-      page: 1
+      page: 1,
     }));
   };
 
   const handlePageChange = (newPage) => {
-    setFilters(prev => ({
+    setFilters((prev) => ({
       ...prev,
-      page: newPage
+      page: newPage,
     }));
   };
 
@@ -119,20 +124,26 @@ export default function ModuleManagement() {
     <div className="w-full overflow-x-auto">
       <div className="p-4 border border-gray-200 rounded-2xl dark:border-gray-800 lg:p-4 mb-3 bg-white dark:border-gray-700 dark:bg-gray-800 dark:text-gray-400">
         <div className="flex flex-col gap-5 xl:flex-row xl:items-center xl:justify-between">
-          <div className="flex flex-col items-center w-full gap-6 xl:flex-row">
-            <div className="w-16 h-16 overflow-hidden border border-gray-200 rounded-full dark:border-gray-800 flex items-center justify-center bg-blue-50">
-              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" className="text-blue-600">
-                <path d="M14 2H6C4.9 2 4 2.9 4 4V20C4 21.1 4.9 22 6 22H18C19.1 22 20 21.1 20 20V8L14 2ZM18 20H6V4H13V9H18V20ZM10 12H8V14H10V12ZM14 12H12V14H14V12ZM10 16H8V18H10V16ZM14 16H12V18H14V16Z" fill="currentColor" />
+          <div className="flex flex-col items-start w-full gap-3 xl:flex-row">
+            <div className="p-3 overflow-hidden border border-gray-200 rounded-full dark:border-gray-800 flex items-center justify-center bg-blue-50">
+              <svg
+                width="24"
+                height="24"
+                viewBox="0 0 24 24"
+                fill="none"
+                className="text-blue-600"
+              >
+                <path
+                  d="M14 2H6C4.9 2 4 2.9 4 4V20C4 21.1 4.9 22 6 22H18C19.1 22 20 21.1 20 20V8L14 2ZM18 20H6V4H13V9H18V20ZM10 12H8V14H10V12ZM14 12H12V14H14V12ZM10 16H8V18H10V16ZM14 16H12V18H14V16Z"
+                  fill="currentColor"
+                />
               </svg>
             </div>
             <div className="order-3 xl:order-2">
-              <h4 className="mb-2 text-lg font-semibold text-center text-gray-800 dark:text-white/90 xl:text-left">
+              <h4 className=" text-lg font-semibold text-center text-gray-800 dark:text-white/90 xl:text-left">
                 Module Management
               </h4>
               <div className="flex flex-col items-center gap-1 text-center xl:flex-row xl:gap-3 xl:text-left">
-                <p className="text-sm text-gray-500 dark:text-gray-400">
-                  Manage your course modules and their content
-                </p>
                 <div className="hidden h-3.5 w-px bg-gray-300 dark:bg-gray-700 xl:block"></div>
                 <p className="text-sm text-gray-500 dark:text-gray-400">
                   {modules.length} modules
@@ -167,26 +178,26 @@ export default function ModuleManagement() {
               className="w-full rounded-md border border-gray-300 bg-white py-2 px-3 text-sm focus:border-indigo-500 focus:outline-none focus:ring-indigo-500 dark:border-gray-600 dark:bg-gray-800 dark:text-white"
             />
           </div>
-          {/* Course Filter */}
-          <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-              Course
-            </label>
-            <select
-              name="course"
-              value={filters.course}
-              onChange={handleFilterChange}
-              className="w-full rounded-md border border-gray-300 bg-white py-2 px-3 text-sm focus:border-indigo-500 focus:outline-none focus:ring-indigo-500 dark:border-gray-600 dark:bg-gray-800 dark:text-white"
-            >
-              <option value="">All Courses</option>
-              {courses.map(course => (
-                <option key={course._id} value={course._id}>
-                  {course.title}
-                </option>
-              ))}
-            </select>
-          </div>
-          {/* Status Filter */}
+          {from != "content" && (
+            <div>
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                Course
+              </label>
+              <select
+                name="course"
+                value={filters.course}
+                onChange={handleFilterChange}
+                className="w-full rounded-md border border-gray-300 bg-white py-2 px-3 text-sm focus:border-indigo-500 focus:outline-none focus:ring-indigo-500 dark:border-gray-600 dark:bg-gray-800 dark:text-white"
+              >
+                <option value="">All Courses</option>
+                {courses.map((course) => (
+                  <option key={course._id} value={course._id}>
+                    {course.title}
+                  </option>
+                ))}
+              </select>
+            </div>
+          )}
           <div>
             <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
               Status
@@ -202,7 +213,6 @@ export default function ModuleManagement() {
               <option value="false">Draft</option>
             </select>
           </div>
-          {/* Sort By */}
           <div>
             <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
               Sort By
@@ -221,17 +231,18 @@ export default function ModuleManagement() {
               <option value="-order">Order (High to Low)</option>
             </select>
           </div>
-          {/* Reset Filters Button */}
           <div className="flex items-end">
             <button
-              onClick={() => setFilters({
-                page: 1,
-                limit: 10,
-                sortBy: "-createdAt",
-                isPublished: "",
-                search: "",
-                course: ""
-              })}
+              onClick={() =>
+                setFilters({
+                  page: 1,
+                  limit: 10,
+                  sortBy: "-createdAt",
+                  isPublished: "",
+                  search: "",
+                  course: "",
+                })
+              }
               className="w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm font-medium text-gray-700 shadow-sm hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 dark:border-gray-600 dark:bg-gray-800 dark:text-white dark:hover:bg-gray-700"
             >
               Reset Filters
@@ -274,8 +285,14 @@ export default function ModuleManagement() {
                     key={module._id}
                     module={module}
                     onView={viewModuleDetails}
-                    onEdit={() => { setSelectedModule(module); setEditModalOpen(true); }}
-                    onDelete={() => { setSelectedModule(module); setDeleteModalOpen(true); }}
+                    onEdit={() => {
+                      setSelectedModule(module);
+                      setEditModalOpen(true);
+                    }}
+                    onDelete={() => {
+                      setSelectedModule(module);
+                      setDeleteModalOpen(true);
+                    }}
                   />
                 ))}
               </div>
@@ -304,29 +321,31 @@ export default function ModuleManagement() {
               <button
                 onClick={() => handlePageChange(filters.page - 1)}
                 disabled={filters.page === 1}
-                className={`rounded-md border border-gray-300 px-3 py-1 text-sm ${filters.page === 1
-                  ? "cursor-not-allowed bg-gray-100 text-gray-400 dark:bg-gray-700 dark:text-gray-500"
-                  : "bg-white text-gray-700 hover:bg-gray-50 dark:bg-gray-800 dark:text-white dark:hover:bg-gray-700"
-                  }`}
+                className={`rounded-md border border-gray-300 px-3 py-1 text-sm ${
+                  filters.page === 1
+                    ? "cursor-not-allowed bg-gray-100 text-gray-400 dark:bg-gray-700 dark:text-gray-500"
+                    : "bg-white text-gray-700 hover:bg-gray-50 dark:bg-gray-800 dark:text-white dark:hover:bg-gray-700"
+                }`}
               >
                 Previous
               </button>
               {Array.from(
                 { length: Math.ceil(total / filters.limit) },
-                (_, i) => i + 1
+                (_, i) => i + 1,
               )
                 .slice(
                   Math.max(0, filters.page - 3),
-                  Math.min(Math.ceil(total / filters.limit), filters.page + 2)
+                  Math.min(Math.ceil(total / filters.limit), filters.page + 2),
                 )
                 .map((pageNum) => (
                   <button
                     key={pageNum}
                     onClick={() => handlePageChange(pageNum)}
-                    className={`rounded-md border px-3 py-1 text-sm ${filters.page === pageNum
-                      ? "border-indigo-500 bg-indigo-500 text-white"
-                      : "border-gray-300 bg-white text-gray-700 hover:bg-gray-50 dark:border-gray-600 dark:bg-gray-800 dark:text-white dark:hover:bg-gray-700"
-                      }`}
+                    className={`rounded-md border px-3 py-1 text-sm ${
+                      filters.page === pageNum
+                        ? "border-indigo-500 bg-indigo-500 text-white"
+                        : "border-gray-300 bg-white text-gray-700 hover:bg-gray-50 dark:border-gray-600 dark:bg-gray-800 dark:text-white dark:hover:bg-gray-700"
+                    }`}
                   >
                     {pageNum}
                   </button>
@@ -334,10 +353,11 @@ export default function ModuleManagement() {
               <button
                 onClick={() => handlePageChange(filters.page + 1)}
                 disabled={filters.page * filters.limit >= total}
-                className={`rounded-md border border-gray-300 px-3 py-1 text-sm ${filters.page * filters.limit >= total
-                  ? "cursor-not-allowed bg-gray-100 text-gray-400 dark:bg-gray-700 dark:text-gray-500"
-                  : "bg-white text-gray-700 hover:bg-gray-50 dark:bg-gray-800 dark:text-white dark:hover:bg-gray-700"
-                  }`}
+                className={`rounded-md border border-gray-300 px-3 py-1 text-sm ${
+                  filters.page * filters.limit >= total
+                    ? "cursor-not-allowed bg-gray-100 text-gray-400 dark:bg-gray-700 dark:text-gray-500"
+                    : "bg-white text-gray-700 hover:bg-gray-50 dark:bg-gray-800 dark:text-white dark:hover:bg-gray-700"
+                }`}
               >
                 Next
               </button>
@@ -368,29 +388,39 @@ export default function ModuleManagement() {
                     </h5>
                     <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
                       <div>
-                        <p className="text-sm text-gray-500 dark:text-gray-400">Title</p>
+                        <p className="text-sm text-gray-500 dark:text-gray-400">
+                          Title
+                        </p>
                         <p className="text-sm font-medium text-gray-800 dark:text-white/90">
                           {selectedModule.title}
                         </p>
                       </div>
                       <div>
-                        <p className="text-sm text-gray-500 dark:text-gray-400">Course</p>
+                        <p className="text-sm text-gray-500 dark:text-gray-400">
+                          Course
+                        </p>
                         <p className="text-sm font-medium text-gray-800 dark:text-white/90">
                           {selectedModule.courseInfo?.title || "N/A"}
                         </p>
                       </div>
                       <div>
-                        <p className="text-sm text-gray-500 dark:text-gray-400">Order</p>
+                        <p className="text-sm text-gray-500 dark:text-gray-400">
+                          Order
+                        </p>
                         <p className="text-sm font-medium text-gray-800 dark:text-white/90">
                           {selectedModule.order}
                         </p>
                       </div>
-                      <div>
-                        <p className="text-sm text-gray-500 dark:text-gray-400">Duration</p>
-                        <p className="text-sm font-medium text-gray-800 dark:text-white/90">
-                          {selectedModule.duration > 0 ? `${selectedModule.duration} minutes` : "N/A"}
+                      {/* <div>
+                        <p className="text-sm text-gray-500 dark:text-gray-400">
+                          Duration
                         </p>
-                      </div>
+                        <p className="text-sm font-medium text-gray-800 dark:text-white/90">
+                          {selectedModule.duration > 0
+                            ? `${selectedModule.duration} minutes`
+                            : "N/A"}
+                        </p>
+                      </div> */}
                     </div>
                   </div>
 
@@ -413,21 +443,30 @@ export default function ModuleManagement() {
                     </h5>
                     <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
                       <div>
-                        <p className="text-sm text-gray-500 dark:text-gray-400">Publication Status</p>
+                        <p className="text-sm text-gray-500 dark:text-gray-400">
+                          Publication Status
+                        </p>
                         <p className="text-sm font-medium text-gray-800 dark:text-white/90">
-                          <span className={`inline-flex rounded-full px-2 text-xs font-semibold leading-5 ${selectedModule.isPublished
-                            ? "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200"
-                            : "bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200"
-                            }`}>
+                          <span
+                            className={`inline-flex rounded-full px-2 text-xs font-semibold leading-5 ${
+                              selectedModule.isPublished
+                                ? "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200"
+                                : "bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200"
+                            }`}
+                          >
                             {selectedModule.isPublished ? "Published" : "Draft"}
                           </span>
                         </p>
                       </div>
                       <div>
-                        <p className="text-sm text-gray-500 dark:text-gray-400">Published At</p>
+                        <p className="text-sm text-gray-500 dark:text-gray-400">
+                          Published At
+                        </p>
                         <p className="text-sm font-medium text-gray-800 dark:text-white/90">
                           {selectedModule.publishedAt
-                            ? moment(selectedModule.publishedAt).format("MMM D, YYYY h:mm A")
+                            ? moment(selectedModule.publishedAt).format(
+                                "MMM D, YYYY h:mm A",
+                              )
                             : "N/A"}
                         </p>
                       </div>
@@ -441,19 +480,25 @@ export default function ModuleManagement() {
                     </h5>
                     <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
                       <div className="bg-gray-50 dark:bg-gray-800 p-3 rounded-lg">
-                        <p className="text-sm text-gray-500 dark:text-gray-400">Live Classes</p>
+                        <p className="text-sm text-gray-500 dark:text-gray-400">
+                          Live Classes
+                        </p>
                         <p className="text-lg font-bold text-gray-800 dark:text-white">
                           {selectedModule.liveClassesCount || 0}
                         </p>
                       </div>
                       <div className="bg-gray-50 dark:bg-gray-800 p-3 rounded-lg">
-                        <p className="text-sm text-gray-500 dark:text-gray-400">Recorded Classes</p>
+                        <p className="text-sm text-gray-500 dark:text-gray-400">
+                          Recorded Classes
+                        </p>
                         <p className="text-lg font-bold text-gray-800 dark:text-white">
                           {selectedModule.recordedClassesCount || 0}
                         </p>
                       </div>
                       <div className="bg-gray-50 dark:bg-gray-800 p-3 rounded-lg">
-                        <p className="text-sm text-gray-500 dark:text-gray-400">Tests</p>
+                        <p className="text-sm text-gray-500 dark:text-gray-400">
+                          Tests
+                        </p>
                         <p className="text-lg font-bold text-gray-800 dark:text-white">
                           {selectedModule.testsCount || 0}
                         </p>
@@ -470,8 +515,12 @@ export default function ModuleManagement() {
                       <ul className="space-y-2">
                         {selectedModule.objectives.map((objective, index) => (
                           <li key={index} className="flex items-start">
-                            <span className="mr-2 text-gray-500 dark:text-gray-400">•</span>
-                            <span className="text-sm text-gray-800 dark:text-white/90">{objective}</span>
+                            <span className="mr-2 text-gray-500 dark:text-gray-400">
+                              •
+                            </span>
+                            <span className="text-sm text-gray-800 dark:text-white/90">
+                              {objective}
+                            </span>
                           </li>
                         ))}
                       </ul>
@@ -485,12 +534,18 @@ export default function ModuleManagement() {
                         Prerequisites
                       </h5>
                       <ul className="space-y-2">
-                        {selectedModule.prerequisites.map((prerequisite, index) => (
-                          <li key={index} className="flex items-start">
-                            <span className="mr-2 text-gray-500 dark:text-gray-400">•</span>
-                            <span className="text-sm text-gray-800 dark:text-white/90">{prerequisite}</span>
-                          </li>
-                        ))}
+                        {selectedModule.prerequisites.map(
+                          (prerequisite, index) => (
+                            <li key={index} className="flex items-start">
+                              <span className="mr-2 text-gray-500 dark:text-gray-400">
+                                •
+                              </span>
+                              <span className="text-sm text-gray-800 dark:text-white/90">
+                                {prerequisite}
+                              </span>
+                            </li>
+                          ),
+                        )}
                       </ul>
                     </div>
                   )}
@@ -502,15 +557,23 @@ export default function ModuleManagement() {
                     </h5>
                     <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
                       <div>
-                        <p className="text-sm text-gray-500 dark:text-gray-400">Created At</p>
+                        <p className="text-sm text-gray-500 dark:text-gray-400">
+                          Created At
+                        </p>
                         <p className="text-sm font-medium text-gray-800 dark:text-white/90">
-                          {moment(selectedModule.createdAt).format("MMM D, YYYY h:mm A")}
+                          {moment(selectedModule.createdAt).format(
+                            "MMM D, YYYY h:mm A",
+                          )}
                         </p>
                       </div>
                       <div>
-                        <p className="text-sm text-gray-500 dark:text-gray-400">Last Updated</p>
+                        <p className="text-sm text-gray-500 dark:text-gray-400">
+                          Last Updated
+                        </p>
                         <p className="text-sm font-medium text-gray-800 dark:text-white/90">
-                          {moment(selectedModule.updatedAt).format("MMM D, YYYY h:mm A")}
+                          {moment(selectedModule.updatedAt).format(
+                            "MMM D, YYYY h:mm A",
+                          )}
                         </p>
                       </div>
                     </div>
@@ -519,11 +582,7 @@ export default function ModuleManagement() {
               )}
             </div>
             <div className="flex items-center gap-3 px-2 mt-6 lg:justify-end">
-              <Button
-                size="sm"
-                variant="outline"
-                onClick={closeModal}
-              >
+              <Button size="sm" variant="outline" onClick={closeModal}>
                 Close
               </Button>
             </div>
@@ -535,32 +594,38 @@ export default function ModuleManagement() {
       <Modal
         isOpen={editModalOpen}
         onClose={() => setEditModalOpen(false)}
-        className="max-w-[900px] m-4"
+        className="max-w-[900px]"
       >
-        <div className="no-scrollbar relative w-full max-w-[900px] overflow-y-auto rounded-3xl bg-white p-4 dark:bg-gray-900 lg:p-11">
+        <div className="no-scrollbar relative w-full max-w-[900px] overflow-y-auto rounded-3xl bg-white p-4 dark:bg-gray-900 lg:p-6">
           <div className="px-2 pr-14">
-            <h4 className="mb-2 text-2xl font-semibold text-gray-800 dark:text-white/90">
-              {selectedModule ? 'Edit Module' : 'Add New Module'}
+            <h4 className=" text-2xl font-semibold text-gray-800 dark:text-white/90">
+              {selectedModule ? "Edit Module" : "Add New Module"}
             </h4>
-            <p className="mb-6 text-sm text-gray-500 dark:text-gray-400 lg:mb-7">
+            <p className="mb-2 text-sm text-gray-500 dark:text-gray-400">
               {selectedModule
-                ? 'Update module details below'
-                : 'Create a new module for your course'}
+                ? "Update module details below"
+                : "Create a new module for your course"}
             </p>
           </div>
-          <div className="custom-scrollbar h-[480px] overflow-y-auto px-2 pb-3">
+          <div className="custom-scrollbar h-[480px] overflow-y-auto py-3 px-2 pb-3">
             <ModuleForm
               module={selectedModule}
               onSave={handleSaveSuccess}
               onCancel={handleCancelForm}
               courses={courses}
+              course={course}
+              from={from}
             />
           </div>
         </div>
       </Modal>
 
       {/* Delete Confirmation Modal */}
-      <Modal isOpen={isDeleteModalOpen} onClose={() => setDeleteModalOpen(false)} className="max-w-lg">
+      <Modal
+        isOpen={isDeleteModalOpen}
+        onClose={() => setDeleteModalOpen(false)}
+        className="max-w-lg"
+      >
         {selectedModule && (
           <div className="no-scrollbar relative w-full overflow-y-auto rounded-3xl bg-white p-4 dark:bg-gray-900 lg:p-6">
             <div className="px-2 pr-14">
@@ -568,7 +633,8 @@ export default function ModuleManagement() {
                 Confirm Deletion
               </h4>
               <p className="mb-2 text-sm text-gray-500 dark:text-gray-400 lg:mb-2">
-                Are you sure you want to delete this module? This action cannot be undone.
+                Are you sure you want to delete this module? This action cannot
+                be undone.
               </p>
             </div>
             <div className="px-2">
@@ -580,7 +646,8 @@ export default function ModuleManagement() {
                     </h3>
                     <div className="mt-2 text-sm text-red-700 dark:text-red-300">
                       <p>
-                        Deleting "{selectedModule.title}" will permanently remove it from the system.
+                        Deleting "{selectedModule.title}" will permanently
+                        remove it from the system.
                       </p>
                     </div>
                   </div>
@@ -595,36 +662,40 @@ export default function ModuleManagement() {
               >
                 Cancel
               </Button>
-              <Button
-                size="sm"
-                variant="primary"
-                onClick={deleteModule}
-              >
+              <Button size="sm" variant="primary" onClick={deleteModule}>
                 Delete Module
               </Button>
             </div>
           </div>
         )}
       </Modal>
-    </div >
+    </div>
   );
 }
 
 // Module Form Component
-const ModuleForm = ({ module = null, onSave, onCancel, courses }: any) => {
+const ModuleForm = ({
+  module = null,
+  onSave,
+  onCancel,
+  courses,
+  course,
+  from,
+}: any) => {
   const [formData, setFormData] = useState({
     title: "",
     description: "",
-    course: "",
+    course: from ? course._id : "",
     order: 0,
     duration: 0,
     icon: "",
     objectives: [""],
     prerequisites: [""],
-    isPublished: false
+    isPublished: false,
   });
   const [errors, setErrors] = useState({});
-  const [iconFile, setIconFile] = useState(null)
+  const [iconFile, setIconFile] = useState(null);
+  const [loading, setLoading] = useState(false);
 
   // Initialize form data if editing
   useEffect(() => {
@@ -634,11 +705,13 @@ const ModuleForm = ({ module = null, onSave, onCancel, courses }: any) => {
         description: module.description || "",
         course: module.course || "",
         order: module.order || 0,
-        duration: module.duration || 0,
+        // duration: module.duration || 0,
         objectives: module.objectives?.length ? [...module.objectives] : [""],
-        prerequisites: module.prerequisites?.length ? [...module.prerequisites] : [""],
+        prerequisites: module.prerequisites?.length
+          ? [...module.prerequisites]
+          : [""],
         isPublished: module.isPublished || false,
-        icon: ImageBaseUrl + "/" + module.icon
+        icon: ImageBaseUrl + "/" + module.icon,
       });
     } else {
       setFormData({
@@ -646,11 +719,11 @@ const ModuleForm = ({ module = null, onSave, onCancel, courses }: any) => {
         description: "",
         course: "",
         order: 0,
-        duration: 0,
+        // duration: 0,
         objectives: [""],
         prerequisites: [""],
         isPublished: false,
-        icon: ""
+        icon: "",
       });
     }
     setErrors({});
@@ -659,84 +732,89 @@ const ModuleForm = ({ module = null, onSave, onCancel, courses }: any) => {
   const handleIconChange = (file) => {
     setIconFile(file);
     if (errors.icon) {
-      setErrors(prev => ({ ...prev, icon: '' }));
+      setErrors((prev) => ({ ...prev, icon: "" }));
     }
   };
 
   const handleIconRemove = () => {
     setIconFile(null); // Clear the selected file
-    setFormData(prev => ({ ...prev, icon: "" }));
+    setFormData((prev) => ({ ...prev, icon: "" }));
     if (errors.icon) {
-      setErrors(prev => ({ ...prev, icon: '' }));
+      setErrors((prev) => ({ ...prev, icon: "" }));
     }
   };
 
   const handleChange = (e) => {
     const { name, value, type, checked } = e.target;
-    setFormData(prev => ({
+    setFormData((prev) => ({
       ...prev,
-      [name]: type === 'checkbox' ? checked : value
+      [name]: type === "checkbox" ? checked : value,
     }));
     if (errors[name]) {
-      setErrors(prev => ({ ...prev, [name]: '' }));
+      setErrors((prev) => ({ ...prev, [name]: "" }));
     }
   };
 
   const handleArrayChange = (field, index, value) => {
     const newArray = [...formData[field]];
     newArray[index] = value;
-    setFormData(prev => ({
+    setFormData((prev) => ({
       ...prev,
-      [field]: newArray
+      [field]: newArray,
     }));
   };
 
   const addArrayField = (field) => {
-    setFormData(prev => ({
+    setFormData((prev) => ({
       ...prev,
-      [field]: [...prev[field], ""]
+      [field]: [...prev[field], ""],
     }));
   };
 
   const removeArrayField = (field, index) => {
     if (formData[field].length <= 1) {
-      setFormData(prev => ({
+      setFormData((prev) => ({
         ...prev,
-        [field]: [""]
+        [field]: [""],
       }));
     } else {
       const newArray = [...formData[field]];
       newArray.splice(index, 1);
-      setFormData(prev => ({
+      setFormData((prev) => ({
         ...prev,
-        [field]: newArray
+        [field]: newArray,
       }));
     }
   };
 
   const validateForm = () => {
     const newErrors = {};
-    if (!formData.title.trim()) newErrors.title = 'Module title is required';
-    if (!formData.course) newErrors.course = 'Course is required';
-    if (formData.order < 0) newErrors.order = 'Order must be a positive number';
-    if (!formData.icon && !iconFile) newErrors.icon = 'Icon is required';
+    if (!formData.title.trim()) newErrors.title = "Module title is required";
+    if (!formData.course && !from) newErrors.course = "Course is required";
+    if (formData.order < 0) newErrors.order = "Order must be a positive number";
+    // if (!formData.icon && !iconFile) newErrors.icon = "Icon is required";
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    setLoading(true);
     if (!validateForm()) return;
     let finalIconData = formData.icon;
     if (iconFile) {
       const uploadFormData = new FormData();
-      uploadFormData.append('image', iconFile);
+      uploadFormData.append("image", iconFile);
       try {
-        const uploadResponse = await api.post('/upload/single', uploadFormData, {
-          headers: {
-            'Content-Type': 'multipart/form-data',
+        const uploadResponse = await api.post(
+          "/upload/single",
+          uploadFormData,
+          {
+            headers: {
+              "Content-Type": "multipart/form-data",
+            },
           },
-        });
+        );
         const uploadedIconUrl = uploadResponse.data?.file?.filename;
         if (!uploadedIconUrl) {
           throw new Error("Icon upload failed: No URL returned.");
@@ -751,9 +829,10 @@ const ModuleForm = ({ module = null, onSave, onCancel, courses }: any) => {
     try {
       const payload = {
         ...formData,
+        course: from ? course._id : formData.course,
         icon: finalIconData,
         order: parseInt(formData.order) || 0,
-        duration: parseInt(formData.duration) || 0
+        // duration: parseInt(formData.duration) || 0,
       };
 
       if (module) {
@@ -767,6 +846,8 @@ const ModuleForm = ({ module = null, onSave, onCancel, courses }: any) => {
     } catch (error) {
       console.error("Error saving module:", error);
       toast.error(error?.message || "Failed to save module");
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -782,28 +863,39 @@ const ModuleForm = ({ module = null, onSave, onCancel, courses }: any) => {
             onChange={handleChange}
             placeholder="Enter module title"
           />
-          {errors.title && <p className="mt-1 text-sm text-red-600">{errors.title}</p>}
+          {errors.title && (
+            <p className="mt-1 text-sm text-red-600">{errors.title}</p>
+          )}
         </div>
-        <div className="md:col-span-2">
+        {/* <div className="md:col-span-2">
           <Label>Module Icon (SVG)</Label>
           <IconDropzone
             value={{ url: formData.icon }} // Pass existing URL for preview if editing
-            onChange={handleIconChange}    // Handle new file selection
-            onRemove={handleIconRemove}    // Handle file removal
-            error={errors.icon}            // Display icon-specific errors
+            onChange={handleIconChange} // Handle new file selection
+            onRemove={handleIconRemove} // Handle file removal
+            error={errors.icon} // Display icon-specific errors
           />
-        </div>
-        <div>
-          <Label>Course *</Label>
-          <Select
-            defaultValue={formData.course}
-            options={[
-              ...courses.map(course => ({ value: course._id, label: course.title }))
-            ]}
-            onChange={(value) => setFormData(prev => ({ ...prev, course: value, module: "" }))}
-          />
-          {errors.course && <p className="mt-1 text-sm text-red-600">{errors.course}</p>}
-        </div>
+        </div> */}
+        {!from && (
+          <div>
+            <Label>Course *</Label>
+            <Select
+              defaultValue={formData.course}
+              options={[
+                ...courses.map((course) => ({
+                  value: course._id,
+                  label: course.title,
+                })),
+              ]}
+              onChange={(value) =>
+                setFormData((prev) => ({ ...prev, course: value, module: "" }))
+              }
+            />
+            {errors.course && (
+              <p className="mt-1 text-sm text-red-600">{errors.course}</p>
+            )}
+          </div>
+        )}
 
         <div>
           <Label>Order *</Label>
@@ -814,10 +906,12 @@ const ModuleForm = ({ module = null, onSave, onCancel, courses }: any) => {
             onChange={handleChange}
             min="0"
           />
-          {errors.order && <p className="mt-1 text-sm text-red-600">{errors.order}</p>}
+          {errors.order && (
+            <p className="mt-1 text-sm text-red-600">{errors.order}</p>
+          )}
         </div>
 
-        <div>
+        {/* <div>
           <Label>Duration (minutes)</Label>
           <Input
             type="number"
@@ -826,7 +920,7 @@ const ModuleForm = ({ module = null, onSave, onCancel, courses }: any) => {
             onChange={handleChange}
             min="0"
           />
-        </div>
+        </div> */}
 
         <div className="md:col-span-2">
           <Label>Description</Label>
@@ -862,13 +956,15 @@ const ModuleForm = ({ module = null, onSave, onCancel, courses }: any) => {
               <Input
                 type="text"
                 value={objective}
-                onChange={(e) => handleArrayChange('objectives', index, e.target.value)}
+                onChange={(e) =>
+                  handleArrayChange("objectives", index, e.target.value)
+                }
                 placeholder="Enter objective"
               />
               {formData.objectives.length > 1 && (
                 <button
                   type="button"
-                  onClick={() => removeArrayField('objectives', index)}
+                  onClick={() => removeArrayField("objectives", index)}
                   className="text-red-500 hover:text-red-700"
                 >
                   <DynamicIcon name="Trash" />
@@ -878,7 +974,7 @@ const ModuleForm = ({ module = null, onSave, onCancel, courses }: any) => {
           ))}
           <button
             type="button"
-            onClick={() => addArrayField('objectives')}
+            onClick={() => addArrayField("objectives")}
             className="text-blue-500 hover:text-blue-700 text-sm font-medium"
           >
             + Add Objective
@@ -894,13 +990,15 @@ const ModuleForm = ({ module = null, onSave, onCancel, courses }: any) => {
               <Input
                 type="text"
                 value={prerequisite}
-                onChange={(e) => handleArrayChange('prerequisites', index, e.target.value)}
+                onChange={(e) =>
+                  handleArrayChange("prerequisites", index, e.target.value)
+                }
                 placeholder="Enter prerequisite"
               />
               {formData.prerequisites.length > 1 && (
                 <button
                   type="button"
-                  onClick={() => removeArrayField('prerequisites', index)}
+                  onClick={() => removeArrayField("prerequisites", index)}
                   className="text-red-500 hover:text-red-700"
                 >
                   <DynamicIcon name="Trash" />
@@ -910,7 +1008,7 @@ const ModuleForm = ({ module = null, onSave, onCancel, courses }: any) => {
           ))}
           <button
             type="button"
-            onClick={() => addArrayField('prerequisites')}
+            onClick={() => addArrayField("prerequisites")}
             className="text-blue-500 hover:text-blue-700 text-sm font-medium"
           >
             + Add Prerequisite
@@ -920,6 +1018,7 @@ const ModuleForm = ({ module = null, onSave, onCancel, courses }: any) => {
 
       <div className="flex justify-between pt-4">
         <button
+          disabled={loading}
           className="bg-white text-gray-700 ring-1 ring-inset ring-gray-300 hover:bg-gray-50 dark:bg-gray-800 dark:text-gray-400 dark:ring-gray-700 dark:hover:bg-white/[0.03] dark:hover:text-gray-300 inline-flex items-center justify-center gap-2 rounded-lg transition px-5 py-2"
           type="button"
           onClick={onCancel}
@@ -927,10 +1026,11 @@ const ModuleForm = ({ module = null, onSave, onCancel, courses }: any) => {
           Cancel
         </button>
         <button
+          disabled={loading}
           className="bg-brand-500 text-white shadow-theme-xs hover:bg-brand-600 disabled:bg-brand-300 inline-flex items-center justify-center gap-2 rounded-lg transition px-5 py-2"
           type="submit"
         >
-          {module ? "Update Module" : "Create Module"}
+          {loading ? "Loading..." : "Submit"}
         </button>
       </div>
     </form>
@@ -939,16 +1039,18 @@ const ModuleForm = ({ module = null, onSave, onCancel, courses }: any) => {
 
 const ModuleCard = ({ module, onView, onEdit, onDelete }: any) => {
   return (
-    <div className="border border-gray-200 dark:border-gray-700 rounded-lg shadow-sm overflow-hidden bg-white dark:bg-gray-800 hover:shadow-md transition-shadow duration-200">
+    <div className="border border-gray-200 dark:border-gray-700 rounded-3xl overflow-hidden bg-white dark:bg-gray-800 hover:shadow-md transition-shadow duration-200">
       <div className="p-4 relative">
-        <span className={`absolute top-2 right-2 inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${module.isPublished
-          ? "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200"
-          : "bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200"
-          }`}>
+        <span
+          className={`absolute top-2 right-2 inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
+            module.isPublished
+              ? "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200"
+              : "bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200"
+          }`}
+        >
           {module.isPublished ? "Published" : "Draft"}
         </span>
         <div className="flex justify-start gap-2 items-center">
-          <img src={`${ImageBaseUrl}/${module.icon}`} alt="" className="h-12 p-1 rounded-full bg-gray-100 text-gray-800 dark:bg-gray-900 dark:text-yellow-200" />
           <h3 className="text-lg font-semibold text-gray-800 dark:text-white truncate">
             {module.title}
             <p className=" text-sm text-gray-500 dark:text-gray-400 truncate">
@@ -970,67 +1072,69 @@ const ModuleCard = ({ module, onView, onEdit, onDelete }: any) => {
             T: {module.testsCount || 0}
           </span>
         </div>
-        <div className="mt-4 flex justify-between items-center text-xs text-gray-500 dark:text-gray-400">
+        <div className="mt-4 flex justify-between items-center text-xs font-medium text-gray-600 dark:text-gray-400">
           <span>Order: {module.order}</span>
-          <span>{module.duration > 0 ? `${module.duration} min` : "N/A"}</span>
+          {/* <span>{module.duration > 0 ? `${module.duration} min` : "N/A"}</span> */}
           <span>
             {module.publishedAt
-              ? moment(module.publishedAt).format("MMM D")
+              ? moment(module.publishedAt).format("DD MMM YYYY")
               : "Not Published"}
           </span>
         </div>
       </div>
-      <div className="bg-gray-50 dark:bg-gray-700 px-4 py-2 flex justify-end space-x-2">
+      <div className="bg-gray-50 dark:bg-gray-700 px-4 py-1 flex justify-end space-x-2">
         <button
           onClick={() => onView(module)}
           className="p-2 text-gray-500 hover:text-indigo-600 dark:text-gray-400 dark:hover:text-indigo-400 rounded-full hover:bg-gray-100 dark:hover:bg-gray-600"
           aria-label="View"
         >
-          <Eye className="h-4 w-4" />
+          <Eye className="h-5 w-5" />
         </button>
         <button
           onClick={onEdit}
           className="p-2 text-gray-500 hover:text-blue-600 dark:text-gray-400 dark:hover:text-blue-400 rounded-full hover:bg-gray-100 dark:hover:bg-gray-600"
           aria-label="Edit"
         >
-          <Pencil className="h-4 w-4" />
+          <Pencil className="h-5 w-5" />
         </button>
         <button
           onClick={onDelete}
           className="p-2 text-gray-500 hover:text-red-600 dark:text-gray-400 dark:hover:text-red-400 rounded-full hover:bg-gray-100 dark:hover:bg-gray-600"
           aria-label="Delete"
         >
-          <Trash2 className="h-4 w-4" />
+          <Trash2 className="h-5 w-5" />
         </button>
       </div>
     </div>
   );
 };
 
-
 const IconDropzone = ({ value, onChange, onRemove, error }: any) => {
   const [preview, setPreview] = useState(null);
 
-  const onDrop = useCallback((acceptedFiles) => {
-    const file = acceptedFiles[0];
-    if (file) {
-      if (preview) {
-        URL.revokeObjectURL(preview);
+  const onDrop = useCallback(
+    (acceptedFiles) => {
+      const file = acceptedFiles[0];
+      if (file) {
+        if (preview) {
+          URL.revokeObjectURL(preview);
+        }
+        const previewUrl = URL.createObjectURL(file);
+        setPreview(previewUrl);
+        onChange(file);
       }
-      const previewUrl = URL.createObjectURL(file);
-      setPreview(previewUrl);
-      onChange(file);
-    }
-  }, [onChange, preview]); // Include preview in dependencies
+    },
+    [onChange, preview],
+  ); // Include preview in dependencies
 
   const { getRootProps, getInputProps, isDragActive } = useDropzone({
     onDrop,
     accept: {
-      'image/svg+xml': ['.svg']
+      "image/svg+xml": [".svg"],
     },
     maxSize: 1 * 1024 * 1024,
     multiple: false,
-    maxFiles: 1
+    maxFiles: 1,
   });
 
   const handleRemove = () => {
@@ -1047,10 +1151,11 @@ const IconDropzone = ({ value, onChange, onRemove, error }: any) => {
     <div className="space-y-2">
       <div
         {...getRootProps()}
-        className={`border-2 border-dashed rounded-lg p-4 text-center cursor-pointer transition-colors ${isDragActive
-          ? 'border-blue-500 bg-blue-50 dark:bg-blue-900/20'
-          : 'border-gray-300 dark:border-gray-600 hover:border-gray-400 dark:hover:border-gray-500'
-          } ${error ? 'border-red-500' : ''}`}
+        className={`border-2 border-dashed rounded-lg p-4 text-center cursor-pointer transition-colors ${
+          isDragActive
+            ? "border-blue-500 bg-blue-50 dark:bg-blue-900/20"
+            : "border-gray-300 dark:border-gray-600 hover:border-gray-400 dark:hover:border-gray-500"
+        } ${error ? "border-red-500" : ""}`}
       >
         <input {...getInputProps()} />
         {imageSrc ? (
@@ -1066,13 +1171,24 @@ const IconDropzone = ({ value, onChange, onRemove, error }: any) => {
           </div>
         ) : (
           <div className="space-y-1">
-            <svg className="mx-auto h-6 w-6 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"></path>
+            <svg
+              className="mx-auto h-6 w-6 text-gray-400"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+              xmlns="http://www.w3.org/2000/svg"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth="2"
+                d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"
+              ></path>
             </svg>
             <p className="text-xs text-gray-600 dark:text-gray-400">
               {isDragActive
-                ? 'Drop the SVG here'
-                : 'Drag & drop an SVG icon here, or click to select'}
+                ? "Drop the SVG here"
+                : "Drag & drop an SVG icon here, or click to select"}
             </p>
             <p className="text-xs text-gray-500 dark:text-gray-500">
               SVG up to 1MB
@@ -1080,7 +1196,7 @@ const IconDropzone = ({ value, onChange, onRemove, error }: any) => {
           </div>
         )}
       </div>
-      {(imageSrc) && (
+      {imageSrc && (
         <button
           type="button"
           onClick={handleRemove}

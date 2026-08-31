@@ -611,7 +611,7 @@ const FeedbackPage = () => {
 </div>
 
                         {/* Pagination */}
-                        {pagination.totalPages > 1 && (
+                        {pagination?.totalPages > 1 && (
                             <div className="flex items-center justify-between bg-white rounded-xl border border-gray-200 px-4 py-3">
                                 <p className="text-sm text-gray-500">
                                     Page {pagination.page} of {pagination.totalPages} ({pagination.total} total)

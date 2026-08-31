@@ -1,32 +1,40 @@
-import { useState, useEffect } from 'react';
-import { useAuth } from '../../context/UserContext';
-import api from '../../axiosInstance';
-import LeadManagement from '../Leads/LeadManagement';
-import GREDashboard from './userDashboard';
-import TeacherDashboard from './TeacherDashboard';
+import { useState, useEffect } from "react";
+import { useAuth } from "../../context/UserContext";
+import api from "../../axiosInstance";
+import LeadManagement from "../Leads/LeadManagement";
+import GREDashboard from "./userDashboard";
+import TeacherDashboard from "./TeacherDashboard";
+import AdminDashboard from "./AdminDashbarod";
 
 const EducationAnalytics = () => {
   const { user } = useAuth();
   const [loading, setLoading] = useState(true);
   const [analytics, setAnalytics] = useState(null);
-  const [timeRange, setTimeRange] = useState('7d');
+  const [timeRange, setTimeRange] = useState("7d");
   const [counselors, setAllCounselors] = useState([]);
 
-    if (user.role == "teacher") {
-    return (< TeacherDashboard/>)
+  if (user.role == "teacher") {
+    return <TeacherDashboard />;
   }
 
+  
+  if (user.role == "admin") {
+    return <AdminDashboard />;
+  }
 
   const fetchAnalytics = async () => {
     try {
       setLoading(true);
-      const endpoint = user.role === 'Admin' ? '/admin/analytics' :
-        user.role === 'Teacher' ? '/teacher/analytics' :
-          '/student/analytics';
+      const endpoint =
+        user.role === "Admin"
+          ? "/admin/analytics"
+          : user.role === "Teacher"
+            ? "/teacher/analytics"
+            : "/student/analytics";
       const response = await api.get(`${endpoint}?range=${timeRange}`);
       setAnalytics(response.data.data);
     } catch (error) {
-      console.error('Error fetching analytics:', error);
+      console.error("Error fetching analytics:", error);
     } finally {
       setLoading(false);
     }
@@ -52,12 +60,10 @@ const EducationAnalytics = () => {
     fetchAnalytics();
   }, [timeRange, user.role]);
 
-
   if (user.role == "counselor") {
-    return (<LeadManagement />)
+    return <LeadManagement />;
   }
-    return (<GREDashboard />)
-
+  return <GREDashboard />;
 };
 
 export default EducationAnalytics;
