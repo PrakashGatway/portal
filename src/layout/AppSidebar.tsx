@@ -437,7 +437,7 @@ const AppSidebar: React.FC = () => {
               <div className={`border-l-4 border-orange-500 rounded-[26px] `}>
                 <Link
                   to={nav.path}
-                  className={`w-full  flex items-center gap-3 ${isExpanded || isHovered || isMobileOpen ? "px-4" : "px-1"} py-1.5  rounded-[26px]  group relative
+                  className={`w-full  flex items-center gap-3 ${isExpanded || isHovered || isMobileOpen ? "px-5" : "px-1"} py-1.5  rounded-[26px]  group relative
                   ${isActive(nav.path) ? "font-semibold" : "font-medium"}
                   ${
                     isActive(nav.path)
@@ -508,7 +508,7 @@ const AppSidebar: React.FC = () => {
                     const subActive = isActive(subItem.path);
                     return (
                       <li key={subItem.name}>
-                        <div className="border-l-4 border-orange-500 rounded-[26px] ">
+                        <div className="border-l-4 border-orange-500 rounded-[26px]">
                           <Link
                             to={subItem.path}
                             className={`flex items-center justify-between gap-2.5 px-3 py-[9px] rounded-lg text-[14px] transition-all duration-200

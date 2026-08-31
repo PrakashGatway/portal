@@ -956,12 +956,12 @@ const GREDashboard = () => {
     return (
 
         <div className=" mx-auto max-w-7xl">
-            <div className='grid grid-cols-1 lg:grid-cols-[1.5fr_0.5fr] gap-6 my-4'>
+            <div className='grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 xl:grid-cols-[1.5fr_0.5fr] gap-6 my-4'>
                 <HeaderBanner data={data} user={user} filterBanner={filterBanner} />
 
                 {(
-                    <div className="p-[2px] rounded-3xl bg-gradient-to-b from-orange-500 via-orange-500 to-orange-200/40">
-                        <div className=" rounded-3xl  bg-white dark:bg-gray-800 p-4 ">
+                    <div className="p-[2px] h-full rounded-3xl bg-gradient-to-b from-orange-500 via-orange-500 to-orange-200/40">
+                        <div className="h-full rounded-3xl  bg-white dark:bg-gray-800 p-4 ">
                             {/* Top */}
                             <div className="flex items-start gap-4">
                                 {/* <Image
@@ -1039,7 +1039,7 @@ const GREDashboard = () => {
             </div>
             <div className="grid grid-cols-1 lg:grid-cols-[1.5fr_0.5fr] gap-6 mb-2 ">
                 <div className="flex flex-col gap-4 lg:col-span-2 ">
-                    <div className="grid min-w-0 grid-cols-1 md:grid-cols-[1.5fr_0.5fr] gap-4">
+                    <div className="grid min-w-0 grid-cols-1 xl:grid-cols-[1.5fr_0.5fr] gap-4">
 
                         {/* 1. Pink/Orange Gradient Card */}
                         <section className="w-full  overflow-hidden">
@@ -1950,7 +1950,7 @@ const GREDashboard = () => {
                     })}
                 </div>
                 ) : (
-                    <div className="grid grid-cols-1 sm:grid-cols-2 sm:grid-cols-3 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 sm:grid-cols-2 lg:grid-cols-2 xl:grid-cols-4 gap-6">
                         {allCourses.map((item) => {
                             const realPrice = item?.pricing?.amount;
 

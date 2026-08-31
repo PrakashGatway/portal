@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from "react";
 import api, { ImageBaseUrl } from "../axiosInstance";
+import { ChevronLeft, ChevronRight } from "lucide-react";
 
 const FeedbackPage = () => {
     const [activeTab, setActiveTab] = useState("report");
@@ -413,202 +414,110 @@ const FeedbackPage = () => {
                 )}
 
                 {/* Cards Grid — NO client-side filtering, data is already filtered by API */}
-                {!loading && feedbacks.length > 0 && (
-                    <>
-                       <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-5">
-    {feedbacks.map((item) => (
-        <div
-            key={item._id}
-            onClick={() => setSelectedItem(item)}
-            className="
-                group relative bg-white rounded-xl
-                border border-gray-200
-                cursor-pointer
-                overflow-hidden
-                transition-all duration-200
-                hover:border-orange-300
-                hover:shadow-[0_8px_30px_rgba(234,88,12,0.08)]
-            "
-        >
-            {/* Left Highlight */}
+              {!loading && feedbacks.length > 0 && (
+    <>
+        <div className="w-full overflow-hidden bg-white rounded-2xl border border-gray-200 shadow-sm">
+            {/* Table Header - Hidden on Mobile */}
+            <div className="hidden md:grid grid-cols-12 gap-4 px-6 py-4 bg-[#f45b2a] border-b border-gray-200 text-xs font-semibold text-white uppercase tracking-wider">
+                <div className="col-span-2">Content / User</div>
+                <div className="col-span-5 text-center">Type & Details</div>
+                <div className="col-span-2">Message Preview</div>
+                <div className="col-span-2 text-center">Status / Rating</div>
+                <div className="col-span-1 text-right">Date</div>
+            </div>
 
-            <div className="p-5 pl-6">
-
-                {/* Header */}
-                <div className="flex items-center justify-between mb-4">
-                    <div className="flex items-center gap-2">
-
-                        {/* Content Type */}
-                        <span
-                            className="
-                                inline-flex items-center
-                                px-2.5 py-1
-                                rounded-md
-                                bg-orange-50
-                                border border-orange-100
-                                text-[11px]
-                                font-semibold
-                                text-orange-600
-                            "
-                        >
-                            {formatContentRef(item.contentref)}
-                        </span>
-
-                        {/* Severity */}
-                        {activeTab === "report" && (
-                            <span
-                                className={`
-                                    px-2.5 py-1
-                                    rounded-md
-                                    text-[11px]
-                                    font-semibold
-                                    capitalize
-                                    ${severityStyle(item.severity)}
-                                `}
-                            >
-                                {item.severity}
-                            </span>
-                        )}
-                    </div>
-
-                    {/* Date */}
-                    <span className="text-[11px] text-gray-400">
-                        {new Date(item.createdAt).toLocaleDateString(
-                            "en-US",
-                            {
-                                month: "short",
-                                day: "numeric",
-                                year: "numeric",
-                            }
-                        )}
-                    </span>
-                </div>
-
-                {/* Content Title */}
-                <div className="mb-4">
-                    <h3
-                        className="
-                            text-[15px]
-                            font-semibold
-                            text-gray-900
-                            leading-5
-                            line-clamp-2
-                            group-hover:text-orange-600
-                            transition-colors
-                        "
+            {/* Table Body */}
+            <div className="divide-y divide-gray-100">
+                {feedbacks.map((item) => (
+                    <div
+                        key={item._id}
+                        onClick={() => setSelectedItem(item)}
+                        className="group relative grid grid-cols-1 md:grid-cols-12 gap-4 px-6 py-5 hover:bg-orange-50/30 transition-colors cursor-pointer items-center"
                     >
-                        {item.content?.title || "Unknown Content"}
-                    </h3>
-
-                    {/* User */}
-                    <div className="flex items-center gap-2 mt-2">
-                        <div
-                            className="
-                                w-6 h-6
-                                rounded-full
-                                bg-orange-100
-                                text-orange-600
-                                flex items-center justify-center
-                                text-[10px]
-                                font-bold
-                            "
-                        >
-                            {(item.user?.name || "A")
-                                .charAt(0)
-                                .toUpperCase()}
-                        </div>
-
-                        <span className="text-xs text-gray-500">
-                            {item.user?.name || "Anonymous"}
-                        </span>
-                    </div>
-                </div>
-
-                {/* Divider */}
-                <div className="border-t border-gray-100 mb-4" />
-
-                {/* REPORT */}
-                {activeTab === "report" ? (
-                    <>
-                        {/* Issue Type */}
-                        <div className="flex items-center justify-between mb-3">
-                            <span className="text-xs text-gray-400">
-                                Issue Type
-                            </span>
-
-                            <span className="text-xs font-medium text-gray-700">
-                                {item.issueType || "General Issue"}
-                            </span>
-                        </div>
-
-                        {/* Description */}
-                        <div className="bg-gray-50 rounded-lg px-3 py-2.5 border border-gray-100">
-                            <p className="text-xs leading-5 text-gray-600 line-clamp-2">
-                                {item.description ||
-                                    item.message ||
-                                    "No description provided."}
-                            </p>
-                        </div>
-
-                        {/* Screenshot */}
-                        {item.screenshot && (
-                            <div className="mt-3 flex items-center gap-1.5 text-xs text-orange-600 font-medium">
-                                <span>📎</span>
-                                <span>Screenshot attached</span>
-                            </div>
-                        )}
-                    </>
-                ) : (
-                    /* REVIEW */
-                    <div>
-                        <div className="flex items-center justify-between mb-3">
-                            <span className="text-xs text-gray-400">
-                                Student Rating
-                            </span>
-
-                            <div className="flex items-center gap-1.5">
-                                <Stars rating={item.rating} />
-
-                                <span className="text-xs font-semibold text-gray-700">
-                                    {item.rating}/5
-                                </span>
+                        
+                        {/* 1. Content & User Info */}
+                        <div className="col-span-1 md:col-span-4 flex items-start gap-4">
+                         
+                            
+                            <div className="min-w-0 flex-1">
+                                <h4 className="text-sm font-bold text-gray-900 line-clamp-1 group-hover:text-orange-600 transition-colors">
+                                    {item.content?.title || "Unknown Content"}
+                                </h4>
+                                <p className="text-xs text-gray-500 mt-0.5 flex items-center gap-2">
+                                    by <span className="font-medium text-gray-700">{item.user?.name || "Anonymous"}</span>
+                                    <span className="w-1 h-1 rounded-full bg-gray-300"></span>
+                                    <span className="inline-flex items-center px-2 py-0.5 rounded text-[10px] font-medium bg-gray-100 text-gray-600">
+                                        {formatContentRef(item.contentref)}
+                                    </span>
+                                </p>
                             </div>
                         </div>
 
-                        <div className="bg-orange-50/50 rounded-lg px-3 py-2.5 border border-orange-100">
-                            <p className="text-xs leading-5 text-gray-600 line-clamp-2">
-                                {item.message ||
-                                    "No review message provided."}
-                            </p>
+                        {/* 2. Type & Issue (Report) OR Just Type (Review) */}
+                        <div className="col-span-1 md:col-span-2 flex flex-col justify-center">
+                             {activeTab === "report" ? (
+                                 <div className="flex flex-col gap-1">
+                                     <span className={`text-[11px] font-bold px-2 py-1 rounded-md w-fit capitalize ${severityStyle(item.severity)}`}>
+                                         {item.severity}
+                                     </span>
+                                     <span className="text-xs text-gray-500 truncate">{item.issueType || "General"}</span>
+                                 </div>
+                             ) : (
+                                 <div className="flex items-center gap-2">
+                                     <div className="flex text-orange-400">
+                                         <Stars rating={item.rating} size={14} /> 
+                                     </div>
+                                     <span className="text-xs font-bold text-gray-700">{item.rating}.0</span>
+                                 </div>
+                             )}
                         </div>
+
+                        {/* 3. Message Preview */}
+                        <div className="col-span-1 md:col-span-3">
+                            <div className="bg-orange-50 rounded-lg p-2.5 border border-gray-100  group-hover:border-orange-200 transition-all">
+                                <p className="text-xs text-gray-600 line-clamp-2 leading-relaxed">
+                                    {activeTab === "report" 
+                                        ? (item.description || item.message || "No description")
+                                        : (item.message || "No review message")
+                                    }
+                                </p>
+                                {item.screenshot && activeTab === "report" && (
+                                    <div className="mt-2 flex items-center gap-1 text-[10px] text-orange-600 font-semibold bg-orange-50 px-2 py-1 rounded w-fit">
+                                        📎 Attachment
+                                    </div>
+                                )}
+                            </div>
+                        </div>
+
+                        {/* 4. Status / Action Badge */}
+                        <div className="col-span-1 md:col-span-2 flex justify-center md:justify-center">
+                            <span className={`
+                                inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium border
+                                ${activeTab === 'report' 
+                                    ? 'bg-orange-50 text-orange-700 border-blue-100' 
+                                    : 'bg-green-50 text-green-700 border-green-100'}
+                            `}>
+                                {activeTab === 'report' ? 'Open Issue' : 'Verified Review'}
+                            </span>
+                        </div>
+
+                        {/* 5. Date & Arrow */}
+                        <div className="col-span-1 md:col-span-1 flex items-center justify-between md:justify-end gap-2">
+                            <span className="text-xs text-gray-400 font-medium whitespace-nowrap">
+                                {new Date(item.createdAt).toLocaleDateString("en-US", {
+                                    month: "short",
+                                    day: "numeric",
+                                })}
+                            </span>
+                            <ChevronRight className="h-4 w-4 text-gray-300 group-hover:text-orange-500 group-hover:translate-x-1 transition-all hidden md:block" />
+                        </div>
+
+                        {/* Mobile Only: Bottom Border Accent */}
+                        <div className="absolute bottom-0 left-0 h-[2px] bg-orange-500 w-0 group-hover:w-full transition-all duration-300 md:hidden"></div>
                     </div>
-                )}
-
-                {/* Bottom */}
-                <div className="flex items-center justify-between mt-4 pt-3 border-t border-gray-100">
-                    <span className="text-[11px] text-gray-400">
-                        {activeTab === "report"
-                            ? "Issue Report"
-                            : "Video Review"}
-                    </span>
-
-                    <span
-                        className="
-                            text-[11px]
-                            font-semibold
-                            text-orange-500
-                            opacity-0
-                            group-hover:opacity-100
-                            transition-opacity
-                        "
-                    >
-                        View details →
-                    </span>
-                </div>
+                ))}
             </div>
         </div>
-    ))}
-</div>
 
                         {/* Pagination */}
                         {pagination?.totalPages > 1 && (
@@ -670,7 +579,7 @@ const FeedbackPage = () => {
                                     <div className="min-w-0">
                                         <h3 className="font-bold text-gray-900 truncate">{selectedItem.content.title}</h3>
                                         <p className="text-sm text-gray-500 line-clamp-2 mt-1">{selectedItem.content.description}</p>
-                                        {selectedItem.content.slug && <p className="text-xs text-orange-500 mt-2 font-mono">/{selectedItem.content.slug}</p>}
+                                     
                                     </div>
                                 </div>
                             )}

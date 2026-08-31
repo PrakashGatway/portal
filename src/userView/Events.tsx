@@ -96,7 +96,26 @@ const EventCalendar = () => {
     setShowEventModal(true);
   }, [user.role]);
 
-  const handleSelectEvent = useCallback((event) => { setViewingEvent(event); setEditingEvent(null); setShowEventModal(true); }, []);
+   const handleSelectEvent = useCallback((event) => {
+    // Find all events that happen on the same calendar day as the clicked event
+    const eventDate = moment(event.start).format('YYYY-MM-DD');
+    
+    const allEventsOnSameDay = events.filter(e => 
+      moment(e.start).format('YYYY-MM-DD') === eventDate
+    ).sort((a, b) => a.start - b.start); // Sort by time
+
+    // We attach this list to the viewingEvent object so the modal can access it
+    // We keep the original 'event' as the primary one for header purposes if needed,
+    // but we add a property 'siblings' or similar.
+    
+    setViewingEvent({
+      ...event,
+      siblings: allEventsOnSameDay // Store the full list here
+    });
+    
+    setEditingEvent(null);
+    setShowEventModal(true);
+  }, [events]); // Added 'events' to dependency array
 
   const handleEditEvent = (event) => {
     if (user.role !== "admin") return
@@ -730,9 +749,9 @@ date cut
         </main>
 
         {/* RIGHT SIDEBAR - Hidden on mobile unless toggled */}
-        <aside className={`lg:w-80 w-full transition-all duration-300 overflow-hidden`}>
+        <aside className={`xl:w-80 w-full transition-all duration-300 overflow-hidden`}>
           <div className='flex flex-col gap-3'>
-            <div className="bg-orange-50 rounded-3xl   h-full p-6 ">
+            <div className="bg-orange-50 rounded-xl   h-full p-6 ">
 
               {/* Date Header */}
               <div className="mb-6">
@@ -774,17 +793,25 @@ date cut
             </div>
 
             {/* Lists */}
-            <div className="flex-1 overflow-y-auto pr-2  scrollbar-hide">
-              <div>
-                <div className="bg-orange-100/50 rounded-xl p-3 mb-3 lg:h-55 overflow-y-auto ">
-                  <h3 className="font-bold text-orange-700 text-sm flex items-center gap-2">
+            <div className="flex-1 overflow-y-auto  scrollbar-hide">
+                           <div>
+                {/* Container with fixed height on large screens */}
+                <div className="bg-orange-100/50 rounded-xl p-3 mb-3 flex flex-col lg:h-55">
+                  
+                  {/* Header - shrinks to fit content */}
+                  <h3 className="font-bold text-orange-700 text-sm flex items-center gap-2 shrink-0">
                     <Clock className="h-4 w-4" /> Today's Schedule
                   </h3>
 
-                  <div className="space-y-3 mt-3">
-                    {todayEvents.length > 0 ? (
-                      todayEvents.map(event => (
-                        <div key={event.id} onClick={() => handleSelectEvent(event)} className="group p-3 rounded-xl bg-white border border-orange-100 cursor-pointer hover:border-orange-300 hover:shadow-md transition-all">
+                  {todayEvents.length > 0 ? (
+                    /* ✅ HAS CONTENT: Scrollable list */
+                    <div className="space-y-3 mt-3 overflow-y-auto scrollbar-hide flex-1">
+                      {todayEvents.map(event => (
+                        <div 
+                          key={event.id} 
+                          onClick={() => handleSelectEvent(event)} 
+                          className="group p-3 rounded-xl bg-white border border-orange-100 cursor-pointer hover:border-orange-300 hover:shadow-md transition-all"
+                        >
                           <div className="flex items-start gap-3">
                             <div className={`flex h-10 w-10 items-center justify-center rounded-lg bg-[#ff5321] text-white flex-shrink-0 shadow-sm`}>
                               {React.createElement(event.icon || Video, { className: "h-5 w-5" })}
@@ -797,37 +824,58 @@ date cut
                             </div>
                           </div>
                         </div>
-                      ))
-                    ) : (
-                      <div className="text-center py-6 text-gray-400 bg-white/50 rounded-xl border border-dashed border-orange-200">
-                        <p className="text-sm">No classes today</p>
+                      ))}
+                    </div>
+                  ) : (
+                    /* ✅ NO CONTENT: Full height, centered message */
+                    <div className="flex-1 flex flex-col items-center justify-center text-center py-6 mt-2">
+                      <div className="bg-white p-4 rounded-full mb-3 shadow-sm">
+                        <Clock className="h-8 w-8 text-orange-300" />
                       </div>
-                    )}
-                  </div>
+                      <p className="text-sm text-gray-500 font-medium">No classes today</p>
+                      <p className="text-xs text-gray-400 mt-1">Enjoy your free time!</p>
+                    </div>
+                  )}
                 </div>
-
               </div>
 
               <div>
                 <div className="bg-orange-100/50 rounded-xl p-3 mb-3 overflow-y-auto lg:h-54">
                   <h3 className="font-bold text-orange-700 text-sm flex items-center gap-2">
                     <Award className="h-4 w-4" /> Upcoming
-                  </h3>
-
-                  <div className="space-y-2 my-3">
-                    {upcomingEvents.map(event => (
-                      <div key={event.id} onClick={() => handleSelectEvent(event)} className="flex items-center gap-3 p-2.5 rounded-xl bg-white border border-transparent hover:border-orange-200 hover:bg-orange-50 cursor-pointer transition-all">
-                        <div className="text-center min-w-[45px] bg-orange-50 rounded-lg py-1.5 border border-orange-100">
-                          <div className="text-[10px] font-bold text-orange-500 uppercase">{moment(event.start).format('MMM')}</div>
-                          <div className="text-lg font-bold text-gray-800 leading-none">{moment(event.start).format('DD')}</div>
+                  </h3><div>
+                  {upcomingEvents.length > 0 ? (
+                    /* ✅ HAS CONTENT: Scrollable list, natural height */
+                    <div className="space-y-2 my-3 overflow-y-auto scrollbar-hide flex-1">
+                      {upcomingEvents.map(event => (
+                        <div 
+                          key={event.id} 
+                          onClick={() => handleSelectEvent(event)} 
+                          className="flex items-center gap-3 p-2.5 rounded-xl bg-white border border-transparent hover:border-orange-200 hover:bg-orange-50 cursor-pointer transition-all"
+                        >
+                          <div className="text-center min-w-[45px] bg-orange-50 rounded-lg py-1.5 border border-orange-100">
+                            <div className="text-[10px] font-bold text-orange-500 uppercase">{moment(event.start).format('MMM')}</div>
+                            <div className="text-lg font-bold text-gray-800 leading-none">{moment(event.start).format('DD')}</div>
+                          </div>
+                          <div className="flex-1 min-w-0">
+                            <div className="text-sm font-semibold text-gray-800 truncate">{event.title}</div>
+                            <div className="text-xs text-orange-500 font-medium">{moment(event.start).format('HH:mm')}</div>
+                          </div>
                         </div>
-                        <div className="flex-1 min-w-0">
-                          <div className="text-sm font-semibold text-gray-800 truncate">{event.title}</div>
-                          <div className="text-xs text-orange-500 font-medium">{moment(event.start).format('HH:mm')}</div>
-                        </div>
+                      ))}
+                    </div>
+                  ) : (
+                    /* ✅ NO CONTENT: Full height, centered message */
+                    <div className="flex-1 flex flex-col items-center justify-center text-center py-6 mt-2">
+                      <div className="bg-white p-4 rounded-full mb-3 shadow-sm">
+                        <CalendarIcon className="h-8 w-8 text-orange-300" />
                       </div>
-                    ))}
-                  </div>
+                      <p className="text-sm text-gray-500 font-medium">No upcoming events</p>
+                      <p className="text-xs text-gray-400 mt-1">Check back later for new schedules</p>
+                    </div>
+                  )}
+            
+              </div>
                 </div>
 
               </div>
@@ -866,44 +914,78 @@ date cut
             </div>
 
             {/* Content */}
+                        {/* Content */}
             <div className="p-6 space-y-6">
               {viewingEvent ? (
                 /* ✅ VIEW MODE - ACCESSIBLE BY ALL ROLES */
                 <div className="space-y-4">
-                  <h4 className="text-2xl font-bold text-gray-900">{viewingEvent.title}</h4>
-
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                    <div className="p-4 bg-orange-50 rounded-xl border border-orange-100">
-                      <div className="text-xs text-orange-600 font-bold uppercase mb-1">Start</div>
-                      <div className="font-semibold text-gray-800">
-                        {moment(viewingEvent.start).format('MMM DD, YYYY HH:mm')}
-                      </div>
-                    </div>
-                    <div className="p-4 bg-orange-50 rounded-xl border border-orange-100">
-                      <div className="text-xs text-orange-600 font-bold uppercase mb-1">End</div>
-                      <div className="font-semibold text-gray-800">
-                        {moment(viewingEvent.end).format('MMM DD, YYYY HH:mm')}
-                      </div>
-                    </div>
+                  {/* Header shows the total count if multiple events exist */}
+                  <div className="flex items-center justify-between">
+                     <h4 className="text-2xl font-bold text-gray-900">
+                      {viewingEvent.siblings && viewingEvent.siblings.length > 1 
+                        ? `${viewingEvent.siblings.length} Events on ${moment(viewingEvent.start).format('MMM DD')}`
+                        : viewingEvent.title
+                      }
+                    </h4>
                   </div>
 
-                  {/* Only show Edit/Delete buttons for Admin */}
-                  {user.role === "admin" && (
-                    <div className="flex gap-3 pt-4 border-t border-gray-100">
-                      <button
-                        onClick={() => handleEditEvent(viewingEvent)}
-                        className="flex-1 py-3 bg-orange-500 text-white rounded-xl font-bold hover:bg-orange-600 transition-colors"
-                      >
-                        Edit
-                      </button>
-                      <button
-                        onClick={() => handleDeleteEvent(viewingEvent.id)}
-                        className="px-6 py-3 bg-red-50 text-red-600 rounded-xl font-bold hover:bg-red-100 transition-colors"
-                      >
-                        Delete
-                      </button>
-                    </div>
-                  )}
+                  {/* Map through ALL events for this day */}
+                  <div className="space-y-3 max-h-[60vh] overflow-y-auto pr-2 custom-scrollbar">
+                    {(viewingEvent.siblings || [viewingEvent]).map((evt, index) => (
+                      <div key={evt.id || index} className="p-4 bg-orange-50 rounded-xl border border-orange-100 relative group">
+                        
+                        {/* Event Title & Time */}
+                        <div className="flex justify-between items-start mb-2">
+                          <h5 className="font-bold text-gray-800 text-lg">{evt.title}</h5>
+                          <span className="text-xs font-bold bg-white px-2 py-1 rounded-md text-orange-600 border border-orange-200 shadow-sm">
+                            {moment(evt.start).format('HH:mm')} - {moment(evt.end).format('HH:mm')}
+                          </span>
+                        </div>
+
+                        {/* Details Grid */}
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-sm">
+                           <div>
+                              <div className="text-xs text-orange-600 font-bold uppercase mb-1">Start</div>
+                              <div className="font-semibold text-gray-700">
+                                {moment(evt.start).format('MMM DD, YYYY HH:mm')}
+                              </div>
+                           </div>
+                           <div>
+                              <div className="text-xs text-orange-600 font-bold uppercase mb-1">End</div>
+                              <div className="font-semibold text-gray-700">
+                                {moment(evt.end).format('MMM DD, YYYY HH:mm')}
+                              </div>
+                           </div>
+                        </div>
+                        
+                        {/* Instructor Info (if available) */}
+                        {evt.instructor && (
+                          <div className="mt-3 pt-3 border-t border-orange-200/50 flex items-center gap-2">
+                             <User className="h-4 w-4 text-orange-500" />
+                             <span className="text-sm text-gray-600 font-medium">{evt.instructor.name}</span>
+                          </div>
+                        )}
+
+                        {/* Admin Actions for THIS specific event in the list */}
+                        {user.role === "admin" && (
+                          <div className="flex gap-2 mt-4 pt-2 border-t border-orange-200/50 opacity-100 transition-opacity">
+                            <button
+                              onClick={() => handleEditEvent(evt)}
+                              className="flex-1 py-2 bg-orange-500 text-white rounded-lg text-sm font-bold hover:bg-orange-600 transition-colors flex items-center justify-center gap-2"
+                            >
+                              <Edit2 className="h-4 w-4" /> Edit
+                            </button>
+                            <button
+                              onClick={() => handleDeleteEvent(evt.id)}
+                              className="px-4 py-2 bg-red-50 text-red-600 rounded-lg text-sm font-bold hover:bg-red-100 transition-colors flex items-center justify-center gap-2"
+                            >
+                              <Trash2 className="h-4 w-4" /> Delete
+                            </button>
+                          </div>
+                        )}
+                      </div>
+                    ))}
+                  </div>
                 </div>
               ) : (
                 /* ✅ CREATE/EDIT MODE - ADMIN ONLY (Protected by handler guard) */

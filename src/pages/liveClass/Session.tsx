@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback } from "react";
-import { useParams, useNavigate } from "react-router";
+import { useParams, useNavigate, Link } from "react-router";
 import {
   Clock,
   Video,
@@ -20,6 +20,8 @@ import {
   Mail,
   Bookmark,
   User,
+  Plus,
+  ChevronRight,
 } from "lucide-react";
 import api, { ImageBaseUrl } from "../../axiosInstance";
 
@@ -42,6 +44,61 @@ const ContentViewPage = () => {
     instructorRole: "Pte expert",
     instructorImage: "/images/sidney.png",
 };
+
+
+  const [timeLeft, setTimeLeft] = useState({
+    days: 4,
+    hours: 56,
+    minutes: 17
+  });
+
+  // Countdown timer effect
+  useEffect(() => {
+    const timer = setInterval(() => {
+      setTimeLeft(prev => {
+        if (prev.minutes > 0) {
+          return { ...prev, minutes: prev.minutes - 1 };
+        } else if (prev.hours > 0) {
+          return { ...prev, hours: prev.hours - 1, minutes: 59 };
+        } else if (prev.days > 0) {
+          return { ...prev, days: prev.days - 1, hours: 23, minutes: 59 };
+        }
+        return prev;
+      });
+    }, 60000); // Update every minute
+
+    return () => clearInterval(timer);
+  }, []);
+
+  const upcomingSessions = [
+    {
+      id: '08',
+      title: 'Session 08',
+      topic: 'Advanced Algebra & Problem Solving',
+      date: '26 Aug, Tue',
+      time: '4:00 PM - 5:00 PM',
+      active: true
+    },
+    {
+      id: '09',
+      title: 'Session 09',
+      topic: 'Problem Solving Techniques',
+      date: '28 Aug, Thu',
+      time: '4:00 PM - 5:00 PM',
+      active: false
+    },
+    {
+      id: '10',
+      title: 'Session 10',
+      topic: 'Full Mathematics Review',
+      date: '30 Aug, Sat',
+      time: '4:00 PM - 5:00 PM',
+      active: false
+    }
+  ];
+
+  const tabs = ['Overview', 'Material', 'Schedule', 'Trainer', 'Recordings'];
+  const [activeTab, setActiveTab] = useState('Overview');
 
   useEffect(() => {
     const fetchContent = async () => {
@@ -70,6 +127,30 @@ const ContentViewPage = () => {
       fetchContent();
     }
   }, [slug]);
+
+
+  // Check session date against today's date
+const getSessionDateStatus = (scheduledStart?: string) => {
+  if (!scheduledStart) return "upcoming";
+
+  const sessionDate = new Date(scheduledStart);
+  const today = new Date();
+
+  sessionDate.setHours(0, 0, 0, 0);
+  today.setHours(0, 0, 0, 0);
+
+  if (sessionDate.getTime() < today.getTime()) {
+    return "expired";
+  }
+
+  if (sessionDate.getTime() === today.getTime()) {
+    return "today";
+  }
+
+  return "upcoming";
+};
+
+const sessionStatus2 = getSessionDateStatus(content?.scheduledStart);
 
 
   const meetingUrl = content?.meetingId || null;
@@ -382,588 +463,2123 @@ const ContentViewPage = () => {
     {/* ==================================================
         HERO SECTION
     ================================================== */}
-    <div className="overflow-hidden rounded-2xl ">
-      <UpcomingSessionCard
-    session={session}
-  
-/>
-      <div className="w-full px-3 sm:px-4 lg:px-0">
+    <div className="p-4 md:p-6 lg:p-0">
+      <div className="">
+        {/* Main Content Grid */}
+        <div className="h-full">
+        <div className="grid grid-cols-1 lg:grid-cols-[1.5fr_0.5fr] gap-2 h-full">
+          
+     {/* Main Session Card */}
 
-    {/* ================= PAGE TITLE ================= */}
-    <div className="mb-3 sm:mb-4">
-        <h1
-            className="
-                text-xl
-                sm:text-2xl
-                font-semibold
-                leading-tight
-                text-[#111827]
-            "
-        >
-            <span className="text-[#FF5A3C]">
-                Live Session
-            </span>{" "}
-            Detail
-        </h1>
+     <div className="flex flex-col h-full">
+      <div className="bg-gradient-to-b from-white via-gray-50 to-gray-200 p-[2px] rounded-[24px]">
+<div
+  className="
+    grid
+    grid-cols-1
+    lg:grid-cols-[1.35fr_0.85fr_1fr]
+    gap-5
+    lg:gap-3
+    p-5
+    md:p-4
+    rounded-[24px]
+    border
+    border-orange-200/60
+    bg-gradient-to-r
+    from-orange-100/70
+    via-[#fff1e8]
+    to-orange-100
+    h-70
+   
+  "
+>
+  {/* ================= LEFT SECTION ================= */}
+  <div className="flex h-full flex-col min-w-0">
+    
+    {/* Badge */}
+    <div>
+      <div
+        className="
+          inline-flex
+          items-center
+          gap-2
+          bg-orange-500
+          text-white
+          px-4
+          py-2
+          rounded-full
+          text-sm
+          font-semibold
+          mb-3
+        "
+      >
+        <span className="w-2 h-2 bg-white rounded-full animate-pulse" />
+        Upcoming Session
+      </div>
+
+      {/* Category */}
+      <p className="text-gray-700 text-sm font-semibold mb-2">
+        SAT MATHEMATICS{" "}
+        <span className="text-orange-500">•</span>{" "}
+        SESSION 08
+      </p>
+
+      {/* Title */}
+      <h1
+        className="
+          text-2xl
+          md:text-3xl
+          lg:text-[27px]
+          xl:text-lg
+          font-bold
+          text-gray-900
+          leading-[1.15]
+          mb-5
+        "
+      >
+      {content?.title}
+      </h1>
+
+      {/* Date */}
+      <div className="flex items-center gap-2 text-gray-700 mb-3">
+        <Calendar className="w-5 h-5 shrink-0 text-orange-500" />
+       <span className="font-medium text-sm md:text-base">
+  {new Date(content?.scheduledStart).toLocaleDateString("en-GB", {
+    weekday: "long",
+    day: "2-digit",
+    month: "short",
+    year: "numeric",
+  })}
+</span>
+      </div>
+
+      {/* Time */}
+      <div className="flex items-center gap-2 text-gray-700 mb-3">
+        <Clock className="w-5 h-5 shrink-0 text-orange-500" />
+    <span className="font-medium text-sm md:text-base">
+  {content?.scheduledStart
+    ? new Date(content.scheduledStart).toLocaleTimeString("en-US", {
+        hour: "numeric",
+        minute: "2-digit",
+      })
+    : ""}
+</span>
+      </div>
     </div>
 
-    {/* ================= MAIN CARD ================= */}
-    <div
+    {/* Buttons */}
+    <div className="flex flex-wrap gap-3">
+    <Link to={content?.meetingId}>
+      <button
+      
         className="
-            relative
-            w-full
-            overflow-hidden
-            rounded-[22px]
-            sm:rounded-[26px]
-            border
-            border-[#E5E5E5]
-            bg-gradient-to-r
-            from-[#FFF8F4]
-            via-white
-            to-[#FAFAFA]
-            shadow-sm
+          inline-flex
+          items-center
+          justify-center
+          gap-2
+          bg-orange-500
+          hover:bg-orange-600
+          text-white
+          px-4
+          py-2.5
+          rounded-xl
+          text-sm
+          font-semibold
+          transition-all
+          duration-200
+          shadow-lg
+          shadow-orange-500/30
         "
-    >
+      >
+        <Video className="w-4 h-4" />
+        Join Class
+      </button></Link>
 
-        <div
-            className="
-                flex
-                flex-col
-                lg:flex-row
-                justify-center
-                items-center
-                gap-0
-                p-2
-                sm:p-3
-                lg:p-2
-                bg-gradient-to-r from-gray-200 via-white to-white
-            "
-        >
+      <button
+        className="
+          inline-flex
+          items-center
+          justify-center
+          gap-2
+          bg-white
+          hover:bg-gray-50
+          text-gray-700
+          border
+          border-orange-200
+          px-4
+          py-2.5
+          rounded-xl
+          text-sm
+          font-semibold
+          transition-all
+          duration-200
+        "
+      >
+        <Plus className="w-4 h-4" />
+        Add to Calendar
+      </button>
+    </div>
+  </div>
 
-            {/* ================================================= */}
-            {/* LEFT : SESSION IMAGE */}
-            {/* ================================================= */}
-          
 
-            {/* ================================================= */}
-{/* LEFT : SESSION IMAGE */}
-{/* ================================================= */}
-
-<div
+  {/* ================= TRAINER SECTION ================= */}
+  <div
     className="
-        relative
-        w-full
-        lg:w-[46%]
-        xl:w-[44%]
-        h-[220px]
-        sm:h-[260px]
-        md:h-[280px]
-        lg:h-[220px]
-        xl:h-[230px]
-        shrink-0
-        overflow-hidden
-        rounded-[18px]
+      bg-white/60
+      rounded-[20px]
+      p-5
+      md:p-6
+      border
+      border-orange-200
+      flex
+      justify-center
+      items-center
     "
->
-    <img
-        src={`${ImageBaseUrl}/${content.thumbnailPic}`}
-        alt={content?.title || "Live Session"}
+  >
+    <div className="text-center flex flex-col justify-center items-center">
+      
+      {/* Profile Image */}
+      <div className="relative mb-4">
+        <div
+          className="
+            w-[76px]
+            h-[76px]
+            md:w-[82px]
+            md:h-[82px]
+            rounded-full
+            border-2
+            border-orange-400
+            overflow-hidden
+          "
+        >
+          <img
+            src="https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=400&h=400&fit=crop"
+            alt="Trainer"
+            className="w-full h-full object-cover"
+          />
+        </div>
+
+    
+      </div>
+
+      <p className="text-gray-500 text-sm mb-1">
+        Your Instructor
+      </p>
+
+      <h3 className="text-lg md:text-sm font-bold text-gray-900 leading-tight">
+        {instructor?.name}
+      </h3>
+
+      <p className="text-orange-600 font-medium text-sm mt-1">
+        Pte expert
+      </p>
+
+      <p className="text-gray-500 text-xs mt-1">
+        8+ years Experience
+      </p>
+    </div>
+  </div>
+
+
+  {/* ================= COUNTDOWN SECTION ================= */}
+  <div
+    className="
+  
+     
+      bg-white
+      rounded-[20px]
+      p-5
+      md:p-6
+      border
+      border-orange-100
+      flex
+      items-center justify-center
+     
+    "
+  >
+    <div className="w-full  text-center">
+      
+      <h3
         className="
-            absolute
-            inset-0
-            w-full
-            h-full
-            object-cover
-            object-center
-            rounded-[18px]
+          text-base
+          md:text-lg
+          font-bold
+          text-gray-900
+          mb-6
         "
-    />
+      >
+        CLASS STARTS IN
+      </h3>
+
+      {/* Timer */}
+      <div className="flex items-start justify-center gap-1.5 w-full mb-5">
+        
+        {/* Days */}
+        <div className="flex flex-col items-center">
+          <div
+            className="
+              bg-orange-500
+              text-white
+              rounded-md
+              w-[45px]
+              md:w-[48px]
+              py-2
+            "
+          >
+            <div className="text-2xl md:text-3xl font-bold leading-none">
+              {String(timeLeft.days).padStart(2, "0")}
+            </div>
+          </div>
+
+          <span className="text-[10px] md:text-xs font-semibold text-gray-700 mt-1">
+            DAYS
+          </span>
+        </div>
+
+        {/* Separator */}
+        <span className="text-orange-500 text-2xl font-bold mt-1">
+          :
+        </span>
+
+        {/* Hours */}
+        <div className="flex flex-col items-center">
+          <div
+            className="
+              bg-orange-500
+              text-white
+              rounded-md
+              w-[45px]
+              md:w-[48px]
+              py-2
+            "
+          >
+            <div className="text-2xl md:text-3xl font-bold leading-none">
+              {String(timeLeft.hours).padStart(2, "0")}
+            </div>
+          </div>
+
+          <span className="text-[10px] md:text-xs font-semibold text-gray-700 mt-1">
+            HOURS
+          </span>
+        </div>
+
+        {/* Separator */}
+        <span className="text-orange-500 text-2xl font-bold mt-1">
+          :
+        </span>
+
+        {/* Minutes */}
+        <div className="flex flex-col items-center">
+          <div
+            className="
+              bg-orange-500
+              text-white
+              rounded-md
+              w-[45px]
+              md:w-[48px]
+              py-2
+            "
+          >
+            <div className="text-2xl md:text-3xl font-bold leading-none">
+              {String(timeLeft.minutes).padStart(2, "0")}
+            </div>
+          </div>
+
+          <span className="text-[10px] md:text-xs font-semibold text-gray-700 mt-1">
+            MINUTE
+          </span>
+        </div>
+      </div>
+
+      {/* Date */}
+      <p className="text-gray-600 text-sm font-medium">
+        Tuesday, 26 Aug 2026
+      </p>
+    </div>
+  </div>
+</div></div>
+   {/* Bottom Navigation Tabs */}
+        <div className="mt-6  bg-white rounded-2xl border border-orange-100 overflow-hidden">
+          <div className="flex overflow-x-auto scrollbar-hide ">
+            {tabs.map((tab) => (
+              <button
+                key={tab}
+                onClick={() => setActiveTab(tab)}
+                className={`flex min-w-[100px] px-6 py-4 text-sm font-semibold transition-all duration-200 border-b-2 ${
+                  activeTab === tab
+                    ? 'text-orange-600 border-orange-500 bg-orange-50/50'
+                    : 'text-gray-600 border-transparent hover:text-gray-900 hover:bg-gray-50'
+                }`}
+              >
+                {tab}
+              </button>
+            ))}
+          </div>
+        </div>
 </div>
 
-            {/* ================================================= */}
-            {/* RIGHT : SESSION INFORMATION */}
-            {/* ================================================= */}
-
-            <div
-                className="
-                    flex
-                    min-w-0
-                    flex-1
-                    flex-col
-                    justify-center
-                    px-3
-                    py-4
-                    sm:px-5
-                    sm:py-5
-                    lg:px-8
-                    lg:py-4
-                    xl:px-10
-                "
-            >
-
-                {/* TITLE */}
-                <div>
-                    <h2
-                        className="
-                            text-xl
-                            sm:text-2xl
-                            lg:text-xl
-                            xl:text-[22px]
-                            font-bold
-                            leading-tight
-                            text-[#111827]
-                        "
-                    >
-                        <span className="text-[#FF5A3C]">
-                           {content.title.split(" ")[0]}
-                        </span>
-                     {" "}
-                        {content.title.split(" ").slice(1).join(" ")}
-                    </h2>
-                </div>
-
-                {/* ================= INSTRUCTOR ================= */}
-                <div
-                    className="
-                        mt-3
-                        flex
-                        items-center
-                        gap-2.5
-                        sm:gap-3
-                    "
-                >
-                    <div
-                        className="
-                            h-10
-                            w-10
-                            shrink-0
-                            flex items-center
-                            justify-center
-                            overflow-hidden
-                            rounded-full
-                            border-2
-                            border-[#FF5A3C]
-                            bg-[#FFF1EB]
-                        "
-                    >
-                      <User/>
-                    </div>
-
-                    <div className="min-w-0">
-                        <p
-                            className="
-                                text-sm
-                                sm:text-lg
-                                font-bold
-                                leading-tight
-                                text-[#111827]
-                            "
-                        >
-                            Instructor:{" "}
-                            <span className="text-[#FF5A3C]">
-                                {content?.instructorInfo?.name}
-                            </span>
-                        </p>
-
-                        <p
-                            className="
-                                mt-0.5
-                                text-[10px]
-                                sm:text-base
-                                text-[#6B7280]
-                            "
-                        >
-                            PTE Expert & English Language Trainer
-                        </p>
-                    </div>
-                </div>
-
-                {/* ================= META ================= */}
-                <div
-                    className="
-                        mt-3
-                        flex
-                        flex-wrap
-                        items-center
-                        gap-x-3
-                        gap-y-1.5
-                        text-[10px]
-                        sm:text-base
-                        text-[#737373]
-                    "
-                >
-                    <span>
-                        Session #11:1
-                    </span>
-
-                    <span>
-                        Live Session
-                    </span>
-
-                    <span>
-                        {content?.duration/60} Minutes Completed
-                    </span>
-                </div>
-
-                {/* DESCRIPTION */}
-                <p
-                    className="
-                        mt-2
-                        max-w-[700px]
-                        text-sm
-                        sm:text-base
-                        leading-relaxed
-                        text-[#6B7280]
-                        line-clamp-2
-                    "
-                >
-                    {content?.description}
-                </p>
-
+          {/* Right Section - Upcoming Sessions */}
+          <div className="">
+            <div className="bg-white rounded-3xl p-4 shadow-lg border border-orange-500 h-full">
+              <h2 className="text-lg font-bold text-gray-900 mb-4">Upcoming Sessions</h2>
               
+              <div className="space-y-3">
+                {upcomingSessions.map((session) => (
+                  <div
+                    key={session.id}
+                    className={`rounded-2xl p-2 cursor-pointer transition-all duration-200 ${
+                      session.active
+                        ? 'bg-gradient-to-br from-orange-100 to-peach-100 border-2 border-orange-300 shadow-md'
+                        : 'bg-gray-50 border-2 border-gray-100 hover:border-orange-200 hover:shadow-md'
+                    }`}
+                  >
+                    <div className="flex gap-3">
+                      {/* Session Number */}
+                      <div className={`w-10 h-10 rounded-full flex items-center justify-center font-bold text-sm ${
+                        session.active
+                          ? 'bg-orange-500 text-white'
+                          : 'bg-white text-gray-600 border-2 border-gray-200'
+                      }`}>
+                        {session.id}
+                      </div>
+
+                      {/* Session Info */}
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-start justify-between gap-2 mb-1">
+                          <h3 className={`font-bold text-sm ${
+                            session.active ? 'text-gray-900' : 'text-gray-700'
+                          }`}>
+                            {session.title}
+                          </h3>
+                          { (
+                            <span className={`text-[10px] font-semibold  whitespace-nowrap ${session.active ? "text-orange-600" : "text-gray-600"}`}>
+                              {session.date}
+                            </span>
+                          )}
+                        </div>
+                        <p className="text-xs text-gray-600 mb-2 line-clamp-2">{session.topic}</p>
+                        <div className="flex items-center gap-1 text-[11px] text-gray-500">
+                          <Clock className="w-3 h-3" />
+                          <span>{session.time}</span>
+                        </div>
+                    
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+        </div>
+
+        </div>
+
+     
+
+      </div>
+    </div>
+
+    <div className="">
+  <div className="w-full max-w-7xl mx-auto px-4 sm:px-5 lg:px-0 my-3">
+
+    <div className="grid grid-cols-1 xl:grid-cols-[1.5fr_0.5fr] gap-4">
+      
+      {/* ======================================================= */}
+      {/* LEFT - CURRENT SESSION */}
+      {/* ======================================================= */}
+
+    <div className="w-full">
+  {sessionStatus2 === "expired" ? (
+    /* ========================================================= */
+    /* EXPIRED SESSION CARD */
+    /* ========================================================= */
+
+   <div
+  className="
+    w-full
+   
+    bg-gradient-to-br
+    from-white
+    via-[#fffaf7]
+    to-[#f8f8f8]
+    border
+    border-[#ffd3c4]
+    rounded-[16px]
+    p-6
+    sm:p-8
+    flex
+    flex-col
+    items-center
+    justify-center
+    text-center
+    shadow-sm
+  "
+>
+  {/* Expired Icon */}
+  <div
+    className="
+      w-16
+      h-16
+      sm:w-20
+      sm:h-20
+      rounded-full
+      bg-[#fff0eb]
+      border
+      border-[#ffd6ca]
+      flex
+      items-center
+      justify-center
+      mb-5
+    "
+  >
+    <svg
+      xmlns="http://www.w3.org/2000/svg"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="1.6"
+      className="
+        w-7
+        h-7
+        sm:w-8
+        sm:h-8
+        text-[#ff7148]
+      "
+    >
+      <circle cx="12" cy="12" r="9" />
+      <path d="M12 7v5l3 2" />
+    </svg>
+  </div>
+
+  {/* Title */}
+  <h2
+    className="
+      text-xl
+      sm:text-2xl
+      font-semibold
+      text-[#10152f]
+      mb-2
+    "
+  >
+    Session Ended
+  </h2>
+
+  {/* Description */}
+  <p
+    className="
+      max-w-[420px]
+      text-sm
+      sm:text-[15px]
+      leading-relaxed
+      text-[#777777]
+      mb-6
+    "
+  >
+    This session has already ended and is no longer available to join.
+  </p>
+
+  {/* Status Badge */}
+  <span
+    className="
+      inline-flex
+      items-center
+      gap-2
+      px-4
+      py-2
+      rounded-full
+      bg-[#f1f1f1]
+      border
+      border-[#e3e3e3]
+      text-[#656565]
+      text-sm
+      font-medium
+    "
+  >
+    <span className="w-2 h-2 rounded-full bg-[#9b9b9b]" />
+    Expired Session
+  </span>
+</div>
+  ) : (
+    /* ========================================================= */
+    /* TODAY / UPCOMING SESSION CARD */
+    /* ========================================================= */
+
+    <div
+      className="
+        w-full
+        min-w-0
+        bg-white
+        border
+        border-[#ffd3c4]
+        rounded-[12px]
+        p-5
+        sm:p-6
+        lg:p-5
+      "
+    >
+      <div
+        className="
+          grid
+          grid-cols-1
+          md:grid-cols-[300px_minmax(0,1fr)]
+          lg:grid-cols-[325px_minmax(0,1fr)]
+          gap-6
+          lg:gap-8
+          items-start
+        "
+      >
+
+        {/* =================================================== */}
+        {/* SESSION THUMBNAIL */}
+        {/* =================================================== */}
+
+        <div className="w-full min-w-0">
+
+          <h2
+            className="
+              text-[24px]
+              sm:text-[25px]
+              lg:text-[26px]
+              leading-tight
+              font-semibold
+              text-[#111827]
+              mb-5
+            "
+          >
+            <span className="text-[#ff613f]">
+              Session
+            </span>
+          </h2>
+
+          {/* Thumbnail */}
+          <div
+            className="
+              relative
+              w-full
+              overflow-hidden
+              rounded-[11px]
+              border
+              border-[#ff633f]
+              bg-[#fff7f2]
+              aspect-[1.5/1]
+            "
+          >
+            <img
+              src={`${ImageBaseUrl}/${content?.thumbnailPic}`}
+              alt={content?.title || "Session"}
+              className="
+                absolute
+                inset-0
+                w-full
+                h-full
+                object-cover
+              "
+            />
+          </div>
+        </div>
+
+
+        {/* =================================================== */}
+        {/* SESSION INFORMATION */}
+        {/* =================================================== */}
+
+        <div className="w-full min-w-0">
+
+          {/* Title */}
+          <h1
+            className="
+              text-[25px]
+              sm:text-[28px]
+              lg:text-[29px]
+              xl:text-[30px]
+              leading-[1.08]
+              font-semibold
+              tracking-[-0.4px]
+              text-[#10152f]
+              mb-5
+            "
+          >
+            {content?.title}
+          </h1>
+
+
+          {/* ================================================= */}
+          {/* INSTRUCTOR */}
+          {/* ================================================= */}
+
+          <div className="flex items-center gap-3 mb-3">
+
+            {/* Instructor Image */}
+            <div
+              className="
+                w-[52px]
+                h-[52px]
+                shrink-0
+                rounded-full
+                border-2
+                border-[#ff704c]
+                overflow-hidden
+                bg-[#fff3ed]
+              "
+            >
+              <img
+                src="https://cdn-icons-png.flaticon.com/512/709/709699.png"
+                alt={instructor?.name || "Instructor"}
+                className="w-full h-full object-cover"
+              />
+            </div>
+
+            {/* Instructor Details */}
+            <div className="min-w-0">
+
+              <p
+                className="
+                  text-[15px]
+                  sm:text-[16px]
+                  leading-tight
+                  font-semibold
+                  text-[#15182d]
+                "
+              >
+                Instructor:{" "}
+                <span className="text-[#ff613f]">
+                  {instructor?.name}
+                </span>
+              </p>
+
+              <p
+                className="
+                  text-[13px]
+                  sm:text-[14px]
+                  text-[#777777]
+                  mt-1
+                "
+              >
+                PTE Expert & English Language Trainer
+              </p>
 
             </div>
+          </div>
+
+
+          {/* ================================================= */}
+          {/* DESCRIPTION */}
+          {/* ================================================= */}
+
+          <p
+            className="
+              max-w-[620px]
+              text-[14px]
+              sm:text-[15px]
+              leading-[1.45]
+              text-[#606060]
+              mb-5
+              line-clamp-3
+            "
+          >
+            {course?.description}
+          </p>
+
+
+          {/* ================================================= */}
+          {/* ACTION */}
+          {/* ================================================= */}
+
+          <div className="flex flex-wrap items-center gap-3">
+
+            {/* View Session */}
+            <Link to={content?.meetingId || "#"}>
+              <button
+                className="
+                  inline-flex
+                  items-center
+                  justify-center
+                  min-h-[34px]
+                  px-4
+                  sm:px-5
+                  rounded-[9px]
+                  bg-[#ff7148]
+                  hover:bg-[#ff6338]
+                  text-white
+                  text-[14px]
+                  sm:text-[15px]
+                  font-medium
+                  transition-colors
+                  duration-200
+                "
+              >
+                View Session
+              </button>
+            </Link>
+
+          </div>
+
         </div>
+      </div>
     </div>
+  )}
 </div>
+
+
+      {/* ======================================================= */}
+      {/* RIGHT - PREVIOUS RECORDING */}
+      {/* ======================================================= */}
+
+      <div
+        className="
+          w-full
+          min-w-0
+          bg-white
+          border
+          border-[#ffd3c4]
+          rounded-[12px]
+          p-4
+          sm:px-3
+          sm:py-1
+        "
+      >
+        
+        {/* Heading */}
+        <h2
+          className="
+            text-[15px]
+            sm:text-[16px]
+            font-semibold
+            text-[#111827]
+            
+            border-b
+            border-[#eeeeee]
+          "
+        >
+          Previous Recording
+        </h2>
+
+
+        {/* ===================================================== */}
+        {/* VIDEO THUMBNAIL */}
+        {/* ===================================================== */}
+
+        <div className="mt-2">
+          <div
+            className="
+              relative
+              w-full
+              overflow-hidden
+              rounded-[10px]
+              bg-[#111111]
+              aspect-[1.9/1]
+            "
+          >
+            <img
+              src="/images/previous-recording.png"
+              alt="Previous recording"
+              className="
+                absolute
+                inset-0
+                w-full
+                h-full
+                object-cover
+              "
+            />
+
+            {/* Dark Overlay */}
+            <div className="absolute inset-0 bg-black/10" />
+
+            {/* Play Button */}
+            <button
+              className="
+                absolute
+                left-1/2
+                top-1/2
+                -translate-x-1/2
+                -translate-y-1/2
+                w-[48px]
+                h-[48px]
+                rounded-full
+                bg-white
+                flex
+                items-center
+                justify-center
+                shadow-md
+                hover:scale-105
+                transition-transform
+                duration-200
+              "
+              aria-label="Play recording"
+            >
+              <span className="ml-1 text-[#ff6b3d] text-xl">
+                ▶
+              </span>
+            </button>
+
+            {/* Bottom Overlay */}
+            <div
+              className="
+                absolute
+                bottom-0
+                left-0
+                right-0
+                px-2.5
+                py-2
+                flex
+                items-center
+                justify-between
+                gap-2
+                bg-gradient-to-t
+                from-black/70
+                to-transparent
+              "
+            >
+              <span
+                className="
+                  text-white
+                  text-[11px]
+                  sm:text-xs
+                  font-semibold
+                  truncate
+                "
+              >
+                Session 07 · Number Systems
+              </span>
+
+              <span
+                className="
+                  shrink-0
+                  text-white
+                  text-[10px]
+                  font-semibold
+                  bg-black/40
+                  px-1.5
+                  py-0.5
+                  rounded
+                "
+              >
+                1:28:42
+              </span>
+            </div>
+          </div>
+        </div>
+
+
+        {/* ===================================================== */}
+        {/* RECORDING INFORMATION */}
+        {/* ===================================================== */}
+
+        <div className="mt-3">
+          <h3
+            className="
+              text-[13px]
+              sm:text-[14px]
+              font-semibold
+              leading-snug
+              text-[#202020]
+            "
+          >
+            Session 07 – Number Systems & Ratios
+          </h3>
+
+          <div
+            className="
+              flex
+              flex-wrap
+              items-center
+              gap-x-2
+              gap-y-1
+              mt-1
+              text-[11px]
+              sm:text-xs
+              text-[#8a8a8a]
+            "
+          >
+            <span className="inline-flex items-center gap-1">
+              <span className="text-[10px]">
+                □
+              </span>
+              Sep 11, 2025
+            </span>
+
+            <span>
+              ·
+            </span>
+
+            <span>
+              1h 28min
+            </span>
+          </div>
+        </div>
+
+
+        {/* ===================================================== */}
+        {/* WATCH BUTTON */}
+        {/* ===================================================== */}
+
+        <button
+          className="
+            w-full
+            mt-3
+            min-h-[42px]
+            rounded-[10px]
+            bg-[#ff711d]
+            hover:bg-[#f76512]
+            text-white
+            text-[14px]
+            font-semibold
+            flex
+            items-center
+            justify-center
+            gap-2
+            transition-colors
+            duration-200
+          "
+        >
+          <span className="text-sm">
+            ▷
+          </span>
+
+          Watch Recording
+        </button>
+      </div>
     </div>
+  </div>
+  </div>
+
+  <div className="w-full">
+  <div
+    className="
+      grid
+      grid-cols-1
+      lg:grid-cols-[minmax(0,3fr)_minmax(280px,1fr)]
+      gap-4
+      items-start
+    "
+  >
+    {/* ========================================================= */}
+    {/* TEACHING PLAN */}
+    {/* ========================================================= */}
+
+    <div
+      className="
+        w-full
+        min-w-0
+        overflow-hidden
+        rounded-[14px]
+        border
+        border-[#ffd4c7]
+        bg-white
+      "
+    >
+      {/* Header */}
+      <div
+        className="
+          flex
+          flex-col
+          sm:flex-row
+          sm:items-center
+          sm:justify-between
+          gap-2
+          px-4
+          sm:px-5
+          py-4
+          border-b
+          border-[#eeeeee]
+        "
+      >
+        <h2
+          className="
+            text-[15px]
+            sm:text-[16px]
+            font-semibold
+            text-[#10182f]
+          "
+        >
+          Teaching Plan
+        </h2>
+
+        <p
+          className="
+            text-[11px]
+            sm:text-xs
+            font-medium
+            text-[#63718a]
+          "
+        >
+          4 topics · 110 min
+        </p>
+      </div>
+
+      {/* ======================================================= */}
+      {/* TOPIC LIST */}
+      {/* ======================================================= */}
+
+      <div className="w-full">
+
+        {/* ------------------------------------------------------- */}
+        {/* TOPIC 01 */}
+        {/* ------------------------------------------------------- */}
+
+        <div
+          className="
+            grid
+            grid-cols-[38px_minmax(0,1fr)_auto]
+            sm:grid-cols-[38px_minmax(0,1fr)_auto]
+            items-center
+            gap-3
+            px-3
+            sm:px-4
+            py-3
+            sm:py-3.5
+            bg-[#fff8f3]
+            border-b
+            border-[#f0e0da]
+          "
+        >
+          {/* Number */}
+          <div
+            className="
+              w-[34px]
+              h-[34px]
+              rounded-[10px]
+              bg-[#ff6b25]
+              text-white
+              flex
+              items-center
+              justify-center
+              text-[13px]
+              font-semibold
+            "
+          >
+            01
+          </div>
+
+          {/* Content */}
+          <div className="min-w-0">
+            <h3
+              className="
+                text-[13px]
+                sm:text-[14px]
+                font-semibold
+                text-[#10203b]
+                truncate
+              "
+            >
+              Introduction to Algebraic Expressions
+            </h3>
+
+            <p
+              className="
+                text-[11px]
+                sm:text-xs
+                text-[#71809a]
+                mt-0.5
+              "
+            >
+              25 min
+            </p>
+          </div>
+
+          {/* Status */}
+          <span
+            className="
+              shrink-0
+              inline-flex
+              items-center
+              justify-center
+              px-2.5
+              py-1
+              rounded-full
+              border
+              border-[#ffb58f]
+              bg-[#fffaf7]
+              text-[#ff6b25]
+              text-[10px]
+              sm:text-[11px]
+              font-medium
+              whitespace-nowrap
+            "
+          >
+            In Progress
+          </span>
+        </div>
+
+
+        {/* ------------------------------------------------------- */}
+        {/* TOPIC 02 */}
+        {/* ------------------------------------------------------- */}
+
+        <div
+          className="
+            grid
+            grid-cols-[38px_minmax(0,1fr)_auto]
+            items-center
+            gap-3
+            px-3
+            sm:px-4
+            py-3
+            sm:py-3.5
+            bg-white
+            border-b
+            border-[#eeeeee]
+          "
+        >
+          {/* Number */}
+          <div
+            className="
+              w-[34px]
+              h-[34px]
+              rounded-[10px]
+              bg-[#fff8f3]
+              border
+              border-[#ffb58f]
+              text-[#ff6b25]
+              flex
+              items-center
+              justify-center
+              text-[13px]
+              font-semibold
+            "
+          >
+            02
+          </div>
+
+          {/* Content */}
+          <div className="min-w-0">
+            <h3
+              className="
+                text-[13px]
+                sm:text-[14px]
+                font-semibold
+                text-[#10203b]
+                truncate
+              "
+            >
+              Linear Equations & Inequalities
+            </h3>
+
+            <p
+              className="
+                text-[11px]
+                sm:text-xs
+                text-[#71809a]
+                mt-0.5
+              "
+            >
+              30 min
+            </p>
+          </div>
+
+          {/* Status */}
+          <span
+            className="
+              shrink-0
+              inline-flex
+              items-center
+              justify-center
+              px-2.5
+              py-1
+              rounded-full
+              border
+              border-[#c9ddff]
+              bg-[#f5f9ff]
+              text-[#4b8df8]
+              text-[10px]
+              sm:text-[11px]
+              font-medium
+              whitespace-nowrap
+            "
+          >
+            Next
+          </span>
+        </div>
+
+
+        {/* ------------------------------------------------------- */}
+        {/* TOPIC 03 */}
+        {/* ------------------------------------------------------- */}
+
+        <div
+          className="
+            grid
+            grid-cols-[38px_minmax(0,1fr)_auto]
+            items-center
+            gap-3
+            px-3
+            sm:px-4
+            py-3
+            sm:py-3.5
+            bg-white
+            border-b
+            border-[#eeeeee]
+          "
+        >
+          {/* Number */}
+          <div
+            className="
+              w-[34px]
+              h-[34px]
+              rounded-[10px]
+              bg-[#f4f6fa]
+              text-[#63718a]
+              flex
+              items-center
+              justify-center
+              text-[13px]
+              font-semibold
+            "
+          >
+            03
+          </div>
+
+          {/* Content */}
+          <div className="min-w-0">
+            <h3
+              className="
+                text-[13px]
+                sm:text-[14px]
+                font-semibold
+                text-[#10203b]
+                truncate
+              "
+            >
+              Quadratic Functions & Parabolas
+            </h3>
+
+            <p
+              className="
+                text-[11px]
+                sm:text-xs
+                text-[#71809a]
+                mt-0.5
+              "
+            >
+              35 min
+            </p>
+          </div>
+
+          {/* Status */}
+          <span
+            className="
+              shrink-0
+              inline-flex
+              items-center
+              justify-center
+              px-2.5
+              py-1
+              rounded-full
+              border
+              border-[#e1e6ee]
+              bg-[#f7f8fa]
+              text-[#71809a]
+              text-[10px]
+              sm:text-[11px]
+              font-medium
+              whitespace-nowrap
+            "
+          >
+            Upcoming
+          </span>
+        </div>
+
+
+        {/* ------------------------------------------------------- */}
+        {/* TOPIC 04 */}
+        {/* ------------------------------------------------------- */}
+
+        <div
+          className="
+            grid
+            grid-cols-[38px_minmax(0,1fr)_auto]
+            items-center
+            gap-3
+            px-3
+            sm:px-4
+            py-3
+            sm:py-3.5
+            bg-white
+          "
+        >
+          {/* Number */}
+          <div
+            className="
+              w-[34px]
+              h-[34px]
+              rounded-[10px]
+              bg-[#f4f6fa]
+              text-[#63718a]
+              flex
+              items-center
+              justify-center
+              text-[13px]
+              font-semibold
+            "
+          >
+            04
+          </div>
+
+          {/* Content */}
+          <div className="min-w-0">
+            <h3
+              className="
+                text-[13px]
+                sm:text-[14px]
+                font-semibold
+                text-[#10203b]
+                truncate
+              "
+            >
+              Word Problems & Applied Algebra
+            </h3>
+
+            <p
+              className="
+                text-[11px]
+                sm:text-xs
+                text-[#71809a]
+                mt-0.5
+              "
+            >
+              20 min
+            </p>
+          </div>
+
+          {/* Status */}
+          <span
+            className="
+              shrink-0
+              inline-flex
+              items-center
+              justify-center
+              px-2.5
+              py-1
+              rounded-full
+              border
+              border-[#e1e6ee]
+              bg-[#f7f8fa]
+              text-[#71809a]
+              text-[10px]
+              sm:text-[11px]
+              font-medium
+              whitespace-nowrap
+            "
+          >
+            Upcoming
+          </span>
+        </div>
+      </div>
+    </div>
+
+
+    {/* ========================================================= */}
+    {/* COURSE PROGRESS */}
+    {/* ========================================================= */}
+
+    <div
+      className="
+        w-full
+        min-w-0
+        rounded-[14px]
+        border
+        border-[#ffd4c7]
+        bg-white
+        p-4
+        sm:p-5
+      "
+    >
+      {/* Header */}
+      <div className="flex items-center justify-between gap-3">
+        <h2
+          className="
+            text-[15px]
+            sm:text-[16px]
+            font-semibold
+            text-[#10182f]
+          "
+        >
+          Course Progress
+        </h2>
+
+        <span
+          className="
+            text-[15px]
+            sm:text-[16px]
+            font-bold
+            text-[#ff642f]
+          "
+        >
+          33%
+        </span>
+      </div>
+
+      {/* ======================================================= */}
+      {/* PROGRESS BAR */}
+      {/* ======================================================= */}
+
+      <div
+        className="
+          w-full
+          h-[7px]
+          mt-3
+          rounded-full
+          bg-[#f0f2f7]
+          overflow-hidden
+        "
+      >
+        <div
+          className="
+            h-full
+            w-[33%]
+            rounded-full
+            bg-gradient-to-r
+            from-[#ff6b25]
+            to-[#ffb45d]
+          "
+        />
+      </div>
+
+      {/* ======================================================= */}
+      {/* STAT CARDS */}
+      {/* ======================================================= */}
+
+      <div
+        className="
+          grid
+          grid-cols-3
+          gap-2
+          mt-3
+        "
+      >
+        {/* Done */}
+        <div
+          className="
+            min-w-0
+            rounded-[12px]
+            bg-[#f4f6fb]
+            px-2
+            py-2.5
+            text-center
+          "
+        >
+          <p
+            className="
+              text-[14px]
+              sm:text-[15px]
+              font-semibold
+              text-[#16213b]
+            "
+          >
+            8
+          </p>
+
+          <p
+            className="
+              text-[9px]
+              sm:text-[10px]
+              text-[#77849a]
+              mt-0.5
+            "
+          >
+            Done
+          </p>
+        </div>
+
+        {/* Left */}
+        <div
+          className="
+            min-w-0
+            rounded-[12px]
+            bg-[#f4f6fb]
+            px-2
+            py-2.5
+            text-center
+          "
+        >
+          <p
+            className="
+              text-[14px]
+              sm:text-[15px]
+              font-semibold
+              text-[#16213b]
+            "
+          >
+            16
+          </p>
+
+          <p
+            className="
+              text-[9px]
+              sm:text-[10px]
+              text-[#77849a]
+              mt-0.5
+            "
+          >
+            Left
+          </p>
+        </div>
+
+        {/* Total */}
+        <div
+          className="
+            min-w-0
+            rounded-[12px]
+            bg-[#f4f6fb]
+            px-2
+            py-2.5
+            text-center
+          "
+        >
+          <p
+            className="
+              text-[14px]
+              sm:text-[15px]
+              font-semibold
+              text-[#16213b]
+            "
+          >
+            24
+          </p>
+
+          <p
+            className="
+              text-[9px]
+              sm:text-[10px]
+              text-[#77849a]
+              mt-0.5
+            "
+          >
+            Total
+          </p>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+
+<div className="w-full space-y-3 my-4 grid grid-cols-1 xl:grid-cols-[1.5fr_0.5fr] gap-4">
+
+  {/* ========================================================= */}
+  {/* SESSION MATERIAL */}
+  {/* ========================================================= */}
+  <div className="flex flex-col gap-4">
+
+  <div
+    className="
+      w-full
+      rounded-[20px]
+      border
+      border-[#dedede]
+      bg-white
+      px-4
+      py-5
+      sm:px-5
+      md:px-7
+      md:py-6
+    "
+  >
+    {/* Header */}
+    <div className="flex items-center justify-between gap-4 mb-5">
+      <h2
+        className="
+          text-[16px]
+          sm:text-[17px]
+          font-semibold
+          text-[#1c1c1c]
+        "
+      >
+        Session Material
+      </h2>
+
+      <button
+        className="
+          shrink-0
+          text-[12px]
+          sm:text-[13px]
+          font-medium
+          text-[#ff6b3d]
+          hover:text-[#f45128]
+          transition-colors
+        "
+      >
+        View All &gt;
+      </button>
+    </div>
+
+
+    {/* ======================================================= */}
+    {/* MATERIAL LIST */}
+    {/* ======================================================= */}
+
+    <div className="space-y-3">
+
+      {/* ------------------------------------------------------- */}
+      {/* MATERIAL 01 */}
+      {/* ------------------------------------------------------- */}
+
+      <div
+        className="
+          w-full
+          flex
+          items-center
+          gap-3
+          sm:gap-4
+          rounded-[13px]
+          border
+          border-[#f2dfd5]
+          bg-[#fff8f2]
+          px-3
+          sm:px-4
+          py-3
+          sm:py-3.5
+        "
+      >
+        {/* PDF Icon */}
+        <div
+          className="
+            w-[38px]
+            h-[38px]
+            sm:w-[40px]
+            sm:h-[40px]
+            shrink-0
+            rounded-[9px]
+            bg-[#ffe9dd]
+            flex
+            items-center
+            justify-center
+          "
+        >
+          <div
+            className="
+              w-[27px]
+              h-[30px]
+              rounded-[4px]
+              bg-[#d91b0b]
+              flex
+              items-center
+              justify-center
+              text-white
+              text-[15px]
+            "
+          >
+            <span>PDF</span>
+          </div>
+        </div>
+
+        {/* Material Info */}
+        <div className="flex-1 min-w-0">
+          <h3
+            className="
+              text-[13px]
+              sm:text-[14px]
+              font-medium
+              text-[#202020]
+              truncate
+            "
+          >
+            Advanced Algebra Notes
+          </h3>
+
+          <p
+            className="
+              text-[11px]
+              sm:text-[12px]
+              text-[#858585]
+              mt-0.5
+            "
+          >
+            PDF · 2.4 MB
+          </p>
+        </div>
+
+        {/* Download */}
+        <button
+          className="
+            w-[34px]
+            h-[34px]
+            shrink-0
+            rounded-[9px]
+            border
+            border-[#efdfd5]
+            bg-[#fffaf6]
+            flex
+            items-center
+            justify-center
+            text-[#9b918b]
+            hover:text-[#ff6b3d]
+            hover:border-[#ffc8b5]
+            transition-all
+          "
+          aria-label="Download Advanced Algebra Notes"
+        >
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            width="17"
+            height="17"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="1.7"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+          >
+            <path d="M12 3v12" />
+            <path d="m7 10 5 5 5-5" />
+            <path d="M5 21h14" />
+          </svg>
+        </button>
+      </div>
+
+
+      {/* ------------------------------------------------------- */}
+      {/* MATERIAL 02 */}
+      {/* ------------------------------------------------------- */}
+
+      <div
+        className="
+          w-full
+          flex
+          items-center
+          gap-3
+          sm:gap-4
+          rounded-[13px]
+          border
+          border-[#f2dfd5]
+          bg-[#fff8f2]
+          px-3
+          sm:px-4
+          py-3
+          sm:py-3.5
+        "
+      >
+        {/* PDF Icon */}
+        <div
+          className="
+            w-[38px]
+            h-[38px]
+            sm:w-[40px]
+            sm:h-[40px]
+            shrink-0
+            rounded-[9px]
+            bg-[#ffe9dd]
+            flex
+            items-center
+            justify-center
+          "
+        >
+          <div
+            className="
+              w-[27px]
+              h-[30px]
+              rounded-[4px]
+              bg-[#d91b0b]
+              flex
+              items-center
+              justify-center
+              text-white
+              text-[10px]
+              font-bold
+            "
+          >
+            PDF
+          </div>
+        </div>
+
+        {/* Material Info */}
+        <div className="flex-1 min-w-0">
+          <h3
+            className="
+              text-[13px]
+              sm:text-[14px]
+              font-medium
+              text-[#202020]
+              truncate
+            "
+          >
+            Practice Worksheet
+          </h3>
+
+          <p
+            className="
+              text-[11px]
+              sm:text-[12px]
+              text-[#858585]
+              mt-0.5
+            "
+          >
+            Questions · 20 Questions
+          </p>
+        </div>
+
+        {/* Download */}
+        <button
+          className="
+            w-[34px]
+            h-[34px]
+            shrink-0
+            rounded-[9px]
+            border
+            border-[#efdfd5]
+            bg-[#fffaf6]
+            flex
+            items-center
+            justify-center
+            text-[#9b918b]
+            hover:text-[#ff6b3d]
+            hover:border-[#ffc8b5]
+            transition-all
+          "
+          aria-label="Download Practice Worksheet"
+        >
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            width="17"
+            height="17"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="1.7"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+          >
+            <path d="M12 3v12" />
+            <path d="m7 10 5 5 5-5" />
+            <path d="M5 21h14" />
+          </svg>
+        </button>
+      </div>
+
+
+      {/* ------------------------------------------------------- */}
+      {/* MATERIAL 03 */}
+      {/* ------------------------------------------------------- */}
+
+      <div
+        className="
+          w-full
+          flex
+          items-center
+          gap-3
+          sm:gap-4
+          rounded-[13px]
+          border
+          border-[#f2dfd5]
+          bg-[#fff8f2]
+          px-3
+          sm:px-4
+          py-3
+          sm:py-3.5
+        "
+      >
+        {/* PDF Icon */}
+        <div
+          className="
+            w-[38px]
+            h-[38px]
+            sm:w-[40px]
+            sm:h-[40px]
+            shrink-0
+            rounded-[9px]
+            bg-[#ffe9dd]
+            flex
+            items-center
+            justify-center
+          "
+        >
+          <div
+            className="
+              w-[27px]
+              h-[30px]
+              rounded-[4px]
+              bg-[#d91b0b]
+              flex
+              items-center
+              justify-center
+              text-white
+              text-[10px]
+              font-bold
+            "
+          >
+            PDF
+          </div>
+        </div>
+
+        {/* Material Info */}
+        <div className="flex-1 min-w-0">
+          <h3
+            className="
+              text-[13px]
+              sm:text-[14px]
+              font-medium
+              text-[#202020]
+              truncate
+            "
+          >
+            SAT Mathematics Formula Sheet
+          </h3>
+
+          <p
+            className="
+              text-[11px]
+              sm:text-[12px]
+              text-[#858585]
+              mt-0.5
+            "
+          >
+            PDF · 1.1 MB
+          </p>
+        </div>
+
+        {/* Download */}
+        <button
+          className="
+            w-[34px]
+            h-[34px]
+            shrink-0
+            rounded-[9px]
+            border
+            border-[#efdfd5]
+            bg-[#fffaf6]
+            flex
+            items-center
+            justify-center
+            text-[#9b918b]
+            hover:text-[#ff6b3d]
+            hover:border-[#ffc8b5]
+            transition-all
+          "
+          aria-label="Download SAT Mathematics Formula Sheet"
+        >
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            width="17"
+            height="17"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="1.7"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+          >
+            <path d="M12 3v12" />
+            <path d="m7 10 5 5 5-5" />
+            <path d="M5 21h14" />
+          </svg>
+        </button>
+      </div>
+
+    </div>
+  </div>
+
+
+  {/* ========================================================= */}
+  {/* ABOUT THIS SESSION */}
+  {/* ========================================================= */}
+
+  <div
+    className="
+      w-full
+      rounded-[20px]
+      border
+      border-[#dedede]
+      bg-white
+      px-5
+      py-6
+      sm:px-6
+      md:px-7
+      md:py-7
+    "
+  >
+    {/* Heading */}
+    <h2
+      className="
+        text-[16px]
+        sm:text-[17px]
+        font-semibold
+        text-[#4b4b4b]
+        mb-3
+      "
+    >
+      About This Session
+    </h2>
+
+    {/* Description */}
+    <p
+      className="
+        max-w-[900px]
+        text-[14px]
+        sm:text-[15px]
+        md:text-[16px]
+        leading-[1.5]
+        text-[#777777]
+        mb-5
+      "
+    >
+      "In this session, we will cover advanced algebra concepts including
+      equations, expressions, and problem-solving strategies to help you
+      improve accuracy and speed."
+    </p>
+
+    {/* Session Details */}
+    <div className="space-y-2">
+      
+      {/* Session Type */}
+      <div className="grid grid-cols-[125px_minmax(0,1fr)] sm:grid-cols-[140px_minmax(0,1fr)] items-center">
+        <span
+          className="
+            text-[13px]
+            sm:text-[14px]
+            text-[#ff6b3d]
+            font-medium
+          "
+        >
+          Session Type:
+        </span>
+
+        <span
+          className="
+            text-[13px]
+            sm:text-[14px]
+            text-[#242424]
+            font-medium
+          "
+        >
+          Live One-on-One Class
+        </span>
+      </div>
+
+      {/* Duration */}
+      <div className="grid grid-cols-[125px_minmax(0,1fr)] sm:grid-cols-[140px_minmax(0,1fr)] items-center">
+        <span
+          className="
+            text-[13px]
+            sm:text-[14px]
+            text-[#ff6b3d]
+            font-medium
+          "
+        >
+          Duration:
+        </span>
+
+        <span
+          className="
+            text-[13px]
+            sm:text-[14px]
+            text-[#242424]
+            font-medium
+          "
+        >
+          60 Minutes
+        </span>
+      </div>
+
+    </div>
+  </div>
+  </div>
+
+</div>
 
     {/* ==================================================
         MAIN CONTENT
     ================================================== */}
-    <div className="mt-6 grid grid-cols-1 gap-6 lg:grid-cols-[1fr_380px]">
-      {/* LEFT */}
-      <div className="space-y-6">
-        {/* LIVE SESSION */}
-        <div className="overflow-hidden rounded-2xl border border-gray-200 bg-white">
-          {/* Header */}
-          <div className="border-b border-gray-100 px-5 py-5 sm:px-7">
-            <div className="flex items-center justify-between gap-4">
-              <div className="flex items-center gap-3">
-                <div className="flex h-10 w-10 items-center justify-center rounded-full bg-orange-50">
-                  <Video className="h-5 w-5 text-orange-500" />
-                </div>
-                <div>
-                  <h2 className="text-lg font-bold text-gray-900">
-                    Live Session
-                  </h2>
-                  <p className="mt-0.5 text-sm text-gray-500">
-                    Join your instructor through Google Meet
-                  </p>
-                </div>
-              </div>
-
-              <div className="hidden rounded-xl border border-gray-200 bg-white p-2.5 sm:flex">
-                <img
-                  src="https://www.gstatic.com/meet/google_meet_marketing_24x24.png"
-                  alt="Google Meet"
-                  className="h-6 w-6"
-                  onError={(e) => {
-                    (e.target as HTMLImageElement).style.display = "none";
-                  }}
-                />
-              </div>
-            </div>
-          </div>
-
-          {/* Timer / Status */}
-          <div className="px-5 py-8 text-center sm:px-7">
-            <div className="mb-4 flex flex-col items-center justify-center gap-4 sm:flex-row">
-              {/* Calendar illustration */}
-              <div className="relative">
-                <div className="flex h-28 w-28 items-center justify-center rounded-2xl border-2 border-dashed border-orange-200 bg-orange-50/50">
-                  <div className="flex flex-col items-center">
-                    <div className="h-2 w-16 rounded-t-md bg-orange-400" />
-                    <div className="grid grid-cols-4 gap-1.5 p-2">
-                      {[...Array(8)].map((_, i) => (
-                        <div
-                          key={i}
-                          className="h-3 w-3 rounded-sm bg-gray-200"
-                        />
-                      ))}
-                    </div>
-                  </div>
-                </div>
-                <div className="absolute -bottom-2 -right-2 flex h-10 w-10 items-center justify-center rounded-full border-2 border-white bg-white shadow-md">
-                  <Clock className="h-5 w-5 text-gray-700" />
-                </div>
-              </div>
-
-              <div className="text-left">
-                <p className="text-sm font-medium text-gray-500">
-                  {timeRemaining?.type === "live"
-                    ? "Session is currently in progress"
-                    : timeRemaining?.type === "ended"
-                      ? "This session has ended"
-                      : "Session starts in"}
-                </p>
-                <div className="mt-1 flex items-center gap-2">
-                  <Clock className="h-5 w-5 text-orange-500" />
-                  <span className="text-xl font-bold text-gray-900">
-                    Session Ended
-                  </span>
-                </div>
-              </div>
-            </div>
-
-            {formatTime(timeRemaining)}
-
-            {/* Join Button */}
-            {canJoin && meetingUrl && (
-              <button
-                onClick={handleJoinMeeting}
-                className="mx-auto mt-6 inline-flex w-full max-w-sm items-center justify-center gap-2 rounded-xl bg-green-600 px-6 py-3.5 text-sm font-bold text-white shadow-lg shadow-green-600/20 transition hover:bg-green-700 hover:shadow-xl sm:w-auto"
-              >
-                <Video className="h-5 w-5" />
-                Join Meeting
-                <ExternalLink className="h-4 w-4" />
-              </button>
-            )}
-
-            {/* Waiting message */}
-            {!canJoin && timeRemaining?.type === "waiting" && (
-              <div className="mx-auto mt-6 max-w-md rounded-xl bg-amber-50 px-4 py-3 text-sm text-amber-700">
-                <div className="flex items-center justify-center gap-2">
-                  <Clock className="h-4 w-4" />
-                  <span>
-                    The join button will be available 10 minutes before the
-                    session starts.
-                  </span>
-                </div>
-              </div>
-            )}
-
-            {/* Ended */}
-            {timeRemaining?.type === "ended" && (
-              <div className="mx-auto mt-4 max-w-md rounded-xl bg-red-50 px-4 py-3 text-sm text-gray-700">
-                This live session has already ended.
-              </div>
-            )}
-          </div>
-
-          {/* Schedule */}
-          <div className="border-t border-gray-100 bg-white px-5 py-5 sm:px-7">
-            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-              <div className="flex items-center gap-3">
-                <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-orange-50">
-                  <Calendar className="h-5 w-5 text-orange-500" />
-                </div>
-                <div>
-                  <p className="text-xs text-gray-500">Date</p>
-                  <p className="text-sm font-bold text-gray-900">
-                    {formatDate(scheduledStart)}
-                  </p>
-                </div>
-              </div>
-
-              <div className="flex items-center gap-3">
-                <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-orange-50">
-                  <Clock className="h-5 w-5 text-orange-500" />
-                </div>
-                <div>
-                  <p className="text-xs text-gray-500">Time</p>
-                  <p className="text-sm font-bold text-gray-900">
-                    {formatTimeOnly(scheduledStart)}
-                    {" - "}
-                    {formatTimeOnly(scheduledEnd)}
-                  </p>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        {/* DESCRIPTION */}
-        {content.description && (
-          <div className="relative overflow-hidden rounded-2xl border border-gray-200 bg-white p-6 sm:p-7">
-            <div className="mb-4 flex items-center gap-3">
-              <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-orange-50">
-                <BookOpen className="h-5 w-5 text-orange-500" />
-              </div>
-              <h2 className="text-lg font-bold text-gray-900">
-                About This Session
-              </h2>
-            </div>
-
-            <p className="max-w-2xl text-sm leading-7 text-gray-600">
-              {content.description}
-            </p>
-
-            {/* Book illustration */}
-            <div className="absolute right-4 top-1/2 hidden -translate-y-1/2 lg:block">
-              <div className="relative">
-                <div className="flex h-24 w-32 items-center justify-center rounded-lg bg-orange-50">
-                  <div className="flex items-center gap-1">
-                    <div className="h-16 w-14 rounded-sm border-2 border-gray-300 bg-white" />
-                    <div className="h-16 w-14 rounded-sm border-2 border-gray-300 bg-white" />
-                  </div>
-                  <div className="absolute -right-2 -top-2 h-8 w-3 rotate-12 rounded-sm bg-orange-400" />
-                </div>
-              </div>
-            </div>
-          </div>
-        )}
-      </div>
-
-      {/* ==================================================
-          RIGHT SIDEBAR
-      ================================================== */}
-      <div className="space-y-6">
-        {/* COURSE */}
-        <div className="overflow-hidden rounded-2xl border border-gray-200 bg-white">
-          <div className="relative">
-            {course?.thumbnail?.url ? (
-              <img
-                src={`${ImageBaseUrl}/${course.thumbnail.url}`}
-                alt={course.title}
-                className="h-full w-full object-cover"
-              />
-            ) : (
-              <div className="flex h-40 w-full items-center justify-center bg-gradient-to-br from-gray-800 to-gray-900">
-                <div className="text-center">
-                  <div className="mx-auto mb-2 flex h-12 w-12 items-center justify-center rounded-full border-2 border-orange-400">
-                    <span className="text-lg font-bold text-orange-400">
-                      AI
-                    </span>
-                  </div>
-                  <div className="flex justify-center gap-1">
-                    {[...Array(5)].map((_, i) => (
-                      <div
-                        key={i}
-                        className="h-1 w-1 rounded-full bg-orange-400"
-                      />
-                    ))}
-                  </div>
-                </div>
-              </div>
-            )}
-
-            {/* Bookmark */}
-            <button className="absolute right-3 top-3 flex h-8 w-8 items-center justify-center rounded-lg bg-white shadow-md">
-              <Bookmark className="h-4 w-4 text-orange-500" />
-            </button>
-          </div>
-
-          <div className="p-5">
-            <div className="mb-1 text-xs font-bold uppercase tracking-wide text-orange-500">
-              Course
-            </div>
-            <h3 className="font-bold leading-6 text-gray-900">
-              {course?.title || "Course"}
-            </h3>
-            {course?.description && (
-              <p className="mt-2 line-clamp-3 text-sm leading-6 text-gray-500">
-                {course.description}
-              </p>
-            )}
-            <button className="mt-3 inline-flex items-center gap-1 text-sm font-bold text-orange-500 transition hover:text-orange-600">
-              Explore Course
-              <ArrowRight className="h-4 w-4" />
-            </button>
-          </div>
-        </div>
-
-        {/* SESSION INFO */}
-        <div className="rounded-2xl border border-gray-200 bg-white p-5">
-          <h3 className="mb-4 font-bold text-gray-900">
-            Session Information
-          </h3>
-
-          <div className="grid grid-cols-2 gap-x-4 gap-y-4">
-            {/* Instructor */}
-            <div className="flex items-center gap-3">
-              <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-orange-50">
-                <Users className="h-4 w-4 text-orange-500" />
-              </div>
-              <div className="min-w-0">
-                <p className="text-xs text-gray-500">Instructor</p>
-                <p className="truncate text-sm font-bold text-gray-900">
-                  {instructor?.name || "Not assigned"}
-                </p>
-              </div>
-            </div>
-
-            {/* Duration */}
-            <div className="flex items-center gap-3">
-              <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-orange-50">
-                <Clock className="h-4 w-4 text-orange-500" />
-              </div>
-              <div className="min-w-0">
-                <p className="text-xs text-gray-500">Duration</p>
-                <p className="truncate text-sm font-bold text-gray-900">
-                  {formatDuration(content.duration)}
-                </p>
-              </div>
-            </div>
-
-            {/* Module */}
-            <div className="flex items-center gap-3">
-              <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-orange-50">
-                <Layers className="h-4 w-4 text-orange-500" />
-              </div>
-              <div className="min-w-0">
-                <p className="text-xs text-gray-500">Module</p>
-                <p className="truncate text-sm font-bold text-gray-900">
-                  {moduleInfo?.title || "Not assigned"}
-                </p>
-              </div>
-            </div>
-
-            {/* Progress */}
-            <div className="flex items-center gap-3">
-              <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-orange-50">
-                <CheckCircle className="h-4 w-4 text-orange-500" />
-              </div>
-              <div className="min-w-0">
-                <p className="text-xs text-gray-500">Progress</p>
-                <p className="truncate text-sm font-bold text-gray-900">
-                  {content.progressCount || 0} completed
-                </p>
-              </div>
-            </div>
-
-            {/* Session Type */}
-            <div className="flex items-center gap-3">
-              <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-orange-50">
-                <Tag className="h-4 w-4 text-orange-500" />
-              </div>
-              <div className="min-w-0">
-                <p className="text-xs text-gray-500">Session Type</p>
-                <p className="truncate text-sm font-bold text-gray-900">
-                  {content.contentType || "Session"}
-                </p>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        {/* INSTRUCTOR CARD */}
-        {instructor && (
-          <div className="rounded-2xl bg-gradient-to-r from-orange-400 to-orange-500 p-5 text-white shadow-sm">
-            <div className="flex items-center gap-3">
-              <div className="flex h-12 w-12 items-center justify-center rounded-full bg-white">
-                <GraduationCap className="h-6 w-6 text-orange-500" />
-              </div>
-              <div>
-                <p className="text-xs text-white/80">Your Instructor</p>
-                <p className="font-bold">{instructor.name}</p>
-              </div>
-            </div>
-
-            {instructor.email && (
-              <div className="mt-4 flex items-center justify-between">
-                <p className="break-all text-xs text-white/90">
-                  {instructor.email}
-                </p>
-                <button className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-white/20 transition hover:bg-white/30">
-                  <Mail className="h-4 w-4" />
-                </button>
-              </div>
-            )}
-          </div>
-        )}
-      </div>
-    </div>
+   
 
     {/* ==================================================
         BOTTOM SUCCESS BANNER
