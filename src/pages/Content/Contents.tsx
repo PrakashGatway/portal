@@ -28,6 +28,7 @@ import {
   ChevronUp,
   MoreVertical,
   X,
+  Loader2,
 } from "lucide-react";
 import { useNavigate } from "react-router";
 import RecordedVideoUploadModal from "./UploadClass";
@@ -856,9 +857,9 @@ export default function ContentManagement({ type, from, course }: any) {
       <Modal
         isOpen={editModalOpen}
         onClose={() => setEditModalOpen(false)}
-        className="max-w-[900px] m-2"
+        className="max-w-[800px] m-2 border-4"
       >
-        <div className="no-scrollbar relative w-full max-w-[900px] overflow-y-auto rounded-3xl bg-white p-4 sm:p-5 dark:bg-gray-900 ">
+        <div className="no-scrollbar relative w-full max-w-[800px] overflow-y-auto rounded-3xl bg-white p-4 sm:p-5 dark:bg-gray-900 ">
           <div className="px-2 pr-14">
             <h4 className="mb-px text-xl font-bold text-gray-800 dark:text-white/90">
               {selectedContent ? "Edit Content" : "Add New Content"}
@@ -873,7 +874,7 @@ export default function ContentManagement({ type, from, course }: any) {
                 : "Create a new content for your course"}
             </p>
           </div>
-          <div className="custom-scrollbar h-[480px] overflow-y-auto px-2 pb-3">
+          <div className="custom-scrollbar h-[480px] overflow-y-auto px-2 py-2 pb-3">
             <ContentForm
               content={selectedContent}
               onSave={handleSaveSuccess}
@@ -953,7 +954,107 @@ const ContentTableRow = ({
 }: any) => {
   let navigate = useNavigate();
   const [isUploadModalOpen, setIsUploadModalOpen] = useState(false);
+  const [uploadMaterial, setUploadMaterial] = useState<any>(null);
+  const [selectedFile, setSelectedFile] = useState<File | null>(null);
+  const [uploading, setUploading] = useState(false);
 
+  const handleUploadFile = (material: any) => {
+    setUploadMaterial(material);
+    setSelectedFile(null);
+  };
+
+  const handleUpload = async () => {
+    if (!uploadMaterial?._id || !selectedFile) return;
+
+    try {
+      setUploading(true);
+
+      const body = new FormData();
+
+      body.append("file", selectedFile);
+      body.append("studyMaterialId", uploadMaterial._id);
+
+      const response = await api.post(
+        `/upload/studymaterial/${uploadMaterial._id}`,
+        body,
+        {
+          headers: {
+            "Content-Type": "multipart/form-data",
+          },
+        },
+      );
+
+      toast.success("Study material uploaded successfully");
+
+      setUploadMaterial(null);
+      setSelectedFile(null);
+
+      // Refresh your list
+      // fetchContents();
+    } catch (error: any) {
+      console.error(error);
+
+      toast.error(
+        error?.response?.data?.message || "Failed to upload study material",
+      );
+    } finally {
+      setUploading(false);
+    }
+  };
+
+  const getAcceptedFileTypes = (type: string) => {
+    switch (type?.toLowerCase()) {
+      case "pdf":
+        return ".pdf,application/pdf";
+
+      case "doc":
+      case "document":
+        return ".doc,.docx,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document";
+
+      case "ppt":
+      case "presentation":
+        return ".ppt,.pptx,application/vnd.ms-powerpoint,application/vnd.openxmlformats-officedocument.presentationml.presentation";
+
+      case "image":
+        return "image/*";
+
+      case "video":
+        return "video/*";
+
+      case "audio":
+        return "audio/*";
+
+      default:
+        return "*/*";
+    }
+  };
+
+  const getAcceptedFileText = (type: string) => {
+    switch (type?.toLowerCase()) {
+      case "pdf":
+        return "PDF";
+
+      case "doc":
+      case "document":
+        return "DOC, DOCX";
+
+      case "ppt":
+      case "presentation":
+        return "PPT, PPTX";
+
+      case "image":
+        return "JPG, PNG, WEBP";
+
+      case "video":
+        return "MP4, WEBM, MOV";
+
+      case "audio":
+        return "MP3, WAV, M4A";
+
+      default:
+        return "Any file";
+    }
+  };
   return (
     <>
       <tr className="border-b !font-medium border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-800/50 transition-colors">
@@ -1018,7 +1119,14 @@ const ContentTableRow = ({
               />
             )}
             <div>
-              <p className="text-sm font-medium text-gray-900 dark:text-white line-clamp-1">
+              <p
+                onClick={() => {
+                  if (content.__t === "StudyMaterials") {
+                    navigate(`/resources/${content.slug}`);
+                  }
+                }}
+                className="text-sm cursor-pointer font-medium text-gray-900 dark:text-white line-clamp-1"
+              >
                 {content.title}
               </p>
               <p className="text-xs text-gray-500 dark:text-gray-400">
@@ -1066,6 +1174,37 @@ const ContentTableRow = ({
               >
                 <Upload size={16} />
               </button>
+            )}
+            {content.__t === "StudyMaterials" && (
+              <div className="flex items-center gap-2">
+                {content.file.url ? (
+                  <>
+                    <button
+                      type="button"
+                      onClick={() => handleUploadFile(content)}
+                      className="rounded-lg p-2 text-slate-500 hover:bg-slate-100 hover:text-amber-600"
+                      title="Replace file"
+                    >
+                      <Upload className="h-4 w-4" />
+                    </button>
+                  </>
+                ) : (
+                  <button
+                    type="button"
+                    onClick={() => handleUploadFile(content)}
+                    className="
+        inline-flex items-center gap-2
+        rounded-lg bg-indigo-50 px-3 py-2
+        text-xs font-semibold text-indigo-600
+        transition hover:bg-indigo-100
+        dark:bg-indigo-500/10 dark:text-indigo-400
+      "
+                  >
+                    <Upload className="h-3.5 w-3.5" />
+                    Upload
+                  </button>
+                )}
+              </div>
             )}
             <button
               onClick={() => onView(content)}
@@ -1172,6 +1311,93 @@ const ContentTableRow = ({
             }
           }}
         />
+      )}
+
+      {uploadMaterial && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
+          <div className="w-full max-w-lg rounded-2xl bg-white p-6 shadow-2xl dark:bg-slate-900">
+            <div className="mb-5">
+              <h2 className="text-lg font-bold text-slate-900 dark:text-white">
+                Upload Study Material
+              </h2>
+
+              <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">
+                {uploadMaterial.title}
+              </p>
+            </div>
+
+            <div className="mb-4 rounded-xl bg-slate-50 p-3 dark:bg-slate-800">
+              <p className="text-xs text-slate-400">Material Type</p>
+
+              <p className="mt-1 text-sm font-semibold capitalize text-slate-800 dark:text-white">
+                {uploadMaterial.materialType}
+              </p>
+            </div>
+
+            <label
+              htmlFor="material-upload"
+              className="
+          flex cursor-pointer flex-col items-center
+          justify-center rounded-xl border-2 border-dashed
+          border-slate-300 px-6 py-10
+          transition hover:border-indigo-500
+          hover:bg-indigo-50/50
+          dark:border-slate-700 dark:hover:border-indigo-500
+        "
+            >
+              <Upload className="mb-3 h-8 w-8 text-indigo-500" />
+
+              <span className="text-sm font-semibold text-slate-700 dark:text-white">
+                {selectedFile ? selectedFile.name : "Choose file to upload"}
+              </span>
+
+              <span className="mt-1 text-xs text-slate-400">
+                Accepted format:{" "}
+                {getAcceptedFileText(uploadMaterial.materialType)}
+              </span>
+
+              <input
+                id="material-upload"
+                type="file"
+                className="hidden"
+                accept={getAcceptedFileTypes(uploadMaterial.materialType)}
+                onChange={(e) => {
+                  setSelectedFile(e.target.files?.[0] || null);
+                }}
+              />
+            </label>
+
+            <div className="mt-5 flex justify-end gap-3">
+              <button
+                type="button"
+                onClick={() => {
+                  setUploadMaterial(null);
+                  setSelectedFile(null);
+                }}
+                className="rounded-xl px-4 py-2.5 text-sm font-medium text-slate-600 hover:bg-slate-100 dark:text-slate-300 dark:hover:bg-slate-800"
+              >
+                Cancel
+              </button>
+
+              <button
+                type="button"
+                disabled={!selectedFile || uploading}
+                onClick={handleUpload}
+                className="
+            inline-flex items-center gap-2
+            rounded-xl bg-indigo-600 px-5 py-2.5
+            text-sm font-semibold text-white
+            hover:bg-indigo-700
+            disabled:cursor-not-allowed disabled:opacity-50
+          "
+              >
+                {uploading && <Loader2 className="h-4 w-4 animate-spin" />}
+
+                {uploading ? "Uploading..." : "Upload Material"}
+              </button>
+            </div>
+          </div>
+        </div>
       )}
     </>
   );
@@ -1425,7 +1651,7 @@ const ContentForm = ({
         newErrors.thumbnailPic = "Thumbnail is required";
       if (!formData.instructor) newErrors.instructor = "Instructor is required";
     } else if (formData.__t === "StudyMaterials") {
-      if (!formData.fileUrl.trim()) newErrors.fileUrl = "File URL is required";
+      // if (!formData.fileUrl.trim()) newErrors.fileUrl = "File URL is required";
       if (!formData.materialType) {
         newErrors.materialType = "Material type is required";
       }
@@ -1811,7 +2037,7 @@ const ContentForm = ({
               }
             />
           </div>
-          <div>
+          {/* <div>
             <Label>File URL *</Label>
             <Input
               type="url"
@@ -1823,7 +2049,7 @@ const ContentForm = ({
             {errors.fileUrl && (
               <p className="mt-1 text-sm text-red-600">{errors.fileUrl}</p>
             )}
-          </div>
+          </div> */}
           <div>
             <Label>Is Downloadable</Label>
             <select
@@ -1836,7 +2062,7 @@ const ContentForm = ({
               <option value="false">No</option>
             </select>
           </div>
-          <div>
+          {/* <div>
             <Label>Version</Label>
             <Input
               type="text"
@@ -1845,8 +2071,8 @@ const ContentForm = ({
               onChange={handleChange}
               placeholder="1.0"
             />
-          </div>
-          <div className="md:col-span-2">
+          </div> */}
+          {/* <div className="md:col-span-2">
             <Label>Text Content</Label>
             <textarea
               name="textContent"
@@ -1856,8 +2082,8 @@ const ContentForm = ({
               className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-200 focus:border-blue-500 dark:bg-gray-800 dark:border-gray-600 dark:text-white"
               placeholder="Enter text content for the study material"
             />
-          </div>
-          <div>
+          </div> */}
+          {/* <div>
             <Label>Number of Pages</Label>
             <Input
               type="number"
@@ -1867,7 +2093,7 @@ const ContentForm = ({
               placeholder="Enter number of pages"
               min="0"
             />
-          </div>
+          </div> */}
           <div>
             <Label>External Link</Label>
             <Input

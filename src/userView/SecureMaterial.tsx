@@ -1,13 +1,23 @@
-import React, { useEffect, useState } from 'react';
-import { useNavigate, useParams } from 'react-router';
-import { Viewer, Worker } from '@react-pdf-viewer/core';
-import { toolbarPlugin } from '@react-pdf-viewer/toolbar';
-import { FileText, Image as ImageIcon, Music, Link as LinkIcon, ExternalLink, AlertTriangle, Lock, ChevronLeft } from 'lucide-react';
-import api from '../axiosInstance'; // Adjust this import path to match your project structure
+import React, { useEffect, useState } from "react";
+import { useNavigate, useParams } from "react-router";
+import { Viewer, Worker } from "@react-pdf-viewer/core";
+import { toolbarPlugin } from "@react-pdf-viewer/toolbar";
+import {
+  FileText,
+  Image as ImageIcon,
+  Music,
+  Link as LinkIcon,
+  ExternalLink,
+  AlertTriangle,
+  Lock,
+  ChevronLeft,
+  Download,
+} from "lucide-react";
+import api, { ImageBaseUrl } from "../axiosInstance"; // Adjust this import path to match your project structure
 
 // Import PDF Viewer styles
-import '@react-pdf-viewer/core/lib/styles/index.css';
-import '@react-pdf-viewer/toolbar/lib/styles/index.css';
+import "@react-pdf-viewer/core/lib/styles/index.css";
+import "@react-pdf-viewer/toolbar/lib/styles/index.css";
 
 const SecureMaterialViewer = ({ material: initialMaterial }) => {
   const { slug } = useParams();
@@ -20,6 +30,20 @@ const SecureMaterialViewer = ({ material: initialMaterial }) => {
   useEffect(() => {
     setIsClient(true);
   }, []);
+
+  const handleDownload = () => {
+    if (!fileUrl) return;
+
+    const link = document.createElement("a");
+    link.href = fileUrl;
+    link.download = material.file?.publicId || material.title;
+    link.target = "_blank";
+    link.rel = "noopener noreferrer";
+
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
 
   // Fetch material if not passed as a prop
   useEffect(() => {
@@ -38,11 +62,11 @@ const SecureMaterialViewer = ({ material: initialMaterial }) => {
           if (response.data.success) {
             setMaterial(response.data.data);
           } else {
-            setError('Failed to fetch material details.');
+            setError("Failed to fetch material details.");
           }
         } catch (err) {
-          console.error('Error fetching material:', err);
-          setError('Unable to load the study material. Please try again.');
+          console.error("Error fetching material:", err);
+          setError("Unable to load the study material. Please try again.");
         } finally {
           setLoading(false);
         }
@@ -68,23 +92,60 @@ const SecureMaterialViewer = ({ material: initialMaterial }) => {
       <div className="flex items-center justify-center h-[85vh] rounded-xl">
         <div className="text-center max-w-md p-6">
           <AlertTriangle className="h-25 w-25 stroke-1 text-red-500 mx-auto mb-4" />
-          <h3 className="text-xl font-semibold text-gray-900 dark:text-white mb-2">Error Loading Material</h3>
-          <p className="text-gray-600 dark:text-gray-400 mb-4">{error || 'Material not found.'}</p>
+          <h3 className="text-xl font-semibold text-gray-900 dark:text-white mb-2">
+            Error Loading Material
+          </h3>
+          <p className="text-gray-600 dark:text-gray-400 mb-4">
+            {error || "Material not found."}
+          </p>
         </div>
       </div>
     );
   }
 
-  const fileUrl = material.file?.url || material.externalLink;
-  const watermarkText = material.instructor?.email || material.course?.title || 'Confidential';
+  const fileUrl =
+    `${ImageBaseUrl}${material.file?.url}` || material.externalLink;
+  const watermarkText =
+    material.instructor?.email || material.course?.title || "Confidential";
 
   const renderContent = () => {
     switch (material.materialType) {
-      case 'pdf':
-      case 'document':
+      case "pdf":
         return <PdfViewer fileUrl={fileUrl} watermarkText={watermarkText} />;
+      case "document":
+        return (
+          <div className="flex h-full items-center justify-center bg-gray-50 dark:bg-gray-900">
+            <div className="text-center">
+              <h3 className="mb-2 text-xl font-bold text-gray-900 dark:text-white">
+                {material.title}
+              </h3>
 
-      case 'image':
+              <p className="mb-6 text-sm text-gray-500 dark:text-gray-400">
+                This study material is available as a document.
+              </p>
+
+              <button
+                type="button"
+                onClick={handleDownload}
+                className="
+            inline-flex items-center gap-2
+            rounded-xl bg-black
+            px-6 py-3
+            text-sm font-semibold text-white
+            shadow-lg shadow-orange-500/20
+            transition-all
+            hover:bg-orange-600
+            active:scale-95
+          "
+              >
+                <Download className="h-5 w-5" />
+                Download
+              </button>
+            </div>
+          </div>
+        );
+
+      case "image":
         return (
           <div className="relative w-full h-full flex items-center justify-center bg-gray-100 dark:bg-gray-900 overflow-hidden">
             <Watermark text={watermarkText} />
@@ -98,14 +159,18 @@ const SecureMaterialViewer = ({ material: initialMaterial }) => {
           </div>
         );
 
-      case 'audio':
+      case "audio":
         return (
           <div className="relative w-full h-full flex flex-col items-center justify-center bg-gray-50 dark:bg-gray-900 ">
             <Watermark text={watermarkText} />
             <div className="bg-white dark:bg-gray-800 p-8 rounded-2xl w-full h-full">
               <Music className="h-16 w-16 text-orange-500 mb-4" />
-              <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-2">{material.title}</h3>
-               <p className="text-gray-500 font-medium dark:text-gray-400 mb-6">{material.description}</p>
+              <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-2">
+                {material.title}
+              </h3>
+              <p className="text-gray-500 font-medium dark:text-gray-400 mb-6">
+                {material.description}
+              </p>
               {/* <p className="text-gray-500 dark:text-gray-400 mb-6">Secure Audio Player</p> */}
               <audio
                 controls
@@ -119,15 +184,17 @@ const SecureMaterialViewer = ({ material: initialMaterial }) => {
           </div>
         );
 
-      case 'link':
+      case "link":
         return (
           <div className="relative flex items-center justify-center bg-white h-full w-full">
             {/* <Watermark text={watermarkText} /> */}
             <div className=" text-center z-10">
               <LinkIcon className="h-16 w-16 text-orange-500 mx-auto mb-4" />
-              <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-2">{material.title}</h3>
+              <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-2">
+                {material.title}
+              </h3>
               <p className="text-base mb-3 text-gray-600 font-medium dark:text-gray-400 capitalize">
-                {material.description || 'General'}
+                {material.description || "General"}
               </p>
               <p className="text-gray-500 text-sm dark:text-gray-400 mb-6">
                 This is an external resource. Click below to open it.
@@ -141,7 +208,8 @@ const SecureMaterialViewer = ({ material: initialMaterial }) => {
                 Open External Link <ExternalLink className="h-4 w-4" />
               </a>
               <p className="text-xs text-gray-400 mt-4 flex items-center justify-center gap-1">
-                <Lock className="h-3 w-3" /> Opening external links takes you outside the secure environment.
+                <Lock className="h-3 w-3" /> Opening external links takes you
+                outside the secure environment.
               </p>
             </div>
           </div>
@@ -152,7 +220,9 @@ const SecureMaterialViewer = ({ material: initialMaterial }) => {
           <div className="flex items-center justify-center h-full">
             <div className="text-center">
               <FileText className="h-16 w-16 text-gray-400 mx-auto mb-4" />
-              <p className="text-gray-600 dark:text-gray-400">Unsupported material type: {material.materialType}</p>
+              <p className="text-gray-600 dark:text-gray-400">
+                Unsupported material type: {material.materialType}
+              </p>
             </div>
           </div>
         );
@@ -160,12 +230,12 @@ const SecureMaterialViewer = ({ material: initialMaterial }) => {
   };
 
   return (
-    <div className='p-3'>
+    <div className="p-3">
       <div className="relative w-full max-w-7xl mx-auto rounded-2xl overflow-hidden">
         {/* Header */}
         <div className="p-4 bg-white flex items-center justify-between">
           <div>
-            <div className='flex items-start justify-start gap-2'>
+            <div className="flex items-start justify-start gap-2">
               <button
                 onClick={() => navigate(-1)}
                 className="text-gray-500 rounded-full bg-gray-100 hover:bg-gray-300 mt-1 h-9 w-9 flex items-center justify-center  hover:text-gray-600 dark:text-gray-400 dark:hover:text-gray-300 transition-colors"
@@ -173,21 +243,23 @@ const SecureMaterialViewer = ({ material: initialMaterial }) => {
                 <ChevronLeft className="h-5.5 w-5.5" />
               </button>
               <div>
-                <h2 className="text-xl font-semibold text-gray-900 dark:text-white">{material.title}</h2>
+                <h2 className="text-xl font-semibold text-gray-900 dark:text-white">
+                  {material.title}
+                </h2>
                 <p className="text-xs text-gray-500 dark:text-gray-400 capitalize">
-                  {material.materialType} • {material.course?.title || 'General'}
+                  {material.materialType} •{" "}
+                  {material.course?.title || "General"}
                 </p>
               </div>
             </div>
           </div>
         </div>
         {/* Content Area */}
-        <div className="relative" style={{ height: '72vh' }}>
+        <div className="relative" style={{ height: "72vh" }}>
           {renderContent()}
         </div>
       </div>
     </div>
-
   );
 };
 
@@ -218,16 +290,26 @@ const PdfViewer = ({ fileUrl, watermarkText }) => {
                   } = props;
                   return (
                     <>
-                      <div className="px-1"><ZoomOut /></div>
-                      <div className="px-1"><ZoomIn /></div>
-                      <div className="px-1 ml-auto"><GoToPreviousPage /></div>
+                      <div className="px-1">
+                        <ZoomOut />
+                      </div>
+                      <div className="px-1">
+                        <ZoomIn />
+                      </div>
+                      <div className="px-1 ml-auto">
+                        <GoToPreviousPage />
+                      </div>
                       <div className="px-1 flex items-center gap-1 text-sm text-gray-700 dark:text-gray-300 font-medium">
                         <CurrentPageInput />
                         <span>/</span>
                         <NumberOfPages />
                       </div>
-                      <div className="px-1"><GoToNextPage /></div>
-                      <div className="px-1 ml-auto"><EnterFullScreen /></div>
+                      <div className="px-1">
+                        <GoToNextPage />
+                      </div>
+                      <div className="px-1 ml-auto">
+                        <EnterFullScreen />
+                      </div>
                     </>
                   );
                 }}
@@ -254,7 +336,7 @@ const PdfViewer = ({ fileUrl, watermarkText }) => {
   );
 };
 
-const Watermark = ({ text = 'Confidential' }) => (
+const Watermark = ({ text = "Confidential" }) => (
   <div className="absolute inset-0 pointer-events-none z-50 opacity-20 overflow-hidden select-none">
     <div className="absolute top-1/3 left-1/2 transform -translate-x-1/2 -translate-y-1/2 text-4xl font-bold text-gray-500 dark:text-gray-400 whitespace-nowrap rotate-12">
       {text}

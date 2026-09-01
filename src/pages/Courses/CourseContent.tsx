@@ -98,7 +98,7 @@ const COURSE_TABS = [
     gradient: "from-emerald-500 to-teal-600",
     activeGradient: "from-emerald-600 to-teal-700",
   },
-    {
+  {
     id: "tests",
     label: "Tests",
     description: "Manage learning materials",
@@ -343,9 +343,9 @@ export default function CourseManagement() {
           </div>
         </aside>
 
-        <div className="fixed bottom-4 left-4 right-4 z-40 lg:hidden">
-          <div className="rounded-2xl border border-slate-200 bg-white/95 p-2 shadow-2xl shadow-slate-900/20 backdrop-blur-xl dark:border-slate-700 dark:bg-slate-900/95">
-            <div className="grid grid-cols-4 gap-1.5">
+        <div className="fixed bottom-2 left-2 right-2 z-40 lg:hidden">
+          <div className="rounded-4xl border border-slate-200 bg-white/95 p-1 shadow-2xl shadow-slate-900/20 backdrop-blur-xl dark:border-slate-700 dark:bg-slate-900/95">
+            <div className="flex overflow-x-auto no-scrollbar  justify-between gap-1">
               {COURSE_TABS.map((tab) => {
                 const Icon = tab.icon;
                 const active = activeTab === tab.id;
@@ -355,14 +355,40 @@ export default function CourseManagement() {
                     key={tab.id}
                     type="button"
                     onClick={() => setActiveTab(tab.id)}
-                    className={`flex flex-col items-center justify-center gap-1.5 rounded-xl px-2 py-3 transition-all duration-300 ${
-                      active
-                        ? `bg-gradient-to-br ${tab.activeGradient} text-white shadow-lg`
-                        : "text-slate-500 hover:bg-slate-100 dark:text-slate-400 dark:hover:bg-slate-800"
-                    }`}
+                    className={`
+    group
+    flex h-[58px] w-[72px] shrink-0
+    flex-col items-center justify-center
+    gap-1 rounded-4xl px-2
+    transition-all duration-200
+    ${
+      active
+        ? `bg-gradient-to-br ${tab.activeGradient} text-white shadow-md`
+        : `
+          text-slate-500
+          hover:bg-slate-100 hover:text-slate-900
+          dark:text-slate-400
+          dark:hover:bg-slate-800 dark:hover:text-slate-100
+        `
+    }
+  `}
                   >
-                    <Icon className="h-5 w-5" />
-                    <span className="text-[10px] font-semibold">
+                    <Icon
+                      className={`
+      h-[18px] w-[18px] shrink-0
+      transition-transform duration-200
+      ${active ? "scale-105" : "group-hover:scale-105"}
+    `}
+                    />
+
+                    <span
+                      className="
+      w-full truncate
+      text-center text-[10px]
+      font-medium leading-tight
+    "
+                      title={tab.label}
+                    >
                       {tab.label}
                     </span>
                   </button>
@@ -402,14 +428,14 @@ export default function CourseManagement() {
                   course={courseInfo}
                 />
               )}
-               {activeTab === "session" && (
+              {activeTab === "session" && (
                 <ContentManagement
                   type="Sessions"
                   from={"content"}
                   course={courseInfo}
                 />
               )}
-               {activeTab === "tests" && (
+              {activeTab === "tests" && (
                 <ContentManagement
                   type="Tests"
                   from={"content"}
@@ -423,7 +449,6 @@ export default function CourseManagement() {
                   course={courseInfo}
                 />
               )}
-             
             </motion.div>
           </AnimatePresence>
         </main>
