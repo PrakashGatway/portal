@@ -290,6 +290,7 @@ const AppSidebar: React.FC = () => {
     toggleSidebar,
     toggleMobileSidebar,
   } = useSidebar();
+
   const location = useLocation();
   const { user } = useAuth() as any;
   const navigate = useNavigate();
@@ -646,6 +647,7 @@ const AppSidebar: React.FC = () => {
               {renderMenuItems(getMenuItems("others"), "others")}
             </div>
           </nav>
+
           {/* Bottom */}
           {/* <div className="flex flex-col gap-2 mt-4 pt-4 flex-shrink-0 border-t border-zinc-100 dark:border-white/[0.06]">
             {user && (showLabels ? (
@@ -684,5 +686,6 @@ const AppSidebar: React.FC = () => {
     </div>
   );
 };
+
 
 export default AppSidebar;

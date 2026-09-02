@@ -183,6 +183,17 @@ export const PAGE_TYPES_SCHEMA = {
           { name: "content", type: "editor", label: "Section content" },
         ],
       },
+      
+      {
+        type: "Banner",
+        label: "Banner",
+        fields: [
+          { name: "title", type: "text", label: " Title" },
+          { name: "content", type: "editor", label: " content" },
+          { name : 'buttonText', type : 'text', label : 'Botton text'},
+          { name : 'url', type : 'text', label : 'Botton Url'}
+        ],
+      },
     ],
   },
 
