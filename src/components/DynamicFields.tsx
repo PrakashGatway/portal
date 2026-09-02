@@ -9,6 +9,7 @@ import { Plus, X, ChevronRight, Image as ImageIcon } from "lucide-react";
 import CKEditorComponent from "./CkEditor";
 
 export const DynamicFormFields = ({ formData, setFormData, pageType }) => {
+  console.log(formData, setFormData, pageType , 'dynamic form')
   const schema = pageType ? PAGE_TYPES_SCHEMA[pageType] : null;
 
   // State to track which sections are expanded
@@ -248,6 +249,7 @@ export const DynamicFormFields = ({ formData, setFormData, pageType }) => {
 // --- Dynamic Field Component (Logic unchanged - Fully Controlled) ---
 const DynamicField = ({ field, value, onChange }) => {
   const { name, type, label, required, itemFields, accept } = field;
+  console.log( name, type, label, required, itemFields, accept,"Dynamic field")
 
   const handleChange = (e) => {
     const val = e?.target ? e.target.value : e;
@@ -450,7 +452,7 @@ const DynamicField = ({ field, value, onChange }) => {
   );
 };
 
-// --- File Uploader (Minimal safety fixes only - logic unchanged) ---
+
 const FileUploader = ({ value, onChange, accept, compact }) => {
   const [isUploading, setIsUploading] = useState(false);
   const [preview, setPreview] = useState("");
@@ -467,7 +469,7 @@ const FileUploader = ({ value, onChange, accept, compact }) => {
 
   // Update preview when value changes (logic unchanged, added null safety)
   useEffect(() => {
-    // Clean up previous blob URL only if it's a blob URL
+    
     if (preview && preview.startsWith("blob:")) {
       URL.revokeObjectURL(preview);
     }
@@ -484,13 +486,14 @@ const FileUploader = ({ value, onChange, accept, compact }) => {
       if (value.startsWith("http") || value.startsWith("/")) {
         imageUrl = value;
       }
-      // If it's a relative path/filename, prepend your API base URL or public path
+      
       else {
+
       }
 
       setPreview(imageUrl);
     }
-    // Note: We don't handle File objects here because our logic uploads immediately
+    
   }, [value]); // Removed `preview` from dependency to avoid circular updates
 
   const handleFileChange = async (e) => {

@@ -439,8 +439,7 @@ const PagesManagement = () => {
                   filters.page * filters.limit >= total
                     ? "cursor-not-allowed bg-gray-100 text-gray-400 dark:bg-gray-700"
                     : "bg-white text-gray-700 hover:bg-gray-50 dark:bg-gray-800 dark:text-white"
-                }`}
-              >
+                }`}>
                 Next
               </button>
             </div>

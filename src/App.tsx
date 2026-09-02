@@ -103,7 +103,7 @@ export default function App() {
           <Route element={<ProtectedRoute />}>
             <Route element={<AppLayout />}>
               <Route index path="/" element={<Home />} />
-              //completed
+            
               <Route path="/offers" element={<OffersPage />} />
               <Route path="/profile" element={<UserProfiles />} />
               <Route path="/coming" element={<ComingSoon />} />
@@ -112,26 +112,26 @@ export default function App() {
               <Route path="/sessions/:slug" element={<ContentViewPage />} />
               <Route path="/transactions" element={<TransactionsPage />} />
               <Route path="/referrals" element={<ReferAndEarnPage />} />
-              //support
+            
               <Route path="/support" element={<SupportPage />} />
               <Route path="/all-tickets" element={<SupportTickets />} />
               <Route path="/our-selection" element={<JobSelectionsWall />} />
               <Route path="/calendar" element={<EventCalendar />} />
-              // my course
+            
               <Route path="/my-courses" element={<MyCoursesPage />} />
               <Route path="/courses/:slug" element={<CourseDetailPageee />} />
-              // study material
+            
               <Route path="/resources" element={<StudyMaterialPage />} />
               <Route
                 path="/resources/:slug"
                 element={<SecureMaterialViewer />}
               />
-              // Video player
+            
               <Route
                 path="/class/:contentId/:courseId"
                 element={<VideoPlayerPage />}
               />
-              // test series
+            
               <Route path="/test-series" element={<MockTestsPage />} />
               <Route
                 path="/tests"
@@ -146,10 +146,10 @@ export default function App() {
                 path="/test-series/:slug"
                 element={<TestSeriesDetailPage />}
               />
-              // ilets
+            
               <Route path="/mock-tests" element={<MockTest />} />
               {/* <Route path="/test/:testId" element={<TestQuestionPage/>} /> */}
-              // admin
+            
               <Route element={<ProtectedRoute roles={[ROLES.ADMIN]} />}>
                 <Route path="/users" element={<UserListPage />} />
 
@@ -187,7 +187,7 @@ export default function App() {
               </Route>
               <Route path="/notifications" element={<Notifications />} />
               <Route path="/privacy-policy" element={<Privacy />} />
-              // teachers
+            
               <Route
                 element={
                   <ProtectedRoute roles={[ROLES.TEACHER, ROLES.ADMIN]} />
@@ -213,7 +213,7 @@ export default function App() {
                   path="/sessions"
                   element={<ContentManagement type="Sessions" />}
                 />
-                 <Route
+                <Route
                   path="/course-tests"
                   element={<ContentManagement type="Tests" />}
                 />
@@ -227,13 +227,15 @@ export default function App() {
                 />
 
                 <Route path="/courses" element={<CourseManagement />} />
-                <Route path="/courses/content/:courseId" element={<CourseContentManagement />} />
+                <Route
+                  path="/courses/content/:courseId"
+                  element={<CourseContentManagement />}
+                />
 
                 <Route path="/modules" element={<ModuleManagement />} />
                 <Route path="/categories" element={<CategoryManagement />} />
-
               </Route>
-              // Crm
+            
               <Route
                 element={
                   <ProtectedRoute
@@ -249,7 +251,7 @@ export default function App() {
                 <Route path="/leads" element={<LeadManagement />} />
                 <Route path="/lead-report" element={<DailyReport />} />
               </Route>
-              // website
+            
               <Route
                 element={<ProtectedRoute roles={[ROLES.EDITOR, ROLES.ADMIN]} />}
               >
@@ -301,10 +303,7 @@ export default function App() {
               path="/ielts/tests/:testId"
               element={<IeltsTestPlatform />}
             />
-            {/* <Route
-              path="/ielts/results/:testId"
-              element={<IeltsTestResultPage />}
-            /> */}
+            
             <Route path="*" element={<ComingSoon />} />
           </Route>
           <Route path="/unauthorized" element={<NotFound />} />
