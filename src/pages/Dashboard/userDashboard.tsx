@@ -568,8 +568,8 @@ const HeaderBanner = ({ data, user, filterBanner }) => {
                                     key={index}
                                     onClick={() => goToSlide(index)}
                                     className={`h-2 rounded-full transition-all duration-300 ${currentSlide === index
-                                            ? "w-6 bg-white"
-                                            : "w-2 bg-white/50"
+                                        ? "w-6 bg-white"
+                                        : "w-2 bg-white/50"
                                         }`}
                                 />
                             ))}
@@ -1482,8 +1482,8 @@ const GREDashboard = () => {
                                                 }
                                             }}
                                             className={`h-1.5 rounded-full transition-all duration-300 ${currentSlide4 === index
-                                                    ? "w-4 bg-[#ff764b]"
-                                                    : "w-1.5 bg-[#3975b9]"
+                                                ? "w-4 bg-[#ff764b]"
+                                                : "w-1.5 bg-[#3975b9]"
                                                 }`}
                                         />
                                     ))}
@@ -1642,20 +1642,28 @@ const GREDashboard = () => {
                         ) : useSlider ? (
                             <div ref={sliderRef} className="keen-slider  mt-10">
                                 {courses.map((course) => {
-                                    const realPrice = course?.pricing?.amount;
+                                    const realPrice = course?.pricing?.amount || 0;
 
-                                    const isEarlyBirdActive =
-                                        course?.pricing?.earlyBird &&
-                                        new Date(course.pricing.earlyBird.deadline) > new Date();
+                        const earlyBird = course?.pricing?.earlyBird;
 
-                                    const discount = isEarlyBirdActive
-                                        ? course.pricing.earlyBird.discount
-                                        : course?.pricing?.discount;
+                        const isEarlyBirdActive =
+                            !!earlyBird?.deadline &&
+                            new Date(earlyBird.deadline).getTime() > Date.now();
 
-                                    const price = realPrice - (realPrice * discount) / 100;
+                        let price = realPrice;
+
+                        // Apply early bird discount first
+                        if (isEarlyBirdActive) {
+                            price = price - (price * (earlyBird?.discount || 0)) / 100;
+                        }
+                        const earlyBirdDiscount = isEarlyBirdActive ? earlyBird?.discount || 0 : 0;
+                        // Then apply normal discount
+                        const normalDiscount = course?.pricing?.discount || 0;
+
+                        price = price - (price * normalDiscount) / 100;
                                     return (
                                         <div className=''>
-                                            <div className='bg-gradient-to-b from-[#CFCFCF] via-[#ECECEC] to-black  rounded-[28px] p-[1px] relative '>
+                                             <div className='bg-gradient-to-b from-[#CFCFCF] via-[#ECECEC] to-black  rounded-[28px] p-[1px] relative '>
                                                 {course?.pricing?.earlyBird && new Date(course.pricing.earlyBird.deadline) > new Date() && (
                                                     <div className="absolute top-0 left-0 z-10">
                                                         <span className="inline-flex items-center gap-1 rounded-tl-[22px] rounded-br-[22px] bg-gradient-to-r from-[#FF6B35] to-[#FF8A3D] px-3 py-1 text-sm font-bold text-white shadow-lg">
@@ -1665,7 +1673,7 @@ const GREDashboard = () => {
                                                 )}
                                                 <div
                                                     key={course.id}
-                                                    className="rounded-[28px]  bg-white dark:bg-gray-800 overflow-hidden shadow-sm hover:shadow-xl duration-300 relative keen-slider__slide"
+                                                    className="rounded-[28px]  bg-white dark:bg-gray-800 overflow-hidden shadow-sm hover:shadow-xl duration-300 relative "
                                                 >
 
                                                     {/* Image */}
@@ -1683,9 +1691,9 @@ const GREDashboard = () => {
                                                     {/* Body */}
 
                                                     <div className="px-6 pb-4 lg:py-0">
-                                                        <h3 className="text-xl md:text-2xl font-bold">
-                                                            <span className="text-[#FF6736] text-2xl">{course.title.split(" ")[0]}</span>{" "}
-                                                            <span className="dark:text-white text-2xl"> {course.title.split(" ").slice(1).join(" ")}</span>
+                                                        <h3 className="text-xl md:text-xl font-bold">
+                                                            <span className="text-[#FF6736] text-xl">{course.title.split(" ")[0]}</span>{" "}
+                                                            <span className="dark:text-white text-xl "> {course.title.split(" ").slice(1).join(" ")}</span>
                                                         </h3>
 
                                                         <div className="mt-2 space-y-2 text-gray-600 dark:text-white">
@@ -1704,11 +1712,11 @@ const GREDashboard = () => {
 
                                                         <div className="mt-2 flex justify-between items-end">
                                                             <div>
-                                                                <div className="flex items-center gap-2 flex-wrap dark:text-white">
+                                                                <div className="flex items-center gap-1  dark:text-white">
                                                                     {course?.pricing?.currency}
                                                                     <span className="text-base font-bold"></span>
 
-                                                                    <span className="text-base font-bold ">
+                                                                    <span className="text-2xl font-bold ">
                                                                         {price}
                                                                     </span>
 
@@ -1718,9 +1726,19 @@ const GREDashboard = () => {
                                                                     </span>
                                                                 </div>
 
-                                                                <p className="text-[#16A34A] text-base font-semibold mt-2">
-                                                                    {discount}% off
-                                                                </p>
+                                                                  {(normalDiscount > 0 && earlyBirdDiscount > 0) ? (
+                                                <span className="rounded-full bg-green-50 px-2 py-0.5 text-sm font-semibold text-green-600">
+                                                    {normalDiscount}%
+                                                    <span className="text-xs font-medium">
+                                                        {" + "}{earlyBirdDiscount}%
+                                                    </span>
+                                                    <span className="text-xs font-medium"> OFF</span>
+                                                </span>
+                                            ) : (
+                                                <span className="rounded-full bg-green-50 px-2 py-0.5 text-xs font-semibold text-green-600">
+                                                    {normalDiscount}% OFF
+                                                </span>
+                                            )}
                                                             </div>
 
                                                             <Link to={`/course/${course.slug}`} className="border border-[#FF6736] rounded-2xl px-6 py-2 text-[#FF6736] text-base hover:bg-[#FF6736] hover:text-white transition ">
@@ -1732,9 +1750,9 @@ const GREDashboard = () => {
 
                                                     {/* Footer */}
 
-                                                    <div className="px-5 pb-2 mt-2 hidden lg:block">
+                                                    <div className="px-5 pb-1 mt-2 hidden lg:block">
                                                         <div className="rounded-full bg-[#FCE7D3] dark:bg-gray-600 flex items-center p-2">
-                                                            <span className="bg-[#FF6D42] text-white rounded-full px-4 py-1 text-xs font-semibold">
+                                                            <span className="bg-[#FF6D42]  text-white rounded-full px-4 py-1 text-xs font-semibold">
                                                                 Ooshas Prep
                                                             </span>
 
@@ -1751,17 +1769,25 @@ const GREDashboard = () => {
                             </div>) : (
                             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 xl:grid-cols-3 gap-6 mt-10">
                                 {courses.map((course) => {
-                                    const realPrice = course?.pricing?.amount;
+                                    const realPrice = course?.pricing?.amount || 0;
 
-                                    const isEarlyBirdActive =
-                                        course?.pricing?.earlyBird &&
-                                        new Date(course.pricing.earlyBird.deadline) > new Date();
+                        const earlyBird = course?.pricing?.earlyBird;
 
-                                    const discount = isEarlyBirdActive
-                                        ? course.pricing.earlyBird.discount
-                                        : course?.pricing?.discount;
+                        const isEarlyBirdActive =
+                            !!earlyBird?.deadline &&
+                            new Date(earlyBird.deadline).getTime() > Date.now();
 
-                                    const price = realPrice - (realPrice * discount) / 100;
+                        let price = realPrice;
+
+                        // Apply early bird discount first
+                        if (isEarlyBirdActive) {
+                            price = price - (price * (earlyBird?.discount || 0)) / 100;
+                        }
+                        const earlyBirdDiscount = isEarlyBirdActive ? earlyBird?.discount || 0 : 0;
+                        // Then apply normal discount
+                        const normalDiscount = course?.pricing?.discount || 0;
+
+                        price = price - (price * normalDiscount) / 100;
                                     return (
                                         <div className=''>
                                             <div className='bg-gradient-to-b from-[#CFCFCF] via-[#ECECEC] to-black  rounded-[28px] p-[1px] relative '>
@@ -1827,9 +1853,19 @@ const GREDashboard = () => {
                                                                     </span>
                                                                 </div>
 
-                                                                <p className="text-[#16A34A] text-base font-semibold mt-2">
-                                                                    {discount}% off
-                                                                </p>
+                                                                  {(normalDiscount > 0 && earlyBirdDiscount > 0) ? (
+                                                <span className="rounded-full bg-green-50 px-2 py-0.5 text-sm font-semibold text-green-600">
+                                                    {normalDiscount}%
+                                                    <span className="text-xs font-medium">
+                                                        {" + "}{earlyBirdDiscount}%
+                                                    </span>
+                                                    <span className="text-xs font-medium"> OFF</span>
+                                                </span>
+                                            ) : (
+                                                <span className="rounded-full bg-green-50 px-2 py-0.5 text-xs font-semibold text-green-600">
+                                                    {normalDiscount}% OFF
+                                                </span>
+                                            )}
                                                             </div>
 
                                                             <Link to={`/course/${course.slug}`} className="border border-[#FF6736] rounded-2xl px-6 py-2 text-[#FF6736] text-base hover:bg-[#FF6736] hover:text-white transition ">
@@ -1877,19 +1913,27 @@ const GREDashboard = () => {
                 {/* Cards */}
                 {useSlider2 ? (<div ref={sliderRef2} className="keen-slider">
                     {allCourses.map((item) => {
-                        const realPrice = item?.pricing?.amount;
+                        const realPrice = item?.pricing?.amount || 0;
+
+                        const earlyBird = item?.pricing?.earlyBird;
 
                         const isEarlyBirdActive =
-                            item?.pricing?.earlyBird &&
-                            new Date(item.pricing.earlyBird.deadline) > new Date();
+                            !!earlyBird?.deadline &&
+                            new Date(earlyBird.deadline).getTime() > Date.now();
 
-                        const discount = isEarlyBirdActive
-                            ? item.pricing.earlyBird.discount
-                            : item?.pricing?.discount;
+                        let price = realPrice;
 
-                        const price = realPrice - (realPrice * discount) / 100;
+                        // Apply early bird discount first
+                        if (isEarlyBirdActive) {
+                            price = price - (price * (earlyBird?.discount || 0)) / 100;
+                        }
+                        const earlyBirdDiscount = isEarlyBirdActive ? earlyBird?.discount || 0 : 0;
+                        // Then apply normal discount
+                        const normalDiscount = item?.pricing?.discount || 0;
+
+                        price = price - (price * normalDiscount) / 100;
                         return (
-                            <div className='bg-gradient-to-b from-[#CFCFCF] via-[#ECECEC] to-black dark:bg-gray-800 p-[1px] rounded-[22px] relative keen-slider__slide'>
+                            <div className='bg-gradient-to-b from-[#CFCFCF] via-[#ECECEC] to-black dark:bg-gray-800 p-[1px] rounded-[22px] relative keen-slider__slide h-full'>
                                 {item?.pricing?.earlyBird && new Date(item.pricing.earlyBird.deadline) > new Date() && (
                                     <div className="absolute top-0 left-0 z-10">
                                         <span className="inline-flex items-center gap-1 rounded-tl-[22px] rounded-br-[22px] bg-gradient-to-r from-[#FF6B35] to-[#FF8A3D] px-3 py-1 text-xs font-bold text-white shadow-lg">
@@ -1923,18 +1967,34 @@ const GREDashboard = () => {
                                         </h3>
 
                                         {/* Price */}
-                                        <div className="mt-4 flex items-center flex-wrap gap-2 ">
+                                        <div className="mt-4 flex items-center flex-wrap gap-2">
+                                            {/* Final Price */}
                                             <span className="text-base font-bold text-[#222] dark:text-white">
-                                                ₹ {price}
+                                                ₹{price}
                                             </span>
 
-                                            <span className="text-base text-gray-400 line-through dark:text-white">
+                                            {/* Original Price */}
+                                            <span className="text-sm text-gray-400 line-through dark:text-gray-500">
                                                 ₹{item.pricing?.amount}
                                             </span>
 
-                                            <span className="text-base font-semibold text-green-600 dark:text-white">
-                                                {discount}%
-                                            </span>
+
+                                            {/* Normal Discount */}
+                                            {(normalDiscount > 0 && earlyBirdDiscount > 0) ? (
+                                                <span className="rounded-full bg-green-50 px-2 py-0.5 text-sm font-semibold text-green-600">
+                                                    {normalDiscount}%
+                                                    <span className="text-xs font-medium">
+                                                        {" + "}{earlyBirdDiscount}%
+                                                    </span>
+                                                    <span className="text-xs font-medium"> OFF</span>
+                                                </span>
+                                            ) : (
+                                                <span className="rounded-full bg-green-50 px-2 py-0.5 text-xs font-semibold text-green-600">
+                                                    {normalDiscount}% OFF
+                                                </span>
+                                            )}
+
+
                                         </div>
 
                                         {/* Button */}
@@ -1952,253 +2012,99 @@ const GREDashboard = () => {
                 ) : (
                     <div className="grid grid-cols-1 sm:grid-cols-2 sm:grid-cols-2 lg:grid-cols-2 xl:grid-cols-4 gap-6">
                         {allCourses.map((item) => {
-                            const realPrice = item?.pricing?.amount;
+                                                   const realPrice = item?.pricing?.amount || 0;
 
-                            const isEarlyBirdActive =
-                                item?.pricing?.earlyBird &&
-                                new Date(item.pricing.earlyBird.deadline) > new Date();
+                        const earlyBird = item?.pricing?.earlyBird;
 
-                            const discount = isEarlyBirdActive
-                                ? item.pricing.earlyBird.discount
-                                : item?.pricing?.discount;
+                        const isEarlyBirdActive =
+                            !!earlyBird?.deadline &&
+                            new Date(earlyBird.deadline).getTime() > Date.now();
 
-                            const price = realPrice - (realPrice * discount) / 100;
+                        let price = realPrice;
+
+                        // Apply early bird discount first
+                        if (isEarlyBirdActive) {
+                            price = price - (price * (earlyBird?.discount || 0)) / 100;
+                        }
+                        const earlyBirdDiscount = isEarlyBirdActive ? earlyBird?.discount || 0 : 0;
+                        // Then apply normal discount
+                        const normalDiscount = item?.pricing?.discount || 0;
+
+                        price = price - (price * normalDiscount) / 100;
                             return (
-                               <div
-    className="
-        bg-gradient-to-b
-        from-[#CFCFCF]
-        via-[#ECECEC]
-        to-black
-        dark:bg-gray-800
-        p-[1px]
-        rounded-[22px]
-        relative
-        overflow-hidden
-        h-full
-    "
->
-    {/* Early Bird */}
-    {item?.pricing?.earlyBird &&
-        new Date(item.pricing.earlyBird.deadline) > new Date() && (
-            <div className="absolute top-0 left-0 z-10">
-                <span
-                    className="
-                        inline-flex
-                        items-center
-                        gap-1
-                        rounded-tl-[22px]
-                        rounded-br-[22px]
-                        bg-gradient-to-r
-                        from-[#FF6B35]
-                        to-[#FF8A3D]
-                        px-2.5
-                        lg:px-3
-                        py-1
-                        text-[10px]
-                        lg:text-xs
-                        font-bold
-                        text-white
-                        shadow-lg
-                    "
-                >
-                    Early Bird
-                </span>
-            </div>
-        )}
+                                 <div className='bg-gradient-to-b from-[#CFCFCF] via-[#ECECEC] to-black dark:bg-gray-800 p-[1px] rounded-[22px] relative keen-slider__slide h-full'>
+                                {item?.pricing?.earlyBird && new Date(item.pricing.earlyBird.deadline) > new Date() && (
+                                    <div className="absolute top-0 left-0 z-10">
+                                        <span className="inline-flex items-center gap-1 rounded-tl-[22px] rounded-br-[22px] bg-gradient-to-r from-[#FF6B35] to-[#FF8A3D] px-3 py-1 text-xs font-bold text-white shadow-lg">
+                                            Early Bird
+                                        </span>
+                                    </div>
+                                )}
+                                <div
+                                    key={item.id}
+                                    className="overflow-hidden rounded-[22px] border border-[#d8d8d8] bg-white dark:bg-gray-800 shadow-sm "
+                                >
 
-    <div
-        key={item.id}
-        className="
-            overflow-hidden
-            rounded-[22px]
-            border
-            border-[#d8d8d8]
-            bg-white
-            dark:bg-gray-800
-            shadow-sm
-            h-full
-        "
-    >
+                                    {/* Banner */}
+                                    <div className='p-[6px] rounded-2xl bg-gradient-to-b from-[#CFCFCF] via-[#ECECEC] to-white'>
+                                        <div className="relative  overflow-hidden">
+                                            <img
+                                                src={item?.thumbnail?.url && `${ImageBaseUrl}/${item?.thumbnail?.url}`}
+                                                alt={item.title}
+                                                className="h-35 w-full rounded-2xl object-cover"
+                                            />
+                                        </div>
+                                    </div>
 
-        {/* ================= BANNER ================= */}
-        <div
-            className="
-                p-[4px]
-                lg:p-[5px]
-                xl:p-[6px]
-                rounded-2xl
-                bg-gradient-to-b
-                from-[#CFCFCF]
-                via-[#ECECEC]
-                to-white
-            "
-        >
-            <div className="relative overflow-hidden">
-                <img
-                    src={
-                        item?.thumbnail?.url &&
-                        `${ImageBaseUrl}/${item?.thumbnail?.url}`
-                    }
-                    alt={item.title}
-                    className="
-                        h-full
-                        sm:h-full
-                        md:h-[150px]
-                        lg:h-[145px]
-                        xl:h-35
-                        w-full
-                        rounded-2xl
-                        object-cover
-                    "
-                />
-            </div>
-        </div>
+                                    {/* Content */}
+                                    <div className="p-4">
+                                        <h3 className="text-xl font-bold leading-none">
+                                            <span className="text-orange-500">{item.title.split(" ")[0]}</span>{" "}
+                                            <span className="text-black dark:text-white text-base font-semibold">
+                                                {item.title.split(" ").slice(1).join(" ")}
+                                            </span>
+                                        </h3>
 
-        {/* ================= CONTENT ================= */}
-        <div
-            className="
-                p-3
-                sm:p-3.5
-                md:p-4
-                lg:p-3.5
-                xl:p-4
-            "
-        >
+                                        {/* Price */}
+                                        <div className="mt-4 flex items-center flex-wrap gap-2">
+                                            {/* Final Price */}
+                                            <span className="text-base font-bold text-[#222] dark:text-white">
+                                                ₹{price}
+                                            </span>
 
-            {/* TITLE */}
-            <h3
-                className="
-                    text-lg
-                    sm:text-lg
-                    md:text-xl
-                    lg:text-lg
-                    xl:text-xl
-                    font-bold
-                    leading-tight
-                    line-clamp-2
-                    min-h-[44px]
-                    lg:min-h-[42px]
-                    xl:min-h-0
-                "
-            >
-                <span className="text-orange-500">
-                    {item.title.split(" ")[0]}
-                </span>{" "}
+                                            {/* Original Price */}
+                                            <span className="text-sm text-gray-400 line-through dark:text-gray-500">
+                                                ₹{item.pricing?.amount}
+                                            </span>
 
-                <span
-                    className="
-                        text-black
-                        dark:text-white
-                        text-sm
-                        sm:text-base
-                        md:text-base
-                        lg:text-sm
-                        xl:text-base
-                        font-semibold
-                    "
-                >
-                    {item.title
-                        .split(" ")
-                        .slice(1)
-                        .join(" ")}
-                </span>
-            </h3>
 
-            {/* ================= PRICE ================= */}
-            <div
-                className="
-                    mt-3
-                    lg:mt-3
-                    xl:mt-4
-                    flex
-                    items-center
-                    flex-wrap
-                    gap-1.5
-                    lg:gap-1.5
-                    xl:gap-2
-                "
-            >
-                <span
-                    className="
-                        text-sm
-                        sm:text-base
-                        lg:text-sm
-                        xl:text-base
-                        font-bold
-                        text-[#222]
-                        dark:text-white
-                    "
-                >
-                    ₹ {price}
-                </span>
+                                            {/* Normal Discount */}
+                                            {(normalDiscount > 0 && earlyBirdDiscount > 0) ? (
+                                                <span className="rounded-full bg-green-50 px-2 py-0.5 text-sm font-semibold text-green-600">
+                                                    {normalDiscount}%
+                                                    <span className="text-xs font-medium">
+                                                        {" + "}{earlyBirdDiscount}%
+                                                    </span>
+                                                    <span className="text-xs font-medium"> OFF</span>
+                                                </span>
+                                            ) : (
+                                                <span className="rounded-full bg-green-50 px-2 py-0.5 text-xs font-semibold text-green-600">
+                                                    {normalDiscount}% OFF
+                                                </span>
+                                            )}
 
-                <span
-                    className="
-                        text-sm
-                        sm:text-base
-                        lg:text-sm
-                        xl:text-base
-                        text-gray-400
-                        line-through
-                        dark:text-white
-                    "
-                >
-                    ₹{item.pricing?.amount}
-                </span>
 
-                <span
-                    className="
-                        text-sm
-                        sm:text-base
-                        lg:text-sm
-                        xl:text-base
-                        font-semibold
-                        text-green-600
-                        dark:text-white
-                    "
-                >
-                    {discount}%
-                </span>
-            </div>
+                                        </div>
 
-            {/* ================= BUTTON ================= */}
-            <Link
-                to={`/course/${item.slug}`}
-                className="flex justify-center"
-            >
-                <button
-                    className="
-                        mt-4
-                        lg:mt-4
-                        xl:mt-5
-                        py-2
-                        w-full
-                        sm:w-3/4
-                        md:w-2/3
-                        lg:w-full
-                        xl:w-1/2
-                        text-sm
-                        sm:text-base
-                        lg:text-sm
-                        xl:text-base
-                        rounded-xl
-                        border
-                        border-[#ff5b2e]
-                        text-[#ff5b2e]
-                        font-medium
-                        transition-all
-                        duration-300
-                        hover:bg-[#ff5b2e]
-                        hover:text-white
-                    "
-                >
-                    Explore
-                </button>
-            </Link>
-        </div>
-    </div>
-</div>
+                                        {/* Button */}
+                                        <Link to={`/course/${item.slug}`} className='flex justify-center'>
+                                            <button className="mt-5 py-2  w-1/2 text-base   rounded-xl border border-[#ff5b2e] text-[#ff5b2e] font-medium transition-all duration-300 hover:bg-[#ff5b2e] hover:text-white">
+                                                Explore
+                                            </button>
+                                        </Link>
+                                    </div>
+                                </div>
+                            </div>
                             )
                         })}
                     </div>

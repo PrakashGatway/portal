@@ -22,6 +22,7 @@ import {
   User,
   Plus,
   ChevronRight,
+  MoveRight,
 } from "lucide-react";
 import api, { ImageBaseUrl } from "../../axiosInstance";
 
@@ -30,6 +31,7 @@ const ContentViewPage = () => {
   const navigate = useNavigate();
 
   const [content, setContent] = useState<any>(null);
+  const [allcontent, setAllContent] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -51,6 +53,32 @@ const ContentViewPage = () => {
     hours: 56,
     minutes: 17
   });
+
+
+
+  const [timeLeft2, setTimeLeft2] = useState(0);
+
+useEffect(() => {
+  if (!content?.scheduledStart) return;
+
+  const targetTime = new Date(content.scheduledStart).getTime();
+
+  const updateTimer = () => {
+    const now = Date.now();
+    const remaining = Math.max(0, Math.floor((targetTime - now) / 1000));
+
+    setTimeLeft2(remaining);
+  };
+
+  updateTimer();
+
+  const interval = setInterval(updateTimer, 1000);
+
+  return () => clearInterval(interval);
+}, [content?.scheduledStart]);
+
+
+
 
   // Countdown timer effect
   useEffect(() => {
@@ -106,7 +134,7 @@ const ContentViewPage = () => {
         setLoading(true);
         setError(null);
 
-        const response = await api.get(`/content/slug/${slug}`);
+        const response = await api.get(`/content/slug/${slug}?isModule=${true}`);
 
         const data = response?.data?.data;
 
@@ -115,6 +143,7 @@ const ContentViewPage = () => {
         }
 
         setContent(data);
+        setAllContent(response?.data)
       } catch (err) {
         console.error("Error fetching content:", err);
         setError("Failed to load session. Please try again.");
@@ -167,6 +196,9 @@ const sessionStatus2 = getSessionDateStatus(content?.scheduledStart);
   const instructor = content?.instructorInfo;
   const course = content?.courseInfo;
   const moduleInfo = content?.moduleInfo;
+
+
+  
 
 
   const calculateTimeUntilMeeting = useCallback(() => {
@@ -334,6 +366,25 @@ const sessionStatus2 = getSessionDateStatus(content?.scheduledStart);
     );
   };
 
+
+  const formatTime2 = (seconds: number) => {
+  const days = Math.floor(seconds / 86400);
+  const hours = Math.floor((seconds % 86400) / 3600);
+  const minutes = Math.floor((seconds % 3600) / 60);
+  const secs = seconds % 60;
+
+  if (days > 0) {
+    return `${days}d ${String(hours).padStart(2, "0")}h ${String(
+      minutes
+    ).padStart(2, "0")}m ${String(secs).padStart(2, "0")}s`;
+  }
+
+  return `${String(hours).padStart(2, "0")}:${String(minutes).padStart(
+    2,
+    "0"
+  )}:${String(secs).padStart(2, "0")}`;
+};
+
   const handleJoinMeeting = () => {
     if (!canJoin || !meetingUrl) return;
 
@@ -467,21 +518,25 @@ const sessionStatus2 = getSessionDateStatus(content?.scheduledStart);
       <div className="">
         {/* Main Content Grid */}
         <div className="h-full">
-        <div className="grid grid-cols-1 lg:grid-cols-[1.5fr_0.5fr] gap-2 h-full">
+        <div className="grid grid-cols-1 lg:grid-cols-[minmax(0,1.65fr)_minmax(280px,0.85fr)] xl:grid-cols-[1.5fr_0.5fr] gap-4 lg:gap-3 xl:gap-2 h-full">
           
      {/* Main Session Card */}
 
      <div className="flex flex-col h-full">
-      <div className="bg-gradient-to-b from-white via-gray-50 to-gray-200 p-[2px] rounded-[24px]">
+      <div className="bg-gradient-to-b from-white via-gray-50 to-gray-300 p-[1.5px] rounded-[24px]">
 <div
   className="
     grid
     grid-cols-1
-    lg:grid-cols-[1.35fr_0.85fr_1fr]
-    gap-5
-    lg:gap-3
-    p-5
+    gap-4
+    md:gap-4
+    lg:gap-4
+    xl:grid-cols-[1.35fr_0.85fr_1fr]
+    xl:gap-3
+    p-4
+    sm:p-5
     md:p-4
+    xl:p-4
     rounded-[24px]
     border
     border-orange-200/60
@@ -489,7 +544,8 @@ const sessionStatus2 = getSessionDateStatus(content?.scheduledStart);
     from-orange-100/70
     via-[#fff1e8]
     to-orange-100
-    h-70
+    h-auto
+    xl:h-70
    
   "
 >
@@ -527,10 +583,11 @@ const sessionStatus2 = getSessionDateStatus(content?.scheduledStart);
       {/* Title */}
       <h1
         className="
-          text-2xl
+          text-xl
+          sm:text-2xl
           md:text-3xl
-          lg:text-[27px]
-          xl:text-lg
+          lg:text-3xl
+          xl:text-2xl
           font-bold
           text-gray-900
           leading-[1.15]
@@ -568,7 +625,7 @@ const sessionStatus2 = getSessionDateStatus(content?.scheduledStart);
     </div>
 
     {/* Buttons */}
-    <div className="flex flex-wrap gap-3">
+    <div className="flex flex-col sm:flex-row flex-wrap gap-3">
     <Link to={content?.meetingId}>
       <button
       
@@ -580,6 +637,7 @@ const sessionStatus2 = getSessionDateStatus(content?.scheduledStart);
           bg-orange-500
           hover:bg-orange-600
           text-white
+          w-full sm:w-auto
           px-4
           py-2.5
           rounded-xl
@@ -606,6 +664,7 @@ const sessionStatus2 = getSessionDateStatus(content?.scheduledStart);
           text-gray-700
           border
           border-orange-200
+          w-full sm:w-auto
           px-4
           py-2.5
           rounded-xl
@@ -627,25 +686,29 @@ const sessionStatus2 = getSessionDateStatus(content?.scheduledStart);
     className="
       bg-white/60
       rounded-[20px]
-      p-5
+      p-4
+      sm:p-5
       md:p-6
       border
       border-orange-200
       flex
       justify-center
       items-center
+      h-full
     "
   >
     <div className="text-center flex flex-col justify-center items-center">
       
       {/* Profile Image */}
-      <div className="relative mb-4">
+      <div className="relative mb-3">
         <div
           className="
-            w-[76px]
-            h-[76px]
-            md:w-[82px]
-            md:h-[82px]
+            w-[68px]
+            h-[68px]
+            sm:w-[76px]
+            sm:h-[76px]
+            md:w-[60px]
+            md:h-[60px]
             rounded-full
             border-2
             border-orange-400
@@ -653,7 +716,7 @@ const sessionStatus2 = getSessionDateStatus(content?.scheduledStart);
           "
         >
           <img
-            src="https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=400&h=400&fit=crop"
+            src="https://cdn-icons-png.flaticon.com/512/709/709699.png"
             alt="Trainer"
             className="w-full h-full object-cover"
           />
@@ -661,23 +724,23 @@ const sessionStatus2 = getSessionDateStatus(content?.scheduledStart);
 
     
       </div>
-
+<div className="text-left">
+  
       <p className="text-gray-500 text-sm mb-1">
         Your Instructor
       </p>
 
-      <h3 className="text-lg md:text-sm font-bold text-gray-900 leading-tight">
+      <h3 className="text-base sm:text-lg md:text-lg xl:text-xl font-bold text-gray-900 text-left">
         {instructor?.name}
       </h3>
 
-      <p className="text-orange-600 font-medium text-sm mt-1">
+      <p className="text-gray-600 font-medium text-sm xl:text-lg -mt-1">
         Pte expert
       </p>
 
-      <p className="text-gray-500 text-xs mt-1">
+      <p className="text-gray-500 text-xs ">
         8+ years Experience
-      </p>
-    </div>
+      </p></div>    </div>
   </div>
 
 
@@ -688,8 +751,9 @@ const sessionStatus2 = getSessionDateStatus(content?.scheduledStart);
      
       bg-white
       rounded-[20px]
-      p-5
-      md:p-6
+      p-4
+      sm:p-5
+      md:p-4
       border
       border-orange-100
       flex
@@ -701,7 +765,8 @@ const sessionStatus2 = getSessionDateStatus(content?.scheduledStart);
       
       <h3
         className="
-          text-base
+          text-sm
+          sm:text-base
           md:text-lg
           font-bold
           text-gray-900
@@ -712,84 +777,112 @@ const sessionStatus2 = getSessionDateStatus(content?.scheduledStart);
       </h3>
 
       {/* Timer */}
-      <div className="flex items-start justify-center gap-1.5 w-full mb-5">
-        
-        {/* Days */}
-        <div className="flex flex-col items-center">
-          <div
-            className="
-              bg-orange-500
-              text-white
-              rounded-md
-              w-[45px]
-              md:w-[48px]
-              py-2
-            "
-          >
-            <div className="text-2xl md:text-3xl font-bold leading-none">
-              {String(timeLeft.days).padStart(2, "0")}
-            </div>
-          </div>
+     <div className="flex items-start justify-center gap-1.5 sm:gap-2 w-full mb-5">
 
-          <span className="text-[10px] md:text-xs font-semibold text-gray-700 mt-1">
-            DAYS
+  {/* Days */}
+  <div className="flex flex-col items-center">
+    <div className="flex gap-1">
+      {String(timeLeft.days).padStart(2, "0").split("").map((digit, index) => (
+        <div
+          key={index}
+          className="
+            flex items-center justify-center
+            bg-[#ff7148]
+            text-white
+            rounded-[5px]
+            w-[28px]
+            h-[38px]
+            sm:w-[32px]
+            sm:h-[42px]
+            md:w-[30px]
+            md:h-[40px]
+          "
+        >
+          <span className="text-xl sm:text-2xl md:text-3xl font-bold leading-none">
+            {digit}
           </span>
         </div>
+      ))}
+    </div>
 
-        {/* Separator */}
-        <span className="text-orange-500 text-2xl font-bold mt-1">
-          :
-        </span>
+    <span className="text-[10px] md:text-xs font-semibold text-gray-700 mt-1">
+      DAYS
+    </span>
+  </div>
 
-        {/* Hours */}
-        <div className="flex flex-col items-center">
-          <div
-            className="
-              bg-orange-500
-              text-white
-              rounded-md
-              w-[45px]
-              md:w-[48px]
-              py-2
-            "
-          >
-            <div className="text-2xl md:text-3xl font-bold leading-none">
-              {String(timeLeft.hours).padStart(2, "0")}
-            </div>
-          </div>
+  {/* Separator */}
+  <span className="text-orange-500 text-2xl font-bold mt-1">
+    :
+  </span>
 
-          <span className="text-[10px] md:text-xs font-semibold text-gray-700 mt-1">
-            HOURS
+  {/* Hours */}
+  <div className="flex flex-col items-center">
+    <div className="flex gap-1">
+      {String(timeLeft.hours).padStart(2, "0").split("").map((digit, index) => (
+        <div
+          key={index}
+          className="
+            flex items-center justify-center
+            bg-[#ff7148]
+            text-white
+            rounded-[5px]
+            w-[28px]
+            h-[38px]
+            sm:w-[32px]
+            sm:h-[42px]
+            md:w-[30px]
+            md:h-[40px]
+          "
+        >
+          <span className="text-xl sm:text-2xl md:text-3xl font-bold leading-none">
+            {digit}
           </span>
         </div>
+      ))}
+    </div>
 
-        {/* Separator */}
-        <span className="text-orange-500 text-2xl font-bold mt-1">
-          :
-        </span>
+    <span className="text-[10px] md:text-xs font-semibold text-gray-700 mt-1">
+      HOURS
+    </span>
+  </div>
 
-        {/* Minutes */}
-        <div className="flex flex-col items-center">
-          <div
-            className="
-              bg-orange-500
-              text-white
-              rounded-md
-              w-[45px]
-              md:w-[48px]
-              py-2
-            "
-          >
-            <div className="text-2xl md:text-3xl font-bold leading-none">
-              {String(timeLeft.minutes).padStart(2, "0")}
-            </div>
-          </div>
+  {/* Separator */}
+  <span className="text-orange-500 text-2xl font-bold mt-1">
+    :
+  </span>
 
-          <span className="text-[10px] md:text-xs font-semibold text-gray-700 mt-1">
-            MINUTE
+  {/* Minutes */}
+  <div className="flex flex-col items-center">
+    <div className="flex gap-1">
+      {String(timeLeft.minutes).padStart(2, "0").split("").map((digit, index) => (
+        <div
+          key={index}
+          className="
+            flex items-center justify-center
+            bg-[#ff7148]
+            text-white
+            rounded-[5px]
+            w-[28px]
+            h-[38px]
+            sm:w-[32px]
+            sm:h-[42px]
+            md:w-[30px]
+            md:h-[40px]
+          "
+        >
+          <span className="text-xl sm:text-2xl md:text-3xl font-bold leading-none">
+            {digit}
           </span>
         </div>
-      </div>
+      ))}
+    </div>
+
+    <span className="text-[10px] md:text-xs font-semibold text-gray-700 mt-1">
+      MINUTE
+    </span>
+  </div>
+
+</div>
 
       {/* Date */}
       <p className="text-gray-600 text-sm font-medium">
@@ -799,13 +892,13 @@ const sessionStatus2 = getSessionDateStatus(content?.scheduledStart);
   </div>
 </div></div>
    {/* Bottom Navigation Tabs */}
-        <div className="mt-6  bg-white rounded-2xl border border-orange-100 overflow-hidden">
+        <div className="mt-4 sm:mt-6 bg-white rounded-2xl border border-orange-100 overflow-hidden">
           <div className="flex overflow-x-auto scrollbar-hide ">
             {tabs.map((tab) => (
               <button
                 key={tab}
                 onClick={() => setActiveTab(tab)}
-                className={`flex min-w-[100px] px-6 py-4 text-sm font-semibold transition-all duration-200 border-b-2 ${
+                className={`flex min-w-[100px] sm:min-w-[110px] px-4 sm:px-6 py-3 sm:py-4 text-sm font-semibold transition-all duration-200 border-b-2 ${
                   activeTab === tab
                     ? 'text-orange-600 border-orange-500 bg-orange-50/50'
                     : 'text-gray-600 border-transparent hover:text-gray-900 hover:bg-gray-50'
@@ -820,11 +913,11 @@ const sessionStatus2 = getSessionDateStatus(content?.scheduledStart);
 
           {/* Right Section - Upcoming Sessions */}
           <div className="">
-            <div className="bg-white rounded-3xl p-4 shadow-lg border border-orange-500 h-full">
-              <h2 className="text-lg font-bold text-gray-900 mb-4">Upcoming Sessions</h2>
+            <div className="bg-white rounded-3xl p-3 sm:p-4 shadow-lg border border-orange-500 h-full">
+              <h2 className="text-lg font-bold text-gray-900 mb-2">Upcoming Sessions</h2>
               
               <div className="space-y-3">
-                {upcomingSessions.map((session) => (
+                {allcontent?.relatedSessions?.slice(0, 3)?.map((session,i) => (
                   <div
                     key={session.id}
                     className={`rounded-2xl p-2 cursor-pointer transition-all duration-200 ${
@@ -840,27 +933,31 @@ const sessionStatus2 = getSessionDateStatus(content?.scheduledStart);
                           ? 'bg-orange-500 text-white'
                           : 'bg-white text-gray-600 border-2 border-gray-200'
                       }`}>
-                        {session.id}
+                        {i + 1}
                       </div>
 
                       {/* Session Info */}
                       <div className="flex-1 min-w-0">
-                        <div className="flex items-start justify-between gap-2 mb-1">
+                        <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-1 sm:gap-2 mb-1">
                           <h3 className={`font-bold text-sm ${
                             session.active ? 'text-gray-900' : 'text-gray-700'
                           }`}>
-                            {session.title}
+                            session {i+1}
                           </h3>
                           { (
                             <span className={`text-[10px] font-semibold  whitespace-nowrap ${session.active ? "text-orange-600" : "text-gray-600"}`}>
-                              {session.date}
+                              {new Date(session.scheduledStart).toLocaleDateString("en-GB", {
+                                weekday: "short",
+                                day: "2-digit",
+                                month: "short",
+                              })}
                             </span>
                           )}
                         </div>
-                        <p className="text-xs text-gray-600 mb-2 line-clamp-2">{session.topic}</p>
+                        <p className="text-xs text-gray-600 mb-2 line-clamp-2">{session.description}</p>
                         <div className="flex items-center gap-1 text-[11px] text-gray-500">
                           <Clock className="w-3 h-3" />
-                          <span>{session.time}</span>
+                          <span>{new Date(session.scheduledStart).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })} </span> - <span>{new Date(session.scheduledEnd).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
                         </div>
                     
                       </div>
@@ -879,8 +976,10 @@ const sessionStatus2 = getSessionDateStatus(content?.scheduledStart);
       </div>
     </div>
 
-    <div className="">
-  <div className="w-full max-w-7xl mx-auto px-4 sm:px-5 lg:px-0 my-3">
+    {
+      activeTab === 'Overview' && (
+        <>
+         <div className="w-full max-w-7xl mx-auto px-4 sm:px-5 lg:px-0 my-3">
 
     <div className="grid grid-cols-1 xl:grid-cols-[1.5fr_0.5fr] gap-4">
       
@@ -1099,7 +1198,10 @@ const sessionStatus2 = getSessionDateStatus(content?.scheduledStart);
               mb-5
             "
           >
-            {content?.title}
+            <span>{content?.title.split(" ")[0]}</span>{" "}
+            <span className="text-[#ff613f]">
+              {content?.title.split(" ").slice(1).join(" ")}
+            </span>
           </h1>
 
 
@@ -1185,34 +1287,58 @@ const sessionStatus2 = getSessionDateStatus(content?.scheduledStart);
           {/* ACTION */}
           {/* ================================================= */}
 
-          <div className="flex flex-wrap items-center gap-3">
+       <div className="flex flex-wrap items-center gap-3">
 
-            {/* View Session */}
-            <Link to={content?.meetingId || "#"}>
-              <button
-                className="
-                  inline-flex
-                  items-center
-                  justify-center
-                  min-h-[34px]
-                  px-4
-                  sm:px-5
-                  rounded-[9px]
-                  bg-[#ff7148]
-                  hover:bg-[#ff6338]
-                  text-white
-                  text-[14px]
-                  sm:text-[15px]
-                  font-medium
-                  transition-colors
-                  duration-200
-                "
-              >
-                View Session
-              </button>
-            </Link>
+  {/* Countdown Timer */}
+  {timeLeft2 > 0 && (
+    <div
+      className="
+        inline-flex
+        items-center
+        justify-center
+        min-h-[34px]
+        px-4
+        sm:px-5
+        rounded-[9px]
+        bg-[#fff1eb]
+        border
+        border-[#ff7148]
+        text-[#ff7148]
+        text-[14px]
+        sm:text-[15px]
+        font-medium
+      "
+    >
+      Starts in {formatTime2(timeLeft2)}
+    </div>
+  )}
 
-          </div>
+  {/* View Session */}
+  <Link to={content?.meetingId || "#"}>
+    <button
+      className="
+        inline-flex
+        items-center
+        justify-center
+        min-h-[34px]
+        px-4
+        sm:px-5
+        rounded-[9px]
+        bg-[#ff7148]
+        hover:bg-[#ff6338]
+        text-white
+        text-[14px]
+        sm:text-[15px]
+        font-medium
+        transition-colors
+        duration-200
+      "
+    >
+      View Session
+    </button>
+  </Link>
+
+</div>
 
         </div>
       </div>
@@ -1235,7 +1361,7 @@ const sessionStatus2 = getSessionDateStatus(content?.scheduledStart);
           rounded-[12px]
           p-4
           sm:px-3
-          sm:py-1
+          sm:py-3
         "
       >
         
@@ -1251,7 +1377,7 @@ const sessionStatus2 = getSessionDateStatus(content?.scheduledStart);
             border-[#eeeeee]
           "
         >
-          Previous Recording
+          Course
         </h2>
 
 
@@ -1271,7 +1397,7 @@ const sessionStatus2 = getSessionDateStatus(content?.scheduledStart);
             "
           >
             <img
-              src="/images/previous-recording.png"
+              src={`${ImageBaseUrl}/${course?.thumbnail.url}`}
               alt="Previous recording"
               className="
                 absolute
@@ -1282,81 +1408,7 @@ const sessionStatus2 = getSessionDateStatus(content?.scheduledStart);
               "
             />
 
-            {/* Dark Overlay */}
-            <div className="absolute inset-0 bg-black/10" />
-
-            {/* Play Button */}
-            <button
-              className="
-                absolute
-                left-1/2
-                top-1/2
-                -translate-x-1/2
-                -translate-y-1/2
-                w-[48px]
-                h-[48px]
-                rounded-full
-                bg-white
-                flex
-                items-center
-                justify-center
-                shadow-md
-                hover:scale-105
-                transition-transform
-                duration-200
-              "
-              aria-label="Play recording"
-            >
-              <span className="ml-1 text-[#ff6b3d] text-xl">
-                ▶
-              </span>
-            </button>
-
-            {/* Bottom Overlay */}
-            <div
-              className="
-                absolute
-                bottom-0
-                left-0
-                right-0
-                px-2.5
-                py-2
-                flex
-                items-center
-                justify-between
-                gap-2
-                bg-gradient-to-t
-                from-black/70
-                to-transparent
-              "
-            >
-              <span
-                className="
-                  text-white
-                  text-[11px]
-                  sm:text-xs
-                  font-semibold
-                  truncate
-                "
-              >
-                Session 07 · Number Systems
-              </span>
-
-              <span
-                className="
-                  shrink-0
-                  text-white
-                  text-[10px]
-                  font-semibold
-                  bg-black/40
-                  px-1.5
-                  py-0.5
-                  rounded
-                "
-              >
-                1:28:42
-              </span>
-            </div>
+     
           </div>
         </div>
 
@@ -1375,7 +1427,7 @@ const sessionStatus2 = getSessionDateStatus(content?.scheduledStart);
               text-[#202020]
             "
           >
-            Session 07 – Number Systems & Ratios
+          {course?.title}
           </h3>
 
           <div
@@ -1391,20 +1443,11 @@ const sessionStatus2 = getSessionDateStatus(content?.scheduledStart);
               text-[#8a8a8a]
             "
           >
-            <span className="inline-flex items-center gap-1">
-              <span className="text-[10px]">
-                □
-              </span>
-              Sep 11, 2025
+            <span className=" items-center gap-1 line-clamp-2">     
+             {course?.description}
             </span>
 
-            <span>
-              ·
-            </span>
-
-            <span>
-              1h 28min
-            </span>
+        
           </div>
         </div>
 
@@ -1413,7 +1456,7 @@ const sessionStatus2 = getSessionDateStatus(content?.scheduledStart);
         {/* WATCH BUTTON */}
         {/* ===================================================== */}
 
-        <button
+        <Link to={`/course/${course?.slug || "#"}`}
           className="
             w-full
             mt-3
@@ -1432,626 +1475,15 @@ const sessionStatus2 = getSessionDateStatus(content?.scheduledStart);
             duration-200
           "
         >
-          <span className="text-sm">
-            ▷
-          </span>
 
-          Watch Recording
-        </button>
+          Explore
+        </Link>
       </div>
     </div>
   </div>
-  </div>
-
-  <div className="w-full">
-  <div
-    className="
-      grid
-      grid-cols-1
-      lg:grid-cols-[minmax(0,3fr)_minmax(280px,1fr)]
-      gap-4
-      items-start
-    "
-  >
-    {/* ========================================================= */}
-    {/* TEACHING PLAN */}
-    {/* ========================================================= */}
-
-    <div
-      className="
-        w-full
-        min-w-0
-        overflow-hidden
-        rounded-[14px]
-        border
-        border-[#ffd4c7]
-        bg-white
-      "
-    >
-      {/* Header */}
-      <div
-        className="
-          flex
-          flex-col
-          sm:flex-row
-          sm:items-center
-          sm:justify-between
-          gap-2
-          px-4
-          sm:px-5
-          py-4
-          border-b
-          border-[#eeeeee]
-        "
-      >
-        <h2
-          className="
-            text-[15px]
-            sm:text-[16px]
-            font-semibold
-            text-[#10182f]
-          "
-        >
-          Teaching Plan
-        </h2>
-
-        <p
-          className="
-            text-[11px]
-            sm:text-xs
-            font-medium
-            text-[#63718a]
-          "
-        >
-          4 topics · 110 min
-        </p>
-      </div>
-
-      {/* ======================================================= */}
-      {/* TOPIC LIST */}
-      {/* ======================================================= */}
-
-      <div className="w-full">
-
-        {/* ------------------------------------------------------- */}
-        {/* TOPIC 01 */}
-        {/* ------------------------------------------------------- */}
-
-        <div
-          className="
-            grid
-            grid-cols-[38px_minmax(0,1fr)_auto]
-            sm:grid-cols-[38px_minmax(0,1fr)_auto]
-            items-center
-            gap-3
-            px-3
-            sm:px-4
-            py-3
-            sm:py-3.5
-            bg-[#fff8f3]
-            border-b
-            border-[#f0e0da]
-          "
-        >
-          {/* Number */}
-          <div
-            className="
-              w-[34px]
-              h-[34px]
-              rounded-[10px]
-              bg-[#ff6b25]
-              text-white
-              flex
-              items-center
-              justify-center
-              text-[13px]
-              font-semibold
-            "
-          >
-            01
-          </div>
-
-          {/* Content */}
-          <div className="min-w-0">
-            <h3
-              className="
-                text-[13px]
-                sm:text-[14px]
-                font-semibold
-                text-[#10203b]
-                truncate
-              "
-            >
-              Introduction to Algebraic Expressions
-            </h3>
-
-            <p
-              className="
-                text-[11px]
-                sm:text-xs
-                text-[#71809a]
-                mt-0.5
-              "
-            >
-              25 min
-            </p>
-          </div>
-
-          {/* Status */}
-          <span
-            className="
-              shrink-0
-              inline-flex
-              items-center
-              justify-center
-              px-2.5
-              py-1
-              rounded-full
-              border
-              border-[#ffb58f]
-              bg-[#fffaf7]
-              text-[#ff6b25]
-              text-[10px]
-              sm:text-[11px]
-              font-medium
-              whitespace-nowrap
-            "
-          >
-            In Progress
-          </span>
-        </div>
+ 
 
 
-        {/* ------------------------------------------------------- */}
-        {/* TOPIC 02 */}
-        {/* ------------------------------------------------------- */}
-
-        <div
-          className="
-            grid
-            grid-cols-[38px_minmax(0,1fr)_auto]
-            items-center
-            gap-3
-            px-3
-            sm:px-4
-            py-3
-            sm:py-3.5
-            bg-white
-            border-b
-            border-[#eeeeee]
-          "
-        >
-          {/* Number */}
-          <div
-            className="
-              w-[34px]
-              h-[34px]
-              rounded-[10px]
-              bg-[#fff8f3]
-              border
-              border-[#ffb58f]
-              text-[#ff6b25]
-              flex
-              items-center
-              justify-center
-              text-[13px]
-              font-semibold
-            "
-          >
-            02
-          </div>
-
-          {/* Content */}
-          <div className="min-w-0">
-            <h3
-              className="
-                text-[13px]
-                sm:text-[14px]
-                font-semibold
-                text-[#10203b]
-                truncate
-              "
-            >
-              Linear Equations & Inequalities
-            </h3>
-
-            <p
-              className="
-                text-[11px]
-                sm:text-xs
-                text-[#71809a]
-                mt-0.5
-              "
-            >
-              30 min
-            </p>
-          </div>
-
-          {/* Status */}
-          <span
-            className="
-              shrink-0
-              inline-flex
-              items-center
-              justify-center
-              px-2.5
-              py-1
-              rounded-full
-              border
-              border-[#c9ddff]
-              bg-[#f5f9ff]
-              text-[#4b8df8]
-              text-[10px]
-              sm:text-[11px]
-              font-medium
-              whitespace-nowrap
-            "
-          >
-            Next
-          </span>
-        </div>
-
-
-        {/* ------------------------------------------------------- */}
-        {/* TOPIC 03 */}
-        {/* ------------------------------------------------------- */}
-
-        <div
-          className="
-            grid
-            grid-cols-[38px_minmax(0,1fr)_auto]
-            items-center
-            gap-3
-            px-3
-            sm:px-4
-            py-3
-            sm:py-3.5
-            bg-white
-            border-b
-            border-[#eeeeee]
-          "
-        >
-          {/* Number */}
-          <div
-            className="
-              w-[34px]
-              h-[34px]
-              rounded-[10px]
-              bg-[#f4f6fa]
-              text-[#63718a]
-              flex
-              items-center
-              justify-center
-              text-[13px]
-              font-semibold
-            "
-          >
-            03
-          </div>
-
-          {/* Content */}
-          <div className="min-w-0">
-            <h3
-              className="
-                text-[13px]
-                sm:text-[14px]
-                font-semibold
-                text-[#10203b]
-                truncate
-              "
-            >
-              Quadratic Functions & Parabolas
-            </h3>
-
-            <p
-              className="
-                text-[11px]
-                sm:text-xs
-                text-[#71809a]
-                mt-0.5
-              "
-            >
-              35 min
-            </p>
-          </div>
-
-          {/* Status */}
-          <span
-            className="
-              shrink-0
-              inline-flex
-              items-center
-              justify-center
-              px-2.5
-              py-1
-              rounded-full
-              border
-              border-[#e1e6ee]
-              bg-[#f7f8fa]
-              text-[#71809a]
-              text-[10px]
-              sm:text-[11px]
-              font-medium
-              whitespace-nowrap
-            "
-          >
-            Upcoming
-          </span>
-        </div>
-
-
-        {/* ------------------------------------------------------- */}
-        {/* TOPIC 04 */}
-        {/* ------------------------------------------------------- */}
-
-        <div
-          className="
-            grid
-            grid-cols-[38px_minmax(0,1fr)_auto]
-            items-center
-            gap-3
-            px-3
-            sm:px-4
-            py-3
-            sm:py-3.5
-            bg-white
-          "
-        >
-          {/* Number */}
-          <div
-            className="
-              w-[34px]
-              h-[34px]
-              rounded-[10px]
-              bg-[#f4f6fa]
-              text-[#63718a]
-              flex
-              items-center
-              justify-center
-              text-[13px]
-              font-semibold
-            "
-          >
-            04
-          </div>
-
-          {/* Content */}
-          <div className="min-w-0">
-            <h3
-              className="
-                text-[13px]
-                sm:text-[14px]
-                font-semibold
-                text-[#10203b]
-                truncate
-              "
-            >
-              Word Problems & Applied Algebra
-            </h3>
-
-            <p
-              className="
-                text-[11px]
-                sm:text-xs
-                text-[#71809a]
-                mt-0.5
-              "
-            >
-              20 min
-            </p>
-          </div>
-
-          {/* Status */}
-          <span
-            className="
-              shrink-0
-              inline-flex
-              items-center
-              justify-center
-              px-2.5
-              py-1
-              rounded-full
-              border
-              border-[#e1e6ee]
-              bg-[#f7f8fa]
-              text-[#71809a]
-              text-[10px]
-              sm:text-[11px]
-              font-medium
-              whitespace-nowrap
-            "
-          >
-            Upcoming
-          </span>
-        </div>
-      </div>
-    </div>
-
-
-    {/* ========================================================= */}
-    {/* COURSE PROGRESS */}
-    {/* ========================================================= */}
-
-    <div
-      className="
-        w-full
-        min-w-0
-        rounded-[14px]
-        border
-        border-[#ffd4c7]
-        bg-white
-        p-4
-        sm:p-5
-      "
-    >
-      {/* Header */}
-      <div className="flex items-center justify-between gap-3">
-        <h2
-          className="
-            text-[15px]
-            sm:text-[16px]
-            font-semibold
-            text-[#10182f]
-          "
-        >
-          Course Progress
-        </h2>
-
-        <span
-          className="
-            text-[15px]
-            sm:text-[16px]
-            font-bold
-            text-[#ff642f]
-          "
-        >
-          33%
-        </span>
-      </div>
-
-      {/* ======================================================= */}
-      {/* PROGRESS BAR */}
-      {/* ======================================================= */}
-
-      <div
-        className="
-          w-full
-          h-[7px]
-          mt-3
-          rounded-full
-          bg-[#f0f2f7]
-          overflow-hidden
-        "
-      >
-        <div
-          className="
-            h-full
-            w-[33%]
-            rounded-full
-            bg-gradient-to-r
-            from-[#ff6b25]
-            to-[#ffb45d]
-          "
-        />
-      </div>
-
-      {/* ======================================================= */}
-      {/* STAT CARDS */}
-      {/* ======================================================= */}
-
-      <div
-        className="
-          grid
-          grid-cols-3
-          gap-2
-          mt-3
-        "
-      >
-        {/* Done */}
-        <div
-          className="
-            min-w-0
-            rounded-[12px]
-            bg-[#f4f6fb]
-            px-2
-            py-2.5
-            text-center
-          "
-        >
-          <p
-            className="
-              text-[14px]
-              sm:text-[15px]
-              font-semibold
-              text-[#16213b]
-            "
-          >
-            8
-          </p>
-
-          <p
-            className="
-              text-[9px]
-              sm:text-[10px]
-              text-[#77849a]
-              mt-0.5
-            "
-          >
-            Done
-          </p>
-        </div>
-
-        {/* Left */}
-        <div
-          className="
-            min-w-0
-            rounded-[12px]
-            bg-[#f4f6fb]
-            px-2
-            py-2.5
-            text-center
-          "
-        >
-          <p
-            className="
-              text-[14px]
-              sm:text-[15px]
-              font-semibold
-              text-[#16213b]
-            "
-          >
-            16
-          </p>
-
-          <p
-            className="
-              text-[9px]
-              sm:text-[10px]
-              text-[#77849a]
-              mt-0.5
-            "
-          >
-            Left
-          </p>
-        </div>
-
-        {/* Total */}
-        <div
-          className="
-            min-w-0
-            rounded-[12px]
-            bg-[#f4f6fb]
-            px-2
-            py-2.5
-            text-center
-          "
-        >
-          <p
-            className="
-              text-[14px]
-              sm:text-[15px]
-              font-semibold
-              text-[#16213b]
-            "
-          >
-            24
-          </p>
-
-          <p
-            className="
-              text-[9px]
-              sm:text-[10px]
-              text-[#77849a]
-              mt-0.5
-            "
-          >
-            Total
-          </p>
-        </div>
-      </div>
-    </div>
-  </div>
-</div>
 
 
 <div className="w-full space-y-3 my-4 grid grid-cols-1 xl:grid-cols-[1.5fr_0.5fr] gap-4">
@@ -2060,13 +1492,12 @@ const sessionStatus2 = getSessionDateStatus(content?.scheduledStart);
   {/* SESSION MATERIAL */}
   {/* ========================================================= */}
   <div className="flex flex-col gap-4">
-
+<div className="bg-gradient-to-b from-white via-gray-50 to-gray-300 p-[1.5px] rounded-[20px]">
   <div
     className="
       w-full
       rounded-[20px]
-      border
-      border-[#dedede]
+     
       bg-white
       px-4
       py-5
@@ -2109,16 +1540,14 @@ const sessionStatus2 = getSessionDateStatus(content?.scheduledStart);
     {/* ======================================================= */}
 
     <div className="space-y-3">
-
-      {/* ------------------------------------------------------- */}
-      {/* MATERIAL 01 */}
-      {/* ------------------------------------------------------- */}
-
-      <div
-        className="
-          w-full
-          flex
-          items-center
+{allcontent?.relatedMaterials?.slice(0, 4)?.map((material, index) => {
+  console.log("Material:", material); // Debugging line
+  return(
+  <div
+    className="
+      w-full
+      flex
+      items-center
           gap-3
           sm:gap-4
           rounded-[13px]
@@ -2140,7 +1569,7 @@ const sessionStatus2 = getSessionDateStatus(content?.scheduledStart);
             sm:h-[40px]
             shrink-0
             rounded-[9px]
-            bg-[#ffe9dd]
+             bg-[#d91b0b]
             flex
             items-center
             justify-center
@@ -2174,7 +1603,7 @@ const sessionStatus2 = getSessionDateStatus(content?.scheduledStart);
               truncate
             "
           >
-            Advanced Algebra Notes
+            {material.title}
           </h3>
 
           <p
@@ -2190,7 +1619,8 @@ const sessionStatus2 = getSessionDateStatus(content?.scheduledStart);
         </div>
 
         {/* Download */}
-        <button
+        <Link
+        to={`/resources/${material.slug}`}
           className="
             w-[34px]
             h-[34px]
@@ -2209,277 +1639,30 @@ const sessionStatus2 = getSessionDateStatus(content?.scheduledStart);
           "
           aria-label="Download Advanced Algebra Notes"
         >
-          <svg
-            xmlns="http://www.w3.org/2000/svg"
-            width="17"
-            height="17"
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            strokeWidth="1.7"
-            strokeLinecap="round"
-            strokeLinejoin="round"
-          >
-            <path d="M12 3v12" />
-            <path d="m7 10 5 5 5-5" />
-            <path d="M5 21h14" />
-          </svg>
-        </button>
+        <MoveRight/>
+        </Link>
       </div>
+)})}
 
 
-      {/* ------------------------------------------------------- */}
-      {/* MATERIAL 02 */}
-      {/* ------------------------------------------------------- */}
-
-      <div
-        className="
-          w-full
-          flex
-          items-center
-          gap-3
-          sm:gap-4
-          rounded-[13px]
-          border
-          border-[#f2dfd5]
-          bg-[#fff8f2]
-          px-3
-          sm:px-4
-          py-3
-          sm:py-3.5
-        "
-      >
-        {/* PDF Icon */}
-        <div
-          className="
-            w-[38px]
-            h-[38px]
-            sm:w-[40px]
-            sm:h-[40px]
-            shrink-0
-            rounded-[9px]
-            bg-[#ffe9dd]
-            flex
-            items-center
-            justify-center
-          "
-        >
-          <div
-            className="
-              w-[27px]
-              h-[30px]
-              rounded-[4px]
-              bg-[#d91b0b]
-              flex
-              items-center
-              justify-center
-              text-white
-              text-[10px]
-              font-bold
-            "
-          >
-            PDF
-          </div>
-        </div>
-
-        {/* Material Info */}
-        <div className="flex-1 min-w-0">
-          <h3
-            className="
-              text-[13px]
-              sm:text-[14px]
-              font-medium
-              text-[#202020]
-              truncate
-            "
-          >
-            Practice Worksheet
-          </h3>
-
-          <p
-            className="
-              text-[11px]
-              sm:text-[12px]
-              text-[#858585]
-              mt-0.5
-            "
-          >
-            Questions · 20 Questions
-          </p>
-        </div>
-
-        {/* Download */}
-        <button
-          className="
-            w-[34px]
-            h-[34px]
-            shrink-0
-            rounded-[9px]
-            border
-            border-[#efdfd5]
-            bg-[#fffaf6]
-            flex
-            items-center
-            justify-center
-            text-[#9b918b]
-            hover:text-[#ff6b3d]
-            hover:border-[#ffc8b5]
-            transition-all
-          "
-          aria-label="Download Practice Worksheet"
-        >
-          <svg
-            xmlns="http://www.w3.org/2000/svg"
-            width="17"
-            height="17"
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            strokeWidth="1.7"
-            strokeLinecap="round"
-            strokeLinejoin="round"
-          >
-            <path d="M12 3v12" />
-            <path d="m7 10 5 5 5-5" />
-            <path d="M5 21h14" />
-          </svg>
-        </button>
-      </div>
 
 
-      {/* ------------------------------------------------------- */}
-      {/* MATERIAL 03 */}
-      {/* ------------------------------------------------------- */}
-
-      <div
-        className="
-          w-full
-          flex
-          items-center
-          gap-3
-          sm:gap-4
-          rounded-[13px]
-          border
-          border-[#f2dfd5]
-          bg-[#fff8f2]
-          px-3
-          sm:px-4
-          py-3
-          sm:py-3.5
-        "
-      >
-        {/* PDF Icon */}
-        <div
-          className="
-            w-[38px]
-            h-[38px]
-            sm:w-[40px]
-            sm:h-[40px]
-            shrink-0
-            rounded-[9px]
-            bg-[#ffe9dd]
-            flex
-            items-center
-            justify-center
-          "
-        >
-          <div
-            className="
-              w-[27px]
-              h-[30px]
-              rounded-[4px]
-              bg-[#d91b0b]
-              flex
-              items-center
-              justify-center
-              text-white
-              text-[10px]
-              font-bold
-            "
-          >
-            PDF
-          </div>
-        </div>
-
-        {/* Material Info */}
-        <div className="flex-1 min-w-0">
-          <h3
-            className="
-              text-[13px]
-              sm:text-[14px]
-              font-medium
-              text-[#202020]
-              truncate
-            "
-          >
-            SAT Mathematics Formula Sheet
-          </h3>
-
-          <p
-            className="
-              text-[11px]
-              sm:text-[12px]
-              text-[#858585]
-              mt-0.5
-            "
-          >
-            PDF · 1.1 MB
-          </p>
-        </div>
-
-        {/* Download */}
-        <button
-          className="
-            w-[34px]
-            h-[34px]
-            shrink-0
-            rounded-[9px]
-            border
-            border-[#efdfd5]
-            bg-[#fffaf6]
-            flex
-            items-center
-            justify-center
-            text-[#9b918b]
-            hover:text-[#ff6b3d]
-            hover:border-[#ffc8b5]
-            transition-all
-          "
-          aria-label="Download SAT Mathematics Formula Sheet"
-        >
-          <svg
-            xmlns="http://www.w3.org/2000/svg"
-            width="17"
-            height="17"
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            strokeWidth="1.7"
-            strokeLinecap="round"
-            strokeLinejoin="round"
-          >
-            <path d="M12 3v12" />
-            <path d="m7 10 5 5 5-5" />
-            <path d="M5 21h14" />
-          </svg>
-        </button>
-      </div>
 
     </div>
+  </div>
   </div>
 
 
   {/* ========================================================= */}
   {/* ABOUT THIS SESSION */}
   {/* ========================================================= */}
-
+<div className="bg-gradient-to-b from-white via-gray-50 to-gray-300 p-[1.5px] rounded-[20px]">
   <div
     className="
       w-full
       rounded-[20px]
-      border
-      border-[#dedede]
-      bg-white
+     
+      bg-gray-50
       px-5
       py-6
       sm:px-6
@@ -2512,9 +1695,7 @@ const sessionStatus2 = getSessionDateStatus(content?.scheduledStart);
         mb-5
       "
     >
-      "In this session, we will cover advanced algebra concepts including
-      equations, expressions, and problem-solving strategies to help you
-      improve accuracy and speed."
+     {content?.description || "No description available for this session."}
     </p>
 
     {/* Session Details */}
@@ -2566,15 +1747,22 @@ const sessionStatus2 = getSessionDateStatus(content?.scheduledStart);
             font-medium
           "
         >
-          60 Minutes
+          {(content?.duration / 60) || "Duration not specified"} Minutes
         </span>
       </div>
 
     </div>
   </div>
   </div>
+  </div>
 
 </div>
+        </>
+      )
+    }
+
+  
+ 
 
     {/* ==================================================
         MAIN CONTENT

@@ -111,6 +111,20 @@ const SupportPage = () => {
   const [support,setsupport] = useState([])
 
   useEffect(() => {
+    const fetchSupport = async () => {
+      try {
+        const res = await fetch("https://www.ooshasprep.com/api/article-category");
+        console.log(res);
+      }
+      catch (error) {
+        console.error("Error fetching support categories:", error);
+      }
+    };
+    fetchSupport();
+  }, []);
+
+
+  useEffect(() => {
     fetchTickets();
   }, [filters]);
 
@@ -655,8 +669,8 @@ const supportBenefits = [
             Browse Help Topics
           </h2>
 
-          <button
-            type="button"
+          <Link
+            to="/all-articles"
             className="group flex shrink-0 items-center gap-1.5 text-[12px] font-medium text-[#E87545] transition-colors hover:text-[#D95F32] sm:text-base"
           >
             <span>View All Articles</span>
@@ -666,7 +680,7 @@ const supportBenefits = [
               strokeWidth={1.8}
               className="transition-transform duration-200 group-hover:translate-x-1"
             />
-          </button>
+          </Link>
         </div>
 
         {/* Cards */}

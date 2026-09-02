@@ -394,21 +394,25 @@ export default function CourseDetailPage() {
     return Math.ceil(diffTime / (1000 * 60 * 60 * 24));
   };
 
-  // Calculate pricing
-  const discountPercent =
-    course?.pricing.earlyBird?.discount &&
-    new Date() < new Date(course.pricing.earlyBird.deadline)
-      ? course.pricing.earlyBird.discount
-      : course?.pricing.discount || 0;
-  const isEarlyBirdActive =
-    course?.pricing.earlyBird?.discount &&
-    new Date() < new Date(course.pricing.earlyBird.deadline);
-  const originalPrice =
-    course?.pricing.originalAmount || course?.pricing.amount || 0;
-  const finalPrice =
-    discountPercent > 0
-      ? originalPrice * (1 - discountPercent / 100)
-      : originalPrice;
+ const realPrice = course?.pricing?.amount || 0;
+
+                        const earlyBird = course?.pricing?.earlyBird;
+
+                        const isEarlyBirdActive =
+                            !!earlyBird?.deadline &&
+                            new Date(earlyBird.deadline).getTime() > Date.now();
+
+                        let price = realPrice;
+
+                        // Apply early bird discount first
+                        if (isEarlyBirdActive) {
+                            price = price - (price * (earlyBird?.discount || 0)) / 100;
+                        }
+                        const earlyBirdDiscount = isEarlyBirdActive ? earlyBird?.discount || 0 : 0;
+                        // Then apply normal discount
+                        const normalDiscount = course?.pricing?.discount || 0;
+
+                        price = price - (price * normalDiscount) / 100;
 
   if (loading) {
     return (
@@ -581,7 +585,7 @@ export default function CourseDetailPage() {
                         Validity
                       </p>
                       <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">
-                        2 year
+                       1 Year
                       </p>
                     </CardContent>
                   </Card>
@@ -1738,11 +1742,19 @@ export default function CourseDetailPage() {
                 >
                   <div className="p-[1.5px] rounded-2xl overflow-hidden w-full bg-gradient-to-b from-[#686868]/0 via-[#686868]/60 to-[#686868]">
                     <div className="relative rounded-2xl h-full bg-white p-1.5 overflow-hidden">
+
+                  
+
+
+ 
+
                       <div className="absolute top-0 left-0 w-full h-[30%] bg-gradient-to-b from-[#ADADAC] to-[#ADADAC]/0" />
                       <div
                         style={{ borderRadius: "15px 15px 0px 0px" }}
                         className="relative overflow-hidden h-[210px]"
                       >
+
+                       
                         <div className="relative aspect-video bg-gray-900 rounded-t-lg overflow-hidden">
                           {course?.preview?.url ? (
                             (() => {
@@ -1815,10 +1827,56 @@ export default function CourseDetailPage() {
                           {course.title}
                         </h2>
 
-                        <div className="space-y-2 py-2 text-sm grid grid-cols-2 gap-x-4">
+                         <div className="flex items-center gap-3 w-full">
+  
+  {/* Early Bird */}
+  {isEarlyBirdActive && (
+    <div className="flex items-center rounded-lg bg-[#FF7148] px-2.5 py-1 text-white shadow-sm">
+      <span className="text-sm font-bold leading-none">
+        Early Bird
+      </span>
+    </div>
+  )}
+
+  {/* Discount */}
+  <div
+    className={`
+      flex flex-col items-center
+      
+      bg-green-500
+      px-2.5 py-1
+      text-white
+      rounded-lg
+      shadow-sm
+    
+    `}
+  >
+    {isEarlyBirdActive ? (
+      <span className="text-sm font-bold leading-none">
+        {normalDiscount}%
+        <span className="mx-0.5 text-xs font-semibold opacity-90">
+          +
+        </span>
+        <span className="text-[10px] font-semibold">
+          {earlyBirdDiscount}% OFF
+        </span>
+      </span>
+    ) : (
+      <>
+        <span className="text-sm rounded--lg font-bold leading-none">
+          {normalDiscount}% OFF
+        </span>
+
+      
+      </>
+    )}
+  </div>
+</div>
+
+                        <div className="space-y-2 text-sm grid grid-cols-2 gap-x-4">
                           <div className="flex justify-between">
                             <span>Duration :</span>
-                            <span>{course.duration || "Unknown"}</span>
+                            <span>{course?.schedule_pattern?.duration || "Unknown"} Hours</span>
                           </div>
 
                           <div className="flex justify-between">
@@ -1833,14 +1891,13 @@ export default function CourseDetailPage() {
 
                           <div className="flex justify-between">
                             <span>Validity :</span>
-                            <span>2 Years</span>
+                            <span>1 Year</span>
                           </div>
                         </div>
 
+                       
                         <div className="space-y-1 grid grid-cols-2">
-                          <div className="flex items-center gap-2 text-sm">
-                            ✓ Lifetime Access
-                          </div>
+                          
 
                           <div className="flex items-center gap-2 text-sm">
                             ✓ Certificate Included
@@ -1854,17 +1911,32 @@ export default function CourseDetailPage() {
                             ✓ Expert Support
                           </div>
                         </div>
+
+                        
+
                       </div>
 
                       {/* FOOTER */}
                       {course?.isPurchased === false ? (
                         <div className="flex items-start">
-                          <div
-                            style={{ borderRadius: "0px 0px 12px 15px" }}
-                            className="flex-1 f bg-[#FF6A3D] text-center text-white text-3xl font-bold px-4 py-2"
-                          >
-                            {formatPrice(finalPrice, course.pricing.currency)}
-                          </div>
+                         <div
+  style={{ borderRadius: "0px 0px 12px 15px" }}
+  className="flex bg-[#FF6A3D] items-center gap-2 text-center text-white px-4 py-2"
+>
+
+
+  {/* Final Price */}
+  <div className="text-2xl sm:text-3xl font-bold leading-tight">
+    {formatPrice(price, course.pricing.currency)}
+  </div>
+
+    {/* Real Price */}
+  {course?.pricing?.amount > price && (
+    <div className="text-sm sm:text-lg font-medium text-white/70 line-through leading-tight">
+      {formatPrice(course.pricing.amount, course.pricing.currency)}
+    </div>
+  )}
+</div>
                           <button
                             style={{ borderRadius: "0px 0px 15px 0px" }}
                             onClick={() => {
