@@ -124,6 +124,7 @@ const QUESTION_TYPE_OPTIONS = [
 
   { value: "sat_reading_writing", label: "SAT – Reading & Writing" },
   { value: "sat_math_calculator", label: "SAT – Math (Calculator)" },
+  { value: "sat_value", label: "SAT – Value" },
   { value: "sat_math_no_calculator", label: "SAT – Math (No Calculator)" },
 
   { value: "read_aloud", label: "PTE-Read Aloud" },
@@ -437,7 +438,7 @@ export default function QuestionManagementPage() {
     filters.sectionId,
     filters.questionType,
     filters.difficulty,
-    examId
+    examId,
   ]);
 
   const handleSearchChange = (value: string) => {
@@ -688,11 +689,11 @@ export default function QuestionManagementPage() {
         return;
       }
 
-      if (isMCQType(values.questionType) && !isDataInsights) {
-        if (!values.options || values.options.length < 2) {
-          toast.error("MCQ must have at least 2 options");
-          return;
-        }
+      if (
+        isMCQType(values.questionType) &&
+        !isDataInsights &&
+        !values.questionType.includes("sat")
+      ) {
         const hasCorrect = values.options.some((opt) => opt.isCorrect);
         if (!hasCorrect) {
           toast.error("Select at least one correct option");
@@ -753,6 +754,9 @@ export default function QuestionManagementPage() {
         payload.options = [];
         payload.correctAnswerText = values.correctAnswerText || "";
         payload.dataInsights = undefined;
+      }
+      if (values.questionType.includes("sat")) {
+        payload.correctAnswerText = values.correctAnswerText || "";
       }
 
       if (editingQuestion) {
@@ -877,7 +881,7 @@ export default function QuestionManagementPage() {
                       sectionId: "all",
                       questionType: "all",
                     }));
-                 
+
                     setPage(1);
                   }}
                   className={`cursor-pointer p-2 px-4 hover:outline-1 hover:bg-gray-200 outline-gray-300 rounded-2xl `}
@@ -1865,20 +1869,46 @@ export default function QuestionManagementPage() {
                           <Label className="text-sm font-medium text-gray-700 dark:text-gray-300">
                             Correct Answer
                           </Label>
-                          <RichTextEditor
+                          {/* <RichTextEditor
                             header={true}
                             initialValue={watchCorrectAnswerText}
                             onChange={(html) =>
                               setValue("correctAnswerText", html)
                             }
-                          />
-                          {/* <Input
+                          /> */}
+                          <Input
                             type="text"
                             placeholder="Enter the correct answer"
                             value={watchCorrectAnswerText}
-                            onChange={(e) => setValue("correctAnswerText", e.target.value)}
+                            onChange={(e) =>
+                              setValue("correctAnswerText", e.target.value)
+                            }
                             className="mt-1 rounded-2xl border-gray-200 dark:border-gray-700"
+                          />
+                        </div>
+                      )}
+
+                      {watchQuestionType == "sat_math_calculator" && (
+                        <div>
+                          <Label className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                            Correct Answer
+                          </Label>
+                          {/* <RichTextEditor
+                            header={true}
+                            initialValue={watchCorrectAnswerText}
+                            onChange={(html) =>
+                              setValue("correctAnswerText", html)
+                            }
                           /> */}
+                          <Input
+                            type="text"
+                            placeholder="Enter the correct answer"
+                            value={watchCorrectAnswerText}
+                            onChange={(e) =>
+                              setValue("correctAnswerText", e.target.value)
+                            }
+                            className="mt-1 rounded-2xl border-gray-200 dark:border-gray-700"
+                          />
                         </div>
                       )}
 

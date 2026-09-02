@@ -1124,6 +1124,15 @@ const ContentTableRow = ({
                   if (content.__t === "StudyMaterials") {
                     navigate(`/resources/${content.slug}`);
                   }
+                  if (content.__t === "RecordedClasses") {
+                    navigate(`/class/${content._id}/${content.courseInfo?._id}?module=${content.module}`);
+                  }
+                  if (content.__t === "LiveClasses") {
+                    navigate(`/class/${content._id}/${content.courseInfo?._id}?module=${content.module}`);
+                  }
+                  if (content.__t === "Sessions") {
+                    navigate(`/sessions/${content.slug}`);
+                  }
                 }}
                 className="text-sm cursor-pointer font-medium text-gray-900 dark:text-white line-clamp-1"
               >
@@ -1175,7 +1184,7 @@ const ContentTableRow = ({
                 <Upload size={16} />
               </button>
             )}
-            {content.__t === "StudyMaterials" && (
+            {content.__t === "StudyMaterials" && content.materialType !== "link" && (
               <div className="flex items-center gap-2">
                 {content.file.url ? (
                   <>
@@ -1655,6 +1664,18 @@ const ContentForm = ({
       if (!formData.materialType) {
         newErrors.materialType = "Material type is required";
       }
+
+      if (formData.materialType === "link" && !formData.externalLink?.trim()) {
+        newErrors.externalLink = "External link is required";
+      }
+
+      if (formData.materialType === "link" && formData.externalLink?.trim()) {
+        try {
+          new URL(formData.externalLink);
+        } catch {
+          newErrors.externalLink = "Please enter a valid URL";
+        }
+      }
     } else if (formData.__t === "Tests") {
       if (!formData.test) {
         newErrors.test = "Test is required";
@@ -1691,17 +1712,9 @@ const ContentForm = ({
         payload.testType = formData.testType;
       } else if (formData.__t === "StudyMaterials") {
         payload.materialType = formData.materialType;
-        payload.file = {
-          url: formData.fileUrl,
-        };
         payload.isDownloadable =
           formData.isDownloadable === "true" ||
           formData.isDownloadable === true;
-        payload.version = formData.version || "1.0";
-        payload.content = {
-          text: formData.textContent || "",
-          pages: parseInt(formData.pages, 10) || 0,
-        };
         payload.externalLink = formData.externalLink || "";
       }
       let finalThumbnailUrl = formData.thumbnailPic;
@@ -2050,18 +2063,31 @@ const ContentForm = ({
               <p className="mt-1 text-sm text-red-600">{errors.fileUrl}</p>
             )}
           </div> */}
-          <div>
-            <Label>Is Downloadable</Label>
-            <select
-              name="isDownloadable"
-              value={formData.isDownloadable}
-              onChange={handleChange}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-200 focus:border-blue-500 dark:bg-gray-800 dark:border-gray-600 dark:text-white"
-            >
-              <option value="true">Yes</option>
-              <option value="false">No</option>
-            </select>
-          </div>
+          {formData.materialType !== "link" && (
+            <div>
+              <Label>Is Downloadable</Label>
+
+              <select
+                name="isDownloadable"
+                value={formData.isDownloadable}
+                onChange={handleChange}
+                className="
+              w-full rounded-xl border border-gray-300
+              bg-white px-3 py-2.5
+              text-sm text-gray-700
+              outline-none
+              focus:border-blue-500
+              focus:ring-2 focus:ring-blue-200
+              dark:border-gray-600
+              dark:bg-gray-800
+              dark:text-white
+            "
+              >
+                <option value="true">Yes</option>
+                <option value="false">No</option>
+              </select>
+            </div>
+          )}
           {/* <div>
             <Label>Version</Label>
             <Input
@@ -2094,16 +2120,30 @@ const ContentForm = ({
               min="0"
             />
           </div> */}
-          <div>
-            <Label>External Link</Label>
-            <Input
-              type="url"
-              name="externalLink"
-              value={formData.externalLink || ""}
-              onChange={handleChange}
-              placeholder="https://example.com"
-            />
-          </div>
+          {formData.materialType === "link" && (
+            <div>
+              <Label>External Link *</Label>
+
+              <Input
+                type="url"
+                name="externalLink"
+                value={formData.externalLink || ""}
+                onChange={handleChange}
+                placeholder="https://example.com/study-material"
+              />
+
+              {errors.externalLink && (
+                <p className="mt-1 text-sm text-red-600">
+                  {errors.externalLink}
+                </p>
+              )}
+
+              <p className="mt-1.5 text-xs text-gray-500 dark:text-gray-400">
+                Enter the complete URL where students can access this study
+                material.
+              </p>
+            </div>
+          )}
         </div>
       )}
 
