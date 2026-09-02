@@ -112,8 +112,12 @@ const COURSE_TABS = [
 export default function CourseManagement() {
   const { courseId } = useParams();
   const navigate = useNavigate();
+  let activeTabFromQuery = useMemo(() => {
+    const urlParams = new URLSearchParams(window.location.search);
+    return urlParams.get("tab");
+  }, []);
 
-  const [activeTab, setActiveTab] = useState("overview");
+  const [activeTab, setActiveTab] = useState(activeTabFromQuery || "overview");
   const [courseInfo, setCourseInfo] = useState<any>(null);
   const [loadingCourse, setLoadingCourse] = useState(true);
   const [isScrolled, setIsScrolled] = useState(false);
@@ -286,7 +290,18 @@ export default function CourseManagement() {
                     <motion.button
                       key={tab.id}
                       type="button"
-                      onClick={() => setActiveTab(tab.id)}
+                      onClick={() => {
+                        setActiveTab(tab.id);
+                        const urlParams = new URLSearchParams(
+                          window.location.search,
+                        );
+                        urlParams.set("tab", tab.id);
+                        window.history.replaceState(
+                          {},
+                          "",
+                          `${window.location.pathname}?${urlParams.toString()}`,
+                        );
+                      }}
                       whileHover={{ x: 4 }}
                       whileTap={{ scale: 0.98 }}
                       className={`group relative mb-1 flex w-full items-center gap-3 rounded-xl px-2 py-2 text-left transition-all duration-300 ${
@@ -354,7 +369,18 @@ export default function CourseManagement() {
                   <button
                     key={tab.id}
                     type="button"
-                    onClick={() => setActiveTab(tab.id)}
+                    onClick={() => {
+                      setActiveTab(tab.id);
+                      const urlParams = new URLSearchParams(
+                        window.location.search,
+                      );
+                      urlParams.set("tab", tab.id);
+                      window.history.replaceState(
+                        {},
+                        "",
+                        `${window.location.pathname}?${urlParams.toString()}`,
+                      );
+                    }}
                     className={`
     group
     flex h-[58px] w-[72px] shrink-0

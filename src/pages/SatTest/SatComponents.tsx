@@ -1,4 +1,10 @@
-import React, { useEffect, useMemo, useRef, useState, useCallback } from "react";
+import React, {
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+  useCallback,
+} from "react";
 import {
   Flag,
   Save,
@@ -84,7 +90,7 @@ const QuestionRenderer: any = React.memo(
       setCrossedOptions((prev) =>
         prev.includes(index)
           ? prev.filter((i) => i !== index)
-          : [...prev, index]
+          : [...prev, index],
       );
     };
 
@@ -100,7 +106,6 @@ const QuestionRenderer: any = React.memo(
 
     return (
       <div className="max-w-7xl mx-auto p-4 space-y-4">
-
         {isMCQ && type == "sat_reading_writing" ? (
           <div ref={containerRef} className="flex gap-3">
             {/* LEFT: Passage / Stimulus */}
@@ -137,7 +142,10 @@ const QuestionRenderer: any = React.memo(
                   <span className="bg-slate-800 dark:bg-slate-100 text-slate-100 dark:text-slate-800 p-2">
                     {questionNumber}
                   </span>
-                  <span className="flex cursor-pointer" onClick={toggleMarkForReview}>
+                  <span
+                    className="flex cursor-pointer"
+                    onClick={toggleMarkForReview}
+                  >
                     {currentQuestion.markedForReview ? (
                       <>
                         <BookmarkCheck className="mr-1 h-6 w-6 text-slate-900" />
@@ -155,7 +163,10 @@ const QuestionRenderer: any = React.memo(
                 {/* ABC / elimination switch */}
                 <div>
                   <span
-                    onClick={() => { setShowEliminationMode((prev) => !prev); setCrossedOptions([]); }}
+                    onClick={() => {
+                      setShowEliminationMode((prev) => !prev);
+                      setCrossedOptions([]);
+                    }}
                     className="bg-blue-800 dark:bg-blue-100 border border-slate-800 rounded-lg text-slate-100 dark:text-slate-800 p-1 mr-2 cursor-pointer select-none"
                   >
                     {showEliminationMode ? <del>ABC</del> : "ABC"}
@@ -186,19 +197,22 @@ const QuestionRenderer: any = React.memo(
                         <button
                           onClick={() => onOptionClick(i)}
                           disabled={isCompleted}
-                          className={`w-full text-left rounded-lg border-2 px-4 py-2 flex items-start gap-3 transition ${selected
-                            ? "border-indigo-600 bg-indigo-50 dark:bg-indigo-900/30 shadow-sm"
-                            : "border-slate-300 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-800"
-                            } ${isCrossed && !selected
+                          className={`w-full text-left rounded-lg border-2 px-4 py-2 flex items-start gap-3 transition ${
+                            selected
+                              ? "border-indigo-600 bg-indigo-50 dark:bg-indigo-900/30 shadow-sm"
+                              : "border-slate-300 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-800"
+                          } ${
+                            isCrossed && !selected
                               ? "opacity-60"
                               : "opacity-100"
-                            }`}
+                          }`}
                         >
                           <div
-                            className={`flex h-7 w-7 flex-shrink-0 items-center justify-center rounded-full text-xs font-bold ${selected
-                              ? "bg-indigo-600 text-white"
-                              : "border border-slate-400 text-slate-700 dark:border-slate-500 dark:text-slate-300"
-                              }`}
+                            className={`flex h-7 w-7 flex-shrink-0 items-center justify-center rounded-full text-xs font-bold ${
+                              selected
+                                ? "bg-indigo-600 text-white"
+                                : "border border-slate-400 text-slate-700 dark:border-slate-500 dark:text-slate-300"
+                            }`}
                           >
                             {String.fromCharCode(65 + i)}
                           </div>
@@ -219,8 +233,9 @@ const QuestionRenderer: any = React.memo(
                         <div className="relative">
                           <div
                             onClick={() => toggleCrossOption(i)}
-                            className={`flex h-7 w-7 flex-shrink-0 items-center justify-center border border-slate-400 text-slate-700 dark:border-slate-500 dark:text-slate-300 rounded-full text-sm font-bold cursor-pointer select-none ${isCrossed ? "bg-slate-800 text-slate-100" : ""
-                              }`}
+                            className={`flex h-7 w-7 flex-shrink-0 items-center justify-center border border-slate-400 text-slate-700 dark:border-slate-500 dark:text-slate-300 rounded-full text-sm font-bold cursor-pointer select-none ${
+                              isCrossed ? "bg-slate-800 text-slate-100" : ""
+                            }`}
                           >
                             {isCrossed ? "X" : String.fromCharCode(65 + i)}
                           </div>
@@ -235,164 +250,170 @@ const QuestionRenderer: any = React.memo(
               </div>
             </div>
           </div>
-        ) : isMCQ && type != "sat_reading_writing" ?
-          (
-            <div
-              className="bg-white rounded dark:bg-slate-900 p-2 min-h-[65vh] max-h-[65vh] overflow-y-auto"
-            >
-              {/* Question Header */}
-              <div className="flex items-center justify-between mb-4 bg-slate-300 dark:bg-slate-700 border-b-3 border-dashed border-slate-800">
-                <div className="flex items-center justify-between gap-2">
-                  <span className="bg-slate-800 dark:bg-slate-100 text-slate-100 dark:text-slate-800 p-2">
-                    {questionNumber}
-                  </span>
-                  <span className="flex cursor-pointer" onClick={toggleMarkForReview}>
-                    {currentQuestion.markedForReview ? (
-                      <>
-                        <BookmarkCheck className="mr-1 h-6 w-6 text-slate-900" />
-                        Marked
-                      </>
-                    ) : (
-                      <>
-                        <BookmarkIcon className="mr-1 h-6 w-6" />
-                        Mark for Review
-                      </>
-                    )}
-                  </span>
-                </div>
-
-                {/* ABC / elimination switch */}
-                <div>
-                  <span
-                    onClick={() => { setShowEliminationMode((prev) => !prev); setCrossedOptions([]); }}
-                    className="bg-blue-800 dark:bg-blue-100 border border-slate-800 rounded-lg text-slate-100 dark:text-slate-800 p-1 mr-2 cursor-pointer select-none"
-                  >
-                    {showEliminationMode ? <del>ABC</del> : "ABC"}
-                  </span>
-                </div>
+        ) : isMCQ && type != "sat_reading_writing" ? (
+          <div className="bg-white rounded dark:bg-slate-900 p-2 min-h-[65vh] max-h-[65vh] overflow-y-auto">
+            {/* Question Header */}
+            <div className="flex items-center justify-between mb-4 bg-slate-300 dark:bg-slate-700 border-b-3 border-dashed border-slate-800">
+              <div className="flex items-center justify-between gap-2">
+                <span className="bg-slate-800 dark:bg-slate-100 text-slate-100 dark:text-slate-800 p-2">
+                  {questionNumber}
+                </span>
+                <span
+                  className="flex cursor-pointer"
+                  onClick={toggleMarkForReview}
+                >
+                  {currentQuestion.markedForReview ? (
+                    <>
+                      <BookmarkCheck className="mr-1 h-6 w-6 text-slate-900" />
+                      Marked
+                    </>
+                  ) : (
+                    <>
+                      <BookmarkIcon className="mr-1 h-6 w-6" />
+                      Mark for Review
+                    </>
+                  )}
+                </span>
               </div>
 
-              {/* Question Text */}
-              <div className="flex items-start justify-between mb-4">
-                <h2
-                  className="text-base sm:text-lg"
-                  dangerouslySetInnerHTML={{
-                    __html: qDoc.questionText || "Question missing",
+              {/* ABC / elimination switch */}
+              <div>
+                <span
+                  onClick={() => {
+                    setShowEliminationMode((prev) => !prev);
+                    setCrossedOptions([]);
                   }}
-                />
+                  className="bg-blue-800 dark:bg-blue-100 border border-slate-800 rounded-lg text-slate-100 dark:text-slate-800 p-1 mr-2 cursor-pointer select-none"
+                >
+                  {showEliminationMode ? <del>ABC</del> : "ABC"}
+                </span>
               </div>
+            </div>
 
-              {/* Options */}
-              <div className="space-y-3 mt-4">
-                {qDoc.options.map((opt: any, i: number) => {
-                  const selected =
-                    currentQuestion.answerOptionIndexes?.includes(i);
-                  const isCrossed = crossedOptions.includes(i);
+            {/* Question Text */}
+            <div className="flex items-start justify-between mb-4">
+              <h2
+                className="text-base sm:text-lg"
+                dangerouslySetInnerHTML={{
+                  __html: qDoc.questionText || "Question missing",
+                }}
+              />
+            </div>
 
-                  return (
-                    <div key={i} className="flex items-center gap-2">
-                      <div className="w-full relative">
-                        <button
-                          onClick={() => onOptionClick(i)}
-                          disabled={isCompleted}
-                          className={`w-full text-left rounded-lg border-2 px-4 py-2 flex items-start gap-3 transition ${selected
+            {/* Options */}
+            <div className="space-y-3 mt-4">
+              {qDoc.options.map((opt: any, i: number) => {
+                const selected =
+                  currentQuestion.answerOptionIndexes?.includes(i);
+                const isCrossed = crossedOptions.includes(i);
+
+                return (
+                  <div key={i} className="flex items-center gap-2">
+                    <div className="w-full relative">
+                      <button
+                        onClick={() => onOptionClick(i)}
+                        disabled={isCompleted}
+                        className={`w-full text-left rounded-lg border-2 px-4 py-2 flex items-start gap-3 transition ${
+                          selected
                             ? "border-indigo-600 bg-indigo-50 dark:bg-indigo-900/30 shadow-sm"
                             : "border-slate-300 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-800"
-                            } ${isCrossed && !selected
-                              ? "opacity-60"
-                              : "opacity-100"
-                            }`}
-                        >
-                          <div
-                            className={`flex h-7 w-7 flex-shrink-0 items-center justify-center rounded-full text-xs font-bold ${selected
+                        } ${
+                          isCrossed && !selected ? "opacity-60" : "opacity-100"
+                        }`}
+                      >
+                        <div
+                          className={`flex h-7 w-7 flex-shrink-0 items-center justify-center rounded-full text-xs font-bold ${
+                            selected
                               ? "bg-indigo-600 text-white"
                               : "border border-slate-400 text-slate-700 dark:border-slate-500 dark:text-slate-300"
-                              }`}
-                          >
-                            {String.fromCharCode(65 + i)}
-                          </div>
-                          <div
-                            className="prose prose-sm dark:prose-invert"
-                            dangerouslySetInnerHTML={{ __html: opt.text }}
-                          />
-                        </button>
+                          }`}
+                        >
+                          {String.fromCharCode(65 + i)}
+                        </div>
+                        <div
+                          className="prose prose-sm dark:prose-invert"
+                          dangerouslySetInnerHTML={{ __html: opt.text }}
+                        />
+                      </button>
 
-                        {/* Strike-through on main option when crossed */}
-                        {showEliminationMode && isCrossed && !selected && (
+                      {/* Strike-through on main option when crossed */}
+                      {showEliminationMode && isCrossed && !selected && (
+                        <span className="absolute h-0.5 w-full bg-slate-900 top-1/2 -translate-y-1/2 pointer-events-none" />
+                      )}
+                    </div>
+
+                    {/* Elimination control on right */}
+                    {showEliminationMode && (
+                      <div className="relative">
+                        <div
+                          onClick={() => toggleCrossOption(i)}
+                          className={`flex h-7 w-7 flex-shrink-0 items-center justify-center border border-slate-400 text-slate-700 dark:border-slate-500 dark:text-slate-300 rounded-full text-sm font-bold cursor-pointer select-none ${
+                            isCrossed ? "bg-slate-800 text-slate-100" : ""
+                          }`}
+                        >
+                          {isCrossed ? "X" : String.fromCharCode(65 + i)}
+                        </div>
+                        {isCrossed && (
                           <span className="absolute h-0.5 w-full bg-slate-900 top-1/2 -translate-y-1/2 pointer-events-none" />
                         )}
                       </div>
-
-                      {/* Elimination control on right */}
-                      {showEliminationMode && (
-                        <div className="relative">
-                          <div
-                            onClick={() => toggleCrossOption(i)}
-                            className={`flex h-7 w-7 flex-shrink-0 items-center justify-center border border-slate-400 text-slate-700 dark:border-slate-500 dark:text-slate-300 rounded-full text-sm font-bold cursor-pointer select-none ${isCrossed ? "bg-slate-800 text-slate-100" : ""
-                              }`}
-                          >
-                            {isCrossed ? "X" : String.fromCharCode(65 + i)}
-                          </div>
-                          {isCrossed && (
-                            <span className="absolute h-0.5 w-full bg-slate-900 top-1/2 -translate-y-1/2 pointer-events-none" />
-                          )}
-                        </div>
-                      )}
-                    </div>
-                  );
-                })}
-              </div>
-            </div>
-          ) :
-          (
-            <div
-              className="bg-white rounded dark:bg-slate-900 p-2 min-h-[65vh] max-h-[65vh] overflow-y-auto"
-            >
-              {/* Question Header */}
-              <div className="flex items-center justify-between mb-4 bg-slate-300 dark:bg-slate-700 border-b-3 border-dashed border-slate-800">
-                <div className="flex items-center justify-between gap-2">
-                  <span className="bg-slate-800 dark:bg-slate-100 text-slate-100 dark:text-slate-800 p-2">
-                    {questionNumber}
-                  </span>
-                  <span className="flex cursor-pointer" onClick={toggleMarkForReview}>
-                    {currentQuestion.markedForReview ? (
-                      <>
-                        <BookmarkCheck className="mr-1 h-6 w-6 text-slate-900" />
-                        Marked
-                      </>
-                    ) : (
-                      <>
-                        <BookmarkIcon className="mr-1 h-6 w-6" />
-                        Mark for Review
-                      </>
                     )}
-                  </span>
-                </div>
-              </div>
-
-              <div className="flex items-start justify-between mb-4">
-                <h2
-                  className="text-base sm:text-lg"
-                  dangerouslySetInnerHTML={{
-                    __html: qDoc.questionText || "Question missing",
-                  }}
-                />
-              </div>
-              <div className="space-y-3 mt-4">
-                <textarea
-                  value={currentQuestion.answerText || ""}
-                  onChange={handleTextAnswerChange}
-                  rows={2}
-                  disabled={isCompleted}
-                  className="min-w-2xl rounded-lg border border-slate-300 dark:border-slate-600 px-3 py-2 text-base focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 dark:bg-slate-800 dark:text-white"
-                  placeholder="Type your answer..."
-                />
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        ) : (
+          <div className="bg-white rounded dark:bg-slate-900 p-2 min-h-[65vh] max-h-[65vh] overflow-y-auto">
+            {/* Question Header */}
+            <div className="flex items-center justify-between mb-4 bg-slate-300 dark:bg-slate-700 border-b-3 border-dashed border-slate-800">
+              <div className="flex items-center justify-between gap-2">
+                <span className="bg-slate-800 dark:bg-slate-100 text-slate-100 dark:text-slate-800 p-2">
+                  {questionNumber}
+                </span>
+                <span
+                  className="flex cursor-pointer"
+                  onClick={toggleMarkForReview}
+                >
+                  {currentQuestion.markedForReview ? (
+                    <>
+                      <BookmarkCheck className="mr-1 h-6 w-6 text-slate-900" />
+                      Marked
+                    </>
+                  ) : (
+                    <>
+                      <BookmarkIcon className="mr-1 h-6 w-6" />
+                      Mark for Review
+                    </>
+                  )}
+                </span>
               </div>
             </div>
-          )}
+
+            <div className="flex items-start justify-between mb-4">
+              <h2
+                className="text-base sm:text-lg"
+                dangerouslySetInnerHTML={{
+                  __html: qDoc.questionText || "Question missing",
+                }}
+              />
+            </div>
+            <div className="space-y-3 mt-4">
+              <textarea
+                value={currentQuestion.answerText || ""}
+                onChange={handleTextAnswerChange}
+                rows={2}
+                disabled={isCompleted}
+                className="min-w-xl rounded-lg border border-slate-300 dark:border-slate-600 px-3 py-2 text-base focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 dark:bg-slate-800 dark:text-white"
+                placeholder="Type your answer..."
+              />
+            </div>
+          </div>
+        )}
         <div
-          className={`fixed left-0 right-0 z-30 max-w-3xl mx-auto transition-transform duration-300 ease-out ${isPaletteOpen ? "translate-y-0" : "translate-y-[200%]"
-            } bottom-10 sm:bottom-12`}
+          className={`fixed left-0 right-0 z-30 max-w-3xl mx-auto transition-transform duration-300 ease-out ${
+            isPaletteOpen ? "translate-y-0" : "translate-y-[200%]"
+          } bottom-10 sm:bottom-12`}
         >
           <div className="mx-auto max-w-3xl min-h-[50vh] rounded-t-2xl border border-slate-300 dark:border-slate-700 bg-slate-200 dark:bg-slate-900 shadow-xl p-6">
             <div className="">
@@ -463,62 +484,67 @@ const QuestionRenderer: any = React.memo(
         </div>
 
         {/* BOTTOM BAR */}
-       {!mode && <div className="fixed bottom-0 left-0 right-0 z-40 border-t-3 border-dashed border-slate-900 dark:border-slate-700 bg-slate-300 dark:bg-slate-900/90 backdrop-blur">
-          <div className="mx-auto max-w-7xl px-4 py-3">
-            <div className="grid grid-cols-3 items-center gap-3">
-              <div className="flex text-lg text-slate-900 dark:text-slate-100 flex-wrap gap-2">
-                SAT TEST
-              </div>
+        {!mode && (
+          <div className="fixed bottom-0 left-0 right-0 z-40 border-t-3 border-dashed border-slate-900 dark:border-slate-700 bg-slate-300 dark:bg-slate-900/90 backdrop-blur">
+            <div className="mx-auto max-w-7xl px-4 py-3">
+              <div className="grid grid-cols-3 items-center gap-3">
+                <div className="flex text-lg text-slate-900 dark:text-slate-100 flex-wrap gap-2">
+                  SAT TEST
+                </div>
 
-              {/* Palette toggle button */}
-              <div className="flex-1 mx-auto">
-                <button
-                  type="button"
-                  onClick={togglePalette}
-                  className="text-base  flex items-center bg-slate-800 p-1.5 px-2 rounded-lg text-slate-100 dark:text-slate-300"
-                >
-                  Question {questionNumber} of {sectionTotal}
-                  {isPaletteOpen ? (
-                    <ChevronDown className="ml-1 h-4 w-4" />
+                {/* Palette toggle button */}
+                <div className="flex-1 mx-auto">
+                  <button
+                    type="button"
+                    onClick={togglePalette}
+                    className="text-base  flex items-center bg-slate-800 p-1.5 px-2 rounded-lg text-slate-100 dark:text-slate-300"
+                  >
+                    Question {questionNumber} of {sectionTotal}
+                    {isPaletteOpen ? (
+                      <ChevronDown className="ml-1 h-4 w-4" />
+                    ) : (
+                      <ChevronUp className="ml-1 h-4 w-4" />
+                    )}
+                  </button>
+                </div>
+
+                <div className="flex justify-end gap-2">
+                  {activeQuestionIndex <= 0 ? (
+                    ""
                   ) : (
-                    <ChevronUp className="ml-1 h-4 w-4" />
+                    <button
+                      className="p-1.5 bg-slate-800 text-slate-100 font-semibold border-slate-200 rounded-full px-4"
+                      disabled={activeQuestionIndex <= 0 || isCompleted}
+                      onClick={() => {
+                        goToQuestion(Math.max(0, activeQuestionIndex - 1));
+                        setCrossedOptions([]);
+                      }}
+                    >
+                      Previous
+                    </button>
                   )}
-                </button>
-              </div>
 
-
-              <div className="flex justify-end gap-2">
-                {activeQuestionIndex <= 0 ? "" : <button
-                  className="p-1.5 bg-slate-800 text-slate-100 font-semibold border-slate-200 rounded-full px-4"
-                  disabled={activeQuestionIndex <= 0 || isCompleted}
-                  onClick={() => {
-                    goToQuestion(Math.max(0, activeQuestionIndex - 1));
-                    setCrossedOptions([])
-                  }
-                  }
-                >
-                  Previous
-                </button>}
-
-                <button
-                  className="p-1.5 bg-blue-800 text-slate-100 font-semibold border-slate-200 rounded-full px-4"
-                  disabled={isNextDisabled}
-                  onClick={() => { goNextQuestion(); setCrossedOptions([]) }}
-                >
-                  {isLastQuestionInCurrentSection ? "Review Section" : "Next"}
-                </button>
+                  <button
+                    className="p-1.5 bg-blue-800 text-slate-100 font-semibold border-slate-200 rounded-full px-4"
+                    disabled={isNextDisabled}
+                    onClick={() => {
+                      goNextQuestion();
+                      setCrossedOptions([]);
+                    }}
+                  >
+                    {isLastQuestionInCurrentSection ? "Review Section" : "Next"}
+                  </button>
+                </div>
               </div>
             </div>
           </div>
-        </div>}
+        )}
       </div>
     );
-  }
+  },
 );
 
 export default QuestionRenderer;
-
-
 
 interface SectionInstructionsProps {
   currentSection: {
@@ -530,8 +556,8 @@ interface SectionInstructionsProps {
   setCurrentScreen: (screen: "question") => void;
 }
 
-export const SectionInstructions: React.FC<SectionInstructionsProps> = React.memo(
-  ({ currentSection, activeSectionIndex, setCurrentScreen }) => {
+export const SectionInstructions: React.FC<SectionInstructionsProps> =
+  React.memo(({ currentSection, activeSectionIndex, setCurrentScreen }) => {
     if (!currentSection) return null;
 
     const sectionName =
@@ -549,8 +575,8 @@ export const SectionInstructions: React.FC<SectionInstructionsProps> = React.mem
           {sectionName} — Instructions
         </h2>
         <p className="mb-4">
-          This section is <b>{timedText}</b> and contains{" "}
-          <b>{questionCount}</b> questions.
+          This section is <b>{timedText}</b> and contains <b>{questionCount}</b>{" "}
+          questions.
         </p>
         <p className="mb-4">
           You may move backward and forward among questions in this section. You
@@ -595,8 +621,7 @@ export const SectionInstructions: React.FC<SectionInstructionsProps> = React.mem
         </div>
       </div>
     );
-  }
-);
+  });
 
 import { Eye, ArrowLeft, CheckCircle2 } from "lucide-react";
 
@@ -633,7 +658,9 @@ export const SectionReview: React.FC<SectionReviewProps> = React.memo(
     handleFinishSectionReview,
   }) => {
     const total = currentSection.questions.length;
-    const answeredCount = currentSection.questions.filter((q) => q.isAnswered).length;
+    const answeredCount = currentSection.questions.filter(
+      (q) => q.isAnswered,
+    ).length;
 
     const filtered = useMemo(() => {
       return currentSection.questions
@@ -653,18 +680,29 @@ export const SectionReview: React.FC<SectionReviewProps> = React.memo(
           <aside className=" max-w-4xl flex-shrink-0 mx-auto">
             <div className="">
               <div className="py-6">
-                <h4 className="text-3xl text-center font-semibold text-slate-900 dark:text-slate-50">Check Your Work</h4>
-                <div className="text-base text-center text-slate-500">On the test day you will not be able to return to this section review. and go to next section without time completed</div>
+                <h4 className="text-3xl text-center font-semibold text-slate-900 dark:text-slate-50">
+                  Check Your Work
+                </h4>
+                <div className="text-base text-center text-slate-500">
+                  On the test day you will not be able to return to this section
+                  review. and go to next section without time completed
+                </div>
               </div>
               <div className="rounded-2xl bg-white dark:bg-slate-900/60 border border-slate-200 dark:border-slate-700 p-6">
                 <div className="mt-3 flex gap-1 flex-wrap">
-                  {(["all", "answered", "not_answered", "flagged"] as const).map((f) => {
+                  {(
+                    ["all", "answered", "not_answered", "flagged"] as const
+                  ).map((f) => {
                     const isActive = filter === f;
-                    let bgClass = "bg-slate-50 dark:bg-slate-800 text-slate-700 dark:text-slate-200";
+                    let bgClass =
+                      "bg-slate-50 dark:bg-slate-800 text-slate-700 dark:text-slate-200";
                     if (isActive) {
-                      if (f === "answered") bgClass = "bg-emerald-600 text-white";
-                      else if (f === "not_answered") bgClass = "bg-yellow-500 text-white";
-                      else if (f === "flagged") bgClass = "bg-indigo-700 text-white";
+                      if (f === "answered")
+                        bgClass = "bg-emerald-600 text-white";
+                      else if (f === "not_answered")
+                        bgClass = "bg-yellow-500 text-white";
+                      else if (f === "flagged")
+                        bgClass = "bg-indigo-700 text-white";
                       else bgClass = "bg-indigo-600 text-white";
                     }
                     return (
@@ -673,7 +711,9 @@ export const SectionReview: React.FC<SectionReviewProps> = React.memo(
                         onClick={() => setFilter(f)}
                         className={`px-3 py-1 rounded-full ${bgClass}`}
                       >
-                        {f === "not_answered" ? "Not answered" : f.charAt(0).toUpperCase() + f.slice(1)}
+                        {f === "not_answered"
+                          ? "Not answered"
+                          : f.charAt(0).toUpperCase() + f.slice(1)}
                       </button>
                     );
                   })}
@@ -691,24 +731,25 @@ export const SectionReview: React.FC<SectionReviewProps> = React.memo(
                             setActiveQuestionIndex(idx);
                             setCurrentScreen("question");
                           }}
-                          className={`group flex flex-col items-center justify-center gap-1 p-2 rounded-xl border transition-colors ${isBookmarked
-                            ? "border-purple-300 bg-purple-50 dark:bg-purple-500/10"
-                            : isAnsweredLocal
-                              ? "border-emerald-200 bg-emerald-50"
-                              : "border-slate-200 bg-white dark:bg-slate-900 hover:border-indigo-300"
-                            }`}
+                          className={`group flex flex-col items-center justify-center gap-1 p-2 rounded-xl border transition-colors ${
+                            isBookmarked
+                              ? "border-purple-300 bg-purple-50 dark:bg-purple-500/10"
+                              : isAnsweredLocal
+                                ? "border-emerald-200 bg-emerald-50"
+                                : "border-slate-200 bg-white dark:bg-slate-900 hover:border-indigo-300"
+                          }`}
                         >
                           <div
-                            className={`h-10 w-10 rounded-full flex items-center justify-center font-semibold ${isBookmarked
-                              ? "bg-purple-500 text-white"
-                              : isAnsweredLocal
-                                ? "bg-emerald-500 text-white"
-                                : "bg-slate-200 text-slate-700"
-                              }`}
+                            className={`h-10 w-10 rounded-full flex items-center justify-center font-semibold ${
+                              isBookmarked
+                                ? "bg-purple-500 text-white"
+                                : isAnsweredLocal
+                                  ? "bg-emerald-500 text-white"
+                                  : "bg-slate-200 text-slate-700"
+                            }`}
                           >
                             {q.order || idx + 1}
                           </div>
-
                         </button>
                       );
                     })}
@@ -729,16 +770,22 @@ export const SectionReview: React.FC<SectionReviewProps> = React.memo(
               </div>
 
               <div className="flex gap-2">
-                {activeQuestionIndex <= 0 ? "" : <button
-                  className="p-1.5 bg-slate-800 text-slate-100 font-semibold border-slate-200 rounded-full px-4"
-                  onClick={() => {
-                    setActiveQuestionIndex(Math.max(0, activeQuestionIndex - 1));
-                    setCurrentScreen("question");
-                  }}
-                  disabled={activeQuestionIndex <= 0}
-                >
-                  Previous
-                </button>}
+                {activeQuestionIndex <= 0 ? (
+                  ""
+                ) : (
+                  <button
+                    className="p-1.5 bg-slate-800 text-slate-100 font-semibold border-slate-200 rounded-full px-4"
+                    onClick={() => {
+                      setActiveQuestionIndex(
+                        Math.max(0, activeQuestionIndex - 1),
+                      );
+                      setCurrentScreen("question");
+                    }}
+                    disabled={activeQuestionIndex <= 0}
+                  >
+                    Previous
+                  </button>
+                )}
 
                 <button
                   className="p-1.5 bg-blue-800 text-slate-100 font-semibold border-slate-200 rounded-full px-4"
@@ -753,14 +800,10 @@ export const SectionReview: React.FC<SectionReviewProps> = React.memo(
         </div>
       </div>
     );
-  }
+  },
 );
 
-import {
-  AlertTriangle,
-  BookOpen,
-  Edit3,
-} from "lucide-react";
+import { AlertTriangle, BookOpen, Edit3 } from "lucide-react";
 
 interface GRETestResultsProps {
   attempt: any;
@@ -777,7 +820,11 @@ export const GRETestResults: React.FC<GRETestResultsProps> = React.memo(
       if (typeof q.isCorrect === "boolean") {
         return q.isCorrect ? "correct" : "incorrect";
       }
-      if (qd && typeof qd.correctOptionIndex === "number" && qd.correctOptionIndex >= 0) {
+      if (
+        qd &&
+        typeof qd.correctOptionIndex === "number" &&
+        qd.correctOptionIndex >= 0
+      ) {
         const userIdx = q.answerOptionIndexes[0];
         return userIdx === qd.correctOptionIndex ? "correct" : "incorrect";
       }
@@ -786,19 +833,27 @@ export const GRETestResults: React.FC<GRETestResultsProps> = React.memo(
 
     const getStatusColor = (status: string) => {
       switch (status) {
-        case "correct": return "bg-gradient-to-r from-emerald-500 to-emerald-600 text-white shadow-emerald-200 dark:shadow-emerald-900/30";
-        case "incorrect": return "bg-gradient-to-r from-red-500 to-red-600 text-white shadow-red-200 dark:shadow-red-900/30";
-        case "skipped": return "bg-gradient-to-r from-slate-400 to-slate-500 text-white shadow-slate-200 dark:shadow-slate-900/30";
-        default: return "bg-gradient-to-r from-indigo-500 to-indigo-600 text-white shadow-indigo-200 dark:shadow-indigo-900/30";
+        case "correct":
+          return "bg-gradient-to-r from-emerald-500 to-emerald-600 text-white shadow-emerald-200 dark:shadow-emerald-900/30";
+        case "incorrect":
+          return "bg-gradient-to-r from-red-500 to-red-600 text-white shadow-red-200 dark:shadow-red-900/30";
+        case "skipped":
+          return "bg-gradient-to-r from-slate-400 to-slate-500 text-white shadow-slate-200 dark:shadow-slate-900/30";
+        default:
+          return "bg-gradient-to-r from-indigo-500 to-indigo-600 text-white shadow-indigo-200 dark:shadow-indigo-900/30";
       }
     };
 
     const getStatusIcon = (status: string) => {
       switch (status) {
-        case "correct": return <CheckCircle2 className="h-4 w-4 mr-1.5" />;
-        case "incorrect": return <AlertTriangle className="h-4 w-4 mr-1.5" />;
-        case "skipped": return <Clock className="h-4 w-4 mr-1.5" />;
-        default: return <Edit3 className="h-4 w-4 mr-1.5" />;
+        case "correct":
+          return <CheckCircle2 className="h-4 w-4 mr-1.5" />;
+        case "incorrect":
+          return <AlertTriangle className="h-4 w-4 mr-1.5" />;
+        case "skipped":
+          return <Clock className="h-4 w-4 mr-1.5" />;
+        default:
+          return <Edit3 className="h-4 w-4 mr-1.5" />;
       }
     };
 
@@ -837,11 +892,36 @@ export const GRETestResults: React.FC<GRETestResultsProps> = React.memo(
         {overall && (
           <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
             {[
-              { label: "Total Questions", value: overall.totalQuestions, icon: BookOpen, color: "indigo" },
-              { label: "Attempted", value: `${overall.totalAttempted} (${Math.round((overall.totalAttempted / overall.totalQuestions) * 100)}%)`, icon: Edit3, color: "blue" },
-              { label: "Correct", value: `${overall.totalCorrect} (${Math.round((overall.totalCorrect / overall.totalQuestions) * 100)}%)`, icon: CheckCircle2, color: "emerald" },
-              { label: "Incorrect", value: `${overall.totalIncorrect} (${Math.round((overall.totalIncorrect / overall.totalQuestions) * 100)}%)`, icon: AlertTriangle, color: "red" },
-              { label: "Raw Score", value: `${overall.rawScore}/${overall.totalQuestions}`, icon: Flag, color: "purple" },
+              {
+                label: "Total Questions",
+                value: overall.totalQuestions,
+                icon: BookOpen,
+                color: "indigo",
+              },
+              {
+                label: "Attempted",
+                value: `${overall.totalAttempted} (${Math.round((overall.totalAttempted / overall.totalQuestions) * 100)}%)`,
+                icon: Edit3,
+                color: "blue",
+              },
+              {
+                label: "Correct",
+                value: `${overall.totalCorrect} (${Math.round((overall.totalCorrect / overall.totalQuestions) * 100)}%)`,
+                icon: CheckCircle2,
+                color: "emerald",
+              },
+              {
+                label: "Incorrect",
+                value: `${overall.totalIncorrect} (${Math.round((overall.totalIncorrect / overall.totalQuestions) * 100)}%)`,
+                icon: AlertTriangle,
+                color: "red",
+              },
+              {
+                label: "Raw Score",
+                value: `${overall.rawScore}/${overall.totalQuestions}`,
+                icon: Flag,
+                color: "purple",
+              },
             ].map((item, i) => (
               <div
                 key={i}
@@ -856,8 +936,12 @@ export const GRETestResults: React.FC<GRETestResultsProps> = React.memo(
                       {item.value}
                     </p>
                   </div>
-                  <div className={`h-10 w-10 rounded-full bg-${item.color}-100 dark:bg-${item.color}-900/30 flex items-center justify-center`}>
-                    <item.icon className={`h-5 w-5 text-${item.color}-600 dark:text-${item.color}-400`} />
+                  <div
+                    className={`h-10 w-10 rounded-full bg-${item.color}-100 dark:bg-${item.color}-900/30 flex items-center justify-center`}
+                  >
+                    <item.icon
+                      className={`h-5 w-5 text-${item.color}-600 dark:text-${item.color}-400`}
+                    />
                   </div>
                 </div>
               </div>
@@ -887,7 +971,8 @@ export const GRETestResults: React.FC<GRETestResultsProps> = React.memo(
                         {sec.name || `Section ${sIdx + 1}`}
                       </h4>
                       <p className="text-sm text-slate-600 dark:text-slate-400">
-                        {sec.questions.length} Questions • {sec.durationMinutes || 45} minutes
+                        {sec.questions.length} Questions •{" "}
+                        {sec.durationMinutes || 45} minutes
                       </p>
                     </div>
                   </div>
@@ -895,17 +980,23 @@ export const GRETestResults: React.FC<GRETestResultsProps> = React.memo(
                   {sec.stats && (
                     <div className="flex items-center gap-4">
                       <div className="text-center">
-                        <div className="text-lg font-bold text-emerald-600 dark:text-emerald-400">{sec.stats.correct}</div>
+                        <div className="text-lg font-bold text-emerald-600 dark:text-emerald-400">
+                          {sec.stats.correct}
+                        </div>
                         <div className="text-xs text-slate-500">Correct</div>
                       </div>
                       <div className="h-8 w-px bg-slate-200 dark:bg-slate-700"></div>
                       <div className="text-center">
-                        <div className="text-lg font-bold text-red-600 dark:text-red-400">{sec.stats.incorrect}</div>
+                        <div className="text-lg font-bold text-red-600 dark:text-red-400">
+                          {sec.stats.incorrect}
+                        </div>
                         <div className="text-xs text-slate-500">Incorrect</div>
                       </div>
                       <div className="h-8 w-px bg-slate-200 dark:bg-slate-700"></div>
                       <div className="text-center">
-                        <div className="text-lg font-bold text-slate-600 dark:text-slate-400">{sec.stats.skipped}</div>
+                        <div className="text-lg font-bold text-slate-600 dark:text-slate-400">
+                          {sec.stats.skipped}
+                        </div>
                         <div className="text-xs text-slate-500">Skipped</div>
                       </div>
                     </div>
@@ -917,8 +1008,18 @@ export const GRETestResults: React.FC<GRETestResultsProps> = React.memo(
                 <table className="w-full text-sm">
                   <thead>
                     <tr className="border-b border-slate-100 dark:border-slate-800">
-                      {["Q.No", "Status", "Your Answer", "Correct Answer", "Time Spent", "Question Preview"].map((col) => (
-                        <th key={col} className="py-3 px-4 text-left font-semibold text-slate-700 dark:text-slate-300 text-xs uppercase tracking-wider">
+                      {[
+                        "Q.No",
+                        "Status",
+                        "Your Answer",
+                        "Correct Answer",
+                        "Time Spent",
+                        "Question Preview",
+                      ].map((col) => (
+                        <th
+                          key={col}
+                          className="py-3 px-4 text-left font-semibold text-slate-700 dark:text-slate-300 text-xs uppercase tracking-wider"
+                        >
                           {col}
                         </th>
                       ))}
@@ -932,20 +1033,25 @@ export const GRETestResults: React.FC<GRETestResultsProps> = React.memo(
 
                       const getOptionLabel = (idx: number) => {
                         if (!qd?.options || !qd.options[idx]) return "--";
-                        return qd.options[idx].label || String.fromCharCode("A".charCodeAt(0) + idx);
+                        return (
+                          qd.options[idx].label ||
+                          String.fromCharCode("A".charCodeAt(0) + idx)
+                        );
                       };
 
-                      const userLabel = q.answerOptionIndexes.length > 0
-                        ? q.answerOptionIndexes.map(getOptionLabel).join(", ")
-                        : q.answerText || "--";
+                      const userLabel =
+                        q.answerOptionIndexes.length > 0
+                          ? q.answerOptionIndexes.map(getOptionLabel).join(", ")
+                          : q.answerText || "--";
 
                       const correctLabels = qd.options
-                        .filter(o => o.isCorrect)
-                        .map(o => `${o.label}. ${o.text}`);  // label + text
+                        .filter((o) => o.isCorrect)
+                        .map((o) => `${o.label}. ${o.text}`); // label + text
 
-                      const correctLabel = correctLabels.length > 0
-                        ? correctLabels.join(", ")           // multiple values joined
-                        : qd.correctAnswerText || "--";
+                      const correctLabel =
+                        correctLabels.length > 0
+                          ? correctLabels.join(", ") // multiple values joined
+                          : qd.correctAnswerText || "--";
 
                       return (
                         <tr
@@ -954,39 +1060,53 @@ export const GRETestResults: React.FC<GRETestResultsProps> = React.memo(
                         >
                           <td className="py-3 px-4 align-middle">
                             <div className="flex items-center">
-                              <div className={`h-8 w-8 rounded-lg flex items-center justify-center ${status === "correct"
-                                ? "bg-emerald-100 dark:bg-emerald-900/30 text-emerald-600 dark:text-emerald-400"
-                                : status === "incorrect"
-                                  ? "bg-red-100 dark:bg-red-900/30 text-red-600 dark:text-red-400"
-                                  : "bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400"
-                                }`}>
-                                <span className="font-bold">{q.order || qIdx + 1}</span>
+                              <div
+                                className={`h-8 w-8 rounded-lg flex items-center justify-center ${
+                                  status === "correct"
+                                    ? "bg-emerald-100 dark:bg-emerald-900/30 text-emerald-600 dark:text-emerald-400"
+                                    : status === "incorrect"
+                                      ? "bg-red-100 dark:bg-red-900/30 text-red-600 dark:text-red-400"
+                                      : "bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400"
+                                }`}
+                              >
+                                <span className="font-bold">
+                                  {q.order || qIdx + 1}
+                                </span>
                               </div>
                             </div>
                           </td>
                           <td className="py-3 px-4 align-middle">
-                            <span className={`inline-flex items-center rounded-full px-3 py-1.5 text-xs font-medium shadow-sm ${statusClass}`}>
+                            <span
+                              className={`inline-flex items-center rounded-full px-3 py-1.5 text-xs font-medium shadow-sm ${statusClass}`}
+                            >
                               {getStatusIcon(status)}
                               {status.charAt(0).toUpperCase() + status.slice(1)}
                             </span>
                           </td>
                           <td className="py-3 px-4 align-middle">
-                            <div className={`font-medium ${status === "correct"
-                              ? "text-emerald-700 dark:text-emerald-300"
-                              : status === "incorrect"
-                                ? "text-red-700 dark:text-red-300"
-                                : "text-slate-700 dark:text-slate-300"
-                              }`}>
+                            <div
+                              className={`font-medium ${
+                                status === "correct"
+                                  ? "text-emerald-700 dark:text-emerald-300"
+                                  : status === "incorrect"
+                                    ? "text-red-700 dark:text-red-300"
+                                    : "text-slate-700 dark:text-slate-300"
+                              }`}
+                            >
                               {userLabel}
                             </div>
                           </td>
                           <td className="py-3 px-4 align-middle">
-                            <div className="font-medium text-emerald-700 dark:text-emerald-300">{correctLabel}</div>
+                            <div className="font-medium text-emerald-700 dark:text-emerald-300">
+                              {correctLabel}
+                            </div>
                           </td>
                           <td className="py-3 px-4 align-middle">
                             <div className="flex items-center text-slate-600 dark:text-slate-400">
                               <Clock className="h-3.5 w-3.5 mr-1.5" />
-                              <span className="font-mono">{formatTimeSpent(q.timeSpentSeconds)}</span>
+                              <span className="font-mono">
+                                {formatTimeSpent(q.timeSpentSeconds)}
+                              </span>
                             </div>
                           </td>
                           <td className="py-3 px-4 align-middle max-w-xs">
@@ -995,7 +1115,9 @@ export const GRETestResults: React.FC<GRETestResultsProps> = React.memo(
                                 {qd.questionText.replace(/<[^>]*>/g, "")}
                               </div>
                             ) : (
-                              <span className="text-slate-400 dark:text-slate-500 italic">No preview available</span>
+                              <span className="text-slate-400 dark:text-slate-500 italic">
+                                No preview available
+                              </span>
                             )}
                           </td>
                         </tr>
@@ -1011,13 +1133,32 @@ export const GRETestResults: React.FC<GRETestResultsProps> = React.memo(
                   {sec.stats && (
                     <div className="flex items-center gap-2">
                       {[
-                        { label: "Correct", count: sec.stats.correct, color: "emerald" },
-                        { label: "Incorrect", count: sec.stats.incorrect, color: "red" },
-                        { label: "Skipped", count: sec.stats.skipped, color: "slate" },
+                        {
+                          label: "Correct",
+                          count: sec.stats.correct,
+                          color: "emerald",
+                        },
+                        {
+                          label: "Incorrect",
+                          count: sec.stats.incorrect,
+                          color: "red",
+                        },
+                        {
+                          label: "Skipped",
+                          count: sec.stats.skipped,
+                          color: "slate",
+                        },
                       ].map((item) => (
-                        <div key={item.label} className="flex items-center gap-1">
-                          <div className={`h-2 w-2 rounded-full bg-${item.color}-500`}></div>
-                          <span>{item.label}: {item.count}</span>
+                        <div
+                          key={item.label}
+                          className="flex items-center gap-1"
+                        >
+                          <div
+                            className={`h-2 w-2 rounded-full bg-${item.color}-500`}
+                          ></div>
+                          <span>
+                            {item.label}: {item.count}
+                          </span>
                         </div>
                       ))}
                     </div>
@@ -1031,32 +1172,52 @@ export const GRETestResults: React.FC<GRETestResultsProps> = React.memo(
         {/* Performance Summary */}
         {overall && (
           <div className="rounded-xl border border-slate-200 dark:border-slate-700 bg-gradient-to-r from-indigo-50 to-white dark:from-indigo-900/20 dark:to-slate-900 p-5">
-            <h3 className="text-lg font-semibold text-slate-800 dark:text-slate-100 mb-3">Performance Summary</h3>
+            <h3 className="text-lg font-semibold text-slate-800 dark:text-slate-100 mb-3">
+              Performance Summary
+            </h3>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div className="space-y-3">
                 <div className="flex items-center justify-between">
-                  <span className="text-slate-600 dark:text-slate-400">Accuracy</span>
+                  <span className="text-slate-600 dark:text-slate-400">
+                    Accuracy
+                  </span>
                   <span className="font-bold text-lg text-slate-800 dark:text-slate-100">
-                    {overall.totalAttempted > 0 ? ((overall.totalCorrect / overall.totalAttempted) * 100).toFixed(1) : "0"}%
+                    {overall.totalAttempted > 0
+                      ? (
+                          (overall.totalCorrect / overall.totalAttempted) *
+                          100
+                        ).toFixed(1)
+                      : "0"}
+                    %
                   </span>
                 </div>
                 <div className="h-2 bg-slate-200 dark:bg-slate-700 rounded-full overflow-hidden">
                   <div
                     className="h-full bg-gradient-to-r from-emerald-500 to-emerald-600 rounded-full"
-                    style={{ width: `${overall.totalAttempted > 0 ? (overall.totalCorrect / overall.totalAttempted) * 100 : 0}%` }}
+                    style={{
+                      width: `${overall.totalAttempted > 0 ? (overall.totalCorrect / overall.totalAttempted) * 100 : 0}%`,
+                    }}
                   ></div>
                 </div>
 
                 <div className="flex items-center justify-between mt-4">
-                  <span className="text-slate-600 dark:text-slate-400">Completion Rate</span>
+                  <span className="text-slate-600 dark:text-slate-400">
+                    Completion Rate
+                  </span>
                   <span className="font-bold text-lg text-slate-800 dark:text-slate-100">
-                    {((overall.totalAttempted / overall.totalQuestions) * 100).toFixed(1)}%
+                    {(
+                      (overall.totalAttempted / overall.totalQuestions) *
+                      100
+                    ).toFixed(1)}
+                    %
                   </span>
                 </div>
                 <div className="h-2 bg-slate-200 dark:bg-slate-700 rounded-full overflow-hidden">
                   <div
                     className="h-full bg-gradient-to-r from-blue-500 to-blue-600 rounded-full"
-                    style={{ width: `${(overall.totalAttempted / overall.totalQuestions) * 100}%` }}
+                    style={{
+                      width: `${(overall.totalAttempted / overall.totalQuestions) * 100}%`,
+                    }}
                   ></div>
                 </div>
               </div>
@@ -1065,12 +1226,24 @@ export const GRETestResults: React.FC<GRETestResultsProps> = React.memo(
                 <div className="relative h-40 w-40">
                   <div className="absolute inset-0 flex items-center justify-center">
                     <div className="text-center">
-                      <div className="text-3xl font-bold text-indigo-600 dark:text-indigo-400">{overall.rawScore}</div>
-                      <div className="text-sm text-slate-600 dark:text-slate-400">Raw Score</div>
+                      <div className="text-3xl font-bold text-indigo-600 dark:text-indigo-400">
+                        {overall.rawScore}
+                      </div>
+                      <div className="text-sm text-slate-600 dark:text-slate-400">
+                        Raw Score
+                      </div>
                     </div>
                   </div>
                   <svg className="h-full w-full" viewBox="0 0 100 100">
-                    <circle cx="50" cy="50" r="40" fill="none" stroke="#e2e8f0" strokeWidth="8" strokeLinecap="round" />
+                    <circle
+                      cx="50"
+                      cy="50"
+                      r="40"
+                      fill="none"
+                      stroke="#e2e8f0"
+                      strokeWidth="8"
+                      strokeLinecap="round"
+                    />
                     <circle
                       cx="50"
                       cy="50"
@@ -1083,7 +1256,13 @@ export const GRETestResults: React.FC<GRETestResultsProps> = React.memo(
                       transform="rotate(-90 50 50)"
                     />
                     <defs>
-                      <linearGradient id="gradient1" x1="0%" y1="0%" x2="100%" y2="0%">
+                      <linearGradient
+                        id="gradient1"
+                        x1="0%"
+                        y1="0%"
+                        x2="100%"
+                        y2="0%"
+                      >
                         <stop offset="0%" stopColor="#6366f1" />
                         <stop offset="100%" stopColor="#8b5cf6" />
                       </linearGradient>
@@ -1101,10 +1280,20 @@ export const GRETestResults: React.FC<GRETestResultsProps> = React.memo(
             Review your answers carefully before leaving
           </div>
           <div className="flex items-center gap-3">
-            <Button variant="outline" size="sm" className="border-slate-300 dark:border-slate-600" onClick={() => window.print()}>
+            <Button
+              variant="outline"
+              size="sm"
+              className="border-slate-300 dark:border-slate-600"
+              onClick={() => window.print()}
+            >
               Print Results
             </Button>
-            <Button variant="outline" size="sm" className="border-slate-300 dark:border-slate-600" onClick={navigateBack}>
+            <Button
+              variant="outline"
+              size="sm"
+              className="border-slate-300 dark:border-slate-600"
+              onClick={navigateBack}
+            >
               <LogOut className="h-4 w-4 mr-2" />
               Return to Dashboard
             </Button>
@@ -1119,5 +1308,5 @@ export const GRETestResults: React.FC<GRETestResultsProps> = React.memo(
         </div>
       </div>
     );
-  }
+  },
 );
