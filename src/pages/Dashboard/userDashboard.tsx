@@ -1949,12 +1949,12 @@ const GREDashboard = () => {
 
                           {/* Body */}
 
-                          <div className="px-6 pb-4 lg:py-0">
-                            <h3 className="text-xl md:text-xl font-bold">
-                              <span className="text-[#FF6736] text-xl">
+                          <div className="px-4 pb-4 lg:py-0">
+                            <h3 className="text-xl md:text-xl font-bold line-clamp-2">
+                              <span className="text-[#FF6736] text-2xl">
                                 {course.title.split(" ")[0]}
                               </span>{" "}
-                              <span className="dark:text-white text-xl ">
+                              <span className="dark:text-white text-lg ">
                                 {" "}
                                 {course.title.split(" ").slice(1).join(" ")}
                               </span>
@@ -2112,7 +2112,7 @@ const GREDashboard = () => {
 
                     {/* Content */}
                     <div className="p-4">
-                      <h3 className="text-xl font-bold leading-none">
+                      <h3 className="text-xl font-bold leading-none line-clamp-2">
                         <span className="text-orange-500">
                           {item.title.split(" ")[0]}
                         </span>{" "}
@@ -2219,7 +2219,7 @@ const GREDashboard = () => {
 
                     {/* Content */}
                     <div className="p-4">
-                      <h3 className="text-xl font-bold leading-none">
+                      <h3 className="text-xl font-bold leading-none line-clamp-2">
                         <span className="text-orange-500">
                           {item.title.split(" ")[0]}
                         </span>{" "}
