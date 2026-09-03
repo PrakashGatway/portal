@@ -5,7 +5,7 @@ import Backdrop from "./Backdrop";
 import AppSidebar from "./AppSidebar";
 import { BannerProvider } from "../context/BannerContext";
 import { useAuth } from "../context/UserContext";
-import DriverTour from "../components/DriverTour";
+import DriverTour from "../components/Tour/DriverTour";
 import { useEffect, useState } from "react";
 
 const LayoutContent: React.FC = () => {
@@ -28,12 +28,12 @@ const LayoutContent: React.FC = () => {
 
   return (
     <div className="min-h-screen max-w-screen">
-      
-      {/* <DriverTour
+      {user?.role === 'user' && 
+      <DriverTour
         start={startTour}
         profile={user}
         onFinish={() => setStartTour(false)}
-      /> */}
+      />}
 
       <div>
         <AppSidebar />

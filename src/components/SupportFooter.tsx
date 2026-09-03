@@ -15,7 +15,7 @@ export default function CourseSupportFooter() {
     <div className="mt-6 max-w-7xl mx-auto rounded-2xl border border-gray-200 bg-gradient-to-r from-white via-[#FFF8F5] to-white p-6">
       <div className="flex flex-col lg:flex-row items-center justify-between gap-6">
 
-        <div className="flex">
+        <div className="md:flex">
           <img src="/images/iels/listening.png" alt="" className="w-40 h-40 scale-120" />
           <div>
             <h3 className="text-2xl font-semibold text-gray-800">

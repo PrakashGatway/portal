@@ -1,970 +1,1091 @@
-'use client';
+"use client";
 
-import { useState, useEffect, useRef } from 'react';
-import { motion } from 'framer-motion';
+import { useState, useEffect, useRef } from "react";
+import { motion } from "framer-motion";
 import {
-    Trophy, TrendingUp, ChevronRight, Target,
-    FileText, PlayCircle, MoreHorizontal, ArrowUpRight,
-    AlertCircle, ArrowUp, ArrowDown, Link as LinkIcon,
-    Circle,
-    ClipboardList,
-    FileQuestion,
-    Box,
-    CalendarDays,
-    Clock3,
-    BookOpen,
-    Bookmark,
-    Play,
-    CircleHelp,
-    Radio,
-    Calendar,
-    Filter,
-    Search,
-    Star,
-    Bell,
-    ChevronLeft,
-    ArrowRight,
-    ArrowLeft,
-    Gift,
-    ShieldCheck,
-    Tag
-} from 'lucide-react';
+  Trophy,
+  TrendingUp,
+  ChevronRight,
+  Target,
+  FileText,
+  PlayCircle,
+  MoreHorizontal,
+  ArrowUpRight,
+  AlertCircle,
+  ArrowUp,
+  ArrowDown,
+  Link as LinkIcon,
+  Circle,
+  ClipboardList,
+  FileQuestion,
+  Box,
+  CalendarDays,
+  Clock3,
+  BookOpen,
+  Bookmark,
+  Play,
+  CircleHelp,
+  Radio,
+  Calendar,
+  Filter,
+  Search,
+  Star,
+  Bell,
+  ChevronLeft,
+  ArrowRight,
+  ArrowLeft,
+  Gift,
+  ShieldCheck,
+  Tag,
+} from "lucide-react";
 import {
-    XAxis, Tooltip,
-    ResponsiveContainer, AreaChart, Area, BarChart, Bar, Cell,
-    PieChart as RechartsPieChart, Pie, Legend
-} from 'recharts';
-import api, { ImageBaseUrl } from '../../axiosInstance';
-import { useAuth } from '../../context/UserContext';
+  XAxis,
+  Tooltip,
+  ResponsiveContainer,
+  AreaChart,
+  Area,
+  BarChart,
+  Bar,
+  Cell,
+  PieChart as RechartsPieChart,
+  Pie,
+  Legend,
+} from "recharts";
+import api, { ImageBaseUrl } from "../../axiosInstance";
+import { useAuth } from "../../context/UserContext";
 
 const quickAccess = [
-    {
-        title: "Mock TEST",
-        count: "12 Tests",
-        img: "/images/dashboard-icon-1.webp",
-    },
-    {
-        title: "Practice Test",
-        count: "156 Questions",
-        img: "/images/dashboard-icon-2.webp",
-    },
-    {
-        title: "Quiz",
-        count: "24 Quiz",
-        img: "/images/dashboard-icon-3.webp",
-    },
-    {
-        title: "Study Material",
-        count: "58 PDFs",
-        img: "/images/dashboard-icon-4.webp",
-    },
-]
+  {
+    title: "Mock TEST",
+    count: "12 Tests",
+    img: "/images/dashboard-icon-1.webp",
+  },
+  {
+    title: "Practice Test",
+    count: "156 Questions",
+    img: "/images/dashboard-icon-2.webp",
+  },
+  {
+    title: "Quiz",
+    count: "24 Quiz",
+    img: "/images/dashboard-icon-3.webp",
+  },
+  {
+    title: "Study Material",
+    count: "58 PDFs",
+    img: "/images/dashboard-icon-4.webp",
+  },
+];
 
 // ==================== MOCK API SERVICE ====================
 const mockApi = {
-    getDashboardData: () => {
-        return new Promise((resolve) => {
-            setTimeout(() => {
-                resolve({
-                    summary: {
-                        testsAttempted: 24,
-                        avgScore: 85,
-                        dayStreak: 112,
-                        allIndiaRank: 156,
-                        targetScore: 330,
-                        currentScore: 320,
-                        improvement: 12,
-                        accuracyTrend: 8,
-                        timeEfficiency: 92
-                    },
-                    recentTests: [
-                        {
-                            id: 1,
-                            name: 'GRE General Test 01',
-                            type: 'Full Length Test',
-                            score: '320/340',
-                            percentile: 85,
-                            quant: 165,
-                            verbal: 155,
-                            date: '2025-05-15',
-                            accuracy: 82,
-                            timeSpent: '3h 45m',
-                            status: 'completed',
-                            improvement: '+5'
-                        },
-                        {
-                            id: 2,
-                            name: 'GRE Quantitative Sectional',
-                            type: 'Sectional Test',
-                            score: '38/51',
-                            percentile: 78,
-                            quant: 38,
-                            verbal: null,
-                            date: '2025-05-12',
-                            accuracy: 76,
-                            timeSpent: '35m',
-                            status: 'completed',
-                            improvement: '+3'
-                        },
-                        {
-                            id: 3,
-                            name: 'GRE Verbal Sectional',
-                            type: 'Sectional Test',
-                            score: '41/51',
-                            percentile: 88,
-                            quant: null,
-                            verbal: 41,
-                            date: '2025-05-10',
-                            accuracy: 84,
-                            timeSpent: '38m',
-                            status: 'completed',
-                            improvement: '+7'
-                        }
-                    ],
-                    upcomingTests: [
-                        {
-                            id: 1,
-                            name: 'GRE Full Test 03',
-                            type: 'Full Length Test',
-                            date: '2025-05-20',
-                            time: '09:00 AM',
-                            duration: '3h 45m',
-                            sections: 6
-                        },
-                        {
-                            id: 2,
-                            name: 'GRE Quant Sectional',
-                            type: 'Sectional Test',
-                            date: '2025-05-22',
-                            time: '11:00 AM',
-                            duration: '35m',
-                            sections: 2
-                        }
-                    ],
-                    performanceData: [
-                        { date: 'May 12', score: 65, quant: 162, verbal: 153, accuracy: 72 },
-                        { date: 'May 13', score: 72, quant: 164, verbal: 155, accuracy: 75 },
-                        { date: 'May 14', score: 68, quant: 163, verbal: 154, accuracy: 73 },
-                        { date: 'May 15', score: 80, quant: 165, verbal: 158, accuracy: 79 },
-                        { date: 'May 16', score: 75, quant: 164, verbal: 156, accuracy: 77 },
-                        { date: 'May 17', score: 85, quant: 166, verbal: 159, accuracy: 82 },
-                        { date: 'May 18', score: 90, quant: 168, verbal: 162, accuracy: 86 }
-                    ],
-                    weakAreas: [
-                        { topic: 'Text Completion', accuracy: 62, questions: 45, priority: 'High' },
-                        { topic: 'Geometry', accuracy: 68, questions: 38, priority: 'High' },
-                        { topic: 'Reading Comprehension', accuracy: 71, questions: 52, priority: 'Medium' },
-                        { topic: 'Algebra', accuracy: 75, questions: 41, priority: 'Medium' }
-                    ],
-                    strengthsData: [
-                        { name: 'Quantitative', value: 85, color: '#8b5cf6' },
-                        { name: 'Verbal', value: 78, color: '#f97316' },
-                        { name: 'Analytical', value: 82, color: '#10b981' }
-                    ],
-                    weeklyActivity: [
-                        { day: 'Mon', hours: 2.5, tests: 2 },
-                        { day: 'Tue', hours: 3, tests: 1 },
-                        { day: 'Wed', hours: 1.5, tests: 2 },
-                        { day: 'Thu', hours: 4, tests: 3 },
-                        { day: 'Fri', hours: 2, tests: 1 },
-                        { day: 'Sat', hours: 5, tests: 2 },
-                        { day: 'Sun', hours: 3.5, tests: 2 }
-                    ],
-                    topicDistribution: [
-                        { name: 'Quantitative', value: 45, color: '#8b5cf6' },
-                        { name: 'Verbal', value: 35, color: '#f97316' },
-                        { name: 'AWA', value: 20, color: '#10b981' }
-                    ]
-                });
-            }, 1200);
+  getDashboardData: () => {
+    return new Promise((resolve) => {
+      setTimeout(() => {
+        resolve({
+          summary: {
+            testsAttempted: 24,
+            avgScore: 85,
+            dayStreak: 112,
+            allIndiaRank: 156,
+            targetScore: 330,
+            currentScore: 320,
+            improvement: 12,
+            accuracyTrend: 8,
+            timeEfficiency: 92,
+          },
+          recentTests: [
+            {
+              id: 1,
+              name: "GRE General Test 01",
+              type: "Full Length Test",
+              score: "320/340",
+              percentile: 85,
+              quant: 165,
+              verbal: 155,
+              date: "2025-05-15",
+              accuracy: 82,
+              timeSpent: "3h 45m",
+              status: "completed",
+              improvement: "+5",
+            },
+            {
+              id: 2,
+              name: "GRE Quantitative Sectional",
+              type: "Sectional Test",
+              score: "38/51",
+              percentile: 78,
+              quant: 38,
+              verbal: null,
+              date: "2025-05-12",
+              accuracy: 76,
+              timeSpent: "35m",
+              status: "completed",
+              improvement: "+3",
+            },
+            {
+              id: 3,
+              name: "GRE Verbal Sectional",
+              type: "Sectional Test",
+              score: "41/51",
+              percentile: 88,
+              quant: null,
+              verbal: 41,
+              date: "2025-05-10",
+              accuracy: 84,
+              timeSpent: "38m",
+              status: "completed",
+              improvement: "+7",
+            },
+          ],
+          upcomingTests: [
+            {
+              id: 1,
+              name: "GRE Full Test 03",
+              type: "Full Length Test",
+              date: "2025-05-20",
+              time: "09:00 AM",
+              duration: "3h 45m",
+              sections: 6,
+            },
+            {
+              id: 2,
+              name: "GRE Quant Sectional",
+              type: "Sectional Test",
+              date: "2025-05-22",
+              time: "11:00 AM",
+              duration: "35m",
+              sections: 2,
+            },
+          ],
+          performanceData: [
+            {
+              date: "May 12",
+              score: 65,
+              quant: 162,
+              verbal: 153,
+              accuracy: 72,
+            },
+            {
+              date: "May 13",
+              score: 72,
+              quant: 164,
+              verbal: 155,
+              accuracy: 75,
+            },
+            {
+              date: "May 14",
+              score: 68,
+              quant: 163,
+              verbal: 154,
+              accuracy: 73,
+            },
+            {
+              date: "May 15",
+              score: 80,
+              quant: 165,
+              verbal: 158,
+              accuracy: 79,
+            },
+            {
+              date: "May 16",
+              score: 75,
+              quant: 164,
+              verbal: 156,
+              accuracy: 77,
+            },
+            {
+              date: "May 17",
+              score: 85,
+              quant: 166,
+              verbal: 159,
+              accuracy: 82,
+            },
+            {
+              date: "May 18",
+              score: 90,
+              quant: 168,
+              verbal: 162,
+              accuracy: 86,
+            },
+          ],
+          weakAreas: [
+            {
+              topic: "Text Completion",
+              accuracy: 62,
+              questions: 45,
+              priority: "High",
+            },
+            {
+              topic: "Geometry",
+              accuracy: 68,
+              questions: 38,
+              priority: "High",
+            },
+            {
+              topic: "Reading Comprehension",
+              accuracy: 71,
+              questions: 52,
+              priority: "Medium",
+            },
+            {
+              topic: "Algebra",
+              accuracy: 75,
+              questions: 41,
+              priority: "Medium",
+            },
+          ],
+          strengthsData: [
+            { name: "Quantitative", value: 85, color: "#8b5cf6" },
+            { name: "Verbal", value: 78, color: "#f97316" },
+            { name: "Analytical", value: 82, color: "#10b981" },
+          ],
+          weeklyActivity: [
+            { day: "Mon", hours: 2.5, tests: 2 },
+            { day: "Tue", hours: 3, tests: 1 },
+            { day: "Wed", hours: 1.5, tests: 2 },
+            { day: "Thu", hours: 4, tests: 3 },
+            { day: "Fri", hours: 2, tests: 1 },
+            { day: "Sat", hours: 5, tests: 2 },
+            { day: "Sun", hours: 3.5, tests: 2 },
+          ],
+          topicDistribution: [
+            { name: "Quantitative", value: 45, color: "#8b5cf6" },
+            { name: "Verbal", value: 35, color: "#f97316" },
+            { name: "AWA", value: 20, color: "#10b981" },
+          ],
         });
-    }
+      }, 1200);
+    });
+  },
 };
 
 // ==================== SKELETON ====================
-export const SkeletonCard = ({ className = '' }) => (
-    <div className={`animate-pulse bg-white dark:bg-gray-800 rounded-2xl ${className}`} />
+export const SkeletonCard = ({ className = "" }) => (
+  <div
+    className={`animate-pulse bg-white dark:bg-gray-800 rounded-2xl ${className}`}
+  />
 );
 
 const DashboardSkeleton = () => (
-    <div className="min-h-screen">
-        <div className="p-8 space-y-6">
-            <div className="flex justify-between"><SkeletonCard className="w-40 h-10" /><SkeletonCard className="w-60 h-10" /></div>
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                <SkeletonCard className="h-64 lg:col-span-1" />
-                <SkeletonCard className="h-64 lg:col-span-1" />
-                <SkeletonCard className="h-64 lg:col-span-1" />
-            </div>
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                <SkeletonCard className="h-40 lg:col-span-2" />
-                <SkeletonCard className="h-40" />
-            </div>
-        </div>
+  <div className="min-h-screen">
+    <div className="p-8 space-y-6">
+      <div className="flex justify-between">
+        <SkeletonCard className="w-40 h-10" />
+        <SkeletonCard className="w-60 h-10" />
+      </div>
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <SkeletonCard className="h-64 lg:col-span-1" />
+        <SkeletonCard className="h-64 lg:col-span-1" />
+        <SkeletonCard className="h-64 lg:col-span-1" />
+      </div>
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <SkeletonCard className="h-40 lg:col-span-2" />
+        <SkeletonCard className="h-40" />
+      </div>
     </div>
+  </div>
 );
 
 const GradientStatsCard = ({ title, value, subValues, delay }) => (
-    <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ delay }}
-        className="relative overflow-hidden rounded-3xl p-6 text-white shadow-xl bg-gradient-to-br from-[#ff7e5f] to-[#feb47b]"
-    >
-        <div className="absolute top-4 right-4">
-            <MoreHorizontal className="w-5 h-5 opacity-50" />
-        </div>
-        <p className="text-sm font-medium opacity-80 mb-2">{title}</p>
-        <h2 className="text-4xl font-bold mb-4 tracking-tight">{value}</h2>
+  <motion.div
+    initial={{ opacity: 0, y: 20 }}
+    animate={{ opacity: 1, y: 0 }}
+    transition={{ delay }}
+    className="relative overflow-hidden rounded-3xl p-6 text-white shadow-xl bg-gradient-to-br from-[#ff7e5f] to-[#feb47b]"
+  >
+    <div className="absolute top-4 right-4">
+      <MoreHorizontal className="w-5 h-5 opacity-50" />
+    </div>
+    <p className="text-sm font-medium opacity-80 mb-2">{title}</p>
+    <h2 className="text-4xl font-bold mb-4 tracking-tight">{value}</h2>
 
-        {/* Decorative Graph Lines */}
-        <div className="h-16 w-full mb-6 relative">
-            <svg className="w-full h-full" viewBox="0 0 100 40" preserveAspectRatio="none">
-                <path d="M0,30 Q20,20 40,25 T80,15 T100,20" fill="none" stroke="rgba(255,255,255,0.4)" strokeWidth="1" />
-                <path d="M0,35 Q30,10 60,30 T100,10" fill="none" stroke="rgba(255,255,255,0.6)" strokeWidth="1.5" />
-                <path d="M0,20 Q40,35 80,10 T100,30" fill="none" stroke="rgba(255,255,255,0.3)" strokeWidth="1" />
-            </svg>
-        </div>
+    {/* Decorative Graph Lines */}
+    <div className="h-16 w-full mb-6 relative">
+      <svg
+        className="w-full h-full"
+        viewBox="0 0 100 40"
+        preserveAspectRatio="none"
+      >
+        <path
+          d="M0,30 Q20,20 40,25 T80,15 T100,20"
+          fill="none"
+          stroke="rgba(255,255,255,0.4)"
+          strokeWidth="1"
+        />
+        <path
+          d="M0,35 Q30,10 60,30 T100,10"
+          fill="none"
+          stroke="rgba(255,255,255,0.6)"
+          strokeWidth="1.5"
+        />
+        <path
+          d="M0,20 Q40,35 80,10 T100,30"
+          fill="none"
+          stroke="rgba(255,255,255,0.3)"
+          strokeWidth="1"
+        />
+      </svg>
+    </div>
 
-        <div className="grid grid-cols-3 gap-4 text-center border-t border-white/20 pt-4">
-            {subValues.map((sub, idx) => (
-                <div key={idx}>
-                    <p className="text-[10px] opacity-70 mb-1">{sub.label}</p>
-                    <p className="text-lg font-bold">{sub.value}</p>
-                </div>
-            ))}
+    <div className="grid grid-cols-3 gap-4 text-center border-t border-white/20 pt-4">
+      {subValues.map((sub, idx) => (
+        <div key={idx}>
+          <p className="text-[10px] opacity-70 mb-1">{sub.label}</p>
+          <p className="text-lg font-bold">{sub.value}</p>
         </div>
-    </motion.div>
+      ))}
+    </div>
+  </motion.div>
 );
 
 // Circular Donut Card (Exact Pink/Yellow colors)
 const CircularStatCard = ({ title, value, data, delay }) => (
-    <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ delay }}
-        className="bg-white rounded-3xl p-6 shadow-sm border border-gray-100 relative"
-    >
-        <div className="flex justify-between items-start mb-4">
+  <motion.div
+    initial={{ opacity: 0, y: 20 }}
+    animate={{ opacity: 1, y: 0 }}
+    transition={{ delay }}
+    className="bg-white rounded-3xl p-6 shadow-sm border border-gray-100 relative"
+  >
+    <div className="flex justify-between items-start mb-4">
+      <div>
+        <p className="text-sm text-gray-500 font-medium">{title}</p>
+        <h2 className="text-3xl font-bold text-gray-900 mt-1">{value}</h2>
+      </div>
+      <MoreHorizontal className="w-5 h-5 text-gray-400" />
+    </div>
+
+    <div className="flex items-center justify-between mt-4">
+      <div className="relative w-28 h-28">
+        <ResponsiveContainer width="100%" height="100%">
+          <RechartsPieChart>
+            <Pie
+              data={data}
+              cx="50%"
+              cy="50%"
+              innerRadius={35}
+              outerRadius={50}
+              stroke="none"
+              dataKey="value"
+            >
+              {data.map((entry, index) => (
+                <Cell key={`cell-${index}`} fill={entry.color} />
+              ))}
+            </Pie>
+          </RechartsPieChart>
+        </ResponsiveContainer>
+        <div className="absolute inset-0 flex items-center justify-center">
+          <div className="w-10 h-10 bg-orange-100 rounded-full flex items-center justify-center text-orange-500 text-xl">
+            🎯
+          </div>
+        </div>
+      </div>
+
+      <div className="flex flex-col gap-3">
+        {data.map((item, idx) => (
+          <div key={idx} className="flex items-center gap-3">
+            <div className={`w-2 h-2 rounded-full ${item.color}`} />
             <div>
-                <p className="text-sm text-gray-500 font-medium">{title}</p>
-                <h2 className="text-3xl font-bold text-gray-900 mt-1">{value}</h2>
+              <p className="text-xs text-gray-500">{item.name}</p>
+              <p className="text-sm font-bold text-gray-800">{item.value}%</p>
             </div>
-            <MoreHorizontal className="w-5 h-5 text-gray-400" />
-        </div>
-
-        <div className="flex items-center justify-between mt-4">
-            <div className="relative w-28 h-28">
-                <ResponsiveContainer width="100%" height="100%">
-                    <RechartsPieChart>
-                        <Pie
-                            data={data}
-                            cx="50%"
-                            cy="50%"
-                            innerRadius={35}
-                            outerRadius={50}
-                            stroke="none"
-                            dataKey="value"
-                        >
-                            {data.map((entry, index) => (
-                                <Cell key={`cell-${index}`} fill={entry.color} />
-                            ))}
-                        </Pie>
-                    </RechartsPieChart>
-                </ResponsiveContainer>
-                <div className="absolute inset-0 flex items-center justify-center">
-                    <div className="w-10 h-10 bg-orange-100 rounded-full flex items-center justify-center text-orange-500 text-xl">🎯</div>
-                </div>
-            </div>
-
-            <div className="flex flex-col gap-3">
-                {data.map((item, idx) => (
-                    <div key={idx} className="flex items-center gap-3">
-                        <div className={`w-2 h-2 rounded-full ${item.color}`} />
-                        <div>
-                            <p className="text-xs text-gray-500">{item.name}</p>
-                            <p className="text-sm font-bold text-gray-800">{item.value}%</p>
-                        </div>
-                    </div>
-                ))}
-            </div>
-        </div>
-    </motion.div>
+          </div>
+        ))}
+      </div>
+    </div>
+  </motion.div>
 );
-
 
 // Post Stats Chart (Pink highlighted bar chart)
 const ActivityChartCard = ({ data }) => (
-    <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 0.3 }}
-        className="bg-white rounded-3xl p-6 shadow-sm border border-gray-100 col-span-1 lg:col-span-2"
-    >
-        <div className="flex justify-between items-center mb-6">
-            <p className="text-lg font-bold text-gray-900">Weekly Progress</p>
-            <MoreHorizontal className="w-5 h-5 text-gray-400" />
-        </div>
+  <motion.div
+    initial={{ opacity: 0, y: 20 }}
+    animate={{ opacity: 1, y: 0 }}
+    transition={{ delay: 0.3 }}
+    className="bg-white rounded-3xl p-6 shadow-sm border border-gray-100 col-span-1 lg:col-span-2"
+  >
+    <div className="flex justify-between items-center mb-6">
+      <p className="text-lg font-bold text-gray-900">Weekly Progress</p>
+      <MoreHorizontal className="w-5 h-5 text-gray-400" />
+    </div>
 
-        <div className="h-40 w-full">
-            <ResponsiveContainer width="100%" height="100%">
-                <BarChart data={data} margin={{ top: 0, right: 0, left: 0, bottom: 0 }}>
-                    <XAxis dataKey="day" axisLine={false} tickLine={false} tick={{ fill: '#9ca3af', fontSize: 12 }} />
-                    <Tooltip />
-                    <Bar dataKey="hours" radius={[10, 10, 0, 0]} barSize={12}>
-                        {data.map((entry, index) => (
-                            <Cell key={`cell-${index}`} fill={index === 4 ? '#f43f5e' : '#e5e7eb'} />
-                        ))}
-                    </Bar>
-                </BarChart>
-            </ResponsiveContainer>
-            {/* Overlay Line (Simulated) */}
-            <div className="relative -mt-32 h-32 w-full pointer-events-none">
-                <svg className="w-full h-full" viewBox="0 0 100 50" preserveAspectRatio="none">
-                    <path d="M0,30 Q20,20 40,25 T80,15 T100,20" fill="none" stroke="#f43f5e" strokeWidth="2" />
-                </svg>
-            </div>
-        </div>
-    </motion.div>
+    <div className="h-40 w-full">
+      <ResponsiveContainer width="100%" height="100%">
+        <BarChart data={data} margin={{ top: 0, right: 0, left: 0, bottom: 0 }}>
+          <XAxis
+            dataKey="day"
+            axisLine={false}
+            tickLine={false}
+            tick={{ fill: "#9ca3af", fontSize: 12 }}
+          />
+          <Tooltip />
+          <Bar dataKey="hours" radius={[10, 10, 0, 0]} barSize={12}>
+            {data.map((entry, index) => (
+              <Cell
+                key={`cell-${index}`}
+                fill={index === 4 ? "#f43f5e" : "#e5e7eb"}
+              />
+            ))}
+          </Bar>
+        </BarChart>
+      </ResponsiveContainer>
+      {/* Overlay Line (Simulated) */}
+      <div className="relative -mt-32 h-32 w-full pointer-events-none">
+        <svg
+          className="w-full h-full"
+          viewBox="0 0 100 50"
+          preserveAspectRatio="none"
+        >
+          <path
+            d="M0,30 Q20,20 40,25 T80,15 T100,20"
+            fill="none"
+            stroke="#f43f5e"
+            strokeWidth="2"
+          />
+        </svg>
+      </div>
+    </div>
+  </motion.div>
 );
 
 // Post Activity List (Table style)
-const TestActivityList = ({ tests }) =>
-(
-    <>
-
-    </>
-)
+const TestActivityList = ({ tests }) => <></>;
 
 // Right Bottom Card (Blue background from image)
 const BottomRightCard = () => (
-    <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 0.5 }}
-        className="bg-white rounded-3xl p-6 shadow-sm border border-gray-100 flex flex-col justify-between"
-    >
-        <div className="flex items-start justify-between mb-2">
-            <div className="w-12 h-12 rounded-2xl bg-blue-100 flex items-center justify-center">
-                <FileText className="w-5 h-5 text-gray-800" />
-            </div>
-            <div>
-                <p className="text-2xl font-bold text-gray-900">874</p>
-            </div>
-        </div>
-        <div>
-            <p className="text-sm font-medium text-gray-900">Tests Completed</p>
-            <p className="text-xs text-gray-400">Last 30 Days</p>
-        </div>
-    </motion.div>
+  <motion.div
+    initial={{ opacity: 0, y: 20 }}
+    animate={{ opacity: 1, y: 0 }}
+    transition={{ delay: 0.5 }}
+    className="bg-white rounded-3xl p-6 shadow-sm border border-gray-100 flex flex-col justify-between"
+  >
+    <div className="flex items-start justify-between mb-2">
+      <div className="w-12 h-12 rounded-2xl bg-blue-100 flex items-center justify-center">
+        <FileText className="w-5 h-5 text-gray-800" />
+      </div>
+      <div>
+        <p className="text-2xl font-bold text-gray-900">874</p>
+      </div>
+    </div>
+    <div>
+      <p className="text-sm font-medium text-gray-900">Tests Completed</p>
+      <p className="text-xs text-gray-400">Last 30 Days</p>
+    </div>
+  </motion.div>
 );
 
 const QuickActions = () => {
-    const items = [
-        { icon: ClipboardList, label: 'Full Test Series', desc: 'Attempt full length tests', color: 'bg-blue-50', iconColor: 'text-blue-600' },
-        { icon: FileQuestion, label: 'Sectional Tests', desc: 'Practice by sections', color: 'bg-purple-50', iconColor: 'text-purple-600' },
-        { icon: Target, label: 'Topic Tests', desc: 'Practice specific topics', color: 'bg-green-50', iconColor: 'text-green-600' },
-        { icon: Box, label: 'Previous Papers', desc: 'Solve past papers', color: 'bg-orange-50', iconColor: 'text-orange-600' }
-    ];
+  const items = [
+    {
+      icon: ClipboardList,
+      label: "Full Test Series",
+      desc: "Attempt full length tests",
+      color: "bg-blue-50",
+      iconColor: "text-blue-600",
+    },
+    {
+      icon: FileQuestion,
+      label: "Sectional Tests",
+      desc: "Practice by sections",
+      color: "bg-purple-50",
+      iconColor: "text-purple-600",
+    },
+    {
+      icon: Target,
+      label: "Topic Tests",
+      desc: "Practice specific topics",
+      color: "bg-green-50",
+      iconColor: "text-green-600",
+    },
+    {
+      icon: Box,
+      label: "Previous Papers",
+      desc: "Solve past papers",
+      color: "bg-orange-50",
+      iconColor: "text-orange-600",
+    },
+  ];
 
-    return (
-        <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.2 }}
-            className="grid grid-cols-1 gap-2"
+  return (
+    <motion.div
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ delay: 0.2 }}
+      className="grid grid-cols-1 gap-2"
+    >
+      {items.map((item, idx) => (
+        <div
+          key={idx}
+          className="flex items-center justify-between bg-white rounded-3xl p-6 py-4 shadow-sm border border-gray-100 relative cursor-pointer hover:shadow-lg transition-shadow"
         >
-            {items.map((item, idx) => (
-                <div key={idx} className="flex items-center justify-between bg-white rounded-3xl p-6 py-4 shadow-sm border border-gray-100 relative cursor-pointer hover:shadow-lg transition-shadow">
-                    <div>
-                        <h4 className="font-semibold text-gray-900 dark:text-white text-lg">{item.label}</h4>
-                        {/* <p className="text-xs text-gray-500 dark:text-gray-400">{item.desc}</p> */}
-                    </div>
-                    <ChevronRight className="w-4 h-4 text-gray-400 ml-auto" />
-                </div>
-            ))}
-        </motion.div>
-    );
+          <div>
+            <h4 className="font-semibold text-gray-900 dark:text-white text-lg">
+              {item.label}
+            </h4>
+            {/* <p className="text-xs text-gray-500 dark:text-gray-400">{item.desc}</p> */}
+          </div>
+          <ChevronRight className="w-4 h-4 text-gray-400 ml-auto" />
+        </div>
+      ))}
+    </motion.div>
+  );
 };
 
 const HeaderBanner = ({ data, user, filterBanner }) => {
-    const [currentSlide, setCurrentSlide] = useState(0);
-    const [loaded, setLoaded] = useState(false);
-    const autoplayTimerRef = useRef(null);
+  const [currentSlide, setCurrentSlide] = useState(0);
+  const [loaded, setLoaded] = useState(false);
+  const autoplayTimerRef = useRef(null);
 
-    // Initialize Slider
-    const [sliderRef, instanceRef] = useKeenSlider({
-        initial: 0,
-        loop: true,
-        slides: {
-            perView: 1,
-            spacing: 0,
-        },
-        slideChanged(slider) {
-            setCurrentSlide(slider.track.details.rel);
-        },
-        created() {
-            setLoaded(true);
-            startAutoplay();
-        },
-        animationEnded() {
-            startAutoplay();
-        },
-        dragStarted() {
-            stopAutoplay();
-        },
-    });
+  // Initialize Slider
+  const [sliderRef, instanceRef] = useKeenSlider({
+    initial: 0,
+    loop: true,
+    slides: {
+      perView: 1,
+      spacing: 0,
+    },
+    slideChanged(slider) {
+      setCurrentSlide(slider.track.details.rel);
+    },
+    created() {
+      setLoaded(true);
+      startAutoplay();
+    },
+    animationEnded() {
+      startAutoplay();
+    },
+    dragStarted() {
+      stopAutoplay();
+    },
+  });
 
-    // Autoplay Logic
-    const startAutoplay = () => {
-        stopAutoplay();
-        // Only start if we have more than 1 banner
-        if (instanceRef.current && filterBanner?.Banners?.length > 1) {
-            autoplayTimerRef.current = setInterval(() => {
-                instanceRef.current?.next();
-            }, 5000);
-        }
-    };
-
-    const stopAutoplay = () => {
-        if (autoplayTimerRef.current) {
-            clearInterval(autoplayTimerRef.current);
-            autoplayTimerRef.current = null;
-        }
-    };
-
-    // Cleanup on unmount
-    useEffect(() => {
-        return () => {
-            stopAutoplay();
-        };
-    }, []);
-
-    // Force update when filterBanner data changes
-    useEffect(() => {
-        if (instanceRef.current && filterBanner?.Banners?.length > 0) {
-            instanceRef.current.update();
-            startAutoplay();
-        }
-    }, [filterBanner]);
-
-    // Navigation Handlers
-    const goToPrev = () => {
-        instanceRef.current?.prev();
-        startAutoplay();
-    };
-
-    const goToNext = () => {
+  // Autoplay Logic
+  const startAutoplay = () => {
+    stopAutoplay();
+    // Only start if we have more than 1 banner
+    if (instanceRef.current && filterBanner?.Banners?.length > 1) {
+      autoplayTimerRef.current = setInterval(() => {
         instanceRef.current?.next();
-        startAutoplay();
-    };
-
-    const goToSlide = (index) => {
-        instanceRef.current?.moveToIdx(index);
-        startAutoplay();
-    };
-
-    // --- RENDER LOGIC ---
-
-    // Case 1: No Filter Banner Data -> Show Default Welcome Banner
-    if (!filterBanner || !filterBanner.Banners || filterBanner.Banners.length === 0) {
-        return (
-            <section className="w-full">
-                <div className="relative rounded-3xl bg-[#FF764B] min-h-[220px] md:min-h-[280px] lg:min-h-[250px] px-6 sm:px-10 lg:px-8 flex flex-col md:flex-row items-center justify-between overflow-hidden">
-                    {/* Left Content */}
-                    <div className="relative z-10 w-full md:w-full text-center md:text-left py-8 md:py-0">
-                        <h3 className="text-white text-2xl sm:text-3xl md:text-4xl font-medium">
-                            Hi {user?.name || 'Student'}!
-                        </h3>
-                        <h1 className="mt-2 text-white font-black uppercase leading-none text-[42px] sm:text-[60px] md:text-[72px] lg:text-[86px]">
-                            {user?.category?.name || 'EXAM'} PREP
-                        </h1>
-                        <p className="mt-4 text-white text-base sm:text-lg md:text-xl font-medium">
-                            Expert Guidance. Smart Practice. Top Results.
-                        </p>
-                    </div>
-
-                    {/* Right Illustration */}
-                    <div className="relative lg:block hidden w-full md:w-2/5 flex justify-center items-end mt-6 md:-mt-16">
-                        <img
-                            src={"/images/banner-dashboard.webp"}
-                            alt="Dashboard Illustration"
-                            className="w-[170px] sm:w-[220px] md:w-[170px]"
-                        />
-                    </div>
-                </div>
-            </section>
-        );
+      }, 5000);
     }
+  };
 
-    // Case 2: Filter Banner Exists -> Show Slider
+  const stopAutoplay = () => {
+    if (autoplayTimerRef.current) {
+      clearInterval(autoplayTimerRef.current);
+      autoplayTimerRef.current = null;
+    }
+  };
+
+  // Cleanup on unmount
+  useEffect(() => {
+    return () => {
+      stopAutoplay();
+    };
+  }, []);
+
+  // Force update when filterBanner data changes
+  useEffect(() => {
+    if (instanceRef.current && filterBanner?.Banners?.length > 0) {
+      instanceRef.current.update();
+      startAutoplay();
+    }
+  }, [filterBanner]);
+
+  // Navigation Handlers
+  const goToPrev = () => {
+    instanceRef.current?.prev();
+    startAutoplay();
+  };
+
+  const goToNext = () => {
+    instanceRef.current?.next();
+    startAutoplay();
+  };
+
+  const goToSlide = (index) => {
+    instanceRef.current?.moveToIdx(index);
+    startAutoplay();
+  };
+
+  // --- RENDER LOGIC ---
+
+  // Case 1: No Filter Banner Data -> Show Default Welcome Banner
+  if (
+    !filterBanner ||
+    !filterBanner.Banners ||
+    filterBanner.Banners.length === 0
+  ) {
     return (
-        <section className="w-full overflow-hidden">
-            <div
-                className="relative w-full h-[220px] md:h-[280px] lg:h-[250px] rounded-3xl bg-[#FF764B]"
-                onMouseEnter={stopAutoplay}
-                onMouseLeave={startAutoplay}
-            >
-                {/* Slider Container */}
-                <div ref={sliderRef} className="keen-slider w-full h-full rounded-3xl">
-                    {filterBanner.Banners.map((item, index) => {
-                        // Safe URL construction
-                        // Adjust this path logic if your backend returns full URLs or just filenames
-                        const fileName = item.Banner?.file;
-                        const imageUrl = fileName
-                            ? (fileName.startsWith('http') ? fileName : `${ImageBaseUrl}/${fileName}`)
-                            : '';
+      <section className="w-full">
+        <div className="relative rounded-3xl bg-[#FF764B] min-h-[220px] md:min-h-[280px] lg:min-h-[250px] px-6 sm:px-10 lg:px-8 flex flex-col md:flex-row items-center justify-between overflow-hidden">
+          {/* Left Content */}
+          <div className="relative z-10 w-full md:w-full text-center md:text-left py-8 md:py-0">
+            <h3 className="text-white text-2xl sm:text-3xl md:text-4xl font-medium">
+              Hi {user?.name || "Student"}!
+            </h3>
+            <h1 className="mt-2 text-white font-black uppercase leading-none text-[42px] sm:text-[60px] md:text-[72px] lg:text-[86px]">
+              {user?.category?.name || "EXAM"} PREP
+            </h1>
+            <p className="mt-4 text-white text-base sm:text-lg md:text-xl font-medium">
+              Expert Guidance. Smart Practice. Top Results.
+            </p>
+          </div>
 
-                        return (
-                            <div
-                                key={item._id || index}
-                                className="keen-slider__slide w-full h-full overflow-hidden relative rounded-3xl"
-                            >
-                                {imageUrl ? (
-                                    <img
-                                        src={imageUrl}
-                                        alt={item.Banner?.alt || `Banner ${index + 1}`}
-                                        className="w-full h-full object-cover rounded-3xl"
-                                        onError={(e) => {
-                                            // Fallback if image fails to load
-                                            e.target.style.display = 'none';
-                                            e.target.parentElement.classList.add('flex', 'items-center', 'justify-center');
-                                            e.target.parentElement.innerHTML = `<span class="text-white text-xl font-bold">Banner Image Missing</span>`;
-                                        }}
-                                    />
-                                ) : (
-                                    // Fallback if no URL in data
-                                    <div className="w-full h-full flex items-center justify-center bg-orange-400 text-white font-bold">
-                                        No Image Available
-                                    </div>
-                                )}
-                            </div>
-                        );
-                    })}
-                </div>
-
-                {/* Navigation Controls (Only show if > 1 banner) */}
-                {filterBanner.Banners.length > 1 && (
-                    <>
-                        {/* Left Arrow */}
-                        <button
-                            onClick={goToPrev}
-                            className="absolute left-4 top-1/2 -translate-y-1/2 w-10 h-10 rounded-full bg-white/20 backdrop-blur-sm flex items-center justify-center text-white hover:bg-white/30 transition-all duration-300 z-10"
-                        >
-                            <ChevronLeft size={20} />
-                        </button>
-
-                        {/* Right Arrow */}
-                        <button
-                            onClick={goToNext}
-                            className="absolute right-4 top-1/2 -translate-y-1/2 w-10 h-10 rounded-full bg-white/20 backdrop-blur-sm flex items-center justify-center text-white hover:bg-white/30 transition-all duration-300 z-10"
-                        >
-                            <ChevronRight size={20} />
-                        </button>
-
-                        {/* Dots */}
-                        <div className="absolute bottom-4 left-1/2 -translate-x-1/2 flex gap-2 z-10">
-                            {filterBanner.Banners.map((_, index) => (
-                                <button
-                                    key={index}
-                                    onClick={() => goToSlide(index)}
-                                    className={`h-2 rounded-full transition-all duration-300 ${currentSlide === index
-                                            ? "w-6 bg-white"
-                                            : "w-2 bg-white/50"
-                                        }`}
-                                />
-                            ))}
-                        </div>
-                    </>
-                )}
-            </div>
-        </section>
+          {/* Right Illustration */}
+          <div className="relative lg:block hidden w-full md:w-2/5 flex justify-center items-end mt-6 md:-mt-16">
+            <img
+              src={"/images/banner-dashboard.webp"}
+              alt="Dashboard Illustration"
+              className="w-[170px] sm:w-[220px] md:w-[170px]"
+            />
+          </div>
+        </div>
+      </section>
     );
-};
+  }
 
+  // Case 2: Filter Banner Exists -> Show Slider
+  return (
+    <section className="w-full overflow-hidden">
+      <div
+        className="relative w-full h-[220px] md:h-[280px] lg:h-[250px] rounded-3xl bg-[#FF764B]"
+        onMouseEnter={stopAutoplay}
+        onMouseLeave={startAutoplay}
+      >
+        {/* Slider Container */}
+        <div ref={sliderRef} className="keen-slider w-full h-full rounded-3xl">
+          {filterBanner.Banners.map((item, index) => {
+            // Safe URL construction
+            // Adjust this path logic if your backend returns full URLs or just filenames
+            const fileName = item.Banner?.file;
+            const imageUrl = fileName
+              ? fileName.startsWith("http")
+                ? fileName
+                : `${ImageBaseUrl}/${fileName}`
+              : "";
+
+            return (
+              <div
+                key={item._id || index}
+                className="keen-slider__slide w-full h-full overflow-hidden relative rounded-3xl"
+              >
+                {imageUrl ? (
+                  <img
+                    src={imageUrl}
+                    alt={item.Banner?.alt || `Banner ${index + 1}`}
+                    className="w-full h-full object-contain rounded-3xl"
+                    onError={(e) => {
+                      // Fallback if image fails to load
+                      e.target.style.display = "none";
+                      e.target.parentElement.classList.add(
+                        "flex",
+                        "items-center",
+                        "justify-center",
+                      );
+                      e.target.parentElement.innerHTML = `<span class="text-white text-xl font-bold">Banner Image Missing</span>`;
+                    }}
+                  />
+                ) : (
+                  // Fallback if no URL in data
+                  <div className="w-full h-full flex items-center justify-center bg-orange-400 text-white font-bold">
+                    No Image Available
+                  </div>
+                )}
+              </div>
+            );
+          })}
+        </div>
+
+        {/* Navigation Controls (Only show if > 1 banner) */}
+        {filterBanner.Banners.length > 1 && (
+          <>
+            {/* Left Arrow */}
+            <button
+              onClick={goToPrev}
+              className="absolute left-4 top-1/2 -translate-y-1/2 w-10 h-10 rounded-full bg-white/20 backdrop-blur-sm flex items-center justify-center text-white hover:bg-white/30 transition-all duration-300 z-10"
+            >
+              <ChevronLeft size={20} />
+            </button>
+
+            {/* Right Arrow */}
+            <button
+              onClick={goToNext}
+              className="absolute right-4 top-1/2 -translate-y-1/2 w-10 h-10 rounded-full bg-white/20 backdrop-blur-sm flex items-center justify-center text-white hover:bg-white/30 transition-all duration-300 z-10"
+            >
+              <ChevronRight size={20} />
+            </button>
+
+            {/* Dots */}
+            <div className="absolute bottom-4 left-1/2 -translate-x-1/2 flex gap-2 z-10">
+              {filterBanner.Banners.map((_, index) => (
+                <button
+                  key={index}
+                  onClick={() => goToSlide(index)}
+                  className={`h-2 rounded-full transition-all duration-300 ${
+                    currentSlide === index ? "w-6 bg-white" : "w-2 bg-white/50"
+                  }`}
+                />
+              ))}
+            </div>
+          </>
+        )}
+      </div>
+    </section>
+  );
+};
 
 import "keen-slider/keen-slider.min.css";
 import { useKeenSlider } from "keen-slider/react";
-import { toast } from 'react-toastify';
-import { Link, useLocation } from 'react-router';
-import { UseBanner } from '../../context/BannerContext';
+import { toast } from "react-toastify";
+import { Link, useLocation } from "react-router";
+import { UseBanner } from "../../context/BannerContext";
 
 // ==================== MAIN DASHBOARD COMPONENT ====================
 const GREDashboard = () => {
-    const [loading, setLoading] = useState(true);
-    const [data, setData] = useState(null);
-    const { user } = useAuth() as any
-    const { banner } = UseBanner()
-    const { pathname } = useLocation()
+  const [loading, setLoading] = useState(true);
+  const [data, setData] = useState(null);
+  const { user } = useAuth() as any;
+  const { banner } = UseBanner();
+  const { pathname } = useLocation();
 
+  const [courses, setcourses] = useState([]);
+  const [allCourses, setallCourses] = useState([]);
+  const [searchTerm, setSearchTerm] = useState("");
+  const [filteredCourses, setFilteredCourses] = useState([]);
+  const [debouncedSearch, setDebouncedSearch] = useState("");
+  const [loading2, setLoading2] = useState(true);
+  const [sort, setSort] = useState("-createdAt");
+  const [purchase, setPurchase] = useState([]);
+  const [notification, setnotification] = useState([]);
+  const [promo, setpromo] = useState([]);
 
-    const [courses, setcourses] = useState([])
-    const [allCourses, setallCourses] = useState([])
-    const [searchTerm, setSearchTerm] = useState('');
-    const [filteredCourses, setFilteredCourses] = useState([]);
-    const [debouncedSearch, setDebouncedSearch] = useState("");
-    const [loading2, setLoading2] = useState(true);
-    const [sort, setSort] = useState("-createdAt");
-    const [purchase, setPurchase] = useState([])
-    const [notification, setnotification] = useState([])
-    const [promo, setpromo] = useState([])
+  const filterBanner = banner.find((item) => {
+    return item.key === pathname;
+  });
 
-
-
-    const filterBanner = banner.find((item) => {
-        return item.key === pathname;
-    });
-
-
-
-
-
-
-
-
-
-    useEffect(() => {
-        // Initialization logic if needed
-        const fetchPurchases = async () => {
-            try {
-                const response = await api.get("/purchase")
-                setPurchase(response.data.data);
-            } catch (error) {
-                toast.error("something went wrong...")
-            }
-        };
-
-        fetchPurchases();
-    }, []);
-
-
-
-
-    useEffect(() => {
-
-        const fetchPromo = async () => {
-            try {
-                const response = await api.get("/promo-codes");
-                setpromo(response.data.data)
-            }
-            catch {
-                toast.error("something went wrong..")
-
-            }
-        }
-        fetchPromo()
-    }, [])
-
-
-    const SORT_OPTIONS = [
-        { value: '-createdAt', label: 'Newest First' },
-        { value: 'createdAt', label: 'Oldest First' },
-        { value: '-pricing.amount', label: 'Price: High to Low' },
-        { value: 'pricing.amount', label: 'Price: Low to High' },
-        { value: '-rating', label: 'Highest Rated' },
-        { value: '-studentsEnrolled', label: 'Most Popular' },
-        { value: '-pricing.discount', label: 'Best Discount' },
-    ]
-
-
-    const progress = 82;
-
-    useEffect(() => {
-        const timer = setTimeout(() => {
-            setDebouncedSearch(searchTerm);
-        }, 500); // 500ms delay
-
-        return () => clearTimeout(timer);
-    }, [searchTerm]);
-
-
-
-    useEffect(() => {
-        const FetchCourses = async () => {
-            setLoading2(true)
-            const params = {
-                category: user?.category?._id,
-                search: debouncedSearch,
-                sort,
-            };
-            try {
-                const res = await api.get(`courses`, { params });
-                const res2 = await api.get("/courses")
-                setcourses(res?.data?.data)
-                setallCourses(res2?.data?.data)
-                setLoading2(false)
-            }
-            catch {
-                toast.error("something went wrong...")
-            }
-        }
-        FetchCourses()
-    }, [debouncedSearch, sort])
-
-    useEffect(() => {
-        const fetchData = async () => {
-            try {
-                const response = await mockApi.getDashboardData();
-                setData(response);
-            } catch (error) {
-                console.error('Error fetching dashboard data:', error);
-            } finally {
-                setLoading(false);
-            }
-        };
-
-        fetchData();
-    }, []);
-
-    const displayCourses = searchTerm.trim() === "" ? courses : filteredCourses;
-
-
-
-    const handleSort = (type) => {
-        const sortedCourses = [...displayCourses];
-
-        if (type === "newest") {
-            sortedCourses.sort(
-                (a, b) => new Date(b.createdAt) - new Date(a.createdAt)
-            );
-        }
-
-        if (type === "oldest") {
-            sortedCourses.sort(
-                (a, b) => new Date(a.createdAt) - new Date(b.createdAt)
-            );
-        }
-
-        setFilteredCourses(sortedCourses);
+  useEffect(() => {
+    // Initialization logic if needed
+    const fetchPurchases = async () => {
+      try {
+        const response = await api.get("/purchase");
+        setPurchase(response.data.data);
+      } catch (error) {
+        toast.error("something went wrong...");
+      }
     };
 
+    fetchPurchases();
+  }, []);
 
-    const [currentSlide, setCurrentSlide] = useState(0);
-    const [loaded, setLoaded] = useState(false);
+  useEffect(() => {
+    const fetchPromo = async () => {
+      try {
+        const response = await api.get("/promo-codes");
+        setpromo(response.data.data);
+      } catch {
+        toast.error("something went wrong..");
+      }
+    };
+    fetchPromo();
+  }, []);
 
+  const SORT_OPTIONS = [
+    { value: "-createdAt", label: "Newest First" },
+    { value: "createdAt", label: "Oldest First" },
+    { value: "-pricing.amount", label: "Price: High to Low" },
+    { value: "pricing.amount", label: "Price: Low to High" },
+    { value: "-rating", label: "Highest Rated" },
+    { value: "-studentsEnrolled", label: "Most Popular" },
+    { value: "-pricing.discount", label: "Best Discount" },
+  ];
 
-    // ... inside GREDashboard component
+  const progress = 82;
 
-    const [currentSlide4, setCurrentSlide4] = useState(0);
-    const autoplayTimerRef = useRef(null);
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setDebouncedSearch(searchTerm);
+    }, 500); // 500ms delay
 
-    const [sliderRef4, instanceRef4] = useKeenSlider<HTMLDivElement>({
-        initial: 0,
-        loop: true,
-        slides: {
-            perView: 1,
-            spacing: 0,
-        },
-        slideChanged(slider) {
-            setCurrentSlide4(slider.track.details.rel);
-        },
-        created(slider) {
-            // Start autoplay when slider is ready
-            startAutoplay();
-        },
-        animationEnded(slider) {
-            // Restart timer after every slide transition
-            startAutoplay();
-        },
-        dragStarted() {
-            // Stop timer while user is dragging
-            stopAutoplay();
-        },
-    });
+    return () => clearTimeout(timer);
+  }, [searchTerm]);
 
-    const startAutoplay = () => {
-        stopAutoplay(); // Clear existing to prevent duplicates
-        // Only start if we have slides
-        if (instanceRef4.current && instanceRef4.current.track.details.slides.length > 0) {
-            autoplayTimerRef.current = setInterval(() => {
-                instanceRef4.current?.next();
-            }, 4000);
-        }
+  useEffect(() => {
+    const FetchCourses = async () => {
+      setLoading2(true);
+      const params = {
+        category: user?.category?._id,
+        search: debouncedSearch,
+        sort,
+      };
+      try {
+        const res = await api.get(`courses`, { params });
+        const res2 = await api.get("/courses");
+        setcourses(res?.data?.data);
+        setallCourses(res2?.data?.data);
+        setLoading2(false);
+      } catch {
+        toast.error("something went wrong...");
+      }
+    };
+    FetchCourses();
+  }, [debouncedSearch, sort]);
+
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        const response = await mockApi.getDashboardData();
+        setData(response);
+      } catch (error) {
+        console.error("Error fetching dashboard data:", error);
+      } finally {
+        setLoading(false);
+      }
     };
 
-    const stopAutoplay = () => {
-        if (autoplayTimerRef.current) {
-            clearInterval(autoplayTimerRef.current);
-            autoplayTimerRef.current = null;
-        }
-    };
+    fetchData();
+  }, []);
 
-    // Effect to handle data loading and resizing
-    useEffect(() => {
-        if (promo.length > 0 && instanceRef4.current) {
-            // Force update when data arrives
-            instanceRef4.current.update();
+  const displayCourses = searchTerm.trim() === "" ? courses : filteredCourses;
 
-            // Ensure autoplay is running after data load
-            startAutoplay();
-        }
-    }, [promo]);
+  const handleSort = (type) => {
+    const sortedCourses = [...displayCourses];
 
-    // Cleanup on unmount
-    useEffect(() => {
-        return () => {
-            stopAutoplay();
-        };
-    }, []);
-
-
-    const [sliderRef3, instanceRef] = useKeenSlider({
-        loop: purchase.length > 1,
-        slideChanged(slider) {
-            setCurrentSlide(slider.track.details.rel);
-        },
-        created() {
-            setLoaded(true);
-        },
-        slides: {
-            perView: 1,
-            spacing: 20,
-        },
-    });
-
-
-
-    const [sliderRef] = useKeenSlider(
-        {
-            loop: true,
-            slides: {
-                perView: 3,
-                spacing: 10,
-            },
-            breakpoints: {
-                "(max-width:1023px)": {
-                    slides: {
-                        perView: 2,
-                        spacing: 16,
-                    },
-                },
-                "(max-width:640px)": {
-                    slides: {
-                        perView: 1,
-                        spacing: 12,
-                    },
-                },
-            },
-        },
-        [
-            (slider) => {
-                let timeout;
-
-                const clearNextTimeout = () => clearTimeout(timeout);
-
-                const nextTimeout = () => {
-                    clearTimeout(timeout);
-                    timeout = setTimeout(() => {
-
-                        slider.next();
-
-                    }, 3000);
-                };
-
-                slider.on("created", nextTimeout);
-                slider.on("dragStarted", clearNextTimeout);
-                slider.on("animationEnded", nextTimeout);
-                slider.on("updated", nextTimeout);
-            },
-        ]
-    );
-
-
-    const [sliderRef2] = useKeenSlider(
-        {
-            loop: true,
-            slides: {
-                perView: 4,
-                spacing: 20,
-            },
-            breakpoints: {
-                "(max-width:1023px)": {
-                    slides: {
-                        perView: 2,
-                        spacing: 16,
-                    },
-                },
-                "(max-width:640px)": {
-                    slides: {
-                        perView: 1,
-                        spacing: 12,
-                    },
-                },
-            },
-        },
-        [
-            (slider) => {
-                let timeout;
-
-                const clearNextTimeout = () => clearTimeout(timeout);
-
-                const nextTimeout = () => {
-                    clearTimeout(timeout);
-                    timeout = setTimeout(() => {
-
-                        slider.next();
-
-                    }, 2000);
-                };
-
-                slider.on("created", nextTimeout);
-                slider.on("dragStarted", clearNextTimeout);
-                slider.on("animationEnded", nextTimeout);
-                slider.on("updated", nextTimeout);
-            },
-        ]
-    );
-
-    // useEffect(() => {
-    //   instanceRef.current?.update();
-    // }, [courses.length]);
-    const useSlider = courses.length > 3;
-    const useSlider2 = allCourses.length > 4;
-
-    if (loading) {
-        return <DashboardSkeleton />;
+    if (type === "newest") {
+      sortedCourses.sort(
+        (a, b) => new Date(b.createdAt) - new Date(a.createdAt),
+      );
     }
 
-
-    const highPriorityCount = notification.filter(
-        (notification) => notification.priority === "high"
-    ).length;
-
-
-    if (!data) {
-        return (
-            <div className="min-h-screen max-w-7xl mx-auto flex items-center justify-center pl-20">
-                <motion.div
-                    initial={{ scale: 0 }}
-                    animate={{ scale: 1 }}
-                    className="text-center p-8 rounded-2xl shadow-xl"
-                >
-                    <AlertCircle className="w-16 h-16 text-red-500 mx-auto mb-4" />
-                    <h2 className="text-2xl font-bold text-gray-900 mb-2">Error Loading Dashboard</h2>
-                    <p className="text-gray-500 mb-6">Please try again later</p>
-                    <motion.button
-                        whileHover={{ scale: 1.05 }}
-                        whileTap={{ scale: 0.95 }}
-                        className="px-6 py-3 bg-[#1e293b] text-white rounded-xl font-bold"
-                    >
-                        Retry
-                    </motion.button>
-                </motion.div>
-            </div>
-        );
+    if (type === "oldest") {
+      sortedCourses.sort(
+        (a, b) => new Date(a.createdAt) - new Date(b.createdAt),
+      );
     }
 
+    setFilteredCourses(sortedCourses);
+  };
+
+  const [currentSlide, setCurrentSlide] = useState(0);
+  const [loaded, setLoaded] = useState(false);
+
+  // ... inside GREDashboard component
+
+  const [currentSlide4, setCurrentSlide4] = useState(0);
+  const autoplayTimerRef = useRef(null);
+
+  const [sliderRef4, instanceRef4] = useKeenSlider<HTMLDivElement>({
+    initial: 0,
+    loop: true,
+    slides: {
+      perView: 1,
+      spacing: 0,
+    },
+    slideChanged(slider) {
+      setCurrentSlide4(slider.track.details.rel);
+    },
+    created(slider) {
+      // Start autoplay when slider is ready
+      startAutoplay();
+    },
+    animationEnded(slider) {
+      // Restart timer after every slide transition
+      startAutoplay();
+    },
+    dragStarted() {
+      // Stop timer while user is dragging
+      stopAutoplay();
+    },
+  });
+
+  const startAutoplay = () => {
+    stopAutoplay(); // Clear existing to prevent duplicates
+    // Only start if we have slides
+    if (
+      instanceRef4.current &&
+      instanceRef4.current.track.details.slides.length > 0
+    ) {
+      autoplayTimerRef.current = setInterval(() => {
+        instanceRef4.current?.next();
+      }, 4000);
+    }
+  };
+
+  const stopAutoplay = () => {
+    if (autoplayTimerRef.current) {
+      clearInterval(autoplayTimerRef.current);
+      autoplayTimerRef.current = null;
+    }
+  };
+
+  // Effect to handle data loading and resizing
+  useEffect(() => {
+    if (promo.length > 0 && instanceRef4.current) {
+      // Force update when data arrives
+      instanceRef4.current.update();
+
+      // Ensure autoplay is running after data load
+      startAutoplay();
+    }
+  }, [promo]);
+
+  // Cleanup on unmount
+  useEffect(() => {
+    return () => {
+      stopAutoplay();
+    };
+  }, []);
+
+  const [sliderRef3, instanceRef] = useKeenSlider({
+    loop: purchase.length > 1,
+    slideChanged(slider) {
+      setCurrentSlide(slider.track.details.rel);
+    },
+    created() {
+      setLoaded(true);
+    },
+    slides: {
+      perView: 1,
+      spacing: 20,
+    },
+  });
+
+  const [sliderRef] = useKeenSlider(
+    {
+      loop: true,
+      slides: {
+        perView: 3,
+        spacing: 10,
+      },
+      breakpoints: {
+        "(max-width:1023px)": {
+          slides: {
+            perView: 2,
+            spacing: 16,
+          },
+        },
+        "(max-width:640px)": {
+          slides: {
+            perView: 1,
+            spacing: 12,
+          },
+        },
+      },
+    },
+    [
+      (slider) => {
+        let timeout;
+
+        const clearNextTimeout = () => clearTimeout(timeout);
+
+        const nextTimeout = () => {
+          clearTimeout(timeout);
+          timeout = setTimeout(() => {
+            slider.next();
+          }, 3000);
+        };
+
+        slider.on("created", nextTimeout);
+        slider.on("dragStarted", clearNextTimeout);
+        slider.on("animationEnded", nextTimeout);
+        slider.on("updated", nextTimeout);
+      },
+    ],
+  );
+
+  const [sliderRef2] = useKeenSlider(
+    {
+      loop: true,
+      slides: {
+        perView: 4,
+        spacing: 20,
+      },
+      breakpoints: {
+        "(max-width:1023px)": {
+          slides: {
+            perView: 2,
+            spacing: 16,
+          },
+        },
+        "(max-width:640px)": {
+          slides: {
+            perView: 1,
+            spacing: 12,
+          },
+        },
+      },
+    },
+    [
+      (slider) => {
+        let timeout;
+
+        const clearNextTimeout = () => clearTimeout(timeout);
+
+        const nextTimeout = () => {
+          clearTimeout(timeout);
+          timeout = setTimeout(() => {
+            slider.next();
+          }, 2000);
+        };
+
+        slider.on("created", nextTimeout);
+        slider.on("dragStarted", clearNextTimeout);
+        slider.on("animationEnded", nextTimeout);
+        slider.on("updated", nextTimeout);
+      },
+    ],
+  );
+
+  // useEffect(() => {
+  //   instanceRef.current?.update();
+  // }, [courses.length]);
+  const useSlider = courses.length > 3;
+  const useSlider2 = allCourses.length > 4;
+
+  if (loading) {
+    return <DashboardSkeleton />;
+  }
+
+  const highPriorityCount = notification.filter(
+    (notification) => notification.priority === "high",
+  ).length;
+
+  if (!data) {
     return (
+      <div className="min-h-screen max-w-7xl mx-auto flex items-center justify-center pl-20">
+        <motion.div
+          initial={{ scale: 0 }}
+          animate={{ scale: 1 }}
+          className="text-center p-8 rounded-2xl shadow-xl"
+        >
+          <AlertCircle className="w-16 h-16 text-red-500 mx-auto mb-4" />
+          <h2 className="text-2xl font-bold text-gray-900 mb-2">
+            Error Loading Dashboard
+          </h2>
+          <p className="text-gray-500 mb-6">Please try again later</p>
+          <motion.button
+            whileHover={{ scale: 1.05 }}
+            whileTap={{ scale: 0.95 }}
+            className="px-6 py-3 bg-[#1e293b] text-white rounded-xl font-bold"
+          >
+            Retry
+          </motion.button>
+        </motion.div>
+      </div>
+    );
+  }
 
-        <div className=" mx-auto max-w-7xl">
-            <div className='grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 xl:grid-cols-[1.5fr_0.5fr] gap-6 my-4'>
-                <HeaderBanner data={data} user={user} filterBanner={filterBanner} />
+  return (
+    <div className=" mx-auto max-w-7xl">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 xl:grid-cols-[1.5fr_0.5fr] gap-6 my-4">
+        <HeaderBanner data={data} user={user} filterBanner={filterBanner} />
 
-                {(
-                    <div className="p-[2px] h-full rounded-3xl bg-gradient-to-b from-orange-500 via-orange-500 to-orange-200/40">
-                        <div className="h-full rounded-3xl  bg-white dark:bg-gray-800 p-4 ">
-                            {/* Top */}
-                            <div className="flex items-start gap-4">
-                                {/* <Image
+        {
+          <div className="p-[2px] h-full rounded-3xl bg-gradient-to-b from-orange-500 via-orange-500 to-orange-200/40">
+            <div className="h-full rounded-3xl  bg-white dark:bg-gray-800 p-4 ">
+              {/* Top */}
+              <div className="flex items-start gap-4">
+                {/* <Image
         src={
           "https://cdn.pixabay.com/photo/2023/02/18/11/00/icon-7797704_1280.png"
         }
@@ -973,48 +1094,51 @@ const GREDashboard = () => {
         height={64}
         className="rounded-full border border-white shadow-md object-cover"
       /> */}
-                                <img className="rounded-full border border-white shadow-md object-cover w-16 h-16" src="https://cdn.pixabay.com/photo/2023/02/18/11/00/icon-7797704_1280.png" alt="" />
+                <img
+                  className="rounded-full border border-white shadow-md object-cover w-16 h-16"
+                  src="https://cdn.pixabay.com/photo/2023/02/18/11/00/icon-7797704_1280.png"
+                  alt=""
+                />
 
+                <div className="flex-1">
+                  <p className="text-gray-500 text-sm font-medium dark:text-white">
+                    Your Counsellor
+                  </p>
 
-                                <div className="flex-1">
-                                    <p className="text-gray-500 text-sm font-medium dark:text-white">
-                                        Your Counsellor
-                                    </p>
+                  <h3 className="text-base leading-none font-bold text-[#222] mt-1 dark:text-white">
+                    Expert Study Abroad Counsellor
+                  </h3>
 
-                                    <h3 className="text-base leading-none font-bold text-[#222] mt-1 dark:text-white">
-                                        Expert Study Abroad Counsellor
-                                    </h3>
+                  <div className="grid grid-cols-1a lg:grid-cols-2 items-center gap-2 mt-3">
+                    <div className="flex text-[#FF6B35]">
+                      {[1, 2, 3, 4, 5].map((i) => (
+                        <Star
+                          key={i}
+                          size={14}
+                          fill="currentColor"
+                          className="text-[#FF6B35]"
+                        />
+                      ))}
+                    </div>
 
-                                    <div className="grid grid-cols-1a lg:grid-cols-2 items-center gap-2 mt-3">
-                                        <div className="flex text-[#FF6B35]">
-                                            {[1, 2, 3, 4, 5].map((i) => (
-                                                <Star
-                                                    key={i}
-                                                    size={14}
-                                                    fill="currentColor"
-                                                    className="text-[#FF6B35]"
-                                                />
-                                            ))}
-                                        </div>
+                    <span className="text-sm font-semibold text-gray-400 dark:text-gray-300">
+                      4.9 · 200+ students
+                    </span>
+                  </div>
+                </div>
+              </div>
 
-                                        <span className="text-sm font-semibold text-gray-400 dark:text-gray-300">
-                                            4.9 · 200+ students
-                                        </span>
-                                    </div>
-                                </div>
-                            </div>
+              {/* Description */}
+              <p className="mt-2 text-[14px] text-[#6B7280] leading-6 dark:text-gray-400">
+                Specializes in Canada & UK admissions.
+                <br />
+                Available Mon–Fri, 10am–7pm IST.
+              </p>
 
-                            {/* Description */}
-                            <p className="mt-2 text-[14px] text-[#6B7280] leading-6 dark:text-gray-400">
-                                Specializes in Canada & UK admissions.
-                                <br />
-                                Available Mon–Fri, 10am–7pm IST.
-                            </p>
-
-                            {/* Button */}
-                            <Link to="/support">
-                                <button
-                                    className="
+              {/* Button */}
+              <Link to="/support">
+                <button
+                  className="
         mt-4
         w-full
         rounded-2xl
@@ -1027,251 +1151,248 @@ const GREDashboard = () => {
         text-white
        
       "
-                                >
-                                    Book a Session →
-                                </button></Link>
+                >
+                  Book a Session →
+                </button>
+              </Link>
+            </div>
+          </div>
+        }
+      </div>
+      <div className="grid grid-cols-1 lg:grid-cols-[1.5fr_0.5fr] gap-6 mb-2 ">
+        <div className="flex flex-col gap-4 lg:col-span-2 ">
+          <div className="grid min-w-0 grid-cols-1 xl:grid-cols-[1.5fr_0.5fr] gap-4">
+            {/* 1. Pink/Orange Gradient Card */}
+            <section className="w-full  overflow-hidden">
+              <div className="w-full mx-auto overflow-hidden ">
+                {purchase?.length > 0 ? (
+                  <div
+                    className="keen-slider overflow-hidden rounded-3xl  "
+                    ref={sliderRef3}
+                  >
+                    {purchase.map((item) => (
+                      <div
+                        key={item?._id}
+                        className="relative dark:bg-gray-800 bg-white rounded-3xl overflow-hidden p-6 lg:p-0 keen-slider__slide "
+                      >
+                        <div className="grid grid-cols-1 lg:grid-cols-[0.9fr_1.1fr] lg:gap-4 py-4 px-4">
+                          {/* Left Image */}
+                          <div className="flex flex-col gap-4 lg:py-0 px-2">
+                            <div>
+                              <h2 className="text-xl lg:-mt-0 lg:mb-4 lg:text-2xl font-bold text-[#202020] dark:text-white">
+                                My Courses
+                              </h2>
+                            </div>
+
+                            <div className="rounded-xl overflow-hidden">
+                              {" "}
+                              <img
+                                src={
+                                  `${ImageBaseUrl}/${item?.item?.thumbnail.url}` ||
+                                  "/images/course-thumbnail.webp"
+                                }
+                                alt=""
+                                className="w-full h-[140px] lg:h-full  object-contain"
+                              />
+                            </div>
+                          </div>
+
+                          <div className="flex flex-col gap-4">
+                            {/* Center */}
+                            <div className="xl:col-span-3 px-2 lg:px-0">
+                              <div className="flex gap-2 ">
+                                <div>
+                                  <h3 className="text-2xl font-bold text-gray-900 dark:text-white line-clamp-1">
+                                    {item?.item?.title}
+                                  </h3>
+
+                                  <p className="text-gray-500  text-sm dark:text-gray-400 ">
+                                    {item?.item?.shortDescription?.length > 100
+                                      ? item?.item?.shortDescription?.substring(
+                                          0,
+                                          100,
+                                        ) + "..."
+                                      : item?.item?.shortDescription}
+                                  </p>
+                                </div>
+                              </div>
+                            </div>
+
+                            {/* Right */}
+
+                            <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-0  justify-center items-center mr-22">
+                              <div className="flex flex-col lg:flex-col items-center gap-2 lg:mt-0 mb-4 lg:mb-0">
+                                {/* Progress */}
+
+                                <div className="relative w-38 h-38 hidden lg:block">
+                                  <svg
+                                    className="w-full h-full -rotate-90"
+                                    viewBox="0 0 120 120"
+                                  >
+                                    <circle
+                                      cx="60"
+                                      cy="60"
+                                      r="50"
+                                      fill="none"
+                                      stroke="#F2F2F2"
+                                      strokeWidth="10"
+                                    />
+
+                                    <circle
+                                      cx="60"
+                                      cy="60"
+                                      r="50"
+                                      fill="none"
+                                      stroke="#FF5A14"
+                                      strokeWidth="10"
+                                      strokeLinecap="round"
+                                      strokeDasharray={314}
+                                      strokeDashoffset={
+                                        314 -
+                                        (314 * item?.progress?.percentage) / 100
+                                      }
+                                    />
+                                  </svg>
+
+                                  <div className="absolute inset-0 flex flex-col justify-center items-center dark:text-white">
+                                    <div className="flex items-end gap-1">
+                                      <h2 className="text-5xl font-bold">
+                                        {item?.progress?.percentage}
+                                      </h2>
+                                      <span className="text-2xl">%</span>
+                                    </div>
+                                    <span className="text-sm text-gray-500 dark:text-gray-400 font-semibold mt-1">
+                                      COMPLETE
+                                    </span>
+                                  </div>
+                                </div>
+
+                                {/* Buttons */}
+
+                                <div className="flex items-center  gap-2 w-full ">
+                                  <Link
+                                    to={`/course/${item?.item?.slug}?isCurriculum=true`}
+                                    className="bg-[#FF5A14] hover:bg-[#f04d08] text-xs text-white rounded-xl py-3 px-4 flex gap-2 items-center justify-center  font-semibold transition"
+                                  >
+                                    <Play size={18} fill="white" />
+                                    CONTINUE LEARNING
+                                  </Link>
+                                </div>
+                              </div>
+
+                              {/* Stats */}
+
+                              <div className="space-y-3.5  border-l border-gray-100 pl-4 lg:pl-6">
+                                <div className="flex gap-4 items-start">
+                                  <div className="w-10 h-10 rounded-xl bg-orange-50 dark:bg-gray-600 flex items-center justify-center">
+                                    <BookOpen
+                                      size={22}
+                                      className="text-black dark:text-white"
+                                    />
+                                  </div>
+
+                                  <div>
+                                    <p className="text-gray-500 dark:text-white text-sm">
+                                      Language
+                                    </p>
+
+                                    <h3 className="font-bold text-sm dark:text-white">
+                                      {item?.item?.language}
+                                    </h3>
+                                  </div>
+                                </div>
+
+                                <hr />
+
+                                <div className="flex gap-4 items-start">
+                                  <div className="w-10 h-10 rounded-xl bg-orange-50 flex items-center justify-center dark:bg-gray-600">
+                                    <Clock3
+                                      size={22}
+                                      className="text-black dark:text-white"
+                                    />
+                                  </div>
+
+                                  <div>
+                                    <p className="text-gray-500 dark:text-white text-sm">
+                                      Level
+                                    </p>
+
+                                    <h3 className="font-bold text-sm dark:text-white">
+                                      {item?.item?.level}
+                                    </h3>
+                                  </div>
+                                </div>
+
+                                <hr />
+
+                                <div className="flex gap-4 items-start">
+                                  <div className="w-10 h-10 rounded-xl bg-orange-50 flex items-center justify-center dark:bg-gray-600">
+                                    <CalendarDays
+                                      size={22}
+                                      className="text-black dark:text-white"
+                                    />
+                                  </div>
+
+                                  <div>
+                                    <p className="text-gray-500 dark:text-white text-sm">
+                                      Days Left
+                                    </p>
+
+                                    <h3 className="font-bold text-sm text-[#FF5A14]">
+                                      {Math.max(
+                                        0,
+                                        Math.ceil(
+                                          (new Date(item?.accessExpiresAt) -
+                                            new Date()) /
+                                            (1000 * 60 * 60 * 24),
+                                        ),
+                                      )}{" "}
+                                      Days
+                                    </h3>
+                                  </div>
+                                </div>
+                              </div>
+                            </div>
+                          </div>
                         </div>
 
-                    </div>
+                        {/* Right Arrow */}
+                        <div className="flex justify-end items-center gap-6 absolute right-2 bottom-40 ">
+                          <button
+                            onClick={() => instanceRef.current?.next()}
+                            className="hidden xl:flex  w-10 h-10 rounded-full border items-center justify-center hover:bg-orange-50"
+                          >
+                            <ChevronRight className="text-[#FF5A14]" />
+                          </button>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <div className="flex flex-col items-center justify-center min-h-[300px] rounded-3xl bg-white dark:bg-gray-800">
+                    <BookOpen size={48} className="text-gray-400 mb-4" />
 
+                    <h2 className="text-xl font-bold text-gray-800 dark:text-white">
+                      No Course Purchased
+                    </h2>
+
+                    <p className="mt-2 text-sm text-gray-500 dark:text-gray-400">
+                      You haven't purchased any course yet.
+                    </p>
+                  </div>
                 )}
+              </div>
+            </section>
 
-            </div>
-            <div className="grid grid-cols-1 lg:grid-cols-[1.5fr_0.5fr] gap-6 mb-2 ">
-                <div className="flex flex-col gap-4 lg:col-span-2 ">
-                    <div className="grid min-w-0 grid-cols-1 xl:grid-cols-[1.5fr_0.5fr] gap-4">
-
-                        {/* 1. Pink/Orange Gradient Card */}
-                        <section className="w-full  overflow-hidden">
-
-                            <div className="w-full mx-auto overflow-hidden ">
-
-
-                                {purchase?.length > 0 ? (
-                                    <div className="keen-slider overflow-hidden rounded-3xl  " ref={sliderRef3}>
-                                        {purchase.map((item) => (
-                                            <div
-                                                key={item?._id}
-                                                className="relative dark:bg-gray-800 bg-white rounded-3xl overflow-hidden p-6 lg:p-0 keen-slider__slide "
-                                            >
-                                                <div className="grid grid-cols-1 lg:grid-cols-[0.9fr_1.1fr] lg:gap-4 py-4 px-4">
-
-                                                    {/* Left Image */}
-                                                    <div className="flex flex-col gap-4 lg:py-0 px-2">
-                                                        <div><h2 className="text-xl lg:-mt-0 lg:mb-4 lg:text-2xl font-bold text-[#202020] dark:text-white">
-                                                            My Courses
-                                                        </h2></div>
-
-                                                        <div className='rounded-xl overflow-hidden'> <img
-                                                            src={`${ImageBaseUrl}/${item?.item?.thumbnail.url}` || "/images/course-thumbnail.webp"}
-                                                            alt=""
-                                                            className="w-full h-[140px] lg:h-full  object-contain"
-                                                        /></div>
-                                                    </div>
-
-
-                                                    <div className='flex flex-col gap-4'>
-                                                        {/* Center */}
-                                                        <div className="xl:col-span-3 px-2 lg:px-0">
-                                                            <div className='flex gap-2 '>
-                                                                <div>
-                                                                    <h3 className="text-2xl font-bold text-gray-900 dark:text-white line-clamp-1">
-                                                                        {item?.item?.title}
-                                                                    </h3>
-
-                                                                    <p className="text-gray-500  text-sm dark:text-gray-400 ">
-                                                                        {item?.item?.shortDescription?.length > 100 ? item?.item?.shortDescription?.substring(0, 100) + "..." : item?.item?.shortDescription}
-                                                                    </p>
-                                                                </div>
-
-
-                                                            </div>
-
-
-                                                        </div>
-
-                                                        {/* Right */}
-
-                                                        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-0  justify-center items-center mr-22">
-
-
-                                                            <div className="flex flex-col lg:flex-col items-center gap-2 lg:mt-0 mb-4 lg:mb-0">
-
-                                                                {/* Progress */}
-
-                                                                <div className="relative w-38 h-38 hidden lg:block">
-
-                                                                    <svg
-                                                                        className="w-full h-full -rotate-90"
-                                                                        viewBox="0 0 120 120"
-                                                                    >
-                                                                        <circle
-                                                                            cx="60"
-                                                                            cy="60"
-                                                                            r="50"
-                                                                            fill="none"
-                                                                            stroke="#F2F2F2"
-                                                                            strokeWidth="10"
-                                                                        />
-
-                                                                        <circle
-                                                                            cx="60"
-                                                                            cy="60"
-                                                                            r="50"
-                                                                            fill="none"
-                                                                            stroke="#FF5A14"
-                                                                            strokeWidth="10"
-                                                                            strokeLinecap="round"
-                                                                            strokeDasharray={314}
-                                                                            strokeDashoffset={314 - (314 * item?.progress?.percentage) / 100}
-                                                                        />
-                                                                    </svg>
-
-                                                                    <div className="absolute inset-0 flex flex-col justify-center items-center dark:text-white">
-                                                                        <div className="flex items-end gap-1">
-                                                                            <h2 className="text-5xl font-bold">{item?.progress?.percentage}</h2><span className='text-2xl'>%</span></div>
-                                                                        <span className="text-sm text-gray-500 dark:text-gray-400 font-semibold mt-1">
-                                                                            COMPLETE
-                                                                        </span>
-                                                                    </div>
-                                                                </div>
-
-                                                                {/* Buttons */}
-
-                                                                <div className="flex items-center  gap-2 w-full ">
-
-                                                                    <Link to={`/course/${item?.item?.slug}?isCurriculum=true`} className="bg-[#FF5A14] hover:bg-[#f04d08] text-xs text-white rounded-xl py-3 px-4 flex gap-2 items-center justify-center  font-semibold transition">
-                                                                        <Play size={18} fill="white" />
-                                                                        CONTINUE LEARNING
-                                                                    </Link>
-
-
-
-                                                                </div>
-                                                            </div>
-
-
-                                                            {/* Stats */}
-
-                                                            <div className="space-y-3.5  border-l border-gray-100 pl-4 lg:pl-6">
-
-                                                                <div className="flex gap-4 items-start">
-
-                                                                    <div className="w-10 h-10 rounded-xl bg-orange-50 dark:bg-gray-600 flex items-center justify-center">
-                                                                        <BookOpen size={22} className="text-black dark:text-white" />
-                                                                    </div>
-
-                                                                    <div>
-                                                                        <p className="text-gray-500 dark:text-white text-sm">
-                                                                            Language
-                                                                        </p>
-
-                                                                        <h3 className="font-bold text-sm dark:text-white">
-                                                                            {item?.item?.language}
-                                                                        </h3>
-                                                                    </div>
-
-                                                                </div>
-
-                                                                <hr />
-
-                                                                <div className="flex gap-4 items-start">
-
-                                                                    <div className="w-10 h-10 rounded-xl bg-orange-50 flex items-center justify-center dark:bg-gray-600">
-                                                                        <Clock3 size={22} className="text-black dark:text-white" />
-                                                                    </div>
-
-                                                                    <div>
-                                                                        <p className="text-gray-500 dark:text-white text-sm">
-                                                                            Level
-                                                                        </p>
-
-                                                                        <h3 className="font-bold text-sm dark:text-white">
-                                                                            {item?.item?.level}
-                                                                        </h3>
-                                                                    </div>
-
-                                                                </div>
-
-                                                                <hr />
-
-                                                                <div className="flex gap-4 items-start">
-
-                                                                    <div className="w-10 h-10 rounded-xl bg-orange-50 flex items-center justify-center dark:bg-gray-600">
-                                                                        <CalendarDays
-                                                                            size={22}
-                                                                            className="text-black dark:text-white"
-                                                                        />
-                                                                    </div>
-
-                                                                    <div>
-                                                                        <p className="text-gray-500 dark:text-white text-sm">Days Left</p>
-
-                                                                        <h3 className="font-bold text-sm text-[#FF5A14]">
-                                                                            {Math.max(
-                                                                                0,
-                                                                                Math.ceil(
-                                                                                    (new Date(item?.accessExpiresAt) - new Date()) /
-                                                                                    (1000 * 60 * 60 * 24)
-                                                                                )
-                                                                            )}{" "}
-                                                                            Days
-                                                                        </h3>
-                                                                    </div>
-
-                                                                </div>
-
-                                                            </div>
-
-                                                        </div>
-                                                    </div>
-
-
-                                                </div>
-
-                                                {/* Right Arrow */}
-                                                <div className='flex justify-end items-center gap-6 absolute right-2 bottom-40 '>
-
-
-
-                                                    <button onClick={() => instanceRef.current?.next()} className="hidden xl:flex  w-10 h-10 rounded-full border items-center justify-center hover:bg-orange-50">
-                                                        <ChevronRight className="text-[#FF5A14]" />
-                                                    </button>
-
-
-
-                                                </div>
-                                            </div>
-                                        ))}
-                                    </div>
-                                ) : (
-                                    <div className="flex flex-col items-center justify-center min-h-[300px] rounded-3xl bg-white dark:bg-gray-800">
-                                        <BookOpen
-                                            size={48}
-                                            className="text-gray-400 mb-4"
-                                        />
-
-                                        <h2 className="text-xl font-bold text-gray-800 dark:text-white">
-                                            No Course Purchased
-                                        </h2>
-
-                                        <p className="mt-2 text-sm text-gray-500 dark:text-gray-400">
-                                            You haven't purchased any course yet.
-                                        </p>
-                                    </div>
-                                )}
-                            </div>
-                        </section>
-
-                        <div
-                            ref={sliderRef4}
-                            className="keen-slider min-w-0 w-full relative overflow-hidden rounded-3xl h-[300px]"
-                        >
-                            {promo?.length > 0 ? (
-                                promo.map((item, index) => (
-                                    <div
-                                        key={item?._id || item?.id || index}
-                                        className="
+            <div
+              ref={sliderRef4}
+              className="keen-slider min-w-0 w-full relative overflow-hidden rounded-3xl h-[300px]"
+            >
+              {promo?.length > 0 ? (
+                promo.map((item, index) => (
+                  <div
+                    key={item?._id || item?.id || index}
+                    className="
                                             keen-slider__slide
                                             relative
                                             !min-w-full
@@ -1285,35 +1406,35 @@ const GREDashboard = () => {
                                             bg-[#f8fbff]
                                             shadow-[0_10px_35px_rgba(0,0,0,0.12)]
                                         "
-                                    >
-                                        {/* ================= TOP ================= */}
-                                        <div className="relative z-10 px-4 pt-3 text-center">
-                                            <div className="mt-0.5 text-[6px] tracking-[1.5px] text-[#102957]">
-                                                ─── Gateway To Your Dreams ───
-                                            </div>
-                                            <div className="mt-3">
-                                                <p
-                                                    className="text-base font-medium italic leading-none text-[#ff764b]"
-                                                    style={{ fontFamily: "cursive" }}
-                                                >
-                                                    Exclusive Offer!
-                                                </p>
-                                                <h2 className="mt-1 text-lg font-extrabold leading-tight text-[#102957]">
-                                                    Grab Your Discount Now
-                                                </h2>
-                                                <p className="mt-1 text-[9px] text-[#29436e]">
-                                                    Use the coupon code and{" "}
-                                                    <span className="font-bold text-[#ff6a00]">
-                                                        save big
-                                                    </span>{" "}
-                                                    on your next booking.
-                                                </p>
-                                            </div>
-                                        </div>
+                  >
+                    {/* ================= TOP ================= */}
+                    <div className="relative z-10 px-4 pt-3 text-center">
+                      <div className="mt-0.5 text-[6px] tracking-[1.5px] text-[#102957]">
+                        ─── Gateway To Your Dreams ───
+                      </div>
+                      <div className="mt-3">
+                        <p
+                          className="text-base font-medium italic leading-none text-[#ff764b]"
+                          style={{ fontFamily: "cursive" }}
+                        >
+                          Exclusive Offer!
+                        </p>
+                        <h2 className="mt-1 text-lg font-extrabold leading-tight text-[#102957]">
+                          Grab Your Discount Now
+                        </h2>
+                        <p className="mt-1 text-[9px] text-[#29436e]">
+                          Use the coupon code and{" "}
+                          <span className="font-bold text-[#ff6a00]">
+                            save big
+                          </span>{" "}
+                          on your next booking.
+                        </p>
+                      </div>
+                    </div>
 
-                                        {/* ================= RIBBON ================= */}
-                                        <div
-                                            className="
+                    {/* ================= RIBBON ================= */}
+                    <div
+                      className="
                                                 absolute
                                                 right-[-43px]
                                                 top-[20px]
@@ -1329,27 +1450,27 @@ const GREDashboard = () => {
                                                 py-2
                                                 shadow-md
                                             "
-                                        >
-                                            <span className="text-[12px] font-extrabold uppercase leading-tight text-white">
-                                                LIMITED
-                                                <br />
-                                                TIME OFFER
-                                            </span>
-                                        </div>
+                    >
+                      <span className="text-[12px] font-extrabold uppercase leading-tight text-white">
+                        LIMITED
+                        <br />
+                        TIME OFFER
+                      </span>
+                    </div>
 
-                                        {/* ================= COUPON ================= */}
-                                        <div className="relative z-10 mx-10">
-                                            <div
-                                                className="
+                    {/* ================= COUPON ================= */}
+                    <div className="relative z-10 mx-10">
+                      <div
+                        className="
                                                     relative
                                                     rounded-xl
                                                     bg-white
                                                     p-2
                                                     shadow-[0_6px_18px_rgba(0,0,0,0.10)]
                                                 "
-                                            >
-                                                <div
-                                                    className="
+                      >
+                        <div
+                          className="
                                                         rounded-lg
                                                         border
                                                         border-dashed
@@ -1357,10 +1478,10 @@ const GREDashboard = () => {
                                                         px-3
                                                         py-2
                                                     "
-                                                >
-                                                    <div className="flex justify-center">
-                                                        <span
-                                                            className="
+                        >
+                          <div className="flex justify-center">
+                            <span
+                              className="
                                                                 rounded-full
                                                                 bg-[#102957]
                                                                 px-4
@@ -1370,12 +1491,12 @@ const GREDashboard = () => {
                                                                 tracking-wide
                                                                 text-white
                                                             "
-                                                        >
-                                                            COUPON CODE
-                                                        </span>
-                                                    </div>
-                                                    <p
-                                                        className="
+                            >
+                              COUPON CODE
+                            </span>
+                          </div>
+                          <p
+                            className="
                                                             mt-1
                                                             text-center
                                                             text-xl
@@ -1384,32 +1505,29 @@ const GREDashboard = () => {
                                                             tracking-wide
                                                             text-[#102957]
                                                         "
-                                                    >
-                                                        {item?.code?.slice(0, -2)}
-                                                        <span className="text-[#ff6a00]">
-                                                            {item?.code?.slice(-2)}
-                                                        </span>
-                                                    </p>
-                                                    <div className="mt-1 flex items-center justify-center gap-1.5">
-                                                        <span className="text-[#ff764b]">≫</span>
-                                                        <span className="text-sm font-extrabold text-[#102957]">
-                                                            <span className="text-[#ff764b]">
-                                                                {item?.title?.split(" ")[0]}
-                                                            </span>{" "}
-                                                            {item?.title
-                                                                ?.split(" ")
-                                                                .slice(1)
-                                                                .join(" ")}
-                                                        </span>
-                                                        <span className="text-[#ff764b]">≪</span>
-                                                    </div>
-                                                </div>
-                                            </div>
-                                        </div>
+                          >
+                            {item?.code?.slice(0, -2)}
+                            <span className="text-[#ff6a00]">
+                              {item?.code?.slice(-2)}
+                            </span>
+                          </p>
+                          <div className="mt-1 flex items-center justify-center gap-1.5">
+                            <span className="text-[#ff764b]">≫</span>
+                            <span className="text-sm font-extrabold text-[#102957]">
+                              <span className="text-[#ff764b]">
+                                {item?.title?.split(" ")[0]}
+                              </span>{" "}
+                              {item?.title?.split(" ").slice(1).join(" ")}
+                            </span>
+                            <span className="text-[#ff764b]">≪</span>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
 
-                                        {/* ================= BOTTOM NAVY ================= */}
-                                        <div
-                                            className="
+                    {/* ================= BOTTOM NAVY ================= */}
+                    <div
+                      className="
                                                 absolute
                                                 bottom-0
                                                 left-0
@@ -1420,9 +1538,9 @@ const GREDashboard = () => {
                                                 px-5
                                                 pt-4
                                             "
-                                        >
-                                            <div
-                                                className="
+                    >
+                      <div
+                        className="
                                                     absolute
                                                     left-0
                                                     right-0
@@ -1430,10 +1548,10 @@ const GREDashboard = () => {
                                                     h-[5px]
                                                     bg-[#ff764b]
                                                 "
-                                            />
-                                            <button
-                                                type="button"
-                                                className="
+                      />
+                      <button
+                        type="button"
+                        className="
                                                     absolute
                                                     bottom-[28px]
                                                     left-1/2
@@ -1453,82 +1571,77 @@ const GREDashboard = () => {
                                                     text-white
                                                     shadow-lg
                                                 "
-                                            >
-                                                Explore
-                                                <ArrowRight className="h-3.5 w-3.5" />
-                                            </button>
-                                        </div>
-                                    </div>
-                                ))
-                            ) : (
-                                // Optional: Show a skeleton or empty state if promo is loading
-                                <div className="keen-slider__slide flex items-center justify-center h-full bg-gray-100 rounded-2xl">
-                                    <p className="text-gray-400">Loading Offers...</p>
-                                </div>
-                            )}
-
-                            {/* DOTS */}
-                            {promo?.length > 1 && (
-                                <div className="absolute bottom-1.5 left-1/2 z-[100] flex -translate-x-1/2 gap-2">
-                                    {promo?.map((_, index) => (
-                                        <button
-                                            key={index}
-                                            type="button"
-                                            onClick={() => {
-                                                if (instanceRef4.current) {
-                                                    instanceRef4.current.moveToIdx(index);
-                                                    // Reset timer when manually clicking a dot
-                                                    startAutoplay();
-                                                }
-                                            }}
-                                            className={`h-1.5 rounded-full transition-all duration-300 ${currentSlide4 === index
-                                                    ? "w-4 bg-[#ff764b]"
-                                                    : "w-1.5 bg-[#3975b9]"
-                                                }`}
-                                        />
-                                    ))}
-                                </div>
-                            )}
-                        </div>
-
-
+                      >
+                        Explore
+                        <ArrowRight className="h-3.5 w-3.5" />
+                      </button>
                     </div>
+                  </div>
+                ))
+              ) : (
+                // Optional: Show a skeleton or empty state if promo is loading
+                <div className="keen-slider__slide flex items-center justify-center h-full bg-gray-100 rounded-2xl">
+                  <p className="text-gray-400">Loading Offers...</p>
+                </div>
+              )}
 
+              {/* DOTS */}
+              {promo?.length > 1 && (
+                <div className="absolute bottom-1.5 left-1/2 z-[100] flex -translate-x-1/2 gap-2">
+                  {promo?.map((_, index) => (
+                    <button
+                      key={index}
+                      type="button"
+                      onClick={() => {
+                        if (instanceRef4.current) {
+                          instanceRef4.current.moveToIdx(index);
+                          // Reset timer when manually clicking a dot
+                          startAutoplay();
+                        }
+                      }}
+                      className={`h-1.5 rounded-full transition-all duration-300 ${
+                        currentSlide4 === index
+                          ? "w-4 bg-[#ff764b]"
+                          : "w-1.5 bg-[#3975b9]"
+                      }`}
+                    />
+                  ))}
+                </div>
+              )}
+            </div>
+          </div>
 
-                    <section className="w-full  py-6 md:py-1">
-                        <div className="max-w-7xl mx-auto ">
+          <section className="w-full  py-6 md:py-1">
+            <div className="max-w-7xl mx-auto ">
+              <div className="bg-white dark:bg-gray-800 rounded-3xl shadow-sm p-5 md:p-8 lg:p-4">
+                {/* Heading */}
 
-                            <div className="bg-white dark:bg-gray-800 rounded-3xl shadow-sm p-5 md:p-8 lg:p-4">
+                <h2 className="text-xl md:text-[36px] lg:text-2xl font-bold text-[#181818] mb-4 dark:text-white md:px-2">
+                  Quick Access
+                </h2>
 
-                                {/* Heading */}
+                {/* Cards */}
 
-                                <h2 className="text-xl md:text-[36px] lg:text-2xl font-bold text-[#181818] mb-4 dark:text-white md:px-2">
-                                    Quick Access
-                                </h2>
+                <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 lg:gap-0">
+                  {quickAccess.map((item, index) => {
+                    const img = item.img;
 
-                                {/* Cards */}
+                    return (
+                      <div
+                        key={index}
+                        className="group flex flex-col items-center text-center"
+                      >
+                        {/* Icon */}
 
-                                <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 lg:gap-0">
+                        <div className="relative bg-white dark:bg-gray-800">
+                          {/* Glow */}
 
-                                    {quickAccess.map((item, index) => {
-                                        const img = item.img;
+                          <div className="absolute inset-0 bg-[#FFEFE7] dark:bg-gray-800 rounded-full blur-xl scale-110 opacity-70" />
 
-                                        return (
-                                            <div
-                                                key={index}
-                                                className="group flex flex-col items-center text-center"
-                                            >
-                                                {/* Icon */}
+                          {/* Circle */}
 
-                                                <div className="relative bg-white dark:bg-gray-800">
-
-                                                    {/* Glow */}
-
-                                                    <div className="absolute inset-0 bg-[#FFEFE7] dark:bg-gray-800 rounded-full blur-xl scale-110 opacity-70" />
-
-                                                    {/* Circle */}
-
-                                                    <div className="relative flex items-center justify-center
+                          <div
+                            className="relative flex items-center justify-center
                       w-20 h-20
                       sm:w-28 sm:h-28
                       md:w-25 md:h-25
@@ -1539,433 +1652,465 @@ const GREDashboard = () => {
                       border
                       p-1
                       border-[#F4F4F4]
-                    ">
-
-
-                                                        <div className='bg-orange-100 dark:bg-gray-600 w-full h-full rounded-full flex justify-center items-center'>
-                                                            <div>
-                                                                <img src={img} alt="image" />
-                                                            </div>
-                                                        </div>
-
-
-                                                    </div>
-                                                </div>
-
-
-
-                                                {/* Title */}
-
-                                                <h3 className="lg:mt-1  text-sm sm:text-2xl md:text-xl font-bold text-[#171717] leading-tight dark:text-white">
-                                                    {item.title}
-                                                </h3>
-                                            </div>
-                                        );
-                                    })}
-                                </div>
-
+                    "
+                          >
+                            <div className="bg-orange-100 dark:bg-gray-600 w-full h-full rounded-full flex justify-center items-center">
+                              <div>
+                                <img src={img} alt="image" />
+                              </div>
                             </div>
-                        </div>
-                    </section>
-
-                    <div className="bg-white dark:bg-gray-800 rounded-3xl p-5 md:px-6">
-                        {/* Heading */}
-
-                        <h2 className="text-xl md:text-2xl font-bold text-[#151515] dark:text-white">
-                            Browse {user?.category?.name} Courses
-                        </h2>
-
-                        {/* Search */}
-
-                        <div className="lg:mt-7 mt-2 flex flex-col md:flex-row gap-4">
-                            <div className="flex-1 relative">
-                                <Search
-                                    className="absolute left-5 top-6 -translate-y-1/2 text-gray-500"
-                                    size={20}
-                                />
-
-                                <input
-                                    type="text"
-                                    placeholder="Search for test series..."
-                                    onChange={(e) => setSearchTerm(e.target.value)}
-                                    className="w-full h-12 rounded-full border border-[#FF8356] bg-white pl-14 pr-4 outline-none text-base"
-                                />
-                            </div>
-
-                            <div className="relative group lg:inline-block hidden lg:block">
-                                <button className="h-12 px-4 rounded-2xl border border-[#FF8356] flex items-center justify-center gap-3 bg-white hover:bg-orange-50 transition">
-                                    <Filter size={22} />
-                                    <span className="text-base font-medium">Sort</span>
-                                </button>
-                                <div className="absolute right-0 top-full mt-2 w-48 rounded-xl border border-gray-200 bg-white shadow-lg opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 z-50">
-                                    {/* Dropdown */}
-                                    {SORT_OPTIONS.map((option) => (
-                                        <button
-                                            onClick={() => setSort(option.value)}
-                                            className="w-full text-left px-4 py-1 hover:bg-orange-50 rounded-t-xl text-sm font-medium"
-                                        >
-                                            {option.label}
-                                        </button>
-
-                                    ))}
-
-
-
-
-                                </div>
-                            </div>
+                          </div>
                         </div>
 
-                        {/* Cards */}
+                        {/* Title */}
 
-
-                        {loading2 ? (<div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mt-10">
-                            {[...Array(3)].map((_, index) => (
-                                <div
-                                    key={index}
-                                    className="rounded-[28px] border p-2 animate-pulse"
-                                >
-                                    <div className="h-110 rounded-2xl bg-gray-200"></div>
-
-
-                                </div>
-                            ))}
-                        </div>) : courses.length === 0 ? (
-                            <div className="mt-10 flex flex-col items-center justify-center py-16">
-                                <h3 className="text-2xl font-bold text-gray-800">
-                                    No Courses Found
-                                </h3>
-                                <p className="mt-2 text-gray-500">
-                                    Try searching with a different keyword.
-                                </p>
-                            </div>
-                        ) : useSlider ? (
-                            <div ref={sliderRef} className="keen-slider  mt-10">
-                                {courses.map((course) => {
-                                    const realPrice = course?.pricing?.amount;
-
-                                    const isEarlyBirdActive =
-                                        course?.pricing?.earlyBird &&
-                                        new Date(course.pricing.earlyBird.deadline) > new Date();
-
-                                    const discount = isEarlyBirdActive
-                                        ? course.pricing.earlyBird.discount
-                                        : course?.pricing?.discount;
-
-                                    const price = realPrice - (realPrice * discount) / 100;
-                                    return (
-                                        <div className=''>
-                                            <div className='bg-gradient-to-b from-[#CFCFCF] via-[#ECECEC] to-black  rounded-[28px] p-[1px] relative '>
-                                                {course?.pricing?.earlyBird && new Date(course.pricing.earlyBird.deadline) > new Date() && (
-                                                    <div className="absolute top-0 left-0 z-10">
-                                                        <span className="inline-flex items-center gap-1 rounded-tl-[22px] rounded-br-[22px] bg-gradient-to-r from-[#FF6B35] to-[#FF8A3D] px-3 py-1 text-sm font-bold text-white shadow-lg">
-                                                            Early Bird
-                                                        </span>
-                                                    </div>
-                                                )}
-                                                <div
-                                                    key={course.id}
-                                                    className="rounded-[28px]  bg-white dark:bg-gray-800 overflow-hidden shadow-sm hover:shadow-xl duration-300 relative keen-slider__slide"
-                                                >
-
-                                                    {/* Image */}
-
-                                                    <div className="rounded-2xl p-2.5 bg-gradient-to-b from-[#CFCFCF] via-[#ECECEC] to-white ">
-                                                        <div className=" rounded-2xl overflow-hidden ">
-                                                            <img
-                                                                src={course?.thumbnail?.url && `${ImageBaseUrl}/${course?.thumbnail?.url}`}
-                                                                alt=""
-                                                                className=" w-full h-full lg:h-45 lg:object-cover"
-                                                            />
-                                                        </div>
-                                                    </div>
-
-                                                    {/* Body */}
-
-                                                    <div className="px-6 pb-4 lg:py-0">
-                                                        <h3 className="text-xl md:text-2xl font-bold">
-                                                            <span className="text-[#FF6736] text-2xl">{course.title.split(" ")[0]}</span>{" "}
-                                                            <span className="dark:text-white text-2xl"> {course.title.split(" ").slice(1).join(" ")}</span>
-                                                        </h3>
-
-                                                        <div className="mt-2 space-y-2 text-gray-600 dark:text-white">
-                                                            <div className="flex items-center gap-3 text-base">
-                                                                <Radio size={20} className="text-[#FF6736]" />
-                                                                <span className='text-sm'> {course?.mode}</span>
-                                                            </div>
-
-                                                            <div className="flex items-center gap-3 text-base " >
-                                                                <Calendar size={20} className="text-[#FF6736]" />
-                                                                <span className='text-sm'>Starts on {new Date(course?.schedule?.startDate).toLocaleDateString("en-GB")}</span>
-                                                            </div>
-                                                        </div>
-
-                                                        {/* Price */}
-
-                                                        <div className="mt-2 flex justify-between items-end">
-                                                            <div>
-                                                                <div className="flex items-center gap-2 flex-wrap dark:text-white">
-                                                                    {course?.pricing?.currency}
-                                                                    <span className="text-base font-bold"></span>
-
-                                                                    <span className="text-base font-bold ">
-                                                                        {price}
-                                                                    </span>
-
-                                                                    <span className="line-through text-gray-400 text-base dark:text-white">
-                                                                        {course?.pricing?.amount} {" "}
-                                                                        {course?.pricing?.currency}
-                                                                    </span>
-                                                                </div>
-
-                                                                <p className="text-[#16A34A] text-base font-semibold mt-2">
-                                                                    {discount}% off
-                                                                </p>
-                                                            </div>
-
-                                                            <Link to={`/course/${course.slug}`} className="border border-[#FF6736] rounded-2xl px-6 py-2 text-[#FF6736] text-base hover:bg-[#FF6736] hover:text-white transition ">
-                                                                Explore
-                                                            </Link>
-
-                                                        </div>
-                                                    </div>
-
-                                                    {/* Footer */}
-
-                                                    <div className="px-5 pb-2 mt-2 hidden lg:block">
-                                                        <div className="rounded-full bg-[#FCE7D3] dark:bg-gray-600 flex items-center p-2">
-                                                            <span className="bg-[#FF6D42] text-white rounded-full px-4 py-1 text-xs font-semibold">
-                                                                Ooshas Prep
-                                                            </span>
-
-                                                            <span className="ml-3 text-gray-700 text-xs dark:text-white">
-                                                                Limited Time Offer
-                                                            </span>
-                                                        </div>
-                                                    </div>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    )
-                                })}
-                            </div>) : (
-                            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 xl:grid-cols-3 gap-6 mt-10">
-                                {courses.map((course) => {
-                                    const realPrice = course?.pricing?.amount;
-
-                                    const isEarlyBirdActive =
-                                        course?.pricing?.earlyBird &&
-                                        new Date(course.pricing.earlyBird.deadline) > new Date();
-
-                                    const discount = isEarlyBirdActive
-                                        ? course.pricing.earlyBird.discount
-                                        : course?.pricing?.discount;
-
-                                    const price = realPrice - (realPrice * discount) / 100;
-                                    return (
-                                        <div className=''>
-                                            <div className='bg-gradient-to-b from-[#CFCFCF] via-[#ECECEC] to-black  rounded-[28px] p-[1px] relative '>
-                                                {course?.pricing?.earlyBird && new Date(course.pricing.earlyBird.deadline) > new Date() && (
-                                                    <div className="absolute top-0 left-0 z-10">
-                                                        <span className="inline-flex items-center gap-1 rounded-tl-[22px] rounded-br-[22px] bg-gradient-to-r from-[#FF6B35] to-[#FF8A3D] px-3 py-1 text-sm font-bold text-white shadow-lg">
-                                                            Early Bird
-                                                        </span>
-                                                    </div>
-                                                )}
-                                                <div
-                                                    key={course.id}
-                                                    className="rounded-[28px]  bg-white dark:bg-gray-800 overflow-hidden shadow-sm hover:shadow-xl duration-300 relative "
-                                                >
-
-                                                    {/* Image */}
-
-                                                    <div className="rounded-2xl p-2.5 bg-gradient-to-b from-[#CFCFCF] via-[#ECECEC] to-white ">
-                                                        <div className=" rounded-2xl overflow-hidden ">
-                                                            <img
-                                                                src={course?.thumbnail?.url && `${ImageBaseUrl}/${course?.thumbnail?.url}`}
-                                                                alt=""
-                                                                className=" w-full h-full lg:h-45 lg:object-cover"
-                                                            />
-                                                        </div>
-                                                    </div>
-
-                                                    {/* Body */}
-
-                                                    <div className="px-6 pb-4 lg:py-0">
-                                                        <h3 className="text-xl md:text-xl font-bold">
-                                                            <span className="text-[#FF6736] text-xl">{course.title.split(" ")[0]}</span>{" "}
-                                                            <span className="dark:text-white text-xl "> {course.title.split(" ").slice(1).join(" ")}</span>
-                                                        </h3>
-
-                                                        <div className="mt-2 space-y-2 text-gray-600 dark:text-white">
-                                                            <div className="flex items-center gap-3 text-base">
-                                                                <Radio size={20} className="text-[#FF6736]" />
-                                                                <span className='text-sm'> {course?.mode}</span>
-                                                            </div>
-
-                                                            <div className="flex items-center gap-3 text-base " >
-                                                                <Calendar size={20} className="text-[#FF6736]" />
-                                                                <span className='text-sm'>Starts on {new Date(course?.schedule?.startDate).toLocaleDateString("en-GB")}</span>
-                                                            </div>
-                                                        </div>
-
-                                                        {/* Price */}
-
-                                                        <div className="mt-2 flex justify-between items-end">
-                                                            <div>
-                                                                <div className="flex items-center gap-1  dark:text-white">
-                                                                    {course?.pricing?.currency}
-                                                                    <span className="text-base font-bold"></span>
-
-                                                                    <span className="text-2xl font-bold ">
-                                                                        {price}
-                                                                    </span>
-
-                                                                    <span className="line-through text-gray-400 text-base dark:text-white">
-                                                                        {course?.pricing?.amount} {" "}
-                                                                        {course?.pricing?.currency}
-                                                                    </span>
-                                                                </div>
-
-                                                                <p className="text-[#16A34A] text-base font-semibold mt-2">
-                                                                    {discount}% off
-                                                                </p>
-                                                            </div>
-
-                                                            <Link to={`/course/${course.slug}`} className="border border-[#FF6736] rounded-2xl px-6 py-2 text-[#FF6736] text-base hover:bg-[#FF6736] hover:text-white transition ">
-                                                                Explore
-                                                            </Link>
-
-                                                        </div>
-                                                    </div>
-
-                                                    {/* Footer */}
-
-                                                    <div className="px-5 pb-1 mt-2 hidden lg:block">
-                                                        <div className="rounded-full bg-[#FCE7D3] dark:bg-gray-600 flex items-center p-2">
-                                                            <span className="bg-[#FF6D42]  text-white rounded-full px-4 py-1 text-xs font-semibold">
-                                                                Ooshas Prep
-                                                            </span>
-
-                                                            <span className="ml-3 text-gray-700 text-xs dark:text-white">
-                                                                Limited Time Offer
-                                                            </span>
-                                                        </div>
-                                                    </div>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    )
-                                })}
-                            </div>)
-                        }
-
-                    </div>
+                        <h3 className="lg:mt-1  text-sm sm:text-2xl md:text-xl font-bold text-[#171717] leading-tight dark:text-white">
+                          {item.title}
+                        </h3>
+                      </div>
+                    );
+                  })}
                 </div>
+              </div>
+            </div>
+          </section>
 
+          <div className="bg-white dark:bg-gray-800 rounded-3xl p-5 md:px-6">
+            {/* Heading */}
 
+            <h2 className="text-xl md:text-2xl font-bold text-[#151515] dark:text-white">
+              Browse {user?.category?.name} Courses
+            </h2>
 
+            {/* Search */}
+
+            <div className="lg:mt-7 mt-2 flex flex-col md:flex-row gap-4">
+              <div className="flex-1 relative">
+                <Search
+                  className="absolute left-5 top-6 -translate-y-1/2 text-gray-500"
+                  size={20}
+                />
+
+                <input
+                  type="text"
+                  placeholder="Search for test series..."
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  className="w-full h-12 rounded-full border border-[#FF8356] bg-white pl-14 pr-4 outline-none text-base"
+                />
+              </div>
+
+              <div className="relative group lg:inline-block hidden lg:block">
+                <button className="h-12 px-4 rounded-2xl border border-[#FF8356] flex items-center justify-center gap-3 bg-white hover:bg-orange-50 transition">
+                  <Filter size={22} />
+                  <span className="text-base font-medium">Sort</span>
+                </button>
+                <div className="absolute right-0 top-full mt-2 w-48 rounded-xl border border-gray-200 bg-white shadow-lg opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 z-50">
+                  {/* Dropdown */}
+                  {SORT_OPTIONS.map((option) => (
+                    <button
+                      onClick={() => setSort(option.value)}
+                      className="w-full text-left px-4 py-1 hover:bg-orange-50 rounded-t-xl text-sm font-medium"
+                    >
+                      {option.label}
+                    </button>
+                  ))}
+                </div>
+              </div>
             </div>
 
-            {/* BOTTOM GRID */}
-            <section className="w-full rounded-3xl bg-white dark:bg-gray-800 p-4 sm:p-6 lg:p-7 lg:my-5">
-                {/* Heading */}
-                <h2 className="mb-6 text-xl md:text-2xl font-bold text-[#222] dark:text-white">
-                    Explore Other Test Preps
-                </h2>
+            {/* Cards */}
 
-                {/* Cards */}
-                {useSlider2 ? (<div ref={sliderRef2} className="keen-slider">
-                    {allCourses.map((item) => {
-                        const realPrice = item?.pricing?.amount;
+            {loading2 ? (
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mt-10">
+                {[...Array(3)].map((_, index) => (
+                  <div
+                    key={index}
+                    className="rounded-[28px] border p-2 animate-pulse"
+                  >
+                    <div className="h-110 rounded-2xl bg-gray-200"></div>
+                  </div>
+                ))}
+              </div>
+            ) : courses.length === 0 ? (
+              <div className="mt-10 flex flex-col items-center justify-center py-16">
+                <h3 className="text-2xl font-bold text-gray-800">
+                  No Courses Found
+                </h3>
+                <p className="mt-2 text-gray-500">
+                  Try searching with a different keyword.
+                </p>
+              </div>
+            ) : useSlider ? (
+              <div ref={sliderRef} className="keen-slider  mt-10">
+                {courses.map((course) => {
+                  const realPrice = course?.pricing?.amount;
 
-                        const isEarlyBirdActive =
-                            item?.pricing?.earlyBird &&
-                            new Date(item.pricing.earlyBird.deadline) > new Date();
+                  const isEarlyBirdActive =
+                    course?.pricing?.earlyBird &&
+                    new Date(course.pricing.earlyBird.deadline) > new Date();
 
-                        const discount = isEarlyBirdActive
-                            ? item.pricing.earlyBird.discount
-                            : item?.pricing?.discount;
+                  const discount = isEarlyBirdActive
+                    ? course.pricing.earlyBird.discount
+                    : course?.pricing?.discount;
 
-                        const price = realPrice - (realPrice * discount) / 100;
-                        return (
-                            <div className='bg-gradient-to-b from-[#CFCFCF] via-[#ECECEC] to-black dark:bg-gray-800 p-[1px] rounded-[22px] relative keen-slider__slide'>
-                                {item?.pricing?.earlyBird && new Date(item.pricing.earlyBird.deadline) > new Date() && (
-                                    <div className="absolute top-0 left-0 z-10">
-                                        <span className="inline-flex items-center gap-1 rounded-tl-[22px] rounded-br-[22px] bg-gradient-to-r from-[#FF6B35] to-[#FF8A3D] px-3 py-1 text-xs font-bold text-white shadow-lg">
-                                            Early Bird
-                                        </span>
-                                    </div>
-                                )}
-                                <div
-                                    key={item.id}
-                                    className="overflow-hidden rounded-[22px] border border-[#d8d8d8] bg-white dark:bg-gray-800 shadow-sm "
-                                >
-
-                                    {/* Banner */}
-                                    <div className='p-[6px] rounded-2xl bg-gradient-to-b from-[#CFCFCF] via-[#ECECEC] to-white'>
-                                        <div className="relative  overflow-hidden">
-                                            <img
-                                                src={item?.thumbnail?.url && `${ImageBaseUrl}/${item?.thumbnail?.url}`}
-                                                alt={item.title}
-                                                className="h-35 w-full rounded-2xl object-cover"
-                                            />
-                                        </div>
-                                    </div>
-
-                                    {/* Content */}
-                                    <div className="p-4">
-                                        <h3 className="text-xl font-bold leading-none">
-                                            <span className="text-orange-500">{item.title.split(" ")[0]}</span>{" "}
-                                            <span className="text-black dark:text-white text-base font-semibold">
-                                                {item.title.split(" ").slice(1).join(" ")}
-                                            </span>
-                                        </h3>
-
-                                        {/* Price */}
-                                        <div className="mt-4 flex items-center flex-wrap gap-2 ">
-                                            <span className="text-base font-bold text-[#222] dark:text-white">
-                                                ₹ {price}
-                                            </span>
-
-                                            <span className="text-base text-gray-400 line-through dark:text-white">
-                                                ₹{item.pricing?.amount}
-                                            </span>
-
-                                            <span className="text-base font-semibold text-green-600 dark:text-white">
-                                                {discount}%
-                                            </span>
-                                        </div>
-
-                                        {/* Button */}
-                                        <Link to={`/course/${item.slug}`} className='flex justify-center'>
-                                            <button className="mt-5 py-2  w-1/2 text-base   rounded-xl border border-[#ff5b2e] text-[#ff5b2e] font-medium transition-all duration-300 hover:bg-[#ff5b2e] hover:text-white">
-                                                Explore
-                                            </button>
-                                        </Link>
-                                    </div>
-                                </div>
+                  const price = realPrice - (realPrice * discount) / 100;
+                  return (
+                    <div className="">
+                      <div className="bg-gradient-to-b from-[#CFCFCF] via-[#ECECEC] to-black  rounded-[28px] p-[1px] relative ">
+                        {course?.pricing?.earlyBird &&
+                          new Date(course.pricing.earlyBird.deadline) >
+                            new Date() && (
+                            <div className="absolute top-0 left-0 z-10">
+                              <span className="inline-flex items-center gap-1 rounded-tl-[22px] rounded-br-[22px] bg-gradient-to-r from-[#FF6B35] to-[#FF8A3D] px-3 py-1 text-sm font-bold text-white shadow-lg">
+                                Early Bird
+                              </span>
                             </div>
-                        )
-                    })}
+                          )}
+                        <div
+                          key={course.id}
+                          className="rounded-[28px]  bg-white dark:bg-gray-800 overflow-hidden shadow-sm hover:shadow-xl duration-300 relative keen-slider__slide"
+                        >
+                          {/* Image */}
+
+                          <div className="rounded-2xl p-2.5 bg-gradient-to-b from-[#CFCFCF] via-[#ECECEC] to-white ">
+                            <div className=" rounded-2xl overflow-hidden ">
+                              <img
+                                src={
+                                  course?.thumbnail?.url &&
+                                  `${ImageBaseUrl}/${course?.thumbnail?.url}`
+                                }
+                                alt=""
+                                className=" w-full h-full lg:h-45 lg:object-cover"
+                              />
+                            </div>
+                          </div>
+
+                          {/* Body */}
+
+                          <div className="px-6 pb-4 lg:py-0">
+                            <h3 className="text-xl md:text-2xl font-bold">
+                              <span className="text-[#FF6736] text-2xl">
+                                {course.title.split(" ")[0]}
+                              </span>{" "}
+                              <span className="dark:text-white text-2xl">
+                                {" "}
+                                {course.title.split(" ").slice(1).join(" ")}
+                              </span>
+                            </h3>
+
+                            <div className="mt-2 space-y-2 text-gray-600 dark:text-white">
+                              <div className="flex items-center gap-3 text-base">
+                                <Radio size={20} className="text-[#FF6736]" />
+                                <span className="text-sm"> {course?.mode}</span>
+                              </div>
+
+                              <div className="flex items-center gap-3 text-base ">
+                                <Calendar
+                                  size={20}
+                                  className="text-[#FF6736]"
+                                />
+                                <span className="text-sm">
+                                  Starts on{" "}
+                                  {new Date(
+                                    course?.schedule?.startDate,
+                                  ).toLocaleDateString("en-GB")}
+                                </span>
+                              </div>
+                            </div>
+
+                            {/* Price */}
+
+                            <div className="mt-2 flex justify-between items-end">
+                              <div>
+                                <div className="flex items-center gap-2 flex-wrap dark:text-white">
+                                  {course?.pricing?.currency}
+                                  <span className="text-base font-bold"></span>
+
+                                  <span className="text-base font-bold ">
+                                    {price}
+                                  </span>
+
+                                  <span className="line-through text-gray-400 text-base dark:text-white">
+                                    {course?.pricing?.amount}{" "}
+                                    {course?.pricing?.currency}
+                                  </span>
+                                </div>
+
+                                <p className="text-[#16A34A] text-base font-semibold mt-2">
+                                  {discount}% off
+                                </p>
+                              </div>
+
+                              <Link
+                                to={`/course/${course.slug}`}
+                                className="border border-[#FF6736] rounded-2xl px-6 py-2 text-[#FF6736] text-base hover:bg-[#FF6736] hover:text-white transition "
+                              >
+                                Explore
+                              </Link>
+                            </div>
+                          </div>
+
+                          {/* Footer */}
+
+                          <div className="px-5 pb-2 mt-2 hidden lg:block">
+                            <div className="rounded-full bg-[#FCE7D3] dark:bg-gray-600 flex items-center p-2">
+                              <span className="bg-[#FF6D42] text-white rounded-full px-4 py-1 text-xs font-semibold">
+                                Ooshas Prep
+                              </span>
+
+                              <span className="ml-3 text-gray-700 text-xs dark:text-white">
+                                Limited Time Offer
+                              </span>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            ) : (
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 xl:grid-cols-3 gap-6 mt-10">
+                {courses.map((course) => {
+                  const realPrice = course?.pricing?.amount;
+
+                  const isEarlyBirdActive =
+                    course?.pricing?.earlyBird &&
+                    new Date(course.pricing.earlyBird.deadline) > new Date();
+
+                  const discount = isEarlyBirdActive
+                    ? course.pricing.earlyBird.discount
+                    : course?.pricing?.discount;
+
+                  const price = realPrice - (realPrice * discount) / 100;
+                  return (
+                    <div className="">
+                      <div className="bg-gradient-to-b from-[#CFCFCF] via-[#ECECEC] to-black  rounded-[28px] p-[1px] relative ">
+                        {course?.pricing?.earlyBird &&
+                          new Date(course.pricing.earlyBird.deadline) >
+                            new Date() && (
+                            <div className="absolute top-0 left-0 z-10">
+                              <span className="inline-flex items-center gap-1 rounded-tl-[22px] rounded-br-[22px] bg-gradient-to-r from-[#FF6B35] to-[#FF8A3D] px-3 py-1 text-sm font-bold text-white shadow-lg">
+                                Early Bird
+                              </span>
+                            </div>
+                          )}
+                        <div
+                          key={course.id}
+                          className="rounded-[28px]  bg-white dark:bg-gray-800 overflow-hidden shadow-sm hover:shadow-xl duration-300 relative "
+                        >
+                          {/* Image */}
+
+                          <div className="rounded-2xl p-2.5 bg-gradient-to-b from-[#CFCFCF] via-[#ECECEC] to-white ">
+                            <div className=" rounded-2xl overflow-hidden ">
+                              <img
+                                src={
+                                  course?.thumbnail?.url &&
+                                  `${ImageBaseUrl}/${course?.thumbnail?.url}`
+                                }
+                                alt=""
+                                className=" w-full h-full lg:h-45 lg:object-cover"
+                              />
+                            </div>
+                          </div>
+
+                          {/* Body */}
+
+                          <div className="px-6 pb-4 lg:py-0">
+                            <h3 className="text-xl md:text-xl font-bold">
+                              <span className="text-[#FF6736] text-xl">
+                                {course.title.split(" ")[0]}
+                              </span>{" "}
+                              <span className="dark:text-white text-xl ">
+                                {" "}
+                                {course.title.split(" ").slice(1).join(" ")}
+                              </span>
+                            </h3>
+
+                            <div className="mt-2 space-y-2 text-gray-600 dark:text-white">
+                              <div className="flex items-center gap-3 text-base">
+                                <Radio size={20} className="text-[#FF6736]" />
+                                <span className="text-sm"> {course?.mode}</span>
+                              </div>
+
+                              <div className="flex items-center gap-3 text-base ">
+                                <Calendar
+                                  size={20}
+                                  className="text-[#FF6736]"
+                                />
+                                <span className="text-sm">
+                                  Starts on{" "}
+                                  {new Date(
+                                    course?.schedule?.startDate,
+                                  ).toLocaleDateString("en-GB")}
+                                </span>
+                              </div>
+                            </div>
+
+                            {/* Price */}
+
+                            <div className="mt-2 flex justify-between items-end">
+                              <div>
+                                <div className="flex items-center gap-1  dark:text-white">
+                                  {course?.pricing?.currency}
+                                  <span className="text-base font-bold"></span>
+
+                                  <span className="text-2xl font-bold ">
+                                    {price}
+                                  </span>
+
+                                  <span className="line-through text-gray-400 text-base dark:text-white">
+                                    {course?.pricing?.amount}{" "}
+                                    {course?.pricing?.currency}
+                                  </span>
+                                </div>
+
+                                <p className="text-[#16A34A] text-base font-semibold mt-2">
+                                  {discount}% off
+                                </p>
+                              </div>
+
+                              <Link
+                                to={`/course/${course.slug}`}
+                                className="border border-[#FF6736] rounded-2xl px-6 py-2 text-[#FF6736] text-base hover:bg-[#FF6736] hover:text-white transition "
+                              >
+                                Explore
+                              </Link>
+                            </div>
+                          </div>
+
+                          {/* Footer */}
+
+                          <div className="px-5 pb-1 mt-2 hidden lg:block">
+                            <div className="rounded-full bg-[#FCE7D3] dark:bg-gray-600 flex items-center p-2">
+                              <span className="bg-[#FF6D42]  text-white rounded-full px-4 py-1 text-xs font-semibold">
+                                Ooshas Prep
+                              </span>
+
+                              <span className="ml-3 text-gray-700 text-xs dark:text-white">
+                                Limited Time Offer
+                              </span>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            )}
+          </div>
+        </div>
+      </div>
+
+      {/* BOTTOM GRID */}
+      <section className="w-full rounded-3xl bg-white dark:bg-gray-800 p-4 sm:p-6 lg:p-7 lg:my-5">
+        {/* Heading */}
+        <h2 className="mb-6 text-xl md:text-2xl font-bold text-[#222] dark:text-white">
+          Explore Other Test Preps
+        </h2>
+
+        {/* Cards */}
+        {useSlider2 ? (
+          <div ref={sliderRef2} className="keen-slider">
+            {allCourses.map((item) => {
+              const realPrice = item?.pricing?.amount;
+
+              const isEarlyBirdActive =
+                item?.pricing?.earlyBird &&
+                new Date(item.pricing.earlyBird.deadline) > new Date();
+
+              const discount = isEarlyBirdActive
+                ? item.pricing.earlyBird.discount
+                : item?.pricing?.discount;
+
+              const price = realPrice - (realPrice * discount) / 100;
+              return (
+                <div className="bg-gradient-to-b from-[#CFCFCF] via-[#ECECEC] to-black dark:bg-gray-800 p-[1px] rounded-[22px] relative keen-slider__slide">
+                  {item?.pricing?.earlyBird &&
+                    new Date(item.pricing.earlyBird.deadline) > new Date() && (
+                      <div className="absolute top-0 left-0 z-10">
+                        <span className="inline-flex items-center gap-1 rounded-tl-[22px] rounded-br-[22px] bg-gradient-to-r from-[#FF6B35] to-[#FF8A3D] px-3 py-1 text-xs font-bold text-white shadow-lg">
+                          Early Bird
+                        </span>
+                      </div>
+                    )}
+                  <div
+                    key={item.id}
+                    className="overflow-hidden rounded-[22px] border border-[#d8d8d8] bg-white dark:bg-gray-800 shadow-sm "
+                  >
+                    {/* Banner */}
+                    <div className="p-[6px] rounded-2xl bg-gradient-to-b from-[#CFCFCF] via-[#ECECEC] to-white">
+                      <div className="relative  overflow-hidden">
+                        <img
+                          src={
+                            item?.thumbnail?.url &&
+                            `${ImageBaseUrl}/${item?.thumbnail?.url}`
+                          }
+                          alt={item.title}
+                          className="h-35 w-full rounded-2xl object-fit"
+                        />
+                      </div>
+                    </div>
+
+                    {/* Content */}
+                    <div className="p-4">
+                      <h3 className="text-xl font-bold leading-none">
+                        <span className="text-orange-500">
+                          {item.title.split(" ")[0]}
+                        </span>{" "}
+                        <span className="text-black dark:text-white text-base font-semibold">
+                          {item.title.split(" ").slice(1).join(" ")}
+                        </span>
+                      </h3>
+
+                      {/* Price */}
+                      <div className="mt-4 flex items-center flex-wrap gap-2 ">
+                        <span className="text-base font-bold text-[#222] dark:text-white">
+                          ₹ {price}
+                        </span>
+
+                        <span className="text-base text-gray-400 line-through dark:text-white">
+                          ₹{item.pricing?.amount}
+                        </span>
+
+                        <span className="text-base font-semibold text-green-600 dark:text-white">
+                          {discount}%
+                        </span>
+                      </div>
+
+                      {/* Button */}
+                      <Link
+                        to={`/course/${item.slug}`}
+                        className="flex justify-center"
+                      >
+                        <button className="mt-5 py-2  w-1/2 text-base   rounded-xl border border-[#ff5b2e] text-[#ff5b2e] font-medium transition-all duration-300 hover:bg-[#ff5b2e] hover:text-white">
+                          Explore
+                        </button>
+                      </Link>
+                    </div>
+                  </div>
                 </div>
-                ) : (
-                    <div className="grid grid-cols-1 sm:grid-cols-2 sm:grid-cols-2 lg:grid-cols-2 xl:grid-cols-4 gap-6">
-                        {allCourses.map((item) => {
-                            const realPrice = item?.pricing?.amount;
+              );
+            })}
+          </div>
+        ) : (
+          <div className="grid grid-cols-1 sm:grid-cols-2 sm:grid-cols-2 lg:grid-cols-2 xl:grid-cols-4 gap-6">
+            {allCourses.map((item) => {
+              const realPrice = item?.pricing?.amount;
 
-                            const isEarlyBirdActive =
-                                item?.pricing?.earlyBird &&
-                                new Date(item.pricing.earlyBird.deadline) > new Date();
+              const isEarlyBirdActive =
+                item?.pricing?.earlyBird &&
+                new Date(item.pricing.earlyBird.deadline) > new Date();
 
-                            const discount = isEarlyBirdActive
-                                ? item.pricing.earlyBird.discount
-                                : item?.pricing?.discount;
+              const discount = isEarlyBirdActive
+                ? item.pricing.earlyBird.discount
+                : item?.pricing?.discount;
 
-                            const price = realPrice - (realPrice * discount) / 100;
-                            return (
-                               <div
-    className="
+              const price = realPrice - (realPrice * discount) / 100;
+              return (
+                <div
+                  className="
         bg-gradient-to-b
         from-[#CFCFCF]
         via-[#ECECEC]
@@ -1977,13 +2122,13 @@ const GREDashboard = () => {
         overflow-hidden
         h-full
     "
->
-    {/* Early Bird */}
-    {item?.pricing?.earlyBird &&
-        new Date(item.pricing.earlyBird.deadline) > new Date() && (
-            <div className="absolute top-0 left-0 z-10">
-                <span
-                    className="
+                >
+                  {/* Early Bird */}
+                  {item?.pricing?.earlyBird &&
+                    new Date(item.pricing.earlyBird.deadline) > new Date() && (
+                      <div className="absolute top-0 left-0 z-10">
+                        <span
+                          className="
                         inline-flex
                         items-center
                         gap-1
@@ -2001,15 +2146,15 @@ const GREDashboard = () => {
                         text-white
                         shadow-lg
                     "
-                >
-                    Early Bird
-                </span>
-            </div>
-        )}
+                        >
+                          Early Bird
+                        </span>
+                      </div>
+                    )}
 
-    <div
-        key={item.id}
-        className="
+                  <div
+                    key={item.id}
+                    className="
             overflow-hidden
             rounded-[22px]
             border
@@ -2019,11 +2164,10 @@ const GREDashboard = () => {
             shadow-sm
             h-full
         "
-    >
-
-        {/* ================= BANNER ================= */}
-        <div
-            className="
+                  >
+                    {/* ================= BANNER ================= */}
+                    <div
+                      className="
                 p-[4px]
                 lg:p-[5px]
                 xl:p-[6px]
@@ -2033,15 +2177,15 @@ const GREDashboard = () => {
                 via-[#ECECEC]
                 to-white
             "
-        >
-            <div className="relative overflow-hidden">
-                <img
-                    src={
-                        item?.thumbnail?.url &&
-                        `${ImageBaseUrl}/${item?.thumbnail?.url}`
-                    }
-                    alt={item.title}
-                    className="
+                    >
+                      <div className="relative overflow-hidden">
+                        <img
+                          src={
+                            item?.thumbnail?.url &&
+                            `${ImageBaseUrl}/${item?.thumbnail?.url}`
+                          }
+                          alt={item.title}
+                          className="
                         h-full
                         sm:h-full
                         md:h-[150px]
@@ -2051,24 +2195,23 @@ const GREDashboard = () => {
                         rounded-2xl
                         object-cover
                     "
-                />
-            </div>
-        </div>
+                        />
+                      </div>
+                    </div>
 
-        {/* ================= CONTENT ================= */}
-        <div
-            className="
+                    {/* ================= CONTENT ================= */}
+                    <div
+                      className="
                 p-3
                 sm:p-3.5
                 md:p-4
                 lg:p-3.5
                 xl:p-4
             "
-        >
-
-            {/* TITLE */}
-            <h3
-                className="
+                    >
+                      {/* TITLE */}
+                      <h3
+                        className="
                     text-lg
                     sm:text-lg
                     md:text-xl
@@ -2081,13 +2224,12 @@ const GREDashboard = () => {
                     lg:min-h-[42px]
                     xl:min-h-0
                 "
-            >
-                <span className="text-orange-500">
-                    {item.title.split(" ")[0]}
-                </span>{" "}
-
-                <span
-                    className="
+                      >
+                        <span className="text-orange-500">
+                          {item.title.split(" ")[0]}
+                        </span>{" "}
+                        <span
+                          className="
                         text-black
                         dark:text-white
                         text-sm
@@ -2097,17 +2239,14 @@ const GREDashboard = () => {
                         xl:text-base
                         font-semibold
                     "
-                >
-                    {item.title
-                        .split(" ")
-                        .slice(1)
-                        .join(" ")}
-                </span>
-            </h3>
+                        >
+                          {item.title.split(" ").slice(1).join(" ")}
+                        </span>
+                      </h3>
 
-            {/* ================= PRICE ================= */}
-            <div
-                className="
+                      {/* ================= PRICE ================= */}
+                      <div
+                        className="
                     mt-3
                     lg:mt-3
                     xl:mt-4
@@ -2118,9 +2257,9 @@ const GREDashboard = () => {
                     lg:gap-1.5
                     xl:gap-2
                 "
-            >
-                <span
-                    className="
+                      >
+                        <span
+                          className="
                         text-sm
                         sm:text-base
                         lg:text-sm
@@ -2129,12 +2268,12 @@ const GREDashboard = () => {
                         text-[#222]
                         dark:text-white
                     "
-                >
-                    ₹ {price}
-                </span>
+                        >
+                          ₹ {price}
+                        </span>
 
-                <span
-                    className="
+                        <span
+                          className="
                         text-sm
                         sm:text-base
                         lg:text-sm
@@ -2143,12 +2282,12 @@ const GREDashboard = () => {
                         line-through
                         dark:text-white
                     "
-                >
-                    ₹{item.pricing?.amount}
-                </span>
+                        >
+                          ₹{item.pricing?.amount}
+                        </span>
 
-                <span
-                    className="
+                        <span
+                          className="
                         text-sm
                         sm:text-base
                         lg:text-sm
@@ -2157,18 +2296,18 @@ const GREDashboard = () => {
                         text-green-600
                         dark:text-white
                     "
-                >
-                    {discount}%
-                </span>
-            </div>
+                        >
+                          {discount}%
+                        </span>
+                      </div>
 
-            {/* ================= BUTTON ================= */}
-            <Link
-                to={`/course/${item.slug}`}
-                className="flex justify-center"
-            >
-                <button
-                    className="
+                      {/* ================= BUTTON ================= */}
+                      <Link
+                        to={`/course/${item.slug}`}
+                        className="flex justify-center"
+                      >
+                        <button
+                          className="
                         mt-4
                         lg:mt-4
                         xl:mt-5
@@ -2192,21 +2331,20 @@ const GREDashboard = () => {
                         hover:bg-[#ff5b2e]
                         hover:text-white
                     "
-                >
-                    Explore
-                </button>
-            </Link>
-        </div>
-    </div>
-</div>
-                            )
-                        })}
+                        >
+                          Explore
+                        </button>
+                      </Link>
                     </div>
-                )}
-            </section>
-
-        </div>
-    );
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        )}
+      </section>
+    </div>
+  );
 };
 
 export default GREDashboard;

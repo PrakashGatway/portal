@@ -5,25 +5,6 @@ import { useAuth } from "../context/UserContext";
 import {
   ChevronDown,
   LayoutDashboard,
-  FileText,
-  GraduationCap,
-  ClipboardList,
-  BookOpen,
-  Folder,
-  Package,
-  ClipboardCheck,
-  Database,
-  CircleHelp,
-  TestTube,
-  Scroll,
-  Rocket,
-  PhoneCall,
-  UserCircle,
-  PlusCircle,
-  TrendingUp,
-  Upload,
-  BarChart3,
-  Pencil,
   ChevronRight,
   ChevronLeft,
 } from "lucide-react";
@@ -32,6 +13,7 @@ type NavItem = {
   name: string;
   icon: any;
   path?: string;
+  id? : string;
   subItems?: {
     name: string;
     path: string;
@@ -126,10 +108,10 @@ const navItems: NavItem[] = [
 ];
 
 const navItemsUser: NavItem[] = [
-  { icon: "📊", name: "Dashboard", path: "/" },
+  { icon: "📊", name: "Dashboard", path: "/", id: "dashboard" },
   { icon: "📅", name: "Calendar", path: "/calendar" },
-  { icon: "📚", name: "Batches", path: "/course" },
-  { icon: "📖", name: "Tests Series", path: "/test-series" },
+  { icon: "📚", name: "Batches", path: "/course", id: 'course' },
+  { icon: "📖", name: "Tests Series", path: "/test-series" ,id:'test'},
   // {
   //   icon: "🧪",
   //   name: "Tests",
@@ -151,9 +133,9 @@ const navItemsUser: NavItem[] = [
   //     },
   //   ],
   // },
-  { icon: "🧪", name: "Mock Tests", path: "/tests" },
-  { icon: "📝", name: "Practice Tests", path: "/practice-tests" },
-  { icon: "✨", name: "Quiz", path: "/quiz" },
+  { icon: "🧪", name: "Mock Tests", path: "/tests", id: 'mock-test' },
+  { icon: "📝", name: "Practice Tests", path: "/practice-tests", id: 'practice-test' },
+  { icon: "✨", name: "Quiz", path: "/quiz", id:'quiz' },
   { icon: "📁", name: "Resources", path: "/resources" },
   { icon: "🔔", name: "Message", path: "/notifications" },
   { icon: "💰", name: "Refer & Earn", path: "/referrals" },
@@ -266,11 +248,11 @@ const navItemsTeacher: NavItem[] = [
 ];
 
 const othersItems: NavItem[] = [
-  { icon: "👤", name: "My Profile", path: "/profile" },
-  { icon: "🎓", name: "My Courses", path: "/my-courses" },
+  { icon: "👤", name: "My Profile", path: "/profile",  },
+  { icon: "🎓", name: "My Courses", path: "/my-courses" ,id: "my-courses" },
   { icon: "🎉", name: "My Offers", path: "/offers" },
   { icon: "🧾", name: "Orders", path: "/transactions" },
-  { icon: "💬", name: "Support", path: "/support" },
+  { icon: "💬", name: "Support", path: "/support", id:'support' },
   { icon: "✨", name: "Our Selection", path: "/our-selection" },
   { icon: "🔒", name: "Privacy Policy", path: "/privacy-policy" },
 ];
@@ -376,7 +358,7 @@ const AppSidebar: React.FC = () => {
         const Icon = nav.icon;
 
         return (
-          <li key={nav.name} className="relative">
+          <li key={nav.name} id={nav?.id} className="relative">
             {nav.subItems ? (
               <div className="border-l-4 border-orange-500 rounded-[26px]">
                 <button

@@ -37,6 +37,7 @@ import QuestionBody from "./QuestionComponent";
 import QuestionRenderer from "../SatTest/SatComponents";
 import { QuestionPreviewRenderer } from "./GreComponents";
 import { PteQuestionPreviewRenderer } from "../PTEtest/Components";
+import CKEditorComponent from "../../components/CkEditor";
 
 interface Exam {
   _id: string;
@@ -1639,10 +1640,19 @@ export default function QuestionManagementPage() {
                         <Label className="text-sm font-medium text-gray-700 dark:text-gray-300">
                           Stimulus / Passage
                         </Label>
-                        <RichTextEditor
+                        {/* <RichTextEditor
                           header={true}
                           initialValue={watchStimulus}
                           onChange={(html) => setValue("stimulus", html)}
+                        />
+                         */}
+
+                        <CKEditorComponent
+                          value={watchStimulus || ""}
+                          onChange={(content: string) =>
+                            setValue("stimulus", content)
+                          }
+                          placeholder="..."
                         />
                       </div>
 
@@ -1662,11 +1672,19 @@ export default function QuestionManagementPage() {
                             className="mt-1 rounded-2xl border-gray-200 dark:border-gray-700"
                           />
                         ) : (
-                          <RichTextEditor
-                            header={true}
-                            initialValue={watchQuestionText}
-                            onChange={(html) => setValue("questionText", html)}
-                          />
+                          // <RichTextEditor
+                          //   header={true}
+                          //   initialValue={watchQuestionText}
+                          //   onChange={(html) => setValue("questionText", html)}
+                          // />
+                          
+                        <CKEditorComponent
+                          value={watchQuestionText || ""}
+                          onChange={(content: string) =>
+                            setValue("questionText", content)
+                          }
+                          placeholder="..."
+                        />
                         )}
                         {errors.questionText && (
                           <p className="mt-1 text-xs text-rose-500">
@@ -1825,7 +1843,9 @@ export default function QuestionManagementPage() {
                                     onChange={(e) => setValue(`options.${index}.text`, e.target.value)}
                                     className="rounded-xl border-gray-200 dark:border-gray-700"
                                   /> */}
-                                  <RichTextEditor
+
+
+                                  {/* <RichTextEditor
                                     header={true}
                                     initialValue={watch(
                                       `options.${index}.text`,
@@ -1833,7 +1853,19 @@ export default function QuestionManagementPage() {
                                     onChange={(html) =>
                                       setValue(`options.${index}.text`, html)
                                     }
+                                  /> */}
+
+                                  
+                                  <CKEditorComponent
+                                    value={watch(
+                                      `options.${index}.text`,
+                                    ) || ""}
+                                    onChange={(content: string) =>
+                                      setValue(`options.${index}.text`, content)
+                                    }
+                                    placeholder="..."
                                   />
+
                                   <label className="inline-flex items-center gap-2 text-xs text-gray-600 dark:text-gray-300">
                                     <input
                                       type="checkbox"
@@ -2134,11 +2166,21 @@ export default function QuestionManagementPage() {
                         <Label className="text-sm font-medium text-gray-700 dark:text-gray-300">
                           Explanation
                         </Label>
-                        <RichTextEditor
+                        {/* <RichTextEditor
                           header={true}
                           initialValue={watchExplanation}
                           onChange={(html) => setValue("explanation", html)}
+                        /> */}
+
+                        
+                        <CKEditorComponent
+                          value={watchExplanation || ""}
+                          onChange={(content: string) =>
+                            setValue("explanation", content)
+                          }
+                          placeholder="..."
                         />
+
                         {/* <Input
                           type="text"
                           placeholder="Explain why this answer is correct"

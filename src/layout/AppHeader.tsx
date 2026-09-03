@@ -319,6 +319,7 @@ const AppHeader: React.FC = () => {
                     whileHover={{ scale: 1.02 }}
                     whileTap={{ scale: 0.98 }}
                     onClick={() => navigate("/course/category")}
+                    id="category"
                     className={`
                         inline-flex items-center justify-center
                         px-4 py-2 bg-[#FF6B35]/10 dark:from-purple-900/20 dark:to-pink-900/20 border border-[#FF6B35]/30
@@ -344,7 +345,10 @@ const AppHeader: React.FC = () => {
           {user.role != "counselor" &&
             user.role != "manager" &&
             user.role != "leader" && (
-              <UserDropdown user={user} logout={logout} />
+              <div id="submenu" 
+                    className={` my-2  `}>
+                <UserDropdown user={user} logout={logout} />
+              </div>
             )}
         </div>
       </div>

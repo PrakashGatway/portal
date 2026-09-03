@@ -17,7 +17,6 @@ const EducationAnalytics = () => {
     return <TeacherDashboard />;
   }
 
-  
   if (user.role == "admin") {
     return <AdminDashboard />;
   }

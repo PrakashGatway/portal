@@ -1,0 +1,634 @@
+/* =========================================================
+   DRIVER GLOBAL
+   ========================================================= */
+
+.driver-popover {
+  background: white !important;
+  border-radius: 12px !important;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.12) !important;
+
+  padding: 24px !important;
+
+  max-width: 600px;
+
+  box-sizing: border-box !important;
+}
+
+
+/* =========================================================
+   DRIVER BUTTONS
+   ========================================================= */
+
+.driver-popover-btn {
+  padding: 8px 20px !important;
+
+  border-radius: 6px !important;
+
+  border: none !important;
+
+  font-weight: 500 !important;
+
+  cursor: pointer !important;
+
+  transition: all 0.2s ease !important;
+}
+
+
+.driver-popover-prev-btn {
+  background: #f26d44 !important;
+
+  color: white !important;
+
+  padding: 8px 20px !important;
+
+  border-radius: 12px !important;
+
+  font-size: 14px !important;
+
+  border: none !important;
+
+  cursor: pointer !important;
+
+  transition: all 0.3s ease !important;
+
+  box-shadow: 0 0 8px rgba(242, 109, 68, 0.5) !important;
+
+  animation: glowPulse 1.8s infinite ease-in-out !important;
+
+  transform: translateY(-2px);
+}
+
+
+.driver-popover-prev-btn:hover {
+  background: #f26d44 !important;
+  color: white !important;
+}
+
+
+.driver-popover-next-btn {
+  padding: 8px 20px !important;
+
+  border-radius: 12px !important;
+
+  font-size: 14px !important;
+
+  background: #f26d44 !important;
+
+  color: white !important;
+
+  border: none !important;
+
+  transform: translateY(-2px);
+}
+
+
+.driver-popover-next-btn:hover {
+  color: white !important;
+  background: #f26d44 !important;
+}
+
+
+.driver-popover-close-btn {
+  font-size: 24px !important;
+  padding: 5px !important;
+}
+
+
+/* =========================================================
+   PROGRESS
+   ========================================================= */
+
+.driver-popover-progress {
+  display: flex !important;
+
+  gap: 8px !important;
+
+  justify-content: center !important;
+
+  margin-bottom: 16px !important;
+}
+
+
+/* =========================================================
+   GLOW ANIMATION
+   ========================================================= */
+
+@keyframes glowPulse {
+  0% {
+    box-shadow: 0 0 6px rgba(242, 109, 68, 0.35);
+  }
+
+  50% {
+    box-shadow: 0 0 14px rgba(242, 109, 68, 0.7);
+  }
+
+  100% {
+    box-shadow: 0 0 6px rgba(242, 109, 68, 0.35);
+  }
+}
+
+
+/* =========================================================
+   MOBILE DRIVER TOUR
+   ========================================================= */
+
+@media (max-width: 767px) {
+
+  /* =======================================================
+     COMMON MOBILE POPOVER
+     ======================================================= */
+
+  .driver-popover.mobile-tour-popover {
+    width: calc(100vw - 32px) !important;
+
+    max-width: 435px !important;
+
+    min-width: 0 !important;
+
+    margin: 0 !important;
+
+    padding: 16px !important;
+
+    border-radius: 20px !important;
+
+    box-sizing: border-box !important;
+
+    z-index: 999999 !important;
+  }
+
+
+  /* =======================================================
+     MOBILE DESCRIPTION
+     ======================================================= */
+
+  .driver-popover.mobile-tour-popover
+    .driver-popover-description {
+
+    width: 100% !important;
+
+    max-width: 100% !important;
+
+    margin: 0 !important;
+
+    padding: 0 !important;
+
+    box-sizing: border-box !important;
+  }
+
+
+  /* =======================================================
+     MOBILE BOTTOM NAVIGATION POPUP
+     ======================================================= */
+
+  .driver-popover.mobile-bottom-nav-tour {
+
+    /*
+     * IMPORTANT
+     *
+     * Force the popup to use viewport positioning.
+     */
+    position: fixed !important;
+
+    /*
+     * Remove Driver.js calculated top.
+     */
+    top: auto !important;
+
+    /*
+     * Keep popup ABOVE BOTTOM NAV.
+     */
+    bottom: 72px !important;
+
+    /*
+     * Center horizontally.
+     */
+    left: 50% !important;
+
+    right: auto !important;
+
+    transform: translateX(-50%) !important;
+
+    /*
+     * Width.
+     */
+    width: calc(100vw - 32px) !important;
+
+    max-width: 340px !important;
+
+    min-width: 0 !important;
+
+    /*
+     * Spacing.
+     */
+    margin: 0 !important;
+
+    padding: 15px !important;
+
+    /*
+     * Appearance.
+     */
+    border-radius: 18px !important;
+
+    box-sizing: border-box !important;
+
+    /*
+     * Keep above overlay / navigation.
+     */
+    z-index: 999999 !important;
+
+    /*
+     * If content becomes too tall,
+     * scroll INSIDE popup.
+     */
+    max-height: calc(100vh - 100px) !important;
+
+    overflow-y: auto !important;
+
+    overflow-x: hidden !important;
+  }
+
+
+  /* =======================================================
+     BOTTOM NAV DESCRIPTION
+     ======================================================= */
+
+  .driver-popover.mobile-bottom-nav-tour
+    .driver-popover-description {
+
+    width: 100% !important;
+
+    max-width: 100% !important;
+
+    margin: 0 !important;
+
+    padding: 0 !important;
+
+    box-sizing: border-box !important;
+  }
+
+
+  /* =======================================================
+     REMOVE ARROW FOR BOTTOM POPUP
+     ======================================================= */
+
+  .driver-popover.mobile-bottom-nav-tour
+    .driver-popover-arrow {
+
+    display: none !important;
+  }
+
+
+  /* =======================================================
+     FOOTER
+     ======================================================= */
+
+  .driver-popover.mobile-tour-popover
+    .driver-popover-footer,
+
+  .driver-popover.mobile-bottom-nav-tour
+    .driver-popover-footer {
+
+    display: flex !important;
+
+    align-items: center !important;
+
+    justify-content: space-between !important;
+
+    gap: 8px !important;
+
+    margin-top: 12px !important;
+  }
+
+
+  /* =======================================================
+     MOBILE BUTTONS
+     ======================================================= */
+
+  .driver-popover.mobile-tour-popover
+    .driver-popover-prev-btn,
+
+  .driver-popover.mobile-tour-popover
+    .driver-popover-next-btn,
+
+  .driver-popover.mobile-bottom-nav-tour
+    .driver-popover-prev-btn,
+
+  .driver-popover.mobile-bottom-nav-tour
+    .driver-popover-next-btn {
+
+    font-size: 12px !important;
+
+    padding: 7px 13px !important;
+
+    border-radius: 9px !important;
+
+    white-space: nowrap !important;
+  }
+
+
+  /* =======================================================
+     CLOSE BUTTON
+     ======================================================= */
+
+  .driver-popover.mobile-tour-popover
+    .driver-popover-close-btn,
+
+  .driver-popover.mobile-bottom-nav-tour
+    .driver-popover-close-btn {
+
+    top: 8px !important;
+
+    right: 8px !important;
+
+    width: 24px !important;
+
+    height: 24px !important;
+
+    font-size: 18px !important;
+  }
+
+
+  /* =======================================================
+     CUSTOM TOUR CARD
+     ======================================================= */
+
+  .tour-mobile-card {
+
+    width: 100%;
+
+    overflow: hidden;
+
+    box-sizing: border-box;
+  }
+
+
+  /* =======================================================
+     MAIN IMAGE
+     ======================================================= */
+
+  .tour-image-wrapper {
+
+    width: 100%;
+
+    height: 255px;
+
+    display: flex;
+
+    align-items: center;
+
+    justify-content: center;
+
+    overflow: hidden;
+
+    box-sizing: border-box;
+  }
+
+
+  .tour-main-image {
+
+    width: 100%;
+
+    height: 255px;
+
+    object-fit: contain;
+
+    display: block;
+  }
+
+
+  /* =======================================================
+     CONTENT
+     ======================================================= */
+
+  .tour-content {
+
+    width: 100%;
+
+    padding: 7px 2px 3px;
+
+    box-sizing: border-box;
+  }
+
+
+  .tour-step {
+
+    color: #f26e00;
+
+    font-size: 16px;
+
+    line-height: 1.4;
+
+    font-weight: 600;
+
+    margin-bottom: 14px;
+  }
+
+
+  .tour-title {
+
+    color: #111111;
+
+    font-size: 29px;
+
+    line-height: 1.15;
+
+    font-weight: 700;
+
+    margin: 0 0 16px;
+  }
+
+
+  .tour-title span {
+
+    display: block;
+
+    color: #f26e00;
+  }
+
+
+  .tour-description {
+
+    color: #374151;
+
+    font-size: 16px;
+
+    line-height: 1.55;
+
+    margin: 0;
+  }
+
+
+  .tour-duration {
+
+    color: #374151;
+
+    font-size: 16px;
+
+    line-height: 1.5;
+
+    font-weight: 500;
+
+    margin-top: 18px;
+
+    margin-bottom: 0;
+  }
+
+
+  /* =======================================================
+     SMALL CONTENT CARD
+     ======================================================= */
+
+  .tour-content-card {
+
+    width: 100%;
+
+    margin: 0;
+
+    padding: 0;
+
+    box-sizing: border-box;
+  }
+
+
+  .tour-small-image {
+
+    width: 100%;
+
+    height: 105px;
+
+    display: flex;
+
+    justify-content: center;
+
+    align-items: center;
+
+    margin-bottom: 8px;
+  }
+
+
+  .tour-small-img {
+
+    width: 100px;
+
+    height: 100px;
+
+    object-fit: contain;
+
+    display: block;
+  }
+
+
+  .tour-heading {
+
+    color: #111111;
+
+    font-size: 20px;
+
+    line-height: 1.3;
+
+    font-weight: 700;
+
+    margin: 0 0 10px;
+  }
+
+
+  .tour-text {
+
+    color: #4b5563;
+
+    font-size: 14px;
+
+    line-height: 1.55;
+
+    margin: 0;
+  }
+
+
+  /* =======================================================
+     OPTIONS
+     ======================================================= */
+
+  .tour-options {
+
+    display: flex;
+
+    flex-wrap: wrap;
+
+    gap: 6px;
+
+    margin-top: 14px;
+  }
+
+
+  .tour-options span {
+
+    background: #fff7ed;
+
+    color: #6b7280;
+
+    padding: 6px 10px;
+
+    border-radius: 999px;
+
+    font-size: 11px;
+
+    line-height: 1.3;
+
+    font-weight: 500;
+  }
+}
+
+
+/* =========================================================
+   SMALL MOBILE
+   ========================================================= */
+
+@media (max-width: 380px) {
+
+  .driver-popover.mobile-tour-popover {
+
+    width: calc(100vw - 24px) !important;
+
+    max-width: 360px !important;
+
+    padding: 13px !important;
+  }
+
+
+  .driver-popover.mobile-bottom-nav-tour {
+
+    width: calc(100vw - 24px) !important;
+
+    max-width: 340px !important;
+
+    bottom: 68px !important;
+
+    padding: 13px !important;
+
+    max-height: calc(100vh - 90px) !important;
+  }
+
+
+  .tour-image-wrapper {
+
+    height: 225px;
+  }
+
+
+  .tour-main-image {
+
+    height: 225px;
+  }
+
+
+  .tour-title {
+
+    font-size: 26px;
+  }
+
+
+  .tour-description {
+
+    font-size: 15px;
+  }
+}
