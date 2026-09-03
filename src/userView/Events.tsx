@@ -302,153 +302,302 @@ const EventCalendar = () => {
     };
   };
 
+
   const CustomMonthEvent = ({ event }) => {
-    const sameDateEvents = event.sameDateEvents || [event];
+  const sameDateEvents = event.sameDateEvents || [event];
 
-    const [showPopup, setShowPopup] = useState(false);
+  const [showPopup, setShowPopup] = useState(false);
 
-    const [popupPosition, setPopupPosition] = useState({
-      left: 0,
-      top: 0,
+  const [popupPosition, setPopupPosition] = useState({
+    left: 0,
+    top: 0,
+  });
+
+  const updatePopupPosition = (e) => {
+    const popupWidth = window.innerWidth <= 767 ? 260 : 290;
+    const popupHeight = window.innerWidth <= 767 ? 200 : 220;
+
+    const offset = window.innerWidth <= 767 ? 12 : 20;
+
+    let left = e.clientX + offset;
+    let top = e.clientY + offset;
+
+    /*
+     * -----------------------------------------
+     * RIGHT EDGE
+     * -----------------------------------------
+     */
+    if (left + popupWidth > window.innerWidth - 10) {
+      left = e.clientX - popupWidth - offset;
+    }
+
+    /*
+     * If still outside left edge
+     */
+    if (left < 10) {
+      left = 10;
+    }
+
+    /*
+     * -----------------------------------------
+     * BOTTOM EDGE
+     * -----------------------------------------
+     */
+    if (top + popupHeight > window.innerHeight - 10) {
+      top = e.clientY - popupHeight - offset;
+    }
+
+    /*
+     * If popup would go above viewport,
+     * keep it at minimum 10px.
+     */
+    if (top < 10) {
+      top = 10;
+    }
+
+    setPopupPosition({
+      left,
+      top,
     });
-
-    const updatePopupPosition = (e) => {
-      const popupWidth = 290;
-      const popupHeight = 220;
-      const offset = 20;
-
-      // Always start BELOW + RIGHT of cursor
-      let left = e.clientX + offset;
-      let top = e.clientY + offset;
-
-      // Keep popup inside right edge
-      if (left + popupWidth > window.innerWidth - 10) {
-        left = window.innerWidth - popupWidth - 10;
-      }
-
-      // Keep popup inside left edge
-      if (left < 10) {
-        left = 10;
-      }
-
-      // IMPORTANT:
-      // Keep popup BELOW cursor.
-      // If there isn't enough room at the bottom,
-      // place it at the lowest possible position,
-      // but NEVER above the cursor.
-      const maxTop = window.innerHeight - popupHeight - 10;
-
-      if (top > maxTop) {
-        top = Math.max(e.clientY + 5, maxTop);
-      }
-
-      // Safety
-      if (top < 10) {
-        top = 10;
-      }
-
-      setPopupPosition({
-        left,
-        top,
-      });
-    };
-
-    return (
-      <>
-        {/* Calendar Event */}
-        <div
-          className="relative w-full"
-          onMouseEnter={(e) => {
-            if (sameDateEvents.length > 1) {
-              updatePopupPosition(e);
-              setShowPopup(true);
-            }
-          }}
-          onMouseMove={(e) => {
-            if (sameDateEvents.length > 1) {
-              updatePopupPosition(e);
-            }
-          }}
-          onMouseLeave={() => {
-            setShowPopup(false);
-          }}
-        >
-          <div
-            className="
-                        bg-white/90
-                        backdrop-blur-sm
-                        border border-orange-200
-                        text-orange-800
-                        text-[10px]
-                        font-bold
-                        px-2
-                        py-[3px]
-                        rounded-lg
-                        shadow-sm
-                        truncate
-                        w-full
-                        cursor-pointer
-                    "
-          >
-            {event.title}
-          </div>
-        </div>
-
-        {/* Hover Card */}
-        {showPopup &&
-          sameDateEvents.length > 1 &&
-          createPortal(
-            <div
-              style={{
-                position: "fixed",
-                left: `${popupPosition.left}px`,
-                top: `${popupPosition.top}px`,
-                zIndex: 2147483647,
-                pointerEvents: "none",
-              }}
-              className="
-                            w-72
-                            bg-white
-                            rounded-xl
-                            p-3
-                            border
-                            border-orange-200
-                            shadow-2xl
-                        "
-            >
-              <div className="text-xs font-bold text-orange-600 mb-2">
-                {moment(event.start).format("MMMM DD, YYYY")}
-              </div>
-
-              <div className="space-y-2">
-                {sameDateEvents.map((item) => (
-                  <div
-                    key={item.id}
-                    className="
-                                        p-2
-                                        rounded-lg
-                                        bg-orange-50
-                                        hover:bg-orange-100
-                                    "
-                  >
-                    <div className="text-xs font-semibold text-gray-800">
-                      {item.title}
-                    </div>
-
-                    <div className="text-[10px] text-orange-500 mt-1">
-                      {moment(item.start).format("HH:mm")}
-                      {" - "}
-                      {moment(item.end).format("HH:mm")}
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </div>,
-            document.body,
-          )}
-      </>
-    );
   };
+
+  return (
+    <>
+      {/* =========================================
+          CALENDAR EVENT
+      ========================================= */}
+      <div
+        className="relative w-full"
+        onMouseEnter={(e) => {
+          if (sameDateEvents.length > 1) {
+            updatePopupPosition(e);
+            setShowPopup(true);
+          }
+        }}
+        onMouseMove={(e) => {
+          if (sameDateEvents.length > 1) {
+            updatePopupPosition(e);
+          }
+        }}
+        onMouseLeave={() => {
+          setShowPopup(false);
+        }}
+      >
+        <div
+          className="
+            bg-white/90
+            backdrop-blur-sm
+            border border-orange-200
+            text-orange-800
+            text-[10px]
+            font-bold
+            px-2
+            py-[3px]
+            rounded-lg
+            shadow-sm
+            truncate
+            
+            w-full
+            cursor-pointer
+          "
+        >
+          {event.title}
+        </div>
+      </div>
+
+      {/* =========================================
+          HOVER CARD
+      ========================================= */}
+      {showPopup &&
+        sameDateEvents.length > 1 &&
+        createPortal(
+          <div
+            className="calendar-event-hover-popup"
+            style={{
+              position: "fixed",
+              left: `${popupPosition.left}px`,
+              top: `${popupPosition.top}px`,
+              zIndex: 2147483647,
+              pointerEvents: "none",
+            }}
+          >
+            <div className="calendar-event-popup-date">
+              {moment(event.start).format("MMMM DD, YYYY")}
+            </div>
+
+            <div className="calendar-event-popup-list">
+              {sameDateEvents.map((item) => (
+                <div
+                  key={item.id}
+                  className="calendar-event-popup-item"
+                >
+                  <div className="calendar-event-popup-title">
+                    {item.title}
+                  </div>
+
+                  <div className="calendar-event-popup-time">
+                    {moment(item.start).format("HH:mm")}
+                    {" - "}
+                    {moment(item.end).format("HH:mm")}
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>,
+          document.body
+        )}
+    </>
+  );
+};
+
+
+  // const CustomMonthEvent = ({ event }) => {
+  //   const sameDateEvents = event.sameDateEvents || [event];
+
+  //   const [showPopup, setShowPopup] = useState(false);
+
+  //   const [popupPosition, setPopupPosition] = useState({
+  //     left: 0,
+  //     top: 0,
+  //   });
+
+  //   const updatePopupPosition = (e) => {
+  //     const popupWidth = 290;
+  //     const popupHeight = 220;
+  //     const offset = 20;
+
+  //     // Always start BELOW + RIGHT of cursor
+  //     let left = e.clientX + offset;
+  //     let top = e.clientY + offset;
+
+  //     // Keep popup inside right edge
+  //     if (left + popupWidth > window.innerWidth - 10) {
+  //       left = window.innerWidth - popupWidth - 10;
+  //     }
+
+  //     // Keep popup inside left edge
+  //     if (left < 10) {
+  //       left = 10;
+  //     }
+
+  //     // IMPORTANT:
+  //     // Keep popup BELOW cursor.
+  //     // If there isn't enough room at the bottom,
+  //     // place it at the lowest possible position,
+  //     // but NEVER above the cursor.
+  //     const maxTop = window.innerHeight - popupHeight - 10;
+
+  //     if (top > maxTop) {
+  //       top = Math.max(e.clientY + 5, maxTop);
+  //     }
+
+  //     // Safety
+  //     if (top < 10) {
+  //       top = 10;
+  //     }
+
+  //     setPopupPosition({
+  //       left,
+  //       top,
+  //     });
+  //   };
+
+  //   return (
+  //     <>
+  //       {/* Calendar Event */}
+  //       <div
+  //         className="relative w-full"
+  //         onMouseEnter={(e) => {
+  //           if (sameDateEvents.length > 1) {
+  //             updatePopupPosition(e);
+  //             setShowPopup(true);
+  //           }
+  //         }}
+  //         onMouseMove={(e) => {
+  //           if (sameDateEvents.length > 1) {
+  //             updatePopupPosition(e);
+  //           }
+  //         }}
+  //         onMouseLeave={() => {
+  //           setShowPopup(false);
+  //         }}
+  //       >
+  //         <div
+  //           className="
+  //                       bg-white/90
+  //                       backdrop-blur-sm
+  //                       border border-orange-200
+  //                       text-orange-800
+  //                       text-[10px]
+  //                       font-bold
+  //                       px-2
+  //                       py-[3px]
+  //                       rounded-lg
+  //                       shadow-sm
+  //                       truncate
+  //                       md:w-full
+  //                       cursor-pointer
+  //                   "
+  //         >
+  //           {event.title}
+  //         </div>
+  //       </div>
+
+  //       {/* Hover Card */}
+  //       {showPopup &&
+  //         sameDateEvents.length > 1 &&
+  //         createPortal(
+  //           <div
+  //             style={{
+  //               position: "fixed",
+  //               left: `${popupPosition.left}px`,
+  //               top: `${popupPosition.top}px`,
+  //               zIndex: 2147483647,
+  //               pointerEvents: "none",
+  //             }}
+  //             className="
+  //                           w-72
+  //                           bg-white
+  //                           rounded-xl
+  //                           p-3
+  //                           border
+  //                           border-orange-200
+  //                           shadow-2xl
+  //                       "
+  //           >
+  //             <div className="text-xs font-bold text-orange-600 mb-2">
+  //               {moment(event.start).format("MMMM DD, YYYY")}
+  //             </div>
+
+  //             <div className="space-y-2">
+  //               {sameDateEvents.map((item) => (
+  //                 <div
+  //                   key={item.id}
+  //                   className="
+  //                                       p-2
+  //                                       rounded-lg
+  //                                       bg-orange-50
+  //                                       hover:bg-orange-100
+  //                                   "
+  //                 >
+  //                   <div className="text-xs font-semibold text-gray-800">
+  //                     {item.title}
+  //                   </div>
+
+  //                   <div className="text-[10px] text-orange-500 mt-1">
+  //                     {moment(item.start).format("HH:mm")}
+  //                     {" - "}
+  //                     {moment(item.end).format("HH:mm")}
+  //                   </div>
+  //                 </div>
+  //               ))}
+  //             </div>
+  //           </div>,
+  //           document.body,
+  //         )}
+  //     </>
+  //   );
+  // };
 
   const CustomEvent = ({ event }) => (
     <div className="w-full min-w-0 overflow-hidden">

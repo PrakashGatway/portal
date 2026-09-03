@@ -360,10 +360,10 @@ const AppSidebar: React.FC = () => {
         return (
           <li key={nav.name} id={nav?.id} className="relative">
             {nav.subItems ? (
-              <div className="border-l-4 border-orange-500 rounded-[26px]">
+              <div className={`relative ${active ? "border-l-4 border-orange-500 rounded-[26px]" : ""}`}>
                 <button
                   onClick={() => handleSubmenuToggle(index, menuType)}
-                  className={`w-full flex items-center gap-3 ${isExpanded || isHovered || isMobileOpen ? "px-4" : "px-1"} py-1 rounded-lg ransition-all duration-200 ease-out group relative
+                  className={`w-full flex items-center gap-3 ${isExpanded || isHovered || isMobileOpen ? "px-4" : "px-1"} py-1 rounded-[28px] transition-all duration-200 ease-out group relative
                   ${active ? "font-semibold" : "font-medium"}
                   ${
                     active
@@ -417,7 +417,7 @@ const AppSidebar: React.FC = () => {
                 </button>
               </div>
             ) : nav.path ? (
-              <div className={`border-l-4 border-orange-500 rounded-[26px] `}>
+              <div className={`${isActive(nav.path) ? "border-l-4 border-orange-500 rounded-[26px]" : ""}`}>
                 <Link
                   to={nav.path}
                   className={`w-full  flex items-center gap-3 ${isExpanded || isHovered || isMobileOpen ? "px-5" : "px-1"} py-1.5  rounded-[26px]  group relative
@@ -491,10 +491,10 @@ const AppSidebar: React.FC = () => {
                     const subActive = isActive(subItem.path);
                     return (
                       <li key={subItem.name}>
-                        <div className="border-l-4 border-orange-500 rounded-[26px]">
+                        <div className={`relative ${subActive ? "border-l-4 border-orange-500 rounded-[26px]" : ""}`}>
                           <Link
                             to={subItem.path}
-                            className={`flex items-center justify-between gap-2.5 px-3 py-[9px] rounded-lg text-[14px] transition-all duration-200
+                            className={`flex items-center justify-between gap-2.5 px-3 py-[9px] rounded-[28px] text-[14px] transition-all duration-200
                             ${subActive ? "font-medium" : "font-medium"}
                             ${
                               subActive

@@ -30,21 +30,25 @@ const CourseCard = ({ course, primaryColor = "#daff02", secondaryColor = "#fe572
         return Math.ceil(diffTime / (1000 * 60 * 60 * 24));
     };
 
-    const discountPercent =
-        course.pricing.earlyBird?.discount > 0 &&
-            new Date() < new Date(course.pricing.earlyBird.deadline)
-            ? course.pricing.earlyBird.discount
-            : course.pricing.discount > 0
-                ? course.pricing.discount
-                : 0;
+  const realPrice = course?.pricing?.amount || 0;
 
-    const isEarlyBirdActive = course.pricing.earlyBird?.discount > 0 &&
-        new Date() < new Date(course.pricing.earlyBird.deadline);
+                        const earlyBird = course?.pricing?.earlyBird;
 
-    const originalPrice = course.pricing.originalAmount || course.pricing.amount;
-    const finalPrice = discountPercent > 0
-        ? originalPrice * (1 - discountPercent / 100)
-        : originalPrice;
+                        const isEarlyBirdActive =
+                            !!earlyBird?.deadline &&
+                            new Date(earlyBird.deadline).getTime() > Date.now();
+
+                        let price = realPrice;
+
+                        // Apply early bird discount first
+                        if (isEarlyBirdActive) {
+                            price = price - (price * (earlyBird?.discount || 0)) / 100;
+                        }
+                        const earlyBirdDiscount = isEarlyBirdActive ? earlyBird?.discount || 0 : 0;
+                        // Then apply normal discount
+                        const normalDiscount = course?.pricing?.discount || 0;
+
+                        price = price - (price * normalDiscount) / 100;
 
     return (
         // <div className="p-[1.5px] rounded-2xl overflow-hidden w-full bg-gradient-to-b from-[#686868]/0 via-[#686868]/60 to-[#686868]">
@@ -190,11 +194,26 @@ const CourseCard = ({ course, primaryColor = "#daff02", secondaryColor = "#fe572
             </div>
 
             {/* Discount Badge */}
-            {discountPercent > 0 && (
-                <span className="absolute top-5 right-5 z-10 bg-green-500 text-white text-xs font-medium px-3 py-1.5 rounded-full">
-                    {discountPercent}% OFF
+            {isEarlyBirdActive && (
+                <span className="absolute top-5 left-5 z-10 bg-gradient-to-r from-[#FF6B35] to-[#FF8A3D] text-white text-xs font-medium px-3 py-1.5 rounded-full">
+                   Early Bird
                 </span>
             )}
+
+            {/* Discount Badge */}
+          {normalDiscount > 0 && (
+  <span className="absolute top-5 right-5 z-10 bg-green-500 text-white px-3 py-1 rounded-full">
+    <span className="text-xs font-medium">
+      {normalDiscount}% OFF
+    </span>
+
+    {isEarlyBirdActive && (
+      <span className="ml-0.5 text-[10px] font-semibold ">
+        +{earlyBirdDiscount}%
+      </span>
+    )}
+  </span>
+)}
 
             {/* ================= BODY ================= */}
             <div
@@ -282,15 +301,15 @@ const CourseCard = ({ course, primaryColor = "#daff02", secondaryColor = "#fe572
 
                                 <span className="text-2xl font-bold text-gray-900">
                                     {formatPrice(
-                                        finalPrice,
+                                        price,
                                         course.pricing.currency
                                     )}
                                 </span>
 
-                                {discountPercent > 0 && (
+                                {normalDiscount > 0 && (
                                     <span className="line-through text-gray-400 text-sm">
                                         {formatPrice(
-                                            originalPrice,
+                                            realPrice,
                                             course.pricing.currency
                                         )}
                                     </span>

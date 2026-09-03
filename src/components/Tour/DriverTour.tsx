@@ -21,13 +21,6 @@ export default function DriverTour({
 
     const isMobile = window.innerWidth <= 767;
 
-    /*
-     * These are the items that appear in the
-     * MOBILE BOTTOM NAVIGATION.
-     *
-     * Profile (#submenu) and Notification (#notification)
-     * stay at the TOP on mobile.
-     */
     const bottomNavElements = [
       "#dashboard",
       "#course",
@@ -134,11 +127,7 @@ export default function DriverTour({
       },
 
       steps: [
-        /*
-         * =====================================================
-         * 1. WELCOME
-         * =====================================================
-         */
+        
         {
           element: "#overviewer",
 
@@ -190,13 +179,6 @@ export default function DriverTour({
           },
         },
 
-        /*
-         * =====================================================
-         * 2. PROFILE
-         * =====================================================
-         *
-         * TOP ON MOBILE
-         */
         {
           element: "#submenu",
 
@@ -219,9 +201,6 @@ export default function DriverTour({
               </div>
             `,
 
-            /*
-             * Profile stays at the top.
-             */
             side: "bottom",
             align: "center",
 
@@ -229,11 +208,6 @@ export default function DriverTour({
           },
         },
 
-        /*
-         * =====================================================
-         * 3. COURSE CATEGORY
-         * =====================================================
-         */
         {
           element: "#category",
 
@@ -262,13 +236,6 @@ export default function DriverTour({
           },
         },
 
-        /*
-         * =====================================================
-         * 4. NOTIFICATION
-         * =====================================================
-         *
-         * TOP ON MOBILE
-         */
         {
           element: "#notification",
 
@@ -291,9 +258,6 @@ export default function DriverTour({
               </div>
             `,
 
-            /*
-             * Notification stays at the top.
-             */
             side: "bottom",
             align: "start",
 
@@ -301,13 +265,6 @@ export default function DriverTour({
           },
         },
 
-        /*
-         * =====================================================
-         * 5. DASHBOARD
-         * =====================================================
-         *
-         * BOTTOM NAV ON MOBILE
-         */
         {
           element: "#dashboard",
 
@@ -330,10 +287,6 @@ export default function DriverTour({
               </div>
             `,
 
-            /*
-             * Desktop = right
-             * Mobile = forced bottom popup by CSS
-             */
             side: isMobile ? "top" : "right",
             align: "center",
 
@@ -341,11 +294,6 @@ export default function DriverTour({
           },
         },
 
-        /*
-         * =====================================================
-         * 6. COURSES
-         * =====================================================
-         */
         {
           element: "#course",
 
@@ -375,11 +323,6 @@ export default function DriverTour({
           },
         },
 
-        /*
-         * =====================================================
-         * 7. TEST
-         * =====================================================
-         */
         {
           element: "#test",
 
@@ -408,11 +351,6 @@ export default function DriverTour({
           },
         },
 
-        /*
-         * =====================================================
-         * 8. MOCK TEST
-         * =====================================================
-         */
         {
           element: "#mock-test",
 
@@ -442,11 +380,6 @@ export default function DriverTour({
           },
         },
 
-        /*
-         * =====================================================
-         * 9. PRACTICE TEST
-         * =====================================================
-         */
         {
           element: "#practice-test",
 
@@ -509,11 +442,6 @@ export default function DriverTour({
           },
         },
 
-        /*
-         * =====================================================
-         * 11. MY COURSES
-         * =====================================================
-         */
         {
           element: "#my-courses",
 
