@@ -11,11 +11,37 @@ interface DriverTourProps {
   profile: any;
 }
 
+const aiImage = (css = "-left-[150px] md:-left-[250px] top-0") => `
+  <div class="absolute ${css}
+    max-md:static
+    max-md:flex
+    max-md:justify-center
+    max-md:items-center
+    max-md:mb-3
+    left-auto
+  ">
+    <img
+      src="/ai.gif"
+      alt="AI Assistant"
+      class="
+        w-32 h-32
+        md:w-64
+        md:h-64
+        object-contain
+        drop-shadow-xl
+      "
+    />
+  </div>
+`;
+
+
 export default function DriverTour({
   start,
   profile,
   onFinish,
 }: DriverTourProps) {
+
+  
   useEffect(() => {
     if (!start) return;
 
@@ -53,10 +79,6 @@ export default function DriverTour({
       smoothScroll: true,
 
       onHighlighted: () => {
-        /*
-         * Give the highlighted element time to settle
-         * before forcing the mobile popup position.
-         */
         requestAnimationFrame(() => {
           requestAnimationFrame(() => {
             window.dispatchEvent(new Event("resize"));
@@ -126,418 +148,523 @@ export default function DriverTour({
         });
       },
 
-      steps: [
+      steps:  [
+  {
+    element: "#overviewer",
+
+    popover: {
+      description: `
+        <div class="relative rounded-2xl bg-white">
+
+        ${aiImage("-left-[150px] md:-left-[250px] top-0")}
+
+          <div class="flex items-center max-md:block">
+            <div class="w-full max-md:text-center">
+
+              <h2 class="text-2xl font-bold text-gray-900 mb-2">
+                👋 Welcome to Your Assistant
+              </h2>
+
+              <p class="text-gray-600 text-base leading-relaxed">
+                I’m here to help you navigate the platform, understand
+                the available features, and guide you through your study
+                abroad preparation journey.
+              </p>
+
+              <p class="text-gray-700 text-sm font-medium mt-4">
+                You can explore:
+              </p>
+
+              <div class="mt-2 flex flex-wrap gap-2 max-md:justify-center">
+                <span class="px-3 py-1.5 bg-orange-50 text-gray-600 text-xs rounded-full">
+                  Universities
+                </span>
+
+                <span class="px-3 py-1.5 bg-orange-50 text-gray-600 text-xs rounded-full">
+                  Courses
+                </span>
+
+                <span class="px-3 py-1.5 bg-orange-50 text-gray-600 text-xs rounded-full">
+                  Mock Tests
+                </span>
+
+                <span class="px-3 py-1.5 bg-orange-50 text-gray-600 text-xs rounded-full">
+                  Scholarships
+                </span>
+              </div>
+
+              <div class="mt-4 text-sm text-orange-600 font-medium">
+                ✓ Let's take a quick tour!
+              </div>
+
+            </div>
+          </div>
+        </div>
+      `,
+
+      side: "bottom",
+      align: "center",
+
+      popoverClass: getPopoverClass("#overviewer"),
+    },
+  },
+
+  {
+    element: "#submenu",
+
+    popover: {
+      description: `
+        <div class="relative rounded-2xl bg-white">
+
         
-        {
-          element: "#overviewer",
+        ${aiImage("-left-[150px] md:-left-[250px] top-0")}
 
-          popover: {
-            description: `
-              <div>
-                <h2 class="text-2xl font-bold text-gray-900 mb-2">
-                  👋 Welcome to Your Assistant
-                </h2>
+          <div class="flex items-center max-md:block">
+            <div class="w-full max-md:text-center">
 
-                <p class="text-gray-600 text-base leading-relaxed">
-                  I’m here to help you navigate the platform, understand
-                  the available features, and guide you through your study
-                  abroad preparation journey.
-                </p>
+              <h2 class="text-xl font-bold text-gray-900 mb-3">
+                👤 Profile
+              </h2>
 
-                <p class="text-gray-700 text-sm font-medium mt-4">
-                  You can explore:
-                </p>
+              <p class="text-gray-600 text-sm leading-6">
+                View and manage your personal information, academic details,
+                preferences, and other profile information used throughout
+                your study abroad journey.
+              </p>
 
-                <div class="mt-2 flex flex-wrap gap-2">
-                  <span class="px-3 py-1.5 bg-orange-50 text-gray-600 text-xs rounded-full">
-                    Universities
-                  </span>
-
-                  <span class="px-3 py-1.5 bg-orange-50 text-gray-600 text-xs rounded-full">
-                    Courses
-                  </span>
-
-                  <span class="px-3 py-1.5 bg-orange-50 text-gray-600 text-xs rounded-full">
-                    Mock Tests
-                  </span>
-
-                  <span class="px-3 py-1.5 bg-orange-50 text-gray-600 text-xs rounded-full">
-                    Scholarships
-                  </span>
-                </div>
-
-                <div class="mt-4 text-sm text-orange-600 font-medium">
-                  ✓ Let's take a quick tour!
-                </div>
+              <div class="mt-3 text-sm text-green-600 font-medium">
+                ✓ Keep your profile information up to date.
               </div>
-            `,
 
-            side: "bottom",
-            align: "center",
+            </div>
+          </div>
+        </div>
+      `,
 
-            popoverClass: getPopoverClass("#overviewer"),
-          },
-        },
+      side: "bottom",
+      align: "center",
 
-        {
-          element: "#submenu",
+      popoverClass: getPopoverClass("#submenu"),
+    },
+  },
 
-          popover: {
-            description: `
-              <div>
-                <h2 class="text-xl font-bold text-gray-900 mb-3">
-                  👤 Profile
-                </h2>
+  {
+    element: "#category",
 
-                <p class="text-gray-600 text-sm leading-6">
-                  View and manage your personal information, academic details,
-                  preferences, and other profile information used throughout
-                  your study abroad journey.
-                </p>
+    popover: {
+      description: `
+        <div class="relative rounded-2xl bg-white">
 
-                <div class="mt-3 text-sm text-green-600 font-medium">
-                  ✓ Keep your profile information up to date.
-                </div>
+        
+        ${aiImage("-left-[150px] md:-left-[250px] top-0")}
+
+          <div class="flex items-center max-md:block">
+            <div class="w-full max-md:text-center">
+
+              <h2 class="text-xl font-bold text-gray-900 mb-3">
+                📚 Course Categories
+              </h2>
+
+              <p class="text-gray-600 text-sm leading-6">
+                Browse courses based on different categories and find
+                programs that match your academic interests and career goals.
+              </p>
+
+              <div class="mt-3 text-sm text-green-600 font-medium">
+                ✓ Explore courses that fit your goals.
               </div>
-            `,
 
-            side: "bottom",
-            align: "center",
+            </div>
+          </div>
+        </div>
+      `,
 
-            popoverClass: getPopoverClass("#submenu"),
-          },
-        },
+      side: "bottom",
+      align: "center",
 
-        {
-          element: "#category",
+      popoverClass: getPopoverClass("#category"),
+    },
+  },
 
-          popover: {
-            description: `
-              <div>
-                <h2 class="text-xl font-bold text-gray-900 mb-3">
-                  📚 Course Categories
-                </h2>
+  {
+    element: "#notification",
 
-                <p class="text-gray-600 text-sm leading-6">
-                  Browse courses based on different categories and find
-                  programs that match your academic interests and career goals.
-                </p>
+    popover: {
+      description: `
+        <div class="relative rounded-2xl bg-white">
 
-                <div class="mt-3 text-sm text-green-600 font-medium">
-                  ✓ Explore courses that fit your goals.
-                </div>
+        
+        ${aiImage("-left-[150px] md:-left-[250px] top-0")}
+
+          <div class="flex items-center max-md:block">
+            <div class="w-full max-md:text-center">
+
+              <h2 class="text-xl font-bold text-gray-900 mb-3">
+                🔔 Notifications
+              </h2>
+
+              <p class="text-gray-600 text-sm leading-6">
+                Stay informed about important updates, announcements,
+                deadlines, application changes, test schedules, and
+                other activities related to your account.
+              </p>
+
+              <div class="mt-3 text-sm text-orange-600 font-medium">
+                ✓ Check your notifications regularly.
               </div>
-            `,
 
-            side: "bottom",
-            align: "center",
+            </div>
+          </div>
+        </div>
+      `,
 
-            popoverClass: getPopoverClass("#category"),
-          },
-        },
+      side: "bottom",
+      align: "start",
 
-        {
-          element: "#notification",
+      popoverClass: getPopoverClass("#notification"),
+    },
+  },
 
-          popover: {
-            description: `
-              <div>
-                <h2 class="text-xl font-bold text-gray-900 mb-3">
-                  🔔 Notifications
-                </h2>
+  {
+    element: "#dashboard",
 
-                <p class="text-gray-600 text-sm leading-6">
-                  Stay informed about important updates, announcements,
-                  deadlines, application changes, test schedules, and
-                  other activities related to your account.
-                </p>
+    popover: {
+      description: `
+        <div class="relative rounded-2xl bg-white">
 
-                <div class="mt-3 text-sm text-orange-600 font-medium">
-                  ✓ Check your notifications regularly.
-                </div>
+        
+        ${aiImage("-right-[150px] md:-right-[250px] top-0")}
+
+          <div class="flex items-center max-md:block">
+            <div class="w-full max-md:text-center">
+
+              <h2 class="text-xl font-bold text-gray-900 mb-3">
+                📊 Dashboard
+              </h2>
+
+              <p class="text-gray-600 text-sm leading-6">
+                Your dashboard gives you a quick overview of your learning
+                activities, courses, tests, progress, and important updates.
+                Use it as your central place to manage your preparation.
+              </p>
+
+              <div class="mt-3 text-sm text-orange-600 font-medium">
+                ✓ Everything you need is available from your dashboard.
               </div>
-            `,
 
-            side: "bottom",
-            align: "start",
+            </div>
+          </div>
+        </div>
+      `,
 
-            popoverClass: getPopoverClass("#notification"),
-          },
-        },
+      side: isMobile ? "top" : "right",
+      align: "center",
 
-        {
-          element: "#dashboard",
+      popoverClass: getPopoverClass("#dashboard"),
+    },
+  },
 
-          popover: {
-            description: `
-              <div>
-                <h2 class="text-xl font-bold text-gray-900 mb-3">
-                  📊 Dashboard
-                </h2>
+  {
+    element: "#course",
 
-                <p class="text-gray-600 text-sm leading-6">
-                  Your dashboard gives you a quick overview of your learning
-                  activities, courses, tests, progress, and important updates.
-                  Use it as your central place to manage your preparation.
-                </p>
+    popover: {
+      description: `
+        <div class="relative rounded-2xl bg-white">
 
-                <div class="mt-3 text-sm text-orange-600 font-medium">
-                  ✓ Everything you need is available from your dashboard.
-                </div>
+          ${aiImage("-right-[150px] md:-right-[250px] top-0")}
+
+          <div class="flex items-center max-md:block">
+            <div class="w-full max-md:text-center">
+
+              <h2 class="text-xl font-bold text-gray-900 mb-3">
+                📚 Courses
+              </h2>
+
+              <p class="text-gray-600 text-sm leading-6">
+                Explore available preparation courses, view course details,
+                and choose the learning resources that match your exam
+                and study goals.
+              </p>
+
+              <div class="mt-3 text-sm text-green-600 font-medium">
+                ✓ Find the right course for your preparation.
               </div>
-            `,
 
-            side: isMobile ? "top" : "right",
-            align: "center",
+            </div>
+          </div>
+        </div>
+      `,
 
-            popoverClass: getPopoverClass("#dashboard"),
-          },
-        },
+      side: isMobile ? "top" : "right",
+      align: "center",
 
-        {
-          element: "#course",
+      popoverClass: getPopoverClass("#course"),
+    },
+  },
 
-          popover: {
-            description: `
-              <div>
-                <h2 class="text-xl font-bold text-gray-900 mb-3">
-                  📚 Courses
-                </h2>
+  {
+    element: "#test",
 
-                <p class="text-gray-600 text-sm leading-6">
-                  Explore available preparation courses, view course details,
-                  and choose the learning resources that match your exam and
-                  study goals.
-                </p>
+    popover: {
+      description: `
+        <div class="relative rounded-2xl bg-white">
 
-                <div class="mt-3 text-sm text-green-600 font-medium">
-                  ✓ Find the right course for your preparation.
-                </div>
+          ${aiImage("-right-[150px] md:-right-[250px] top-0")}
+
+          <div class="flex items-center max-md:block">
+            <div class="w-full max-md:text-center">
+
+              <h2 class="text-xl font-bold text-gray-900 mb-3">
+                🏫 Explore Test
+              </h2>
+
+              <p class="text-gray-600 text-sm leading-6">
+                Find preparation programs designed to help you improve your
+                skills and get ready for your target examination.
+              </p>
+
+              <div class="mt-3 text-sm text-green-600 font-medium">
+                ✓ Choose a test and start learning.
               </div>
-            `,
 
-            side: isMobile ? "top" : "right",
-            align: "center",
+            </div>
+          </div>
+        </div>
+      `,
 
-            popoverClass: getPopoverClass("#course"),
-          },
-        },
+      side: isMobile ? "top" : "right",
+      align: "center",
 
-        {
-          element: "#test",
+      popoverClass: getPopoverClass("#test"),
+    },
+  },
 
-          popover: {
-            description: `
-              <div>
-                <h2 class="text-xl font-bold text-gray-900 mb-3">
-                  🏫 Explore Test
-                </h2>
+  {
+    element: "#mock-test",
 
-                <p class="text-gray-600 text-sm leading-6">
-                  Find preparation programs designed to help you improve your
-                  skills and get ready for your target examination.
-                </p>
+    popover: {
+      description: `
+        <div class="relative rounded-2xl bg-white">
 
-                <div class="mt-3 text-sm text-green-600 font-medium">
-                  ✓ Choose a test and start learning.
-                </div>
+          ${aiImage("-right-[150px] md:-right-[250px] top-0")}
+
+          <div class="flex items-center max-md:block">
+            <div class="w-full max-md:text-center">
+
+              <h2 class="text-xl font-bold text-gray-900 mb-3">
+                📝 Mock Tests
+              </h2>
+
+              <p class="text-gray-600 text-sm leading-6">
+                Practice with realistic mock tests to understand your
+                current performance, identify weak areas, and become
+                familiar with the actual exam format.
+              </p>
+
+              <div class="mt-3 text-sm text-orange-600 font-medium">
+                ✓ Test yourself and track your improvement.
               </div>
-            `,
 
-            side: isMobile ? "top" : "right",
-            align: "center",
+            </div>
+          </div>
+        </div>
+      `,
 
-            popoverClass: getPopoverClass("#test"),
-          },
-        },
+      side: isMobile ? "top" : "right",
+      align: "center",
 
-        {
-          element: "#mock-test",
+      popoverClass: getPopoverClass("#mock-test"),
+    },
+  },
 
-          popover: {
-            description: `
-              <div>
-                <h2 class="text-xl font-bold text-gray-900 mb-3">
-                  📝 Mock Tests
-                </h2>
+  {
+    element: "#practice-test",
 
-                <p class="text-gray-600 text-sm leading-6">
-                  Practice with realistic mock tests to understand your
-                  current performance, identify weak areas, and become
-                  familiar with the actual exam format.
-                </p>
+    popover: {
+      description: `
+        <div class="relative rounded-2xl bg-white">
 
-                <div class="mt-3 text-sm text-orange-600 font-medium">
-                  ✓ Test yourself and track your improvement.
-                </div>
+          ${aiImage("-right-[150px] md:-right-[250px] top-0")}
+
+          <div class="flex items-center max-md:block">
+            <div class="w-full max-md:text-center">
+
+              <h2 class="text-xl font-bold text-gray-900 mb-3">
+                🎯 Practice Tests
+              </h2>
+
+              <p class="text-gray-600 text-sm leading-6">
+                Practice specific topics and question types to strengthen
+                your concepts and improve your accuracy before taking a
+                full mock test.
+              </p>
+
+              <div class="mt-3 text-sm text-green-600 font-medium">
+                ✓ Practice regularly to improve your score.
               </div>
-            `,
 
-            side: isMobile ? "top" : "right",
-            align: "center",
+            </div>
+          </div>
+        </div>
+      `,
 
-            popoverClass: getPopoverClass("#mock-test"),
-          },
-        },
+      side: isMobile ? "top" : "right",
+      align: "center",
 
-        {
-          element: "#practice-test",
+      popoverClass: getPopoverClass("#practice-test"),
+    },
+  },
 
-          popover: {
-            description: `
-              <div>
-                <h2 class="text-xl font-bold text-gray-900 mb-3">
-                  🎯 Practice Tests
-                </h2>
+  {
+    element: "#quiz",
 
-                <p class="text-gray-600 text-sm leading-6">
-                  Practice specific topics and question types to strengthen
-                  your concepts and improve your accuracy before taking a
-                  full mock test.
-                </p>
+    popover: {
+      description: `
+        <div class="relative rounded-2xl bg-white">
 
-                <div class="mt-3 text-sm text-green-600 font-medium">
-                  ✓ Practice regularly to improve your score.
-                </div>
+          ${aiImage("-right-[150px] md:-right-[250px] top-0")}
+
+          <div class="flex items-center max-md:block">
+            <div class="w-full max-md:text-center">
+
+              <h2 class="text-xl font-bold text-gray-900 mb-3">
+                🧠 Quizzes
+              </h2>
+
+              <p class="text-gray-600 text-sm leading-6">
+                Take quick quizzes to test your understanding of different
+                topics and reinforce what you have learned.
+              </p>
+
+              <div class="mt-3 text-sm text-orange-600 font-medium">
+                ✓ Challenge yourself with quick quizzes.
               </div>
-            `,
 
-            side: isMobile ? "top" : "right",
-            align: "center",
+            </div>
+          </div>
+        </div>
+      `,
 
-            popoverClass: getPopoverClass("#practice-test"),
-          },
-        },
+      side: isMobile ? "top" : "right",
+      align: "center",
 
-        /*
-         * =====================================================
-         * 10. QUIZ
-         * =====================================================
-         */
-        {
-          element: "#quiz",
+      popoverClass: getPopoverClass("#quiz"),
+    },
+  },
 
-          popover: {
-            description: `
-              <div>
-                <h2 class="text-xl font-bold text-gray-900 mb-3">
-                  🧠 Quizzes
-                </h2>
+  {
+    element: "#my-courses",
 
-                <p class="text-gray-600 text-sm leading-6">
-                  Take quick quizzes to test your understanding of different
-                  topics and reinforce what you have learned.
-                </p>
+    popover: {
+      description: `
+        <div class="relative rounded-2xl bg-white">
 
-                <div class="mt-3 text-sm text-orange-600 font-medium">
-                  ✓ Challenge yourself with quick quizzes.
-                </div>
+          ${aiImage("-right-[150px] md:-right-[250px] top-0")}
+
+          <div class="flex items-center max-md:block">
+            <div class="w-full max-md:text-center">
+
+              <h2 class="text-xl font-bold text-gray-900 mb-3">
+                📖 My Courses
+              </h2>
+
+              <p class="text-gray-600 text-sm leading-6">
+                Access all the courses you have enrolled in from one place.
+                Continue your lessons, monitor your progress, and keep track
+                of your learning journey.
+              </p>
+
+              <div class="mt-3 text-sm text-green-600 font-medium">
+                ✓ Continue your learning from where you left off.
               </div>
-            `,
 
-            side: isMobile ? "top" : "right",
-            align: "center",
+            </div>
+          </div>
+        </div>
+      `,
 
-            popoverClass: getPopoverClass("#quiz"),
-          },
-        },
+      side: isMobile ? "top" : "right",
+      align: "center",
 
-        {
-          element: "#my-courses",
+      popoverClass: getPopoverClass("#my-courses"),
+    },
+  },
 
-          popover: {
-            description: `
-              <div>
-                <h2 class="text-xl font-bold text-gray-900 mb-3">
-                  📖 My Courses
-                </h2>
+  {
+    element: "#support",
 
-                <p class="text-gray-600 text-sm leading-6">
-                  Access all the courses you have enrolled in from one place.
-                  Continue your lessons, monitor your progress, and keep track
-                  of your learning journey.
-                </p>
+    popover: {
+      description: `
+        <div class="relative rounded-2xl bg-white">
 
-                <div class="mt-3 text-sm text-green-600 font-medium">
-                  ✓ Continue your learning from where you left off.
-                </div>
+          ${aiImage("-right-[150px] md:-right-[250px] top-0")}
+
+          <div class="flex items-center max-md:block">
+            <div class="w-full max-md:text-center">
+
+              <h2 class="text-xl font-bold text-gray-900 mb-3">
+                🆘 Support
+              </h2>
+
+              <p class="text-gray-600 text-sm leading-6">
+                Need help? Use the support section to find helpful resources,
+                FAQs, or contact the support team when you need assistance.
+              </p>
+
+              <div class="mt-3 text-sm text-orange-600 font-medium">
+                ✓ We're here whenever you need help.
               </div>
-            `,
 
-            side: isMobile ? "top" : "right",
-            align: "center",
+            </div>
+          </div>
+        </div>
+      `,
 
-            popoverClass: getPopoverClass("#my-courses"),
-          },
-        },
+      side: isMobile ? "top" : "right",
+      align: "center",
 
-        /*
-         * =====================================================
-         * 12. SUPPORT
-         * =====================================================
-         */
-        {
-          element: "#support",
+      popoverClass: getPopoverClass("#support"),
+    },
+  },
 
-          popover: {
-            description: `
-              <div>
-                <h2 class="text-xl font-bold text-gray-900 mb-3">
-                  🆘 Support
-                </h2>
+  {
+    element: "#settings",
 
-                <p class="text-gray-600 text-sm leading-6">
-                  Need help? Use the support section to find helpful resources,
-                  FAQs, or contact the support team when you need assistance.
-                </p>
+    popover: {
+      description: `
+        <div class="relative rounded-2xl bg-white">
 
-                <div class="mt-3 text-sm text-orange-600 font-medium">
-                  ✓ We're here whenever you need help.
-                </div>
+          ${aiImage("-right-[150px] md:-right-[250px] top-0")}
+
+          <div class="flex items-center max-md:block">
+            <div class="w-full max-md:text-center">
+
+              <h2 class="text-xl font-bold text-gray-900 mb-3">
+                ⚙️ Settings
+              </h2>
+
+              <p class="text-gray-600 text-sm leading-6">
+                Manage your account preferences and customize settings such
+                as notifications, profile preferences, and other available
+                options.
+              </p>
+
+              <div class="mt-3 text-sm text-green-600 font-medium">
+                ✓ Customize your experience.
               </div>
-            `,
 
-            side: isMobile ? "top" : "right",
-            align: "center",
+            </div>
+          </div>
+        </div>
+      `,
 
-            popoverClass: getPopoverClass("#support"),
-          },
-        },
+      side: isMobile ? "top" : "right",
+      align: "center",
 
-        /*
-         * =====================================================
-         * 13. SETTINGS
-         * =====================================================
-         */
-        {
-          element: "#settings",
-
-          popover: {
-            description: `
-              <div>
-                <h2 class="text-xl font-bold text-gray-900 mb-3">
-                  ⚙️ Settings
-                </h2>
-
-                <p class="text-gray-600 text-sm leading-6">
-                  Manage your account preferences and customize settings such
-                  as notifications, profile preferences, and other available
-                  options.
-                </p>
-
-                <div class="mt-3 text-sm text-green-600 font-medium">
-                  ✓ Customize your experience.
-                </div>
-              </div>
-            `,
-
-            side: isMobile ? "top" : "right",
-            align: "center",
-
-            popoverClass: getPopoverClass("#settings"),
-          },
-        },
-      ],
+      popoverClass: getPopoverClass("#settings"),
+    },
+  },
+],
 
       onDestroyed: () => {
         if (profile?.email) {
