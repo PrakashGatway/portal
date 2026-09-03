@@ -1075,11 +1075,6 @@ const ModuleCard = ({ module, onView, onEdit, onDelete }: any) => {
         <div className="mt-4 flex justify-between items-center text-xs font-medium text-gray-600 dark:text-gray-400">
           <span>Order: {module.order}</span>
           {/* <span>{module.duration > 0 ? `${module.duration} min` : "N/A"}</span> */}
-          <span>
-            {module.publishedAt
-              ? moment(module.publishedAt).format("DD MMM YYYY")
-              : "Not Published"}
-          </span>
         </div>
       </div>
       <div className="bg-gray-50 dark:bg-gray-700 px-4 py-1 flex justify-end space-x-2">

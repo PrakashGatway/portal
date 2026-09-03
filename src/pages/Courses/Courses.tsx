@@ -567,7 +567,7 @@ export default function CourseManagement() {
                                                 </p>
                                             </div>
                                             <div>
-                                                <p className="text-sm text-gray-500 dark:text-gray-400">Duration (mins)</p>
+                                                <p className="text-sm text-gray-500 dark:text-gray-400">Duration (hours)</p>
                                                 <p className="text-sm font-medium text-gray-800 dark:text-white/90">
                                                     {selectedCourse.schedule_pattern?.duration || "N/A"}
                                                 </p>

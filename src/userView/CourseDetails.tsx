@@ -30,10 +30,12 @@ import {
   ChevronDown,
   Film,
   Play,
+  Calendar,
 } from "lucide-react";
 import Button from "../components/ui/button/Button";
 import api, { ImageBaseUrl } from "../axiosInstance";
 import {
+  Link,
   useLocation,
   useNavigate,
   useParams,
@@ -47,6 +49,7 @@ import {
   CourseTests,
   TodaySessionsBanner,
 } from "./CourseComponents/courseTests";
+import NextLiveClassCard from "./CourseComponents/courseCard";
 
 interface Instructor {
   _id: string;
@@ -340,13 +343,62 @@ export default function CourseDetailPage() {
     return (
       curriculum?.flatMap((section) =>
         (section.items || [])
-          .filter((item: any) => item.type === "Sessions")
+          .filter((item: any) => {
+            const type = String(item?.type || "")
+              .trim()
+              .toLowerCase();
+
+            return (
+              (type === "liveclasses" || type === "sessions") &&
+              item?.scheduledStart
+            );
+          })
           .map((item: any) => ({
             ...item,
           })),
       ) || []
     );
   }, [curriculum]);
+
+  const nextLiveClass = useMemo(() => {
+    if (!sessions?.length) return null;
+
+    const now = new Date();
+
+    // Start and end of today
+    const startOfToday = new Date(now);
+    startOfToday.setHours(0, 0, 0, 0);
+
+    const endOfToday = new Date(now);
+    endOfToday.setHours(23, 59, 59, 999);
+
+    // Only valid upcoming/live classes
+    const upcomingSessions = sessions
+      .filter((session: any) => {
+        const scheduledStart = new Date(session.scheduledStart);
+
+        return !Number.isNaN(scheduledStart.getTime()) && scheduledStart >= now;
+      })
+      .sort(
+        (a: any, b: any) =>
+          new Date(a.scheduledStart).getTime() -
+          new Date(b.scheduledStart).getTime(),
+      );
+
+    if (!upcomingSessions.length) {
+      return null;
+    }
+    const todaySession = upcomingSessions.find((session: any) => {
+      const scheduledStart = new Date(session.scheduledStart);
+
+      return scheduledStart >= startOfToday && scheduledStart <= endOfToday;
+    });
+
+    if (todaySession) {
+      return todaySession;
+    }
+    return upcomingSessions[0];
+  }, [sessions]);
 
   const handleItemNavigation = (item, sectionId) => {
     if (item.isLocked) return;
@@ -394,25 +446,25 @@ export default function CourseDetailPage() {
     return Math.ceil(diffTime / (1000 * 60 * 60 * 24));
   };
 
- const realPrice = course?.pricing?.amount || 0;
+  const realPrice = course?.pricing?.amount || 0;
 
-                        const earlyBird = course?.pricing?.earlyBird;
+  const earlyBird = course?.pricing?.earlyBird;
 
-                        const isEarlyBirdActive =
-                            !!earlyBird?.deadline &&
-                            new Date(earlyBird.deadline).getTime() > Date.now();
+  const isEarlyBirdActive =
+    !!earlyBird?.deadline &&
+    new Date(earlyBird.deadline).getTime() > Date.now();
 
-                        let price = realPrice;
+  let price = realPrice;
 
-                        // Apply early bird discount first
-                        if (isEarlyBirdActive) {
-                            price = price - (price * (earlyBird?.discount || 0)) / 100;
-                        }
-                        const earlyBirdDiscount = isEarlyBirdActive ? earlyBird?.discount || 0 : 0;
-                        // Then apply normal discount
-                        const normalDiscount = course?.pricing?.discount || 0;
+  // Apply early bird discount first
+  if (isEarlyBirdActive) {
+    price = price - (price * (earlyBird?.discount || 0)) / 100;
+  }
+  const earlyBirdDiscount = isEarlyBirdActive ? earlyBird?.discount || 0 : 0;
+  // Then apply normal discount
+  const normalDiscount = course?.pricing?.discount || 0;
 
-                        price = price - (price * normalDiscount) / 100;
+  price = price - (price * normalDiscount) / 100;
 
   if (loading) {
     return (
@@ -499,39 +551,55 @@ export default function CourseDetailPage() {
             {course.title}
           </span>
         </nav>
-        {
-          course?.isPurchased && (
-            <div className="pb-4">
-          <TodaySessionsBanner
-            sessions={sessions}
-            onJoin={(session) => {
-              handleItemNavigation(session, "");
-            }}
-            onCalendar={(session) => {
-              console.log("Add to calendar:", session);
-            }}
-          />
-        </div>
-          )
-        }
-        
+        {course?.isPurchased && (
+          <div className="pb-4">
+            <TodaySessionsBanner
+              sessions={sessions}
+              onJoin={(session) => {
+                handleItemNavigation(session, "");
+              }}
+              onCalendar={(session) => {
+                console.log("Add to calendar:", session);
+              }}
+            />
+          </div>
+        )}
 
         <motion.div ref={courseHeaderRef} className="relative">
           <div className="relative">
-            <div className="grid grid-cols-1 lg:grid-cols-6 gap-6">
+            <div className="grid grid-cols-1 lg:grid-cols-10 gap-6">
               {/* Left: Course Info */}
-              <div className="lg:col-span-4 space-y-4">
-                <div className="space-y-2">
-                  <h1 className="text-3xl font-bold text-gray-700 dark:text-white leading-tight text-balance">
-                    {course.title}
-                  </h1>
-                  <p className="text-base font-medium text-gray-600 dark:text-gray-400 leading-relaxed text-pretty">
-                    {course.shortDescription}
-                  </p>
-                  <p className="text-base font-medium text-gray-600 dark:text-gray-400 leading-relaxed text-pretty">
-                    {course.description}
-                  </p>
+              <div className="lg:col-span-7 space-y-4">
+                <div className="flex flex-col md:flex-row gap-4">
+                  <div className="flex-shrink-0 w-full md:w-[310px] h-[210px] lg:h-[200px] rounded-2xl overflow-hidden bg-gray-100 dark:bg-gray-700">
+                    <img
+                      src={
+                        course?.thumbnail?.url
+                          ? `${ImageBaseUrl}/${course.thumbnail.url}`
+                          : "https://dpcpa.com/app/uploads/2015/01/thumbnail-default.jpg"
+                      }
+                      className="w-full h-full object-cover"
+                      alt={course?.title || "Course"}
+                      onError={(e) => {
+                        e.currentTarget.onerror = null;
+                        e.currentTarget.src =
+                          "https://dpcpa.com/app/uploads/2015/01/thumbnail-default.jpg";
+                      }}
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <span className="text-[#FF6A3D] mb-2 font-medium">
+                      {course.categoryInfo?.name}
+                    </span>
+                    <h1 className="text-3xl font-bold text-gray-800 dark:text-white leading-tight text-balance">
+                      {course.title}
+                    </h1>
+                    <p className="text-base font-medium text-gray-600 dark:text-gray-400 leading-relaxed text-pretty">
+                      {course.shortDescription}
+                    </p>
+                  </div>
                 </div>
+
                 {/* <div className="flex flex-wrap items-center gap-3 mb-2">
                                 <Badge variant="outline" className=" px-4 py-1.5">
                                     {course.categoryInfo?.name}
@@ -550,42 +618,42 @@ export default function CourseDetailPage() {
                 {/* Course Details Grid */}
                 <div className="grid grid-cols-2 md:grid-cols-4 gap-4 py-2">
                   <Card className="border  border-gray-200 bg-[#FFF7DD] dark:border-gray-700 dark:bg-gray-800/50">
-                    <CardContent className="text-center p-2">
+                    <CardContent className="text-center p-1.5">
                       <p className="text-lg font-semibold text-gray-800 dark:text-white">
                         Start Date
                       </p>
-                      <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">
+                      <p className="text-sm text-gray-600 dark:text-gray-400 mt-px">
                         {formatDate(course.schedule?.startDate || "")}
                       </p>
                     </CardContent>
                   </Card>
                   <Card className="border border-gray-200 dark:border-gray-700 bg-[#FDF0EC]  dark:bg-gray-800/50">
-                    <CardContent className="p-2 text-center">
+                    <CardContent className="p-1.5 text-center">
                       <p className="text-lg font-semibold text-gray-800 dark:text-white">
                         Mode
                       </p>
-                      <p className="text-sm text-gray-600 dark:text-gray-400 mt-1 capitalize">
+                      <p className="text-sm text-gray-600 dark:text-gray-400 mt-px capitalize">
                         {course.mode}
                       </p>
                     </CardContent>
                   </Card>
                   <Card className="border border-gray-200 dark:border-gray-700  bg-[#FFF7DD] dark:bg-gray-800/50 backdrop-blur-sm">
-                    <CardContent className="p-2 text-center">
+                    <CardContent className="p-1.5 text-center">
                       <p className="text-lg font-semibold text-gray-800 dark:text-white">
                         Language
                       </p>
-                      <p className="text-sm text-gray-600 dark:text-gray-400 mt-1 capitalize">
+                      <p className="text-sm text-gray-600 dark:text-gray-400 mt-px capitalize">
                         {course.language}
                       </p>
                     </CardContent>
                   </Card>
                   <Card className="border border-gray-200 dark:border-gray-700 bg-[#FDF0EC]  dark:bg-gray-800/50 backdrop-blur-sm">
-                    <CardContent className="p-2 text-center">
+                    <CardContent className="p-1.5 text-center">
                       <p className="text-lg font-semibold text-gray-800 dark:text-white">
                         Validity
                       </p>
-                      <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">
-                       1 Year
+                      <p className="text-sm text-gray-600 dark:text-gray-400 mt-px">
+                        24 Month
                       </p>
                     </CardContent>
                   </Card>
@@ -593,7 +661,7 @@ export default function CourseDetailPage() {
                 <div className="mb-8">
                   <nav className="border-b border-gray-200 dark:border-gray-700">
                     <LayoutGroup>
-                      <div className="flex items-center gap-6 scrollbar-hide">
+                      <div className="flex items-center gap-3 scrollbar-hide no-scrollbar overflow-x-auto overflow-y-hidden">
                         {[
                           { id: "overview", label: "Overview" },
                           { id: "curriculum", label: "Curriculum" },
@@ -610,13 +678,13 @@ export default function CourseDetailPage() {
                               onClick={() => setActiveTab(tab.id)}
                               className={`
                 relative shrink-0
-                px-1 pb-3 pt-1
+                px-2 pb-3 pt-1
                 text-[16px] font-medium
                 transition-colors duration-200
                 ${
                   isActive
-                    ? "text-orange-600 dark:text-orange-500"
-                    : "text-gray-500 hover:text-gray-700 dark:text-gray-500 dark:hover:text-gray-300"
+                    ? "text-orange-700 dark:text-orange-500"
+                    : "text-gray-800 hover:text-gray-800 dark:text-gray-500 dark:hover:text-gray-300"
                 }
               `}
                               whileHover={{ y: -1 }}
@@ -648,25 +716,25 @@ export default function CourseDetailPage() {
                   {activeTab === "overview" && (
                     <div className="space-y-4 font-medium">
                       <div>
-                        <h2 className="text-xl font-semibold text-gray-700 dark:text-white mb-4">
+                        <h2 className="text-xl font-semibold text-gray-800 dark:text-white mb-4">
                           Course Description
                         </h2>
                         <div
-                          className="text-gray-700 dark:text-gray-300 whitespace-pre-line leading-relaxed"
+                          className="text-gray-800 dark:text-gray-300 whitespace-pre-line leading-relaxed"
                           dangerouslySetInnerHTML={{
                             __html: course.description,
                           }}
                         />
                       </div>
                       <div>
-                        <h3 className="text-xl font-semibold text-gray-700 dark:text-white mb-4">
+                        <h3 className="text-xl font-semibold text-gray-800 dark:text-white mb-4">
                           What You'll Learn
                         </h3>
                         <ul className="space-y-3">
                           {course.objectives?.map((objective, index) => (
                             <li key={index} className="flex items-start">
                               <ChevronRight className="h-5 w-5 text-gray-500 mt-0.5 mr-3 bg-white flex-shrink-0 border border-gray-500 rounded-full p-px" />
-                              <span className="text-gray-700 dark:text-gray-300">
+                              <span className="text-gray-800 dark:text-gray-300">
                                 {objective}
                               </span>
                             </li>
@@ -674,7 +742,7 @@ export default function CourseDetailPage() {
                         </ul>
                       </div>
                       <div>
-                        <h3 className="text-xl font-semibold text-gray-700 dark:text-white mb-4">
+                        <h3 className="text-xl font-semibold text-gray-800 dark:text-white mb-4">
                           Course Highlights
                         </h3>
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
@@ -684,7 +752,7 @@ export default function CourseDetailPage() {
                               className="flex items-start p-3 bg-zinc-100 dark:bg-gray-800 rounded-2xl"
                             >
                               <ChevronRight className="h-5 w-5 text-gray-500 mt-0.5 mr-3 bg-white flex-shrink-0 border border-gray-500 rounded-full p-px" />
-                              <span className="text-gray-700 dark:text-gray-300">
+                              <span className="text-gray-800 dark:text-gray-300">
                                 {highlight}
                               </span>
                             </div>
@@ -693,14 +761,14 @@ export default function CourseDetailPage() {
                       </div>
                       <div className="space-y-3 grid grid-cols-1 md:grid-cols-2 gap-2">
                         <div>
-                          <h3 className="text-xl font-semibold text-gray-700 dark:text-white mb-4">
+                          <h3 className="text-xl font-semibold text-gray-800 dark:text-white mb-4">
                             Requirements
                           </h3>
-                          <ul className="space-y-3 text-gray-700 dark:text-gray-300 list-disc">
+                          <ul className="space-y-3 text-gray-800 dark:text-gray-300 list-disc">
                             {course.requirements?.map((requirement, index) => (
                               <li key={index} className="flex items-center">
                                 <ChevronRight className="h-5 w-5 text-gray-500 mt-0.5 mr-3 flex-shrink-0 border border-gray-500 rounded-full p-px" />
-                                <span className="text-gray-700 dark:text-gray-300">
+                                <span className="text-gray-800 dark:text-gray-300">
                                   {requirement}
                                 </span>
                               </li>
@@ -708,14 +776,14 @@ export default function CourseDetailPage() {
                           </ul>
                         </div>
                         <div>
-                          <h3 className="text-xl font-semibold text-gray-700 dark:text-white mb-4">
+                          <h3 className="text-xl font-semibold text-gray-800 dark:text-white mb-4">
                             Who This Course Is For
                           </h3>
                           <ul className="space-y-3">
                             {course.targetAudience?.map((audience, index) => (
                               <li key={index} className="flex items-start">
                                 <ChevronRight className="h-5 w-5 text-gray-500 mt-0.5 mr-3 bg-white flex-shrink-0 border border-gray-500 rounded-full p-px" />
-                                <span className="text-gray-700 dark:text-gray-300">
+                                <span className="text-gray-800 dark:text-gray-300">
                                   {audience}
                                 </span>
                               </li>
@@ -727,12 +795,12 @@ export default function CourseDetailPage() {
                   )}
 
                   {activeTab === "curriculum" && (
-                    <div className="space-y-5">
+                    <div className="space-y-3">
                       {curriculumLoading ? (
                         <CurriculumSkeleton />
                       ) : (
                         <>
-                          <div className="space-y-4">
+                          <div className="space-y-3">
                             {curriculum?.map((section, sectionIndex) => {
                               const isOpen = openSections.includes(section._id);
 
@@ -757,6 +825,7 @@ export default function CourseDetailPage() {
                   overflow-hidden
                   rounded-xl
                   border
+                  border-[#ffded5]
                   transition-all
                   duration-300
                 "
@@ -772,8 +841,9 @@ export default function CourseDetailPage() {
                     items-center
                     justify-between
                     gap-3
-                    bg-[#FDE8D8]
+                    bg-[#fef7dd]
                     p-2
+                    px-4
                     text-left
                     transition-all
                     duration-300
@@ -794,18 +864,19 @@ export default function CourseDetailPage() {
                         border-r
                         border-[#EAB9A5]
                         pr-4
-                        text-lg
-                        font-bold
+                        text-base
+                        font-medium
                         text-[#F04F23]
                         sm:h-12
                         sm:w-12
-                        sm:text-xl
                       "
                                       >
-                                        {String(sectionIndex + 1).padStart(
-                                          2,
-                                          "0",
-                                        )}
+                                        <span className="bg-[#FF7147] px-2 py-1 text-white rounded-lg">
+                                          {String(sectionIndex + 1).padStart(
+                                            2,
+                                            "0",
+                                          )}
+                                        </span>
                                       </div>
 
                                       {/* TITLE */}
@@ -814,7 +885,7 @@ export default function CourseDetailPage() {
                                           className="
                           truncate
                           text-base
-                          font-bold
+                          font-semibold
                           text-[#111827]
                           sm:text-base
                         "
@@ -853,12 +924,11 @@ export default function CourseDetailPage() {
                         rounded-full
                         border
                         border-[#EBC5B3]
-                        bg-white/80
+                        bg-[#FF7147] px-2 py-1 text-white
                         px-3
                         py-1
-                        text-xs
+                        text-sm
                         font-semibold
-                        text-[#F04F23]
                         sm:block
                       "
                                       >
@@ -936,8 +1006,8 @@ export default function CourseDetailPage() {
                                       items-center
                                       gap-3
                                       border-b
-                                      border-[#F1E7E2]
-                                      py-4
+                                      border-[#ffded5]
+                                      py-3
                                       last:border-b-0
                                       sm:gap-4
                                     "
@@ -946,141 +1016,31 @@ export default function CourseDetailPage() {
                                                         className="
                                 relative
                                 h-[58px]
-                                w-[82px]
+                                w-[90px]
                                 shrink-0
                                 overflow-hidden
                                 rounded-xl
                                 bg-[#F5ECE7]
-                                sm:h-[68px]
-                                sm:w-[100px]
+                                sm:h-[70px]
+                                sm:w-[120px]
                               "
                                                       >
-                                                        {item.thumbnailPic ? (
-                                                          <img
-                                                            src={`${ImageBaseUrl}/${item.thumbnailPic}`}
-                                                            alt={item.title}
-                                                            loading="lazy"
-                                                            onError={(e) => {
-                                                              e.currentTarget.src =
-                                                                "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSzZItwLsuYvbDFTqu2u1MmCBR3dT1X0DAEWwXgo88c4FW8_WArEm7TQFFP&s=10";
-                                                            }}
-                                                            className="
+                                                        <img
+                                                          src={`${ImageBaseUrl}/${item.thumbnailPic}`}
+                                                          alt={item.title}
+                                                          loading="lazy"
+                                                          onError={(e) => {
+                                                            e.currentTarget.src =
+                                                              "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSzZItwLsuYvbDFTqu2u1MmCBR3dT1X0DAEWwXgo88c4FW8_WArEm7TQFFP&s=10";
+                                                          }}
+                                                          className="
     h-full
     w-full
     object-cover
     transition-transform
     duration-300
-    group-hover/lesson:scale-105
   "
-                                                          />
-                                                        ) : (
-                                                          <div
-                                                            className="
-                                    flex
-                                    h-full
-                                    w-full
-                                    items-center
-                                    justify-center
-                                    bg-[#F7EEE9]
-                                  "
-                                                          >
-                                                            {item.type ===
-                                                            "LiveClasses" ? (
-                                                              <Radio className="h-6 w-6 text-[#F4511E]" />
-                                                            ) : (
-                                                              <Film className="h-6 w-6 text-[#A99288]" />
-                                                            )}
-                                                          </div>
-                                                        )}
-
-                                                        {/* IMAGE DARK OVERLAY */}
-
-                                                        {item.thumbnailPic && (
-                                                          <div
-                                                            className="
-                                    absolute
-                                    inset-0
-                                    flex
-                                    items-center
-                                    justify-center
-                                    bg-black/10
-                                    transition-all
-                                    group-hover/lesson:bg-black/25
-                                  "
-                                                          >
-                                                            <div
-                                                              className="
-                                      flex
-                                      h-6
-                                      w-6
-                                      items-center
-                                      justify-center
-                                      rounded-full
-                                      bg-white/95
-                                      text-[#F4511E]
-                                      shadow-md
-                                      transition-transform
-                                      duration-200
-                                    "
-                                                            >
-                                                              <Play
-                                                                className="
-                                        ml-0.5
-                                        h-3
-                                        w-3
-                                        fill-current
-                                      "
-                                                              />
-                                                            </div>
-                                                          </div>
-                                                        )}
-
-                                                        {/* LIVE BADGE */}
-
-                                                        {(item.type ===
-                                                          "LiveClasses" ||
-                                                          item.type ===
-                                                            "Sessions") && (
-                                                          <span
-                                                            className="
-                                    absolute
-                                    left-1
-                                    top-1
-                                    rounded-md
-                                    bg-[#F4511E]
-                                    px-1.5
-                                    py-0.5
-                                    text-[9px]
-                                    font-bold
-                                    uppercase
-                                    tracking-wide
-                                    text-white
-                                  "
-                                                          >
-                                                            Live
-                                                          </span>
-                                                        )}
-
-                                                        {/* DURATION */}
-
-                                                        {item.duration && (
-                                                          <span
-                                                            className="
-                                    absolute
-                                    bottom-1.5
-                                    right-1.5
-                                    rounded-md
-                                    bg-black/75
-                                    px-1.5
-                                    py-0.5
-                                    text-[9px]
-                                    font-medium
-                                    text-white
-                                  "
-                                                          >
-                                                            {item.duration}
-                                                          </span>
-                                                        )}
+                                                        />
                                                       </div>
 
                                                       <div
@@ -1109,6 +1069,7 @@ export default function CourseDetailPage() {
                                           font-semibold
                                           transition-colors
                                           sm:text-base
+                                          hover:text-[#F04F23]
                                           ${
                                             item.isLocked
                                               ? "text-[#B9B0AC]"
@@ -1183,17 +1144,19 @@ export default function CourseDetailPage() {
                                                                     year: "numeric",
                                                                   },
                                                                 )}{" "}
-                                                                {new Date(
-                                                                  item.scheduledStart,
-                                                                ).toLocaleTimeString(
-                                                                  "en-IN",
-                                                                  {
-                                                                    hour: "2-digit",
-                                                                    minute:
-                                                                      "2-digit",
-                                                                    hour12: true,
-                                                                  },
-                                                                )}
+                                                                <span className="ps-3">
+                                                                  {new Date(
+                                                                    item.scheduledStart,
+                                                                  ).toLocaleTimeString(
+                                                                    "en-IN",
+                                                                    {
+                                                                      hour: "2-digit",
+                                                                      minute:
+                                                                        "2-digit",
+                                                                      hour12: true,
+                                                                    },
+                                                                  )}
+                                                                </span>
                                                               </span>
                                                             </>
                                                           )}
@@ -1362,6 +1325,7 @@ export default function CourseDetailPage() {
                   )}
                   {activeTab === "tests" && (
                     <CourseTests
+                    course={course}
                       curriculum={curriculum}
                       loading={curriculumLoading}
                       onItemClick={handleItemNavigation}
@@ -1602,7 +1566,7 @@ export default function CourseDetailPage() {
                                     Teaching
                                   </p>
 
-                                  <p className="text-[11px] font-semibold text-gray-700">
+                                  <p className="text-[11px] font-semibold text-gray-800">
                                     Expert Faculty
                                   </p>
                                 </div>
@@ -1732,7 +1696,7 @@ export default function CourseDetailPage() {
                 initial={{ opacity: 0, x: 20 }}
                 animate={{ opacity: 1, x: 0 }}
                 transition={{ delay: 0.2 }}
-                className="lg:col-span-2"
+                className="lg:col-span-3"
               >
                 <motion.div
                   initial={{ opacity: 0, x: 20 }}
@@ -1740,28 +1704,18 @@ export default function CourseDetailPage() {
                   transition={{ delay: 0.3 }}
                   className="sticky top-20"
                 >
-                  <div className="p-[1.5px] rounded-2xl overflow-hidden w-full bg-gradient-to-b from-[#686868]/0 via-[#686868]/60 to-[#686868]">
-                    <div className="relative rounded-2xl h-full bg-white p-1.5 overflow-hidden">
-
-                  
-
-
- 
-
-                      <div className="absolute top-0 left-0 w-full h-[30%] bg-gradient-to-b from-[#ADADAC] to-[#ADADAC]/0" />
+                  <div className="p-[1.3px] rounded-2xl overflow-hidden w-full bg-gradient-to-b from-[#686868]/0 via-[#686868]/60 to-[#686868]">
+                    <div className="relative rounded-2xl h-full bg-white p-2 overflow-hidden">
+                      <div className="absolute top-0 left-0 w-full h-[50%] bg-gradient-to-b from-[#ADADAC] to-[#ADADAC]/0" />
                       <div
                         style={{ borderRadius: "15px 15px 0px 0px" }}
-                        className="relative overflow-hidden h-[210px]"
+                        className="relative overflow-hidden h-[180px]"
                       >
-
-                       
                         <div className="relative aspect-video bg-gray-900 rounded-t-lg overflow-hidden">
                           {course?.preview?.url ? (
                             (() => {
                               const url = course.preview.url;
                               let embedUrl = "";
-
-                              // YouTube
                               if (
                                 url.includes("youtube.com") ||
                                 url.includes("youtu.be")
@@ -1822,136 +1776,140 @@ export default function CourseDetailPage() {
                         </div>
                       </div>
 
-                      <div className="px-5 py-2 space-y-2">
+                      <div className="px-2 py-2 space-y-2">
                         <h2 className="text-lg font-semibold text-gray-800">
-                          {course.title}
+                          <span className="text-[#F26738]">
+                            {course.title.split(" ")[0]}
+                          </span>
+                          <span className="">
+                            {" "}
+                            {course.title.split(" ").slice(1).join(" ")}
+                          </span>
                         </h2>
-
-                         <div className="flex items-center gap-3 w-full">
-  
-  {/* Early Bird */}
-  {isEarlyBirdActive && (
-    <div className="flex items-center rounded-lg bg-[#FF7148] px-2.5 py-1 text-white shadow-sm">
-      <span className="text-sm font-bold leading-none">
-        Early Bird
-      </span>
-    </div>
-  )}
-
-  {/* Discount */}
-  <div
-    className={`
-      flex flex-col items-center
-      
-      bg-green-500
-      px-2.5 py-1
-      text-white
-      rounded-lg
-      shadow-sm
-    
-    `}
-  >
-    {isEarlyBirdActive ? (
-      <span className="text-sm font-bold leading-none">
-        {normalDiscount}%
-        <span className="mx-0.5 text-xs font-semibold opacity-90">
-          +
-        </span>
-        <span className="text-[10px] font-semibold">
-          {earlyBirdDiscount}% OFF
-        </span>
-      </span>
-    ) : (
-      <>
-        <span className="text-sm rounded--lg font-bold leading-none">
-          {normalDiscount}% OFF
-        </span>
-
-      
-      </>
-    )}
-  </div>
-</div>
-
-                        <div className="space-y-2 text-sm grid grid-cols-2 gap-x-4">
-                          <div className="flex justify-between">
-                            <span>Duration :</span>
-                            <span>{course?.schedule_pattern?.duration || "Unknown"} Hours</span>
+                        <div className="mt-2 space-y-2 text-gray-600 dark:text-white">
+                          <div className="flex items-center gap-3 text-base">
+                            <Radio size={20} className="text-[#FF6736]" />
+                            <span className="text-sm"> {course?.mode}</span>
                           </div>
 
-                          <div className="flex justify-between">
-                            <span>Language :</span>
-                            <span>{course.language}</span>
-                          </div>
-
-                          <div className="flex justify-between">
-                            <span>Mode :</span>
-                            <span>{course.mode}</span>
-                          </div>
-
-                          <div className="flex justify-between">
-                            <span>Validity :</span>
-                            <span>1 Year</span>
+                          <div className="flex items-center gap-3 text-base ">
+                            <Calendar size={20} className="text-[#FF6736]" />
+                            <span className="text-sm">
+                              Starts on{" "}
+                              {new Date(
+                                course?.schedule?.startDate,
+                              ).toLocaleDateString("en-GB")}
+                            </span>
                           </div>
                         </div>
 
-                       
-                        <div className="space-y-1 grid grid-cols-2">
-                          
+                       {course?.isPurchased == false && (
+                         <div className="mt-2 flex justify-between items-end">
+                          <div>
+                            <div className="flex items-center gap-1  dark:text-white">
+                              {course?.pricing?.currency}
+                              <span className="text-base font-bold"></span>
 
-                          <div className="flex items-center gap-2 text-sm">
-                            ✓ Certificate Included
-                          </div>
+                              <span className="text-2xl font-bold ">
+                                {price}
+                              </span>
 
-                          <div className="flex items-center gap-2 text-sm">
-                            ✓ Study Material
+                              <span className="line-through text-gray-400 text-base dark:text-white">
+                                {course?.pricing?.amount}{" "}
+                                {course?.pricing?.currency}
+                              </span>
+                              {normalDiscount > 0 && earlyBirdDiscount > 0 ? (
+                                <span className="rounded-full bg-green-50 px-2 py-0.5 text-sm font-semibold text-green-600">
+                                  {normalDiscount}%
+                                  <span className="text-xs font-medium">
+                                    {" + "}
+                                    {earlyBirdDiscount}%
+                                  </span>
+                                  <span className="text-xs font-medium">
+                                    {" "}
+                                    OFF
+                                  </span>
+                                </span>
+                              ) : (
+                                <span className="rounded-full bg-green-50 px-2 py-0.5 text-xs font-semibold text-green-600">
+                                  {normalDiscount}% OFF
+                                </span>
+                              )}
+                            </div>
                           </div>
-
-                          <div className="flex items-center gap-2 text-sm">
-                            ✓ Expert Support
-                          </div>
+                        </div>)}
+                        <div className="mt-0 flex justify-end">
+                          {course?.isPurchased === true ? null : (
+                            <button
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                navigate(`/checkout/${course?.slug}`);
+                              }}
+                              className="border border-[#FF6736] rounded-2xl px-5 py-2 text-[#FF6736] text-sm font-medium hover:bg-[#FF6736] hover:text-white transition-all duration-300 whitespace-nowrap"
+                            >
+                              Enroll Now
+                            </button>
+                          )}
                         </div>
+                        {course?.isPurchased == false && (
+                          <div className="">
+                            <div
+                              className="
+        flex
+        p-2
+        w-full
+        items-center
+        gap-[6px]
+        rounded-full
+        bg-[#FFE8D5]
+        px-[8px]
+      "
+                            >
+                              <span
+                                className="
+          flex
+          h-[20px]
+          shrink-0
+          items-center
+          rounded-full
+          bg-[#FF7048]
+          px-[8px]
+          text-xs
+          font-semibold
+          leading-none
+          text-white
+        "
+                              >
+                                Ooshas Prep
+                              </span>
 
-                        
-
+                              <span
+                                className="
+          text-xs
+          font-medium
+          leading-none
+          text-[#4F4F4F]
+        "
+                              >
+                                Limited Time Offer
+                              </span>
+                            </div>
+                          </div>
+                        )}
                       </div>
-
-                      {/* FOOTER */}
-                      {course?.isPurchased === false ? (
-                        <div className="flex items-start">
-                         <div
-  style={{ borderRadius: "0px 0px 12px 15px" }}
-  className="flex bg-[#FF6A3D] items-center gap-2 text-center text-white px-4 py-2"
->
-
-
-  {/* Final Price */}
-  <div className="text-2xl sm:text-3xl font-bold leading-tight">
-    {formatPrice(price, course.pricing.currency)}
-  </div>
-
-    {/* Real Price */}
-  {course?.pricing?.amount > price && (
-    <div className="text-sm sm:text-lg font-medium text-white/70 line-through leading-tight">
-      {formatPrice(course.pricing.amount, course.pricing.currency)}
-    </div>
-  )}
-</div>
-                          <button
-                            style={{ borderRadius: "0px 0px 15px 0px" }}
-                            onClick={() => {
-                              course?.pricing?.isFree
-                                ? ""
-                                : navigate(`/checkout/${slug}`);
-                            }}
-                            className="flex-1 bg-[#3B3B3B] text-white font-medium py-2 bg-gradient-to-b from-[#545454] via-[#ffffff]/30 to-[#545454] hover:bg-black transition"
-                          >
-                            Enroll Now
-                          </button>
-                        </div>
-                      ) : null}
                     </div>
                   </div>
+
+                  {course?.isPurchased && nextLiveClass && (
+                    <div className="pb-4 mt-3">
+                      <NextLiveClassCard
+                        session={nextLiveClass}
+                        onContinue={(session) => {
+                          handleItemNavigation(session, "");
+                        }}
+                      />
+                    </div>
+                  )}
                 </motion.div>
               </motion.div>
             </div>

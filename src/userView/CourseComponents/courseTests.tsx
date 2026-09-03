@@ -16,6 +16,7 @@ interface CourseTestsProps {
 }
 
 export function CourseTests({
+  course,
   curriculum,
   loading = false,
   onItemClick,
@@ -65,39 +66,30 @@ export function CourseTests({
           key={section._id}
           className="
             overflow-hidden
-            rounded-xl
-            border
-            border-gray-200
-            bg-white
-            transition-all
-            hover:border-[#FFD5C8]
-            hover:shadow-[0_8px_25px_rgba(243,110,69,0.08)]
           "
         >
           {/* Section Header */}
-          <div className="flex items-center justify-between gap-3 bg-[#FDE8D8] px-4 py-3">
+          <div className="flex items-center justify-between gap-3 pb-2 ">
             <div className="flex min-w-0 items-center gap-3">
               <div
                 className="
                   flex
-                  h-10
-                  w-10
+                 p-1 px-2
                   shrink-0
                   items-center
                   justify-center
                   rounded-lg
-                  border-r
-                  border-[#EAB9A5]
-                  text-sm
-                  font-bold
-                  text-[#F04F23]
+                  bg-[#FF7147]
+                  text-base
+                  font-medium
+                  text-white
                 "
               >
                 {String(sectionIndex + 1).padStart(2, "0")}
               </div>
 
               <div className="min-w-0">
-                <h3 className="truncate text-sm font-bold text-[#172033] sm:text-base">
+                <h3 className="truncate text-sm font-semibold text-[#172033] sm:text-base">
                   {section.title}
                 </h3>
 
@@ -107,120 +99,203 @@ export function CourseTests({
                 </p>
               </div>
             </div>
-
-            <span className="hidden rounded-full bg-white px-3 py-1 text-xs font-semibold text-[#F04F23] sm:block">
-              {section.items.length}
-            </span>
           </div>
-
-          {/* Tests */}
-          <div className="divide-y divide-gray-100">
+          <div className="divide-y divide-gray-100 space-y-2.5">
             {section.items.map((item: any, index: number) => {
-              const test = item.test;
+              const currentTest = item?.test || test;
+
+              const testTitle =
+                currentTest?.title || item?.title || `Test ${index + 1}`;
+
+              const testDescription =
+                currentTest?.description ||
+                item?.description ||
+                "Full Length Assessment";
+
+              const duration =
+                currentTest?.totalDurationMinutes ||
+                currentTest?.duration ||
+                item?.duration ||
+                null;
+
+              const totalQuestions =
+                currentTest?.totalQuestions ||
+                currentTest?.questions?.length ||
+                item?.totalQuestions ||
+                null;
+
+              const totalMarks =
+                currentTest?.totalMarks ||
+                currentTest?.marks ||
+                item?.totalMarks ||
+                null;
 
               return (
                 <div
                   key={item._id}
-                  className={`
-                    group flex items-center gap-3 px-4 py-3
-                    transition-colors
-                    ${
-                      item.isLocked
-                        ? "opacity-60"
-                        : "cursor-pointer hover:bg-[#FFFCFA]"
-                    }
-                  `}
                   onClick={() => {
                     if (!item.isLocked) {
                       onItemClick(item, section._id);
                     }
                   }}
+                  className={`
+        group
+        flex
+        w-full
+        items-center
+        gap-[12px]
+        rounded-lg
+        border
+        border-[#FFB9A3]
+        bg-white
+        p-2 px-2.5
+        
+        transition-all
+        duration-200
+        ${
+          item.isLocked
+            ? "cursor-not-allowed opacity-60"
+            : "cursor-pointer hover:border-[#FF805F] hover:shadow-[0_2px_8px_rgba(242,103,56,0.08)]"
+        }
+      `}
                 >
-                  {/* Test Icon - NO THUMBNAIL */}
                   <div
                     className="
-                      flex
-                      h-11
-                      w-11
-                      shrink-0
-                      items-center
-                      justify-center
-                      rounded-xl
-                      border
-                      border-[#FFE0D6]
-                      bg-[#FFF7F3]
-                      text-[#F36E45]
-                      transition-transform
-                      group-hover:scale-105
-                    "
+          relative
+          flex
+          h-[50px]
+          w-[79px]
+          shrink-0
+          items-center
+          justify-center
+          overflow-hidden
+          rounded-[8px]
+          bg-[#FF6942]
+        "
                   >
-                    <ClipboardCheck className="h-5 w-5" />
-                  </div>
 
-                  {/* Test Content */}
+                    <div className="relative z-10 text-center">
+                      <div
+                        className="
+              text-xl
+              font-bold
+            
+              text-white
+            "
+                      >
+                       
+                         {course?.categoryInfo?.name?.split(" ")[0] ||
+                          "TEST"}
+                      </div>
+
+                      
+                    </div>
+                  </div>
                   <div className="min-w-0 flex-1">
+                    {/* Title */}
                     <h4
                       className={`
-                        truncate
-                        text-sm
-                        font-semibold
-                        sm:text-[15px]
-                        ${
-                          item.isLocked
-                            ? "text-gray-400"
-                            : "text-[#172033] group-hover:text-[#F36E45]"
-                        }
-                      `}
+            truncate
+            text-base
+            font-medium
+            ${item.isLocked ? "text-gray-400" : "text-[#252525]"}
+          `}
                     >
-                      {item.test.title || test?.title || `Test ${index + 1}`}
+                      {testTitle}
                     </h4>
 
-                    <div className="mt-1 flex flex-wrap items-center gap-2 text-xs text-gray-500 sm:text-sm">
-                      {/* Test Type */}
-                      <span className="rounded-md bg-[#FFF5F1] px-2 py-0.5 text-[#F36E45]">
-                        Test
-                      </span>
+                    {/* Description */}
+                    <p
+                      className="
+            mt-px
+            truncate
+            text-xs
+            font-normal
+            text-[#777777]
+          "
+                    >
+                      {testDescription}
+                    </p>
 
-                      {/* Duration */}
-                      {test?.duration || item.duration ? (
-                        <>
-                          <span className="text-gray-300">•</span>
+                    {/* =================================================
+            TEST META
+        ================================================== */}
+                    <div
+                      className="
+            flex
+            items-center
+            gap-[10px]
+            mt-1
+            whitespace-nowrap
+            text-xs
+            leading-none
+            text-[#444444]
+          "
+                    >
+                      {/* Questions */}
+                      {totalQuestions !== null && (
+                        <span className="flex items-center gap-[3px]">
+                          <ClipboardCheck
+                            className="h-[10px] w-[10px] text-[#F26738]"
+                            strokeWidth={2}
+                          />
 
-                          <span className="flex items-center gap-1">
-                            <Clock3 className="h-3.5 w-3.5" />
-                            {test?.totalDurationMinutes  || item.duration} Minutes
+                          <span>
+                            {totalQuestions}{" "}
+                            {Number(totalQuestions) === 1 ? "Task" : "Tasks"}
                           </span>
-                        </>
-                      ) : null}
-
-                      {test?.difficultyLabel && (
-                        <>
-                          <span className="text-gray-300">•</span>
-
-                          <span className="flex items-center gap-1">
-                            <Star className="h-3.5 w-3.5" />
-                            {test?.difficultyLabel}
-                          </span>
-                        </>
-                          
+                        </span>
                       )}
 
- 
+                      {/* Duration */}
+                      {duration !== null && (
+                        <span className="flex items-center gap-[3px]">
+                          <Clock3
+                            className="h-[10px] w-[10px] text-[#F26738]"
+                            strokeWidth={2}
+                          />
+
+                          <span>{duration} Min</span>
+                        </span>
+                      )}
+
+                      {/* Marks */}
+                      {totalMarks !== null && (
+                        <span className="flex items-center gap-[3px]">
+                          <Award
+                            className="h-[10px] w-[10px] text-[#F26738]"
+                            strokeWidth={2}
+                          />
+
+                          <span>{totalMarks} Marks</span>
+                        </span>
+                      )}
                     </div>
                   </div>
 
-                  {/* Action */}
+                  {/* =====================================================
+          START TEST BUTTON
+      ====================================================== */}
                   {item.isLocked ? (
                     <Button
                       type="button"
                       disabled
                       size="sm"
                       variant="outline"
-                      className="rounded-full border-gray-200 bg-gray-50 px-3 text-gray-400"
+                      className="
+            mr-[3px]
+            h-[25px]
+            shrink-0
+            rounded-full
+            border-gray-200
+            bg-gray-50
+            px-[12px]
+            text-[10px]
+            text-gray-400
+          "
                     >
-                      <Lock className="mr-1 h-3.5 w-3.5" />
-
-                      <span className="hidden sm:inline">Locked</span>
+                      <Lock className="mr-1 h-3 w-3" />
+                      Locked
                     </Button>
                   ) : (
                     <button
@@ -230,21 +305,32 @@ export function CourseTests({
                         onItemClick(item, section._id);
                       }}
                       className="
-                        flex
-                        h-9
-                        w-9
-                        shrink-0
-                        items-center
-                        justify-center
-                        rounded-full
-                        bg-gray-50
-                        text-gray-400
-                        transition-all
-                        hover:bg-[#FFF1EB]
-                        hover:text-[#F4511E]
-                      "
+            mr-[3px]
+            flex
+            h-[25px]
+            min-w-[70px]
+            shrink-0
+            items-center
+            justify-center
+            gap-[3px]
+            rounded-[7px]
+            bg-[#FF6942]
+            px-[10px]
+            text-sm
+            font-medium
+            leading-none
+            text-white
+            transition-all
+            duration-200
+            hover:bg-[#F45A34]
+            active:scale-[0.97]
+          "
                     >
-                      <ChevronRight className="h-4 w-4" />
+                      Start Test
+                      <ChevronRight
+                        className="h-[10px] w-[10px]"
+                        strokeWidth={2.5}
+                      />
                     </button>
                   )}
                 </div>
@@ -342,16 +428,15 @@ export function CourseMaterials({
           className="
             overflow-hidden
             rounded-xl
-            border
-            border-gray-200
             bg-white
             transition-all
-            hover:border-[#FFD5C8]
-            hover:shadow-[0_8px_25px_rgba(243,110,69,0.08)]
           "
         >
           {/* Section Header */}
-          <div className="flex items-center justify-between gap-3 bg-[#FDE8D8] px-4 py-3">
+          <div
+            className="flex items-center justify-between gap-3
+                   bg-white px-4 py-3 mb-2"
+          >
             <div className="flex min-w-0 items-center gap-3">
               <div
                 className="
@@ -361,148 +446,261 @@ export function CourseMaterials({
                   shrink-0
                   items-center
                   justify-center
-                  rounded-lg
                   border-r
                   border-[#EAB9A5]
-                  text-sm
-                  font-bold
+                  text-base 
+                  pr-2
+                  font-medium
                   text-[#F04F23]
                 "
               >
-                {String(sectionIndex + 1).padStart(2, "0")}
+                <span className="bg-[#FF7147] px-2 py-1 text-white rounded-lg">
+                  {String(sectionIndex + 1).padStart(2, "0")}
+                </span>
               </div>
 
               <div className="min-w-0">
-                <h3 className="truncate text-sm font-bold text-[#172033] sm:text-base">
+                <h3
+                  className="
+                          truncate
+                          text-base
+                          font-semibold
+                          text-[#111827]
+                          sm:text-base
+                        "
+                >
                   {section.title}
                 </h3>
 
-                <p className="mt-0.5 text-xs text-[#8B6F61]">
+                <p className="mt-px text-xs text-[#8B6F61]">
                   {section.items.length}{" "}
                   {section.items.length === 1 ? "Material" : "Materials"}
                 </p>
               </div>
             </div>
 
-            <span className="hidden rounded-full bg-white px-3 py-1 text-xs font-semibold text-[#F04F23] sm:block">
+            <span
+              className="
+                        hidden
+                        rounded-full
+                        border
+                        border-[#EBC5B3]
+                        bg-[#FF7147] px-2 py-1 text-white
+                        px-3
+                        py-1
+                        text-sm
+                        font-semibold
+                        sm:block
+                      "
+            >
               {section.items.length}
             </span>
           </div>
 
           {/* Materials */}
-          <div className="divide-y divide-gray-100">
-            {section.items.map((item: any) => (
-              <div
-                key={item._id}
-                className={`
-                  group flex items-center gap-3 px-4 py-3
-                  transition-colors
-                  ${
-                    item.isLocked
-                      ? "opacity-60"
-                      : "cursor-pointer hover:bg-[#FFFCFA]"
-                  }
-                `}
-                onClick={() => {
-                  if (!item.isLocked) {
-                    onItemClick(item, section._id);
-                  }
-                }}
-              >
-                {/* Icon - NO THUMBNAIL */}
+          <div className="divide-y divide-gray-100 space-y-2">
+            {section.items.map((item: any) => {
+              const isPdf =
+                item?.materialType?.toLowerCase() === "pdf" ||
+                item?.materialType?.toLowerCase() === "document";
+
+              const handleView = (e: React.MouseEvent) => {
+                e.stopPropagation();
+
+                if (item.isLocked) return;
+                onItemClick(item, section._id);
+              };
+              return (
                 <div
-                  className="
-                    flex
-                    h-11
-                    w-11
-                    shrink-0
-                    items-center
-                    justify-center
-                    rounded-xl
-                    border
-                    border-[#FFE0D6]
-                    bg-[#FFF7F3]
-                    text-[#F36E45]
-                    transition-transform
-                    group-hover:scale-105
-                  "
+                  key={item._id}
+                  onClick={() => {
+                    if (!item.isLocked) {
+                      onItemClick(item, section._id);
+                    }
+                  }}
+                  className={`
+        group
+        flex
+        min-h-[64px]
+        w-full
+        bg-[#FFF6DD]
+        items-center
+        gap-[10px]
+        rounded-[11px]
+        px-3
+        py-2
+        transition-all
+        duration-200
+        ${
+          item.isLocked
+            ? "cursor-not-allowed opacity-60"
+            : "cursor-pointer hover:bg-[#FFF6DD]/50"
+        }
+      `}
                 >
-                  {getMaterialIcon(item.materialType)}
-                </div>
-
-                {/* Content */}
-                <div className="min-w-0 flex-1">
-                  <h4
-                    className={`
-                      truncate
-                      text-sm
-                      font-semibold
-                      sm:text-[15px]
-                      ${
-                        item.isLocked
-                          ? "text-gray-400"
-                          : "text-[#172033] group-hover:text-[#F36E45]"
-                      }
-                    `}
+                  <div
+                    className="
+          flex
+         p-1.5
+          shrink-0
+          items-center
+          justify-center
+          rounded-[9px]
+          bg-white
+        "
                   >
-                    {item.title}
-                  </h4>
-
-                  <div className="mt-1 flex flex-wrap items-center gap-2 text-xs text-gray-500 sm:text-sm">
-                    <span className="rounded-md bg-[#FFF5F1] px-2 py-0.5 text-[#F36E45]">
-                      {getMaterialLabel(item.materialType)}
-                    </span>
-
-                    {item.description && (
-                      <>
-                        <span className="text-gray-300">•</span>
-                        <span className="truncate max-w-[250px]">
-                          {item.description}
-                        </span>
-                      </>
+                    {isPdf ? (
+                      <div
+                        className="
+              flex
+              h-[35px]
+              w-[35px]
+              items-center
+              justify-center
+              rounded-[5px]
+              bg-[#D82323]
+              text-white
+            "
+                      >
+                        {/* PDF icon */}
+                        <img
+                          className="h-full w-full object-cover"
+                          src="https://www.svgrepo.com/show/349472/pdf.svg"
+                          alt="PDF"
+                        />
+                      </div>
+                    ) : (
+                      <div
+                        className="
+              flex
+             h-[35px]
+              w-[35px]
+              items-center
+              justify-center
+              rounded-[5px]
+              bg-[#D82323]
+              text-white
+            "
+                      >
+                        {getMaterialIcon(item.materialType)}
+                      </div>
                     )}
                   </div>
-                </div>
 
-                {/* Action */}
-                {item.isLocked ? (
-                  <Button
-                    type="button"
-                    disabled
-                    size="sm"
-                    variant="outline"
-                    className="rounded-full border-gray-200 bg-gray-50 px-3 text-gray-400"
-                  >
-                    <Lock className="mr-1 h-3.5 w-3.5" />
-                    <span className="hidden sm:inline">Locked</span>
-                  </Button>
-                ) : (
-                  <button
-                    type="button"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      onItemClick(item, section._id);
-                    }}
-                    className="
-                      flex
-                      h-9
-                      w-9
-                      shrink-0
-                      items-center
-                      justify-center
-                      rounded-full
-                      bg-gray-50
-                      text-gray-400
-                      transition-all
-                      hover:bg-[#FFF1EB]
-                      hover:text-[#F4511E]
-                    "
-                  >
-                    <ChevronRight className="h-4 w-4" />
-                  </button>
-                )}
-              </div>
-            ))}
+                  {/* =====================================================
+          CONTENT
+      ====================================================== */}
+                  <div className="min-w-0 flex-1 py-[2px]">
+                    {/* Title */}
+                    <h3
+                      className={`
+            truncate
+            text-base
+            font-semibold
+            ${item.isLocked ? "text-gray-400" : "text-[#2D2D2D]"}
+          `}
+                    >
+                      {item.title}
+                    </h3>
+
+                    {/* Description */}
+                    {item.description && (
+                      <p
+                        className="
+              mt-[1px]
+              line-clamp-2
+              max-w-[300px]
+              text-xs
+              font-normal
+              text-[#858585]
+            "
+                      >
+                        {item.description}
+                      </p>
+                    )}
+
+                    {/* Fallback description */}
+                    {!item.description && (
+                      <p
+                        className="
+              mt-[1px]
+              text-xs
+              font-normal
+              text-[#858585]
+            "
+                      >
+                        {getMaterialLabel(item.materialType)}
+                      </p>
+                    )}
+                  </div>
+
+                  {/* =====================================================
+          ACTIONS
+      ====================================================== */}
+                  {!item.isLocked ? (
+                    <div
+                      className="
+            flex
+            shrink-0
+            items-center
+            gap-[33px]
+            pr-[25px]
+          "
+                    >
+                      {/* View PDF */}
+                      <button
+                        type="button"
+                        onClick={handleView}
+                        className="
+              flex
+             
+              items-center
+              justify-center
+              rounded-[4px]
+              border
+              border-[#FF805F]
+              bg-white
+              px-3
+              py-2
+              text-sm
+              font-medium
+              leading-none
+              text-[#555555]
+              transition-all
+              duration-200
+              hover:bg-[#FFF4EF]
+              hover:text-[#F26738]
+              active:scale-[0.97]
+            "
+                      >
+                        View PDF
+                      </button>
+                    </div>
+                  ) : (
+                    /* Locked */
+                    <Button
+                      type="button"
+                      disabled
+                      size="sm"
+                      variant="outline"
+                      className="
+            mr-[10px]
+            h-[26px]
+            rounded-[5px]
+            border-gray-200
+            bg-gray-50
+            px-[10px]
+            text-[10px]
+            text-gray-400
+          "
+                    >
+                      <Lock className="mr-1 h-3 w-3" />
+                      Locked
+                    </Button>
+                  )}
+                </div>
+              );
+            })}
           </div>
         </div>
       ))}
@@ -510,14 +708,8 @@ export function CourseMaterials({
   );
 }
 
-
-
 import { useEffect, useMemo, useState } from "react";
-import {
-  CalendarDays,
-  ChevronLeft,
-  Video,
-} from "lucide-react";
+import { CalendarDays, ChevronLeft, Video } from "lucide-react";
 
 interface Session {
   _id: string;
@@ -544,7 +736,6 @@ export const TodaySessionsBanner: React.FC<TodaySessionsBannerProps> = ({
 }) => {
   const [currentIndex, setCurrentIndex] = useState(0);
   const [now, setNow] = useState(new Date());
-
 
   useEffect(() => {
     const interval = setInterval(() => {
@@ -586,7 +777,6 @@ export const TodaySessionsBanner: React.FC<TodaySessionsBannerProps> = ({
     }
   }, [todaySessions.length, currentIndex]);
 
-
   useEffect(() => {
     if (todaySessions.length <= 1) return;
 
@@ -596,7 +786,6 @@ export const TodaySessionsBanner: React.FC<TodaySessionsBannerProps> = ({
 
     return () => clearInterval(interval);
   }, [todaySessions.length]);
-
 
   if (!todaySessions.length) {
     return null;
@@ -612,10 +801,8 @@ export const TodaySessionsBanner: React.FC<TodaySessionsBannerProps> = ({
   const nowTimestamp = now.getTime();
 
   const isUpcoming = nowTimestamp < startTimestamp;
-  const isLive =
-    nowTimestamp >= startTimestamp && nowTimestamp < endTimestamp;
+  const isLive = nowTimestamp >= startTimestamp && nowTimestamp < endTimestamp;
   const isCompleted = nowTimestamp >= endTimestamp;
-
 
   const timerTarget = isUpcoming ? startTimestamp : endTimestamp;
 
@@ -632,8 +819,7 @@ export const TodaySessionsBanner: React.FC<TodaySessionsBannerProps> = ({
 
   const seconds = remainingSeconds % 60;
 
-  const formatNumber = (value: number) =>
-    String(value).padStart(2, "0");
+  const formatNumber = (value: number) => String(value).padStart(2, "0");
 
   /*
    * -------------------------------------------------------
@@ -695,8 +881,6 @@ export const TodaySessionsBanner: React.FC<TodaySessionsBannerProps> = ({
   return (
     <section className="w-full">
       <div className="relative overflow-hidden rounded-xl border border-[#F6DED2] bg-[#FFF7F1]">
-
-
         <div className="relative z-10 flex min-h-[255px] flex-col lg:flex-row">
           {/* ===================================================
               LEFT CONTENT
@@ -748,30 +932,27 @@ export const TodaySessionsBanner: React.FC<TodaySessionsBannerProps> = ({
               {/* Date */}
               <div className="flex items-center gap-2">
                 <div className="flex items-center gap-2">
+                  <CalendarDays
+                    className="h-[18px] w-[18px] text-[#F4511E]"
+                    strokeWidth={1.8}
+                  />
 
-                <CalendarDays
-                  className="h-[18px] w-[18px] text-[#F4511E]"
-                  strokeWidth={1.8}
-                />
-
-                <span>{formattedDate}</span>
+                  <span>{formattedDate}</span>
                 </div>
-                 <div className="flex items-center gap-2">
-                <Clock3
-                  className="h-[18px] w-[18px] text-[#F4511E]"
-                  strokeWidth={1.8}
-                />
+                <div className="flex items-center gap-2">
+                  <Clock3
+                    className="h-[18px] w-[18px] text-[#F4511E]"
+                    strokeWidth={1.8}
+                  />
 
-                <span>
-                  {formattedStartTime} - {formattedEndTime}
-                  {session.duration && (
-                    <span className="ml-1">
-                      ({session.duration})
-                    </span>
-                  )}
-                </span>
+                  <span>
+                    {formattedStartTime} - {formattedEndTime}
+                    {session.duration && (
+                      <span className="ml-1">({session.duration})</span>
+                    )}
+                  </span>
+                </div>
               </div>
-              </div>         
             </div>
 
             {/* Buttons */}
@@ -838,9 +1019,7 @@ export const TodaySessionsBanner: React.FC<TodaySessionsBannerProps> = ({
                       {formatNumber(days)}
                     </span>
 
-                    <span className="mx-1 text-[24px] text-[#F36E45]">
-                      :
-                    </span>
+                    <span className="mx-1 text-[24px] text-[#F36E45]">:</span>
                   </>
                 )}
 
@@ -848,17 +1027,13 @@ export const TodaySessionsBanner: React.FC<TodaySessionsBannerProps> = ({
                   {formatNumber(hours)}
                 </span>
 
-                <span className="text-[24px] text-[#F36E45]">
-                  :
-                </span>
+                <span className="text-[24px] text-[#F36E45]">:</span>
 
                 <span className="text-[30px] font-semibold tracking-wide text-[#F36E45]">
                   {formatNumber(minutes)}
                 </span>
 
-                <span className="text-[24px] text-[#F36E45]">
-                  :
-                </span>
+                <span className="text-[24px] text-[#F36E45]">:</span>
 
                 <span className="text-[30px] font-semibold tracking-wide text-[#F36E45]">
                   {formatNumber(seconds)}
@@ -889,17 +1064,19 @@ export const TodaySessionsBanner: React.FC<TodaySessionsBannerProps> = ({
           <div className="relative hidden w-[34%] min-w-[300px] overflow-hidden lg:block">
             {/* Background */}
 
-              <img
-                src={"https://orientelectric.com/cdn/shop/files/study_desk_lamp.png?v=1728973392"}
-                alt=""
-                className="
+            <img
+              src={
+                "https://orientelectric.com/cdn/shop/files/study_desk_lamp.png?v=1728973392"
+              }
+              alt=""
+              className="
                   absolute
                   inset-0
                   h-full
                   w-full
                   object-contain
                 "
-              />
+            />
           </div>
         </div>
 

@@ -824,7 +824,7 @@ const CourseSteppedForm = ({ course = null, onSave, onCancel, categories, users 
                     />
                 </div>
                 <div>
-                    <Label>Early Bird Discount (%)</Label>
+                    <Label>Extra Early Bird Discount (%)</Label>
                     <Input
                         type="number"
                         name="pricing.earlyBird.discount"
@@ -965,7 +965,7 @@ const CourseSteppedForm = ({ course = null, onSave, onCancel, categories, users 
                     />
                 </div>
                 <div>
-                    <Label>Duration (minutes)</Label>
+                    <Label>Duration (hr)</Label>
                     <Input
                         type="number"
                         name="schedule_pattern.duration"
