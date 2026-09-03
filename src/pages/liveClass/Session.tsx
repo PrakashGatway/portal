@@ -37,22 +37,79 @@ const ContentViewPage = () => {
 
   const [timeRemaining, setTimeRemaining] = useState<any>(null);
   const [canJoin, setCanJoin] = useState(false);
-
-  const session = {
-    time: "10:00 AM",
-    date: "June 12",
-    description: "Follow-up Pte Exam and prescription review",
-    instructorName: "Sidney Yates",
-    instructorRole: "Pte expert",
-    instructorImage: "/images/sidney.png",
-};
+  const [selectUpcomingSession, setSelectUpcomingSession] = useState<any>(null)
 
 
-  const [timeLeft, setTimeLeft] = useState({
-    days: 4,
-    hours: 56,
-    minutes: 17
-  });
+
+
+const [timeLeft, setTimeLeft] = useState({
+  days: 0,
+  hours: 0,
+  minutes: 0,
+  seconds: 0,
+});
+
+
+ useEffect(() => {
+  if (allcontent?.relatedSessions?.length) {
+    setSelectUpcomingSession(allcontent.relatedSessions[0]);
+  }
+}, [allcontent]);
+
+
+
+
+useEffect(() => {
+  if (!selectUpcomingSession?.scheduledStart) {
+    return;
+  }
+
+  const calculateTimeLeft = () => {
+    const startTime = new Date(
+      selectUpcomingSession.scheduledStart
+    ).getTime();
+
+    const now = new Date().getTime();
+
+    const difference = startTime - now;
+
+    if (difference <= 0) {
+      setTimeLeft({
+        days: 0,
+        hours: 0,
+        minutes: 0,
+        seconds: 0,
+      });
+      return;
+    }
+
+    const days = Math.floor(difference / (1000 * 60 * 60 * 24));
+    const hours = Math.floor(
+      (difference / (1000 * 60 * 60)) % 24
+    );
+    const minutes = Math.floor(
+      (difference / (1000 * 60)) % 60
+    );
+    const seconds = Math.floor(
+      (difference / 1000) % 60
+    );
+
+    setTimeLeft({
+      days,
+      hours,
+      minutes,
+      seconds,
+    });
+  };
+
+  // Calculate immediately
+  calculateTimeLeft();
+
+  // Update every second
+  const timer = setInterval(calculateTimeLeft, 1000);
+
+  return () => clearInterval(timer);
+}, [selectUpcomingSession?.scheduledStart]);
 
 
 
@@ -98,34 +155,8 @@ useEffect(() => {
     return () => clearInterval(timer);
   }, []);
 
-  const upcomingSessions = [
-    {
-      id: '08',
-      title: 'Session 08',
-      topic: 'Advanced Algebra & Problem Solving',
-      date: '26 Aug, Tue',
-      time: '4:00 PM - 5:00 PM',
-      active: true
-    },
-    {
-      id: '09',
-      title: 'Session 09',
-      topic: 'Problem Solving Techniques',
-      date: '28 Aug, Thu',
-      time: '4:00 PM - 5:00 PM',
-      active: false
-    },
-    {
-      id: '10',
-      title: 'Session 10',
-      topic: 'Full Mathematics Review',
-      date: '30 Aug, Sat',
-      time: '4:00 PM - 5:00 PM',
-      active: false
-    }
-  ];
 
-  const tabs = ['Overview', 'Material', 'Schedule', 'Trainer', 'Recordings'];
+  const tabs = ['Overview', 'Material', 'Schedule', 'Trainer'];
   const [activeTab, setActiveTab] = useState('Overview');
 
   useEffect(() => {
@@ -367,6 +398,8 @@ const sessionStatus2 = getSessionDateStatus(content?.scheduledStart);
   };
 
 
+ 
+
   const formatTime2 = (seconds: number) => {
   const days = Math.floor(seconds / 86400);
   const hours = Math.floor((seconds % 86400) / 3600);
@@ -455,6 +488,8 @@ const sessionStatus2 = getSessionDateStatus(content?.scheduledStart);
     };
   };
 
+
+
   if (loading) {
     return (
       <div className="flex min-h-screen items-center justify-center bg-gray-50">
@@ -514,15 +549,18 @@ const sessionStatus2 = getSessionDateStatus(content?.scheduledStart);
     {/* ==================================================
         HERO SECTION
     ================================================== */}
-    <div className="p-4 md:p-6 lg:p-0">
-      <div className="">
-        {/* Main Content Grid */}
-        <div className="h-full">
-        <div className="grid grid-cols-1 lg:grid-cols-[minmax(0,1.65fr)_minmax(280px,0.85fr)] xl:grid-cols-[1.5fr_0.5fr] gap-4 lg:gap-3 xl:gap-2 h-full">
-          
+   
+      <div className="p-4 md:p-6 lg:p-0">
+        <div className="">
+          {/* Main Content Grid */}
+          <div className="h-full">
+          <div className="grid grid-cols-1 lg:grid-cols-[minmax(0,1.65fr)_minmax(280px,0.85fr)] xl:grid-cols-[1.5fr_0.5fr] gap-4 lg:gap-3 xl:gap-2 h-full">
+            
      {/* Main Session Card */}
 
-     <div className="flex flex-col h-full">
+  
+      <div className="flex flex-col h-full">
+     {selectUpcomingSession && (
       <div className="bg-gradient-to-b from-white via-gray-50 to-gray-300 p-[1.5px] rounded-[24px]">
 <div
   className="
@@ -591,17 +629,18 @@ const sessionStatus2 = getSessionDateStatus(content?.scheduledStart);
           font-bold
           text-gray-900
           leading-[1.15]
-          mb-5
+          mb-1
+          line-clamp-2
         "
       >
-      {content?.title}
+      {selectUpcomingSession?.title}
       </h1>
 
       {/* Date */}
       <div className="flex items-center gap-2 text-gray-700 mb-3">
         <Calendar className="w-5 h-5 shrink-0 text-orange-500" />
        <span className="font-medium text-sm md:text-base">
-  {new Date(content?.scheduledStart).toLocaleDateString("en-GB", {
+  {new Date(selectUpcomingSession?.scheduledStart).toLocaleDateString("en-GB", {
     weekday: "long",
     day: "2-digit",
     month: "short",
@@ -614,8 +653,8 @@ const sessionStatus2 = getSessionDateStatus(content?.scheduledStart);
       <div className="flex items-center gap-2 text-gray-700 mb-3">
         <Clock className="w-5 h-5 shrink-0 text-orange-500" />
     <span className="font-medium text-sm md:text-base">
-  {content?.scheduledStart
-    ? new Date(content.scheduledStart).toLocaleTimeString("en-US", {
+  {selectUpcomingSession?.scheduledStart
+    ? new Date(selectUpcomingSession?.scheduledStart).toLocaleTimeString("en-US", {
         hour: "numeric",
         minute: "2-digit",
       })
@@ -626,7 +665,7 @@ const sessionStatus2 = getSessionDateStatus(content?.scheduledStart);
 
     {/* Buttons */}
     <div className="flex flex-col sm:flex-row flex-wrap gap-3">
-    <Link to={content?.meetingId}>
+    <Link to={`/sessions/${selectUpcomingSession?.slug}`}>
       <button
       
         className="
@@ -730,16 +769,16 @@ const sessionStatus2 = getSessionDateStatus(content?.scheduledStart);
         Your Instructor
       </p>
 
-      <h3 className="text-base sm:text-lg md:text-lg xl:text-xl font-bold text-gray-900 text-left">
-        {instructor?.name}
+      <h3 className="text-base sm:text-lg md:text-lg xl:text-lg font-bold text-gray-900 text-left">
+        {selectUpcomingSession?.instructor?.name}
       </h3>
 
-      <p className="text-gray-600 font-medium text-sm xl:text-lg -mt-1">
+      <p className="text-gray-600 font-medium text-sm xl:text-base -mt-1">
         Pte expert
       </p>
 
-      <p className="text-gray-500 text-xs ">
-        8+ years Experience
+      <p className="text-gray-500 text-xs line-clamp-2 ">
+       {selectUpcomingSession?.instructor?.profile?.bio }
       </p></div>    </div>
   </div>
 
@@ -886,11 +925,20 @@ const sessionStatus2 = getSessionDateStatus(content?.scheduledStart);
 
       {/* Date */}
       <p className="text-gray-600 text-sm font-medium">
-        Tuesday, 26 Aug 2026
-      </p>
+  {selectUpcomingSession?.scheduledStart
+    ? new Date(selectUpcomingSession.scheduledStart).toLocaleDateString(
+        "en-US",
+        {
+          month: "long",
+          day: "numeric",
+          year: "numeric",
+        }
+      )
+    : ""}
+</p>
     </div>
   </div>
-</div></div>
+</div></div>)}
    {/* Bottom Navigation Tabs */}
         <div className="mt-4 sm:mt-6 bg-white rounded-2xl border border-orange-100 overflow-hidden">
           <div className="flex overflow-x-auto scrollbar-hide ">
@@ -912,16 +960,17 @@ const sessionStatus2 = getSessionDateStatus(content?.scheduledStart);
 </div>
 
           {/* Right Section - Upcoming Sessions */}
-          <div className="">
+         { selectUpcomingSession && (<div className="">
             <div className="bg-white rounded-3xl p-3 sm:p-4 shadow-lg border border-orange-500 h-full">
               <h2 className="text-lg font-bold text-gray-900 mb-2">Upcoming Sessions</h2>
               
               <div className="space-y-3">
                 {allcontent?.relatedSessions?.slice(0, 3)?.map((session,i) => (
                   <div
+                  onClick={()=>setSelectUpcomingSession(session)}
                     key={session.id}
                     className={`rounded-2xl p-2 cursor-pointer transition-all duration-200 ${
-                      session.active
+                      selectUpcomingSession?.id === session.id
                         ? 'bg-gradient-to-br from-orange-100 to-peach-100 border-2 border-orange-300 shadow-md'
                         : 'bg-gray-50 border-2 border-gray-100 hover:border-orange-200 hover:shadow-md'
                     }`}
@@ -967,6 +1016,7 @@ const sessionStatus2 = getSessionDateStatus(content?.scheduledStart);
               </div>
             </div>
           </div>
+          )}
         </div>
 
         </div>
@@ -1541,7 +1591,7 @@ const sessionStatus2 = getSessionDateStatus(content?.scheduledStart);
 
     <div className="space-y-3">
 {allcontent?.relatedMaterials?.slice(0, 4)?.map((material, index) => {
-  console.log("Material:", material); // Debugging line
+
   return(
   <div
     className="
