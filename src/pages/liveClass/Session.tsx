@@ -1820,12 +1820,31 @@ const ContentViewPage = () => {
           {/* Orange Left Panel */}
           <div className="absolute left-0 top-0 h-full w-[102px] bg-[#ff711f] md:w-[112px]" />
 
-          {/* Trainer Image */}
-          <div className="absolute left-[20px] top-1/2 z-10 flex h-[145px] w-[145px] -translate-y-1/2 items-center justify-center rounded-full border-[7px] border-white bg-[#fff] shadow-md md:left-[38px] md:h-[170px] md:w-[170px]">
-            <div className="relative h-full w-full overflow-hidden rounded-full">
-              <img src={`https://res.cloudinary.com/dd5s7qpsc/image/upload/${instructor?.profilePic}`} alt={instructor?.name} className="object-cover h-full w-full" sizes="170px" />
-            </div>
-          </div>
+          
+{/* Trainer Image */}
+<div className="absolute left-[20px] top-1/2 z-10 h-[170px] w-[170px] -translate-y-1/2 md:left-[38px] md:h-[150px] md:w-[150px]">
+
+  <div className="absolute -inset-2 rounded-full border-[7px] border-[#fce6d7] bg-white" />
+
+  <div className="absolute inset-0 overflow-hidden rounded-full">
+    <img
+      src={`https://res.cloudinary.com/dd5s7qpsc/image/upload/${instructor?.profilePic}`}
+      alt={instructor?.name || "Trainer"}
+      className="absolute left-1/2 top-[-40px] h-[220px] w-[170px] -translate-x-1/2 object-cover object-top"
+    />
+  </div>
+
+  <img
+    src={`https://res.cloudinary.com/dd5s7qpsc/image/upload/${instructor?.profilePic}`}
+    alt=""
+    className="absolute left-1/2 top-[-40px] z-10 h-[220px] w-[170px] -translate-x-1/2 object-cover object-top"
+    style={{
+      clipPath: "inset(0 0 166px 0)",
+    }}
+  />
+
+</div>
+
 
           {/* Counter */}
           <div className="absolute right-6 top-4 z-20 text-[12px] font-medium text-[#d99a7a]">
