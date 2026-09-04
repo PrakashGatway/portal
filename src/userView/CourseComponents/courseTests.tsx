@@ -668,7 +668,6 @@ const getMaterialLabel = (materialType?: string) => {
 };
 
 
-import { motion, LayoutGroup, AnimatePresence } from "framer-motion";
 
 
 export function CourseMaterials({
@@ -676,7 +675,8 @@ export function CourseMaterials({
   loading = false,
   onItemClick,
 }: CourseMaterialsProps) {
-  if (loading) {
+
+    if (loading) {
     return (
       <div className="space-y-4">
         {[1, 2, 3].map((item) => (
@@ -694,6 +694,8 @@ export function CourseMaterials({
   const [expandedMaterials, setExpandedMaterials] = useState<
     Record<string, boolean>
   >({});
+
+  const hasInitializedMaterials = useRef(false);
 
   const toggleMaterialSection = (sectionId: string) => {
     setOpenMaterialSections((prev) =>
@@ -721,12 +723,16 @@ export function CourseMaterials({
     }))
     .filter((section) => section.items.length > 0);
 
-  useEffect(() => {
-    if (sectionsWithMaterials?.length > 0) {
-      setOpenMaterialSections([sectionsWithMaterials[0]._id]);
-    }
-  }, [sectionsWithMaterials]);
+ useEffect(() => {
+  if (
+    sectionsWithMaterials?.length > 0 &&
+    !hasInitializedMaterials.current
+  ) {
+    setOpenMaterialSections([sectionsWithMaterials[0]._id]);
 
+    hasInitializedMaterials.current = true;
+  }
+}, [sectionsWithMaterials]);
   if (!sectionsWithMaterials?.length) {
     return (
       <div className="rounded-2xl border border-gray-200 bg-white p-8 text-center">
@@ -1116,7 +1122,7 @@ export function CourseMaterials({
                                 active:scale-[0.97]
                               "
                                 >
-                                  View PDF
+                                  View
                                 </button>
                               </div>
                             ) : (
@@ -1201,6 +1207,7 @@ export function CourseMaterials({
 
 import { useEffect, useMemo, useState } from "react";
 import { CalendarDays, ChevronLeft, Video } from "lucide-react";
+import { AnimatePresence, motion } from "framer-motion";
 
 interface Session {
   _id: string;

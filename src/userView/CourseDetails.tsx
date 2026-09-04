@@ -223,18 +223,29 @@ export default function CourseDetailPage() {
   const [course, setCourse] = useState<Course | null>(null);
   const [loading, setLoading] = useState(true);
   const [searchParams, setSearchParams] = useSearchParams();
-  const [activeTab, setActiveTab] = useState(searchParams.get("tab")|| "overview");
+
+  const [activeTab, setActiveTab] = useState(searchParams.get("tab") || "overview");
+
+
   const [expandedFaq, setExpandedFaq] = useState<number | null>(null);
   const [isVideoCardFixed, setIsVideoCardFixed] = useState(false);
   const courseHeaderRef = useRef<HTMLDivElement>(null);
   const videoCardRef = useRef<HTMLDivElement>(null);
+
+
   const [curriculum, setCurriculum] = useState<
     { _id: string; title: string; items: any[] }[]
   >([]);
+    const [openSections, setOpenSections] = useState(() => {
+    return curriculum?.length ? [curriculum[0]?._id] : [];
+  });
   const [curriculumLoading, setCurriculumLoading] = useState(false);
   const curriculumRef = useRef(false);
 
   const navigate = useNavigate();
+
+
+
 
   useEffect(() => {
     const fetchCourse = async () => {
@@ -250,12 +261,8 @@ export default function CourseDetailPage() {
     fetchCourse();
   }, [slug]);
 
-  const location = useLocation();
 
-  const [openSections, setOpenSections] = useState(() => {
-    // Open first section by default
-    return curriculum?.length ? [curriculum[0]?._id] : [];
-  });
+
 
   const [expandedLessons, setExpandedLessons] = useState({});
 
@@ -280,13 +287,7 @@ export default function CourseDetailPage() {
     }
   }, [curriculum]);
 
-  useEffect(() => {
-    const searchParams = new URLSearchParams(location.search);
 
-    if (searchParams.get("isCurriculum") === "true") {
-      setActiveTab("curriculum");
-    }
-  }, [location.search]);
 
   useEffect(() => {
     if (course && !curriculumRef.current) {
@@ -668,7 +669,7 @@ export default function CourseDetailPage() {
                           { id: "curriculum", label: "Curriculum" },
                           { id: "materials", label: "Materials" },
                           { id: "tests", label: "Tests" },
-                          { id: "instructors", label: "Instructors" },
+                          // { id: "instructors", label: "Instructors" },
                           // { id: "faq", label: "FAQ" },
                         ].map((tab) => {
                           const isActive = activeTab === tab.id;
@@ -678,21 +679,21 @@ export default function CourseDetailPage() {
                               key={tab.id}
                               onClick={() => {
                                 setActiveTab(tab.id);
-  setSearchParams((prev) => {
-    prev.set("tab", tab.id);
-    return prev;
-  });
-}}
+
+                                setSearchParams((prev) => {
+                                  prev.set("tab", tab.id);
+                                  return prev;
+                                });
+                              }}
                               className={`
                 relative shrink-0
                 px-2 pb-3 pt-1
                 text-[16px] font-medium
                 transition-colors duration-200
-                ${
-                  isActive
-                    ? "text-orange-700 dark:text-orange-500"
-                    : "text-gray-800 hover:text-gray-800 dark:text-gray-500 dark:hover:text-gray-300"
-                }
+                ${isActive
+                                  ? "text-orange-700 dark:text-orange-500"
+                                  : "text-gray-800 hover:text-gray-800 dark:text-gray-500 dark:hover:text-gray-300"
+                                }
               `}
                               whileHover={{ y: -1 }}
                               whileTap={{ y: 0 }}
@@ -1054,11 +1055,10 @@ export default function CourseDetailPage() {
                                                         className={`
                                         min-w-0
                                         flex-1
-                                        ${
-                                          item.isLocked
-                                            ? "cursor-not-allowed opacity-50"
-                                            : "cursor-pointer"
-                                        }
+                                        ${item.isLocked
+                                                            ? "cursor-not-allowed opacity-50"
+                                                            : "cursor-pointer"
+                                                          }
                                       `}
                                                         onClick={() => {
                                                           if (!item.isLocked) {
@@ -1077,13 +1077,12 @@ export default function CourseDetailPage() {
                                           transition-colors
                                           sm:text-base
                                           hover:text-[#F04F23]
-                                          ${
-                                            item.isLocked
-                                              ? "text-[#B9B0AC]"
-                                              : isCurrent
-                                                ? "text-[#111827]"
-                                                : "text-[#111827] group-hover/lesson:text-[#F04F23]"
-                                          }
+                                          ${item.isLocked
+                                                              ? "text-[#B9B0AC]"
+                                                              : isCurrent
+                                                                ? "text-[#111827]"
+                                                                : "text-[#111827] group-hover/lesson:text-[#F04F23]"
+                                                            }
                                         `}
                                                         >
                                                           {item.title}
@@ -1111,16 +1110,16 @@ export default function CourseDetailPage() {
                                                             }
                                                           >
                                                             {item.type ===
-                                                            "LiveClasses"
+                                                              "LiveClasses"
                                                               ? "Live Class"
                                                               : item.type ===
-                                                                  "RecordedClasses"
+                                                                "RecordedClasses"
                                                                 ? "Recorded Class"
                                                                 : item.type ===
-                                                                    "Sessions"
+                                                                  "Sessions"
                                                                   ? "1:1 Session"
                                                                   : item.materialType ||
-                                                                    item.type}
+                                                                  item.type}
                                                           </span>
 
                                                           {item.duration && (
@@ -1323,16 +1322,16 @@ export default function CourseDetailPage() {
                     </div>
                   )}
 
-                  {activeTab === "materials" && (
+                  {activeTab === "materials" && curriculum && (
                     <CourseMaterials
-                      curriculum={curriculum}
-                      loading={curriculumLoading}
+                      curriculum={ curriculum && curriculum}
+                      loading={ curriculumLoading && curriculumLoading}
                       onItemClick={handleItemNavigation}
                     />
                   )}
                   {activeTab === "tests" && (
                     <CourseTests
-                    course={course}
+                      course={course}
                       curriculum={curriculum}
                       loading={curriculumLoading}
                       onItemClick={handleItemNavigation}
@@ -1532,9 +1531,9 @@ export default function CourseDetailPage() {
                                           typeof item === "string"
                                             ? item
                                             : item?.designation ||
-                                              item?.title ||
-                                              item?.companyName ||
-                                              "",
+                                            item?.title ||
+                                            item?.companyName ||
+                                            "",
                                         )
                                         .filter(Boolean)
                                         .join(" • ")}
@@ -1680,9 +1679,8 @@ export default function CourseDetailPage() {
                             {faq.question}
                           </h3>
                           <ChevronRight
-                            className={`h-5 w-5 text-gray-500 dark:text-gray-400 transition-transform ${
-                              expandedFaq === index ? "rotate-90" : ""
-                            }`}
+                            className={`h-5 w-5 text-gray-500 dark:text-gray-400 transition-transform ${expandedFaq === index ? "rotate-90" : ""
+                              }`}
                           />
                         </button>
                         {expandedFaq === index && (
@@ -1810,41 +1808,41 @@ export default function CourseDetailPage() {
                           </div>
                         </div>
 
-                       {course?.isPurchased == false && (
-                         <div className="mt-2 flex justify-between items-end">
-                          <div>
-                            <div className="flex items-center gap-1  dark:text-white">
-                              {course?.pricing?.currency}
-                              <span className="text-base font-bold"></span>
-
-                              <span className="text-2xl font-bold ">
-                                {price}
-                              </span>
-
-                              <span className="line-through text-gray-400 text-base dark:text-white">
-                                {course?.pricing?.amount}{" "}
+                        {course?.isPurchased == false && (
+                          <div className="mt-2 flex justify-between items-end">
+                            <div>
+                              <div className="flex items-center gap-1  dark:text-white">
                                 {course?.pricing?.currency}
-                              </span>
-                              {normalDiscount > 0 && earlyBirdDiscount > 0 ? (
-                                <span className="rounded-full bg-green-50 px-2 py-0.5 text-sm font-semibold text-green-600">
-                                  {normalDiscount}%
-                                  <span className="text-xs font-medium">
-                                    {" + "}
-                                    {earlyBirdDiscount}%
-                                  </span>
-                                  <span className="text-xs font-medium">
-                                    {" "}
-                                    OFF
-                                  </span>
+                                <span className="text-base font-bold"></span>
+
+                                <span className="text-2xl font-bold ">
+                                  {price}
                                 </span>
-                              ) : (
-                                <span className="rounded-full bg-green-50 px-2 py-0.5 text-xs font-semibold text-green-600">
-                                  {normalDiscount}% OFF
+
+                                <span className="line-through text-gray-400 text-base dark:text-white">
+                                  {course?.pricing?.amount}{" "}
+                                  {course?.pricing?.currency}
                                 </span>
-                              )}
+                                {normalDiscount > 0 && earlyBirdDiscount > 0 ? (
+                                  <span className="rounded-full bg-green-50 px-2 py-0.5 text-sm font-semibold text-green-600">
+                                    {normalDiscount}%
+                                    <span className="text-xs font-medium">
+                                      {" + "}
+                                      {earlyBirdDiscount}%
+                                    </span>
+                                    <span className="text-xs font-medium">
+                                      {" "}
+                                      OFF
+                                    </span>
+                                  </span>
+                                ) : (
+                                  <span className="rounded-full bg-green-50 px-2 py-0.5 text-xs font-semibold text-green-600">
+                                    {normalDiscount}% OFF
+                                  </span>
+                                )}
+                              </div>
                             </div>
-                          </div>
-                        </div>)}
+                          </div>)}
                         <div className="mt-0 flex justify-end">
                           {course?.isPurchased === true ? null : (
                             <button

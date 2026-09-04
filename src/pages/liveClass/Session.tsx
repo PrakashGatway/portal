@@ -29,6 +29,8 @@ import {
   FileText,
   ChevronLeft,
   Star,
+  Eye,
+  Info,
 } from "lucide-react";
 import api, { ImageBaseUrl } from "../../axiosInstance";
 
@@ -44,6 +46,7 @@ const ContentViewPage = () => {
   const [timeRemaining, setTimeRemaining] = useState<any>(null);
   const [canJoin, setCanJoin] = useState(false);
   const [selectUpcomingSession, setSelectUpcomingSession] = useState<any>(null);
+  const [hoveredSessionIndex, setHoveredSessionIndex] = useState<number | null>(null);
 
   const [timeLeft, setTimeLeft] = useState({
     days: 0,
@@ -623,11 +626,11 @@ const ContentViewPage = () => {
                               <span className="font-medium text-sm md:text-base">
                                 {selectUpcomingSession?.scheduledStart
                                   ? new Date(
-                                      selectUpcomingSession?.scheduledStart,
-                                    ).toLocaleTimeString("en-US", {
-                                      hour: "numeric",
-                                      minute: "2-digit",
-                                    })
+                                    selectUpcomingSession?.scheduledStart,
+                                  ).toLocaleTimeString("en-US", {
+                                    hour: "numeric",
+                                    minute: "2-digit",
+                                  })
                                   : ""}
                               </span>
                             </div>
@@ -664,7 +667,8 @@ const ContentViewPage = () => {
                               </button>
                             </Link>
 
-                            <button
+                            <Link
+                              to={`/calendar`}
                               className="
             inline-flex
             items-center
@@ -685,9 +689,9 @@ const ContentViewPage = () => {
             duration-200
           "
                             >
-                              <Plus className="w-4 h-4" />
-                              Add to Calendar
-                            </button>
+                              <Eye className="w-4 h-4" />
+                              View Calendar
+                            </Link>
                           </div>
                         </div>
 
@@ -875,12 +879,12 @@ const ContentViewPage = () => {
                             <p className="text-gray-600 text-sm font-medium">
                               {selectUpcomingSession?.scheduledStart
                                 ? new Date(
-                                    selectUpcomingSession.scheduledStart,
-                                  ).toLocaleDateString("en-US", {
-                                    month: "long",
-                                    day: "numeric",
-                                    year: "numeric",
-                                  })
+                                  selectUpcomingSession.scheduledStart,
+                                ).toLocaleDateString("en-US", {
+                                  month: "long",
+                                  day: "numeric",
+                                  year: "numeric",
+                                })
                                 : ""}
                             </p>
                           </div>
@@ -895,11 +899,10 @@ const ContentViewPage = () => {
                         <button
                           key={tab}
                           onClick={() => setActiveTab(tab)}
-                          className={`flex min-w-[100px] sm:min-w-[110px] px-4 sm:px-6 py-3 sm:py-4 text-sm font-semibold transition-all duration-200 border-b-2 ${
-                            activeTab === tab
+                          className={`flex min-w-[100px] sm:min-w-[110px] px-4 sm:px-6 py-3 sm:py-4 text-sm font-semibold transition-all duration-200 border-b-2 ${activeTab === tab
                               ? "text-orange-600 border-orange-500 bg-orange-50/50"
                               : "text-gray-600 border-transparent hover:text-gray-900 hover:bg-gray-50"
-                          }`}
+                            }`}
                         >
                           {tab}
                         </button>
@@ -923,20 +926,18 @@ const ContentViewPage = () => {
                             <div
                               onClick={() => setSelectUpcomingSession(session)}
                               key={session.id}
-                              className={`rounded-2xl p-2 cursor-pointer transition-all duration-200 ${
-                                selectUpcomingSession?.id === session.id
+                              className={`rounded-2xl p-2 cursor-pointer transition-all duration-200 ${selectUpcomingSession?.id === session.id
                                   ? "bg-gradient-to-br from-orange-100 to-peach-100 border-2 border-orange-300 shadow-md"
                                   : "bg-gray-50 border-2 border-gray-100 hover:border-orange-200 hover:shadow-md"
-                              }`}
+                                }`}
                             >
                               <div className="flex gap-3">
                                 {/* Session Number */}
                                 <div
-                                  className={`w-10 h-10 rounded-full flex items-center justify-center font-bold text-sm ${
-                                    session.active
+                                  className={`w-10 h-10 rounded-full flex items-center justify-center font-bold text-sm ${session.active
                                       ? "bg-orange-500 text-white"
                                       : "bg-white text-gray-600 border-2 border-gray-200"
-                                  }`}
+                                    }`}
                                 >
                                   {i + 1}
                                 </div>
@@ -945,11 +946,10 @@ const ContentViewPage = () => {
                                 <div className="flex-1 min-w-0">
                                   <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-1 sm:gap-2 mb-1">
                                     <h3
-                                      className={`font-bold text-sm ${
-                                        session.active
+                                      className={`font-bold text-sm ${session.active
                                           ? "text-gray-900"
                                           : "text-gray-700"
-                                      }`}
+                                        }`}
                                     >
                                       session {i + 1}
                                     </h3>
@@ -1005,13 +1005,13 @@ const ContentViewPage = () => {
 
         <div className="w-full max-w-7xl mx-auto px-4 sm:px-5 lg:px-0 ">
           <div className="grid grid-cols-1 xl:grid-cols-[1.5fr_0.5fr] items-start gap-4">
-          
+
             <div>
               {activeTab === "Overview" ? (
                 <div className="flex flex-col gap-4">
                   <div className="w-full">
                     {sessionStatus2 === "expired" ? (
-                      
+
                       <div
                         className="
       w-full
@@ -1289,28 +1289,63 @@ const ContentViewPage = () => {
 
                             <div className="flex flex-wrap items-center gap-3">
                               {/* Countdown Timer */}
-                              {timeLeft2 > 0 && (
-                                <div
-                                  className="
-          inline-flex
-          items-center
-          justify-center
-          min-h-[34px]
-          px-4
-          sm:px-5
-          rounded-[9px]
-          bg-[#fff1eb]
-          border
-          border-[#ff7148]
-          text-[#ff7148]
-          text-[14px]
-          sm:text-[15px]
-          font-medium
-        "
-                                >
-                                  Starts in {formatTime2(timeLeft2)}
-                                </div>
-                              )}
+                            <div className="relative inline-flex items-center gap-2">
+  <div
+    className="
+      inline-flex
+      items-center
+      justify-center
+      min-h-[34px]
+      px-4
+      sm:px-5
+      rounded-[9px]
+      bg-[#fff1eb]
+      border
+      border-[#ff7148]
+      text-[#ff7148]
+      text-[14px]
+      sm:text-[15px]
+      font-medium
+    "
+  >
+    Starts in {formatTime2(timeLeft2)}
+  </div>
+
+  {/* i Icon */}
+  <div className="relative group">
+    <Info
+      size={17}
+      strokeWidth={2.5}
+      className="text-[#ff7148] cursor-help"
+    />
+
+    {/* Tooltip */}
+    <div
+      className="
+        absolute
+        left-1/2
+        bottom-full
+        z-50
+        mb-2
+        hidden
+        w-[240px]
+        -translate-x-1/2
+        rounded-lg
+        bg-[#2D2D2D]
+        px-3
+        py-2
+        text-center
+        text-[11px]
+        font-medium
+        text-white
+        shadow-lg
+        group-hover:block
+      "
+    >
+      You can join this session 10 minutes before the scheduled start time.
+    </div>
+  </div>
+</div>
 
                               {/* View Session */}
                               {showSessionButton && (
@@ -1348,7 +1383,7 @@ const ContentViewPage = () => {
 
                   <div className="flex flex-col gap-4">
                     {allcontent?.relatedMaterials?.length > 0 ? (
-                      
+
                       <div className="bg-gradient-to-b from-white via-gray-50 to-gray-300 p-[1.5px] rounded-[20px]">
                         <div
                           className="
@@ -1490,7 +1525,7 @@ const ContentViewPage = () => {
                         </div>
                       </div>
                     ) : (
-                      
+
                       <div className="bg-gradient-to-b from-white via-gray-50 to-gray-300 p-[1.5px] rounded-[20px]">
                         <div
                           className="
@@ -1638,19 +1673,18 @@ const ContentViewPage = () => {
                     justify-center
                     overflow-hidden
 
-                    ${
-                      pdf?.materialType === "pdf"
-                        ? "bg-transparent"
-                        : pdf?.materialType === "document"
-                          ? "bg-[#b60801]"
-                          : pdf?.materialType === "link"
-                            ? "bg-[#b60801]"
-                            : pdf?.materialType === "image"
-                              ? "bg-[#b60801]"
-                              : pdf?.materialType === "audio"
-                                ? "bg-[#b60801]"
-                                : "bg-[#b60801]"
-                    }
+                    ${pdf?.materialType === "pdf"
+                                        ? "bg-transparent"
+                                        : pdf?.materialType === "document"
+                                          ? "bg-[#EA580C]"
+                                          : pdf?.materialType === "link"
+                                            ? "bg-[#2563EB]"
+                                            : pdf?.materialType === "image"
+                                              ? "bg-[#16A34A]"
+                                              : pdf?.materialType === "audio"
+                                                ? "bg-[#9333EA]"
+                                                : "bg-[#6B7280]"
+                                      }
                   `}
                                   >
                                     <MaterialIcon type={pdf?.materialType} />
@@ -1731,7 +1765,7 @@ const ContentViewPage = () => {
                   sm:w-[120px]
                 "
                                 >
-                                  View PDF
+                                  View
                                 </Link>
                               </div>
                             </div>
@@ -1813,97 +1847,97 @@ const ContentViewPage = () => {
                 </>
               ) : activeTab === "Trainer" ? (
                 <>
-                
-    <section className="w-full px-4 py-8 md:px-8">
-      <div className="mx-auto max-w-6xl">
-        <div className="relative min-h-[260px] overflow-hidden rounded-[24px] border border-[#f4d6c9] bg-[#fffdfb] shadow-sm">
-          {/* Orange Left Panel */}
-          <div className="absolute left-0 top-0 h-full w-[102px] bg-[#ff711f] md:w-[112px]" />
 
-          
-{/* Trainer Image */}
-<div className="absolute left-[20px] top-1/2 z-10 h-[170px] w-[170px] -translate-y-1/2 md:left-[38px] md:h-[150px] md:w-[150px]">
-
-  <div className="absolute -inset-2 rounded-full border-[7px] border-[#fce6d7] bg-white" />
-
-  <div className="absolute inset-0 overflow-hidden rounded-full">
-    <img
-      src={`https://res.cloudinary.com/dd5s7qpsc/image/upload/${instructor?.profilePic}`}
-      alt={instructor?.name || "Trainer"}
-      className="absolute left-1/2 top-[-40px] h-[220px] w-[170px] -translate-x-1/2 object-cover object-top"
-    />
-  </div>
-
-  <img
-    src={`https://res.cloudinary.com/dd5s7qpsc/image/upload/${instructor?.profilePic}`}
-    alt=""
-    className="absolute left-1/2 top-[-40px] z-10 h-[220px] w-[170px] -translate-x-1/2 object-cover object-top"
-    style={{
-      clipPath: "inset(0 0 166px 0)",
-    }}
-  />
-
-</div>
+                  <section className="w-full px-4 py-8 md:px-8">
+                    <div className="mx-auto max-w-6xl">
+                      <div className="relative min-h-[260px] overflow-hidden rounded-[24px] border border-[#f4d6c9] bg-[#fffdfb] shadow-sm">
+                        {/* Orange Left Panel */}
+                        <div className="absolute left-0 top-0 h-full w-[102px] bg-[#ff711f] md:w-[112px]" />
 
 
-          {/* Counter */}
-          <div className="absolute right-6 top-4 z-20 text-[12px] font-medium text-[#d99a7a]">
-            {/*of*/}
-          </div>
+                        {/* Trainer Image */}
+                        <div className="absolute left-[20px] top-1/2 z-10 h-[170px] w-[170px] -translate-y-1/2 md:left-[38px] md:h-[150px] md:w-[150px]">
 
-          {/* Content */}
-          <div className="relative z-10 ml-[130px] min-h-[260px] px-5 py-7 pr-16 md:ml-[200px] md:px-8 md:py-6 md:pr-20">
-            {/* Name */}
-            <h2 className="text-[22px] font-bold leading-tight text-[#303030] md:text-[25px]">
-              {instructor?.name}
-            </h2>
+                          <div className="absolute -inset-2 rounded-full border-[7px] border-[#fce6d7] bg-white" />
 
-            {/* Designation */}
-            <div className="mt-1">
-              <span className="inline-block rounded-sm bg-[#fff0e8] px-2 py-[3px] text-[11px] font-semibold text-[#f47735]">
-                {instructor?.role || "Sinner trainer"}
-              </span>
-            </div>
+                          <div className="absolute inset-0 overflow-hidden rounded-full">
+                            <img
+                              src={`https://res.cloudinary.com/dd5s7qpsc/image/upload/${instructor?.profilePic}`}
+                              alt={instructor?.name || "Trainer"}
+                              className="absolute left-1/2 top-[-40px] h-[220px] w-[170px] -translate-x-1/2 object-cover object-top"
+                            />
+                          </div>
 
-            {/* Info Row */}
-            <div className="mt-2 flex flex-wrap items-center gap-x-8 gap-y-1 text-[12px] text-[#555]">
-              <div className="flex items-center gap-1.5">
-                <Star size={12} className="fill-[#f6b900] text-[#f6b900]" />
-                <span>{instructor?.experience || '4 years'}</span>
-              </div>
-              {/* <div className="flex items-center gap-1.5">
+                          <img
+                            src={`https://res.cloudinary.com/dd5s7qpsc/image/upload/${instructor?.profilePic}`}
+                            alt=""
+                            className="absolute left-1/2 top-[-40px] z-10 h-[220px] w-[170px] -translate-x-1/2 object-cover object-top"
+                            style={{
+                              clipPath: "inset(0 0 166px 0)",
+                            }}
+                          />
+
+                        </div>
+
+
+                        {/* Counter */}
+                        <div className="absolute right-6 top-4 z-20 text-[12px] font-medium text-[#d99a7a]">
+                          {/*of*/}
+                        </div>
+
+                        {/* Content */}
+                        <div className="relative z-10 ml-[130px] min-h-[260px] px-5 py-7 pr-16 md:ml-[200px] md:px-8 md:py-6 md:pr-20">
+                          {/* Name */}
+                          <h2 className="text-[22px] font-bold leading-tight text-[#303030] md:text-[25px]">
+                            {instructor?.name}
+                          </h2>
+
+                          {/* Designation */}
+                          <div className="mt-1">
+                            <span className="inline-block rounded-sm bg-[#fff0e8] px-2 py-[3px] text-[11px] font-semibold text-[#f47735]">
+                              {instructor?.role || "Sinner trainer"}
+                            </span>
+                          </div>
+
+                          {/* Info Row */}
+                          <div className="mt-2 flex flex-wrap items-center gap-x-8 gap-y-1 text-[12px] text-[#555]">
+                            <div className="flex items-center gap-1.5">
+                              <Star size={12} className="fill-[#f6b900] text-[#f6b900]" />
+                              <span>{instructor?.experience || '4 years'}</span>
+                            </div>
+                            {/* <div className="flex items-center gap-1.5">
                 <span className="text-[#e58a52]">▤</span>
                 <span>{instructor?.certification || "--"}</span>
               </div> */}
-            </div>
+                          </div>
 
-            {/* Specialization */}
-            <div className="mt-2">
-              <p className="text-[12px] font-medium text-[#f47735]">
-                Specialization
-              </p>
-              <p className="mt-0.5 text-[12px] text-[#555]">
-                {instructor?.skills?.join(' ,')}
-              </p>
-            </div>
+                          {/* Specialization */}
+                          <div className="mt-2">
+                            <p className="text-[12px] font-medium text-[#f47735]">
+                              Specialization
+                            </p>
+                            <p className="mt-0.5 text-[12px] text-[#555]">
+                              {instructor?.skills?.join(' ,')}
+                            </p>
+                          </div>
 
-            {/* About */}
-            <div className="mt-2 max-w-[720px]">
-              <h3 className="text-[16px] font-semibold text-[#f47735]">
-                About the Trainer
-              </h3>
-              <p className="mt-0.5 text-[12px] leading-[1.65] text-[#3f3f3f] md:text-[13px]">
-                {instructor?.profile?.bio}
-              </p>
-            </div>
+                          {/* About */}
+                          <div className="mt-2 max-w-[720px]">
+                            <h3 className="text-[16px] font-semibold text-[#f47735]">
+                              About the Trainer
+                            </h3>
+                            <p className="mt-0.5 text-[12px] leading-[1.65] text-[#3f3f3f] md:text-[13px]">
+                              {instructor?.profile?.bio}
+                            </p>
+                          </div>
 
-          </div>
-        </div>
-      </div>
-    </section>
-                 {/* <TrainerSection /> */}
+                        </div>
+                      </div>
+                    </div>
+                  </section>
+                  {/* <TrainerSection /> */}
                 </>
-             
+
               ) : (
                 <div
                   className="
@@ -1948,306 +1982,310 @@ const ContentViewPage = () => {
 
                           const date = startDate
                             ? startDate
-                                .toLocaleDateString("en-GB", {
-                                  day: "2-digit",
-                                  month: "short",
-                                  weekday: "short",
-                                })
-                                .toUpperCase()
+                              .toLocaleDateString("en-GB", {
+                                day: "2-digit",
+                                month: "short",
+                                weekday: "short",
+                              })
+                              .toUpperCase()
                             : "";
 
                           const time =
                             startDate && endDate
                               ? `${startDate.toLocaleTimeString("en-US", {
-                                  hour: "2-digit",
-                                  minute: "2-digit",
-                                })} to ${endDate.toLocaleTimeString("en-US", {
-                                  hour: "2-digit",
-                                  minute: "2-digit",
-                                })}`
+                                hour: "2-digit",
+                                minute: "2-digit",
+                              })} to ${endDate.toLocaleTimeString("en-US", {
+                                hour: "2-digit",
+                                minute: "2-digit",
+                              })}`
                               : "";
 
                           return (
-                            <div
-                              key={session?.id || index}
-                              className="
-                  relative
-                  grid
-                  grid-cols-[125px_minmax(0,1fr)]
-                  sm:grid-cols-[0.4fr_1.6fr]
-                  gap-3
-                  sm:gap-4
-                  items-center
-                "
-                            >
-                              {/* ================= TIMELINE DOT ================= */}
-                              <div
-                                className="
-                    absolute
-                    left-[16px]
-                    sm:left-0
-                    top-1/2
-                    -translate-y-1/2
-                    z-10
-                    w-[10px]
-                    h-[10px]
-                    rounded-full
-                    border-2
-                    border-white
-                    bg-[#ffe3d7]
-                  "
-                              />
+                          <div
+  key={session?.id || index}
+  className="
+    relative
+    grid
+    grid-cols-[125px_minmax(0,1fr)]
+    sm:grid-cols-[0.4fr_1.6fr]
+    gap-3
+    sm:gap-4
+    items-center
+  "
+>
+  {/* ================= TIMELINE DOT ================= */}
+  <div
+    className="
+      absolute
+      left-[16px]
+      sm:left-0
+      top-1/2
+      -translate-y-1/2
+      z-10
+      w-[10px]
+      h-[10px]
+      rounded-full
+      border-2
+      border-white
+      bg-[#ffe3d7]
+    "
+  />
 
-                              {/* Active dot */}
-                              {index === 0 && (
-                                <div
-                                  className="
-                      absolute
-                      left-[16px]
-                      sm:left-0
-                      top-1/2
-                      -translate-y-1/2
-                      z-20
-                      w-[10px]
-                      h-[10px]
-                      rounded-full
-                      bg-[#ff7148]
-                      border-2
-                      border-white
-                    "
-                                />
-                              )}
+  {/* 
+     2. UPDATED ACTIVE DOT LOGIC 
+     Shows if it's the first item (index === 0) OR if it's the currently hovered item 
+  */}
+  {(index === 0 || hoveredSessionIndex === index) && (
+    <div
+      className="
+        absolute
+        left-[16px]
+        sm:left-0
+        top-1/2
+        -translate-y-1/2
+        z-20
+        w-[10px]
+        h-[10px]
+        rounded-full
+        bg-[#ff7148]
+        border-2
+        border-white
+        transition-all duration-200
+      "
+    />
+  )}
 
-                              {/* ================= DATE CARD ================= */}
-                              <div
-                                className="
-                    relative
-                    ml-[29px]
-                    sm:ml-[22px]
-                    rounded-[10px]
-                    bg-white
-                    border
-                    border-[#f0f0f0]
-                    shadow-[0_2px_8px_rgba(0,0,0,0.06)]
-                    overflow-hidden
-                  "
-                              >
-                                {/* Date */}
-                                <div
-                                  className="
-                      mx-1
-                      mt-1
-                      rounded-[8px]
-                      bg-[#fff4ef]
-                      px-2
-                      py-2
-                      text-center
-                    "
-                                >
-                                  <p
-                                    className="
-                        text-[11px]
-                        sm:text-[12px]
-                        font-semibold
-                        text-[#ff7148]
-                        uppercase
-                      "
-                                  >
-                                    {date}
-                                  </p>
-                                </div>
+  {/* ================= DATE CARD ================= */}
+  <div
+    className="
+      relative
+      ml-[29px]
+      sm:ml-[22px]
+      rounded-[10px]
+      bg-white
+      border
+      border-[#f0f0f0]
+      shadow-[0_2px_8px_rgba(0,0,0,0.06)]
+      overflow-hidden
+    "
+  >
+    {/* Date */}
+    <div
+      className="
+        mx-1
+        mt-1
+        rounded-[8px]
+        bg-[#fff4ef]
+        px-2
+        py-2
+        text-center
+      "
+    >
+      <p
+        className="
+          text-[11px]
+          sm:text-[12px]
+          font-semibold
+          text-[#ff7148]
+          uppercase
+        "
+      >
+        {date}
+      </p>
+    </div>
 
-                                {/* Time */}
-                                <p
-                                  className="
-                      px-2
-                      py-2
-                      text-center
-                      text-[10px]
-                      sm:text-[11px]
-                      text-gray-800
-                      whitespace-nowrap
-                    "
-                                >
-                                  {time}
-                                </p>
-                              </div>
+    {/* Time */}
+    <p
+      className="
+        px-2
+        py-2
+        text-center
+        text-[10px]
+        sm:text-[11px]
+        text-gray-800
+        whitespace-nowrap
+      "
+    >
+      {time}
+    </p>
+  </div>
 
-                              {/* ================= SESSION CARD ================= */}
-                              <div
-                                className={`
-                    relative
-                    min-w-0
-                    rounded-[13px]
-                  
-                    px-3
-                    py-3
-                    sm:px-4
-                    sm:py-3
-                    shadow-[0_2px_8px_rgba(0,0,0,0.06)]
-                    transition-all
-                    duration-200
-                  
+  {/* ================= SESSION CARD ================= */}
+  <div
+    // 3. ADDED onMouseEnter and onMouseLeave handlers
+    onMouseEnter={() => setHoveredSessionIndex(index)}
+    onMouseLeave={() => setHoveredSessionIndex(null)}
+    className={`
+      relative
+      min-w-0
+      rounded-[13px]
+      px-3
+      py-3
+      sm:px-4
+      sm:py-3
+      shadow-[0_2px_8px_rgba(0,0,0,0.06)]
+      transition-all
+      duration-200
+      cursor-pointer
 
-                    ${
-                      index === 0
-                        ? " bg-gradient-to-r from-[#ffeee2] to-[#fff4ef]"
-                        : "border-[#eeeeee] hover:bg-gradient-to-r from-[#ffeee2] to-[#fff4ef] hover:border-[#ffd3c4] hover:shadow-[0_3px_10px_rgba(255,113,72,0.10)]"
-                    }
-                  `}
-                              >
-                                <div
-                                  className="
-                      flex
-                      flex-col
-                      gap-3
-                      sm:flex-row
-                      sm:items-center
-                      sm:justify-between
-                    "
-                                >
-                                  {/* ================= SESSION INFO ================= */}
-                                  <div className="min-w-0 flex-1">
-                                    {/* Session number */}
-                                    <p
-                                      className="
-                          text-[9px]
-                          sm:text-[10px]
-                          uppercase
-                          font-medium
-                          text-[#888888]
-                          leading-none
-                          mb-0.5
-                        "
-                                    >
-                                      SESSION {String(index).padStart(1, "1")}
-                                    </p>
+      ${
+        index === 0 || hoveredSessionIndex === index
+          ? "bg-gradient-to-r from-[#ffeee2] to-[#fff4ef]"
+          : "border-[#eeeeee] hover:bg-gradient-to-r from-[#ffeee2] to-[#fff4ef] hover:border-[#ffd3c4] hover:shadow-[0_3px_10px_rgba(255,113,72,0.10)]"
+      }
+    `}
+  >
+    <div
+      className="
+        flex
+        flex-col
+        gap-3
+        sm:flex-row
+        sm:items-center
+        sm:justify-between
+      "
+    >
+      {/* ================= SESSION INFO ================= */}
+      <div className="min-w-0 flex-1">
+        {/* Session number */}
+        <p
+          className="
+            text-[9px]
+            sm:text-[10px]
+            uppercase
+            font-medium
+            text-[#888888]
+            leading-none
+            mb-0.5
+          "
+        >
+          SESSION {String(index).padStart(1, "1")}
+        </p>
 
-                                    {/* Title */}
-                                    <h3
-                                      className="
-                          text-[13px]
-                          sm:text-base
-                          font-semibold
-                          text-[#252525]
-                          leading-tight
-                          line-clamp-2
-                          sm:w-90
-                        "
-                                    >
-                                      {session?.title}
-                                    </h3>
+        {/* Title */}
+        <h3
+          className="
+            text-[13px]
+            sm:text-base
+            font-semibold
+            text-[#252525]
+            leading-tight
+            line-clamp-2
+            sm:w-90
+          "
+        >
+          {session?.title}
+        </h3>
 
-                                    {/* Category */}
-                                    <p
-                                      className="
-                          text-[10px]
-                          sm:text-sm
-                          font-medium
-                          text-[#ff7148]
-                          leading-tight
-                          mt-0.5
-                        "
-                                    >
-                                      IELTS English
-                                    </p>
+        {/* Category */}
+        <p
+          className="
+            text-[10px]
+            sm:text-sm
+            font-medium
+            text-[#ff7148]
+            leading-tight
+            mt-0.5
+          "
+        >
+          IELTS English
+        </p>
 
-                                    {/* Instructor */}
-                                    <div
-                                      className="
-                          flex
-                          items-center
-                          gap-1
-                          mt-1
-                        "
-                                    >
-                                      <User
-                                        className="w-[14px] h-[14px] text-[#ff7148]"
-                                        strokeWidth={2.5}
-                                        fill="#f36d45"
-                                      />
+        {/* Instructor */}
+        <div
+          className="
+            flex
+            items-center
+            gap-1
+            mt-1
+          "
+        >
+          <User
+            className="w-[14px] h-[14px] text-[#ff7148]"
+            strokeWidth={2.5}
+            fill="#f36d45"
+          />
 
-                                      <span
-                                        className="
-                            text-[10px]
-                            sm:text-sm
-                            text-[#4f4f4f]
-                          "
-                                      >
-                                        {session?.instructor?.name || "Rashmi"}
-                                      </span>
-                                    </div>
-                                  </div>
+          <span
+            className="
+              text-[10px]
+              sm:text-sm
+              text-[#4f4f4f]
+            "
+          >
+            {session?.instructor?.name || "Rashmi"}
+          </span>
+        </div>
+      </div>
 
-                                  {/* ================= RIGHT SIDE ================= */}
-                                  <div
-                                    className="
-                        flex
-                        items-center
-                        justify-between
-                        sm:flex-row
-                        sm:items-end
-                        sm:justify-center
-                        gap-2
-                        shrink-0
-                      "
-                                  >
-                                    {/* Status */}
-                                    <span
-                                      className="
-                    
-                        
-                          inline-flex
-                          items-center
-                          justify-center
-                          min-w-[96px]
-                          sm:min-w-[116px]
-                          h-[28px]
-                          sm:h-[30px]
-                          rounded-[7px]
-                          bg-[#ffe3d6]
-                          px-3
-                          py-1
-                          text-[9px]
-                          sm:text-xs
-                          font-medium
-                          text-[#ff7148]
-                        "
-                                    >
-                                      Upcoming
-                                    </span>
+      {/* ================= RIGHT SIDE ================= */}
+      <div
+        className="
+          flex
+          items-center
+          justify-between
+          sm:flex-row
+          sm:items-end
+          sm:justify-center
+          gap-2
+          shrink-0
+        "
+      >
+        {/* Status */}
+        <span
+          className="
+            inline-flex
+            items-center
+            justify-center
+            min-w-[96px]
+            sm:min-w-[116px]
+            h-[28px]
+            sm:h-[30px]
+            rounded-[7px]
+            bg-[#ffe3d6]
+            px-3
+            py-1
+            text-[9px]
+            sm:text-xs
+            font-medium
+            text-[#ff7148]
+          "
+        >
+          Upcoming
+        </span>
 
-                                    {/* Join button */}
-                                    <Link
-                                      to={`/sessions/${session?.slug}`}
-                                      onClick={() => {
-                                        setActiveTab("Overview");
-                                      }}
-                                      className="
-                          inline-flex
-                          items-center
-                          justify-center
-                          min-w-[96px]
-                          sm:min-w-[116px]
-                          h-[28px]
-                          sm:h-[30px]
-                          rounded-[7px]
-                          bg-[#ff7148]
-                          hover:bg-[#ff6338]
-                          text-white
-                          text-[10px]
-                          sm:text-sm
-                          font-medium
-                          transition-colors
-                        "
-                                    >
-                                      Join Class
-                                      <span className="ml-1">›</span>
-                                    </Link>
-                                  </div>
-                                </div>
-                              </div>
-                            </div>
+        {/* Join button */}
+        <Link
+          to={`/sessions/${session?.slug}`}
+          onClick={() => {
+            setActiveTab("Overview");
+          }}
+          className="
+            inline-flex
+            items-center
+            justify-center
+            min-w-[96px]
+            sm:min-w-[116px]
+            h-[28px]
+            sm:h-[30px]
+            rounded-[7px]
+            bg-[#ff7148]
+            hover:bg-[#ff6338]
+            text-white
+            text-[10px]
+            sm:text-sm
+            font-medium
+            transition-colors
+          "
+        >
+          Join Class
+          <span className="ml-1">›</span>
+        </Link>
+      </div>
+    </div>
+  </div>
+</div>
                           );
                         },
                       )}

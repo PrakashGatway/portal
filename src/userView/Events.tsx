@@ -298,87 +298,208 @@ const EventCalendar = () => {
   };
 
   const CustomMonthEvent = ({ event }) => {
-    const sameDateEvents = event.sameDateEvents || [event];
-    const [showPopup, setShowPopup] = useState(false);
-    const [popupPosition, setPopupPosition] = useState({ left: 0, top: 0 });
+  const sameDateEvents = event.sameDateEvents || [event];
+  const [showPopup, setShowPopup] = useState(false);
+  const [popupPosition, setPopupPosition] = useState({ left: 0, top: 0 });
 
-    const updatePopupPosition = (e) => {
-      const popupWidth = window.innerWidth <= 767 ? 260 : 290;
-      const popupHeight = window.innerWidth <= 767 ? 200 : 220;
-      const offset = window.innerWidth <= 767 ? 12 : 20;
+  const updatePopupPosition = (e) => {
+    const popupWidth = window.innerWidth <= 767 ? 260 : 290;
+    const popupHeight = window.innerWidth <= 767 ? 200 : 220;
+    const offset = window.innerWidth <= 767 ? 12 : 20;
 
-      let left = e.clientX + offset;
-      let top = e.clientY + offset;
+    let left = e.clientX + offset;
+    let top = e.clientY + offset;
 
-      if (left + popupWidth > window.innerWidth - 10) {
-        left = e.clientX - popupWidth - offset;
-      }
-      if (left < 10) left = 10;
+    if (left + popupWidth > window.innerWidth - 10) {
+      left = e.clientX - popupWidth - offset;
+    }
 
-      if (top + popupHeight > window.innerHeight - 10) {
-        top = e.clientY - popupHeight - offset;
-      }
-      if (top < 10) top = 10;
+    if (left < 10) left = 10;
 
-      setPopupPosition({ left, top });
-    };
+    if (top + popupHeight > window.innerHeight - 10) {
+      top = e.clientY - popupHeight - offset;
+    }
 
-    return (
-      <>
-        <div
-          className="relative w-full"
-          onMouseEnter={(e) => {
-            if (sameDateEvents.length > 1) {
-              updatePopupPosition(e);
-              setShowPopup(true);
-            }
-          }}
-          onMouseMove={(e) => {
-            if (sameDateEvents.length > 1) {
-              updatePopupPosition(e);
-            }
-          }}
-          onMouseLeave={() => setShowPopup(false)}
-        >
+    if (top < 10) top = 10;
+
+    setPopupPosition({ left, top });
+  };
+
+  return (
+    <>
+      <div
+        className="
+         w-full
+    cursor-pointer
+    z-10
+    flex
+    justify-end
+    items-start
+        "
+        onMouseEnter={(e) => {
+          updatePopupPosition(e);
+          setShowPopup(true);
+        }}
+        onMouseMove={(e) => {
+          updatePopupPosition(e);
+        }}
+        onMouseLeave={() => setShowPopup(false)}
+      >
+        {/* Blinking Event Dot */}
+       <div className="w-full flex justify-end items-center">
+  <div
+    className="
+      h-2.5 w-2.5
+      shrink-0
+      rounded-full
+      bg-orange-500
+      animate-pulse
+      shadow-[0_0_6px_rgba(249,115,22,0.6)]
+    "
+  />
+</div>
+      </div>
+
+      {showPopup &&
+        createPortal(
           <div
-            className="bg-white/90 backdrop-blur-sm border border-orange-200 text-orange-800 text-[10px] font-bold px-2 py-[3px] rounded-lg shadow-sm truncate w-10 md:w-20 lg:w-full cursor-pointer"
+            className="calendar-event-hover-popup"
+            style={{
+              position: "fixed",
+              left: `${popupPosition.left}px`,
+              top: `${popupPosition.top}px`,
+              zIndex: 2147483647,
+              pointerEvents: "none",
+            }}
           >
-            {event.title}
-          </div>
-        </div>
-
-        {showPopup &&
-          sameDateEvents.length > 1 &&
-          createPortal(
             <div
-              className="calendar-event-hover-popup"
-              style={{
-                position: "fixed",
-                left: `${popupPosition.left}px`,
-                top: `${popupPosition.top}px`,
-                zIndex: 2147483647,
-                pointerEvents: "none",
-              }}
+              className="
+                w-[220px]
+                rounded-lg
+                border border-[#FFD6C7]
+                bg-white
+                p-2
+                shadow-[0_6px_20px_rgba(249,115,22,0.18)]
+              "
             >
-              <div className="calendar-event-popup-date">
-                {moment(event.start).format("MMMM DD, YYYY")}
+              {/* Date Header */}
+              <div
+                className="
+                  mb-1.5
+                  flex items-center justify-between
+                  rounded-md
+                  bg-[#FFF3ED]
+                  px-2.5 py-1.5
+                "
+              >
+                <span className="text-[11px] font-semibold text-[#E85D2A]">
+                  {moment(event.start).format("MMM DD, YYYY")}
+                </span>
+
+                <span
+                  className="
+                    rounded-full
+                    bg-[#F97316]
+                    px-1.5 py-0.5
+                    text-[9px]
+                    font-bold
+                    text-white
+                  "
+                >
+                  {sameDateEvents.length}
+                </span>
               </div>
-              <div className="calendar-event-popup-list">
+
+              {/* Events */}
+              <div className="space-y-1">
                 {sameDateEvents.map((item) => (
-                  <div key={item.id} className="calendar-event-popup-item">
-                    <div className="calendar-event-popup-title">{item.title}</div>
-                    <div className="calendar-event-popup-time">
-                      {moment(item.start).format("HH:mm")} - {moment(item.end).format("HH:mm")}
-                    </div>
+                  <div
+                    key={item.id}
+                    className="
+                      flex items-center gap-2
+                      rounded-md
+                      border border-transparent
+                      px-2 py-1.5
+                      hover:border-[#FFE0D5]
+                      hover:bg-[#FFF9F6]
+                    "
+                  >
+                    {/* Orange Dot */}
+                    <span
+                      className="
+                        h-2 w-2
+                        shrink-0
+                        rounded-full
+                        bg-[#F97316]
+                        shadow-[0_0_0_3px_rgba(249,115,22,0.12)]
+                      "
+                    />
+
+                    {/* Title */}
+                    <span
+                      className="
+                        min-w-0
+                        flex-1
+                        text-[11px]
+                        font-semibold
+                        text-[#333]
+                      "
+                      title={item.title}
+                    >
+                      {item.title}
+                    </span>
+
+                    {/* Time */}
+                    <span className="shrink-0 text-[9px] font-medium text-[#9A8F89]">
+                      {moment(item.start).format("HH:mm")}
+                    </span>
                   </div>
                 ))}
               </div>
-            </div>,
-            document.body,
-          )}
-      </>
-    );
-  };
+            </div>
+          </div>,
+          document.body
+        )}
+    </>
+  );
+};
+
+
+// Add this custom date cell component
+const CustomDateCell = ({ date, events: allEvents, children }) => {
+  const dateKey = moment(date).format("YYYY-MM-DD");
+  const hasEvents = allEvents.some(
+    (e) => moment(e.start).format("YYYY-MM-DD") === dateKey
+  );
+
+  return (
+    <div className="relative w-full h-full">
+      {children}
+      {hasEvents && (
+        <div
+          className="
+            absolute
+            top-2
+            right-2
+            z-20
+          "
+        >
+          <div
+            className="
+              h-2.5 w-2.5
+              rounded-full
+              bg-orange-500
+              animate-pulse
+              shadow-[0_0_6px_rgba(249,115,22,0.6)]
+            "
+          />
+        </div>
+      )}
+    </div>
+  );
+};
+
+
 
   const CustomEvent = ({ event }) => (
     <div className="w-full min-w-0 overflow-hidden">
@@ -593,7 +714,7 @@ const EventCalendar = () => {
           `}</style>
 
           {loading ? (
-            <div className="flex items-center justify-center h-full">
+            <div className="flex items-center justify-center h-full w-full">
               <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-orange-500"></div>
             </div>
           ) : (
@@ -613,13 +734,16 @@ const EventCalendar = () => {
               date={date}
               onNavigate={handleNavigate}
               views={[Views.MONTH, Views.WEEK, Views.DAY, Views.AGENDA]}
-              components={{
-                toolbar: () => null,
-                month: { event: CustomMonthEvent },
-                week: { event: CustomEvent },
-                day: { event: CustomEvent },
-                agenda: { event: CustomEvent },
-              }}
+               components={{
+    toolbar: () => null,
+    month: { 
+      event: CustomMonthEvent,
+      dateCell: (props) => <CustomDateCell {...props} events={events} />
+    },
+    week: { event: CustomEvent },
+    day: { event: CustomEvent },
+    agenda: { event: CustomEvent },
+  }}
             />
           )}
         </main>
@@ -631,14 +755,14 @@ const EventCalendar = () => {
               <div className="mb-6">
                 <div className="flex flex-col lg:flex-row lg:items-end justify-between mb-6">
                   <div>
-                    <h1 className="text-xl font-bold text-[#ff5321] leading-none">
+                    <h1 className="text-xl font-bold text-[#f36d45] leading-none">
                       {moment(date).format("dddd")}
                     </h1>
-                    <p className="text-sm text-[#ff5321] mt-2 font-medium">
+                    <p className="text-sm text-[#f36d45] mt-2 font-medium">
                       {moment(date).format("MMMM DD, YYYY")}
                     </p>
                   </div>
-                  <div className="text-7xl font-black text-[#ff5321] leading-none opacity-90 font-medium">
+                  <div className="text-7xl font-black text-[#f36d45] leading-none opacity-90 font-medium">
                     {moment(date).format("DD")}
                   </div>
                 </div>
@@ -659,12 +783,12 @@ const EventCalendar = () => {
                 )}
 
                 <div className="grid grid-cols-2 gap-3 mb-8">
-                  <div className="bg-[#ff5321] rounded-2xl p-4 text-white shadow-lg shadow-orange-500/20">
+                  <div className="bg-[#f36d45] rounded-2xl p-4 text-white shadow-lg shadow-orange-500/20">
                     <div className="text-3xl font-bold">{stats.today}</div>
                     <div className="text-xs opacity-80 font-medium mt-1">Today</div>
                   </div>
                   <div className="bg-white border-2 border-orange-200 rounded-2xl p-4 shadow-sm">
-                    <div className="text-3xl font-bold text-orange-600">{stats.thisWeek}</div>
+                    <div className="text-3xl font-bold text-[#f36d45]">{stats.thisWeek}</div>
                     <div className="text-xs text-gray-500 font-medium mt-1">This Week</div>
                   </div>
                 </div>
