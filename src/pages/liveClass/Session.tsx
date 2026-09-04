@@ -27,6 +27,8 @@ import {
   ImageIcon,
   LinkIcon,
   FileText,
+  ChevronLeft,
+  Star,
 } from "lucide-react";
 import api, { ImageBaseUrl } from "../../axiosInstance";
 
@@ -41,10 +43,7 @@ const ContentViewPage = () => {
 
   const [timeRemaining, setTimeRemaining] = useState<any>(null);
   const [canJoin, setCanJoin] = useState(false);
-  const [selectUpcomingSession, setSelectUpcomingSession] = useState<any>(null)
-
-
-
+  const [selectUpcomingSession, setSelectUpcomingSession] = useState<any>(null);
 
   const [timeLeft, setTimeLeft] = useState({
     days: 0,
@@ -53,9 +52,7 @@ const ContentViewPage = () => {
     seconds: 0,
   });
 
-
   const [showSessionButton, setShowSessionButton] = useState(false);
-
 
   useEffect(() => {
     if (!content?.scheduledStart || !content?.scheduledEnd) {
@@ -72,9 +69,7 @@ const ContentViewPage = () => {
       // 10 minutes before scheduled start
       const buttonStartTime = startTime - 10 * 60 * 1000;
 
-      setShowSessionButton(
-        now >= buttonStartTime && now <= endTime
-      );
+      setShowSessionButton(now >= buttonStartTime && now <= endTime);
     };
 
     // Check immediately
@@ -92,9 +87,6 @@ const ContentViewPage = () => {
     }
   }, [allcontent]);
 
-
-
-
   useEffect(() => {
     if (!selectUpcomingSession?.scheduledStart) {
       return;
@@ -102,7 +94,7 @@ const ContentViewPage = () => {
 
     const calculateTimeLeft = () => {
       const startTime = new Date(
-        selectUpcomingSession.scheduledStart
+        selectUpcomingSession.scheduledStart,
       ).getTime();
 
       const now = new Date().getTime();
@@ -120,15 +112,9 @@ const ContentViewPage = () => {
       }
 
       const days = Math.floor(difference / (1000 * 60 * 60 * 24));
-      const hours = Math.floor(
-        (difference / (1000 * 60 * 60)) % 24
-      );
-      const minutes = Math.floor(
-        (difference / (1000 * 60)) % 60
-      );
-      const seconds = Math.floor(
-        (difference / 1000) % 60
-      );
+      const hours = Math.floor((difference / (1000 * 60 * 60)) % 24);
+      const minutes = Math.floor((difference / (1000 * 60)) % 60);
+      const seconds = Math.floor((difference / 1000) % 60);
 
       setTimeLeft({
         days,
@@ -146,8 +132,6 @@ const ContentViewPage = () => {
 
     return () => clearInterval(timer);
   }, [selectUpcomingSession?.scheduledStart]);
-
-
 
   const [timeLeft2, setTimeLeft2] = useState(0);
 
@@ -170,13 +154,10 @@ const ContentViewPage = () => {
     return () => clearInterval(interval);
   }, [content?.scheduledStart]);
 
-
-
-
   // Countdown timer effect
   useEffect(() => {
     const timer = setInterval(() => {
-      setTimeLeft(prev => {
+      setTimeLeft((prev) => {
         if (prev.minutes > 0) {
           return { ...prev, minutes: prev.minutes - 1 };
         } else if (prev.hours > 0) {
@@ -191,9 +172,8 @@ const ContentViewPage = () => {
     return () => clearInterval(timer);
   }, []);
 
-
-  const tabs = ['Overview', 'Material', 'Schedule', 'Trainer'];
-  const [activeTab, setActiveTab] = useState('Overview');
+  const tabs = ["Overview", "Material", "Schedule", "Trainer"];
+  const [activeTab, setActiveTab] = useState("Overview");
 
   useEffect(() => {
     const fetchContent = async () => {
@@ -201,7 +181,9 @@ const ContentViewPage = () => {
         setLoading(true);
         setError(null);
 
-        const response = await api.get(`/content/slug/${slug}?isModule=${true}`);
+        const response = await api.get(
+          `/content/slug/${slug}?isModule=${true}`,
+        );
 
         const data = response?.data?.data;
 
@@ -210,7 +192,7 @@ const ContentViewPage = () => {
         }
 
         setContent(data);
-        setAllContent(response?.data)
+        setAllContent(response?.data);
       } catch (err) {
         console.error("Error fetching content:", err);
         setError("Failed to load session. Please try again.");
@@ -223,7 +205,6 @@ const ContentViewPage = () => {
       fetchContent();
     }
   }, [slug]);
-
 
   // Check session date against today's date
   const getSessionDateStatus = (scheduledStart?: string) => {
@@ -248,7 +229,6 @@ const ContentViewPage = () => {
 
   const sessionStatus2 = getSessionDateStatus(content?.scheduledStart);
 
-
   const meetingUrl = content?.meetingId || null;
 
   const scheduledStartValue = content?.scheduledStart || null;
@@ -263,10 +243,6 @@ const ContentViewPage = () => {
   const instructor = content?.instructorInfo;
   const course = content?.courseInfo;
   const moduleInfo = content?.moduleInfo;
-
-
-
-
 
   const calculateTimeUntilMeeting = useCallback(() => {
     if (!scheduledStartValue || !scheduledEndValue) {
@@ -367,61 +343,33 @@ const ContentViewPage = () => {
     };
   }, [scheduledStartValue, scheduledEndValue, calculateTimeUntilMeeting]);
 
-const MaterialIcon = ({ type }: { type: string }) => {
-  switch (type?.toLowerCase()) {
-    case "pdf":
-      return (
-        <img
-          src="/images/pdf.webp"
-          alt="PDF"
-          className="w-full h-full object-contain"
-        />
-      );
+  const MaterialIcon = ({ type }: { type: string }) => {
+    switch (type?.toLowerCase()) {
+      case "pdf":
+        return (
+          <img
+            src="/images/pdf.webp"
+            alt="PDF"
+            className="w-full h-full object-contain"
+          />
+        );
 
-    case "document":
-      return (
-        <FileText
-          className="w-6 h-6 text-white"
-          strokeWidth={2}
-        />
-      );
+      case "document":
+        return <FileText className="w-6 h-6 text-white" strokeWidth={2} />;
 
-    case "link":
-      return (
-        <LinkIcon
-          className="w-6 h-6 text-white"
-          strokeWidth={2}
-        />
-      );
+      case "link":
+        return <LinkIcon className="w-6 h-6 text-white" strokeWidth={2} />;
 
-    case "image":
-      return (
-        <ImageIcon
-          className="w-6 h-6 text-white"
-          strokeWidth={2}
-        />
-      );
+      case "image":
+        return <ImageIcon className="w-6 h-6 text-white" strokeWidth={2} />;
 
-    case "audio":
-      return (
-        <Volume2
-          className="w-6 h-6 text-white"
-          strokeWidth={2}
-        />
-      );
+      case "audio":
+        return <Volume2 className="w-6 h-6 text-white" strokeWidth={2} />;
 
-    default:
-      return (
-        <FileText
-          className="w-6 h-6 text-white"
-          strokeWidth={2}
-        />
-      );
-  }
-};
-
-
-
+      default:
+        return <FileText className="w-6 h-6 text-white" strokeWidth={2} />;
+    }
+  };
 
   const formatTime2 = (seconds: number) => {
     const days = Math.floor(seconds / 86400);
@@ -431,13 +379,13 @@ const MaterialIcon = ({ type }: { type: string }) => {
 
     if (days > 0) {
       return `${days}d ${String(hours).padStart(2, "0")}h ${String(
-        minutes
+        minutes,
       ).padStart(2, "0")}m ${String(secs).padStart(2, "0")}s`;
     }
 
     return `${String(hours).padStart(2, "0")}:${String(minutes).padStart(
       2,
-      "0"
+      "0",
     )}:${String(secs).padStart(2, "0")}`;
   };
 
@@ -511,8 +459,6 @@ const MaterialIcon = ({ type }: { type: string }) => {
     };
   };
 
-
-
   if (loading) {
     return (
       <div className="flex min-h-screen items-center justify-center bg-gray-50">
@@ -570,65 +516,62 @@ const MaterialIcon = ({ type }: { type: string }) => {
         </button>
 
         {/* ==================================================
-        HERO SECTION
-    ================================================== */}
+          HERO SECTION
+      ================================================== */}
 
         <div className="p-4 md:p-6 lg:p-0 mb-2 xl:mb-6">
           <div className="">
             {/* Main Content Grid */}
             <div className="h-full">
               <div className="grid grid-cols-1 lg:grid-cols-[minmax(0,1.65fr)_minmax(280px,0.85fr)] xl:grid-cols-[1.5fr_0.5fr] gap-4 lg:gap-3 xl:gap-2 h-full">
-
                 {/* Main Session Card */}
-
 
                 <div className="flex flex-col gap-6 h-full">
                   {selectUpcomingSession && (
                     <div className="bg-gradient-to-b from-white via-gray-50 to-gray-300 p-[1.5px] rounded-[24px]">
                       <div
                         className="
-    grid
-    grid-cols-1
-    gap-4
-    md:gap-2
-    lg:gap-2
-    xl:grid-cols-[1.35fr_0.85fr_1fr]
-    xl:gap-3
-    p-4
-    sm:p-5
-    md:p-4
-    xl:p-4
-    rounded-[24px]
-    border
-    border-orange-200/60
-    bg-gradient-to-r
-    from-orange-100/70
-    via-[#fff1e8]
-    to-orange-100
-    h-full
-    xl:h-full
-   
-  "
+      grid
+      grid-cols-1
+      gap-4
+      md:gap-2
+      lg:gap-2
+      xl:grid-cols-[1.35fr_0.85fr_1fr]
+      xl:gap-3
+      p-4
+      sm:p-5
+      md:p-4
+      xl:p-4
+      rounded-[24px]
+      border
+      border-orange-200/60
+      bg-gradient-to-r
+      from-orange-100/70
+      via-[#fff1e8]
+      to-orange-100
+      h-full
+      xl:h-full
+    
+    "
                       >
                         {/* ================= LEFT SECTION ================= */}
                         <div className="flex h-full flex-col min-w-0">
-
                           {/* Badge */}
                           <div>
                             <div
                               className="
-          inline-flex
-          items-center
-          gap-2
-          bg-[#f36d45]
-          text-white
-          px-4
-          py-2
-          rounded-full
-          text-sm
-          font-semibold
-          mb-3
-        "
+            inline-flex
+            items-center
+            gap-2
+            bg-[#f36d45]
+            text-white
+            px-4
+            py-2
+            rounded-full
+            text-sm
+            font-semibold
+            mb-3
+          "
                             >
                               <span className="w-2 h-2 bg-white rounded-full animate-pulse" />
                               Upcoming Session
@@ -637,24 +580,24 @@ const MaterialIcon = ({ type }: { type: string }) => {
                             {/* Category */}
                             <p className="text-gray-700 text-sm font-semibold mb-2">
                               SAT MATHEMATICS{" "}
-                              <span className="text-orange-500">•</span>{" "}
-                              SESSION 08
+                              <span className="text-orange-500">•</span> SESSION
+                              08
                             </p>
 
                             {/* Title */}
                             <h1
                               className="
-          text-xl
-          sm:text-2xl
-          md:text-3xl
-          lg:text-3xl
-          xl:text-2xl
-          font-bold
-          text-gray-900
-          leading-[1.15]
-          mb-1
-          line-clamp-2
-        "
+            text-xl
+            sm:text-2xl
+            md:text-3xl
+            lg:text-3xl
+            xl:text-2xl
+            font-bold
+            text-gray-900
+            leading-[1.15]
+            mb-1
+            line-clamp-2
+          "
                             >
                               {selectUpcomingSession?.title}
                             </h1>
@@ -663,7 +606,9 @@ const MaterialIcon = ({ type }: { type: string }) => {
                             <div className="flex items-center gap-2 text-gray-700 mb-3">
                               <Calendar className="w-5 h-5 shrink-0 text-orange-500" />
                               <span className="font-medium text-sm md:text-base">
-                                {new Date(selectUpcomingSession?.scheduledStart).toLocaleDateString("en-GB", {
+                                {new Date(
+                                  selectUpcomingSession?.scheduledStart,
+                                ).toLocaleDateString("en-GB", {
                                   weekday: "long",
                                   day: "2-digit",
                                   month: "short",
@@ -677,10 +622,12 @@ const MaterialIcon = ({ type }: { type: string }) => {
                               <Clock className="w-5 h-5 shrink-0 text-orange-500" />
                               <span className="font-medium text-sm md:text-base">
                                 {selectUpcomingSession?.scheduledStart
-                                  ? new Date(selectUpcomingSession?.scheduledStart).toLocaleTimeString("en-US", {
-                                    hour: "numeric",
-                                    minute: "2-digit",
-                                  })
+                                  ? new Date(
+                                      selectUpcomingSession?.scheduledStart,
+                                    ).toLocaleTimeString("en-US", {
+                                      hour: "numeric",
+                                      minute: "2-digit",
+                                    })
                                   : ""}
                               </span>
                             </div>
@@ -688,53 +635,55 @@ const MaterialIcon = ({ type }: { type: string }) => {
 
                           {/* Buttons */}
                           <div className="flex flex-col sm:flex-row flex-wrap gap-3">
-                            <Link to={`/sessions/${selectUpcomingSession?.slug}`}>
+                            <Link
+                              to={`/sessions/${selectUpcomingSession?.slug}`}
+                            >
                               <button
-
                                 className="
-          inline-flex
-          items-center
-          justify-center
-          gap-2
-          bg-[#f36d45]
-          hover:bg-orange-600
-          text-white
-          w-full sm:w-auto
-          px-4
-          py-2.5
-          rounded-xl
-          text-sm
-          font-semibold
-          transition-all
-          duration-200
-          shadow-lg
-          shadow-orange-500/30
-        "
+            inline-flex
+            items-center
+            justify-center
+            gap-2
+            bg-[#f36d45]
+            hover:bg-orange-600
+            text-white
+            w-full sm:w-auto
+            px-4
+            py-2.5
+            rounded-xl
+            text-sm
+            font-semibold
+            transition-all
+            duration-200
+            shadow-lg
+            shadow-orange-500/30
+          "
                               >
                                 <Video className="w-4 h-4" />
                                 Join Class
-                              </button></Link>
+                              </button>
+                            </Link>
 
                             <button
                               className="
-          inline-flex
-          items-center
-          justify-center
-          gap-2
-          bg-white
-          hover:bg-gray-50
-          text-gray-700
-          border
-          border-orange-200
-          w-full sm:w-auto
-          px-4
-          py-2.5
-          rounded-xl
-          text-sm
-          font-semibold
-          transition-all
-          duration-200
-        "
+            inline-flex
+            items-center
+            justify-center
+            gap-2
+            bg-white
+            hover:bg-gray-50
+            text-gray-700
+            border
+            border-orange-200
+            w-full sm:w-auto
+            px-4
+            py-2.5
+            rounded-xl
+            text-sm
+            font-semibold
+            transition-all
+            duration-200
+          "
                             >
                               <Plus className="w-4 h-4" />
                               Add to Calendar
@@ -742,40 +691,15 @@ const MaterialIcon = ({ type }: { type: string }) => {
                           </div>
                         </div>
 
-
                         {/* ================= TRAINER SECTION ================= */}
                         <div
-                          className="
-      bg-white/60
-      rounded-[20px]
-      p-4
-      sm:p-5
-      md:p-6
-      border
-      border-orange-200
-      flex
-      justify-center
-      items-center
-      h-full
-    "
+                          className=" bg-white/60 rounded-[20px] p-4 sm:p-5 md:p-6 border border-orange-200 flex justify-center items-center h-full"
                         >
                           <div className="text-center flex flex-col justify-center items-center">
-
                             {/* Profile Image */}
                             <div className="relative mb-3">
                               <div
-                                className="
-            w-[68px]
-            h-[68px]
-            sm:w-[76px]
-            sm:h-[76px]
-            md:w-[60px]
-            md:h-[60px]
-            rounded-full
-            border-2
-            border-orange-400
-            overflow-hidden
-          "
+                                className=" w-[68px] h-[68px] sm:w-[76px] sm:h-[76px] md:w-[60px] md:h-[60px] rounded-full border-2 border-orange-400 overflow-hidden"
                               >
                                 <img
                                   src="https://cdn-icons-png.flaticon.com/512/709/709699.png"
@@ -783,11 +707,8 @@ const MaterialIcon = ({ type }: { type: string }) => {
                                   className="w-full h-full object-cover"
                                 />
                               </div>
-
-
                             </div>
                             <div className="text-left">
-
                               <p className="text-gray-500 text-sm mb-1">
                                 Your Instructor
                               </p>
@@ -802,69 +723,68 @@ const MaterialIcon = ({ type }: { type: string }) => {
 
                               <p className="text-gray-500 text-xs line-clamp-2 ">
                                 {selectUpcomingSession?.instructor?.profile?.bio}
-                              </p></div>    </div>
+                              </p>
+                            </div>{" "}
+                          </div>
                         </div>
-
 
                         {/* ================= COUNTDOWN SECTION ================= */}
                         <div
                           className="
-  
-     
-      bg-white
-      rounded-[20px]
-      p-4
-      sm:p-5
-      md:p-4
-      border
-      border-orange-100
-      flex
-      items-center justify-center
-     
-    "
+        bg-white
+        rounded-[20px]
+        p-4
+        sm:p-5
+        md:p-4
+        border
+        border-orange-100
+        flex
+        items-center justify-center
+      "
                         >
                           <div className="w-full  text-center">
-
                             <h3
                               className="
-          text-sm
-          sm:text-base
-          md:text-lg
-          font-bold
-          text-gray-900
-          mb-6
-        "
+            text-sm
+            sm:text-base
+            md:text-lg
+            font-bold
+            text-gray-900
+            mb-6
+          "
                             >
                               CLASS STARTS IN
                             </h3>
 
                             {/* Timer */}
                             <div className="flex items-start justify-center gap-1.5 sm:gap-2 w-full mb-5">
-
                               {/* Days */}
                               <div className="flex flex-col items-center">
                                 <div className="flex gap-1">
-                                  {String(timeLeft.days).padStart(2, "0").split("").map((digit, index) => (
-                                    <div
-                                      key={index}
-                                      className="
-            flex items-center justify-center
-            bg-[#ff7148]
-            text-white
-            rounded-[5px]
-            w-[28px]
-            h-[38px]
-            sm:w-[32px]
-            sm:h-[42px]
-            md:w-[30px]
-            md:h-[40px]
-          "
-                                    >
-                                      <span className="text-xl sm:text-2xl md:text-3xl font-bold leading-none">
-                                        {digit}
-                                      </span>
-                                    </div>
-                                  ))}
+                                  {String(timeLeft.days)
+                                    .padStart(2, "0")
+                                    .split("")
+                                    .map((digit, index) => (
+                                      <div
+                                        key={index}
+                                        className="
+              flex items-center justify-center
+              bg-[#ff7148]
+              text-white
+              rounded-[5px]
+              w-[28px]
+              h-[38px]
+              sm:w-[32px]
+              sm:h-[42px]
+              md:w-[30px]
+              md:h-[40px]
+            "
+                                      >
+                                        <span className="text-xl sm:text-2xl md:text-3xl font-bold leading-none">
+                                          {digit}
+                                        </span>
+                                      </div>
+                                    ))}
                                 </div>
 
                                 <span className="text-[10px] md:text-xs font-semibold text-gray-700 mt-1">
@@ -880,27 +800,30 @@ const MaterialIcon = ({ type }: { type: string }) => {
                               {/* Hours */}
                               <div className="flex flex-col items-center">
                                 <div className="flex gap-1">
-                                  {String(timeLeft.hours).padStart(2, "0").split("").map((digit, index) => (
-                                    <div
-                                      key={index}
-                                      className="
-            flex items-center justify-center
-            bg-[#ff7148]
-            text-white
-            rounded-[5px]
-            w-[28px]
-            h-[38px]
-            sm:w-[32px]
-            sm:h-[42px]
-            md:w-[30px]
-            md:h-[40px]
-          "
-                                    >
-                                      <span className="text-xl sm:text-2xl md:text-3xl font-bold leading-none">
-                                        {digit}
-                                      </span>
-                                    </div>
-                                  ))}
+                                  {String(timeLeft.hours)
+                                    .padStart(2, "0")
+                                    .split("")
+                                    .map((digit, index) => (
+                                      <div
+                                        key={index}
+                                        className="
+              flex items-center justify-center
+              bg-[#ff7148]
+              text-white
+              rounded-[5px]
+              w-[28px]
+              h-[38px]
+              sm:w-[32px]
+              sm:h-[42px]
+              md:w-[30px]
+              md:h-[40px]
+            "
+                                      >
+                                        <span className="text-xl sm:text-2xl md:text-3xl font-bold leading-none">
+                                          {digit}
+                                        </span>
+                                      </div>
+                                    ))}
                                 </div>
 
                                 <span className="text-[10px] md:text-xs font-semibold text-gray-700 mt-1">
@@ -916,52 +839,55 @@ const MaterialIcon = ({ type }: { type: string }) => {
                               {/* Minutes */}
                               <div className="flex flex-col items-center">
                                 <div className="flex gap-1">
-                                  {String(timeLeft.minutes).padStart(2, "0").split("").map((digit, index) => (
-                                    <div
-                                      key={index}
-                                      className="
-            flex items-center justify-center
-            bg-[#ff7148]
-            text-white
-            rounded-[5px]
-            w-[28px]
-            h-[38px]
-            sm:w-[32px]
-            sm:h-[42px]
-            md:w-[30px]
-            md:h-[40px]
-          "
-                                    >
-                                      <span className="text-xl sm:text-2xl md:text-3xl font-bold leading-none">
-                                        {digit}
-                                      </span>
-                                    </div>
-                                  ))}
+                                  {String(timeLeft.minutes)
+                                    .padStart(2, "0")
+                                    .split("")
+                                    .map((digit, index) => (
+                                      <div
+                                        key={index}
+                                        className="
+              flex items-center justify-center
+              bg-[#ff7148]
+              text-white
+              rounded-[5px]
+              w-[28px]
+              h-[38px]
+              sm:w-[32px]
+              sm:h-[42px]
+              md:w-[30px]
+              md:h-[40px]
+            "
+                                      >
+                                        <span className="text-xl sm:text-2xl md:text-3xl font-bold leading-none">
+                                          {digit}
+                                        </span>
+                                      </div>
+                                    ))}
                                 </div>
 
                                 <span className="text-[10px] md:text-xs font-semibold text-gray-700 mt-1">
                                   MINUTE
                                 </span>
                               </div>
-
                             </div>
 
                             {/* Date */}
                             <p className="text-gray-600 text-sm font-medium">
                               {selectUpcomingSession?.scheduledStart
-                                ? new Date(selectUpcomingSession.scheduledStart).toLocaleDateString(
-                                  "en-US",
-                                  {
+                                ? new Date(
+                                    selectUpcomingSession.scheduledStart,
+                                  ).toLocaleDateString("en-US", {
                                     month: "long",
                                     day: "numeric",
                                     year: "numeric",
-                                  }
-                                )
+                                  })
                                 : ""}
                             </p>
                           </div>
                         </div>
-                      </div></div>)}
+                      </div>
+                    </div>
+                  )}
                   {/* Bottom Navigation Tabs */}
                   <div className="mt-4 sm:mt-0 bg-white rounded-2xl border border-orange-100 overflow-hidden">
                     <div className="flex overflow-x-auto scrollbar-hide ">
@@ -969,10 +895,11 @@ const MaterialIcon = ({ type }: { type: string }) => {
                         <button
                           key={tab}
                           onClick={() => setActiveTab(tab)}
-                          className={`flex min-w-[100px] sm:min-w-[110px] px-4 sm:px-6 py-3 sm:py-4 text-sm font-semibold transition-all duration-200 border-b-2 ${activeTab === tab
-                              ? 'text-orange-600 border-orange-500 bg-orange-50/50'
-                              : 'text-gray-600 border-transparent hover:text-gray-900 hover:bg-gray-50'
-                            }`}
+                          className={`flex min-w-[100px] sm:min-w-[110px] px-4 sm:px-6 py-3 sm:py-4 text-sm font-semibold transition-all duration-200 border-b-2 ${
+                            activeTab === tab
+                              ? "text-orange-600 border-orange-500 bg-orange-50/50"
+                              : "text-gray-600 border-transparent hover:text-gray-900 hover:bg-gray-50"
+                          }`}
                         >
                           {tab}
                         </button>
@@ -982,1310 +909,1363 @@ const MaterialIcon = ({ type }: { type: string }) => {
                 </div>
 
                 {/* Right Section - Upcoming Sessions */}
-                {selectUpcomingSession && (<div className="">
-                  <div className="bg-white rounded-3xl p-3 sm:p-4 shadow-lg border border-orange-500 h-full lg:h-100 xl:h-full ">
-                    <h2 className="text-lg font-bold text-gray-900 mb-2">Upcoming Sessions</h2>
+                {selectUpcomingSession && (
+                  <div className="">
+                    <div className="bg-white rounded-3xl p-3 sm:p-4 shadow-lg border border-orange-500 h-full lg:h-100 xl:h-full ">
+                      <h2 className="text-lg font-bold text-gray-900 mb-2">
+                        Upcoming Sessions
+                      </h2>
 
-                    <div className="space-y-3">
-                      {allcontent?.relatedSessions?.slice(0, 3)?.map((session, i) => (
-                        <div
-                          onClick={() => setSelectUpcomingSession(session)}
-                          key={session.id}
-                          className={`rounded-2xl p-2 cursor-pointer transition-all duration-200 ${selectUpcomingSession?.id === session.id
-                              ? 'bg-gradient-to-br from-orange-100 to-peach-100 border-2 border-orange-300 shadow-md'
-                              : 'bg-gray-50 border-2 border-gray-100 hover:border-orange-200 hover:shadow-md'
-                            }`}
-                        >
-                          <div className="flex gap-3">
-                            {/* Session Number */}
-                            <div className={`w-10 h-10 rounded-full flex items-center justify-center font-bold text-sm ${session.active
-                                ? 'bg-orange-500 text-white'
-                                : 'bg-white text-gray-600 border-2 border-gray-200'
-                              }`}>
-                              {i + 1}
-                            </div>
+                      <div className="space-y-3">
+                        {allcontent?.relatedSessions
+                          ?.slice(0, 3)
+                          ?.map((session, i) => (
+                            <div
+                              onClick={() => setSelectUpcomingSession(session)}
+                              key={session.id}
+                              className={`rounded-2xl p-2 cursor-pointer transition-all duration-200 ${
+                                selectUpcomingSession?.id === session.id
+                                  ? "bg-gradient-to-br from-orange-100 to-peach-100 border-2 border-orange-300 shadow-md"
+                                  : "bg-gray-50 border-2 border-gray-100 hover:border-orange-200 hover:shadow-md"
+                              }`}
+                            >
+                              <div className="flex gap-3">
+                                {/* Session Number */}
+                                <div
+                                  className={`w-10 h-10 rounded-full flex items-center justify-center font-bold text-sm ${
+                                    session.active
+                                      ? "bg-orange-500 text-white"
+                                      : "bg-white text-gray-600 border-2 border-gray-200"
+                                  }`}
+                                >
+                                  {i + 1}
+                                </div>
 
-                            {/* Session Info */}
-                            <div className="flex-1 min-w-0">
-                              <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-1 sm:gap-2 mb-1">
-                                <h3 className={`font-bold text-sm ${session.active ? 'text-gray-900' : 'text-gray-700'
-                                  }`}>
-                                  session {i + 1}
-                                </h3>
-                                {(
-                                  <span className={`text-[10px] font-semibold  whitespace-nowrap ${session.active ? "text-orange-600" : "text-gray-600"}`}>
-                                    {new Date(session.scheduledStart).toLocaleDateString("en-GB", {
-                                      weekday: "short",
-                                      day: "2-digit",
-                                      month: "short",
-                                    })}
-                                  </span>
-                                )}
+                                {/* Session Info */}
+                                <div className="flex-1 min-w-0">
+                                  <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-1 sm:gap-2 mb-1">
+                                    <h3
+                                      className={`font-bold text-sm ${
+                                        session.active
+                                          ? "text-gray-900"
+                                          : "text-gray-700"
+                                      }`}
+                                    >
+                                      session {i + 1}
+                                    </h3>
+                                    {
+                                      <span
+                                        className={`text-[10px] font-semibold  whitespace-nowrap ${session.active ? "text-orange-600" : "text-gray-600"}`}
+                                      >
+                                        {new Date(
+                                          session.scheduledStart,
+                                        ).toLocaleDateString("en-GB", {
+                                          weekday: "short",
+                                          day: "2-digit",
+                                          month: "short",
+                                        })}
+                                      </span>
+                                    }
+                                  </div>
+                                  <p className="text-xs text-gray-600 mb-2 line-clamp-2">
+                                    {session.description}
+                                  </p>
+                                  <div className="flex items-center gap-1 text-[11px] text-gray-500">
+                                    <Clock className="w-3 h-3" />
+                                    <span>
+                                      {new Date(
+                                        session.scheduledStart,
+                                      ).toLocaleTimeString([], {
+                                        hour: "2-digit",
+                                        minute: "2-digit",
+                                      })}{" "}
+                                    </span>{" "}
+                                    -{" "}
+                                    <span>
+                                      {new Date(
+                                        session.scheduledEnd,
+                                      ).toLocaleTimeString([], {
+                                        hour: "2-digit",
+                                        minute: "2-digit",
+                                      })}
+                                    </span>
+                                  </div>
+                                </div>
                               </div>
-                              <p className="text-xs text-gray-600 mb-2 line-clamp-2">{session.description}</p>
-                              <div className="flex items-center gap-1 text-[11px] text-gray-500">
-                                <Clock className="w-3 h-3" />
-                                <span>{new Date(session.scheduledStart).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })} </span> - <span>{new Date(session.scheduledEnd).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
-                              </div>
-
                             </div>
-                          </div>
-                        </div>
-                      ))}
+                          ))}
+                      </div>
                     </div>
                   </div>
-                </div>
                 )}
               </div>
-
             </div>
-
-
-
           </div>
         </div>
 
-
         <div className="w-full max-w-7xl mx-auto px-4 sm:px-5 lg:px-0 ">
-
           <div className="grid grid-cols-1 xl:grid-cols-[1.5fr_0.5fr] items-start gap-4">
-
-            {/* ======================================================= */}
-            {/* LEFT - CURRENT SESSION */}
-            {/* ========================
-      =============================== */}
+          
             <div>
-              {activeTab === "Overview" ? (<div className="flex flex-col gap-4">
-
-                <div className="w-full">
-                  {sessionStatus2 === "expired" ? (
-                    /* ========================================================= */
-                    /* EXPIRED SESSION CARD */
-                    /* ========================================================= */
-
-                    <div
-                      className="
-    w-full
-   
-    bg-gradient-to-br
-    from-white
-    via-[#fffaf7]
-    to-[#f8f8f8]
-    border
-    border-[#ffd3c4]
-    rounded-[16px]
-    p-6
-    sm:p-8
-    flex
-    flex-col
-    items-center
-    justify-center
-    text-center
-    shadow-sm
-  "
-                    >
-                      {/* Expired Icon */}
+              {activeTab === "Overview" ? (
+                <div className="flex flex-col gap-4">
+                  <div className="w-full">
+                    {sessionStatus2 === "expired" ? (
+                      
                       <div
                         className="
-      w-16
-      h-16
-      sm:w-20
-      sm:h-20
-      rounded-full
-      bg-[#fff0eb]
+      w-full
+      bg-gradient-to-br
+      from-white
+      via-[#fffaf7]
+      to-[#f8f8f8]
       border
-      border-[#ffd6ca]
+      border-[#ffd3c4]
+      rounded-[16px]
+      p-6
+      sm:p-8
       flex
+      flex-col
       items-center
       justify-center
-      mb-5
+      text-center
+      shadow-sm
     "
                       >
-                        <svg
-                          xmlns="http://www.w3.org/2000/svg"
-                          viewBox="0 0 24 24"
-                          fill="none"
-                          stroke="currentColor"
-                          strokeWidth="1.6"
+                        {/* Expired Icon */}
+                        <div
                           className="
-        w-7
-        h-7
-        sm:w-8
-        sm:h-8
-        text-[#ff7148]
+        w-16
+        h-16
+        sm:w-20
+        sm:h-20
+        rounded-full
+        bg-[#fff0eb]
+        border
+        border-[#ffd6ca]
+        flex
+        items-center
+        justify-center
+        mb-5
       "
                         >
-                          <circle cx="12" cy="12" r="9" />
-                          <path d="M12 7v5l3 2" />
-                        </svg>
-                      </div>
-
-                      {/* Title */}
-                      <h2
-                        className="
-      text-xl
-      sm:text-2xl
-      font-semibold
-      text-[#10152f]
-      mb-2
-    "
-                      >
-                        Session Ended
-                      </h2>
-
-                      {/* Description */}
-                      <p
-                        className="
-      max-w-[420px]
-      text-sm
-      sm:text-[15px]
-      leading-relaxed
-      text-[#777777]
-      mb-6
-    "
-                      >
-                        This session has already ended and is no longer available to join.
-                      </p>
-
-                      {/* Status Badge */}
-                      <span
-                        className="
-      inline-flex
-      items-center
-      gap-2
-      px-4
-      py-2
-      rounded-full
-      bg-[#f1f1f1]
-      border
-      border-[#e3e3e3]
-      text-[#656565]
-      text-sm
-      font-medium
-    "
-                      >
-                        <span className="w-2 h-2 rounded-full bg-[#9b9b9b]" />
-                        Expired Session
-                      </span>
-                    </div>
-                  ) : (
-                    /* ========================================================= */
-                    /* TODAY / UPCOMING SESSION CARD */
-                    /* ========================================================= */
-
-                    <div
-                      className="
-        w-full
-        min-w-0
-        bg-white
-        border
-        border-[#ffd3c4]
-        rounded-[12px]
-        p-5
-        sm:p-6
-        lg:p-5
-      "
-                    >
-                      <div
-                        className="
-          grid
-          grid-cols-1
-          md:grid-cols-[300px_minmax(0,1fr)]
-          lg:grid-cols-[325px_minmax(0,1fr)]
-          gap-6
-          lg:gap-8
-          items-start
+                          <svg
+                            xmlns="http://www.w3.org/2000/svg"
+                            viewBox="0 0 24 24"
+                            fill="none"
+                            stroke="currentColor"
+                            strokeWidth="1.6"
+                            className="
+          w-7
+          h-7
+          sm:w-8
+          sm:h-8
+          text-[#ff7148]
         "
-                      >
-
-                        {/* =================================================== */}
-                        {/* SESSION THUMBNAIL */}
-                        {/* =================================================== */}
-
-                        <div className="w-full min-w-0">
-
-                          <h2
-                            className="
-              text-[24px]
-              sm:text-[25px]
-              lg:text-[26px]
-              leading-tight
-              font-semibold
-              text-[#111827]
-              mb-5
-            "
                           >
-                            <span className="text-[#ff613f]">
-                              Session
-                            </span>
-                          </h2>
-
-                          {/* Thumbnail */}
-                          <div
-                            className="
-              relative
-              w-full
-              overflow-hidden
-              rounded-[11px]
-              border
-              border-[#ff633f]
-              bg-[#fff7f2]
-              aspect-[1.5/1]
-            "
-                          >
-                            <img
-                              src={`${ImageBaseUrl}/${content?.thumbnailPic}`}
-                              alt={content?.title || "Session"}
-                              className="
-                absolute
-                inset-0
-                w-full
-                h-full
-                object-cover
-              "
-                            />
-                          </div>
+                            <circle cx="12" cy="12" r="9" />
+                            <path d="M12 7v5l3 2" />
+                          </svg>
                         </div>
 
+                        {/* Title */}
+                        <h2
+                          className="
+        text-xl
+        sm:text-2xl
+        font-semibold
+        text-[#10152f]
+        mb-2
+      "
+                        >
+                          Session Ended
+                        </h2>
 
-                        {/* =================================================== */}
-                        {/* SESSION INFORMATION */}
-                        {/* =================================================== */}
+                        {/* Description */}
+                        <p
+                          className="
+        max-w-[420px]
+        text-sm
+        sm:text-[15px]
+        leading-relaxed
+        text-[#777777]
+        mb-6
+      "
+                        >
+                          This session has already ended and is no longer
+                          available to join.
+                        </p>
 
-                        <div className="w-full min-w-0">
+                        {/* Status Badge */}
+                        <span
+                          className="
+        inline-flex
+        items-center
+        gap-2
+        px-4
+        py-2
+        rounded-full
+        bg-[#f1f1f1]
+        border
+        border-[#e3e3e3]
+        text-[#656565]
+        text-sm
+        font-medium
+      "
+                        >
+                          <span className="w-2 h-2 rounded-full bg-[#9b9b9b]" />
+                          Expired Session
+                        </span>
+                      </div>
+                    ) : (
+                      /* ========================================================= */
+                      /* TODAY / UPCOMING SESSION CARD */
+                      /* ========================================================= */
 
-                          {/* Title */}
-                          <h1
-                            className="
-              text-[25px]
-              sm:text-[28px]
-              lg:text-[29px]
-              xl:text-[30px]
-              leading-[1.08]
-              font-semibold
-              tracking-[-0.4px]
-              text-[#10152f]
-              mb-5
-            "
-                          >
-                            <span>{content?.title.split(" ")[0]}</span>{" "}
-                            <span className="text-[#ff613f]">
-                              {content?.title.split(" ").slice(1).join(" ")}
-                            </span>
-                          </h1>
+                      <div
+                        className="
+          w-full
+          min-w-0
+          bg-white
+          border
+          border-[#ffd3c4]
+          rounded-[12px]
+          p-5
+          sm:p-6
+          lg:p-5
+        "
+                      >
+                        <div
+                          className="
+            grid
+            grid-cols-1
+            md:grid-cols-[300px_minmax(0,1fr)]
+            lg:grid-cols-[325px_minmax(0,1fr)]
+            gap-6
+            lg:gap-8
+            items-start
+          "
+                        >
+                          {/* =================================================== */}
+                          {/* SESSION THUMBNAIL */}
+                          {/* =================================================== */}
 
+                          <div className="w-full min-w-0">
+                            <h2
+                              className="
+                text-[24px]
+                sm:text-[25px]
+                lg:text-[26px]
+                leading-tight
+                font-semibold
+                text-[#111827]
+                mb-5
+              "
+                            >
+                              <span className="text-[#ff613f]">Session</span>
+                            </h2>
 
-                          {/* ================================================= */}
-                          {/* INSTRUCTOR */}
-                          {/* ================================================= */}
-
-                          <div className="flex items-center gap-3 mb-3">
-
-                            {/* Instructor Image */}
+                            {/* Thumbnail */}
                             <div
                               className="
-                w-[52px]
-                h-[52px]
-                shrink-0
-                rounded-full
-                border-2
-                border-[#ff704c]
+                relative
+                w-full
                 overflow-hidden
-                bg-[#fff3ed]
+                rounded-[11px]
+                border
+                border-[#ff633f]
+                bg-[#fff7f2]
+                aspect-[1.5/1]
               "
                             >
                               <img
-                                src="https://cdn-icons-png.flaticon.com/512/709/709699.png"
-                                alt={instructor?.name || "Instructor"}
-                                className="w-full h-full object-cover"
+                                src={`${ImageBaseUrl}/${content?.thumbnailPic}`}
+                                alt={content?.title || "Session"}
+                                className="
+                  absolute
+                  inset-0
+                  w-full
+                  h-full
+                  object-cover
+                "
                               />
                             </div>
-
-                            {/* Instructor Details */}
-                            <div className="min-w-0">
-
-                              <p
-                                className="
-                  text-[15px]
-                  sm:text-[16px]
-                  leading-tight
-                  font-semibold
-                  text-[#15182d]
-                "
-                              >
-                                Instructor:{" "}
-                                <span className="text-[#ff613f]">
-                                  {instructor?.name}
-                                </span>
-                              </p>
-
-                              <p
-                                className="
-                  text-[13px]
-                  sm:text-[14px]
-                  text-[#777777]
-                  mt-1
-                "
-                              >
-                                PTE Expert & English Language Trainer
-                              </p>
-
-                            </div>
                           </div>
 
+                          {/* =================================================== */}
+                          {/* SESSION INFORMATION */}
+                          {/* =================================================== */}
 
-                          {/* ================================================= */}
-                          {/* DESCRIPTION */}
-                          {/* ================================================= */}
+                          <div className="w-full min-w-0">
+                            {/* Title */}
+                            <h1
+                              className="
+                text-[25px]
+                sm:text-[28px]
+                lg:text-[29px]
+                xl:text-[30px]
+                leading-[1.08]
+                font-semibold
+                tracking-[-0.4px]
+                text-[#10152f]
+                mb-5
+              "
+                            >
+                              <span>{content?.title.split(" ")[0]}</span>{" "}
+                              <span className="text-[#ff613f]">
+                                {content?.title.split(" ").slice(1).join(" ")}
+                              </span>
+                            </h1>
 
-                          <p
-                            className="
-              max-w-[620px]
-              text-[14px]
-              sm:text-[15px]
-              leading-[1.45]
-              text-[#606060]
-              mb-5
-              line-clamp-3
-            "
-                          >
-                            {course?.description}
-                          </p>
+                            {/* ================================================= */}
+                            {/* INSTRUCTOR */}
+                            {/* ================================================= */}
 
-
-                          {/* ================================================= */}
-                          {/* ACTION */}
-                          {/* ================================================= */}
-
-                          <div className="flex flex-wrap items-center gap-3">
-
-                            {/* Countdown Timer */}
-                            {timeLeft2 > 0 && (
+                            <div className="flex items-center gap-3 mb-3">
+                              {/* Instructor Image */}
                               <div
                                 className="
-        inline-flex
-        items-center
-        justify-center
-        min-h-[34px]
-        px-4
-        sm:px-5
-        rounded-[9px]
-        bg-[#fff1eb]
-        border
-        border-[#ff7148]
-        text-[#ff7148]
-        text-[14px]
-        sm:text-[15px]
-        font-medium
-      "
+                  w-[52px]
+                  h-[52px]
+                  shrink-0
+                  rounded-full
+                  border-2
+                  border-[#ff704c]
+                  overflow-hidden
+                  bg-[#fff3ed]
+                "
                               >
-                                Starts in {formatTime2(timeLeft2)}
+                                <img
+                                  src="https://cdn-icons-png.flaticon.com/512/709/709699.png"
+                                  alt={instructor?.name || "Instructor"}
+                                  className="w-full h-full object-cover"
+                                />
                               </div>
-                            )}
 
-                            {/* View Session */}
-                            {showSessionButton && (
-                              <Link to={content?.meetingId || "#"}>
-                                <button
+                              {/* Instructor Details */}
+                              <div className="min-w-0">
+                                <p
                                   className="
-        w-full
-        items-center
-        justify-center
-        min-h-[34px]
-        px-4
-        sm:px-5
-        rounded-[9px]
-        bg-[#ff7148]
-        hover:bg-[#ff6338]
-        text-white
-        text-[14px]
-        sm:text-[15px]
-        font-medium
-        transition-colors
-        duration-200
-      "
+                    text-[15px]
+                    sm:text-[16px]
+                    leading-tight
+                    font-semibold
+                    text-[#15182d]
+                  "
                                 >
-                                  View Session
-                                </button>
-                              </Link>
-                            )}
-                          </div>
+                                  Instructor:{" "}
+                                  <span className="text-[#ff613f]">
+                                    {instructor?.name}
+                                  </span>
+                                </p>
 
+                                <p
+                                  className="
+                    text-[13px]
+                    sm:text-[14px]
+                    text-[#777777]
+                    mt-1
+                  "
+                                >
+                                  PTE Expert & English Language Trainer
+                                </p>
+                              </div>
+                            </div>
+
+
+                            <p
+                              className="
+                max-w-[620px]
+                text-[14px]
+                sm:text-[15px]
+                leading-[1.45]
+                text-[#606060]
+                mb-5
+                line-clamp-3
+              "
+                            >
+                              {course?.description}
+                            </p>
+
+                            <div className="flex flex-wrap items-center gap-3">
+                              {/* Countdown Timer */}
+                              {timeLeft2 > 0 && (
+                                <div
+                                  className="
+          inline-flex
+          items-center
+          justify-center
+          min-h-[34px]
+          px-4
+          sm:px-5
+          rounded-[9px]
+          bg-[#fff1eb]
+          border
+          border-[#ff7148]
+          text-[#ff7148]
+          text-[14px]
+          sm:text-[15px]
+          font-medium
+        "
+                                >
+                                  Starts in {formatTime2(timeLeft2)}
+                                </div>
+                              )}
+
+                              {/* View Session */}
+                              {showSessionButton && (
+                                <Link to={content?.meetingId || "#"}>
+                                  <button
+                                    className="
+          w-full
+          items-center
+          justify-center
+          min-h-[34px]
+          px-4
+          sm:px-5
+          rounded-[9px]
+          bg-[#ff7148]
+          hover:bg-[#ff6338]
+          text-white
+          text-[14px]
+          sm:text-[15px]
+          font-medium
+          transition-colors
+          duration-200
+        "
+                                  >
+                                    View Session
+                                  </button>
+                                </Link>
+                              )}
+                            </div>
+                          </div>
                         </div>
                       </div>
-                    </div>
-                  )}
-                </div>
+                    )}
+                  </div>
 
-                {/* ========================================================= */}
-                {/* SESSION MATERIAL */}
-                {/* ========================================================= */}
-               <div className="flex flex-col gap-4">
-  {allcontent?.relatedMaterials?.length > 0 ? (
-    /* ========================================================= */
-    /* SESSION MATERIAL */
-    /* ========================================================= */
-    <div className="bg-gradient-to-b from-white via-gray-50 to-gray-300 p-[1.5px] rounded-[20px]">
-      <div
-        className="
-          w-full
-          rounded-[20px]
-          bg-white
-          px-4
-          py-5
-          sm:px-5
-          md:px-7
-          md:py-6
-        "
-      >
-        {/* Header */}
-        <div className="flex items-center justify-between gap-4 mb-5">
-          <h2
-            className="
-              text-[16px]
-              sm:text-[17px]
+
+                  <div className="flex flex-col gap-4">
+                    {allcontent?.relatedMaterials?.length > 0 ? (
+                      
+                      <div className="bg-gradient-to-b from-white via-gray-50 to-gray-300 p-[1.5px] rounded-[20px]">
+                        <div
+                          className="
+            w-full
+            rounded-[20px]
+            bg-white
+            px-4
+            py-5
+            sm:px-5
+            md:px-7
+            md:py-6
+          "
+                        >
+                          {/* Header */}
+                          <div className="flex items-center justify-between gap-4 mb-5">
+                            <h2
+                              className="
+                text-[16px]
+                sm:text-[17px]
+                font-semibold
+                text-[#1c1c1c]
+              "
+                            >
+                              Session Material
+                            </h2>
+
+                            <button
+                              className="
+                shrink-0
+                text-[12px]
+                sm:text-[13px]
+                font-medium
+                text-[#ff6b3d]
+                hover:text-[#f45128]
+                transition-colors
+              "
+                            >
+                              View All &gt;
+                            </button>
+                          </div>
+
+                          {/* Material List */}
+                          <div className="space-y-3">
+                            {allcontent?.relatedMaterials
+                              ?.slice(0, 4)
+                              ?.map((material, index) => (
+                                <div
+                                  key={material?.id || index}
+                                  className="
+                    w-full
+                    flex
+                    items-center
+                    gap-3
+                    sm:gap-4
+                    rounded-[13px]
+                    border
+                    border-[#f2dfd5]
+                    bg-[#fff8f2]
+                    px-3
+                    sm:px-4
+                    py-3
+                    sm:py-3.5
+                  "
+                                >
+                                  {/* PDF Icon */}
+                                  <div
+                                    className="
+                      w-[38px]
+                      h-[38px]
+                      sm:w-[40px]
+                      sm:h-[40px]
+                      shrink-0
+                      rounded-[9px]
+                      bg-[#d91b0b]
+                      flex
+                      items-center
+                      justify-center
+                      overflow-hidden
+                    "
+                                  >
+                                    <img
+                                      src="/images/pdf.webp"
+                                      alt="PDF"
+                                      className="w-full h-full object-contain"
+                                    />
+                                  </div>
+
+                                  {/* Material Info */}
+                                  <div className="flex-1 min-w-0">
+                                    <h3
+                                      className="
+                        text-[13px]
+                        sm:text-[14px]
+                        font-medium
+                        text-[#202020]
+                        truncate
+                      "
+                                    >
+                                      {material.title}
+                                    </h3>
+
+                                    <p
+                                      className="
+                        text-[11px]
+                        sm:text-[12px]
+                        text-[#858585]
+                        mt-0.5
+                      "
+                                    >
+                                      PDF · 2.4 MB
+                                    </p>
+                                  </div>
+
+                                  {/* Arrow */}
+                                  <Link
+                                    to={`/resources/${material.slug}`}
+                                    className="
+                      w-[34px]
+                      h-[34px]
+                      shrink-0
+                      rounded-[9px]
+                      border
+                      border-[#efdfd5]
+                      bg-[#fffaf6]
+                      flex
+                      items-center
+                      justify-center
+                      text-[#9b918b]
+                      hover:text-[#ff6b3d]
+                      hover:border-[#ffc8b5]
+                      transition-all
+                    "
+                                  >
+                                    <MoveRight className="w-4 h-4" />
+                                  </Link>
+                                </div>
+                              ))}
+                          </div>
+                        </div>
+                      </div>
+                    ) : (
+                      
+                      <div className="bg-gradient-to-b from-white via-gray-50 to-gray-300 p-[1.5px] rounded-[20px]">
+                        <div
+                          className="
+            w-full
+            min-h-[220px]
+            rounded-[20px]
+            bg-white
+            px-5
+            py-8
+            sm:px-6
+            md:px-7
+            flex
+            flex-col
+            items-center
+            justify-center
+            text-center
+          "
+                        >
+                          {/* Icon */}
+                          <div
+                            className="
+              w-[58px]
+              h-[58px]
+              sm:w-[64px]
+              sm:h-[64px]
+              rounded-full
+              bg-[#fff1eb]
+              border
+              border-[#ffd8ca]
+              flex
+              items-center
+              justify-center
+              mb-4
+            "
+                          >
+                            <FileText
+                              className="w-7 h-7 sm:w-8 sm:h-8 text-[#ff7148]"
+                              strokeWidth={1.8}
+                            />
+                          </div>
+
+                          {/* Title */}
+                          <h2
+                            className="
+              text-[17px]
+              sm:text-[18px]
               font-semibold
-              text-[#1c1c1c]
+              text-[#202020]
+              mb-1.5
             "
-          >
-            Session Material
-          </h2>
+                          >
+                            No Study Material
+                          </h2>
 
-          <button
-            className="
-              shrink-0
-              text-[12px]
-              sm:text-[13px]
-              font-medium
-              text-[#ff6b3d]
-              hover:text-[#f45128]
-              transition-colors
+                          {/* Description */}
+                          <p
+                            className="
+              max-w-[420px]
+              text-[13px]
+              sm:text-[14px]
+              leading-relaxed
+              text-[#888888]
             "
-          >
-            View All &gt;
-          </button>
-        </div>
+                          >
+                            Study materials for this session will appear here
+                            when they are available.
+                          </p>
+                        </div>
+                      </div>
+                    )}
 
-        {/* Material List */}
-        <div className="space-y-3">
-          {allcontent?.relatedMaterials
-            ?.slice(0, 4)
-            ?.map((material, index) => (
-              <div
-                key={material?.id || index}
-                className="
-                  w-full
+
+                    <div className="bg-gradient-to-b from-white via-gray-50 to-gray-300 p-[1.5px] rounded-[20px]">
+                      {/* Your existing About This Session code */}
+                    </div>
+                  </div>
+                </div>
+              ) : activeTab === "Material" ? (
+                <>
+                  {allcontent?.relatedMaterials?.length > 0 ? (
+                    <div className="p-4 bg-white rounded-lg border border-orange-500/40">
+                      {allcontent?.relatedMaterials?.map(
+                        (pdf: any, index: number) => (
+                          <div
+                            key={pdf?.id || index}
+                            className="
+            w-full
+            rounded-[20px]
+            bg-[#fff9e6]
+            p-3
+            sm:p-4
+            md:p-4
+            my-4
+          "
+                          >
+                            <div
+                              className="
+              flex
+              flex-col
+              gap-4
+              sm:flex-row
+              sm:items-center
+              sm:gap-5
+            "
+                            >
+                              {/* ================= PDF ICON ================= */}
+                              <div
+                                className="
+                flex
+                h-[72px]
+                w-[72px]
+                shrink-0
+                items-center
+                justify-center
+                rounded-[15px]
+                bg-white
+                p-2
+                shadow-sm
+                sm:h-[80px]
+                sm:w-[80px]
+                md:h-[70px]
+                md:w-[70px]
+              "
+                              >
+                                <div
+                                  className="
                   flex
+                  h-full
+                  w-full
                   items-center
-                  gap-3
-                  sm:gap-4
+                  justify-center
                   rounded-[13px]
-                  border
-                  border-[#f2dfd5]
-                  bg-[#fff8f2]
-                  px-3
-                  sm:px-4
-                  py-3
-                  sm:py-3.5
                 "
-              >
-                {/* PDF Icon */}
-                <div
-                  className="
-                    w-[38px]
-                    h-[38px]
-                    sm:w-[40px]
-                    sm:h-[40px]
+                                >
+                                  <div
+                                    className={`
+                    w-[42px]
+                    h-[42px]
+                    sm:w-[44px]
+                    sm:h-[44px]
                     shrink-0
-                    rounded-[9px]
-                    bg-[#d91b0b]
+                    rounded-[10px]
                     flex
                     items-center
                     justify-center
                     overflow-hidden
-                  "
-                >
-                  <img
-                    src="/images/pdf.webp"
-                    alt="PDF"
-                    className="w-full h-full object-contain"
-                  />
-                </div>
 
-                {/* Material Info */}
-                <div className="flex-1 min-w-0">
-                  <h3
-                    className="
-                      text-[13px]
-                      sm:text-[14px]
-                      font-medium
-                      text-[#202020]
-                      truncate
-                    "
-                  >
-                    {material.title}
-                  </h3>
+                    ${
+                      pdf?.materialType === "pdf"
+                        ? "bg-transparent"
+                        : pdf?.materialType === "document"
+                          ? "bg-[#b60801]"
+                          : pdf?.materialType === "link"
+                            ? "bg-[#b60801]"
+                            : pdf?.materialType === "image"
+                              ? "bg-[#b60801]"
+                              : pdf?.materialType === "audio"
+                                ? "bg-[#b60801]"
+                                : "bg-[#b60801]"
+                    }
+                  `}
+                                  >
+                                    <MaterialIcon type={pdf?.materialType} />
+                                  </div>
+                                </div>
+                              </div>
 
-                  <p
-                    className="
-                      text-[11px]
-                      sm:text-[12px]
-                      text-[#858585]
-                      mt-0.5
-                    "
-                  >
-                    PDF · 2.4 MB
-                  </p>
-                </div>
+                              {/* ================= CONTENT ================= */}
+                              <div className="w-full min-w-0 flex-1">
+                                <h3
+                                  className="
+                  text-base
+                  font-medium
+                  leading-tight
+                  text-gray-900
+                  sm:text-lg
+                  md:text-base
+                  line-clamp-2
+                "
+                                >
+                                  {pdf?.title ||
+                                    "IELTS Academic Writing Task 2 Practice Set"}
+                                </h3>
 
-                {/* Arrow */}
-                <Link
-                  to={`/resources/${material.slug}`}
-                  className="
-                    w-[34px]
-                    h-[34px]
-                    shrink-0
-                    rounded-[9px]
-                    border
-                    border-[#efdfd5]
-                    bg-[#fffaf6]
-                    flex
-                    items-center
-                    justify-center
-                    text-[#9b918b]
-                    hover:text-[#ff6b3d]
-                    hover:border-[#ffc8b5]
-                    transition-all
-                  "
-                >
-                  <MoveRight className="w-4 h-4" />
-                </Link>
-              </div>
-            ))}
-        </div>
-      </div>
-    </div>
-  ) : (
-    /* ========================================================= */
-    /* NO SESSION MATERIAL */
-    /* ========================================================= */
-    <div className="bg-gradient-to-b from-white via-gray-50 to-gray-300 p-[1.5px] rounded-[20px]">
-      <div
-        className="
-          w-full
-          min-h-[220px]
-          rounded-[20px]
-          bg-white
-          px-5
-          py-8
-          sm:px-6
-          md:px-7
-          flex
-          flex-col
-          items-center
-          justify-center
-          text-center
-        "
-      >
-        {/* Icon */}
-        <div
-          className="
-            w-[58px]
-            h-[58px]
-            sm:w-[64px]
-            sm:h-[64px]
-            rounded-full
-            bg-[#fff1eb]
-            border
-            border-[#ffd8ca]
-            flex
-            items-center
-            justify-center
-            mb-4
-          "
-        >
-          <FileText
-            className="w-7 h-7 sm:w-8 sm:h-8 text-[#ff7148]"
-            strokeWidth={1.8}
-          />
-        </div>
+                                <p
+                                  className="
+                  mt-1
+                  w-full
+                  lg:w-[280px]
+                  text-sm
+                  leading-5
+                  text-gray-500
+                  sm:text-sm
+                  line-clamp-2
+                "
+                                >
+                                  {pdf?.description ||
+                                    "50+ practice questions with model answers for band 7+"}
+                                </p>
+                              </div>
 
-        {/* Title */}
-        <h2
-          className="
-            text-[17px]
-            sm:text-[18px]
-            font-semibold
-            text-[#202020]
-            mb-1.5
-          "
-        >
-          No Study Material
-        </h2>
-
-        {/* Description */}
-        <p
-          className="
-            max-w-[420px]
-            text-[13px]
-            sm:text-[14px]
-            leading-relaxed
-            text-[#888888]
-          "
-        >
-          Study materials for this session will appear here when they are
-          available.
-        </p>
-      </div>
-    </div>
-  )}
-
-  {/* ========================================================= */}
-  {/* ABOUT THIS SESSION */}
-  {/* ========================================================= */}
-
-  <div className="bg-gradient-to-b from-white via-gray-50 to-gray-300 p-[1.5px] rounded-[20px]">
-    {/* Your existing About This Session code */}
-  </div>
-</div>
-
-
-
-              </div>) :
-                activeTab === "Material" ? (
-                  <>
-                 {allcontent?.relatedMaterials?.length > 0 ? (
-  <div className="p-4 bg-white rounded-lg border border-orange-500/40">
-    {allcontent?.relatedMaterials?.map((pdf: any, index: number) => (
-      <div
-        key={pdf?.id || index}
-        className="
-          w-full
-          rounded-[20px]
-          bg-[#fff9e6]
-          p-3
-          sm:p-4
-          md:p-4
-          my-4
-        "
-      >
-        <div
-          className="
-            flex
-            flex-col
-            gap-4
-            sm:flex-row
-            sm:items-center
-            sm:gap-5
-          "
-        >
-          {/* ================= PDF ICON ================= */}
-          <div
-            className="
-              flex
-              h-[72px]
-              w-[72px]
-              shrink-0
-              items-center
-              justify-center
-              rounded-[15px]
-              bg-white
-              p-2
-              shadow-sm
-              sm:h-[80px]
-              sm:w-[80px]
-              md:h-[70px]
-              md:w-[70px]
-            "
-          >
-            <div
-              className="
+                              {/* ================= BUTTONS ================= */}
+                              <div
+                                className="
                 flex
-                h-full
                 w-full
-                items-center
-                justify-center
-                rounded-[13px]
+                shrink-0
+                flex-col
+                gap-2
+                sm:w-auto
+                sm:flex-row
+                sm:items-center
+                sm:gap-3
+                sm:mr-0
               "
-            >
-              <div
-                className={`
-                  w-[42px]
-                  h-[42px]
-                  sm:w-[44px]
-                  sm:h-[44px]
-                  shrink-0
-                  rounded-[10px]
-                  flex
+                              >
+                                {/* View */}
+                                <Link
+                                  to={`/resources/${pdf?.slug || "#"}`}
+                                  className="
+                  inline-flex
+                  h-[38px]
+                  w-full
                   items-center
                   justify-center
-                  overflow-hidden
+                  rounded-[8px]
+                  border
+                  border-[#FF7148]
+                  bg-white
+                  px-5
+                  text-sm
+                  font-medium
+                  text-black
+                  transition-all
+                  duration-200
+                  hover:bg-orange-50
+                  active:scale-[0.98]
+                  sm:w-[120px]
+                "
+                                >
+                                  View PDF
+                                </Link>
+                              </div>
+                            </div>
+                          </div>
+                        ),
+                      )}
+                    </div>
+                  ) : (
+                    <div className="bg-gradient-to-b from-white via-gray-50 to-gray-300 p-[1.5px] rounded-[20px]">
+                      <div
+                        className="
+            w-full
+            min-h-[220px]
+            rounded-[20px]
+            bg-white
+            px-5
+            py-8
+            sm:px-6
+            md:px-7
+            flex
+            flex-col
+            items-center
+            justify-center
+            text-center
+          "
+                      >
+                        {/* Icon */}
+                        <div
+                          className="
+              w-[58px]
+              h-[58px]
+              sm:w-[64px]
+              sm:h-[64px]
+              rounded-full
+              bg-[#fff1eb]
+              border
+              border-[#ffd8ca]
+              flex
+              items-center
+              justify-center
+              mb-4
+            "
+                        >
+                          <FileText
+                            className="w-7 h-7 sm:w-8 sm:h-8 text-[#ff7148]"
+                            strokeWidth={1.8}
+                          />
+                        </div>
 
-                  ${
-                    pdf?.materialType === "pdf"
-                      ? "bg-transparent"
-                      : pdf?.materialType === "document"
-                      ? "bg-[#b60801]"
-                      : pdf?.materialType === "link"
-                      ? "bg-[#b60801]"
-                      : pdf?.materialType === "image"
-                      ? "bg-[#b60801]"
-                      : pdf?.materialType === "audio"
-                      ? "bg-[#b60801]"
-                      : "bg-[#b60801]"
-                  }
-                `}
-              >
-                <MaterialIcon type={pdf?.materialType} />
-              </div>
+                        {/* Title */}
+                        <h2
+                          className="
+              text-[17px]
+              sm:text-[18px]
+              font-semibold
+              text-[#202020]
+              mb-1.5
+            "
+                        >
+                          No Study Material
+                        </h2>
+
+                        {/* Description */}
+                        <p
+                          className="
+              max-w-[420px]
+              text-[13px]
+              sm:text-[14px]
+              leading-relaxed
+              text-[#888888]
+            "
+                        >
+                          Study materials for this session will appear here when
+                          they are available.
+                        </p>
+                      </div>
+                    </div>
+                  )}
+                </>
+              ) : activeTab === "Trainer" ? (
+                <>
+                
+    <section className="w-full px-4 py-8 md:px-8">
+      <div className="mx-auto max-w-6xl">
+        <div className="relative min-h-[260px] overflow-hidden rounded-[24px] border border-[#f4d6c9] bg-[#fffdfb] shadow-sm">
+          {/* Orange Left Panel */}
+          <div className="absolute left-0 top-0 h-full w-[102px] bg-[#ff711f] md:w-[112px]" />
+
+          {/* Trainer Image */}
+          <div className="absolute left-[20px] top-1/2 z-10 flex h-[145px] w-[145px] -translate-y-1/2 items-center justify-center rounded-full border-[7px] border-white bg-[#fff] shadow-md md:left-[38px] md:h-[170px] md:w-[170px]">
+            <div className="relative h-full w-full overflow-hidden rounded-full">
+              <img src={`https://res.cloudinary.com/dd5s7qpsc/image/upload/${instructor?.profilePic}`} alt={instructor?.name} className="object-cover h-full w-full" sizes="170px" />
             </div>
           </div>
 
-          {/* ================= CONTENT ================= */}
-          <div className="w-full min-w-0 flex-1">
-            <h3
-              className="
-                text-base
-                font-medium
-                leading-tight
-                text-gray-900
-                sm:text-lg
-                md:text-base
-                line-clamp-2
-              "
-            >
-              {pdf?.title ||
-                "IELTS Academic Writing Task 2 Practice Set"}
-            </h3>
-
-            <p
-              className="
-                mt-1
-                w-full
-                lg:w-[280px]
-                text-sm
-                leading-5
-                text-gray-500
-                sm:text-sm
-                line-clamp-2
-              "
-            >
-              {pdf?.description ||
-                "50+ practice questions with model answers for band 7+"}
-            </p>
+          {/* Counter */}
+          <div className="absolute right-6 top-4 z-20 text-[12px] font-medium text-[#d99a7a]">
+            {/*of*/}
           </div>
 
-          {/* ================= BUTTONS ================= */}
-          <div
-            className="
-              flex
-              w-full
-              shrink-0
-              flex-col
-              gap-2
-              sm:w-auto
-              sm:flex-row
-              sm:items-center
-              sm:gap-3
-              sm:mr-0
-            "
-          >
-            {/* View */}
-            <Link
-              to={`/resources/${pdf?.slug || "#"}`}
-              className="
-                inline-flex
-                h-[38px]
-                w-full
-                items-center
-                justify-center
-                rounded-[8px]
-                border
-                border-[#FF7148]
-                bg-white
-                px-5
-                text-sm
-                font-medium
-                text-black
-                transition-all
-                duration-200
-                hover:bg-orange-50
-                active:scale-[0.98]
-                sm:w-[120px]
-              "
-            >
-              View PDF
-            </Link>
+          {/* Content */}
+          <div className="relative z-10 ml-[130px] min-h-[260px] px-5 py-7 pr-16 md:ml-[200px] md:px-8 md:py-6 md:pr-20">
+            {/* Name */}
+            <h2 className="text-[22px] font-bold leading-tight text-[#303030] md:text-[25px]">
+              {instructor?.name}
+            </h2>
 
-          
+            {/* Designation */}
+            <div className="mt-1">
+              <span className="inline-block rounded-sm bg-[#fff0e8] px-2 py-[3px] text-[11px] font-semibold text-[#f47735]">
+                {instructor?.role || "Sinner trainer"}
+              </span>
+            </div>
+
+            {/* Info Row */}
+            <div className="mt-2 flex flex-wrap items-center gap-x-8 gap-y-1 text-[12px] text-[#555]">
+              <div className="flex items-center gap-1.5">
+                <Star size={12} className="fill-[#f6b900] text-[#f6b900]" />
+                <span>{instructor?.experience || '4 years'}</span>
+              </div>
+              {/* <div className="flex items-center gap-1.5">
+                <span className="text-[#e58a52]">▤</span>
+                <span>{instructor?.certification || "--"}</span>
+              </div> */}
+            </div>
+
+            {/* Specialization */}
+            <div className="mt-2">
+              <p className="text-[12px] font-medium text-[#f47735]">
+                Specialization
+              </p>
+              <p className="mt-0.5 text-[12px] text-[#555]">
+                {instructor?.skills?.join(' ,')}
+              </p>
+            </div>
+
+            {/* About */}
+            <div className="mt-2 max-w-[720px]">
+              <h3 className="text-[16px] font-semibold text-[#f47735]">
+                About the Trainer
+              </h3>
+              <p className="mt-0.5 text-[12px] leading-[1.65] text-[#3f3f3f] md:text-[13px]">
+                {instructor?.profile?.bio}
+              </p>
+            </div>
+
           </div>
         </div>
       </div>
-    ))}
-  </div>
-):(
-   <div className="bg-gradient-to-b from-white via-gray-50 to-gray-300 p-[1.5px] rounded-[20px]">
-      <div
-        className="
-          w-full
-          min-h-[220px]
-          rounded-[20px]
-          bg-white
-          px-5
-          py-8
-          sm:px-6
-          md:px-7
-          flex
-          flex-col
-          items-center
-          justify-center
-          text-center
-        "
-      >
-        {/* Icon */}
-        <div
-          className="
-            w-[58px]
-            h-[58px]
-            sm:w-[64px]
-            sm:h-[64px]
-            rounded-full
-            bg-[#fff1eb]
-            border
-            border-[#ffd8ca]
-            flex
-            items-center
-            justify-center
-            mb-4
-          "
-        >
-          <FileText
-            className="w-7 h-7 sm:w-8 sm:h-8 text-[#ff7148]"
-            strokeWidth={1.8}
-          />
-        </div>
-
-        {/* Title */}
-        <h2
-          className="
-            text-[17px]
-            sm:text-[18px]
-            font-semibold
-            text-[#202020]
-            mb-1.5
-          "
-        >
-          No Study Material
-        </h2>
-
-        {/* Description */}
-        <p
-          className="
-            max-w-[420px]
-            text-[13px]
-            sm:text-[14px]
-            leading-relaxed
-            text-[#888888]
-          "
-        >
-          Study materials for this session will appear here when they are
-          available.
-        </p>
-      </div>
-    </div>
-)}
-                  </>
-                ) 
-                :
-                 (
-                  <div
-  className="
-    w-full
-    rounded-[14px]
-    border
-    border-[#ffcfbf]
-    bg-white
-    px-4
-    py-4
-    sm:px-5
-    sm:py-5
-  "
->
-  {/* ================= MONTH HEADER ================= */}
-
-
-  {/* ================= TIMELINE ================= */}
-  <div className="relative">
-    {/* Vertical line */}
-    <div
-      className="
-        absolute
-        left-[21px]
-        sm:left-0
-        top-0
-        bottom-0
-        w-[1px]
-        bg-[#d8d8d8]
-      "
-    />
-
-    <div className="space-y-3 sm:space-y-4">
-      {allcontent?.relatedSessions?.map(
-        (session: any, index: number) => {
-          const startDate = session?.scheduledStart
-            ? new Date(session.scheduledStart)
-            : null;
-
-          const endDate = session?.scheduledEnd
-            ? new Date(session.scheduledEnd)
-            : null;
-
-          const date = startDate
-            ? startDate
-                .toLocaleDateString("en-GB", {
-                  day: "2-digit",
-                  month: "short",
-                  weekday: "short",
-                })
-                .toUpperCase()
-            : "";
-
-          const time =
-            startDate && endDate
-              ? `${startDate.toLocaleTimeString("en-US", {
-                  hour: "2-digit",
-                  minute: "2-digit",
-                })} to ${endDate.toLocaleTimeString("en-US", {
-                  hour: "2-digit",
-                  minute: "2-digit",
-                })}`
-              : "";
-
-          return (
-            <div
-              key={session?.id || index}
-              className="
-                relative
-                grid
-                grid-cols-[125px_minmax(0,1fr)]
-                sm:grid-cols-[0.4fr_1.6fr]
-                gap-3
-                sm:gap-4
-                items-center
-              "
-            >
-              {/* ================= TIMELINE DOT ================= */}
-              <div
-                className="
-                  absolute
-                  left-[16px]
-                  sm:left-0
-                  top-1/2
-                  -translate-y-1/2
-                  z-10
-                  w-[10px]
-                  h-[10px]
-                  rounded-full
-                  border-2
-                  border-white
-                  bg-[#ffe3d7]
-                "
-              />
-
-              {/* Active dot */}
-              {index === 0 && (
+    </section>
+                 {/* <TrainerSection /> */}
+                </>
+             
+              ) : (
                 <div
                   className="
+      w-full
+      rounded-[14px]
+      border
+      border-[#ffcfbf]
+      bg-white
+      px-4
+      py-4
+      sm:px-5
+      sm:py-5
+    "
+                >
+                  {/* ================= MONTH HEADER ================= */}
+
+                  {/* ================= TIMELINE ================= */}
+                  <div className="relative">
+                    {/* Vertical line */}
+                    <div
+                      className="
+          absolute
+          left-[21px]
+          sm:left-0
+          top-0
+          bottom-0
+          w-[1px]
+          bg-[#d8d8d8]
+        "
+                    />
+
+                    <div className="space-y-3 sm:space-y-4">
+                      {allcontent?.relatedSessions?.map(
+                        (session: any, index: number) => {
+                          const startDate = session?.scheduledStart
+                            ? new Date(session.scheduledStart)
+                            : null;
+
+                          const endDate = session?.scheduledEnd
+                            ? new Date(session.scheduledEnd)
+                            : null;
+
+                          const date = startDate
+                            ? startDate
+                                .toLocaleDateString("en-GB", {
+                                  day: "2-digit",
+                                  month: "short",
+                                  weekday: "short",
+                                })
+                                .toUpperCase()
+                            : "";
+
+                          const time =
+                            startDate && endDate
+                              ? `${startDate.toLocaleTimeString("en-US", {
+                                  hour: "2-digit",
+                                  minute: "2-digit",
+                                })} to ${endDate.toLocaleTimeString("en-US", {
+                                  hour: "2-digit",
+                                  minute: "2-digit",
+                                })}`
+                              : "";
+
+                          return (
+                            <div
+                              key={session?.id || index}
+                              className="
+                  relative
+                  grid
+                  grid-cols-[125px_minmax(0,1fr)]
+                  sm:grid-cols-[0.4fr_1.6fr]
+                  gap-3
+                  sm:gap-4
+                  items-center
+                "
+                            >
+                              {/* ================= TIMELINE DOT ================= */}
+                              <div
+                                className="
                     absolute
                     left-[16px]
                     sm:left-0
                     top-1/2
                     -translate-y-1/2
-                    z-20
+                    z-10
                     w-[10px]
                     h-[10px]
                     rounded-full
-                    bg-[#ff7148]
                     border-2
                     border-white
+                    bg-[#ffe3d7]
                   "
-                />
-              )}
+                              />
 
-              {/* ================= DATE CARD ================= */}
-              <div
-                className="
-                  relative
-                  ml-[29px]
-                  sm:ml-[22px]
-                  rounded-[10px]
-                  bg-white
-                  border
-                  border-[#f0f0f0]
-                  shadow-[0_2px_8px_rgba(0,0,0,0.06)]
-                  overflow-hidden
-                "
-              >
-                {/* Date */}
-                <div
-                  className="
-                    mx-1
-                    mt-1
-                    rounded-[8px]
-                    bg-[#fff4ef]
-                    px-2
-                    py-2
-                    text-center
-                  "
-                >
-                  <p
-                    className="
-                      text-[11px]
-                      sm:text-[12px]
-                      font-semibold
-                      text-[#ff7148]
-                      uppercase
+                              {/* Active dot */}
+                              {index === 0 && (
+                                <div
+                                  className="
+                      absolute
+                      left-[16px]
+                      sm:left-0
+                      top-1/2
+                      -translate-y-1/2
+                      z-20
+                      w-[10px]
+                      h-[10px]
+                      rounded-full
+                      bg-[#ff7148]
+                      border-2
+                      border-white
                     "
-                  >
-                    {date}
-                  </p>
-                </div>
+                                />
+                              )}
 
-                {/* Time */}
-                <p
-                  className="
-                    px-2
-                    py-2
-                    text-center
-                    text-[10px]
-                    sm:text-[11px]
-                    text-gray-800
-                    whitespace-nowrap
+                              {/* ================= DATE CARD ================= */}
+                              <div
+                                className="
+                    relative
+                    ml-[29px]
+                    sm:ml-[22px]
+                    rounded-[10px]
+                    bg-white
+                    border
+                    border-[#f0f0f0]
+                    shadow-[0_2px_8px_rgba(0,0,0,0.06)]
+                    overflow-hidden
                   "
-                >
-                  {time}
-                </p>
-              </div>
-
-              {/* ================= SESSION CARD ================= */}
-              <div
-                className={`
-                  relative
-                  min-w-0
-                  rounded-[13px]
-                 
-                  px-3
-                  py-3
-                  sm:px-4
-                  sm:py-3
-                  shadow-[0_2px_8px_rgba(0,0,0,0.06)]
-                  transition-all
-                  duration-200
-                
-
-                  ${
-                    index === 0
-                      ? " bg-gradient-to-r from-[#ffeee2] to-[#fff4ef]"
-                      : "border-[#eeeeee] hover:bg-gradient-to-r from-[#ffeee2] to-[#fff4ef] hover:border-[#ffd3c4] hover:shadow-[0_3px_10px_rgba(255,113,72,0.10)]"
-                  }
-                `}
-              >
-                <div
-                  className="
-                    flex
-                    flex-col
-                    gap-3
-                    sm:flex-row
-                    sm:items-center
-                    sm:justify-between
-                  "
-                >
-                  {/* ================= SESSION INFO ================= */}
-                  <div className="min-w-0 flex-1">
-                    {/* Session number */}
-                    <p
-                      className="
-                        text-[9px]
-                        sm:text-[10px]
-                        uppercase
-                        font-medium
-                        text-[#888888]
-                        leading-none
-                        mb-0.5
-                      "
-                    >
-                      SESSION {String(index).padStart(1, "1")}
-                    </p>
-
-                    {/* Title */}
-                    <h3
-                      className="
-                        text-[13px]
-                        sm:text-base
+                              >
+                                {/* Date */}
+                                <div
+                                  className="
+                      mx-1
+                      mt-1
+                      rounded-[8px]
+                      bg-[#fff4ef]
+                      px-2
+                      py-2
+                      text-center
+                    "
+                                >
+                                  <p
+                                    className="
+                        text-[11px]
+                        sm:text-[12px]
                         font-semibold
-                        text-[#252525]
-                        leading-tight
-                        line-clamp-2
-                        sm:w-90
-                      "
-                    >
-                      {session?.title}
-                    </h3>
-
-                    {/* Category */}
-                    <p
-                      className="
-                        text-[10px]
-                        sm:text-sm
-                        font-medium
                         text-[#ff7148]
-                        leading-tight
-                        mt-0.5
+                        uppercase
                       "
-                    >
-                      IELTS English
-                    </p>
+                                  >
+                                    {date}
+                                  </p>
+                                </div>
 
-                    {/* Instructor */}
-                    <div
-                      className="
-                        flex
-                        items-center
-                        gap-1
-                        mt-1
-                      "
-                    >
-                      <User
-                        className="w-[14px] h-[14px] text-[#ff7148]"
-                        strokeWidth={2.5}
-                        fill="#f36d45"
-                      />
+                                {/* Time */}
+                                <p
+                                  className="
+                      px-2
+                      py-2
+                      text-center
+                      text-[10px]
+                      sm:text-[11px]
+                      text-gray-800
+                      whitespace-nowrap
+                    "
+                                >
+                                  {time}
+                                </p>
+                              </div>
 
-                      <span
-                        className="
+                              {/* ================= SESSION CARD ================= */}
+                              <div
+                                className={`
+                    relative
+                    min-w-0
+                    rounded-[13px]
+                  
+                    px-3
+                    py-3
+                    sm:px-4
+                    sm:py-3
+                    shadow-[0_2px_8px_rgba(0,0,0,0.06)]
+                    transition-all
+                    duration-200
+                  
+
+                    ${
+                      index === 0
+                        ? " bg-gradient-to-r from-[#ffeee2] to-[#fff4ef]"
+                        : "border-[#eeeeee] hover:bg-gradient-to-r from-[#ffeee2] to-[#fff4ef] hover:border-[#ffd3c4] hover:shadow-[0_3px_10px_rgba(255,113,72,0.10)]"
+                    }
+                  `}
+                              >
+                                <div
+                                  className="
+                      flex
+                      flex-col
+                      gap-3
+                      sm:flex-row
+                      sm:items-center
+                      sm:justify-between
+                    "
+                                >
+                                  {/* ================= SESSION INFO ================= */}
+                                  <div className="min-w-0 flex-1">
+                                    {/* Session number */}
+                                    <p
+                                      className="
+                          text-[9px]
+                          sm:text-[10px]
+                          uppercase
+                          font-medium
+                          text-[#888888]
+                          leading-none
+                          mb-0.5
+                        "
+                                    >
+                                      SESSION {String(index).padStart(1, "1")}
+                                    </p>
+
+                                    {/* Title */}
+                                    <h3
+                                      className="
+                          text-[13px]
+                          sm:text-base
+                          font-semibold
+                          text-[#252525]
+                          leading-tight
+                          line-clamp-2
+                          sm:w-90
+                        "
+                                    >
+                                      {session?.title}
+                                    </h3>
+
+                                    {/* Category */}
+                                    <p
+                                      className="
                           text-[10px]
                           sm:text-sm
-                          text-[#4f4f4f]
+                          font-medium
+                          text-[#ff7148]
+                          leading-tight
+                          mt-0.5
                         "
-                      >
-                        {session?.instructor?.name || "Rashmi"}
-                      </span>
+                                    >
+                                      IELTS English
+                                    </p>
+
+                                    {/* Instructor */}
+                                    <div
+                                      className="
+                          flex
+                          items-center
+                          gap-1
+                          mt-1
+                        "
+                                    >
+                                      <User
+                                        className="w-[14px] h-[14px] text-[#ff7148]"
+                                        strokeWidth={2.5}
+                                        fill="#f36d45"
+                                      />
+
+                                      <span
+                                        className="
+                            text-[10px]
+                            sm:text-sm
+                            text-[#4f4f4f]
+                          "
+                                      >
+                                        {session?.instructor?.name || "Rashmi"}
+                                      </span>
+                                    </div>
+                                  </div>
+
+                                  {/* ================= RIGHT SIDE ================= */}
+                                  <div
+                                    className="
+                        flex
+                        items-center
+                        justify-between
+                        sm:flex-row
+                        sm:items-end
+                        sm:justify-center
+                        gap-2
+                        shrink-0
+                      "
+                                  >
+                                    {/* Status */}
+                                    <span
+                                      className="
+                    
+                        
+                          inline-flex
+                          items-center
+                          justify-center
+                          min-w-[96px]
+                          sm:min-w-[116px]
+                          h-[28px]
+                          sm:h-[30px]
+                          rounded-[7px]
+                          bg-[#ffe3d6]
+                          px-3
+                          py-1
+                          text-[9px]
+                          sm:text-xs
+                          font-medium
+                          text-[#ff7148]
+                        "
+                                    >
+                                      Upcoming
+                                    </span>
+
+                                    {/* Join button */}
+                                    <Link
+                                      to={`/sessions/${session?.slug}`}
+                                      onClick={() => {
+                                        setActiveTab("Overview");
+                                      }}
+                                      className="
+                          inline-flex
+                          items-center
+                          justify-center
+                          min-w-[96px]
+                          sm:min-w-[116px]
+                          h-[28px]
+                          sm:h-[30px]
+                          rounded-[7px]
+                          bg-[#ff7148]
+                          hover:bg-[#ff6338]
+                          text-white
+                          text-[10px]
+                          sm:text-sm
+                          font-medium
+                          transition-colors
+                        "
+                                    >
+                                      Join Class
+                                      <span className="ml-1">›</span>
+                                    </Link>
+                                  </div>
+                                </div>
+                              </div>
+                            </div>
+                          );
+                        },
+                      )}
                     </div>
                   </div>
-
-                  {/* ================= RIGHT SIDE ================= */}
-                  <div
-                    className="
-                      flex
-                      items-center
-                      justify-between
-                      sm:flex-row
-                      sm:items-end
-                      sm:justify-center
-                      gap-2
-                      shrink-0
-                    "
-                  >
-                    {/* Status */}
-                    <span
-                      className="
-                   
-                      
-                        inline-flex
-                        items-center
-                        justify-center
-                         min-w-[96px]
-                        sm:min-w-[116px]
-                        h-[28px]
-                        sm:h-[30px]
-                        rounded-[7px]
-                        bg-[#ffe3d6]
-                        px-3
-                        py-1
-                        text-[9px]
-                        sm:text-xs
-                        font-medium
-                        text-[#ff7148]
-                      "
-                    >
-                      Upcoming
-                    </span>
-
-                    {/* Join button */}
-                    <Link
-                      to={`/sessions/${session?.slug}`}
-                      onClick={()=>{
-                        setActiveTab("Overview")
-                      }}
-                      className="
-                        inline-flex
-                        items-center
-                        justify-center
-                        min-w-[96px]
-                        sm:min-w-[116px]
-                        h-[28px]
-                        sm:h-[30px]
-                        rounded-[7px]
-                        bg-[#ff7148]
-                        hover:bg-[#ff6338]
-                        text-white
-                        text-[10px]
-                        sm:text-sm
-                        font-medium
-                        transition-colors
-                      "
-                    >
-                      Join Class
-                      <span className="ml-1">›</span>
-                    </Link>
-                  </div>
                 </div>
-              </div>
+              )}
             </div>
-          );
-        }
-      )}
-    </div>
-  </div>
-</div>
-                )
-              }
-            </div>
-
-            {/* ======================================================= */}
-            {/* RIGHT - PREVIOUS RECORDING */}
-            {/* ======================================================= */}
 
             <div
               className="
-          w-full
-          
-      
-          bg-white
-          border
-          border-[#ffd3c4]
-          rounded-[12px]
-          p-4
-          sm:px-3
-          sm:py-3
-        "
+            w-full
+            
+        
+            bg-white
+            border
+            border-[#ffd3c4]
+            rounded-[12px]
+            p-4
+            sm:px-3
+            sm:py-3
+          "
             >
-
               {/* Heading */}
               <h2
                 className="
-            text-[15px]
-            sm:text-[16px]
-            font-semibold
-            text-[#111827]
-            
-            border-b
-            border-[#eeeeee]
-          "
+              text-[15px]
+              sm:text-[16px]
+              font-semibold
+              text-[#111827]
+              
+              border-b
+              border-[#eeeeee]
+            "
               >
                 Course
               </h2>
-
 
               {/* ===================================================== */}
               {/* VIDEO THUMBNAIL */}
@@ -2294,30 +2274,27 @@ const MaterialIcon = ({ type }: { type: string }) => {
               <div className="mt-2">
                 <div
                   className="
-              relative
-              w-full
-              overflow-hidden
-              rounded-[10px]
-              bg-[#111111]
-              aspect-[1.9/1]
-            "
+                relative
+                w-full
+                overflow-hidden
+                rounded-[10px]
+                bg-[#111111]
+                aspect-[1.9/1]
+              "
                 >
                   <img
                     src={`${ImageBaseUrl}/${course?.thumbnail.url}`}
                     alt="Previous recording"
                     className="
-                absolute
-                inset-0
-                w-full
-                h-full
-                object-cover
-              "
+                  absolute
+                  inset-0
+                  w-full
+                  h-full
+                  object-cover
+                "
                   />
-
-
                 </div>
               </div>
-
 
               {/* ===================================================== */}
               {/* RECORDING INFORMATION */}
@@ -2326,62 +2303,59 @@ const MaterialIcon = ({ type }: { type: string }) => {
               <div className="mt-3">
                 <h3
                   className="
-              text-[13px]
-              sm:text-[14px]
-              font-semibold
-              leading-snug
-              text-[#202020]
-            "
+                text-[13px]
+                sm:text-[14px]
+                font-semibold
+                leading-snug
+                text-[#202020]
+              "
                 >
                   {course?.title}
                 </h3>
 
                 <div
                   className="
-              flex
-              flex-wrap
-              items-center
-              gap-x-2
-              gap-y-1
-              mt-1
-              text-[11px]
-              sm:text-xs
-              text-[#8a8a8a]
-            "
+                flex
+                flex-wrap
+                items-center
+                gap-x-2
+                gap-y-1
+                mt-1
+                text-[11px]
+                sm:text-xs
+                text-[#8a8a8a]
+              "
                 >
                   <span className=" items-center gap-1 line-clamp-2">
                     {course?.description}
                   </span>
-
-
                 </div>
               </div>
-
 
               {/* ===================================================== */}
               {/* WATCH BUTTON */}
               {/* ===================================================== */}
 
-              <Link to={`/course/${course?.slug || "#"}`}
+              <Link
+                to={`/course/${course?.slug || "#"}`}
                 className="
-            w-full
-            mt-3
-            min-h-[42px]
-            rounded-[10px]
-            bg-[#f36d45]
-            hover:bg-[#f76512]
-            text-white
-            text-[14px]
-            font-semibold
-            flex
-            items-center
-            justify-center
-            gap-2
-            transition-colors
-            duration-200
-          "
+              w-full
+              mt-3
+              min-h-[42px]
+              rounded-[10px]
+              bg-[#f36d45]
+              hover:bg-[#f76512]
+              text-white
+              text-[14px]
+              font-semibold
+              flex
+              items-center
+              justify-center
+              gap-2
+              transition-colors
+              duration-200
+            "
               >
-
                 Explore
               </Link>
             </div>
@@ -2389,25 +2363,6 @@ const MaterialIcon = ({ type }: { type: string }) => {
         </div>
 
 
-
-
-
-
-
-
-
-
-
-
-
-        {/* ==================================================
-        MAIN CONTENT
-    ================================================== */}
-
-
-        {/* ==================================================
-        BOTTOM SUCCESS BANNER
-    ================================================== */}
         {timeRemaining?.type === "ended" && content.progressCount > 0 && (
           <div className="mt-6 flex flex-col items-center justify-between gap-4 rounded-2xl border border-orange-200 bg-orange-50 px-5 py-4 sm:flex-row">
             <div className="flex items-center gap-3">
@@ -2415,9 +2370,7 @@ const MaterialIcon = ({ type }: { type: string }) => {
                 <Trophy className="h-5 w-5 text-white" />
               </div>
               <div>
-                <p className="font-bold text-gray-900">
-                  Great Job!
-                </p>
+                <p className="font-bold text-gray-900">Great Job!</p>
                 <p className="text-sm text-gray-600">
                   You have successfully completed this live session.
                 </p>
@@ -2438,6 +2391,8 @@ const MaterialIcon = ({ type }: { type: string }) => {
 
 
 
+
+
 import { MessageSquare, MoreVertical } from "lucide-react";
 
 export const UpcomingSessionCard = ({
@@ -2452,204 +2407,193 @@ export const UpcomingSessionCard = ({
     <div className="w-full px-2 sm:px-0 mb-4">
       <div
         className="
-                    relative
-                    w-full
-                    overflow-hidden
-                    rounded-[22px]
-                    sm:rounded-[24px]
-                    bg-gradient-to-br
-                    from-[#FF754F]
-                    via-[#FF633F]
-                    to-[#FF7048]
-                    shadow-[0_5px_15px_rgba(255,99,63,0.20)]
-                    min-h-[250px]
-                    sm:min-h-[220px]
-                    md:min-h-[205px]
-                    xl:min-h-[122px]
-                "
+                      relative
+                      w-full
+                      overflow-hidden
+                      rounded-[22px]
+                      sm:rounded-[24px]
+                      bg-gradient-to-br
+                      from-[#FF754F]
+                      via-[#FF633F]
+                      to-[#FF7048]
+                      shadow-[0_5px_15px_rgba(255,99,63,0.20)]
+                      min-h-[250px]
+                      sm:min-h-[220px]
+                      md:min-h-[205px]
+                      xl:min-h-[122px]
+                  "
       >
-
         {/* ================= TOP SOFT HIGHLIGHT ================= */}
         <div
           className="
-                        pointer-events-none
-                        absolute
-                        left-0
-                        top-0
-                        h-4
-                        w-full
-                        bg-white/10
-                    "
+                          pointer-events-none
+                          absolute
+                          left-0
+                          top-0
+                          h-4
+                          w-full
+                          bg-white/10
+                      "
         />
 
         {/* ================= BOTTOM WAVE ================= */}
         <div
           className="
-                        pointer-events-none
-                        absolute
-                        bottom-[-45px]
-                        left-[20%]
-                        h-[80px]
-                        w-[70%]
-                        rounded-[50%]
-                        bg-[#FF8A68]/60
-                        blur-[1px]
-                    "
+                          pointer-events-none
+                          absolute
+                          bottom-[-45px]
+                          left-[20%]
+                          h-[80px]
+                          w-[70%]
+                          rounded-[50%]
+                          bg-[#FF8A68]/60
+                          blur-[1px]
+                      "
         />
 
         <div
           className="
-                        pointer-events-none
-                        absolute
-                        bottom-[-65px]
-                        left-[45%]
-                        h-[100px]
-                        w-[65%]
-                        rounded-[50%]
-                        bg-[#FF9678]/40
-                    "
+                          pointer-events-none
+                          absolute
+                          bottom-[-65px]
+                          left-[45%]
+                          h-[100px]
+                          w-[65%]
+                          rounded-[50%]
+                          bg-[#FF9678]/40
+                      "
         />
 
         {/* ================= CONTENT ================= */}
         <div
           className="
-                        relative
-                        z-10
-                        flex
-                        h-full
-                        min-h-[250px]
-                        flex-col
-                        p-4
-                        sm:p-5
-                        md:p-6
-                        xl:min-h-[122px]
-                        xl:flex-row
-                        xl:items-center
-                        xl:px-10
-                        xl:py-4
-                    "
+                          relative
+                          z-10
+                          flex
+                          h-full
+                          min-h-[250px]
+                          flex-col
+                          p-4
+                          sm:p-5
+                          md:p-6
+                          xl:min-h-[122px]
+                          xl:flex-row
+                          xl:items-center
+                          xl:px-10
+                          xl:py-4
+                      "
         >
-
           {/* ================= TOP / SESSION INFO ================= */}
           <div
             className="
-                            flex
-                            min-w-0
-                            flex-1
-                            flex-col
-                        "
+                              flex
+                              min-w-0
+                              flex-1
+                              flex-col
+                          "
           >
-
             {/* Title + Actions */}
             <div
               className="
-                                flex
-                                items-start
-                                justify-between
-                                gap-3
-                                xl:block
-                            "
+                                  flex
+                                  items-start
+                                  justify-between
+                                  gap-3
+                                  xl:block
+                              "
             >
               <div className="min-w-0">
-
                 <h2
                   className="
-                                        text-[20px]
-                                        font-bold
-                                        leading-tight
-                                        text-white
-                                        sm:text-[22px]
-                                        md:text-[24px]
-                                        xl:text-[19px]
-                                    "
+                                          text-[20px]
+                                          font-bold
+                                          leading-tight
+                                          text-white
+                                          sm:text-[22px]
+                                          md:text-[24px]
+                                          xl:text-[19px]
+                                      "
                 >
                   {session?.time || "10:00 AM"}, {session?.date || "June 12"}
                 </h2>
 
                 <p
                   className="
-                                        mt-1
-                                        max-w-[430px]
-                                        truncate
-                                        text-xs
-                                        font-medium
-                                        text-white/95
-                                        sm:text-[13px]
-                                        md:text-sm
-                                        xl:text-[12px]
-                                    "
+                                          mt-1
+                                          max-w-[430px]
+                                          truncate
+                                          text-xs
+                                          font-medium
+                                          text-white/95
+                                          sm:text-[13px]
+                                          md:text-sm
+                                          xl:text-[12px]
+                                      "
                 >
                   {session?.description ||
                     "Follow-up Pte Exam and prescription review"}
                 </p>
-
               </div>
 
               {/* MOBILE ACTIONS */}
               <div
                 className="
-                                    flex
-                                    shrink-0
-                                    items-center
-                                    gap-2
-                                    xl:absolute
-                                    xl:right-7
-                                    xl:top-1/2
-                                    xl:-translate-y-1/2
-                                "
+                                      flex
+                                      shrink-0
+                                      items-center
+                                      gap-2
+                                      xl:absolute
+                                      xl:right-7
+                                      xl:top-1/2
+                                      xl:-translate-y-1/2
+                                  "
               >
                 {/* Chat */}
                 <button
                   type="button"
                   className="
-                                        flex
-                                        h-10
-                                        w-10
-                                        items-center
-                                        justify-center
-                                        rounded-xl
-                                        bg-white
-                                        text-[#1F2937]
-                                        shadow-sm
-                                        transition
-                                        hover:bg-gray-50
-                                        hover:scale-105
-                                        active:scale-95
-                                        sm:h-11
-                                        sm:w-11
-                                    "
+                                          flex
+                                          h-10
+                                          w-10
+                                          items-center
+                                          justify-center
+                                          rounded-xl
+                                          bg-white
+                                          text-[#1F2937]
+                                          shadow-sm
+                                          transition
+                                          hover:bg-gray-50
+                                          hover:scale-105
+                                          active:scale-95
+                                          sm:h-11
+                                          sm:w-11
+                                      "
                 >
-                  <MessageSquare
-                    size={20}
-                    strokeWidth={1.8}
-                  />
+                  <MessageSquare size={20} strokeWidth={1.8} />
                 </button>
 
                 {/* More */}
                 <button
                   type="button"
                   className="
-                                        flex
-                                        h-10
-                                        w-10
-                                        items-center
-                                        justify-center
-                                        rounded-xl
-                                        bg-white
-                                        text-[#1F2937]
-                                        shadow-sm
-                                        transition
-                                        hover:bg-gray-50
-                                        hover:scale-105
-                                        active:scale-95
-                                        sm:h-11
-                                        sm:w-11
-                                    "
+                                          flex
+                                          h-10
+                                          w-10
+                                          items-center
+                                          justify-center
+                                          rounded-xl
+                                          bg-white
+                                          text-[#1F2937]
+                                          shadow-sm
+                                          transition
+                                          hover:bg-gray-50
+                                          hover:scale-105
+                                          active:scale-95
+                                          sm:h-11
+                                          sm:w-11
+                                      "
                 >
-                  <MoreVertical
-                    size={21}
-                    strokeWidth={2}
-                  />
+                  <MoreVertical size={21} strokeWidth={2} />
                 </button>
               </div>
             </div>
@@ -2657,38 +2601,34 @@ export const UpcomingSessionCard = ({
             {/* ================= INSTRUCTOR ================= */}
             <div
               className="
-                                mt-5
-                                flex
-                                items-center
-                                gap-3
-                                sm:mt-6
-                                md:mt-5
-                                xl:mt-3
-                            "
+                                  mt-5
+                                  flex
+                                  items-center
+                                  gap-3
+                                  sm:mt-6
+                                  md:mt-5
+                                  xl:mt-3
+                              "
             >
-
               {/* Avatar */}
               <div
                 className="
-                                    h-12
-                                    w-12
-                                    shrink-0
-                                    overflow-hidden
-                                    rounded-full
-                                    border-2
-                                    border-white/80
-                                    bg-white/30
-                                    sm:h-14
-                                    sm:w-14
-                                    xl:h-10
-                                    xl:w-10
-                                "
+                                      h-12
+                                      w-12
+                                      shrink-0
+                                      overflow-hidden
+                                      rounded-full
+                                      border-2
+                                      border-white/80
+                                      bg-white/30
+                                      sm:h-14
+                                      sm:w-14
+                                      xl:h-10
+                                      xl:w-10
+                                  "
               >
                 <img
-                  src={
-                    session?.instructorImage ||
-                    "/images/avatar.png"
-                  }
+                  src={session?.instructorImage || "/images/avatar.png"}
                   alt={session?.instructorName || "Instructor"}
                   className="h-full w-full object-cover"
                 />
@@ -2697,27 +2637,27 @@ export const UpcomingSessionCard = ({
               <div className="min-w-0">
                 <h3
                   className="
-                                        truncate
-                                        text-base
-                                        font-bold
-                                        leading-tight
-                                        text-white
-                                        sm:text-lg
-                                        xl:text-[16px]
-                                    "
+                                          truncate
+                                          text-base
+                                          font-bold
+                                          leading-tight
+                                          text-white
+                                          sm:text-lg
+                                          xl:text-[16px]
+                                      "
                 >
                   {session?.instructorName || "Sidney Yates"}
                 </h3>
 
                 <p
                   className="
-                                        mt-0.5
-                                        text-xs
-                                        font-medium
-                                        text-white/90
-                                        sm:text-sm
-                                        xl:text-[12px]
-                                    "
+                                          mt-0.5
+                                          text-xs
+                                          font-medium
+                                          text-white/90
+                                          sm:text-sm
+                                          xl:text-[12px]
+                                      "
                 >
                   {session?.instructorRole || "Pte expert"}
                 </p>
@@ -2728,41 +2668,40 @@ export const UpcomingSessionCard = ({
           {/* ================= STATUS + COUNTDOWN ================= */}
           <div
             className="
-                            mt-6
-                            flex
-                            flex-col
-                            items-center
-                            justify-center
-                            gap-5
-                            sm:flex-row
-                            sm:gap-8
-                            md:mt-5
-                            xl:mt-0
-                            xl:mr-32
-                            xl:flex-row
-                            xl:gap-8
-                        "
+                              mt-6
+                              flex
+                              flex-col
+                              items-center
+                              justify-center
+                              gap-5
+                              sm:flex-row
+                              sm:gap-8
+                              md:mt-5
+                              xl:mt-0
+                              xl:mr-32
+                              xl:flex-row
+                              xl:gap-8
+                          "
           >
-
             {/* Status */}
             <div
               className="
-                                rounded-xl
-                                bg-[#202B2D]
-                                px-4
-                                py-2.5
-                                text-center
-                                text-sm
-                                font-bold
-                                text-white
-                                shadow-md
-                                sm:px-5
-                                sm:py-3
-                                sm:text-base
-                                xl:px-3
-                                xl:py-2
-                                xl:text-[15px]
-                            "
+                                  rounded-xl
+                                  bg-[#202B2D]
+                                  px-4
+                                  py-2.5
+                                  text-center
+                                  text-sm
+                                  font-bold
+                                  text-white
+                                  shadow-md
+                                  sm:px-5
+                                  sm:py-3
+                                  sm:text-base
+                                  xl:px-3
+                                  xl:py-2
+                                  xl:text-[15px]
+                              "
             >
               Upcoming Session
             </div>
@@ -2770,31 +2709,21 @@ export const UpcomingSessionCard = ({
             {/* ================= COUNTDOWN ================= */}
             <div
               className="
-                                flex
-                                items-start
-                                justify-center
-                                gap-3
-                                sm:gap-4
-                                xl:gap-2
-                            "
+                                  flex
+                                  items-start
+                                  justify-center
+                                  gap-3
+                                  sm:gap-4
+                                  xl:gap-2
+                              "
             >
-              <CountdownBlock
-                value={countdown.days}
-                label="DAYS"
-              />
+              <CountdownBlock value={countdown.days} label="DAYS" />
 
-              <CountdownBlock
-                value={countdown.hours}
-                label="HOURS"
-              />
+              <CountdownBlock value={countdown.hours} label="HOURS" />
 
-              <CountdownBlock
-                value={countdown.minutes}
-                label="MINUTE"
-              />
+              <CountdownBlock value={countdown.minutes} label="MINUTE" />
             </div>
           </div>
-
         </div>
       </div>
     </div>
@@ -2802,40 +2731,37 @@ export const UpcomingSessionCard = ({
 };
 
 
-/* ================= COUNTDOWN BLOCK ================= */
-
 const CountdownBlock = ({ value, label }) => {
   const digits = String(value).padStart(2, "0").split("");
 
   return (
     <div className="flex flex-col items-center">
-
       <div className="flex gap-1">
         {digits.map((digit, index) => (
           <div
             key={`${digit}-${index}`}
             className="
-                            flex
-                            h-8
-                            w-6
-                            items-center
-                            justify-center
-                            rounded-[6px]
-                            bg-gradient-to-b
-                            from-[#303030]
-                            to-[#050505]
-                            text-lg
-                            font-bold
-                            leading-none
-                            text-white
-                            shadow-[inset_0_1px_1px_rgba(255,255,255,0.25)]
-                            sm:h-9
-                            sm:w-7
-                            sm:text-xl
-                            xl:h-8
-                            xl:w-6
-                            xl:text-lg
-                        "
+                              flex
+                              h-8
+                              w-6
+                              items-center
+                              justify-center
+                              rounded-[6px]
+                              bg-gradient-to-b
+                              from-[#303030]
+                              to-[#050505]
+                              text-lg
+                              font-bold
+                              leading-none
+                              text-white
+                              shadow-[inset_0_1px_1px_rgba(255,255,255,0.25)]
+                              sm:h-9
+                              sm:w-7
+                              sm:text-xl
+                              xl:h-8
+                              xl:w-6
+                              xl:text-lg
+                          "
           >
             {digit}
           </div>
@@ -2844,21 +2770,18 @@ const CountdownBlock = ({ value, label }) => {
 
       <span
         className="
-                    mt-1
-                    text-[8px]
-                    font-bold
-                    tracking-wide
-                    text-white
-                    sm:text-[9px]
-                "
+                      mt-1
+                      text-[8px]
+                      font-bold
+                      tracking-wide
+                      text-white
+                      sm:text-[9px]
+                  "
       >
         {label}
       </span>
-
     </div>
   );
 };
-
-
 
 export default ContentViewPage;
