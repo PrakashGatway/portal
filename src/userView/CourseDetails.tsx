@@ -222,7 +222,8 @@ export default function CourseDetailPage() {
   const { slug } = useParams<{ slug: string }>();
   const [course, setCourse] = useState<Course | null>(null);
   const [loading, setLoading] = useState(true);
-  const [activeTab, setActiveTab] = useState("overview");
+  const [searchParams, setSearchParams] = useSearchParams();
+  const [activeTab, setActiveTab] = useState(searchParams.get("tab")|| "overview");
   const [expandedFaq, setExpandedFaq] = useState<number | null>(null);
   const [isVideoCardFixed, setIsVideoCardFixed] = useState(false);
   const courseHeaderRef = useRef<HTMLDivElement>(null);
@@ -675,7 +676,13 @@ export default function CourseDetailPage() {
                           return (
                             <motion.button
                               key={tab.id}
-                              onClick={() => setActiveTab(tab.id)}
+                              onClick={() => {
+                                setActiveTab(tab.id);
+  setSearchParams((prev) => {
+    prev.set("tab", tab.id);
+    return prev;
+  });
+}}
                               className={`
                 relative shrink-0
                 px-2 pb-3 pt-1

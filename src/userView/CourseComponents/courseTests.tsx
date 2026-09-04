@@ -1,5 +1,6 @@
-import React from "react";
+import React, { useRef } from "react";
 import {
+  ChevronDown,
   ChevronRight,
   ClipboardCheck,
   Clock3,
@@ -34,12 +35,48 @@ export function CourseTests({
     );
   }
 
+  const [openTestSections, setOpenTestSections] = useState<string[]>([]);
+
+const [expandedTests, setExpandedTests] = useState<
+  Record<string, boolean>
+>({});
+
+const hasInitializedTestSections = useRef(false);
+
+
+
+const toggleTestSection = (sectionId: string) => {
+  setOpenTestSections((prev) =>
+    prev.includes(sectionId)
+      ? prev.filter((id) => id !== sectionId)
+      : [...prev, sectionId],
+  );
+};
+
+const toggleTests = (sectionId: string) => {
+  setExpandedTests((prev) => ({
+    ...prev,
+    [sectionId]: !prev[sectionId],
+  }));
+};
+
   const sectionsWithTests = curriculum
     ?.map((section) => ({
       ...section,
       items: section.items?.filter((item: any) => item.type === "Tests") || [],
     }))
     .filter((section) => section.items.length > 0);
+
+    useEffect(() => {
+  if (
+    sectionsWithTests?.length > 0 &&
+    !hasInitializedTestSections.current
+  ) {
+    setOpenTestSections([sectionsWithTests[0]._id]);
+
+    hasInitializedTestSections.current = true;
+  }
+}, [sectionsWithTests]);
 
   if (!sectionsWithTests?.length) {
     return (
@@ -60,286 +97,522 @@ export function CourseTests({
   }
 
   return (
-    <div className="space-y-4">
-      {sectionsWithTests.map((section, sectionIndex) => (
-        <div
-          key={section._id}
+   <div className="space-y-4">
+  {sectionsWithTests.map((section, sectionIndex) => {
+    const tests = section.items || [];
+
+    // Section open / close
+    const isOpen = openTestSections.includes(section._id);
+
+    // View More / Show Less
+    const isTestsExpanded =
+      expandedTests[section._id] || false;
+
+    const visibleTests = isTestsExpanded
+      ? tests
+      : tests.slice(0, 5);
+
+    return (
+      <div
+        key={section._id}
+        className="
+          overflow-hidden
+          rounded-xl
+          border
+          border-[#ffded5]
+          bg-white
+          transition-all
+          duration-300
+        "
+      >
+        {/* =====================================================
+            SECTION HEADER
+        ====================================================== */}
+        <button
+          type="button"
+          onClick={() => toggleTestSection(section._id)}
           className="
-            overflow-hidden
+            group
+            relative
+            flex
+            w-full
+            items-center
+            justify-between
+            gap-3
+            bg-[#fef7dd]
+            p-2
+            px-4
+            text-left
+            transition-all
+            duration-300
+            hover:bg-[#FCE3D2]
           "
         >
-          {/* Section Header */}
-          <div className="flex items-center justify-between gap-3 pb-2 ">
-            <div className="flex min-w-0 items-center gap-3">
+          {/* LEFT SIDE */}
+          <div className="flex min-w-0 items-center gap-4">
+            {/* SECTION NUMBER */}
+            <div
+              className="
+                flex
+                h-10
+                w-10
+                shrink-0
+                items-center
+                justify-center
+                border-r
+                border-[#EAB9A5]
+                pr-4
+                text-base
+                font-medium
+                text-[#F04F23]
+                sm:h-12
+                sm:w-12
+              "
+            >
+              <span className="rounded-lg bg-[#FF7147] px-2 py-1 text-white">
+                {String(sectionIndex + 1).padStart(2, "0")}
+              </span>
+            </div>
+
+            {/* TITLE */}
+            <div className="min-w-0">
+              <h3
+                className="
+                  truncate
+                  text-base
+                  font-semibold
+                  text-[#111827]
+                "
+              >
+                {section.title}
+              </h3>
+
               <div
                 className="
                   flex
-                 p-1 px-2
-                  shrink-0
                   items-center
-                  justify-center
-                  rounded-lg
-                  bg-[#FF7147]
-                  text-base
+                  gap-2
+                  text-xs
                   font-medium
-                  text-white
+                  text-[#8B6F61]
                 "
               >
-                {String(sectionIndex + 1).padStart(2, "0")}
-              </div>
+                <span>
+                  {tests.length}{" "}
+                  {tests.length === 1 ? "Test" : "Tests"}
+                </span>
 
-              <div className="min-w-0">
-                <h3 className="truncate text-sm font-semibold text-[#172033] sm:text-base">
-                  {section.title}
-                </h3>
+                <span className="text-[#C5A99B]">
+                  •
+                </span>
 
-                <p className="mt-0.5 text-xs text-[#8B6F61]">
-                  {section.items.length}{" "}
-                  {section.items.length === 1 ? "Test" : "Tests"}
-                </p>
+                <span>Assessment</span>
               </div>
             </div>
           </div>
-          <div className="divide-y divide-gray-100 space-y-2.5">
-            {section.items.map((item: any, index: number) => {
-              const currentTest = item?.test || test;
 
-              const testTitle =
-                currentTest?.title || item?.title || `Test ${index + 1}`;
+          {/* RIGHT SIDE */}
+          <div className="flex shrink-0 items-center gap-3">
+            {/* TEST COUNT */}
+            <div
+              className="
+                hidden
+                rounded-full
+                border
+                border-[#EBC5B3]
+                bg-[#FF7147]
+                px-3
+                py-1
+                text-sm
+                font-semibold
+                text-white
+                sm:block
+              "
+            >
+              {tests.length}
+            </div>
 
-              const testDescription =
-                currentTest?.description ||
-                item?.description ||
-                "Full Length Assessment";
+            {/* SECTION CHEVRON */}
+            <div
+              className="
+                flex
+                h-8
+                w-8
+                items-center
+                justify-center
+                rounded-full
+              "
+            >
+              <ChevronDown
+                className={`
+                  h-5
+                  w-5
+                  text-[#F04F23]
+                  transition-transform
+                  duration-300
+                  ${isOpen ? "rotate-180" : ""}
+                `}
+              />
+            </div>
+          </div>
+        </button>
 
-              const duration =
-                currentTest?.totalDurationMinutes ||
-                currentTest?.duration ||
-                item?.duration ||
-                null;
+        {/* =====================================================
+            SECTION CONTENT
+        ====================================================== */}
+        <AnimatePresence initial={false}>
+          {isOpen && (
+            <motion.div
+              initial={{
+                height: 0,
+                opacity: 0,
+              }}
+              animate={{
+                height: "auto",
+                opacity: 1,
+              }}
+              exit={{
+                height: 0,
+                opacity: 0,
+              }}
+              transition={{
+                duration: 0.3,
+                ease: "easeInOut",
+              }}
+              className="overflow-hidden"
+            >
+              <div className="bg-white px-4 pb-2">
 
-              const totalQuestions =
-                currentTest?.totalQuestions ||
-                currentTest?.questions?.length ||
-                item?.totalQuestions ||
-                null;
+                {/* =================================================
+                    TEST LIST
+                ================================================== */}
+                <div className="space-y-2.5 mt-2">
+                  {visibleTests.map(
+                    (item: any, index: number) => {
+                      const currentTest =
+                        item?.test || test;
 
-              const totalMarks =
-                currentTest?.totalMarks ||
-                currentTest?.marks ||
-                item?.totalMarks ||
-                null;
+                      const testTitle =
+                        currentTest?.title ||
+                        item?.title ||
+                        `Test ${index + 1}`;
 
-              return (
-                <div
-                  key={item._id}
-                  onClick={() => {
-                    if (!item.isLocked) {
-                      onItemClick(item, section._id);
-                    }
-                  }}
-                  className={`
-        group
-        flex
-        w-full
-        items-center
-        gap-[12px]
-        rounded-lg
-        border
-        border-[#FFB9A3]
-        bg-white
-        p-2 px-2.5
-        
-        transition-all
-        duration-200
-        ${
-          item.isLocked
-            ? "cursor-not-allowed opacity-60"
-            : "cursor-pointer hover:border-[#FF805F] hover:shadow-[0_2px_8px_rgba(242,103,56,0.08)]"
-        }
-      `}
-                >
-                  <div
-                    className="
-          relative
-          flex
-          h-[50px]
-          w-[79px]
-          shrink-0
-          items-center
-          justify-center
-          overflow-hidden
-          rounded-[8px]
-          bg-[#FF6942]
-        "
-                  >
+                      const testDescription =
+                        currentTest?.description ||
+                        item?.description ||
+                        "Full Length Assessment";
 
-                    <div className="relative z-10 text-center">
-                      <div
-                        className="
-              text-xl
-              font-bold
-            
-              text-white
-            "
-                      >
-                       
-                         {course?.categoryInfo?.name?.split(" ")[0] ||
-                          "TEST"}
-                      </div>
+                      const duration =
+                        currentTest?.totalDurationMinutes ||
+                        currentTest?.duration ||
+                        item?.duration ||
+                        null;
 
-                      
-                    </div>
-                  </div>
-                  <div className="min-w-0 flex-1">
-                    {/* Title */}
-                    <h4
-                      className={`
-            truncate
-            text-base
-            font-medium
-            ${item.isLocked ? "text-gray-400" : "text-[#252525]"}
-          `}
-                    >
-                      {testTitle}
-                    </h4>
+                      const totalQuestions =
+                        currentTest?.totalQuestions ||
+                        currentTest?.questions?.length ||
+                        item?.totalQuestions ||
+                        null;
 
-                    {/* Description */}
-                    <p
-                      className="
-            mt-px
-            truncate
-            text-xs
-            font-normal
-            text-[#777777]
-          "
-                    >
-                      {testDescription}
-                    </p>
+                      const totalMarks =
+                        currentTest?.totalMarks ||
+                        currentTest?.marks ||
+                        item?.totalMarks ||
+                        null;
 
-                    {/* =================================================
-            TEST META
-        ================================================== */}
-                    <div
-                      className="
-            flex
-            items-center
-            gap-[10px]
-            mt-1
-            whitespace-nowrap
-            text-xs
-            leading-none
-            text-[#444444]
-          "
-                    >
-                      {/* Questions */}
-                      {totalQuestions !== null && (
-                        <span className="flex items-center gap-[3px]">
-                          <ClipboardCheck
-                            className="h-[10px] w-[10px] text-[#F26738]"
-                            strokeWidth={2}
-                          />
+                      return (
+                        <div
+                          key={item._id}
+                          onClick={() => {
+                            if (!item.isLocked) {
+                              onItemClick(
+                                item,
+                                section._id,
+                              );
+                            }
+                          }}
+                          className={`
+                            group
+                            flex
+                            w-full
+                            items-center
+                            gap-[12px]
+                            rounded-lg
+                            border
+                            border-[#FFB9A3]
+                            bg-white
+                            p-2
+                            px-2.5
+                            transition-all
+                            duration-200
+                            ${
+                              item.isLocked
+                                ? "cursor-not-allowed opacity-60"
+                                : "cursor-pointer hover:border-[#FF805F] hover:shadow-[0_2px_8px_rgba(242,103,56,0.08)]"
+                            }
+                          `}
+                        >
+                          {/* TEST IMAGE / CATEGORY */}
+                          <div
+                            className="
+                              relative
+                              flex
+                              h-[50px]
+                              w-[79px]
+                              shrink-0
+                              items-center
+                              justify-center
+                              overflow-hidden
+                              rounded-[8px]
+                              bg-[#FF6942]
+                            "
+                          >
+                            <div className="relative z-10 text-center">
+                              <div
+                                className="
+                                  text-xl
+                                  font-bold
+                                  text-white
+                                "
+                              >
+                                {course?.categoryInfo?.name?.split(
+                                  " ",
+                                )[0] || "TEST"}
+                              </div>
+                            </div>
+                          </div>
 
-                          <span>
-                            {totalQuestions}{" "}
-                            {Number(totalQuestions) === 1 ? "Task" : "Tasks"}
-                          </span>
-                        </span>
-                      )}
+                          {/* CONTENT */}
+                          <div className="min-w-0 flex-1">
+                            {/* TITLE */}
+                            <h4
+                              className={`
+                                truncate
+                                text-base
+                                font-medium
+                                ${
+                                  item.isLocked
+                                    ? "text-gray-400"
+                                    : "text-[#252525]"
+                                }
+                              `}
+                            >
+                              {testTitle}
+                            </h4>
 
-                      {/* Duration */}
-                      {duration !== null && (
-                        <span className="flex items-center gap-[3px]">
-                          <Clock3
-                            className="h-[10px] w-[10px] text-[#F26738]"
-                            strokeWidth={2}
-                          />
+                            {/* DESCRIPTION */}
+                            <p
+                              className="
+                                mt-px
+                                truncate
+                                text-xs
+                                font-normal
+                                text-[#777777]
+                              "
+                            >
+                              {testDescription}
+                            </p>
 
-                          <span>{duration} Min</span>
-                        </span>
-                      )}
+                            {/* TEST META */}
+                            <div
+                              className="
+                                mt-1
+                                flex
+                                items-center
+                                gap-[10px]
+                                whitespace-nowrap
+                                text-xs
+                                leading-none
+                                text-[#444444]
+                              "
+                            >
+                              {/* QUESTIONS */}
+                              {totalQuestions !== null && (
+                                <span className="flex items-center gap-[3px]">
+                                  <ClipboardCheck
+                                    className="
+                                      h-[10px]
+                                      w-[10px]
+                                      text-[#F26738]
+                                    "
+                                    strokeWidth={2}
+                                  />
 
-                      {/* Marks */}
-                      {totalMarks !== null && (
-                        <span className="flex items-center gap-[3px]">
-                          <Award
-                            className="h-[10px] w-[10px] text-[#F26738]"
-                            strokeWidth={2}
-                          />
+                                  <span>
+                                    {totalQuestions}{" "}
+                                    {Number(
+                                      totalQuestions,
+                                    ) === 1
+                                      ? "Task"
+                                      : "Tasks"}
+                                  </span>
+                                </span>
+                              )}
 
-                          <span>{totalMarks} Marks</span>
-                        </span>
-                      )}
-                    </div>
-                  </div>
+                              {/* DURATION */}
+                              {duration !== null && (
+                                <span className="flex items-center gap-[3px]">
+                                  <Clock3
+                                    className="
+                                      h-[10px]
+                                      w-[10px]
+                                      text-[#F26738]
+                                    "
+                                    strokeWidth={2}
+                                  />
 
-                  {/* =====================================================
-          START TEST BUTTON
-      ====================================================== */}
-                  {item.isLocked ? (
-                    <Button
-                      type="button"
-                      disabled
-                      size="sm"
-                      variant="outline"
-                      className="
-            mr-[3px]
-            h-[25px]
-            shrink-0
-            rounded-full
-            border-gray-200
-            bg-gray-50
-            px-[12px]
-            text-[10px]
-            text-gray-400
-          "
-                    >
-                      <Lock className="mr-1 h-3 w-3" />
-                      Locked
-                    </Button>
-                  ) : (
-                    <button
-                      type="button"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        onItemClick(item, section._id);
-                      }}
-                      className="
-            mr-[3px]
-            flex
-            h-[25px]
-            min-w-[70px]
-            shrink-0
-            items-center
-            justify-center
-            gap-[3px]
-            rounded-[7px]
-            bg-[#FF6942]
-            px-[10px]
-            text-sm
-            font-medium
-            leading-none
-            text-white
-            transition-all
-            duration-200
-            hover:bg-[#F45A34]
-            active:scale-[0.97]
-          "
-                    >
-                      Start Test
-                      <ChevronRight
-                        className="h-[10px] w-[10px]"
-                        strokeWidth={2.5}
-                      />
-                    </button>
+                                  <span>
+                                    {duration} Min
+                                  </span>
+                                </span>
+                              )}
+
+                              {/* MARKS */}
+                              {totalMarks !== null && (
+                                <span className="flex items-center gap-[3px]">
+                                  <Award
+                                    className="
+                                      h-[10px]
+                                      w-[10px]
+                                      text-[#F26738]
+                                    "
+                                    strokeWidth={2}
+                                  />
+
+                                  <span>
+                                    {totalMarks} Marks
+                                  </span>
+                                </span>
+                              )}
+                            </div>
+                          </div>
+
+                          {/* ACTION */}
+                          <div className="shrink-0">
+                            {item.isLocked ? (
+                              <Button
+                                type="button"
+                                disabled
+                                variant="outline"
+                                size="sm"
+                                className="
+                                  mr-[3px]
+                                  h-[25px]
+                                  shrink-0
+                                  rounded-full
+                                  border-gray-200
+                                  bg-gray-50
+                                  px-[12px]
+                                  text-[10px]
+                                  text-gray-400
+                                "
+                              >
+                                <Lock className="mr-1 h-3 w-3" />
+                                Locked
+                              </Button>
+                            ) : (
+                              <button
+                                type="button"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+
+                                  onItemClick(
+                                    item,
+                                    section._id,
+                                  );
+                                }}
+                                className="
+                                  mr-[3px]
+                                  flex
+                                  h-[25px]
+                                  min-w-[70px]
+                                  shrink-0
+                                  items-center
+                                  justify-center
+                                  gap-[3px]
+                                  rounded-[7px]
+                                  bg-[#FF6942]
+                                  px-[10px]
+                                  text-sm
+                                  font-medium
+                                  leading-none
+                                  text-white
+                                  transition-all
+                                  duration-200
+                                  hover:bg-[#F45A34]
+                                  active:scale-[0.97]
+                                "
+                              >
+                                Start Test
+
+                                <ChevronRight
+                                  className="
+                                    h-[10px]
+                                    w-[10px]
+                                  "
+                                  strokeWidth={2.5}
+                                />
+                              </button>
+                            )}
+                          </div>
+                        </div>
+                      );
+                    },
                   )}
                 </div>
-              );
-            })}
-          </div>
-        </div>
-      ))}
-    </div>
+
+                {/* =================================================
+                    VIEW MORE / SHOW LESS
+                ================================================== */}
+                {tests.length > 5 && (
+                  <div className="border-t border-[#F1E7E2]">
+                    <button
+                      type="button"
+                      onClick={() =>
+                        toggleTests(section._id)
+                      }
+                      className="
+                        flex
+                        w-full
+                        items-center
+                        justify-center
+                        gap-2
+                        py-4
+                        text-sm
+                        font-semibold
+                        text-[#F4511E]
+                        transition-colors
+                        hover:text-[#D93F0D]
+                      "
+                    >
+                      {isTestsExpanded
+                        ? "Show less"
+                        : `View all ${tests.length} tests`}
+
+                      <ChevronDown
+                        className={`
+                          h-4
+                          w-4
+                          transition-transform
+                          duration-200
+                          ${
+                            isTestsExpanded
+                              ? "rotate-180"
+                              : ""
+                          }
+                        `}
+                      />
+                    </button>
+                  </div>
+                )}
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
+      </div>
+    );
+  })}
+</div>
   );
 }
 
@@ -354,18 +627,37 @@ interface CourseMaterialsProps {
 const getMaterialIcon = (materialType?: string) => {
   switch (materialType?.toLowerCase()) {
     case "link":
-      return <LinkIcon className="h-5 w-5" />;
+      return <LinkIcon className="h-5 w-5 text-white" />;
 
     case "image":
-      return <ImageIcon className="h-5 w-5" />;
+      return <ImageIcon className="h-5 w-5 text-white" />;
 
     case "audio":
-      return <Headphones className="h-5 w-5" />;
+      return <Headphones className="h-5 w-5 text-white" />;
 
     case "pdf":
     case "document":
     default:
-      return <File className="h-5 w-5" />;
+      return <File className="h-5 w-5 text-white" />;
+  }
+};
+
+const getMaterialIconBg = (materialType?: string) => {
+  switch (materialType?.toLowerCase()) {
+    case "link":
+      return "bg-[#2563EB]";
+
+    case "image":
+      return "bg-[#16A34A]";
+
+    case "audio":
+      return "bg-[#9333EA]";
+
+    case "document":
+      return "bg-[#EA580C]";
+
+    default:
+      return "bg-[#6B7280]";
   }
 };
 
@@ -374,6 +666,10 @@ const getMaterialLabel = (materialType?: string) => {
 
   return materialType.charAt(0).toUpperCase() + materialType.slice(1);
 };
+
+
+import { motion, LayoutGroup, AnimatePresence } from "framer-motion";
+
 
 export function CourseMaterials({
   curriculum,
@@ -393,6 +689,29 @@ export function CourseMaterials({
     );
   }
 
+  const [openMaterialSections, setOpenMaterialSections] = useState<string[]>([]);
+
+  const [expandedMaterials, setExpandedMaterials] = useState<
+    Record<string, boolean>
+  >({});
+
+  const toggleMaterialSection = (sectionId: string) => {
+    setOpenMaterialSections((prev) =>
+      prev.includes(sectionId)
+        ? prev.filter((id) => id !== sectionId)
+        : [...prev, sectionId],
+    );
+  };
+
+  const toggleMaterials = (sectionId: string) => {
+    setExpandedMaterials((prev) => ({
+      ...prev,
+      [sectionId]: !prev[sectionId],
+    }));
+  };
+
+
+
   const sectionsWithMaterials = curriculum
     ?.map((section) => ({
       ...section,
@@ -401,6 +720,12 @@ export function CourseMaterials({
         [],
     }))
     .filter((section) => section.items.length > 0);
+
+  useEffect(() => {
+    if (sectionsWithMaterials?.length > 0) {
+      setOpenMaterialSections([sectionsWithMaterials[0]._id]);
+    }
+  }, [sectionsWithMaterials]);
 
   if (!sectionsWithMaterials?.length) {
     return (
@@ -422,288 +747,454 @@ export function CourseMaterials({
 
   return (
     <div className="space-y-4">
-      {sectionsWithMaterials.map((section, sectionIndex) => (
-        <div
-          key={section._id}
-          className="
-            overflow-hidden
-            rounded-xl
-            bg-white
-            transition-all
-          "
-        >
-          {/* Section Header */}
+      {sectionsWithMaterials.map((section, sectionIndex) => {
+        const materials = section.items || [];
+
+        // Section open / close
+        const isOpen = openMaterialSections.includes(section._id);
+
+        // Materials View More / Show Less
+        const isMaterialsExpanded =
+          expandedMaterials[section._id] || false;
+
+        const visibleMaterials = isMaterialsExpanded
+          ? materials
+          : materials.slice(0, 5);
+
+        return (
           <div
-            className="flex items-center justify-between gap-3
-                   bg-white px-4 py-3 mb-2"
+            key={section._id}
+            className="
+          overflow-hidden
+          rounded-xl
+          border
+          border-[#ffded5]
+          bg-white
+          transition-all
+          duration-300
+        "
           >
-            <div className="flex min-w-0 items-center gap-3">
-              <div
-                className="
-                  flex
-                  h-10
-                  w-10
-                  shrink-0
-                  items-center
-                  justify-center
-                  border-r
-                  border-[#EAB9A5]
-                  text-base 
-                  pr-2
-                  font-medium
-                  text-[#F04F23]
-                "
-              >
-                <span className="bg-[#FF7147] px-2 py-1 text-white rounded-lg">
-                  {String(sectionIndex + 1).padStart(2, "0")}
-                </span>
-              </div>
-
-              <div className="min-w-0">
-                <h3
-                  className="
-                          truncate
-                          text-base
-                          font-semibold
-                          text-[#111827]
-                          sm:text-base
-                        "
-                >
-                  {section.title}
-                </h3>
-
-                <p className="mt-px text-xs text-[#8B6F61]">
-                  {section.items.length}{" "}
-                  {section.items.length === 1 ? "Material" : "Materials"}
-                </p>
-              </div>
-            </div>
-
-            <span
+            {/* =====================================================
+            SECTION HEADER
+        ====================================================== */}
+            <button
+              type="button"
+              onClick={() => toggleMaterialSection(section._id)}
               className="
-                        hidden
-                        rounded-full
-                        border
-                        border-[#EBC5B3]
-                        bg-[#FF7147] px-2 py-1 text-white
-                        px-3
-                        py-1
-                        text-sm
-                        font-semibold
-                        sm:block
-                      "
+            group
+            relative
+            flex
+            w-full
+            items-center
+            justify-between
+            gap-3
+            bg-[#fef7dd]
+            p-2
+            px-4
+            text-left
+            transition-all
+            duration-300
+            hover:bg-[#FCE3D2]
+          "
             >
-              {section.items.length}
-            </span>
-          </div>
-
-          {/* Materials */}
-          <div className="divide-y divide-gray-100 space-y-2">
-            {section.items.map((item: any) => {
-              const isPdf =
-                item?.materialType?.toLowerCase() === "pdf" ||
-                item?.materialType?.toLowerCase() === "document";
-
-              const handleView = (e: React.MouseEvent) => {
-                e.stopPropagation();
-
-                if (item.isLocked) return;
-                onItemClick(item, section._id);
-              };
-              return (
+              {/* LEFT */}
+              <div className="flex min-w-0 items-center gap-4">
+                {/* SECTION NUMBER */}
                 <div
-                  key={item._id}
-                  onClick={() => {
-                    if (!item.isLocked) {
-                      onItemClick(item, section._id);
-                    }
-                  }}
-                  className={`
-        group
-        flex
-        min-h-[64px]
-        w-full
-        bg-[#FFF6DD]
-        items-center
-        gap-[10px]
-        rounded-[11px]
-        px-3
-        py-2
-        transition-all
-        duration-200
-        ${
-          item.isLocked
-            ? "cursor-not-allowed opacity-60"
-            : "cursor-pointer hover:bg-[#FFF6DD]/50"
-        }
-      `}
+                  className="
+                flex
+                h-10
+                w-10
+                shrink-0
+                items-center
+                justify-center
+                border-r
+                border-[#EAB9A5]
+                pr-4
+                text-base
+                font-medium
+                text-[#F04F23]
+                sm:h-12
+                sm:w-12
+              "
                 >
+                  <span className="rounded-lg bg-[#FF7147] px-2 py-1 text-white">
+                    {String(sectionIndex + 1).padStart(2, "0")}
+                  </span>
+                </div>
+
+                {/* TITLE */}
+                <div className="min-w-0">
+                  <h3
+                    className="
+                  truncate
+                  text-base
+                  font-semibold
+                  text-[#111827]
+                "
+                  >
+                    {section.title}
+                  </h3>
+
                   <div
                     className="
-          flex
-         p-1.5
-          shrink-0
-          items-center
-          justify-center
-          rounded-[9px]
-          bg-white
-        "
+                  flex
+                  items-center
+                  gap-2
+                  text-xs
+                  font-medium
+                  text-[#8B6F61]
+                "
                   >
-                    {isPdf ? (
-                      <div
-                        className="
-              flex
-              h-[35px]
-              w-[35px]
-              items-center
-              justify-center
-              rounded-[5px]
-              bg-[#D82323]
-              text-white
-            "
-                      >
-                        {/* PDF icon */}
-                        <img
-                          className="h-full w-full object-cover"
-                          src="https://www.svgrepo.com/show/349472/pdf.svg"
-                          alt="PDF"
-                        />
-                      </div>
-                    ) : (
-                      <div
-                        className="
-              flex
-             h-[35px]
-              w-[35px]
-              items-center
-              justify-center
-              rounded-[5px]
-              bg-[#D82323]
-              text-white
-            "
-                      >
-                        {getMaterialIcon(item.materialType)}
-                      </div>
-                    )}
+                    <span>
+                      {materials.length}{" "}
+                      {materials.length === 1
+                        ? "Material"
+                        : "Materials"}
+                    </span>
+
+                    <span className="text-[#C5A99B]">
+                      •
+                    </span>
+
+                    <span>Study Materials</span>
                   </div>
-
-                  {/* =====================================================
-          CONTENT
-      ====================================================== */}
-                  <div className="min-w-0 flex-1 py-[2px]">
-                    {/* Title */}
-                    <h3
-                      className={`
-            truncate
-            text-base
-            font-semibold
-            ${item.isLocked ? "text-gray-400" : "text-[#2D2D2D]"}
-          `}
-                    >
-                      {item.title}
-                    </h3>
-
-                    {/* Description */}
-                    {item.description && (
-                      <p
-                        className="
-              mt-[1px]
-              line-clamp-2
-              max-w-[300px]
-              text-xs
-              font-normal
-              text-[#858585]
-            "
-                      >
-                        {item.description}
-                      </p>
-                    )}
-
-                    {/* Fallback description */}
-                    {!item.description && (
-                      <p
-                        className="
-              mt-[1px]
-              text-xs
-              font-normal
-              text-[#858585]
-            "
-                      >
-                        {getMaterialLabel(item.materialType)}
-                      </p>
-                    )}
-                  </div>
-
-                  {/* =====================================================
-          ACTIONS
-      ====================================================== */}
-                  {!item.isLocked ? (
-                    <div
-                      className="
-            flex
-            shrink-0
-            items-center
-            gap-[33px]
-            pr-[25px]
-          "
-                    >
-                      {/* View PDF */}
-                      <button
-                        type="button"
-                        onClick={handleView}
-                        className="
-              flex
-             
-              items-center
-              justify-center
-              rounded-[4px]
-              border
-              border-[#FF805F]
-              bg-white
-              px-3
-              py-2
-              text-sm
-              font-medium
-              leading-none
-              text-[#555555]
-              transition-all
-              duration-200
-              hover:bg-[#FFF4EF]
-              hover:text-[#F26738]
-              active:scale-[0.97]
-            "
-                      >
-                        View PDF
-                      </button>
-                    </div>
-                  ) : (
-                    /* Locked */
-                    <Button
-                      type="button"
-                      disabled
-                      size="sm"
-                      variant="outline"
-                      className="
-            mr-[10px]
-            h-[26px]
-            rounded-[5px]
-            border-gray-200
-            bg-gray-50
-            px-[10px]
-            text-[10px]
-            text-gray-400
-          "
-                    >
-                      <Lock className="mr-1 h-3 w-3" />
-                      Locked
-                    </Button>
-                  )}
                 </div>
-              );
-            })}
+              </div>
+
+              {/* RIGHT */}
+              <div className="flex shrink-0 items-center gap-3">
+                {/* COUNT */}
+                <div
+                  className="
+                hidden
+                rounded-full
+                border
+                border-[#EBC5B3]
+                bg-[#FF7147]
+                px-3
+                py-1
+                text-sm
+                font-semibold
+                text-white
+                sm:block
+              "
+                >
+                  {materials.length}
+                </div>
+
+                {/* SECTION ARROW */}
+                <div
+                  className="
+                flex
+                h-8
+                w-8
+                items-center
+                justify-center
+                rounded-full
+              "
+                >
+                  <ChevronDown
+                    className={`
+                  h-5
+                  w-5
+                  text-[#F04F23]
+                  transition-transform
+                  duration-300
+                  ${isOpen ? "rotate-180" : ""}
+                `}
+                  />
+                </div>
+              </div>
+            </button>
+
+            {/* =====================================================
+            SECTION CONTENT
+        ====================================================== */}
+            <AnimatePresence initial={false}>
+              {isOpen && (
+                <motion.div
+                  initial={{
+                    height: 0,
+                    opacity: 0,
+                  }}
+                  animate={{
+                    height: "auto",
+                    opacity: 1,
+                  }}
+                  exit={{
+                    height: 0,
+                    opacity: 0,
+                  }}
+                  transition={{
+                    duration: 0.3,
+                    ease: "easeInOut",
+                  }}
+                  className="overflow-hidden"
+                >
+                  <div className="bg-white px-4 pb-2">
+
+                    {/* =================================================
+                    MATERIAL LIST
+                ================================================== */}
+                    <div className="space-y-2 mt-2">
+                      {visibleMaterials.map((item: any) => {
+                        const isPdf =
+                          item?.materialType?.toLowerCase() === "pdf" ||
+                          item?.materialType?.toLowerCase() ===
+                          "document";
+
+                        const handleView = (
+                          e: React.MouseEvent,
+                        ) => {
+                          e.stopPropagation();
+
+                          if (item.isLocked) return;
+
+                          onItemClick(item, section._id);
+                        };
+
+                        return (
+                          <div
+                            key={item._id}
+                            onClick={() => {
+                              if (!item.isLocked) {
+                                onItemClick(
+                                  item,
+                                  section._id,
+                                );
+                              }
+                            }}
+                            className={`
+                          group
+                          flex
+                          min-h-[64px]
+                          w-full
+                          items-center
+                          gap-[10px]
+                          rounded-[11px]
+                          bg-[#FFF6DD]
+                          px-3
+                          py-2
+                          transition-all
+                          duration-200
+                          ${item.isLocked
+                                ? "cursor-not-allowed opacity-60"
+                                : "cursor-pointer hover:bg-[#FFF6DD]/50"
+                              }
+                        `}
+                          >
+                            {/* ICON */}
+                            <div
+                              className="
+                            flex
+                            shrink-0
+                            items-center
+                            justify-center
+                            rounded-[9px]
+                            bg-white
+                            p-1.5
+                          "
+                            >
+                              {isPdf ? (
+                                <div
+                                  className="
+                                flex
+                                h-[35px]
+                                w-[35px]
+                                items-center
+                                justify-center
+                                rounded-[5px]
+                                bg-[#D82323]
+                              "
+                                >
+                                  <img
+                                    className="
+                                  h-full
+                                  w-full
+                                  object-cover
+                                "
+                                    src="https://www.svgrepo.com/show/349472/pdf.svg"
+                                    alt="PDF"
+                                  />
+                                </div>
+                              ) : (
+                                <div
+                                  className={`flex
+    h-[35px]
+    w-[35px]
+    items-center
+    justify-center
+    rounded-[5px]
+    ${getMaterialIconBg(item.materialType)}
+  `}
+                                >
+                                  {getMaterialIcon(
+                                    item.materialType,
+                                  )}
+                                </div>
+                              )}
+                            </div>
+
+                            {/* CONTENT */}
+                            <div className="min-w-0 flex-1 py-[2px]">
+                              <h3
+                                className={`
+                              truncate
+                              text-base
+                              font-semibold
+                              ${item.isLocked
+                                    ? "text-gray-400"
+                                    : "text-[#2D2D2D]"
+                                  }
+                            `}
+                              >
+                                {item.title}
+                              </h3>
+
+                              {item.description ? (
+                                <p
+                                  className="
+                                mt-[1px]
+                                line-clamp-2
+                                max-w-[300px]
+                                text-xs
+                                font-normal
+                                text-[#858585]
+                              "
+                                >
+                                  {item.description}
+                                </p>
+                              ) : (
+                                <p
+                                  className="
+                                mt-[1px]
+                                text-xs
+                                font-normal
+                                text-[#858585]
+                              "
+                                >
+                                  {getMaterialLabel(
+                                    item.materialType,
+                                  )}
+                                </p>
+                              )}
+                            </div>
+
+                            {/* ACTION */}
+                            {!item.isLocked ? (
+                              <div
+                                className="
+                              flex
+                              shrink-0
+                              items-center
+                              gap-[33px]
+                              pr-[25px]
+                            "
+                              >
+                                <button
+                                  type="button"
+                                  onClick={handleView}
+                                  className="
+                                flex
+                                items-center
+                                justify-center
+                                rounded-[4px]
+                                border
+                                border-[#FF805F]
+                                bg-white
+                                px-3
+                                py-2
+                                text-sm
+                                font-medium
+                                leading-none
+                                text-[#555555]
+                                transition-all
+                                duration-200
+                                hover:bg-[#FFF4EF]
+                                hover:text-[#F26738]
+                                active:scale-[0.97]
+                              "
+                                >
+                                  View PDF
+                                </button>
+                              </div>
+                            ) : (
+                              <Button
+                                type="button"
+                                disabled
+                                size="sm"
+                                variant="outline"
+                                className="
+                              mr-[10px]
+                              h-[26px]
+                              rounded-[5px]
+                              border-gray-200
+                              bg-gray-50
+                              px-[10px]
+                              text-[10px]
+                              text-gray-400
+                            "
+                              >
+                                <Lock className="mr-1 h-3 w-3" />
+                                Locked
+                              </Button>
+                            )}
+                          </div>
+                        );
+                      })}
+                    </div>
+
+                    {/* =================================================
+                    VIEW MORE / SHOW LESS
+                ================================================== */}
+                    {materials.length > 5 && (
+                      <div className="border-t border-[#F1E7E2]">
+                        <button
+                          type="button"
+                          onClick={() =>
+                            toggleMaterials(section._id)
+                          }
+                          className="
+                        flex
+                        w-full
+                        items-center
+                        justify-center
+                        gap-2
+                        py-4
+                        text-sm
+                        font-semibold
+                        text-[#F4511E]
+                        transition-colors
+                        hover:text-[#D93F0D]
+                      "
+                        >
+                          {isMaterialsExpanded
+                            ? "Show less"
+                            : `View all ${materials.length} materials`}
+
+                          <ChevronDown
+                            className={`
+                          h-4
+                          w-4
+                          transition-transform
+                          duration-200
+                          ${isMaterialsExpanded
+                                ? "rotate-180"
+                                : ""
+                              }
+                        `}
+                          />
+                        </button>
+                      </div>
+                    )}
+                  </div>
+                </motion.div>
+              )}
+            </AnimatePresence>
           </div>
-        </div>
-      ))}
+        );
+      })}
     </div>
   );
 }
@@ -900,12 +1391,11 @@ export const TodaySessionsBanner: React.FC<TodaySessionsBannerProps> = ({
                   font-semibold
                   uppercase
                   tracking-wide
-                  ${
-                    isLive
-                      ? "bg-[#FFE1D6] text-[#F4511E]"
-                      : isCompleted
-                        ? "bg-gray-100 text-gray-500"
-                        : "bg-[#FFE7D8] text-[#F4511E]"
+                  ${isLive
+                    ? "bg-[#FFE1D6] text-[#F4511E]"
+                    : isCompleted
+                      ? "bg-gray-100 text-gray-500"
+                      : "bg-[#FFE7D8] text-[#F4511E]"
                   }
                 `}
               >
@@ -973,10 +1463,9 @@ export const TodaySessionsBanner: React.FC<TodaySessionsBannerProps> = ({
                   font-semibold
                   text-white
                   transition-all
-                  ${
-                    session.isLocked || isCompleted
-                      ? "cursor-not-allowed bg-gray-300"
-                      : "bg-[#F36E45] shadow-sm hover:bg-[#e85b35] hover:shadow-md active:scale-[0.98]"
+                  ${session.isLocked || isCompleted
+                    ? "cursor-not-allowed bg-gray-300"
+                    : "bg-[#F36E45] shadow-sm hover:bg-[#e85b35] hover:shadow-md active:scale-[0.98]"
                   }
                 `}
               >
@@ -1159,10 +1648,9 @@ export const TodaySessionsBanner: React.FC<TodaySessionsBannerProps> = ({
                     rounded-full
                     transition-all
                     duration-300
-                    ${
-                      index === currentIndex
-                        ? "w-6 bg-[#F36E45]"
-                        : "w-1.5 bg-[#E5B8A7] hover:bg-[#F36E45]"
+                    ${index === currentIndex
+                      ? "w-6 bg-[#F36E45]"
+                      : "w-1.5 bg-[#E5B8A7] hover:bg-[#F36E45]"
                     }
                   `}
                 />
