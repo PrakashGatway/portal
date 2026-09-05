@@ -1220,7 +1220,7 @@ const GREDashboard = () => {
 
                             {/* Right */}
 
-                            <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-0  justify-center items-center mr-22">
+                            <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-0  justify-center items-center mr-14">
                               <div className="flex flex-col lg:flex-col items-center gap-2 lg:mt-0 mb-4 lg:mb-0">
                                 {/* Progress */}
 

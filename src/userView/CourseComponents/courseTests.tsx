@@ -345,6 +345,7 @@ const toggleTests = (sectionId: string) => {
                             px-2.5
                             transition-all
                             duration-200
+                            hover:bg-[#fef7dd]
                             ${
                               item.isLocked
                                 ? "cursor-not-allowed opacity-60"

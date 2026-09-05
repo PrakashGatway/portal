@@ -464,9 +464,9 @@ const ContentViewPage = () => {
 
   if (loading) {
     return (
-      <div className="flex min-h-screen items-center justify-center bg-gray-50">
+      <div className="flex min-h-screen items-center justify-center ">
         <div className="text-center">
-          <Loader className="mx-auto mb-4 h-10 w-10 animate-spin text-blue-600" />
+          <Loader className="mx-auto mb-4 h-10 w-10 animate-spin text-orange-600" />
 
           <p className="text-sm font-medium text-gray-600">
             Loading session...
@@ -1411,6 +1411,7 @@ const ContentViewPage = () => {
                             </h2>
 
                             <button
+                            onClick={()=> setActiveTab("Material")}
                               className="
                 shrink-0
                 text-[12px]

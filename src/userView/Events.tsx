@@ -23,6 +23,7 @@ import {
 } from "lucide-react";
 import { useAuth } from "../context/UserContext";
 import { createPortal } from "react-dom";
+import { Link } from "react-router";
 
 const localizer = momentLocalizer(moment);
 
@@ -919,8 +920,8 @@ const CustomDateCell = ({ date, events: allEvents, children }) => {
                         key={evt.id || index}
                         className="p-4 bg-orange-50 rounded-xl border border-orange-100 relative group"
                       >
-                        <div className="flex justify-between items-start mb-2">
-                          <h5 className="font-bold text-gray-800 text-lg">{evt.title}</h5>
+                        <div className="grid grid-cols-[1.5fr_0.5fr] justify-between items-start mb-2 gap-2">
+                          <Link to={`/sessions/${evt?.slug}`} className="font-bold text-gray-800 text-base line-clamp-2">{evt.title}</Link>
                           <span className="text-xs font-bold bg-white px-2 py-1 rounded-md text-orange-600 border border-orange-200 shadow-sm">
                             {moment(evt.start).format("HH:mm")} - {moment(evt.end).format("HH:mm")}
                           </span>
@@ -941,6 +942,8 @@ const CustomDateCell = ({ date, events: allEvents, children }) => {
                           </div>
                         </div>
 
+                        <div className="flex justify-between items-center mt-3 pt-3 border-t border-orange-200/50">
+
                         {evt.instructor && (
                           <div className="mt-3 pt-3 border-t border-orange-200/50 flex items-center gap-2">
                             <User className="h-4 w-4 text-orange-500" />
@@ -949,6 +952,19 @@ const CustomDateCell = ({ date, events: allEvents, children }) => {
                             </span>
                           </div>
                         )}
+
+                        {evt.slug && (
+  <div className="flex justify-end mt-4">
+    <Link
+      to = {`/sessions/${evt?.slug}`}
+      className="px-5 py-2.5 bg-[#f6673c] text-white rounded-lg text-sm font-bold hover:bg-orange-600 transition-colors flex items-center gap-2 shadow-sm"
+    >
+      <Video className="h-4 w-4" />
+      Join Now
+    </Link>
+  </div>
+)}
+                        </div>
 
                         {user.role === "admin" && (
                           <div className="flex gap-2 mt-4 pt-2 border-t border-orange-200/50 opacity-100 transition-opacity">
