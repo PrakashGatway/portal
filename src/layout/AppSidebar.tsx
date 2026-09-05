@@ -360,7 +360,7 @@ const AppSidebar: React.FC = () => {
         return (
           <li key={nav.name} id={nav?.id} className="relative">
             {nav.subItems ? (
-              <div className={`relative ${active ? "border-l-4 border-orange-500 rounded-[26px]" : ""}`}>
+              <div className={`relative  ${active ? "border-l-4 border-orange-500 rounded-[26px]" : ""}`}>
                 <button
                   onClick={() => handleSubmenuToggle(index, menuType)}
                   className={`w-full flex items-center gap-3 ${isExpanded || isHovered || isMobileOpen ? "px-4" : "px-1"} py-1 rounded-[28px] transition-all duration-200 ease-out group relative
@@ -425,7 +425,7 @@ const AppSidebar: React.FC = () => {
                   ${
                     isActive(nav.path)
                       ? "bg-orange-50 text-orange-500"
-                      : "text-zinc-600 dark:text-zinc-400 hover:bg-black/[0.04] bg-white dark:hover:bg-white/[0.06] hover:text-zinc-900 dark:hover:text-zinc-100 hover:bg-orange-50"
+                      : "text-zinc-600 dark:text-zinc-400 hover:bg-black/[0.04] bg-white dark:hover:bg-white/[0.06] hover:text-zinc-900 dark:hover:text-zinc-100 hover:bg-orange-50 hover:border-l-4 hover:border-orange-500 hover:rounded-[26px] hover:duration-100 hover:transition-all"
                   }`}
                 >
                   {/* {isActive(nav.path) && (

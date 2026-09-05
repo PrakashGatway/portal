@@ -46,7 +46,9 @@ const ContentViewPage = () => {
   const [timeRemaining, setTimeRemaining] = useState<any>(null);
   const [canJoin, setCanJoin] = useState(false);
   const [selectUpcomingSession, setSelectUpcomingSession] = useState<any>(null);
-  const [hoveredSessionIndex, setHoveredSessionIndex] = useState<number | null>(null);
+  const [hoveredSessionIndex, setHoveredSessionIndex] = useState<number | null>(
+    null,
+  );
 
   const [timeLeft, setTimeLeft] = useState({
     days: 0,
@@ -346,34 +348,28 @@ const ContentViewPage = () => {
     };
   }, [scheduledStartValue, scheduledEndValue, calculateTimeUntilMeeting]);
 
-  const MaterialIcon = ({ type }: { type: string }) => {
-    switch (type?.toLowerCase()) {
-      case "pdf":
-        return (
-          <img
-            src="/images/pdf.webp"
-            alt="PDF"
-            className="w-full h-full object-contain"
-          />
-        );
+ const materialIconImages = {
+  pdf: "/images/pdf.webp",
+  video: "/images/video.webp",
+  audio: "/images/audio.webp",
+  document: "/images/document.webp",
+  image: "/images/image.webp",
+  link: "/images/link.webp",
+};
 
-      case "document":
-        return <FileText className="w-6 h-6 text-white" strokeWidth={2} />;
+const MaterialIcon = ({ type }: { type: string }) => {
+  const iconSrc =
+    materialIconImages[type?.toLowerCase() as keyof typeof materialIconImages] ||
+    materialIconImages.document;
 
-      case "link":
-        return <LinkIcon className="w-6 h-6 text-white" strokeWidth={2} />;
-
-      case "image":
-        return <ImageIcon className="w-6 h-6 text-white" strokeWidth={2} />;
-
-      case "audio":
-        return <Volume2 className="w-6 h-6 text-white" strokeWidth={2} />;
-
-      default:
-        return <FileText className="w-6 h-6 text-white" strokeWidth={2} />;
-    }
-  };
-
+  return (
+    <img
+      src={iconSrc}
+      alt={type || "Material"}
+      className="w-full h-full object-contain"
+    />
+  );
+};
   const formatTime2 = (seconds: number) => {
     const days = Math.floor(seconds / 86400);
     const hours = Math.floor((seconds % 86400) / 3600);
@@ -464,13 +460,172 @@ const ContentViewPage = () => {
 
   if (loading) {
     return (
-      <div className="flex min-h-screen items-center justify-center ">
-        <div className="text-center">
-          <Loader className="mx-auto mb-4 h-10 w-10 animate-spin text-orange-600" />
+      <div className="min-h-screen bg-[#FFF7F2] p-4 md:p-6">
+        <div className="grid grid-cols-1 xl:grid-cols-[minmax(0,1fr)_360px] gap-4 md:gap-6">
+          {/* ================= MAIN CONTENT ================= */}
+          <div className="min-w-0 space-y-4 md:space-y-6">
+            {/* HERO SECTION */}
+            <div className="rounded-[28px] border border-[#FFD6C7] bg-gradient-to-r from-[#FFF0E7] to-[#FFE4D1] p-5 md:p-6">
+              <div className="grid grid-cols-1 lg:grid-cols-[1.3fr_0.8fr_1fr] gap-4">
+                {/* Session Info */}
+                <div className="min-w-0">
+                  <div className="h-10 w-52 rounded-full bg-[#FFD0BE] animate-pulse mb-5" />
 
-          <p className="text-sm font-medium text-gray-600">
-            Loading session...
-          </p>
+                  <div className="h-4 w-64 rounded bg-[#F5CFC0] animate-pulse mb-4" />
+
+                  <div className="space-y-2 mb-5">
+                    <div className="h-7 w-full max-w-[440px] rounded-lg bg-[#F4C7B6] animate-pulse" />
+                    <div className="h-7 w-3/4 max-w-[330px] rounded-lg bg-[#F4C7B6] animate-pulse" />
+                  </div>
+
+                  {/* Date */}
+                  <div className="flex items-center gap-3 mb-4">
+                    <div className="h-6 w-6 rounded bg-[#F7B89F] animate-pulse" />
+                    <div className="h-5 w-48 rounded bg-[#F3C8B8] animate-pulse" />
+                  </div>
+
+                  {/* Time */}
+                  <div className="flex items-center gap-3 mb-6">
+                    <div className="h-6 w-6 rounded-full bg-[#F7B89F] animate-pulse" />
+                    <div className="h-5 w-28 rounded bg-[#F3C8B8] animate-pulse" />
+                  </div>
+
+                  {/* Buttons */}
+                  <div className="flex flex-wrap gap-4">
+                    <div className="h-12 w-40 rounded-xl bg-[#F8A486] animate-pulse" />
+                    <div className="h-12 w-44 rounded-xl bg-[#FFD0BE] animate-pulse" />
+                  </div>
+                </div>
+
+                {/* Instructor Card */}
+                <div className="rounded-[24px] border border-[#FFD6C7] bg-[#FFF9F6] p-6 flex flex-col items-center justify-center min-h-[280px]">
+                  <div className="h-20 w-20 rounded-full bg-[#F5C7B7] animate-pulse mb-5" />
+
+                  <div className="h-4 w-28 rounded bg-[#F2CFC3] animate-pulse mb-3" />
+                  <div className="h-6 w-24 rounded bg-[#EFC0B0] animate-pulse mb-2" />
+                  <div className="h-4 w-28 rounded bg-[#F2CFC3] animate-pulse" />
+                </div>
+
+                {/* Countdown Card */}
+                <div className="rounded-[24px] bg-white p-6 flex flex-col items-center justify-center min-h-[280px]">
+                  <div className="h-6 w-48 rounded bg-[#EBCDC2] animate-pulse mb-8" />
+
+                  <div className="flex items-center gap-2 mb-5">
+                    <div className="h-14 w-14 md:h-16 md:w-16 rounded-lg bg-[#FF8B68] animate-pulse" />
+                    <div className="h-10 w-3 rounded bg-[#FFD2C5] animate-pulse" />
+                    <div className="h-14 w-14 md:h-16 md:w-16 rounded-lg bg-[#FF8B68] animate-pulse" />
+                    <div className="h-10 w-3 rounded bg-[#FFD2C5] animate-pulse" />
+                    <div className="h-14 w-14 md:h-16 md:w-16 rounded-lg bg-[#FF8B68] animate-pulse" />
+                  </div>
+
+                  <div className="flex gap-10 mb-7">
+                    <div className="h-3 w-10 rounded bg-[#EACFC5] animate-pulse" />
+                    <div className="h-3 w-10 rounded bg-[#EACFC5] animate-pulse" />
+                    <div className="h-3 w-12 rounded bg-[#EACFC5] animate-pulse" />
+                  </div>
+
+                  <div className="h-5 w-36 rounded bg-[#EACFC5] animate-pulse" />
+                </div>
+              </div>
+            </div>
+
+            {/* TABS */}
+            <div className="h-[68px] rounded-[20px] border border-[#FFD6C7] bg-white flex items-center px-5 md:px-8 gap-8 md:gap-12 overflow-hidden">
+              <div className="h-5 w-24 rounded bg-[#FFD1C2] animate-pulse" />
+              <div className="h-5 w-20 rounded bg-[#F1DDD6] animate-pulse" />
+              <div className="h-5 w-24 rounded bg-[#F1DDD6] animate-pulse" />
+              <div className="h-5 w-20 rounded bg-[#F1DDD6] animate-pulse" />
+            </div>
+
+            {/* OVERVIEW CONTENT */}
+            <div className="rounded-[20px] border border-[#FFD6C7] bg-white p-6 md:p-8">
+              <div className="grid grid-cols-1 lg:grid-cols-[420px_1fr] gap-8">
+                {/* Image Skeleton */}
+                <div className="space-y-5">
+                  <div className="h-8 w-32 rounded-lg bg-[#F7C5B4] animate-pulse" />
+
+                  <div className="w-full h-[260px] rounded-xl bg-[#F5DED6] animate-pulse" />
+                </div>
+
+                {/* Text Skeleton */}
+                <div className="space-y-5 pt-1">
+                  <div className="space-y-3">
+                    <div className="h-8 w-full max-w-[500px] rounded-lg bg-[#EFCBC0] animate-pulse" />
+                    <div className="h-8 w-4/5 max-w-[400px] rounded-lg bg-[#EFCBC0] animate-pulse" />
+                  </div>
+
+                  {/* Instructor */}
+                  <div className="flex items-center gap-4">
+                    <div className="h-14 w-14 rounded-full bg-[#F3CEC2] animate-pulse" />
+
+                    <div className="space-y-2">
+                      <div className="h-4 w-32 rounded bg-[#EACFC5] animate-pulse" />
+                      <div className="h-4 w-52 rounded bg-[#F0DDD7] animate-pulse" />
+                    </div>
+                  </div>
+
+                  {/* Description */}
+                  <div className="space-y-3">
+                    <div className="h-4 w-full rounded bg-[#F0DDD7] animate-pulse" />
+                    <div className="h-4 w-11/12 rounded bg-[#F0DDD7] animate-pulse" />
+                    <div className="h-4 w-4/5 rounded bg-[#F0DDD7] animate-pulse" />
+                    <div className="h-4 w-2/3 rounded bg-[#F0DDD7] animate-pulse" />
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* ================= RIGHT SIDEBAR ================= */}
+          <aside className="space-y-4">
+            {/* Upcoming Sessions */}
+            <div className="rounded-[26px] border border-[#FF8A5B] bg-white p-5">
+              <div className="h-7 w-56 rounded-lg bg-[#EFCBC0] animate-pulse mb-5" />
+
+              <div className="space-y-3">
+                {[1, 2, 3].map((item) => (
+                  <div
+                    key={item}
+                    className={`rounded-[20px] border p-4 ${
+                      item === 1
+                        ? "border-[#FF9569] bg-[#FFF0E7]"
+                        : "border-[#EEEEEE] bg-[#FAFAFA]"
+                    }`}
+                  >
+                    <div className="flex items-start gap-4">
+                      <div className="h-12 w-12 rounded-full bg-[#F1DDD7] animate-pulse shrink-0" />
+
+                      <div className="flex-1 min-w-0 space-y-3">
+                        <div className="flex items-center justify-between gap-3">
+                          <div className="h-4 w-24 rounded bg-[#EBCDC2] animate-pulse" />
+                          <div className="h-3 w-16 rounded bg-[#EEDDD7] animate-pulse" />
+                        </div>
+
+                        <div className="h-4 w-full rounded bg-[#EBDDD8] animate-pulse" />
+                        <div className="h-4 w-3/4 rounded bg-[#EBDDD8] animate-pulse" />
+
+                        <div className="flex items-center gap-2">
+                          <div className="h-3 w-3 rounded-full bg-[#EBC5B8] animate-pulse" />
+                          <div className="h-3 w-28 rounded bg-[#EBDDD8] animate-pulse" />
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {/* Course */}
+            <div className="rounded-[20px] border border-[#FFD6C7] bg-white p-4">
+              <div className="h-6 w-20 rounded bg-[#EBCDC2] animate-pulse mb-4" />
+
+              <div className="h-40 w-full rounded-xl bg-[#F3DDD6] animate-pulse mb-4" />
+
+              <div className="h-5 w-4/5 rounded bg-[#EBCDC2] animate-pulse mb-3" />
+              <div className="h-4 w-full rounded bg-[#EFDFD9] animate-pulse mb-2" />
+              <div className="h-4 w-3/4 rounded bg-[#EFDFD9] animate-pulse" />
+            </div>
+          </aside>
         </div>
       </div>
     );
@@ -626,11 +781,11 @@ const ContentViewPage = () => {
                               <span className="font-medium text-sm md:text-base">
                                 {selectUpcomingSession?.scheduledStart
                                   ? new Date(
-                                    selectUpcomingSession?.scheduledStart,
-                                  ).toLocaleTimeString("en-US", {
-                                    hour: "numeric",
-                                    minute: "2-digit",
-                                  })
+                                      selectUpcomingSession?.scheduledStart,
+                                    ).toLocaleTimeString("en-US", {
+                                      hour: "numeric",
+                                      minute: "2-digit",
+                                    })
                                   : ""}
                               </span>
                             </div>
@@ -696,15 +851,11 @@ const ContentViewPage = () => {
                         </div>
 
                         {/* ================= TRAINER SECTION ================= */}
-                        <div
-                          className=" bg-white/60 rounded-[20px] p-4 sm:p-5 md:p-6 border border-orange-200 flex justify-center items-center h-full"
-                        >
+                        <div className=" bg-white/60 rounded-[20px] p-4 sm:p-5 md:p-6 border border-orange-200 flex justify-center items-center h-full">
                           <div className="text-center flex flex-col justify-center items-center">
                             {/* Profile Image */}
                             <div className="relative mb-3">
-                              <div
-                                className=" w-[68px] h-[68px] sm:w-[76px] sm:h-[76px] md:w-[60px] md:h-[60px] rounded-full border-2 border-orange-400 overflow-hidden"
-                              >
+                              <div className=" w-[68px] h-[68px] sm:w-[76px] sm:h-[76px] md:w-[60px] md:h-[60px] rounded-full border-2 border-orange-400 overflow-hidden">
                                 <img
                                   src="https://cdn-icons-png.flaticon.com/512/709/709699.png"
                                   alt="Trainer"
@@ -726,7 +877,10 @@ const ContentViewPage = () => {
                               </p>
 
                               <p className="text-gray-500 text-xs line-clamp-2 ">
-                                {selectUpcomingSession?.instructor?.profile?.bio}
+                                {
+                                  selectUpcomingSession?.instructor?.profile
+                                    ?.bio
+                                }
                               </p>
                             </div>{" "}
                           </div>
@@ -879,12 +1033,12 @@ const ContentViewPage = () => {
                             <p className="text-gray-600 text-sm font-medium">
                               {selectUpcomingSession?.scheduledStart
                                 ? new Date(
-                                  selectUpcomingSession.scheduledStart,
-                                ).toLocaleDateString("en-US", {
-                                  month: "long",
-                                  day: "numeric",
-                                  year: "numeric",
-                                })
+                                    selectUpcomingSession.scheduledStart,
+                                  ).toLocaleDateString("en-US", {
+                                    month: "long",
+                                    day: "numeric",
+                                    year: "numeric",
+                                  })
                                 : ""}
                             </p>
                           </div>
@@ -899,10 +1053,11 @@ const ContentViewPage = () => {
                         <button
                           key={tab}
                           onClick={() => setActiveTab(tab)}
-                          className={`flex min-w-[100px] sm:min-w-[110px] px-4 sm:px-6 py-3 sm:py-4 text-sm font-semibold transition-all duration-200 border-b-2 ${activeTab === tab
+                          className={`flex min-w-[100px] sm:min-w-[110px] px-4 sm:px-6 py-3 sm:py-4 text-sm font-semibold transition-all duration-200 border-b-2 ${
+                            activeTab === tab
                               ? "text-orange-600 border-orange-500 bg-orange-50/50"
                               : "text-gray-600 border-transparent hover:text-gray-900 hover:bg-gray-50"
-                            }`}
+                          }`}
                         >
                           {tab}
                         </button>
@@ -926,18 +1081,20 @@ const ContentViewPage = () => {
                             <div
                               onClick={() => setSelectUpcomingSession(session)}
                               key={session.id}
-                              className={`rounded-2xl p-2 cursor-pointer transition-all duration-200 ${selectUpcomingSession?.id === session.id
+                              className={`rounded-2xl p-2 cursor-pointer transition-all duration-200 ${
+                                selectUpcomingSession?.id === session.id
                                   ? "bg-gradient-to-br from-orange-100 to-peach-100 border-2 border-orange-300 shadow-md"
                                   : "bg-gray-50 border-2 border-gray-100 hover:border-orange-200 hover:shadow-md"
-                                }`}
+                              }`}
                             >
                               <div className="flex gap-3">
                                 {/* Session Number */}
                                 <div
-                                  className={`w-10 h-10 rounded-full flex items-center justify-center font-bold text-sm ${session.active
+                                  className={`w-10 h-10 rounded-full flex items-center justify-center font-bold text-sm ${
+                                    session.active
                                       ? "bg-orange-500 text-white"
                                       : "bg-white text-gray-600 border-2 border-gray-200"
-                                    }`}
+                                  }`}
                                 >
                                   {i + 1}
                                 </div>
@@ -946,10 +1103,11 @@ const ContentViewPage = () => {
                                 <div className="flex-1 min-w-0">
                                   <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-1 sm:gap-2 mb-1">
                                     <h3
-                                      className={`font-bold text-sm ${session.active
+                                      className={`font-bold text-sm ${
+                                        session.active
                                           ? "text-gray-900"
                                           : "text-gray-700"
-                                        }`}
+                                      }`}
                                     >
                                       session {i + 1}
                                     </h3>
@@ -1005,13 +1163,11 @@ const ContentViewPage = () => {
 
         <div className="w-full max-w-7xl mx-auto px-4 sm:px-5 lg:px-0 ">
           <div className="grid grid-cols-1 xl:grid-cols-[1.5fr_0.5fr] items-start gap-4">
-
             <div>
               {activeTab === "Overview" ? (
                 <div className="flex flex-col gap-4">
                   <div className="w-full">
                     {sessionStatus2 === "expired" ? (
-
                       <div
                         className="
       w-full
@@ -1272,7 +1428,6 @@ const ContentViewPage = () => {
                               </div>
                             </div>
 
-
                             <p
                               className="
                 max-w-[620px]
@@ -1289,9 +1444,9 @@ const ContentViewPage = () => {
 
                             <div className="flex flex-wrap items-center gap-3">
                               {/* Countdown Timer */}
-                            <div className="relative inline-flex items-center gap-2">
-  <div
-    className="
+                              <div className="relative inline-flex items-center gap-2">
+                                <div
+                                  className="
       inline-flex
       items-center
       justify-center
@@ -1307,21 +1462,21 @@ const ContentViewPage = () => {
       sm:text-[15px]
       font-medium
     "
-  >
-    Starts in {formatTime2(timeLeft2)}
-  </div>
+                                >
+                                  Starts in {formatTime2(timeLeft2)}
+                                </div>
 
-  {/* i Icon */}
-  <div className="relative group">
-    <Info
-      size={17}
-      strokeWidth={2.5}
-      className="text-[#ff7148] cursor-help"
-    />
+                                {/* i Icon */}
+                                <div className="relative group">
+                                  <Info
+                                    size={17}
+                                    strokeWidth={2.5}
+                                    className="text-[#ff7148] cursor-help"
+                                  />
 
-    {/* Tooltip */}
-    <div
-      className="
+                                  {/* Tooltip */}
+                                  <div
+                                    className="
         absolute
         left-1/2
         bottom-full
@@ -1341,11 +1496,12 @@ const ContentViewPage = () => {
         shadow-lg
         group-hover:block
       "
-    >
-      You can join this session 10 minutes before the scheduled start time.
-    </div>
-  </div>
-</div>
+                                  >
+                                    You can join this session 10 minutes before
+                                    the scheduled start time.
+                                  </div>
+                                </div>
+                              </div>
 
                               {/* View Session */}
                               {showSessionButton && (
@@ -1380,10 +1536,8 @@ const ContentViewPage = () => {
                     )}
                   </div>
 
-
                   <div className="flex flex-col gap-4">
                     {allcontent?.relatedMaterials?.length > 0 ? (
-
                       <div className="bg-gradient-to-b from-white via-gray-50 to-gray-300 p-[1.5px] rounded-[20px]">
                         <div
                           className="
@@ -1411,7 +1565,7 @@ const ContentViewPage = () => {
                             </h2>
 
                             <button
-                            onClick={()=> setActiveTab("Material")}
+                              onClick={() => setActiveTab("Material")}
                               className="
                 shrink-0
                 text-[12px]
@@ -1526,7 +1680,6 @@ const ContentViewPage = () => {
                         </div>
                       </div>
                     ) : (
-
                       <div className="bg-gradient-to-b from-white via-gray-50 to-gray-300 p-[1.5px] rounded-[20px]">
                         <div
                           className="
@@ -1597,7 +1750,6 @@ const ContentViewPage = () => {
                         </div>
                       </div>
                     )}
-
 
                     <div className="bg-gradient-to-b from-white via-gray-50 to-gray-300 p-[1.5px] rounded-[20px]">
                       {/* Your existing About This Session code */}
@@ -1674,18 +1826,19 @@ const ContentViewPage = () => {
                     justify-center
                     overflow-hidden
 
-                    ${pdf?.materialType === "pdf"
-                                        ? "bg-transparent"
-                                        : pdf?.materialType === "document"
-                                          ? "bg-[#EA580C]"
-                                          : pdf?.materialType === "link"
-                                            ? "bg-[#2563EB]"
-                                            : pdf?.materialType === "image"
-                                              ? "bg-[#16A34A]"
-                                              : pdf?.materialType === "audio"
-                                                ? "bg-[#9333EA]"
-                                                : "bg-[#6B7280]"
-                                      }
+                    ${
+                      pdf?.materialType === "pdf"
+                        ? "bg-transparent"
+                        : pdf?.materialType === "document"
+                          ? "bg-[#EA580C]"
+                          : pdf?.materialType === "link"
+                            ? "bg-[#2563EB]"
+                            : pdf?.materialType === "image"
+                              ? "bg-[#16A34A]"
+                              : pdf?.materialType === "audio"
+                                ? "bg-[#9333EA]"
+                                : "bg-[#6B7280]"
+                    }
                   `}
                                   >
                                     <MaterialIcon type={pdf?.materialType} />
@@ -1761,7 +1914,8 @@ const ContentViewPage = () => {
                   text-black
                   transition-all
                   duration-200
-                  hover:bg-orange-50
+                  hover:bg-[#f36d45]
+                  hover:text-white
                   active:scale-[0.98]
                   sm:w-[120px]
                 "
@@ -1848,17 +2002,14 @@ const ContentViewPage = () => {
                 </>
               ) : activeTab === "Trainer" ? (
                 <>
-
                   <section className="w-full px-4 py-8 md:px-8">
                     <div className="mx-auto max-w-6xl">
                       <div className="relative min-h-[260px] overflow-hidden rounded-[24px] border border-[#f4d6c9] bg-[#fffdfb] shadow-sm">
                         {/* Orange Left Panel */}
                         <div className="absolute left-0 top-0 h-full w-[102px] bg-[#ff711f] md:w-[112px]" />
 
-
                         {/* Trainer Image */}
                         <div className="absolute left-[20px] top-1/2 z-10 h-[170px] w-[170px] -translate-y-1/2 md:left-[38px] md:h-[150px] md:w-[150px]">
-
                           <div className="absolute -inset-2 rounded-full border-[7px] border-[#fce6d7] bg-white" />
 
                           <div className="absolute inset-0 overflow-hidden rounded-full">
@@ -1877,9 +2028,7 @@ const ContentViewPage = () => {
                               clipPath: "inset(0 0 166px 0)",
                             }}
                           />
-
                         </div>
-
 
                         {/* Counter */}
                         <div className="absolute right-6 top-4 z-20 text-[12px] font-medium text-[#d99a7a]">
@@ -1903,8 +2052,11 @@ const ContentViewPage = () => {
                           {/* Info Row */}
                           <div className="mt-2 flex flex-wrap items-center gap-x-8 gap-y-1 text-[12px] text-[#555]">
                             <div className="flex items-center gap-1.5">
-                              <Star size={12} className="fill-[#f6b900] text-[#f6b900]" />
-                              <span>{instructor?.experience || '4 years'}</span>
+                              <Star
+                                size={12}
+                                className="fill-[#f6b900] text-[#f6b900]"
+                              />
+                              <span>{instructor?.experience || "4 years"}</span>
                             </div>
                             {/* <div className="flex items-center gap-1.5">
                 <span className="text-[#e58a52]">▤</span>
@@ -1918,7 +2070,7 @@ const ContentViewPage = () => {
                               Specialization
                             </p>
                             <p className="mt-0.5 text-[12px] text-[#555]">
-                              {instructor?.skills?.join(' ,')}
+                              {instructor?.skills?.join(" ,")}
                             </p>
                           </div>
 
@@ -1931,14 +2083,12 @@ const ContentViewPage = () => {
                               {instructor?.profile?.bio}
                             </p>
                           </div>
-
                         </div>
                       </div>
                     </div>
                   </section>
                   {/* <TrainerSection /> */}
                 </>
-
               ) : (
                 <div
                   className="
@@ -1983,29 +2133,29 @@ const ContentViewPage = () => {
 
                           const date = startDate
                             ? startDate
-                              .toLocaleDateString("en-GB", {
-                                day: "2-digit",
-                                month: "short",
-                                weekday: "short",
-                              })
-                              .toUpperCase()
+                                .toLocaleDateString("en-GB", {
+                                  day: "2-digit",
+                                  month: "short",
+                                  weekday: "short",
+                                })
+                                .toUpperCase()
                             : "";
 
                           const time =
                             startDate && endDate
                               ? `${startDate.toLocaleTimeString("en-US", {
-                                hour: "2-digit",
-                                minute: "2-digit",
-                              })} to ${endDate.toLocaleTimeString("en-US", {
-                                hour: "2-digit",
-                                minute: "2-digit",
-                              })}`
+                                  hour: "2-digit",
+                                  minute: "2-digit",
+                                })} to ${endDate.toLocaleTimeString("en-US", {
+                                  hour: "2-digit",
+                                  minute: "2-digit",
+                                })}`
                               : "";
 
                           return (
-                          <div
-  key={session?.id || index}
-  className="
+                            <div
+                              key={session?.id || index}
+                              className="
     relative
     grid
     grid-cols-[125px_minmax(0,1fr)]
@@ -2014,10 +2164,10 @@ const ContentViewPage = () => {
     sm:gap-4
     items-center
   "
->
-  {/* ================= TIMELINE DOT ================= */}
-  <div
-    className="
+                            >
+                              {/* ================= TIMELINE DOT ================= */}
+                              <div
+                                className="
       absolute
       left-[16px]
       sm:left-0
@@ -2031,15 +2181,16 @@ const ContentViewPage = () => {
       border-white
       bg-[#ffe3d7]
     "
-  />
+                              />
 
-  {/* 
+                              {/* 
      2. UPDATED ACTIVE DOT LOGIC 
      Shows if it's the first item (index === 0) OR if it's the currently hovered item 
   */}
-  {(index === 0 || hoveredSessionIndex === index) && (
-    <div
-      className="
+                              {(index === 0 ||
+                                hoveredSessionIndex === index) && (
+                                <div
+                                  className="
         absolute
         left-[16px]
         sm:left-0
@@ -2054,12 +2205,12 @@ const ContentViewPage = () => {
         border-white
         transition-all duration-200
       "
-    />
-  )}
+                                />
+                              )}
 
-  {/* ================= DATE CARD ================= */}
-  <div
-    className="
+                              {/* ================= DATE CARD ================= */}
+                              <div
+                                className="
       relative
       ml-[29px]
       sm:ml-[22px]
@@ -2070,10 +2221,10 @@ const ContentViewPage = () => {
       shadow-[0_2px_8px_rgba(0,0,0,0.06)]
       overflow-hidden
     "
-  >
-    {/* Date */}
-    <div
-      className="
+                              >
+                                {/* Date */}
+                                <div
+                                  className="
         mx-1
         mt-1
         rounded-[8px]
@@ -2082,23 +2233,23 @@ const ContentViewPage = () => {
         py-2
         text-center
       "
-    >
-      <p
-        className="
+                                >
+                                  <p
+                                    className="
           text-[11px]
           sm:text-[12px]
           font-semibold
           text-[#ff7148]
           uppercase
         "
-      >
-        {date}
-      </p>
-    </div>
+                                  >
+                                    {date}
+                                  </p>
+                                </div>
 
-    {/* Time */}
-    <p
-      className="
+                                {/* Time */}
+                                <p
+                                  className="
         px-2
         py-2
         text-center
@@ -2107,17 +2258,21 @@ const ContentViewPage = () => {
         text-gray-800
         whitespace-nowrap
       "
-    >
-      {time}
-    </p>
-  </div>
+                                >
+                                  {time}
+                                </p>
+                              </div>
 
-  {/* ================= SESSION CARD ================= */}
-  <div
-    // 3. ADDED onMouseEnter and onMouseLeave handlers
-    onMouseEnter={() => setHoveredSessionIndex(index)}
-    onMouseLeave={() => setHoveredSessionIndex(null)}
-    className={`
+                              {/* ================= SESSION CARD ================= */}
+                              <div
+                                // 3. ADDED onMouseEnter and onMouseLeave handlers
+                                onMouseEnter={() =>
+                                  setHoveredSessionIndex(index)
+                                }
+                                onMouseLeave={() =>
+                                  setHoveredSessionIndex(null)
+                                }
+                                className={`
       relative
       min-w-0
       rounded-[13px]
@@ -2136,9 +2291,9 @@ const ContentViewPage = () => {
           : "border-[#eeeeee] hover:bg-gradient-to-r from-[#ffeee2] to-[#fff4ef] hover:border-[#ffd3c4] hover:shadow-[0_3px_10px_rgba(255,113,72,0.10)]"
       }
     `}
-  >
-    <div
-      className="
+                              >
+                                <div
+                                  className="
         flex
         flex-col
         gap-3
@@ -2146,12 +2301,12 @@ const ContentViewPage = () => {
         sm:items-center
         sm:justify-between
       "
-    >
-      {/* ================= SESSION INFO ================= */}
-      <div className="min-w-0 flex-1">
-        {/* Session number */}
-        <p
-          className="
+                                >
+                                  {/* ================= SESSION INFO ================= */}
+                                  <div className="min-w-0 flex-1">
+                                    {/* Session number */}
+                                    <p
+                                      className="
             text-[9px]
             sm:text-[10px]
             uppercase
@@ -2160,13 +2315,13 @@ const ContentViewPage = () => {
             leading-none
             mb-0.5
           "
-        >
-          SESSION {String(index).padStart(1, "1")}
-        </p>
+                                    >
+                                      SESSION {String(index).padStart(1, "1")}
+                                    </p>
 
-        {/* Title */}
-        <h3
-          className="
+                                    {/* Title */}
+                                    <h3
+                                      className="
             text-[13px]
             sm:text-base
             font-semibold
@@ -2175,13 +2330,13 @@ const ContentViewPage = () => {
             line-clamp-2
             sm:w-90
           "
-        >
-          {session?.title}
-        </h3>
+                                    >
+                                      {session?.title}
+                                    </h3>
 
-        {/* Category */}
-        <p
-          className="
+                                    {/* Category */}
+                                    <p
+                                      className="
             text-[10px]
             sm:text-sm
             font-medium
@@ -2189,40 +2344,40 @@ const ContentViewPage = () => {
             leading-tight
             mt-0.5
           "
-        >
-          IELTS English
-        </p>
+                                    >
+                                      IELTS English
+                                    </p>
 
-        {/* Instructor */}
-        <div
-          className="
+                                    {/* Instructor */}
+                                    <div
+                                      className="
             flex
             items-center
             gap-1
             mt-1
           "
-        >
-          <User
-            className="w-[14px] h-[14px] text-[#ff7148]"
-            strokeWidth={2.5}
-            fill="#f36d45"
-          />
+                                    >
+                                      <User
+                                        className="w-[14px] h-[14px] text-[#ff7148]"
+                                        strokeWidth={2.5}
+                                        fill="#f36d45"
+                                      />
 
-          <span
-            className="
+                                      <span
+                                        className="
               text-[10px]
               sm:text-sm
               text-[#4f4f4f]
             "
-          >
-            {session?.instructor?.name || "Rashmi"}
-          </span>
-        </div>
-      </div>
+                                      >
+                                        {session?.instructor?.name || "Rashmi"}
+                                      </span>
+                                    </div>
+                                  </div>
 
-      {/* ================= RIGHT SIDE ================= */}
-      <div
-        className="
+                                  {/* ================= RIGHT SIDE ================= */}
+                                  <div
+                                    className="
           flex
           items-center
           justify-between
@@ -2232,10 +2387,10 @@ const ContentViewPage = () => {
           gap-2
           shrink-0
         "
-      >
-        {/* Status */}
-        <span
-          className="
+                                  >
+                                    {/* Status */}
+                                    <span
+                                      className="
             inline-flex
             items-center
             justify-center
@@ -2252,17 +2407,17 @@ const ContentViewPage = () => {
             font-medium
             text-[#ff7148]
           "
-        >
-          Upcoming
-        </span>
+                                    >
+                                      Upcoming
+                                    </span>
 
-        {/* Join button */}
-        <Link
-          to={`/sessions/${session?.slug}`}
-          onClick={() => {
-            setActiveTab("Overview");
-          }}
-          className="
+                                    {/* Join button */}
+                                    <Link
+                                      to={`/sessions/${session?.slug}`}
+                                      onClick={() => {
+                                        setActiveTab("Overview");
+                                      }}
+                                      className="
             inline-flex
             items-center
             justify-center
@@ -2279,14 +2434,14 @@ const ContentViewPage = () => {
             font-medium
             transition-colors
           "
-        >
-          Join Class
-          <span className="ml-1">›</span>
-        </Link>
-      </div>
-    </div>
-  </div>
-</div>
+                                    >
+                                      Join Class
+                                      <span className="ml-1">›</span>
+                                    </Link>
+                                  </div>
+                                </div>
+                              </div>
+                            </div>
                           );
                         },
                       )}
@@ -2420,7 +2575,6 @@ const ContentViewPage = () => {
           </div>
         </div>
 
-
         {timeRemaining?.type === "ended" && content.progressCount > 0 && (
           <div className="mt-6 flex flex-col items-center justify-between gap-4 rounded-2xl border border-orange-200 bg-orange-50 px-5 py-4 sm:flex-row">
             <div className="flex items-center gap-3">
@@ -2445,11 +2599,6 @@ const ContentViewPage = () => {
     </div>
   );
 };
-
-
-
-
-
 
 import { MessageSquare, MoreVertical } from "lucide-react";
 
@@ -2787,7 +2936,6 @@ export const UpcomingSessionCard = ({
     </div>
   );
 };
-
 
 const CountdownBlock = ({ value, label }) => {
   const digits = String(value).padStart(2, "0").split("");

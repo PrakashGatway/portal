@@ -16,7 +16,7 @@ export default function CourseSupportFooter() {
       <div className="flex flex-col lg:flex-row items-center justify-between gap-6">
 
         <div className="md:flex">
-          <img src="/images/iels/listening.png" alt="" className="w-40 h-40 scale-120" />
+          <img src="/images/headphone.webp" alt="" className="w-40 h-40 scale-90" />
           <div>
             <h3 className="text-2xl font-semibold text-gray-800">
               Need Help Choosing the Right Course?

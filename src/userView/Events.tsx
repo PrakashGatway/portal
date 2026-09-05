@@ -47,6 +47,11 @@ const EventCalendar = () => {
   const [eventDescription, setEventDescription] = useState("");
   const [eventCategory, setEventCategory] = useState("session");
   const [eventInstructor, setEventInstructor] = useState("");
+  const [hoveredDate, setHoveredDate] = useState(null);
+const [cellPopupPosition, setCellPopupPosition] = useState({
+  left: 0,
+  top: 0,
+});
 
   const colorMap = {
     session: {
@@ -153,42 +158,62 @@ const EventCalendar = () => {
 
   const navigateToday = () => setDate(new Date());
 
-  const handleSelectSlot = useCallback(
-    (slotInfo) => {
-      if (user.role !== "admin") return;
-      setSelectedSlot(slotInfo);
-      setEditingEvent(null);
-      setViewingEvent(null);
-      setEventTitle("");
-      setEventDescription("");
-      setEventInstructor("");
-      setEventCategory("session");
-      setEventStart(slotInfo.start);
-      setEventEnd(
-        slotInfo.end || new Date(slotInfo.start.getTime() + 60 * 60 * 1000),
-      );
-      setShowEventModal(true);
-    },
-    [user.role],
-  );
+ const handleSelectSlot = useCallback(
+  (slotInfo) => {
+    // Clear cell hover popup
+    setHoveredDate(null);
 
-  const handleSelectEvent = useCallback(
-    (event) => {
-      const eventDate = moment(event.start).format("YYYY-MM-DD");
-      const allEventsOnSameDay = events
-        .filter((e) => moment(e.start).format("YYYY-MM-DD") === eventDate)
-        .sort((a, b) => a.start - b.start);
+    const clickedDate = moment(slotInfo.start).format("YYYY-MM-DD");
 
-      setViewingEvent({
-        ...event,
-        siblings: allEventsOnSameDay,
-      });
+    const eventsOnClickedDate = events.filter(
+      (event) =>
+        moment(event.start).format("YYYY-MM-DD") === clickedDate
+    );
 
-      setEditingEvent(null);
-      setShowEventModal(true);
-    },
-    [events],
-  );
+    // Empty cell → do nothing
+    if (eventsOnClickedDate.length === 0) {
+      return;
+    }
+
+    const firstEvent = eventsOnClickedDate[0];
+
+    setViewingEvent({
+      ...firstEvent,
+      siblings: eventsOnClickedDate.sort(
+        (a, b) => a.start - b.start
+      ),
+    });
+
+    setEditingEvent(null);
+    setShowEventModal(true);
+  },
+  [events],
+);
+
+ const handleSelectEvent = useCallback(
+  (event) => {
+    // Clear cell hover popup
+    setHoveredDate(null);
+
+    const eventDate = moment(event.start).format("YYYY-MM-DD");
+
+    const allEventsOnSameDay = events
+      .filter(
+        (e) =>
+          moment(e.start).format("YYYY-MM-DD") === eventDate
+      )
+      .sort((a, b) => a.start - b.start);
+
+    setViewingEvent({
+      ...event,
+      siblings: allEventsOnSameDay,
+    });
+
+    setEditingEvent(null);
+    setShowEventModal(true);
+  },
+  [events],
+);
 
   const handleEditEvent = (event) => {
     if (user.role !== "admin") return;
@@ -257,46 +282,127 @@ const EventCalendar = () => {
     },
   });
 
-  const dayPropGetter = (calendarDate) => {
-    const today = new Date();
-    const isToday =
-      calendarDate.getDate() === today.getDate() &&
-      calendarDate.getMonth() === today.getMonth() &&
-      calendarDate.getFullYear() === today.getFullYear();
-    const isCurrentMonth = calendarDate.getMonth() === date.getMonth();
 
-    const firstDayOfMonth = new Date(
-      calendarDate.getFullYear(),
-      calendarDate.getMonth(),
-      1,
-    );
-    const firstDayWeekday = firstDayOfMonth.getDay();
-    const dateDay = calendarDate.getDate();
-    const rowIndex = Math.floor((firstDayWeekday + dateDay - 1) / 7);
+  const handleCalendarCellHover = (calendarDate, e) => {
+  const dateKey = moment(calendarDate).format("YYYY-MM-DD");
 
-    const rowColors = [
-      "#fdf3e7",
-      "#FDEDD3",
-      "#fde3c2",
-      "#ffd5ad",
-      "#fed9c9",
-      "#fed9c9",
-    ];
-    const bgColor = isCurrentMonth
-      ? rowColors[Math.min(rowIndex, 5)]
-      : "#FEF7EF";
+  const dateEvents = events
+    .filter(
+      (event) =>
+        moment(event.start).format("YYYY-MM-DD") === dateKey
+    )
+    .sort((a, b) => a.start - b.start);
 
-    return {
-      className: `rbc-day-bg-custom ${isToday ? "rbc-today-custom" : ""}`,
-      style: {
-        backgroundColor: isToday ? "#fff" : bgColor,
-        borderRadius: "16px",
-        margin: "4px",
-        border: isToday ? "2px solid #FB923C" : "1px solid transparent",
-        opacity: isCurrentMonth ? 1 : 0.6,
-      },
-    };
+  if (dateEvents.length === 0) {
+    setHoveredDate(null);
+    return;
+  }
+
+  const popupWidth = window.innerWidth <= 767 ? 260 : 290;
+  const popupHeight = Math.min(
+    100 + dateEvents.length * 45,
+    300
+  );
+
+  const offset = window.innerWidth <= 767 ? 12 : 16;
+
+  let left = e.clientX + offset;
+  let top = e.clientY + offset;
+
+  // Right edge
+  if (left + popupWidth > window.innerWidth - 10) {
+    left = e.clientX - popupWidth - offset;
+  }
+
+  // Left edge
+  if (left < 10) {
+    left = 10;
+  }
+
+  // Bottom edge
+  if (top + popupHeight > window.innerHeight - 10) {
+    top = e.clientY - popupHeight - offset;
+  }
+
+  // Top edge
+  if (top < 10) {
+    top = 10;
+  }
+
+  setCellPopupPosition({
+    left,
+    top,
+  });
+
+  setHoveredDate({
+    dateKey,
+    events: dateEvents,
+  });
+};
+
+ const dayPropGetter = (calendarDate) => {
+  const today = new Date();
+
+  const isToday =
+    calendarDate.getDate() === today.getDate() &&
+    calendarDate.getMonth() === today.getMonth() &&
+    calendarDate.getFullYear() === today.getFullYear();
+
+  const isCurrentMonth = calendarDate.getMonth() === date.getMonth();
+
+  const firstDayOfMonth = new Date(
+    calendarDate.getFullYear(),
+    calendarDate.getMonth(),
+    1
+  );
+
+  const firstDayWeekday = firstDayOfMonth.getDay();
+  const dateDay = calendarDate.getDate();
+
+  const rowIndex = Math.floor(
+    (firstDayWeekday + dateDay - 1) / 7
+  );
+
+  const rowColors = [
+    "#fdf3e7",
+    "#FDEDD3",
+    "#fde3c2",
+    "#ffd5ad",
+    "#fed9c9",
+    "#fed9c9",
+  ];
+
+  const bgColor = isCurrentMonth
+    ? rowColors[Math.min(rowIndex, 5)]
+    : "#FEF7EF";
+
+  // Check whether this particular date has an event
+  const dateKey = moment(calendarDate).format("YYYY-MM-DD");
+
+  const hasEvents = events.some(
+    (event) =>
+      moment(event.start).format("YYYY-MM-DD") === dateKey
+  );
+
+  return {
+    className: `
+  rbc-day-bg-custom
+  calendar-date-${dateKey}
+  ${isToday ? "rbc-today-custom" : ""}
+  ${hasEvents && !showEventModal ? "has-calendar-event" : ""}
+`,
+
+    style: {
+      backgroundColor: isToday ? "#fff" : bgColor,
+      borderRadius: "16px",
+      margin: "4px",
+      border: isToday
+        ? "2px solid #FB923C"
+        : "1px solid transparent",
+      opacity: isCurrentMonth ? 1 : 0.6,
+    },
   };
+};
 
   const CustomMonthEvent = ({ event }) => {
   const sameDateEvents = event.sameDateEvents || [event];
@@ -346,19 +452,7 @@ const EventCalendar = () => {
         }}
         onMouseLeave={() => setShowPopup(false)}
       >
-        {/* Blinking Event Dot */}
-       <div className="w-full flex justify-end items-center">
-  <div
-    className="
-      h-2.5 w-2.5
-      shrink-0
-      rounded-full
-      bg-orange-500
-      animate-pulse
-      shadow-[0_0_6px_rgba(249,115,22,0.6)]
-    "
-  />
-</div>
+      
       </div>
 
       {showPopup &&
@@ -467,67 +561,323 @@ const EventCalendar = () => {
 
 
 // Add this custom date cell component
-const CustomDateCell = ({ date, events: allEvents, children }) => {
-  const dateKey = moment(date).format("YYYY-MM-DD");
-  const hasEvents = allEvents.some(
-    (e) => moment(e.start).format("YYYY-MM-DD") === dateKey
-  );
+const CustomDateCell = ({ value, children }) => {
+  const dateKey = moment(value).format("YYYY-MM-DD");
 
-  return (
-    <div className="relative w-full h-full">
-      {children}
-      {hasEvents && (
-        <div
-          className="
-            absolute
-            top-2
-            right-2
-            z-20
-          "
-        >
-          <div
-            className="
-              h-2.5 w-2.5
-              rounded-full
-              bg-orange-500
-              animate-pulse
-              shadow-[0_0_6px_rgba(249,115,22,0.6)]
-            "
-          />
-        </div>
-      )}
-    </div>
-  );
+  const dateEvents = events
+    .filter(
+      (event) =>
+        moment(event.start).format("YYYY-MM-DD") === dateKey
+    )
+    .sort((a, b) => new Date(a.start) - new Date(b.start));
+
+  const handleEnter = (e) => {
+    if (!dateEvents.length) {
+      setHoveredDate(null);
+      return;
+    }
+
+    const popupWidth = window.innerWidth < 768 ? 260 : 290;
+    const popupHeight = Math.min(
+      90 + dateEvents.length * 40,
+      280
+    );
+
+    const offset = 14;
+
+    let left = e.clientX + offset;
+    let top = e.clientY + offset;
+
+    if (left + popupWidth > window.innerWidth - 10) {
+      left = e.clientX - popupWidth - offset;
+    }
+
+    if (top + popupHeight > window.innerHeight - 10) {
+      top = e.clientY - popupHeight - offset;
+    }
+
+    left = Math.max(10, left);
+    top = Math.max(10, top);
+
+    setCellPopupPosition({
+      left,
+      top,
+    });
+
+    setHoveredDate({
+      dateKey,
+      events: dateEvents,
+    });
+  };
+
+  const handleMove = (e) => {
+    if (!dateEvents.length) return;
+
+    const popupWidth = window.innerWidth < 768 ? 260 : 290;
+    const popupHeight = Math.min(
+      90 + dateEvents.length * 40,
+      280
+    );
+
+    const offset = 14;
+
+    let left = e.clientX + offset;
+    let top = e.clientY + offset;
+
+    if (left + popupWidth > window.innerWidth - 10) {
+      left = e.clientX - popupWidth - offset;
+    }
+
+    if (top + popupHeight > window.innerHeight - 10) {
+      top = e.clientY - popupHeight - offset;
+    }
+
+    left = Math.max(10, left);
+    top = Math.max(10, top);
+
+    setCellPopupPosition({
+      left,
+      top,
+    });
+  };
+
+  const handleLeave = () => {
+    setHoveredDate(null);
+  };
+
+  // IMPORTANT:
+  // Don't create another div.
+  // Attach handlers directly to RBC's original day cell.
+  return React.cloneElement(children, {
+    onMouseEnter: handleEnter,
+    onMouseMove: handleMove,
+    onMouseLeave: handleLeave,
+  });
 };
 
 
 
-  const CustomEvent = ({ event }) => (
-    <div className="w-full min-w-0 overflow-hidden">
-      <div className="w-full min-w-0 overflow-hidden text-ellipsis whitespace-nowrap text-[11px] font-semibold text-orange-800 leading-tight">
+ const CustomEvent = ({ event }) => {
+  return (
+    <div
+      className="w-full min-w-0 overflow-hidden cursor-pointer"
+      onClick={(e) => {
+        e.stopPropagation();
+        handleSelectEvent(event);
+      }}
+    >
+      <div
+        className="
+          w-full
+          min-w-0
+          overflow-hidden
+          text-ellipsis
+          whitespace-nowrap
+          text-[11px]
+          font-semibold
+          text-orange-800
+          leading-tight
+          cursor-pointer
+        "
+      >
         {event.title}
       </div>
     </div>
   );
+};
 
   const filteredEvents = useMemo(() => {
-    if (view !== Views.MONTH) return events;
-
+  // MONTH VIEW
+  if (view === Views.MONTH) {
     const grouped = new Map();
+
     events.forEach((event) => {
       const dateKey = moment(event.start).format("YYYY-MM-DD");
-      if (!grouped.has(dateKey)) grouped.set(dateKey, []);
+
+      if (!grouped.has(dateKey)) {
+        grouped.set(dateKey, []);
+      }
+
       grouped.get(dateKey).push(event);
     });
 
     return Array.from(grouped.values()).map((dateEvents) => {
       const sortedEvents = dateEvents.sort(
-        (a, b) => new Date(a.start).getTime() - new Date(b.start).getTime(),
+        (a, b) =>
+          new Date(a.start).getTime() -
+          new Date(b.start).getTime()
       );
+
       const firstEvent = sortedEvents[0];
-      return { ...firstEvent, sameDateEvents: sortedEvents };
+
+      return {
+        ...firstEvent,
+        sameDateEvents: sortedEvents,
+      };
     });
-  }, [events, view]);
+  }
+
+  // WEEK VIEW
+  if (view === Views.WEEK) {
+    const grouped = new Map();
+
+    events.forEach((event) => {
+      const dateKey = moment(event.start).format("YYYY-MM-DD");
+
+      // Group only events having the same start time
+      const timeKey = moment(event.start).format(
+        "YYYY-MM-DD-HH-mm"
+      );
+
+      if (!grouped.has(timeKey)) {
+        grouped.set(timeKey, []);
+      }
+
+      grouped.get(timeKey).push(event);
+    });
+
+    return Array.from(grouped.values()).map((sameTimeEvents) => {
+      const sortedEvents = sameTimeEvents.sort(
+        (a, b) =>
+          new Date(a.start).getTime() -
+          new Date(b.start).getTime()
+      );
+
+      const firstEvent = sortedEvents[0];
+
+      return {
+        ...firstEvent,
+        sameTimeEvents: sortedEvents,
+      };
+    });
+  }
+
+  // DAY / AGENDA
+  return events;
+}, [events, view]);
+
+
+
+useEffect(() => {
+  if (view !== Views.WEEK) {
+    setHoveredDate(null);
+    return;
+  }
+
+  const handleWeekMouseMove = (e) => {
+    const target = e.target.closest(".rbc-day-slot");
+
+    if (!target) {
+      setHoveredDate(null);
+      return;
+    }
+
+    const rect = target.getBoundingClientRect();
+
+    // Find which day column the mouse is inside
+    const timeContent = target.closest(".rbc-time-content");
+
+    if (!timeContent) {
+      setHoveredDate(null);
+      return;
+    }
+
+    const daySlots = Array.from(
+      timeContent.querySelectorAll(".rbc-day-slot")
+    );
+
+    const dayIndex = daySlots.indexOf(target);
+
+    if (dayIndex === -1) {
+      setHoveredDate(null);
+      return;
+    }
+
+    const weekStart = moment(date).startOf("week");
+    const hoveredDay = weekStart.clone().add(dayIndex, "days");
+
+    const dateKey = hoveredDay.format("YYYY-MM-DD");
+
+    const dateEvents = events
+      .filter(
+        (event) =>
+          moment(event.start).format("YYYY-MM-DD") === dateKey
+      )
+      .sort(
+        (a, b) =>
+          new Date(a.start).getTime() -
+          new Date(b.start).getTime()
+      );
+
+    // Only show popup when multiple events exist
+    if (dateEvents.length <= 1) {
+      setHoveredDate(null);
+      return;
+    }
+
+    const popupWidth = window.innerWidth < 768 ? 260 : 290;
+    const popupHeight = Math.min(
+      100 + dateEvents.length * 45,
+      300
+    );
+
+    const offset = 14;
+
+    let left = e.clientX + offset;
+    let top = e.clientY + offset;
+
+    if (left + popupWidth > window.innerWidth - 10) {
+      left = e.clientX - popupWidth - offset;
+    }
+
+    if (top + popupHeight > window.innerHeight - 10) {
+      top = e.clientY - popupHeight - offset;
+    }
+
+    left = Math.max(10, left);
+    top = Math.max(10, top);
+
+    setCellPopupPosition({
+      left,
+      top,
+    });
+
+    setHoveredDate({
+      dateKey,
+      events: dateEvents,
+    });
+  };
+
+  const handleWeekMouseLeave = () => {
+    setHoveredDate(null);
+  };
+
+  const calendarElement = document.querySelector(".rbc-time-view");
+
+  if (!calendarElement) return;
+
+  calendarElement.addEventListener(
+    "mousemove",
+    handleWeekMouseMove
+  );
+
+  calendarElement.addEventListener(
+    "mouseleave",
+    handleWeekMouseLeave
+  );
+
+  return () => {
+    calendarElement.removeEventListener(
+      "mousemove",
+      handleWeekMouseMove
+    );
+
+    calendarElement.removeEventListener(
+      "mouseleave",
+      handleWeekMouseLeave
+    );
+  };
+}, [view, date, events]);
 
   const todayEvents = useMemo(
     () =>
@@ -617,6 +967,45 @@ const CustomDateCell = ({ date, events: allEvents, children }) => {
           <style>{`
             .rbc-calendar { height: 100% !important; font-family: inherit; display: flex; flex-direction: column; }
             .rbc-toolbar { display: none !important; }
+
+            /* Event indicator - stays inside the actual calendar cell */
+.rbc-day-bg-custom {
+  position: relative !important;
+}
+
+/* Blinking dot for dates containing events */
+.rbc-day-bg-custom.has-calendar-event::after {
+  content: "";
+  position: absolute;
+  top: 12px;
+  right: 10px;
+  width: 10px;
+  height: 10px;
+  border-radius: 9999px;
+  background: #fb923c;
+  animation: calendarEventPulse 1.5s ease-in-out infinite;
+  box-shadow: 0 0 6px rgba(249, 115, 22, 0.6);
+  pointer-events: none;
+  z-index: 100;
+}
+  /* Hide calendar event indicators while modal is open */
+body:has(.fixed.inset-0.bg-black\/60) 
+.rbc-day-bg-custom.has-calendar-event::after {
+  display: none !important;
+}
+
+@keyframes calendarEventPulse {
+  0%,
+  100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+
+  50% {
+    opacity: 0.45;
+    transform: scale(0.85);
+  }
+}
             
             .rbc-month-view {
               border: none !important;
@@ -630,7 +1019,25 @@ const CustomDateCell = ({ date, events: allEvents, children }) => {
             .rbc-header:nth-child(1) { color: #EA580C; }
             .rbc-header:nth-child(7) { color: #EA580C; }
             .rbc-month-row { display: flex; flex-direction: column; flex: 1; min-height: 0; overflow: hidden; }
-            .rbc-row-content { flex: 1; z-index: 1; min-height: 0; }
+            .rbc-row-content {
+  flex: 1;
+  z-index: 1;
+  min-height: 0;
+  pointer-events: none;
+}
+
+/* Keep actual events clickable */
+.rbc-row-content .rbc-event,
+.rbc-row-content .rbc-show-more {
+  pointer-events: auto;
+}
+
+/* Keep date number clickable */
+.rbc-row-content .rbc-date-cell a {
+  pointer-events: auto;
+}
+
+
             .rbc-date-cell { padding: 8px 12px; text-align: left; }
             .rbc-date-cell > a { color: #1F2937; font-weight: 600; font-size: 0.9rem; }
             .rbc-day-bg + .rbc-day-bg { border-left: none; }
@@ -736,15 +1143,26 @@ const CustomDateCell = ({ date, events: allEvents, children }) => {
               onNavigate={handleNavigate}
               views={[Views.MONTH, Views.WEEK, Views.DAY, Views.AGENDA]}
                components={{
-    toolbar: () => null,
-    month: { 
-      event: CustomMonthEvent,
-      dateCell: (props) => <CustomDateCell {...props} events={events} />
-    },
-    week: { event: CustomEvent },
-    day: { event: CustomEvent },
-    agenda: { event: CustomEvent },
-  }}
+  toolbar: () => null,
+
+  month: {
+    event: CustomMonthEvent,
+
+    dateCellWrapper: CustomDateCell,
+  },
+
+  week: {
+    event: CustomEvent,
+  },
+
+  day: {
+    event: CustomEvent,
+  },
+
+  agenda: {
+    event: CustomEvent,
+  },
+}}
             />
           )}
         </main>
@@ -1021,6 +1439,132 @@ const CustomDateCell = ({ date, events: allEvents, children }) => {
           </div>
         </div>
       )}
+
+      {!showEventModal &&
+  hoveredDate &&
+  hoveredDate.events.length > 0 &&
+  createPortal(
+    <div
+      className="calendar-cell-hover-popup"
+      style={{
+        position: "fixed",
+        left: `${cellPopupPosition.left}px`,
+        top: `${cellPopupPosition.top}px`,
+        zIndex: 2147483647,
+        pointerEvents: "none",
+      }}
+    >
+      <div
+        className="
+          w-[260px]
+          sm:w-[290px]
+          rounded-xl
+          border
+          border-[#FFD6C7]
+          bg-white
+          p-2
+          shadow-[0_8px_25px_rgba(249,115,22,0.18)]
+        "
+      >
+        {/* Header */}
+        <div
+          className="
+            mb-2
+            flex
+            items-center
+            justify-between
+            rounded-lg
+            bg-[#FFF3ED]
+            px-3
+            py-2
+          "
+        >
+          <span
+            className="
+              text-[11px]
+              font-semibold
+              text-[#E85D2A]
+            "
+          >
+            {moment(hoveredDate.dateKey).format(
+              "MMMM DD, YYYY"
+            )}
+          </span>
+
+          <span
+            className="
+              rounded-full
+              bg-[#F97316]
+              px-2
+              py-0.5
+              text-[9px]
+              font-bold
+              text-white
+            "
+          >
+            {hoveredDate.events.length}
+          </span>
+        </div>
+
+        {/* Events */}
+        <div className="space-y-1">
+          {hoveredDate.events.map((event) => (
+            <div
+              key={event.id}
+              className="
+                flex
+                items-center
+                gap-2
+                rounded-lg
+                border
+                border-transparent
+                px-2
+                py-2
+              "
+            >
+              {/* Dot */}
+              <span
+                className="
+                  h-2
+                  w-2
+                  shrink-0
+                  rounded-full
+                  bg-[#F97316]
+                "
+              />
+
+              {/* Title */}
+              <span
+                className="
+                  min-w-0
+                  flex-1
+                  truncate
+                  text-[11px]
+                  font-semibold
+                  text-[#333]
+                "
+              >
+                {event.title}
+              </span>
+
+              {/* Time */}
+              <span
+                className="
+                  shrink-0
+                  text-[9px]
+                  font-medium
+                  text-[#9A8F89]
+                "
+              >
+                {moment(event.start).format("HH:mm")}
+              </span>
+            </div>
+          ))}
+        </div>
+      </div>
+    </div>,
+    document.body
+  )}
     </div>
   );
 };

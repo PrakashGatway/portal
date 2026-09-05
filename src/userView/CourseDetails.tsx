@@ -224,28 +224,25 @@ export default function CourseDetailPage() {
   const [loading, setLoading] = useState(true);
   const [searchParams, setSearchParams] = useSearchParams();
 
-  const [activeTab, setActiveTab] = useState(searchParams.get("tab") || "overview");
-
+  const [activeTab, setActiveTab] = useState(
+    searchParams.get("tab") || "overview",
+  );
 
   const [expandedFaq, setExpandedFaq] = useState<number | null>(null);
   const [isVideoCardFixed, setIsVideoCardFixed] = useState(false);
   const courseHeaderRef = useRef<HTMLDivElement>(null);
   const videoCardRef = useRef<HTMLDivElement>(null);
 
-
   const [curriculum, setCurriculum] = useState<
     { _id: string; title: string; items: any[] }[]
   >([]);
-    const [openSections, setOpenSections] = useState(() => {
+  const [openSections, setOpenSections] = useState(() => {
     return curriculum?.length ? [curriculum[0]?._id] : [];
   });
   const [curriculumLoading, setCurriculumLoading] = useState(false);
   const curriculumRef = useRef(false);
 
   const navigate = useNavigate();
-
-
-
 
   useEffect(() => {
     const fetchCourse = async () => {
@@ -260,9 +257,6 @@ export default function CourseDetailPage() {
     };
     fetchCourse();
   }, [slug]);
-
-
-
 
   const [expandedLessons, setExpandedLessons] = useState({});
 
@@ -286,8 +280,6 @@ export default function CourseDetailPage() {
       setOpenSections([curriculum[0]._id]);
     }
   }, [curriculum]);
-
-
 
   useEffect(() => {
     if (course && !curriculumRef.current) {
@@ -690,10 +682,11 @@ export default function CourseDetailPage() {
                 px-2 pb-3 pt-1
                 text-[16px] font-medium
                 transition-colors duration-200
-                ${isActive
-                                  ? "text-orange-700 dark:text-orange-500"
-                                  : "text-gray-800 hover:text-gray-800 dark:text-gray-500 dark:hover:text-gray-300"
-                                }
+                ${
+                  isActive
+                    ? "text-orange-700 dark:text-orange-500"
+                    : "text-gray-800 hover:text-gray-800 dark:text-gray-500 dark:hover:text-gray-300"
+                }
               `}
                               whileHover={{ y: -1 }}
                               whileTap={{ y: 0 }}
@@ -757,7 +750,7 @@ export default function CourseDetailPage() {
                           {course.features?.map((highlight, index) => (
                             <div
                               key={index}
-                              className="flex items-start p-3 bg-zinc-100 dark:bg-gray-800 rounded-2xl"
+                              className="flex items-start p-3 bg-[#fdf0ec] dark:bg-gray-800 rounded-2xl"
                             >
                               <ChevronRight className="h-5 w-5 text-gray-500 mt-0.5 mr-3 bg-white flex-shrink-0 border border-gray-500 rounded-full p-px" />
                               <span className="text-gray-800 dark:text-gray-300">
@@ -1055,10 +1048,11 @@ export default function CourseDetailPage() {
                                                         className={`
                                         min-w-0
                                         flex-1
-                                        ${item.isLocked
-                                                            ? "cursor-not-allowed opacity-50"
-                                                            : "cursor-pointer"
-                                                          }
+                                        ${
+                                          item.isLocked
+                                            ? "cursor-not-allowed opacity-50"
+                                            : "cursor-pointer"
+                                        }
                                       `}
                                                         onClick={() => {
                                                           if (!item.isLocked) {
@@ -1077,12 +1071,13 @@ export default function CourseDetailPage() {
                                           transition-colors
                                           sm:text-base
                                           hover:text-[#F04F23]
-                                          ${item.isLocked
-                                                              ? "text-[#B9B0AC]"
-                                                              : isCurrent
-                                                                ? "text-[#111827]"
-                                                                : "text-[#111827] group-hover/lesson:text-[#F04F23]"
-                                                            }
+                                          ${
+                                            item.isLocked
+                                              ? "text-[#B9B0AC]"
+                                              : isCurrent
+                                                ? "text-[#111827]"
+                                                : "text-[#111827] group-hover/lesson:text-[#F04F23]"
+                                          }
                                         `}
                                                         >
                                                           {item.title}
@@ -1110,16 +1105,16 @@ export default function CourseDetailPage() {
                                                             }
                                                           >
                                                             {item.type ===
-                                                              "LiveClasses"
+                                                            "LiveClasses"
                                                               ? "Live Class"
                                                               : item.type ===
-                                                                "RecordedClasses"
+                                                                  "RecordedClasses"
                                                                 ? "Recorded Class"
                                                                 : item.type ===
-                                                                  "Sessions"
+                                                                    "Sessions"
                                                                   ? "1:1 Session"
                                                                   : item.materialType ||
-                                                                  item.type}
+                                                                    item.type}
                                                           </span>
 
                                                           {item.duration && (
@@ -1324,8 +1319,8 @@ export default function CourseDetailPage() {
 
                   {activeTab === "materials" && curriculum && (
                     <CourseMaterials
-                      curriculum={ curriculum && curriculum}
-                      loading={ curriculumLoading && curriculumLoading}
+                      curriculum={curriculum && curriculum}
+                      loading={curriculumLoading && curriculumLoading}
                       onItemClick={handleItemNavigation}
                     />
                   )}
@@ -1531,9 +1526,9 @@ export default function CourseDetailPage() {
                                           typeof item === "string"
                                             ? item
                                             : item?.designation ||
-                                            item?.title ||
-                                            item?.companyName ||
-                                            "",
+                                              item?.title ||
+                                              item?.companyName ||
+                                              "",
                                         )
                                         .filter(Boolean)
                                         .join(" • ")}
@@ -1679,8 +1674,9 @@ export default function CourseDetailPage() {
                             {faq.question}
                           </h3>
                           <ChevronRight
-                            className={`h-5 w-5 text-gray-500 dark:text-gray-400 transition-transform ${expandedFaq === index ? "rotate-90" : ""
-                              }`}
+                            className={`h-5 w-5 text-gray-500 dark:text-gray-400 transition-transform ${
+                              expandedFaq === index ? "rotate-90" : ""
+                            }`}
                           />
                         </button>
                         {expandedFaq === index && (
@@ -1842,7 +1838,8 @@ export default function CourseDetailPage() {
                                 )}
                               </div>
                             </div>
-                          </div>)}
+                          </div>
+                        )}
                         <div className="mt-0 flex justify-end">
                           {course?.isPurchased === true ? null : (
                             <button

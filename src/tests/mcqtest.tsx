@@ -236,6 +236,19 @@ export const MockTestCard = ({
                     <>
                       <span className="mr-1 text-[25px] align-middle">₹</span>
                       {test?.pricing?.salePrice}
+
+                      {test.pricing?.salePrice && (
+                        <span
+                          className="
+                                        ml-2
+                                        text-sm
+                                        text-gray-200
+                                        line-through
+                                    "
+                        >
+                          ₹ {test.pricing.price}
+                        </span>
+                      )}
                     </>
                   )}
                 </span>
@@ -254,19 +267,6 @@ export const MockTestCard = ({
                 ) : (
                   <>
                     <span>Buy Test</span>
-
-                    {test.pricing?.salePrice && (
-                      <span
-                        className="
-                                        ml-2
-                                        text-sm
-                                        text-gray-300
-                                        line-through
-                                    "
-                      >
-                        ₹ {test.pricing.price}
-                      </span>
-                    )}
                   </>
                 )}
               </button>
@@ -677,43 +677,20 @@ export default function MockTests({ testType }: any) {
             </motion.div>
           ) : filteredTests.length === 0 ? (
             <motion.div
-              initial={{ opacity: 0, scale: 0.9 }}
-              animate={{ opacity: 1, scale: 1 }}
-              className="text-center py-16"
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.4 }}
+              className="flex flex-col items-center justify-center text-center "
             >
-              <div className="">
-                <img
-                  className="w-80 mx-auto"
-                  src="https://cdni.iconscout.com/illustration/premium/thumb/data-not-found-illustration-svg-download-png-9404367.png"
-                  alt="no data"
-                />
-                {/* <h3 className="text-2xl font-bold text-gray-900 dark:text-white mb-3">
-                                    {searchQuery || filters.exam || filters.testType || filters.difficulty || filters.price
-                                        ? "No tests match your criteria"
-                                        : "Start Your Test Preparation"}
-                                </h3> */}
-                {/* <p className="text-gray-600 dark:text-gray-400 mb-6 text-lg leading-relaxed">
-                                    {searchQuery || filters.exam || filters.testType || filters.difficulty || filters.price
-                                        ? "Try adjusting your search or filter to find what you're looking for."
-                                        : "Explore our mock tests and start preparing for your exams today."
-                                    }
-                                </p> */}
-                <Button
-                  onClick={() => {
-                    setSearchQuery("");
-                    setFilters({
-                      exam: "",
-                      testType: "",
-                      difficulty: "",
-                      price: "",
-                    });
-                  }}
-                  size="lg"
-                  className="rounded-xl px-8 py-2.5 mt-1 text-base font-semibold bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700 text-white shadow-lg transform hover:scale-105 transition-all duration-300"
-                >
-                  Clear Filters
-                </Button>
-              </div>
+              <img
+                className="w-72 md:w-30 mx-auto mb-1"
+                src="https://cdni.iconscout.com/illustration/premium/thumb/data-not-found-illustration-svg-download-png-9404367.png"
+                alt="No quizzes found"
+              />
+
+              <h3 className="text-2xl font-bold text-gray-900 mb-2">
+                No Found
+              </h3>
             </motion.div>
           ) : (
             <>
@@ -748,7 +725,7 @@ export default function MockTests({ testType }: any) {
             <div className="flex items-center gap-4 rounded-2xl border border-[#E5E5E5] bg-white p-2 px-4 shadow-sm">
               <div className="flex-shrink-0">
                 <img
-                  src="/images/iels/listening.png" // Ensure this path exists
+                  src="/images/headphone.webp" // Ensure this path exists
                   alt="Support"
                   className="h-full w-24 object-contain"
                 />

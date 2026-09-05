@@ -996,18 +996,28 @@ const GREDashboard = () => {
   const [sliderRef2] = useKeenSlider(
     {
       loop: true,
+
       slides: {
-        perView: 4,
+        perView: 2,
         spacing: 20,
       },
+
       breakpoints: {
-        "(max-width:1023px)": {
+        "(min-width: 1280px)": {
+          slides: {
+            perView: 4,
+            spacing: 20,
+          },
+        },
+
+        "(max-width: 1023px)": {
           slides: {
             perView: 2,
             spacing: 16,
           },
         },
-        "(max-width:640px)": {
+
+        "(max-width: 640px)": {
           slides: {
             perView: 1,
             spacing: 12,
@@ -1161,7 +1171,7 @@ const GREDashboard = () => {
       </div>
       <div className="grid grid-cols-1 lg:grid-cols-[1.5fr_0.5fr] gap-6 mb-2 ">
         <div className="flex flex-col gap-4 lg:col-span-2 ">
-          <div className="grid min-w-0 grid-cols-1 xl:grid-cols-[1.5fr_0.5fr] gap-4">
+          <div className="grid min-w-0 grid-cols-1 md:grid-cols-2 lg:grid-cols-2 xl:grid-cols-[1.5fr_0.5fr] gap-4">
             {/* 1. Pink/Orange Gradient Card */}
             <section className="w-full  overflow-hidden">
               <div className="w-full mx-auto overflow-hidden ">
@@ -1175,7 +1185,7 @@ const GREDashboard = () => {
                         key={item?._id}
                         className="relative dark:bg-gray-800 bg-white rounded-3xl overflow-hidden p-6 lg:p-0 keen-slider__slide "
                       >
-                        <div className="grid grid-cols-1 lg:grid-cols-[0.9fr_1.1fr] lg:gap-4 py-4 px-4">
+                        <div className="grid grid-cols-1 xl:grid-cols-[0.9fr_1.1fr] lg:gap-4 py-4 px-4">
                           {/* Left Image */}
                           <div className="flex flex-col gap-4 lg:py-0 px-2">
                             <div>
@@ -1357,7 +1367,7 @@ const GREDashboard = () => {
                         </div>
 
                         {/* Right Arrow */}
-                        <div className="flex justify-end items-center gap-6 absolute right-2 bottom-40 ">
+                        <div className="flex justify-end items-center gap-6 absolute right-5 bottom-40 ">
                           <button
                             onClick={() => instanceRef.current?.next()}
                             className="hidden xl:flex  w-10 h-10 rounded-full border items-center justify-center hover:bg-orange-50"
@@ -1900,7 +1910,8 @@ const GREDashboard = () => {
 
                   const earlyBird = course?.pricing?.earlyBird;
 
-                  const isEarlyBirdActive = !!earlyBird?.deadline &&
+                  const isEarlyBirdActive =
+                    !!earlyBird?.deadline &&
                     new Date(earlyBird.deadline).getTime() > Date.now();
 
                   let price = realPrice;
@@ -1989,7 +2000,7 @@ const GREDashboard = () => {
                                   <span className="text-base font-bold"></span>
 
                                   <span className="text-2xl font-bold ">
-                                    {price}
+                                    {Math.ceil(price)}
                                   </span>
 
                                   <span className="line-through text-gray-400 text-base dark:text-white">
@@ -2125,7 +2136,7 @@ const GREDashboard = () => {
                       <div className="mt-4 flex items-center flex-wrap gap-2">
                         {/* Final Price */}
                         <span className="text-base font-bold text-[#222] dark:text-white">
-                          ₹{price}
+                          ₹{Math.ceil(price)}
                         </span>
 
                         {/* Original Price */}
@@ -2232,7 +2243,7 @@ const GREDashboard = () => {
                       <div className="mt-4 flex items-center flex-wrap gap-2">
                         {/* Final Price */}
                         <span className="text-base font-bold text-[#222] dark:text-white">
-                          ₹{price}
+                          ₹{Math.ceil(price)}
                         </span>
 
                         {/* Original Price */}

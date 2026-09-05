@@ -69,7 +69,7 @@ const NextLiveClassCard: React.FC<NextLiveClassCardProps> = ({
       </p>
 
       {/* Content */}
-      <div className="flex items-center gap-[12px]">
+      <div className="flex items-center gap-[12px] w-full overflow-hidden">
         {/* Thumbnail */}
         <div className="relative h-[60px] w-[100px] flex-shrink-0 overflow-hidden rounded-[7px]">
           <img
@@ -98,7 +98,7 @@ const NextLiveClassCard: React.FC<NextLiveClassCardProps> = ({
             {session?.title || "Live Class"}
           </h3>
 
-          <div className="mt-[5px] flex items-center gap-[4px] whitespace-nowrap">
+          <div className="mt-[5px] flex flex-wrap items-center gap-[4px] whitespace-nowrap">
             <span className="text-[10px] font-medium text-[#F04F23]">
               {session.type}
             </span>
@@ -119,14 +119,14 @@ const NextLiveClassCard: React.FC<NextLiveClassCardProps> = ({
             <span className="text-[10px] text-[#777777]">
               {formatDate(session?.scheduledStart)}
             </span>
-          </div>
 
-          {/* Time */}
-          {session?.scheduledStart && (
-            <p className="mt-[1px] text-[10px] text-[#777777]">
-              {formatTime(session.scheduledStart)}
-            </p>
-          )}
+            {/* Time */}
+            {session?.scheduledStart && (
+              <p className="mt-[1px] text-[10px] text-[#777777]">
+                {formatTime(session.scheduledStart)}
+              </p>
+            )}
+          </div>
         </div>
       </div>
 

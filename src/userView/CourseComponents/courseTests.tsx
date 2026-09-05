@@ -37,28 +37,28 @@ export function CourseTests({
 
   const [openTestSections, setOpenTestSections] = useState<string[]>([]);
 
-const [expandedTests, setExpandedTests] = useState<
-  Record<string, boolean>
->({});
+  const [expandedTests, setExpandedTests] = useState<
+    Record<string, boolean>
+  >({});
 
-const hasInitializedTestSections = useRef(false);
+  const hasInitializedTestSections = useRef(false);
 
 
 
-const toggleTestSection = (sectionId: string) => {
-  setOpenTestSections((prev) =>
-    prev.includes(sectionId)
-      ? prev.filter((id) => id !== sectionId)
-      : [...prev, sectionId],
-  );
-};
+  const toggleTestSection = (sectionId: string) => {
+    setOpenTestSections((prev) =>
+      prev.includes(sectionId)
+        ? prev.filter((id) => id !== sectionId)
+        : [...prev, sectionId],
+    );
+  };
 
-const toggleTests = (sectionId: string) => {
-  setExpandedTests((prev) => ({
-    ...prev,
-    [sectionId]: !prev[sectionId],
-  }));
-};
+  const toggleTests = (sectionId: string) => {
+    setExpandedTests((prev) => ({
+      ...prev,
+      [sectionId]: !prev[sectionId],
+    }));
+  };
 
   const sectionsWithTests = curriculum
     ?.map((section) => ({
@@ -67,16 +67,16 @@ const toggleTests = (sectionId: string) => {
     }))
     .filter((section) => section.items.length > 0);
 
-    useEffect(() => {
-  if (
-    sectionsWithTests?.length > 0 &&
-    !hasInitializedTestSections.current
-  ) {
-    setOpenTestSections([sectionsWithTests[0]._id]);
+  useEffect(() => {
+    if (
+      sectionsWithTests?.length > 0 &&
+      !hasInitializedTestSections.current
+    ) {
+      setOpenTestSections([sectionsWithTests[0]._id]);
 
-    hasInitializedTestSections.current = true;
-  }
-}, [sectionsWithTests]);
+      hasInitializedTestSections.current = true;
+    }
+  }, [sectionsWithTests]);
 
   if (!sectionsWithTests?.length) {
     return (
@@ -97,25 +97,25 @@ const toggleTests = (sectionId: string) => {
   }
 
   return (
-   <div className="space-y-4">
-  {sectionsWithTests.map((section, sectionIndex) => {
-    const tests = section.items || [];
+    <div className="space-y-4">
+      {sectionsWithTests.map((section, sectionIndex) => {
+        const tests = section.items || [];
 
-    // Section open / close
-    const isOpen = openTestSections.includes(section._id);
+        // Section open / close
+        const isOpen = openTestSections.includes(section._id);
 
-    // View More / Show Less
-    const isTestsExpanded =
-      expandedTests[section._id] || false;
+        // View More / Show Less
+        const isTestsExpanded =
+          expandedTests[section._id] || false;
 
-    const visibleTests = isTestsExpanded
-      ? tests
-      : tests.slice(0, 5);
+        const visibleTests = isTestsExpanded
+          ? tests
+          : tests.slice(0, 5);
 
-    return (
-      <div
-        key={section._id}
-        className="
+        return (
+          <div
+            key={section._id}
+            className="
           overflow-hidden
           rounded-xl
           border
@@ -124,14 +124,14 @@ const toggleTests = (sectionId: string) => {
           transition-all
           duration-300
         "
-      >
-        {/* =====================================================
+          >
+            {/* =====================================================
             SECTION HEADER
         ====================================================== */}
-        <button
-          type="button"
-          onClick={() => toggleTestSection(section._id)}
-          className="
+            <button
+              type="button"
+              onClick={() => toggleTestSection(section._id)}
+              className="
             group
             relative
             flex
@@ -147,12 +147,12 @@ const toggleTests = (sectionId: string) => {
             duration-300
             hover:bg-[#FCE3D2]
           "
-        >
-          {/* LEFT SIDE */}
-          <div className="flex min-w-0 items-center gap-4">
-            {/* SECTION NUMBER */}
-            <div
-              className="
+            >
+              {/* LEFT SIDE */}
+              <div className="flex min-w-0 items-center gap-4">
+                {/* SECTION NUMBER */}
+                <div
+                  className="
                 flex
                 h-10
                 w-10
@@ -168,27 +168,27 @@ const toggleTests = (sectionId: string) => {
                 sm:h-12
                 sm:w-12
               "
-            >
-              <span className="rounded-lg bg-[#FF7147] px-2 py-1 text-white">
-                {String(sectionIndex + 1).padStart(2, "0")}
-              </span>
-            </div>
+                >
+                  <span className="rounded-lg bg-[#FF7147] px-2 py-1 text-white">
+                    {String(sectionIndex + 1).padStart(2, "0")}
+                  </span>
+                </div>
 
-            {/* TITLE */}
-            <div className="min-w-0">
-              <h3
-                className="
+                {/* TITLE */}
+                <div className="min-w-0">
+                  <h3
+                    className="
                   truncate
                   text-base
                   font-semibold
                   text-[#111827]
                 "
-              >
-                {section.title}
-              </h3>
+                  >
+                    {section.title}
+                  </h3>
 
-              <div
-                className="
+                  <div
+                    className="
                   flex
                   items-center
                   gap-2
@@ -196,26 +196,26 @@ const toggleTests = (sectionId: string) => {
                   font-medium
                   text-[#8B6F61]
                 "
-              >
-                <span>
-                  {tests.length}{" "}
-                  {tests.length === 1 ? "Test" : "Tests"}
-                </span>
+                  >
+                    <span>
+                      {tests.length}{" "}
+                      {tests.length === 1 ? "Test" : "Tests"}
+                    </span>
 
-                <span className="text-[#C5A99B]">
-                  •
-                </span>
+                    <span className="text-[#C5A99B]">
+                      •
+                    </span>
 
-                <span>Assessment</span>
+                    <span>Assessment</span>
+                  </div>
+                </div>
               </div>
-            </div>
-          </div>
 
-          {/* RIGHT SIDE */}
-          <div className="flex shrink-0 items-center gap-3">
-            {/* TEST COUNT */}
-            <div
-              className="
+              {/* RIGHT SIDE */}
+              <div className="flex shrink-0 items-center gap-3">
+                {/* TEST COUNT */}
+                <div
+                  className="
                 hidden
                 rounded-full
                 border
@@ -228,13 +228,13 @@ const toggleTests = (sectionId: string) => {
                 text-white
                 sm:block
               "
-            >
-              {tests.length}
-            </div>
+                >
+                  {tests.length}
+                </div>
 
-            {/* SECTION CHEVRON */}
-            <div
-              className="
+                {/* SECTION CHEVRON */}
+                <div
+                  className="
                 flex
                 h-8
                 w-8
@@ -242,9 +242,9 @@ const toggleTests = (sectionId: string) => {
                 justify-center
                 rounded-full
               "
-            >
-              <ChevronDown
-                className={`
+                >
+                  <ChevronDown
+                    className={`
                   h-5
                   w-5
                   text-[#F04F23]
@@ -252,86 +252,86 @@ const toggleTests = (sectionId: string) => {
                   duration-300
                   ${isOpen ? "rotate-180" : ""}
                 `}
-              />
-            </div>
-          </div>
-        </button>
+                  />
+                </div>
+              </div>
+            </button>
 
-        {/* =====================================================
+            {/* =====================================================
             SECTION CONTENT
         ====================================================== */}
-        <AnimatePresence initial={false}>
-          {isOpen && (
-            <motion.div
-              initial={{
-                height: 0,
-                opacity: 0,
-              }}
-              animate={{
-                height: "auto",
-                opacity: 1,
-              }}
-              exit={{
-                height: 0,
-                opacity: 0,
-              }}
-              transition={{
-                duration: 0.3,
-                ease: "easeInOut",
-              }}
-              className="overflow-hidden"
-            >
-              <div className="bg-white px-4 pb-2">
+            <AnimatePresence initial={false}>
+              {isOpen && (
+                <motion.div
+                  initial={{
+                    height: 0,
+                    opacity: 0,
+                  }}
+                  animate={{
+                    height: "auto",
+                    opacity: 1,
+                  }}
+                  exit={{
+                    height: 0,
+                    opacity: 0,
+                  }}
+                  transition={{
+                    duration: 0.3,
+                    ease: "easeInOut",
+                  }}
+                  className="overflow-hidden"
+                >
+                  <div className="bg-white px-4 pb-2">
 
-                {/* =================================================
+                    {/* =================================================
                     TEST LIST
                 ================================================== */}
-                <div className="space-y-2.5 mt-2">
-                  {visibleTests.map(
-                    (item: any, index: number) => {
-                      const currentTest =
-                        item?.test || test;
+                    <div className="space-y-2.5 mt-2">
+                      {visibleTests.map(
+                        (item: any, index: number) => {
+                          const currentTest =
+                            item?.test || test;
 
-                      const testTitle =
-                        currentTest?.title ||
-                        item?.title ||
-                        `Test ${index + 1}`;
+                          const testTitle =
+                            currentTest?.title ||
+                            item?.title ||
+                            `Test ${index + 1}`;
 
-                      const testDescription =
-                        currentTest?.description ||
-                        item?.description ||
-                        "Full Length Assessment";
+                          const testDescription =
+                            currentTest?.description ||
+                            item?.description ||
+                            "Full Length Assessment";
 
-                      const duration =
-                        currentTest?.totalDurationMinutes ||
-                        currentTest?.duration ||
-                        item?.duration ||
-                        null;
+                          const duration =
+                            currentTest?.totalDurationMinutes ||
+                            currentTest?.duration ||
+                            item?.duration ||
+                            null;
 
-                      const totalQuestions =
-                        currentTest?.totalQuestions ||
-                        currentTest?.questions?.length ||
-                        item?.totalQuestions ||
-                        null;
+                          const totalQuestions =
+                            currentTest?.totalQuestions ||
+                            currentTest?.questions?.length ||
+                            item?.totalQuestions ||
+                            null;
 
-                      const totalMarks =
-                        currentTest?.totalMarks ||
-                        currentTest?.marks ||
-                        item?.totalMarks ||
-                        null;
+                          const totalMarks =
+                            currentTest?.totalMarks ||
+                            currentTest?.marks ||
+                            item?.totalMarks ||
+                            null;
 
-                      return (
-                        <div
-                          key={item._id}
-                          onClick={() => {
-                            if (!item.isLocked) {
-                              onItemClick(
-                                item,
-                                section._id,
-                              );
-                            }
-                          }}
-                          className={`
+                          return (
+                            <div
+                              key={item._id}
+                              onClick={() => {
+                                if (!item.isLocked) {
+                                  onItemClick(
+                                    item,
+                                    section._id,
+                                  );
+                                }
+                              }}
+                              className={`
                             group
                             flex
                             w-full
@@ -346,16 +346,15 @@ const toggleTests = (sectionId: string) => {
                             transition-all
                             duration-200
                             hover:bg-[#fef7dd]
-                            ${
-                              item.isLocked
-                                ? "cursor-not-allowed opacity-60"
-                                : "cursor-pointer hover:border-[#FF805F] hover:shadow-[0_2px_8px_rgba(242,103,56,0.08)]"
-                            }
+                            ${item.isLocked
+                                  ? "cursor-not-allowed opacity-60"
+                                  : "cursor-pointer hover:border-[#FF805F] hover:shadow-[0_2px_8px_rgba(242,103,56,0.08)]"
+                                }
                           `}
-                        >
-                          {/* TEST IMAGE / CATEGORY */}
-                          <div
-                            className="
+                            >
+                              {/* TEST IMAGE / CATEGORY */}
+                              <div
+                                className="
                               relative
                               flex
                               h-[50px]
@@ -367,56 +366,55 @@ const toggleTests = (sectionId: string) => {
                               rounded-[8px]
                               bg-[#FF6942]
                             "
-                          >
-                            <div className="relative z-10 text-center">
-                              <div
-                                className="
+                              >
+                                <div className="relative z-10 text-center">
+                                  <div
+                                    className="
                                   text-xl
                                   font-bold
                                   text-white
                                 "
-                              >
-                                {course?.categoryInfo?.name?.split(
-                                  " ",
-                                )[0] || "TEST"}
+                                  >
+                                    {course?.categoryInfo?.name?.split(
+                                      " ",
+                                    )[0] || "TEST"}
+                                  </div>
+                                </div>
                               </div>
-                            </div>
-                          </div>
 
-                          {/* CONTENT */}
-                          <div className="min-w-0 flex-1">
-                            {/* TITLE */}
-                            <h4
-                              className={`
+                              {/* CONTENT */}
+                              <div className="min-w-0 flex-1">
+                                {/* TITLE */}
+                                <h4
+                                  className={`
                                 truncate
                                 text-base
                                 font-medium
-                                ${
-                                  item.isLocked
-                                    ? "text-gray-400"
-                                    : "text-[#252525]"
-                                }
+                                ${item.isLocked
+                                      ? "text-gray-400"
+                                      : "text-[#252525]"
+                                    }
                               `}
-                            >
-                              {testTitle}
-                            </h4>
+                                >
+                                  {testTitle}
+                                </h4>
 
-                            {/* DESCRIPTION */}
-                            <p
-                              className="
+                                {/* DESCRIPTION */}
+                                <p
+                                  className="
                                 mt-px
                                 truncate
                                 text-xs
                                 font-normal
                                 text-[#777777]
                               "
-                            >
-                              {testDescription}
-                            </p>
+                                >
+                                  {testDescription}
+                                </p>
 
-                            {/* TEST META */}
-                            <div
-                              className="
+                                {/* TEST META */}
+                                <div
+                                  className="
                                 mt-1
                                 flex
                                 items-center
@@ -426,77 +424,77 @@ const toggleTests = (sectionId: string) => {
                                 leading-none
                                 text-[#444444]
                               "
-                            >
-                              {/* QUESTIONS */}
-                              {totalQuestions !== null && (
-                                <span className="flex items-center gap-[3px]">
-                                  <ClipboardCheck
-                                    className="
+                                >
+                                  {/* QUESTIONS */}
+                                  {totalQuestions !== null && (
+                                    <span className="flex items-center gap-[3px]">
+                                      <ClipboardCheck
+                                        className="
                                       h-[10px]
                                       w-[10px]
                                       text-[#F26738]
                                     "
-                                    strokeWidth={2}
-                                  />
+                                        strokeWidth={2}
+                                      />
 
-                                  <span>
-                                    {totalQuestions}{" "}
-                                    {Number(
-                                      totalQuestions,
-                                    ) === 1
-                                      ? "Task"
-                                      : "Tasks"}
-                                  </span>
-                                </span>
-                              )}
+                                      <span>
+                                        {totalQuestions}{" "}
+                                        {Number(
+                                          totalQuestions,
+                                        ) === 1
+                                          ? "Task"
+                                          : "Tasks"}
+                                      </span>
+                                    </span>
+                                  )}
 
-                              {/* DURATION */}
-                              {duration !== null && (
-                                <span className="flex items-center gap-[3px]">
-                                  <Clock3
-                                    className="
+                                  {/* DURATION */}
+                                  {duration !== null && (
+                                    <span className="flex items-center gap-[3px]">
+                                      <Clock3
+                                        className="
                                       h-[10px]
                                       w-[10px]
                                       text-[#F26738]
                                     "
-                                    strokeWidth={2}
-                                  />
+                                        strokeWidth={2}
+                                      />
 
-                                  <span>
-                                    {duration} Min
-                                  </span>
-                                </span>
-                              )}
+                                      <span>
+                                        {duration} Min
+                                      </span>
+                                    </span>
+                                  )}
 
-                              {/* MARKS */}
-                              {totalMarks !== null && (
-                                <span className="flex items-center gap-[3px]">
-                                  <Award
-                                    className="
+                                  {/* MARKS */}
+                                  {totalMarks !== null && (
+                                    <span className="flex items-center gap-[3px]">
+                                      <Award
+                                        className="
                                       h-[10px]
                                       w-[10px]
                                       text-[#F26738]
                                     "
-                                    strokeWidth={2}
-                                  />
+                                        strokeWidth={2}
+                                      />
 
-                                  <span>
-                                    {totalMarks} Marks
-                                  </span>
-                                </span>
-                              )}
-                            </div>
-                          </div>
+                                      <span>
+                                        {totalMarks} Marks
+                                      </span>
+                                    </span>
+                                  )}
+                                </div>
+                              </div>
 
-                          {/* ACTION */}
-                          <div className="shrink-0">
-                            {item.isLocked ? (
-                              <Button
-                                type="button"
-                                disabled
-                                variant="outline"
-                                size="sm"
-                                className="
+                              {/* ACTION */}
+                              <div className="shrink-0">
+                                {item.isLocked ? (
+                                  <Button
+                                    type="button"
+                                    disabled
+                                    variant="outline"
+                                    size="sm"
+                                    className="
                                   mr-[3px]
                                   h-[25px]
                                   shrink-0
@@ -507,22 +505,22 @@ const toggleTests = (sectionId: string) => {
                                   text-[10px]
                                   text-gray-400
                                 "
-                              >
-                                <Lock className="mr-1 h-3 w-3" />
-                                Locked
-                              </Button>
-                            ) : (
-                              <button
-                                type="button"
-                                onClick={(e) => {
-                                  e.stopPropagation();
+                                  >
+                                    <Lock className="mr-1 h-3 w-3" />
+                                    Locked
+                                  </Button>
+                                ) : (
+                                  <button
+                                    type="button"
+                                    onClick={(e) => {
+                                      e.stopPropagation();
 
-                                  onItemClick(
-                                    item,
-                                    section._id,
-                                  );
-                                }}
-                                className="
+                                      onItemClick(
+                                        item,
+                                        section._id,
+                                      );
+                                    }}
+                                    className="
                                   mr-[3px]
                                   flex
                                   h-[25px]
@@ -543,36 +541,36 @@ const toggleTests = (sectionId: string) => {
                                   hover:bg-[#F45A34]
                                   active:scale-[0.97]
                                 "
-                              >
-                                Start Test
+                                  >
+                                    Start Test
 
-                                <ChevronRight
-                                  className="
+                                    <ChevronRight
+                                      className="
                                     h-[10px]
                                     w-[10px]
                                   "
-                                  strokeWidth={2.5}
-                                />
-                              </button>
-                            )}
-                          </div>
-                        </div>
-                      );
-                    },
-                  )}
-                </div>
+                                      strokeWidth={2.5}
+                                    />
+                                  </button>
+                                )}
+                              </div>
+                            </div>
+                          );
+                        },
+                      )}
+                    </div>
 
-                {/* =================================================
+                    {/* =================================================
                     VIEW MORE / SHOW LESS
                 ================================================== */}
-                {tests.length > 5 && (
-                  <div className="border-t border-[#F1E7E2]">
-                    <button
-                      type="button"
-                      onClick={() =>
-                        toggleTests(section._id)
-                      }
-                      className="
+                    {tests.length > 5 && (
+                      <div className="border-t border-[#F1E7E2]">
+                        <button
+                          type="button"
+                          onClick={() =>
+                            toggleTests(section._id)
+                          }
+                          className="
                         flex
                         w-full
                         items-center
@@ -585,35 +583,34 @@ const toggleTests = (sectionId: string) => {
                         transition-colors
                         hover:text-[#D93F0D]
                       "
-                    >
-                      {isTestsExpanded
-                        ? "Show less"
-                        : `View all ${tests.length} tests`}
+                        >
+                          {isTestsExpanded
+                            ? "Show less"
+                            : `View all ${tests.length} tests`}
 
-                      <ChevronDown
-                        className={`
+                          <ChevronDown
+                            className={`
                           h-4
                           w-4
                           transition-transform
                           duration-200
-                          ${
-                            isTestsExpanded
-                              ? "rotate-180"
-                              : ""
-                          }
+                          ${isTestsExpanded
+                                ? "rotate-180"
+                                : ""
+                              }
                         `}
-                      />
-                    </button>
+                          />
+                        </button>
+                      </div>
+                    )}
                   </div>
-                )}
-              </div>
-            </motion.div>
-          )}
-        </AnimatePresence>
-      </div>
-    );
-  })}
-</div>
+                </motion.div>
+              )}
+            </AnimatePresence>
+          </div>
+        );
+      })}
+    </div>
   );
 }
 
@@ -625,42 +622,50 @@ interface CourseMaterialsProps {
   onItemClick: (item: any, sectionId: string) => void;
 }
 
-const getMaterialIcon = (materialType?: string) => {
-  switch (materialType?.toLowerCase()) {
-    case "link":
-      return <LinkIcon className="h-5 w-5 text-white" />;
-
-    case "image":
-      return <ImageIcon className="h-5 w-5 text-white" />;
-
-    case "audio":
-      return <Headphones className="h-5 w-5 text-white" />;
-
-    case "pdf":
-    case "document":
-    default:
-      return <File className="h-5 w-5 text-white" />;
-  }
+const materialIconImages = {
+  pdf: "/images/pdf.webp",
+  video: "/images/video.webp",
+  audio: "/images/audio.webp",
+  document: "/images/document.webp",
+  image: "/images/image.webp",
+  link: "/images/link.webp",
 };
 
-const getMaterialIconBg = (materialType?: string) => {
-  switch (materialType?.toLowerCase()) {
-    case "link":
-      return "bg-[#2563EB]";
+const getMaterialIconImage = (materialType = "") => {
+  const type = materialType.toLowerCase();
 
-    case "image":
-      return "bg-[#16A34A]";
-
-    case "audio":
-      return "bg-[#9333EA]";
-
-    case "document":
-      return "bg-[#EA580C]";
-
-    default:
-      return "bg-[#6B7280]";
+  if (type.includes("video")) {
+    return materialIconImages.video;
   }
+
+  if (type.includes("audio")) {
+    return materialIconImages.audio;
+  }
+
+  if (type.includes("ppt") || type.includes("powerpoint")) {
+    return materialIconImages.ppt;
+  }
+
+  if (type.includes("excel") || type.includes("spreadsheet")) {
+    return materialIconImages.excel;
+  }
+
+  if (type.includes("image") || type.includes("photo")) {
+    return materialIconImages.image;
+  }
+
+  if (type.includes("document") || type.includes("doc")) {
+    return materialIconImages.document;
+  }
+
+  if (type.includes("link") || type.includes("url")) {
+    return materialIconImages.link;
+  }
+
+  return null;
 };
+
+
 
 const getMaterialLabel = (materialType?: string) => {
   if (!materialType) return "Study Material";
@@ -671,13 +676,15 @@ const getMaterialLabel = (materialType?: string) => {
 
 
 
+
+
 export function CourseMaterials({
   curriculum,
   loading = false,
   onItemClick,
 }: CourseMaterialsProps) {
 
-    if (loading) {
+  if (loading) {
     return (
       <div className="space-y-4">
         {[1, 2, 3].map((item) => (
@@ -724,16 +731,16 @@ export function CourseMaterials({
     }))
     .filter((section) => section.items.length > 0);
 
- useEffect(() => {
-  if (
-    sectionsWithMaterials?.length > 0 &&
-    !hasInitializedMaterials.current
-  ) {
-    setOpenMaterialSections([sectionsWithMaterials[0]._id]);
+  useEffect(() => {
+    if (
+      sectionsWithMaterials?.length > 0 &&
+      !hasInitializedMaterials.current
+    ) {
+      setOpenMaterialSections([sectionsWithMaterials[0]._id]);
 
-    hasInitializedMaterials.current = true;
-  }
-}, [sectionsWithMaterials]);
+      hasInitializedMaterials.current = true;
+    }
+  }, [sectionsWithMaterials]);
   if (!sectionsWithMaterials?.length) {
     return (
       <div className="rounded-2xl border border-gray-200 bg-white p-8 text-center">
@@ -951,6 +958,10 @@ export function CourseMaterials({
                           item?.materialType?.toLowerCase() ===
                           "document";
 
+                        const iconImage = isPdf
+                          ? "/images/pdf.webp"
+                          : getMaterialIconImage(item.materialType);
+
                         const handleView = (
                           e: React.MouseEvent,
                         ) => {
@@ -1003,44 +1014,29 @@ export function CourseMaterials({
                             p-1.5
                           "
                             >
-                              {isPdf ? (
-                                <div
-                                  className="
-                                flex
-                                h-[35px]
-                                w-[35px]
-                                items-center
-                                justify-center
-                                rounded-[5px]
-                                bg-[#D82323]
-                              "
-                                >
-                                  <img
-                                    className="
-                                  h-full
-                                  w-full
-                                  object-cover
-                                "
-                                    src="https://www.svgrepo.com/show/349472/pdf.svg"
-                                    alt="PDF"
-                                  />
-                                </div>
-                              ) : (
-                                <div
-                                  className={`flex
+                              <div
+                                className={`
+    flex
     h-[35px]
     w-[35px]
     items-center
     justify-center
     rounded-[5px]
-    ${getMaterialIconBg(item.materialType)}
+   bg-white
   `}
-                                >
-                                  {getMaterialIcon(
-                                    item.materialType,
-                                  )}
-                                </div>
-                              )}
+                              >
+                                {iconImage ? (
+                                  <img
+                                    src={iconImage}
+                                    alt={item.materialType || "Material"}
+                                    className="h-[25px] w-[25px] object-contain"
+                                  />
+                                ) : (
+                                  <span className="text-xs font-bold text-orange-600">
+                                    {item.materialType?.charAt(0)?.toUpperCase() || "M"}
+                                  </span>
+                                )}
+                              </div>
                             </div>
 
                             {/* CONTENT */}
