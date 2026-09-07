@@ -137,7 +137,7 @@ const navItemsUser: NavItem[] = [
   { icon: "📝", name: "Practice Tests", path: "/practice-tests", id: 'practice-test' },
   { icon: "✨", name: "Quiz", path: "/quiz", id:'quiz' },
   { icon: "📁", name: "Resources", path: "/resources" },
-  { icon: "🔔", name: "Message", path: "/notifications" },
+  { icon: "🔔", name: "Notification", path: "/notifications" },
   { icon: "💰", name: "Refer & Earn", path: "/referrals" },
 ];
 
@@ -487,7 +487,7 @@ const AppSidebar: React.FC = () => {
                 <ul className="pt-1.5 pb-1 space-y-[2px] ml-3 pl-3 border-l border-zinc-100 dark:border-white/[0.06] ">
                   {nav.subItems.map((subItem) => {
                     const SubIcon = subItem.icon;
-                    console.log(subItem.icon, "ghjk");
+                    
                     const subActive = isActive(subItem.path);
                     return (
                       <li key={subItem.name}>

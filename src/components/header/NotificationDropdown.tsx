@@ -32,7 +32,8 @@ export default function NotificationDropdown() {
     const fetchNotification = async () => {
       try {
         const res = await api.get(
-          `/notification?isActive=${user?.lastActive.split("T")[0]}`,
+          // `/notification?isActive=${user?.lastActive.split("T")[0]}`,
+          `/notification/my`
         );
         setnotification(res.data.data);
       } catch {

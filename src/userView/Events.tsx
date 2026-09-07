@@ -1,4 +1,3 @@
-
 // EventCalendar.jsx
 import React, { useState, useEffect, useCallback, useMemo } from "react";
 import { Calendar, momentLocalizer, Views } from "react-big-calendar";
@@ -405,37 +404,37 @@ const [cellPopupPosition, setCellPopupPosition] = useState({
 };
 
   const CustomMonthEvent = ({ event }) => {
-  const sameDateEvents = event.sameDateEvents || [event];
-  const [showPopup, setShowPopup] = useState(false);
-  const [popupPosition, setPopupPosition] = useState({ left: 0, top: 0 });
+    const sameDateEvents = event.sameDateEvents || [event];
+    const [showPopup, setShowPopup] = useState(false);
+    const [popupPosition, setPopupPosition] = useState({ left: 0, top: 0 });
 
-  const updatePopupPosition = (e) => {
-    const popupWidth = window.innerWidth <= 767 ? 260 : 290;
-    const popupHeight = window.innerWidth <= 767 ? 200 : 220;
-    const offset = window.innerWidth <= 767 ? 12 : 20;
+    const updatePopupPosition = (e) => {
+      const popupWidth = window.innerWidth <= 767 ? 260 : 290;
+      const popupHeight = window.innerWidth <= 767 ? 200 : 220;
+      const offset = window.innerWidth <= 767 ? 12 : 20;
 
-    let left = e.clientX + offset;
-    let top = e.clientY + offset;
+      let left = e.clientX + offset;
+      let top = e.clientY + offset;
 
-    if (left + popupWidth > window.innerWidth - 10) {
-      left = e.clientX - popupWidth - offset;
-    }
+      if (left + popupWidth > window.innerWidth - 10) {
+        left = e.clientX - popupWidth - offset;
+      }
 
-    if (left < 10) left = 10;
+      if (left < 10) left = 10;
 
-    if (top + popupHeight > window.innerHeight - 10) {
-      top = e.clientY - popupHeight - offset;
-    }
+      if (top + popupHeight > window.innerHeight - 10) {
+        top = e.clientY - popupHeight - offset;
+      }
 
-    if (top < 10) top = 10;
+      if (top < 10) top = 10;
 
-    setPopupPosition({ left, top });
-  };
+      setPopupPosition({ left, top });
+    };
 
-  return (
-    <>
-      <div
-        className="
+    return (
+      <>
+        <div
+          className="
          w-full
     cursor-pointer
     z-10
@@ -443,32 +442,44 @@ const [cellPopupPosition, setCellPopupPosition] = useState({
     justify-end
     items-start
         "
-        onMouseEnter={(e) => {
-          updatePopupPosition(e);
-          setShowPopup(true);
-        }}
-        onMouseMove={(e) => {
-          updatePopupPosition(e);
-        }}
-        onMouseLeave={() => setShowPopup(false)}
-      >
-      
-      </div>
-
-      {showPopup &&
-        createPortal(
-          <div
-            className="calendar-event-hover-popup"
-            style={{
-              position: "fixed",
-              left: `${popupPosition.left}px`,
-              top: `${popupPosition.top}px`,
-              zIndex: 2147483647,
-              pointerEvents: "none",
-            }}
-          >
+          onMouseEnter={(e) => {
+            updatePopupPosition(e);
+            setShowPopup(true);
+          }}
+          onMouseMove={(e) => {
+            updatePopupPosition(e);
+          }}
+          onMouseLeave={() => setShowPopup(false)}
+        >
+          {/* Blinking Event Dot */}
+          <div className="w-full flex justify-end items-center">
             <div
               className="
+      h-2.5 w-2.5
+      shrink-0
+      rounded-full
+      bg-orange-500
+      animate-pulse
+      shadow-[0_0_6px_rgba(249,115,22,0.6)]
+    "
+            />
+          </div>
+        </div>
+
+        {showPopup &&
+          createPortal(
+            <div
+              className="calendar-event-hover-popup"
+              style={{
+                position: "fixed",
+                left: `${popupPosition.left}px`,
+                top: `${popupPosition.top}px`,
+                zIndex: 2147483647,
+                pointerEvents: "none",
+              }}
+            >
+              <div
+                className="
                 w-[220px]
                 rounded-lg
                 border border-[#FFD6C7]
@@ -476,23 +487,23 @@ const [cellPopupPosition, setCellPopupPosition] = useState({
                 p-2
                 shadow-[0_6px_20px_rgba(249,115,22,0.18)]
               "
-            >
-              {/* Date Header */}
-              <div
-                className="
+              >
+                {/* Date Header */}
+                <div
+                  className="
                   mb-1.5
                   flex items-center justify-between
                   rounded-md
                   bg-[#FFF3ED]
                   px-2.5 py-1.5
                 "
-              >
-                <span className="text-[11px] font-semibold text-[#E85D2A]">
-                  {moment(event.start).format("MMM DD, YYYY")}
-                </span>
+                >
+                  <span className="text-[11px] font-semibold text-[#E85D2A]">
+                    {moment(event.start).format("MMM DD, YYYY")}
+                  </span>
 
-                <span
-                  className="
+                  <span
+                    className="
                     rounded-full
                     bg-[#F97316]
                     px-1.5 py-0.5
@@ -500,17 +511,17 @@ const [cellPopupPosition, setCellPopupPosition] = useState({
                     font-bold
                     text-white
                   "
-                >
-                  {sameDateEvents.length}
-                </span>
-              </div>
+                  >
+                    {sameDateEvents.length}
+                  </span>
+                </div>
 
-              {/* Events */}
-              <div className="space-y-1">
-                {sameDateEvents.map((item) => (
-                  <div
-                    key={item.id}
-                    className="
+                {/* Events */}
+                <div className="space-y-1">
+                  {sameDateEvents.map((item) => (
+                    <div
+                      key={item.id}
+                      className="
                       flex items-center gap-2
                       rounded-md
                       border border-transparent
@@ -518,47 +529,53 @@ const [cellPopupPosition, setCellPopupPosition] = useState({
                       hover:border-[#FFE0D5]
                       hover:bg-[#FFF9F6]
                     "
-                  >
-                    {/* Orange Dot */}
-                    <span
-                      className="
+                    >
+                      {/* Orange Dot */}
+                      <span
+                        className="
                         h-2 w-2
                         shrink-0
                         rounded-full
                         bg-[#F97316]
                         shadow-[0_0_0_3px_rgba(249,115,22,0.12)]
                       "
-                    />
+                      />
 
-                    {/* Title */}
-                    <span
-                      className="
+                      {/* Title */}
+                      <span
+                        className="
                         min-w-0
                         flex-1
                         text-[11px]
                         font-semibold
                         text-[#333]
                       "
-                      title={item.title}
-                    >
-                      {item.title}
-                    </span>
+                        title={item.title}
+                      >
+                        {item.title}
+                      </span>
 
-                    {/* Time */}
-                    <span className="shrink-0 text-[9px] font-medium text-[#9A8F89]">
-                      {moment(item.start).format("HH:mm")}
-                    </span>
-                  </div>
-                ))}
+                      {/* Time */}
+                      <span className="shrink-0 text-[9px] font-medium text-[#9A8F89]">
+                        {moment(item.start).format("HH:mm")}
+                      </span>
+                    </div>
+                  ))}
+                </div>
               </div>
-            </div>
-          </div>,
-          document.body
-        )}
-    </>
-  );
-};
+            </div>,
+            document.body,
+          )}
+      </>
+    );
+  };
 
+  // Add this custom date cell component
+  const CustomDateCell = ({ date, events: allEvents, children }) => {
+    const dateKey = moment(date).format("YYYY-MM-DD");
+    const hasEvents = allEvents.some(
+      (e) => moment(e.start).format("YYYY-MM-DD") === dateKey,
+    );
 
 // Add this custom date cell component
 const CustomDateCell = ({ value, children }) => {
@@ -900,7 +917,8 @@ useEffect(() => {
     () => ({
       total: events.length,
       today: todayEvents.length,
-      thisWeek: events.filter((e) => moment(e.start).isSame(moment(), "week")).length,
+      thisWeek: events.filter((e) => moment(e.start).isSame(moment(), "week"))
+        .length,
     }),
     [events, todayEvents],
   );
@@ -959,11 +977,12 @@ useEffect(() => {
         </div>
       </div>
 
-      <div className="flex flex-col lg:flex-row gap-4 md:gap-6 bg-white rounded-3xl p-2 md:p-4 overflow-hidden 
-      h-[calc(100vh-120px)] md:h-[calc(100vh-160px)] relative">
+      <div
+        className="flex flex-col lg:flex-row gap-4 md:gap-6 bg-white rounded-3xl p-2 md:p-4 overflow-hidden 
+      h-[calc(100vh-120px)] md:h-[calc(100vh-160px)] relative"
+      >
         {/* MAIN CALENDAR AREA */}
         <main className="flex-1 min-w-0 relative transition-all duration-300 h-full min-h-0">
-          
           <style>{`
             .rbc-calendar { height: 100% !important; font-family: inherit; display: flex; flex-direction: column; }
             .rbc-toolbar { display: none !important; }
@@ -1168,7 +1187,9 @@ body:has(.fixed.inset-0.bg-black\/60)
         </main>
 
         {/* RIGHT SIDEBAR */}
-        <aside className={`w-full lg:w-80 lg:flex-shrink-0 h-full transition-all duration-300 overflow-hidden`}>
+        <aside
+          className={`w-full lg:w-80 lg:flex-shrink-0 h-full transition-all duration-300 overflow-hidden`}
+        >
           <div className="flex flex-col gap-3 h-full">
             <div className="bg-orange-50 rounded-xl p-6 shrink-0">
               <div className="mb-6">
@@ -1204,11 +1225,17 @@ body:has(.fixed.inset-0.bg-black\/60)
                 <div className="grid grid-cols-2 gap-3 mb-8">
                   <div className="bg-[#f36d45] rounded-2xl p-4 text-white shadow-lg shadow-orange-500/20">
                     <div className="text-3xl font-bold">{stats.today}</div>
-                    <div className="text-xs opacity-80 font-medium mt-1">Today</div>
+                    <div className="text-xs opacity-80 font-medium mt-1">
+                      Today
+                    </div>
                   </div>
                   <div className="bg-white border-2 border-orange-200 rounded-2xl p-4 shadow-sm">
-                    <div className="text-3xl font-bold text-[#f36d45]">{stats.thisWeek}</div>
-                    <div className="text-xs text-gray-500 font-medium mt-1">This Week</div>
+                    <div className="text-3xl font-bold text-[#f36d45]">
+                      {stats.thisWeek}
+                    </div>
+                    <div className="text-xs text-gray-500 font-medium mt-1">
+                      This Week
+                    </div>
                   </div>
                 </div>
               </div>
@@ -1229,13 +1256,20 @@ body:has(.fixed.inset-0.bg-black\/60)
                         className="group p-3 rounded-xl bg-white border border-orange-100 cursor-pointer hover:border-orange-300 hover:shadow-md transition-all"
                       >
                         <div className="flex items-start gap-3">
-                          <div className={`flex h-10 w-10 items-center justify-center rounded-lg bg-[#ff5321] text-white flex-shrink-0 shadow-sm`}>
-                            {React.createElement(event.icon || Video, { className: "h-5 w-5" })}
+                          <div
+                            className={`flex h-10 w-10 items-center justify-center rounded-lg bg-[#ff5321] text-white flex-shrink-0 shadow-sm`}
+                          >
+                            {React.createElement(event.icon || Video, {
+                              className: "h-5 w-5",
+                            })}
                           </div>
                           <div className="flex-1 min-w-0">
-                            <div className="font-bold text-gray-900 text-sm truncate">{event.title}</div>
+                            <div className="font-bold text-gray-900 text-sm truncate">
+                              {event.title}
+                            </div>
                             <div className="text-xs text-gray-500 mt-0.5">
-                              {moment(event.start).format("HH:mm")} - {moment(event.end).format("HH:mm")}
+                              {moment(event.start).format("HH:mm")} -{" "}
+                              {moment(event.end).format("HH:mm")}
                             </div>
                           </div>
                         </div>
@@ -1247,8 +1281,12 @@ body:has(.fixed.inset-0.bg-black\/60)
                     <div className="bg-white p-4 rounded-full mb-3 shadow-sm">
                       <Clock className="h-8 w-8 text-orange-300" />
                     </div>
-                    <p className="text-sm text-gray-500 font-medium">No classes today</p>
-                    <p className="text-xs text-gray-400 mt-1">Enjoy your free time!</p>
+                    <p className="text-sm text-gray-500 font-medium">
+                      No classes today
+                    </p>
+                    <p className="text-xs text-gray-400 mt-1">
+                      Enjoy your free time!
+                    </p>
                   </div>
                 )}
               </div>
@@ -1275,7 +1313,9 @@ body:has(.fixed.inset-0.bg-black\/60)
                             </div>
                           </div>
                           <div className="flex-1 min-w-0">
-                            <div className="text-sm font-semibold text-gray-800 truncate">{event.title}</div>
+                            <div className="text-sm font-semibold text-gray-800 truncate">
+                              {event.title}
+                            </div>
                             <div className="text-xs text-orange-500 font-medium">
                               {moment(event.start).format("HH:mm")}
                             </div>
@@ -1288,8 +1328,12 @@ body:has(.fixed.inset-0.bg-black\/60)
                       <div className="bg-white p-4 rounded-full mb-3 shadow-sm">
                         <CalendarIcon className="h-8 w-8 text-orange-300" />
                       </div>
-                      <p className="text-sm text-gray-500 font-medium">No upcoming events</p>
-                      <p className="text-xs text-gray-400 mt-1">Check back later for new schedules</p>
+                      <p className="text-sm text-gray-500 font-medium">
+                        No upcoming events
+                      </p>
+                      <p className="text-xs text-gray-400 mt-1">
+                        Check back later for new schedules
+                      </p>
                     </div>
                   )}
                 </div>
@@ -1311,7 +1355,11 @@ body:has(.fixed.inset-0.bg-black\/60)
           >
             <div className="sticky top-0 bg-[#f6673c] text-white px-6 py-4 flex items-center justify-between rounded-t-2xl z-10">
               <h3 className="text-xl font-bold">
-                {viewingEvent ? "Event Details" : editingEvent ? "Edit Event" : "Create New Event"}
+                {viewingEvent
+                  ? "Event Details"
+                  : editingEvent
+                    ? "Edit Event"
+                    : "Create New Event"}
               </h3>
               <button
                 onClick={() => setShowEventModal(false)}
@@ -1384,24 +1432,25 @@ body:has(.fixed.inset-0.bg-black\/60)
 )}
                         </div>
 
-                        {user.role === "admin" && (
-                          <div className="flex gap-2 mt-4 pt-2 border-t border-orange-200/50 opacity-100 transition-opacity">
-                            <button
-                              onClick={() => handleEditEvent(evt)}
-                              className="flex-1 py-2 bg-orange-500 text-white rounded-lg text-sm font-bold hover:bg-orange-600 transition-colors flex items-center justify-center gap-2"
-                            >
-                              <Edit2 className="h-4 w-4" /> Edit
-                            </button>
-                            <button
-                              onClick={() => handleDeleteEvent(evt.id)}
-                              className="px-4 py-2 bg-red-50 text-red-600 rounded-lg text-sm font-bold hover:bg-red-100 transition-colors flex items-center justify-center gap-2"
-                            >
-                              <Trash2 className="h-4 w-4" /> Delete
-                            </button>
-                          </div>
-                        )}
-                      </div>
-                    ))}
+                          {user.role === "admin" && (
+                            <div className="flex gap-2 mt-4 pt-2 border-t border-orange-200/50 opacity-100 transition-opacity">
+                              <button
+                                onClick={() => handleEditEvent(evt)}
+                                className="flex-1 py-2 bg-orange-500 text-white rounded-lg text-sm font-bold hover:bg-orange-600 transition-colors flex items-center justify-center gap-2"
+                              >
+                                <Edit2 className="h-4 w-4" /> Edit
+                              </button>
+                              <button
+                                onClick={() => handleDeleteEvent(evt.id)}
+                                className="px-4 py-2 bg-red-50 text-red-600 rounded-lg text-sm font-bold hover:bg-red-100 transition-colors flex items-center justify-center gap-2"
+                              >
+                                <Trash2 className="h-4 w-4" /> Delete
+                              </button>
+                            </div>
+                          )}
+                        </div>
+                      ),
+                    )}
                   </div>
                 </div>
               ) : (
@@ -1570,11 +1619,6 @@ body:has(.fixed.inset-0.bg-black\/60)
 };
 
 export default EventCalendar;
-
-
-
-
-
 
 
 
@@ -1884,7 +1928,6 @@ export default EventCalendar;
 //     };
 //   };
 
-
 //   const CustomMonthEvent = ({ event }) => {
 //   const sameDateEvents = event.sameDateEvents || [event];
 
@@ -1978,7 +2021,7 @@ export default EventCalendar;
 //             rounded-lg
 //             shadow-sm
 //             truncate
-//             w-10 lg:w-26 md:w-18 
+//             w-10 lg:w-26 md:w-18
 //             cursor-pointer
 //           "
 //         >
@@ -2030,7 +2073,6 @@ export default EventCalendar;
 //     </>
 //   );
 // };
-
 
 //   // const CustomMonthEvent = ({ event }) => {
 //   //   const sameDateEvents = event.sameDateEvents || [event];
@@ -2316,7 +2358,7 @@ export default EventCalendar;
 //               /* --- GLOBAL & MONTH VIEW (UNCHANGED) --- */
 //               .rbc-calendar { height: 100%; font-family: inherit; display: flex; flex-direction: column; }
 //               .rbc-toolbar { display: none !important; }
-              
+
 //               .rbc-month-view {
 //     border: none;
 //     border-radius: 24px;
@@ -2382,12 +2424,12 @@ export default EventCalendar;
 
 //              /* --- WEEK/DAY VIEW FIXES --- */
 // .rbc-time-view {
-//   border: none !important; 
-//   border-radius: 24px; 
-  
-//   display: flex; 
-//   flex-direction: column; 
-//   height: 100%; 
+//   border: none !important;
+//   border-radius: 24px;
+
+//   display: flex;
+//   flex-direction: column;
+//   height: 100%;
 //   background: transparent;
 // }
 
@@ -2404,22 +2446,22 @@ export default EventCalendar;
 
 // /* Fixed Header Height */
 // .rbc-time-header {
-//   flex-shrink: 0; 
-//   height: 70px !important; 
+//   flex-shrink: 0;
+//   height: 70px !important;
 //   padding: 10px 0;
-//   border-bottom: none !important; 
+//   border-bottom: none !important;
 //   background: transparent;
 // }
 
 // /* Hide the SECOND empty header row (All Day row) */
-// .rbc-time-header .rbc-row:last-child { 
-//   display: none !important; 
+// .rbc-time-header .rbc-row:last-child {
+//   display: none !important;
 // }
 
 // /* Style the FIRST header row */
 // .rbc-time-header .rbc-row:first-child {
-//   display: flex; 
-//   align-items: center; 
+//   display: flex;
+//   align-items: center;
 //   height: 100%;
 // }
 //   /* ✅ Events in Week/Day View ONLY */
@@ -2440,22 +2482,20 @@ export default EventCalendar;
 //     display: none !important;
 // }
 
-// define width 
-// date cut 
+// define width
+// date cut
 
 // .rbc-time-header-content .rbc-header {
-//   padding: 0 4px !important; 
+//   padding: 0 4px !important;
 //   border: none !important;
-//   text-transform: none; 
+//   text-transform: none;
 //   font-size: 0.85rem; /* Fixed: removed invalid md: prefix */
-//   font-weight: 700; 
-//   display: flex; 
-//   align-items: center; 
-//   justify-content: center; 
+//   font-weight: 700;
+//   display: flex;
+//   align-items: center;
+//   justify-content: center;
 //   height: 100%;
 // }
-
-
 
 // /* Pill Styling for Headers */
 // .rbc-time-header-content .rbc-header > span {
@@ -2470,10 +2510,6 @@ export default EventCalendar;
 //   color: #1F2937;
 //   white-space: nowrap;
 // }
-
-
-
-
 
 // /* Weekend Colors */
 // .rbc-time-header-content .rbc-header:nth-child(1) > span,
@@ -2491,9 +2527,9 @@ export default EventCalendar;
 // /* Scrollable Content Area - CRITICAL FOR VISIBILITY */
 // .rbc-time-content {
 //   flex: 1;
-  
+
 //   overflow: hidden !important
- 
+
 // }
 
 // /* Time Column (Left Side) */
@@ -2508,8 +2544,6 @@ export default EventCalendar;
 //   font-weight: 500;
 //   padding: 0 8px;
 // }
-
-
 
 // /* Light orange background for Week/Day time slots */
 // .rbc-time-view .rbc-time-slot {
@@ -2534,7 +2568,7 @@ export default EventCalendar;
 //   padding: 2px 6px;
 //   font-size: 0.75rem;
 //   font-weight: 600;
- 
+
 // }
 
 // /* Custom Scrollbar */
@@ -2548,29 +2582,27 @@ export default EventCalendar;
 //                 border-radius: 16px; background: #FED7AA; color: #1F2937;
 //                 white-space: nowrap; font-weight: 700;
 //               }
-              
+
 //               /* Weekend Colors */
 //               .rbc-time-header-content .rbc-header:nth-child(1) > span,
 //               .rbc-time-header-content .rbc-header:nth-child(7) > span { color: #EA580C; }
-              
+
 //               /* Today Highlight */
 //               .rbc-time-header-content .rbc-header.rbc-today > span {
 //                 background: #fff; border: 2px solid #FB923C; color: #EA580C;
 //               }
-              
+
 //               /* Scrollable Content */
 //               .rbc-time-content {
 //                 flex: 1; overflow-y: auto !important; overflow-x: hidden;
 //                 border-top: 1px solid rgba(251, 146, 60, 0.2) !important;
 //               }
-              
+
 //               .rbc-time-gutter { background: transparent; border-right: 1px solid rgba(251, 146, 60, 0.1) !important; }
 //               .rbc-label { color: #9CA3AF; font-size: 0.7rem; md:font-size: 0.75rem; font-weight: 500; padding: 0 4px; md:padding: 0 8px; }
-              
-             
-              
+
 //               .rbc-time-slot { border: none !important; background: #FED7AA !important; }
-              
+
 //               .rbc-day-slot.rbc-today { background: white !important; overflow: hidden }
 //               .rbc-day-slot.rbc-today .rbc-time-slot { background: white !important; }
 
@@ -2578,15 +2610,15 @@ export default EventCalendar;
 // .rbc-time-content > .rbc-day-slot {
 //   overflow: hidden !important;
 // }
-              
+
 //               .rbc-timeslot-group { border-bottom: 1px solid rgba(251, 146, 60, 0.15) !important; border: none !important; }
-              
+
 //               .rbc-event { border: none !important; border-radius: 6px; padding: 2px 6px; font-size: 0.7rem; md:font-size: 0.75rem; font-weight: 600; }
-              
+
 //               .rbc-time-content::-webkit-scrollbar { width: 6px; }
 //               .rbc-time-content::-webkit-scrollbar-track { background: transparent; }
 //               .rbc-time-content::-webkit-scrollbar-thumb { background: #FDBA74; border-radius: 3px; }
-              
+
 //               /* Mobile Adjustments */
 //               @media (max-width: 768px) {
 //                 .rbc-time-header { height: 50px !important; }

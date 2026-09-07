@@ -76,6 +76,7 @@ import IeltsTestManagementPage from "./pages/ielts/ieltsTest";
 import IeltsTestPlatform from "./pages/ielts/ieltsTestAttempt";
 import ContentViewPage from "./pages/liveClass/Session";
 import CourseContentManagement from "./pages/Courses/CourseContent";
+import FirebaseNotifications from "./components/firebaseNotifications";
 
 // Define roles
 export const ROLES = {
@@ -91,7 +92,9 @@ export const ROLES = {
 export default function App() {
   return (
     <Router>
+
       <AuthProvider>
+        <FirebaseNotifications />
         <ToastContainer style={{ zIndex: 999999 }} />
         <Toaster position="top-center" richColors closeButton />
         <ScrollToTop />

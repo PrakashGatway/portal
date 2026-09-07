@@ -677,14 +677,14 @@ const MaterialIcon = ({ type }: { type: string }) => {
           HERO SECTION
       ================================================== */}
 
-        <div className="p-4 md:p-6 lg:p-0 mb-2 xl:mb-6">
+        <div className="p-4 md:p-6 lg:p-0 mb-2 ">
           <div className="">
             {/* Main Content Grid */}
             <div className="h-full">
               <div className="grid grid-cols-1 lg:grid-cols-[minmax(0,1.65fr)_minmax(280px,0.85fr)] xl:grid-cols-[1.5fr_0.5fr] gap-4 lg:gap-3 xl:gap-2 h-full">
                 {/* Main Session Card */}
 
-                <div className="flex flex-col gap-6 h-full">
+                <div className="flex flex-col gap-4 h-full">
                   {selectUpcomingSession && (
                     <div className="bg-gradient-to-b from-white via-gray-50 to-gray-300 p-[1.5px] rounded-[24px]">
                       <div
@@ -1162,12 +1162,14 @@ const MaterialIcon = ({ type }: { type: string }) => {
         </div>
 
         <div className="w-full max-w-7xl mx-auto px-4 sm:px-5 lg:px-0 ">
-          <div className="grid grid-cols-1 xl:grid-cols-[1.5fr_0.5fr] items-start gap-4">
+          <div className="grid grid-cols-1 xl:grid-cols-[1.5fr_0.5fr] items-start gap-2">
+          
             <div>
               {activeTab === "Overview" ? (
                 <div className="flex flex-col gap-4">
                   <div className="w-full">
                     {sessionStatus2 === "expired" ? (
+                      
                       <div
                         className="
       w-full
@@ -1538,6 +1540,7 @@ const MaterialIcon = ({ type }: { type: string }) => {
 
                   <div className="flex flex-col gap-4">
                     {allcontent?.relatedMaterials?.length > 0 ? (
+                      
                       <div className="bg-gradient-to-b from-white via-gray-50 to-gray-300 p-[1.5px] rounded-[20px]">
                         <div
                           className="
@@ -1680,6 +1683,7 @@ const MaterialIcon = ({ type }: { type: string }) => {
                         </div>
                       </div>
                     ) : (
+                      
                       <div className="bg-gradient-to-b from-white via-gray-50 to-gray-300 p-[1.5px] rounded-[20px]">
                         <div
                           className="
@@ -2002,15 +2006,18 @@ const MaterialIcon = ({ type }: { type: string }) => {
                 </>
               ) : activeTab === "Trainer" ? (
                 <>
-                  <section className="w-full px-4 py-8 md:px-8">
-                    <div className="mx-auto max-w-6xl">
-                      <div className="relative min-h-[260px] overflow-hidden rounded-[24px] border border-[#f4d6c9] bg-[#fffdfb] shadow-sm">
-                        {/* Orange Left Panel */}
-                        <div className="absolute left-0 top-0 h-full w-[102px] bg-[#ff711f] md:w-[112px]" />
+                
+    <section className="w-full ">
+      <div className="mx-auto max-w-6xl">
+        <div className="relative min-h-[260px] overflow-hidden rounded-[24px] border border-[#f4d6c9] bg-[#fffdfb] shadow-sm">
+          {/* Orange Left Panel */}
+          <div className="absolute left-0 top-0 h-full w-[102px] bg-[#ff711f] md:w-[112px]" />
 
-                        {/* Trainer Image */}
-                        <div className="absolute left-[20px] top-1/2 z-10 h-[170px] w-[170px] -translate-y-1/2 md:left-[38px] md:h-[150px] md:w-[150px]">
-                          <div className="absolute -inset-2 rounded-full border-[7px] border-[#fce6d7] bg-white" />
+          
+{/* Trainer Image */}
+<div className="absolute left-[20px] top-1/2 z-10 h-[170px] w-[170px] -translate-y-1/2 md:left-[38px] md:h-[150px] md:w-[150px]">
+
+  <div className="absolute -inset-2 rounded-full border-[7px] border-[#fce6d7] bg-white" />
 
                           <div className="absolute inset-0 overflow-hidden rounded-full">
                             <img
@@ -2020,15 +2027,16 @@ const MaterialIcon = ({ type }: { type: string }) => {
                             />
                           </div>
 
-                          <img
-                            src={`https://res.cloudinary.com/dd5s7qpsc/image/upload/${instructor?.profilePic}`}
-                            alt=""
-                            className="absolute left-1/2 top-[-40px] z-10 h-[220px] w-[170px] -translate-x-1/2 object-cover object-top"
-                            style={{
-                              clipPath: "inset(0 0 166px 0)",
-                            }}
-                          />
-                        </div>
+  <img
+    src={`https://res.cloudinary.com/dd5s7qpsc/image/upload/${instructor?.profilePic}`}
+    alt=""
+    className="absolute left-1/2 top-[-40px] z-10 h-[220px] w-[170px] -translate-x-1/2 object-cover object-top"
+    style={{
+      clipPath: "inset(0 0 166px 0)",
+    }}
+  />
+
+</div>
 
                         {/* Counter */}
                         <div className="absolute right-6 top-4 z-20 text-[12px] font-medium text-[#d99a7a]">
@@ -2042,53 +2050,52 @@ const MaterialIcon = ({ type }: { type: string }) => {
                             {instructor?.name}
                           </h2>
 
-                          {/* Designation */}
-                          <div className="mt-1">
-                            <span className="inline-block rounded-sm bg-[#fff0e8] px-2 py-[3px] text-[11px] font-semibold text-[#f47735]">
-                              {instructor?.role || "Sinner trainer"}
-                            </span>
-                          </div>
+            {/* Designation */}
+            <div className="mt-1">
+              <span className="inline-block rounded-sm bg-[#fff0e8] px-2 py-[3px] text-[11px] font-semibold text-[#f47735]">
+                {instructor?.role || "Sinner trainer"}
+              </span>
+            </div>
 
-                          {/* Info Row */}
-                          <div className="mt-2 flex flex-wrap items-center gap-x-8 gap-y-1 text-[12px] text-[#555]">
-                            <div className="flex items-center gap-1.5">
-                              <Star
-                                size={12}
-                                className="fill-[#f6b900] text-[#f6b900]"
-                              />
-                              <span>{instructor?.experience || "4 years"}</span>
-                            </div>
-                            {/* <div className="flex items-center gap-1.5">
+            {/* Info Row */}
+            <div className="mt-2 flex flex-wrap items-center gap-x-8 gap-y-1 text-[12px] text-[#555]">
+              <div className="flex items-center gap-1.5">
+                <Star size={12} className="fill-[#f6b900] text-[#f6b900]" />
+                <span>{instructor?.experience || '4 years'}</span>
+              </div>
+              {/* <div className="flex items-center gap-1.5">
                 <span className="text-[#e58a52]">▤</span>
                 <span>{instructor?.certification || "--"}</span>
               </div> */}
                           </div>
 
-                          {/* Specialization */}
-                          <div className="mt-2">
-                            <p className="text-[12px] font-medium text-[#f47735]">
-                              Specialization
-                            </p>
-                            <p className="mt-0.5 text-[12px] text-[#555]">
-                              {instructor?.skills?.join(" ,")}
-                            </p>
-                          </div>
+            {/* Specialization */}
+            <div className="mt-2">
+              <p className="text-[12px] font-medium text-[#f47735]">
+                Specialization
+              </p>
+              <p className="mt-0.5 text-[12px] text-[#555]">
+                {instructor?.skills?.join(' ,')}
+              </p>
+            </div>
 
-                          {/* About */}
-                          <div className="mt-2 max-w-[720px]">
-                            <h3 className="text-[16px] font-semibold text-[#f47735]">
-                              About the Trainer
-                            </h3>
-                            <p className="mt-0.5 text-[12px] leading-[1.65] text-[#3f3f3f] md:text-[13px]">
-                              {instructor?.profile?.bio}
-                            </p>
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-                  </section>
-                  {/* <TrainerSection /> */}
+            {/* About */}
+            <div className="mt-2 max-w-[720px]">
+              <h3 className="text-[16px] font-semibold text-[#f47735]">
+                About the Trainer
+              </h3>
+              <p className="mt-0.5 text-[12px] leading-[1.65] text-[#3f3f3f] md:text-[13px]">
+                {instructor?.profile?.bio}
+              </p>
+            </div>
+
+          </div>
+        </div>
+      </div>
+    </section>
+                 {/* <TrainerSection /> */}
                 </>
+             
               ) : (
                 <div
                   className="
@@ -2630,7 +2637,7 @@ export const UpcomingSessionCard = ({
                       xl:min-h-[122px]
                   "
       >
-        {/* ================= TOP SOFT HIGHLIGHT ================= */}
+        
         <div
           className="
                           pointer-events-none
