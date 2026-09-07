@@ -4,6 +4,7 @@ import {
   listenForMessages,
 } from "../firebase/messaging";
 import { useAuth } from "../context/UserContext";
+import api from "../axiosInstance";
 
 const FirebaseNotifications = () => {
   const { user } = useAuth();
@@ -54,21 +55,22 @@ const FirebaseNotifications = () => {
 
 const saveTokenToBackend = async (token: string, id: string) => {
   try {
-    const response = await fetch(
-      `${import.meta.env.VITE_API_URL}/notification/fcm-token`,
-      {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        credentials: "include",
-        body: JSON.stringify({ token, id }),
-      }
-    );
+    // const response = await fetch(
+    //   `${import.meta.env.VITE_API_URL}/notification/fcm-token`,
+    //   {
+    //     method: "POST",
+    //     headers: { "Content-Type": "application/json" },
+    //     credentials: "include",
+    //     body: JSON.stringify({ token, id }),
+    //   }
+    // );
 
-    if (!response.ok) {
-      throw new Error(`Server responded with ${response.status}`);
-    }
+    // if (!response.ok) {
+    //   throw new Error(`Server responded with ${response.status}`);
+    // }
 
-    const data = await response.json();
+    const response = await api.post('/notification/fcm-token',{token,id})
+    const data =  response
     console.log("FCM token saved:", data);
   } catch (error) {
     console.error("Failed to save FCM token:", error);
