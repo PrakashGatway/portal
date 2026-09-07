@@ -51,7 +51,7 @@ export const listenForMessages = (
 
     return onMessage(messaging, (payload) => {
       console.log("Foreground notification:", payload);
-      alert(payload);
+      alert(payload?.notification?.title || "new notification.");
       callback(payload);
     });
   } catch (error) {
