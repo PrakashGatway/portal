@@ -45,6 +45,7 @@ import {
   Zap,
   ShieldCheck,
   ThumbsUp,
+  Users,
 } from "lucide-react";
 import { toast } from "react-toastify";
 import Button from "../../components/ui/button/Button";
@@ -109,6 +110,7 @@ const SupportPage = () => {
   const [isSending, setIsSending] = useState(false);
   const [showFilters, setShowFilters] = useState(false);
   const [support, setsupport] = useState([]);
+  const [search, setsearch] = useState("");
 
   useEffect(() => {
     const fetchSupport = async () => {
@@ -116,13 +118,16 @@ const SupportPage = () => {
         const res = await fetch(
           "https://www.ooshasprep.com/api/article-category",
         );
-        console.log(res);
+
+        const resJson = await res.json();
+        setsupport(resJson);
       } catch (error) {
         console.error("Error fetching support categories:", error);
       }
     };
+
     fetchSupport();
-  }, []);
+  }, [support]);
 
   useEffect(() => {
     fetchTickets();
@@ -181,117 +186,6 @@ const SupportPage = () => {
     }
   };
 
-  const handleSendReply = async () => {
-    if (!replyMessage.trim()) return;
-    setIsSending(true);
-    try {
-      await api.put(`/support/${selectedTicket?._id}/reply`, {
-        message: replyMessage,
-      });
-      toast.success("Reply sent!");
-      setReplyMessage("");
-
-      const response = await api.get(`/support/${selectedTicket?._id}`);
-      setSelectedTicket(response.data.ticket);
-      await fetchTickets();
-    } catch (error) {
-      toast.error("Failed to send reply");
-    } finally {
-      setIsSending(false);
-    }
-  };
-
-  const getStatusConfig = (status: string) => {
-    const configs = {
-      open: {
-        icon: AlertCircle,
-        color: "text-yellow-500",
-        bg: "bg-yellow-50 dark:bg-yellow-900/20",
-        border: "border-yellow-200 dark:border-yellow-800",
-        label: "Open",
-      },
-      in_progress: {
-        icon: Clock,
-        color: "text-blue-500",
-        bg: "bg-blue-50 dark:bg-blue-900/20",
-        border: "border-blue-200 dark:border-blue-800",
-        label: "In Progress",
-      },
-      resolved: {
-        icon: CheckCircle,
-        color: "text-green-500",
-        bg: "bg-green-50 dark:bg-green-900/20",
-        border: "border-green-200 dark:border-green-800",
-        label: "Resolved",
-      },
-      closed: {
-        icon: XCircle,
-        color: "text-gray-500",
-        bg: "bg-gray-50 dark:bg-gray-800",
-        border: "border-gray-200 dark:border-gray-700",
-        label: "Closed",
-      },
-    };
-    return configs[status as keyof typeof configs] || configs.open;
-  };
-
-  const getPriorityConfig = (priority: string) => {
-    const configs = {
-      urgent: {
-        color: "text-red-600 dark:text-red-400",
-        bg: "bg-red-50 dark:bg-red-900/20",
-        border: "border-red-200 dark:border-red-800",
-        label: "Urgent",
-      },
-      high: {
-        color: "text-orange-600 dark:text-orange-400",
-        bg: "bg-orange-50 dark:bg-orange-900/20",
-        border: "border-orange-200 dark:border-orange-800",
-        label: "High",
-      },
-      medium: {
-        color: "text-yellow-600 dark:text-yellow-400",
-        bg: "bg-yellow-50 dark:bg-yellow-900/20",
-        border: "border-yellow-200 dark:border-yellow-800",
-        label: "Medium",
-      },
-      low: {
-        color: "text-green-600 dark:text-green-400",
-        bg: "bg-green-50 dark:bg-green-900/20",
-        border: "border-green-200 dark:border-green-800",
-        label: "Low",
-      },
-    };
-    return configs[priority as keyof typeof configs] || configs.medium;
-  };
-
-  const getCategoryColor = (category: string) => {
-    const colors: Record<string, string> = {
-      account:
-        "bg-purple-100 text-purple-800 dark:bg-purple-900/30 dark:text-purple-300",
-      payment:
-        "bg-emerald-100 text-emerald-800 dark:bg-emerald-900/30 dark:text-emerald-300",
-      technical:
-        "bg-cyan-100 text-cyan-800 dark:bg-cyan-900/30 dark:text-cyan-300",
-      content:
-        "bg-pink-100 text-pink-800 dark:bg-pink-900/30 dark:text-pink-300",
-      billing:
-        "bg-amber-100 text-amber-800 dark:bg-amber-900/30 dark:text-amber-300",
-      feature_request:
-        "bg-indigo-100 text-indigo-800 dark:bg-indigo-900/30 dark:text-indigo-300",
-      general: "bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-300",
-      other: "bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-300",
-    };
-    return colors[category] || colors.general;
-  };
-
-  const formatDate = (dateString: string) => {
-    return moment(dateString).fromNow();
-  };
-
-  const formatFullDate = (dateString: string) => {
-    return moment(dateString).format("MMM D, YYYY [at] h:mm A");
-  };
 
   const categoryOptions = [
     { value: "all", label: "All Categories" },
@@ -331,51 +225,18 @@ const SupportPage = () => {
 
   const stats = getTicketStats();
 
-  // Quick reply suggestions
-  const quickReplies = [
-    "I'm looking into this issue and will get back to you shortly.",
-    "Thank you for your patience. We're working on resolving this.",
-    "Could you please provide more details about this issue?",
-    "This has been resolved. Please let us know if you need further assistance.",
-    "We've escalated this to our technical team for review.",
-  ];
+  
 
-  const helpTopics = [
-    {
-      title: "Courses & Enrollments",
-      description:
-        "Find answers related to course content, enrollment and access.",
-      articles: "12 Articles",
-      icon: GraduationCap,
-      iconBg: "bg-[#EEF2FF]",
-      iconColor: "text-[#2563EB]",
-    },
-    {
-      title: "Payments & Refunds",
-      description:
-        "Payment methods, failed transactions, refunds and invoices.",
-      articles: "8 Articles",
-      icon: CreditCard,
-      iconBg: "bg-[#FFF3E8]",
-      iconColor: "text-[#F97316]",
-    },
-    {
-      title: "Mock Tests",
-      description: "How to take tests, test settings, results and performance.",
-      articles: "15 Articles",
-      icon: ClipboardList,
-      iconBg: "bg-[#FFF3E8]",
-      iconColor: "text-[#F97316]",
-    },
-    {
-      title: "Account & Profile",
-      description: "Manage your account, profile, password and preferences.",
-      articles: "10 Articles",
-      icon: UserRound,
-      iconBg: "bg-[#FFF0F2]",
-      iconColor: "text-[#F43F5E]",
-    },
-  ];
+  const Icons = {
+    icon: [BookOpen, FileText, Users, HelpCircle],
+
+    bgColor: [
+      "bg-orange-100 text-orange-600",
+      "bg-blue-100 text-blue-600",
+      "bg-purple-100 text-purple-600",
+      "bg-green-100 text-green-600",
+    ],
+  };
 
   const supportBenefits = [
     {
@@ -421,7 +282,7 @@ const SupportPage = () => {
                     className="
     flex flex-col gap-3
     sm:flex-row sm:items-center
-    -mt-15
+    
   "
                   >
                     {/* All Support Tickets */}
@@ -484,9 +345,11 @@ const SupportPage = () => {
                   </div>
                 </div>
               </div>
+            </div>
 
+            <div className="flex justify-between item-center">
               {/* Search Card */}
-              <div className="mt-7 sm:mt-8 w-full lg:w-[700px] rounded-2xl border border-[#E8E8E8] bg-white p-3 sm:p-4 shadow-sm">
+              <div className="h-full sm:mt-8 w-full lg:w-[700px]  rounded-2xl border border-[#E8E8E8] bg-white p-3 sm:p-4 shadow-sm">
                 {/* Search */}
                 <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2">
                   <div className="relative flex-1">
@@ -497,43 +360,49 @@ const SupportPage = () => {
 
                     <input
                       type="text"
+                      value={search}
+                      onChange={(e) => setsearch(e.target.value)}
                       placeholder="Search for help articles, guides or topics..."
                       className="
-                w-full
-                h-12
-                rounded-xl
-                border border-[#E5E7EB]
-                bg-white
-                pl-11
-                pr-4
-                text-sm
-                text-[#333]
-                outline-none
-                placeholder:text-[#9CA3AF]
-                focus:border-[#FF6B35]
-                focus:ring-1
-                focus:ring-[#FF6B35]
-              "
+        w-full
+        h-12
+        rounded-xl
+        border border-[#E5E7EB]
+        bg-white
+        pl-11
+        pr-4
+        text-sm
+        text-[#333]
+        outline-none
+        placeholder:text-[#9CA3AF]
+        focus:border-[#FF6B35]
+        focus:ring-1
+        focus:ring-[#FF6B35]
+      "
                     />
                   </div>
 
-                  <button
+                  <Link
+                    to={`https://www.ooshasprep.com/guide?search=${search}`}
                     className="
-              h-12
-              px-7
-              rounded-xl
-              bg-[#FF6B35]
-              hover:bg-[#F15A24]
-              text-white
-              text-sm
-              font-semibold
-              shadow-sm
-              transition
-              duration-200
-            "
+      flex
+      h-12
+      items-center
+      justify-center
+      rounded-xl
+      bg-[#FF6B35]
+      px-7
+      text-sm
+      font-semibold
+      text-white
+      shadow-sm
+      transition
+      duration-200
+      hover:bg-[#F15A24]
+    "
                   >
                     Search
-                  </button>
+                  </Link>
                 </div>
 
                 {/* Popular Searches */}
@@ -542,15 +411,10 @@ const SupportPage = () => {
                     Popular Searches:
                   </span>
 
-                  {[
-                    "How to Enroll",
-                    "Payment Issues",
-                    "Refund Policy",
-                    "Mock Test Help",
-                    "Certificate",
-                  ].map((item) => (
-                    <button
-                      key={item}
+                  {support?.data?.slice(0, 7)?.map((item) => (
+                    <Link
+                      key={item.name}
+                      to={`https://www.ooshasprep.com/guide?category=${item?.slug}`}
                       className="
                 rounded-full
                 bg-[#FFF8F5]
@@ -565,31 +429,28 @@ const SupportPage = () => {
                 transition
               "
                     >
-                      {item}
-                    </button>
+                      {item.name}
+                    </Link>
                   ))}
                 </div>
               </div>
-            </div>
 
-            {/* Right Illustration */}
-            <div
-              className="
+              {/* Right Illustration */}
+              <div
+                className="
         hidden
         lg:block
-        absolute
-        right-8
-        bottom-0
         w-[310px]
-        xl:w-[350px]
+        xl:w-[300px]
         pointer-events-none
       "
-            >
-              <img
-                src="/images/support.png"
-                alt="Support Center"
-                className="w-full h-auto object-contain"
-              />
+              >
+                <img
+                  src="/images/support.png"
+                  alt="Support Center"
+                  className="w-full h-auto object-contain"
+                />
+              </div>
             </div>
           </div>
         </div>
@@ -603,13 +464,13 @@ const SupportPage = () => {
               <MessageCircle className="text-orange-500" size={32} />
             </div>
 
-            <div className="flex flex-col gap-4 min-w-0">
+            <div className="flex flex-col gap-4 ">
               <div className="space-y-1 flex flex-col">
                 <span className="font-bold text-black text-base">
                   Live Chat
                 </span>
 
-                <span className="text-sm text-gray-500 whitespace-nowrap">
+                <span className="text-sm text-gray-500 ">
                   Chat with our support team
                 </span>
               </div>
@@ -700,7 +561,7 @@ const SupportPage = () => {
               </h2>
 
               <Link
-                to="/all-articles"
+                to="https://www.ooshasprep.com/guide"
                 className="group flex shrink-0 items-center gap-1.5 text-[12px] font-medium text-[#E87545] transition-colors hover:text-[#D95F32] sm:text-base"
               >
                 <span>View All Articles</span>
@@ -722,13 +583,17 @@ const SupportPage = () => {
             xl:grid-cols-4
           "
             >
-              {helpTopics.map((topic, index) => {
-                const Icon = topic.icon;
+              {support?.data?.map((topic, index) => {
+                const Icon = Icons.icon[index];
 
                 return (
-                  <div
-                    key={topic.title}
-                    className="
+                  <Link
+                    className="cursor-pointer"
+                    to={`https://www.ooshasprep.com/guide?category=${topic?.slug}`}
+                  >
+                    <div
+                      key={topic.title}
+                      className="
                   group relative min-h-[158px]
                   rounded-[15px]
                   border border-[#E9E7E5]
@@ -741,61 +606,59 @@ const SupportPage = () => {
                   hover:shadow-[0_8px_24px_rgba(0,0,0,0.06)]
                   sm:p-[17px]
                 "
-                  >
-                    <div className="flex items-start gap-3">
-                      {/* Icon */}
-                      <div
-                        className={`
+                    >
+                      <div className="flex items-start gap-3">
+                        {/* Icon */}
+                        <div
+                          className={`
                       flex h-[43px] w-[43px] shrink-0
                       items-center justify-center
                       rounded-full
-                      ${topic.iconBg}
+                      ${Icons.bgColor[index]}
                       transition-transform duration-300
                       group-hover:scale-105
                     `}
-                      >
-                        <Icon
-                          size={22}
-                          strokeWidth={2}
-                          className={topic.iconColor}
-                        />
-                      </div>
+                        >
+                          {Icon && <Icon className="h-5 w-5" />}
+                        </div>
 
-                      {/* Content */}
-                      <div className="min-w-0 flex-1">
-                        <h3
-                          className="
+                        {/* Content */}
+                        <div className="min-w-0 flex-1">
+                          <h3
+                            className="
                         pt-[1px]
                         text-base
                         font-semibold
                         leading-[18px]
                         text-[#242424]
                       "
-                        >
-                          {topic.title}
-                        </h3>
+                          >
+                            {topic.name}
+                          </h3>
 
-                        <p
-                          className="
+                          <div
+                            className="
                         mt-2
                         text-sm
-                        font-normal
-                        leading-[18px]
-                        text-[#777777]
+                      line-clamp-6
+                        text-gray-400
+
                       "
-                        >
-                          {topic.description}
-                        </p>
+                            dangerouslySetInnerHTML={{
+                              __html: topic.description,
+                            }}
+                          ></div>
+                        </div>
+                      </div>
+
+                      {/* Article count */}
+                      <div className="mt-2 pl-[55px]">
+                        <span className="text-sm font-medium text-[#666666]">
+                          {topic.articles}
+                        </span>
                       </div>
                     </div>
-
-                    {/* Article count */}
-                    <div className="mt-2 pl-[55px]">
-                      <span className="text-sm font-medium text-[#666666]">
-                        {topic.articles}
-                      </span>
-                    </div>
-                  </div>
+                  </Link>
                 );
               })}
             </div>

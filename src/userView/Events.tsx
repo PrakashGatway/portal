@@ -673,9 +673,9 @@ const CustomDateCell = ({ value, children }) => {
           overflow-hidden
           text-ellipsis
           whitespace-nowrap
-          text-[11px]
+          text-sm
           font-semibold
-          text-orange-800
+          text-[#f36d45]
           leading-tight
           cursor-pointer
         "
@@ -919,25 +919,25 @@ useEffect(() => {
           <div className="flex items-center bg-orange-50 rounded-xl p-1">
             <button
               onClick={navigatePrev}
-              className="p-2 hover:bg-white hover:shadow-sm rounded-lg transition-all text-orange-600"
+              className="p-2 hover:bg-white hover:shadow-sm rounded-lg transition-all text-[#f36d45]"
             >
               <ChevronLeft className="h-5 w-5" />
             </button>
             <button
               onClick={navigateNext}
-              className="p-2 hover:bg-white hover:shadow-sm rounded-lg transition-all text-orange-600"
+              className="p-2 hover:bg-white hover:shadow-sm rounded-lg transition-all text-[#f36d45]"
             >
               <ChevronRight className="h-5 w-5" />
             </button>
           </div>
-          <h2 className="text-lg md:text-2xl font-bold text-orange-600 truncate">
+          <h2 className="text-lg md:text-2xl font-bold text-[#f36d45] truncate">
             {moment(date).format("MMMM YYYY")}
           </h2>
         </div>
         <div className="flex items-center gap-2 md:gap-3">
           <button
             onClick={navigateToday}
-            className="px-3 md:px-5 py-2 text-xs md:text-sm font-bold text-orange-600 bg-orange-100 hover:bg-orange-200 rounded-xl transition-colors"
+            className="px-3 md:px-5 py-2 text-xs md:text-sm font-bold text-[#f36d45] bg-orange-100 hover:bg-orange-200 rounded-xl transition-colors"
           >
             Today
           </button>
@@ -948,8 +948,8 @@ useEffect(() => {
                 onClick={() => handleViewChange(v)}
                 className={`px-3 md:px-4 py-1.5 text-xs md:text-sm font-medium rounded-lg transition-all whitespace-nowrap ${
                   view === v
-                    ? "bg-white text-orange-600 shadow-sm"
-                    : "text-orange-400 hover:text-orange-600"
+                    ? "bg-white text-[#f36d45] shadow-sm"
+                    : "text-[#f36d45] hover:text-orange-600"
                 }`}
               >
                 {v.charAt(0).toUpperCase() + v.slice(1)}
@@ -982,7 +982,7 @@ useEffect(() => {
   width: 10px;
   height: 10px;
   border-radius: 9999px;
-  background: #fb923c;
+  background: #f36d45;
   animation: calendarEventPulse 1.5s ease-in-out infinite;
   box-shadow: 0 0 6px rgba(249, 115, 22, 0.6);
   pointer-events: none;
@@ -1016,8 +1016,8 @@ body:has(.fixed.inset-0.bg-black\/60)
               flex-direction: column;
             }
             .rbc-header { border: none; padding: 15px 0; color: #1F2937; font-weight: 700; text-transform: uppercase; font-size: 0.85rem; letter-spacing: 0.05em; }
-            .rbc-header:nth-child(1) { color: #EA580C; }
-            .rbc-header:nth-child(7) { color: #EA580C; }
+            .rbc-header:nth-child(1) { color: #f36d45; }
+            .rbc-header:nth-child(7) { color: #f36d45; }
             .rbc-month-row { display: flex; flex-direction: column; flex: 1; min-height: 0; overflow: hidden; }
             .rbc-row-content {
   flex: 1;
@@ -1098,9 +1098,9 @@ body:has(.fixed.inset-0.bg-black\/60)
               white-space: nowrap; font-weight: 700;
             }
             .rbc-time-header-content .rbc-header:nth-child(1) > span,
-            .rbc-time-header-content .rbc-header:nth-child(7) > span { color: #EA580C; }
+            .rbc-time-header-content .rbc-header:nth-child(7) > span { color: #f36d45; }
             .rbc-time-header-content .rbc-header.rbc-today > span {
-              background: white; border: 2px solid #FB923C; color: #EA580C;
+              background: white; border: 2px solid #f36d45; color: #f36d45;
             }
 
             .rbc-time-gutter { background: transparent; border-right: 1px solid rgba(251, 146, 60, 0.1) !important; }
@@ -1216,7 +1216,7 @@ body:has(.fixed.inset-0.bg-black\/60)
 
             <div className="flex-1 overflow-y-auto scrollbar-hide min-h-0 flex flex-col gap-3">
               <div className="bg-orange-100/50 rounded-xl p-3 flex flex-col lg:h-52 shrink-0">
-                <h3 className="font-bold text-orange-700 text-sm flex items-center gap-2 shrink-0">
+                <h3 className="font-bold text-[#f36d45] text-sm flex items-center gap-2 shrink-0">
                   <Clock className="h-4 w-4" /> Today's Schedule
                 </h3>
 
@@ -1254,17 +1254,18 @@ body:has(.fixed.inset-0.bg-black\/60)
               </div>
 
               <div className="bg-orange-100/50 rounded-xl p-3 flex flex-col lg:h-52 shrink-0">
-                <h3 className="font-bold text-orange-700 text-sm flex items-center gap-2 shrink-0">
+                <h3 className="font-bold text-[#f36d45] text-sm flex items-center gap-2 shrink-0">
                   <Award className="h-4 w-4" /> Upcoming
                 </h3>
-                <div className="flex-1 min-h-0 mt-3 overflow-y-auto scrollbar-hide">
+                <div className="flex-1 min-h-0 mt-3 overflow-y-auto [scrollbar-width:none]
+    [&::-webkit-scrollbar]:hidden">
                   {upcomingEvents.length > 0 ? (
                     <div className="space-y-2">
                       {upcomingEvents.map((event) => (
                         <div
                           key={event.id}
                           onClick={() => handleSelectEvent(event)}
-                          className="flex items-center gap-3 p-2.5 rounded-xl bg-white border border-transparent hover:border-orange-200 hover:bg-orange-50 cursor-pointer transition-all"
+                          className="flex items-center gap-3 p-2.5 rounded-xl bg-white border border-transparent hover:border-orange-200 cursor-pointer transition-all"
                         >
                           <div className="text-center min-w-[45px] bg-orange-50 rounded-lg py-1.5 border border-orange-100">
                             <div className="text-[10px] font-bold text-orange-500 uppercase">

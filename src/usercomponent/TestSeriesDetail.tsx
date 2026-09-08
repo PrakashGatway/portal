@@ -96,7 +96,7 @@ const TestSeriesDetailPage: React.FC = () => {
                                     {/* Avatar */}
                                     <div className="flex-shrink-0">
                                         <img
-                                            src="/images/iels/listening.png"
+                                            src="/images/headphone.webp"
                                             alt="Support"
                                             className="h-full w-24"
                                         />

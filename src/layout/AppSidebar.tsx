@@ -29,7 +29,7 @@ const navItems: NavItem[] = [
   { icon: "📝", name: "Mock Tests", path: "/mock-tests" },
 
   {
-    icon: "🎓",
+    icon: "📚",
     name: "Courses",
     subItems: [
       { name: "All Courses", path: "/courses", icon: "📚" },
@@ -347,7 +347,7 @@ const AppSidebar: React.FC = () => {
   const showLabels = isExpanded || isHovered || isMobileOpen;
 
   const renderMenuItems = (items: NavItem[], menuType: "main" | "others") => (
-    <ul className="flex flex-col gap-3 ml-2 mt-6">
+    <ul className="flex flex-col gap-3 ml-0 mt-6">
       {items.map((nav, index) => {
         const isSubmenuOpen =
           openSubmenu?.type === menuType && openSubmenu?.index === index;
@@ -368,16 +368,16 @@ const AppSidebar: React.FC = () => {
                   ${
                     active
                       ? "bg-orange-500/10 text-orange-500"
-                      : "text-zinc-600 dark:text-zinc-400 hover:bg-black/[0.04] dark:hover:bg-white/[0.06] hover:text-zinc-900 dark:hover:text-zinc-100"
+                      : "text-zinc-600 dark:text-zinc-400 hover:bg-orange-50 hover:border-l-4 hover:border-orange-500 dark:hover:bg-white/[0.06] hover:text-zinc-900 dark:hover:text-zinc-100"
                   }`}
                 >
                   {showLabels ? (
                     <>
                       {typeof nav.icon === "string" ? (
-                        <span className="text-[22px]">{nav.icon}</span>
+                        <span className="text-[18px]">{nav.icon}</span>
                       ) : (
                         <Icon
-                          className={`w-[20px] h-[20px] stroke-[2.2] flex-shrink-0 transition-colors duration-200 ${
+                          className={`w-6 h-6 stroke-[2.2] flex-shrink-0 transition-colors duration-200 ${
                             active
                               ? "text-orange-500"
                               : "text-zinc-500 dark:text-zinc-500"
@@ -398,7 +398,7 @@ const AppSidebar: React.FC = () => {
                   ) : (
                     <div className="relative flex flex-col gap-1 items-center justify-center w-full ">
                       {typeof nav.icon === "string" ? (
-                        <span className="text-3xl">{nav.icon}</span>
+                        <span className="text-[18px]">{nav.icon}</span>
                       ) : (
                         <Icon
                           className={`w-6 h-6 stroke-[1.7] transition-colors duration-200 ${
@@ -420,7 +420,7 @@ const AppSidebar: React.FC = () => {
               <div className={`${isActive(nav.path) ? "border-l-4 border-orange-500 rounded-[26px]" : ""}`}>
                 <Link
                   to={nav.path}
-                  className={`w-full  flex items-center gap-3 ${isExpanded || isHovered || isMobileOpen ? "px-5" : "px-1"} py-1.5  rounded-[26px]  group relative
+                  className={`w-full  flex items-center gap-3 ${isExpanded || isHovered || isMobileOpen ? "px-4" : "px-1"} py-1.5  rounded-[26px]  group relative
                   ${isActive(nav.path) ? "font-semibold" : "font-medium"}
                   ${
                     isActive(nav.path)
@@ -438,7 +438,7 @@ const AppSidebar: React.FC = () => {
                         <span className="text-[18px] ">{nav.icon}</span>
                       ) : (
                         <Icon
-                          className={`w-[20px] h-[20px]  ${
+                          className={`w-6 h-6  ${
                             isActive(nav.path)
                               ? "text-orange-500"
                               : "text-zinc-500 dark:text-zinc-500"
@@ -452,7 +452,7 @@ const AppSidebar: React.FC = () => {
                   ) : (
                     <div className="relative flex flex-col gap-1 items-center justify-center w-full">
                       {typeof nav.icon === "string" ? (
-                        <span className="text-lg ">{nav.icon}</span>
+                        <span className="text-[18px] ">{nav.icon}</span>
                       ) : (
                         <Icon
                           className={`w-6 h-6 stroke-[2.2] ${
@@ -462,7 +462,7 @@ const AppSidebar: React.FC = () => {
                           }`}
                         />
                       )}
-                      <span className=" text-center font-semibold text-[11px]">
+                      <span className="text-center font-semibold text-[11px]">
                         {nav.name}
                       </span>
                     </div>
@@ -499,7 +499,7 @@ const AppSidebar: React.FC = () => {
                             ${
                               subActive
                                 ? "bg-orange-500/10 text-orange-500"
-                                : "text-zinc-600 dark:text-zinc-400 hover:bg-black/[0.04] dark:hover:bg-white/[0.06] hover:text-zinc-900 dark:hover:text-zinc-100"
+                                : "text-zinc-600 dark:text-zinc-400 hover:bg-orange-50 hover:border-l-4 hover:border-orange-500 dark:hover:bg-white/[0.06] hover:text-zinc-900 dark:hover:text-zinc-100"
                             }`}
                           >
                             <div className="flex items-center gap-2.5">

@@ -348,28 +348,29 @@ const ContentViewPage = () => {
     };
   }, [scheduledStartValue, scheduledEndValue, calculateTimeUntilMeeting]);
 
- const materialIconImages = {
-  pdf: "/images/pdf.webp",
-  video: "/images/video.webp",
-  audio: "/images/audio.webp",
-  document: "/images/document.webp",
-  image: "/images/image.webp",
-  link: "/images/link.webp",
-};
+  const materialIconImages = {
+    pdf: "/images/pdf.webp",
+    video: "/images/video.webp",
+    audio: "/images/audio.webp",
+    document: "/images/document.webp",
+    image: "/images/image.webp",
+    link: "/images/link.webp",
+  };
 
-const MaterialIcon = ({ type }: { type: string }) => {
-  const iconSrc =
-    materialIconImages[type?.toLowerCase() as keyof typeof materialIconImages] ||
-    materialIconImages.document;
+  const MaterialIcon = ({ type }: { type: string }) => {
+    const iconSrc =
+      materialIconImages[
+        type?.toLowerCase() as keyof typeof materialIconImages
+      ] || materialIconImages.document;
 
-  return (
-    <img
-      src={iconSrc}
-      alt={type || "Material"}
-      className="w-full h-full object-contain"
-    />
-  );
-};
+    return (
+      <img
+        src={iconSrc}
+        alt={type || "Material"}
+        className="w-full h-full object-contain"
+      />
+    );
+  };
   const formatTime2 = (seconds: number) => {
     const days = Math.floor(seconds / 86400);
     const hours = Math.floor((seconds % 86400) / 3600);
@@ -857,7 +858,11 @@ const MaterialIcon = ({ type }: { type: string }) => {
                             <div className="relative mb-3">
                               <div className=" w-[68px] h-[68px] sm:w-[76px] sm:h-[76px] md:w-[60px] md:h-[60px] rounded-full border-2 border-orange-400 overflow-hidden">
                                 <img
-                                  src="https://cdn-icons-png.flaticon.com/512/709/709699.png"
+                                  src={
+                                    instructor?.profilePic
+                                      ? `${ImageBaseUrl}/${instructor.profilePic}`
+                                      : "https://cdn-icons-png.flaticon.com/512/10337/10337525.png"
+                                  }
                                   alt="Trainer"
                                   className="w-full h-full object-cover"
                                 />
@@ -876,7 +881,7 @@ const MaterialIcon = ({ type }: { type: string }) => {
                                 Pte expert
                               </p>
 
-                              <p className="text-gray-500 text-xs line-clamp-2 ">
+                              <p className="text-gray-500 text-xs line-clamp-3 ">
                                 {
                                   selectUpcomingSession?.instructor?.profile
                                     ?.bio
@@ -1394,7 +1399,11 @@ const MaterialIcon = ({ type }: { type: string }) => {
                 "
                               >
                                 <img
-                                  src="https://cdn-icons-png.flaticon.com/512/709/709699.png"
+                                  src={
+                                    instructor?.profilePic
+                                      ? `${ImageBaseUrl}/${instructor.profilePic}`
+                                      : "https://cdn-icons-png.flaticon.com/512/10337/10337525.png"
+                                  }
                                   alt={instructor?.name || "Instructor"}
                                   className="w-full h-full object-cover"
                                 />
@@ -1834,14 +1843,14 @@ const MaterialIcon = ({ type }: { type: string }) => {
                       pdf?.materialType === "pdf"
                         ? "bg-transparent"
                         : pdf?.materialType === "document"
-                          ? "bg-[#EA580C]"
+                          ? ""
                           : pdf?.materialType === "link"
-                            ? "bg-[#2563EB]"
+                            ? ""
                             : pdf?.materialType === "image"
-                              ? "bg-[#16A34A]"
+                              ? ""
                               : pdf?.materialType === "audio"
-                                ? "bg-[#9333EA]"
-                                : "bg-[#6B7280]"
+                                ? ""
+                                : ""
                     }
                   `}
                                   >
@@ -2323,7 +2332,7 @@ const MaterialIcon = ({ type }: { type: string }) => {
             mb-0.5
           "
                                     >
-                                      SESSION {String(index).padStart(1, "1")}
+                                      SESSION {index+1}
                                     </p>
 
                                     {/* Title */}

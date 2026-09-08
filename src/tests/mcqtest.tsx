@@ -16,6 +16,7 @@ import api from "../axiosInstance";
 import { useNavigate } from "react-router";
 import { LeftSlider, RightOffer } from "../usercomponent/TestSeriesSlider"; // Adjust path if needed
 import { useAuth } from "../context/UserContext";
+import ConfirmationPopup from "../userView/Confirmation-popup";
 
 // Types
 interface TestTemplate {
@@ -47,6 +48,8 @@ export const MockTestCard = ({
   index: number;
 }) => {
   let navigate = useNavigate();
+
+  const [isOpen,setisOpen] = useState(false)
 
   const getPriceLabel = () => {
     if (test.isFree) return "Free";
@@ -257,7 +260,15 @@ export const MockTestCard = ({
               {/* Button */}
               <button
                 style={{ borderRadius: "0px 0px 15px 0px" }}
-                onClick={handleAction}
+                onClick={()=> {
+                  if(test.isPurchased === true || test.isFree === true){
+                   setisOpen(true)
+                  }
+                  else{
+                    handleAction()
+                  }
+
+                  }}
                 className="
                             flex-1 h-10 bg-[#3B3B3B] text-white font-medium py-2 bg-gradient-to-b from-[#545454] via-[#ffffff]/30 to-[#545454] hover:bg-black transition
                         "
@@ -274,6 +285,7 @@ export const MockTestCard = ({
           </div>
         </div>
       </div>
+     {isOpen&& <ConfirmationPopup isOpen={isOpen} onClose={()=>setisOpen(false)} onConfirm={handleAction} />}
     </div>
   );
 };

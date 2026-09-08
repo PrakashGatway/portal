@@ -79,6 +79,59 @@ const CompactWallOfFame = () => {
     },
   ];
 
+  const students2 = [
+  {
+    name: "Rohan Mehta",
+    score: 760,
+    image: "/images/student-1.png",
+  },
+  {
+    name: "Ananya Sharma",
+    score: 710,
+    image: "/images/student-2.png",
+  },
+  {
+    name: "Karan Malhotra",
+    score: 750,
+    image: "/images/student-3.png",
+  },
+  {
+    name: "Mehak Gupta",
+    score: 720,
+    image: "/images/student-4.png",
+  },
+  {
+    name: "Arjun Nair",
+    score: 730,
+    image: "/images/student-5.png",
+  },
+  {
+    name: "Simran Kaur",
+    score: 710,
+    image: "/images/student-6.png",
+  },
+  {
+    name: "Yash Agarwal",
+    score: 740,
+    image: "/images/student-1.png",
+  },
+  {
+    name: "Ishita Verma",
+    score: 700,
+    image: "/images/student-2.png",
+  },
+  {
+    name: "Rahul Deshmukh",
+    score: 720,
+    image: "/images/student-3.png",
+  },
+  {
+    name: "Neha Bansal",
+    score: 710,
+    image: "/images/student-4.png",
+  },
+];
+
   const students = [
     {
       name: "Ananya Sharma",
@@ -186,6 +239,7 @@ const CompactWallOfFame = () => {
                     mx-auto
                     max-w-[1450px]
                     overflow-hidden
+                    
                     rounded-[28px]
                     border
                     border-[#f4d9c9]
@@ -974,11 +1028,115 @@ const CompactWallOfFame = () => {
                 })}
               </div>
             </div>
+
+
+             <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 max-w-7xl p-6 relative z-10">
+  {students2.map((student, index) => (
+    <div
+      key={student.name}
+      className="
+        group
+        overflow-hidden
+        rounded-2xl
+        border border-[#F1E8E3]
+        bg-white
+        p-3
+        shadow-[0_4px_20px_rgba(0,0,0,0.04)]
+        transition-all
+        duration-300
+        hover:-translate-y-1
+        hover:shadow-[0_10px_30px_rgba(0,0,0,0.08)]
+      "
+    >
+      {/* Student Image */}
+      <div className="relative aspect-[4/3] w-full overflow-hidden rounded-xl bg-[#FFF5F0]">
+        <img
+          src={student.image}
+          alt={student.name}
+          className="
+            h-full
+            w-full
+            object-cover
+            transition-transform
+            duration-300
+            group-hover:scale-105
+          "
+        />
+
+        {/* Score */}
+        <div
+          className="
+            absolute
+            bottom-2
+            right-2
+            rounded-lg
+            bg-[#FF6B35]
+            px-2.5
+            py-1
+            text-sm
+            font-bold
+            text-white
+            shadow-md
+          "
+        >
+          {student.score}
+        </div>
+      </div>
+
+      {/* Student Details */}
+      <div className="px-1 pt-3">
+        <h3
+          className="
+            truncate
+            text-center
+            text-sm
+            font-semibold
+            text-[#242424]
+            sm:text-base
+          "
+        >
+          {student.name}
+        </h3>
+
+        {/* Small divider */}
+        <div className="mx-auto mt-2 h-1 w-7 rounded-full bg-[#FF9B76]" />
+
+        {/* View Profile */}
+        <button
+          type="button"
+          className="
+            mt-3
+            flex
+            w-full
+            items-center
+            justify-center
+            gap-1.5
+            rounded-lg
+            border
+            border-[#FF6B35]
+            py-2
+            text-xs
+            font-semibold
+            text-[#FF6B35]
+            transition-all
+            duration-200
+            hover:bg-[#FF6B35]
+            hover:text-white
+            sm:text-sm
+          "
+        >
+          View Profile
+          <span>→</span>
+        </button>
+      </div>
+    </div>
+  ))}
+</div>
           </div>
         </section>
       </div>
 
-      <AboutSection />
+    
     </>
   );
 };

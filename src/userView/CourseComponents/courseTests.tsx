@@ -22,6 +22,7 @@ export function CourseTests({
   loading = false,
   onItemClick,
 }: CourseTestsProps) {
+
   if (loading) {
     return (
       <div className="space-y-4">
@@ -36,14 +37,18 @@ export function CourseTests({
   }
 
   const [openTestSections, setOpenTestSections] = useState<string[]>([]);
+  const [isOpen, setisOpen] = useState(false);
+  const [selectedItem, setSelectedItem] = useState<any>(null);
+const [selectedSectionId, setSelectedSectionId] = useState<string | null>(null);
 
-  const [expandedTests, setExpandedTests] = useState<
-    Record<string, boolean>
-  >({});
+
+  const [expandedTests, setExpandedTests] = useState<Record<string, boolean>>(
+    {},
+  );
+
+ 
 
   const hasInitializedTestSections = useRef(false);
-
-
 
   const toggleTestSection = (sectionId: string) => {
     setOpenTestSections((prev) =>
@@ -60,6 +65,9 @@ export function CourseTests({
     }));
   };
 
+  console.log(selectedItem,"ss")
+  console.log(selectedSectionId,"id")
+
   const sectionsWithTests = curriculum
     ?.map((section) => ({
       ...section,
@@ -68,10 +76,7 @@ export function CourseTests({
     .filter((section) => section.items.length > 0);
 
   useEffect(() => {
-    if (
-      sectionsWithTests?.length > 0 &&
-      !hasInitializedTestSections.current
-    ) {
+    if (sectionsWithTests?.length > 0 && !hasInitializedTestSections.current) {
       setOpenTestSections([sectionsWithTests[0]._id]);
 
       hasInitializedTestSections.current = true;
@@ -105,12 +110,9 @@ export function CourseTests({
         const isOpen = openTestSections.includes(section._id);
 
         // View More / Show Less
-        const isTestsExpanded =
-          expandedTests[section._id] || false;
+        const isTestsExpanded = expandedTests[section._id] || false;
 
-        const visibleTests = isTestsExpanded
-          ? tests
-          : tests.slice(0, 5);
+        const visibleTests = isTestsExpanded ? tests : tests.slice(0, 5);
 
         return (
           <div
@@ -198,13 +200,10 @@ export function CourseTests({
                 "
                   >
                     <span>
-                      {tests.length}{" "}
-                      {tests.length === 1 ? "Test" : "Tests"}
+                      {tests.length} {tests.length === 1 ? "Test" : "Tests"}
                     </span>
 
-                    <span className="text-[#C5A99B]">
-                      •
-                    </span>
+                    <span className="text-[#C5A99B]">•</span>
 
                     <span>Assessment</span>
                   </div>
@@ -282,56 +281,46 @@ export function CourseTests({
                   className="overflow-hidden"
                 >
                   <div className="bg-white px-4 pb-2">
-
                     {/* =================================================
                     TEST LIST
                 ================================================== */}
                     <div className="space-y-2.5 mt-2">
-                      {visibleTests.map(
-                        (item: any, index: number) => {
-                          const currentTest =
-                            item?.test || test;
+                      {visibleTests.map((item: any, index: number) => {
+                        const currentTest = item?.test || test;
 
-                          const testTitle =
-                            currentTest?.title ||
-                            item?.title ||
-                            `Test ${index + 1}`;
+                        const testTitle =
+                          currentTest?.title ||
+                          item?.title ||
+                          `Test ${index + 1}`;
 
-                          const testDescription =
-                            currentTest?.description ||
-                            item?.description ||
-                            "Full Length Assessment";
+                        const testDescription =
+                          currentTest?.description ||
+                          item?.description ||
+                          "Full Length Assessment";
 
-                          const duration =
-                            currentTest?.totalDurationMinutes ||
-                            currentTest?.duration ||
-                            item?.duration ||
-                            null;
+                        const duration =
+                          currentTest?.totalDurationMinutes ||
+                          currentTest?.duration ||
+                          item?.duration ||
+                          null;
 
-                          const totalQuestions =
-                            currentTest?.totalQuestions ||
-                            currentTest?.questions?.length ||
-                            item?.totalQuestions ||
-                            null;
+                        const totalQuestions =
+                          currentTest?.totalQuestions ||
+                          currentTest?.questions?.length ||
+                          item?.totalQuestions ||
+                          null;
 
-                          const totalMarks =
-                            currentTest?.totalMarks ||
-                            currentTest?.marks ||
-                            item?.totalMarks ||
-                            null;
+                        const totalMarks =
+                          currentTest?.totalMarks ||
+                          currentTest?.marks ||
+                          item?.totalMarks ||
+                          null;
 
-                          return (
-                            <div
-                              key={item._id}
-                              onClick={() => {
-                                if (!item.isLocked) {
-                                  onItemClick(
-                                    item,
-                                    section._id,
-                                  );
-                                }
-                              }}
-                              className={`
+                        return (
+                          <div
+                            key={item._id}
+                          
+                            className={`
                             group
                             flex
                             w-full
@@ -346,15 +335,16 @@ export function CourseTests({
                             transition-all
                             duration-200
                             hover:bg-[#fef7dd]
-                            ${item.isLocked
-                                  ? "cursor-not-allowed opacity-60"
-                                  : "cursor-pointer hover:border-[#FF805F] hover:shadow-[0_2px_8px_rgba(242,103,56,0.08)]"
-                                }
+                            ${
+                              item.isLocked
+                                ? "cursor-not-allowed opacity-60"
+                                : "cursor-pointer hover:border-[#FF805F] hover:shadow-[0_2px_8px_rgba(242,103,56,0.08)]"
+                            }
                           `}
-                            >
-                              {/* TEST IMAGE / CATEGORY */}
-                              <div
-                                className="
+                          >
+                            {/* TEST IMAGE / CATEGORY */}
+                            <div
+                              className="
                               relative
                               flex
                               h-[50px]
@@ -366,55 +356,55 @@ export function CourseTests({
                               rounded-[8px]
                               bg-[#FF6942]
                             "
-                              >
-                                <div className="relative z-10 text-center">
-                                  <div
-                                    className="
+                            >
+                              <div className="relative z-10 text-center">
+                                <div
+                                  className="
                                   text-xl
                                   font-bold
                                   text-white
                                 "
-                                  >
-                                    {course?.categoryInfo?.name?.split(
-                                      " ",
-                                    )[0] || "TEST"}
-                                  </div>
+                                >
+                                  {course?.categoryInfo?.name?.split(" ")[0] ||
+                                    "TEST"}
                                 </div>
                               </div>
+                            </div>
 
-                              {/* CONTENT */}
-                              <div className="min-w-0 flex-1">
-                                {/* TITLE */}
-                                <h4
-                                  className={`
+                            {/* CONTENT */}
+                            <div className="min-w-0 flex-1">
+                              {/* TITLE */}
+                              <h4
+                                className={`
                                 truncate
                                 text-base
                                 font-medium
-                                ${item.isLocked
-                                      ? "text-gray-400"
-                                      : "text-[#252525]"
-                                    }
+                                ${
+                                  item.isLocked
+                                    ? "text-gray-400"
+                                    : "text-[#252525]"
+                                }
                               `}
-                                >
-                                  {testTitle}
-                                </h4>
+                              >
+                                {testTitle}
+                              </h4>
 
-                                {/* DESCRIPTION */}
-                                <p
-                                  className="
+                              {/* DESCRIPTION */}
+                              <p
+                                className="
                                 mt-px
                                 truncate
                                 text-xs
                                 font-normal
                                 text-[#777777]
                               "
-                                >
-                                  {testDescription}
-                                </p>
+                              >
+                                {testDescription}
+                              </p>
 
-                                {/* TEST META */}
-                                <div
-                                  className="
+                              {/* TEST META */}
+                              <div
+                                className="
                                 mt-1
                                 flex
                                 items-center
@@ -424,77 +414,71 @@ export function CourseTests({
                                 leading-none
                                 text-[#444444]
                               "
-                                >
-                                  {/* QUESTIONS */}
-                                  {totalQuestions !== null && (
-                                    <span className="flex items-center gap-[3px]">
-                                      <ClipboardCheck
-                                        className="
+                              >
+                                {/* QUESTIONS */}
+                                {totalQuestions !== null && (
+                                  <span className="flex items-center gap-[3px]">
+                                    <ClipboardCheck
+                                      className="
                                       h-[10px]
                                       w-[10px]
                                       text-[#F26738]
                                     "
-                                        strokeWidth={2}
-                                      />
+                                      strokeWidth={2}
+                                    />
 
-                                      <span>
-                                        {totalQuestions}{" "}
-                                        {Number(
-                                          totalQuestions,
-                                        ) === 1
-                                          ? "Task"
-                                          : "Tasks"}
-                                      </span>
+                                    <span>
+                                      {totalQuestions}{" "}
+                                      {Number(totalQuestions) === 1
+                                        ? "Task"
+                                        : "Tasks"}
                                     </span>
-                                  )}
+                                  </span>
+                                )}
 
-                                  {/* DURATION */}
-                                  {duration !== null && (
-                                    <span className="flex items-center gap-[3px]">
-                                      <Clock3
-                                        className="
+                                {/* DURATION */}
+                                {duration !== null && (
+                                  <span className="flex items-center gap-[3px]">
+                                    <Clock3
+                                      className="
                                       h-[10px]
                                       w-[10px]
                                       text-[#F26738]
                                     "
-                                        strokeWidth={2}
-                                      />
+                                      strokeWidth={2}
+                                    />
 
-                                      <span>
-                                        {duration} Min
-                                      </span>
-                                    </span>
-                                  )}
+                                    <span>{duration} Min</span>
+                                  </span>
+                                )}
 
-                                  {/* MARKS */}
-                                  {totalMarks !== null && (
-                                    <span className="flex items-center gap-[3px]">
-                                      <Award
-                                        className="
+                                {/* MARKS */}
+                                {totalMarks !== null && (
+                                  <span className="flex items-center gap-[3px]">
+                                    <Award
+                                      className="
                                       h-[10px]
                                       w-[10px]
                                       text-[#F26738]
                                     "
-                                        strokeWidth={2}
-                                      />
+                                      strokeWidth={2}
+                                    />
 
-                                      <span>
-                                        {totalMarks} Marks
-                                      </span>
-                                    </span>
-                                  )}
-                                </div>
+                                    <span>{totalMarks} Marks</span>
+                                  </span>
+                                )}
                               </div>
+                            </div>
 
-                              {/* ACTION */}
-                              <div className="shrink-0">
-                                {item.isLocked ? (
-                                  <Button
-                                    type="button"
-                                    disabled
-                                    variant="outline"
-                                    size="sm"
-                                    className="
+                            {/* ACTION */}
+                            <div className="shrink-0">
+                              {item.isLocked ? (
+                                <Button
+                                  type="button"
+                                  disabled
+                                  variant="outline"
+                                  size="sm"
+                                  className="
                                   mr-[3px]
                                   h-[25px]
                                   shrink-0
@@ -505,22 +489,20 @@ export function CourseTests({
                                   text-[10px]
                                   text-gray-400
                                 "
-                                  >
-                                    <Lock className="mr-1 h-3 w-3" />
-                                    Locked
-                                  </Button>
-                                ) : (
-                                  <button
-                                    type="button"
-                                    onClick={(e) => {
-                                      e.stopPropagation();
-
-                                      onItemClick(
-                                        item,
-                                        section._id,
-                                      );
-                                    }}
-                                    className="
+                                >
+                                  <Lock className="mr-1 h-3 w-3" />
+                                  Locked
+                                </Button>
+                              ) : (
+                                <button
+                                  type="button"
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    setSelectedItem(item)
+                                    setSelectedSectionId(section?._id)
+                                    setisOpen(true);
+                                  }}
+                                  className="
                                   mr-[3px]
                                   flex
                                   h-[25px]
@@ -541,23 +523,21 @@ export function CourseTests({
                                   hover:bg-[#F45A34]
                                   active:scale-[0.97]
                                 "
-                                  >
-                                    Start Test
-
-                                    <ChevronRight
-                                      className="
+                                >
+                                  Start Test
+                                  <ChevronRight
+                                    className="
                                     h-[10px]
                                     w-[10px]
                                   "
-                                      strokeWidth={2.5}
-                                    />
-                                  </button>
-                                )}
-                              </div>
+                                    strokeWidth={2.5}
+                                  />
+                                </button>
+                              )}
                             </div>
-                          );
-                        },
-                      )}
+                          </div>
+                        );
+                      })}
                     </div>
 
                     {/* =================================================
@@ -567,9 +547,7 @@ export function CourseTests({
                       <div className="border-t border-[#F1E7E2]">
                         <button
                           type="button"
-                          onClick={() =>
-                            toggleTests(section._id)
-                          }
+                          onClick={() => toggleTests(section._id)}
                           className="
                         flex
                         w-full
@@ -594,10 +572,7 @@ export function CourseTests({
                           w-4
                           transition-transform
                           duration-200
-                          ${isTestsExpanded
-                                ? "rotate-180"
-                                : ""
-                              }
+                          ${isTestsExpanded ? "rotate-180" : ""}
                         `}
                           />
                         </button>
@@ -610,6 +585,20 @@ export function CourseTests({
           </div>
         );
       })}
+      {isOpen && <ConfirmationPopup
+        isOpen={isOpen}
+          onClose={() => {
+    setisOpen(false);
+    setSelectedItem(null);
+    setSelectedSectionId(null);
+  }}
+  onConfirm={() => {
+    if (selectedItem && selectedSectionId) {
+      onItemClick(selectedItem, selectedSectionId);
+    }
+    setisOpen(false);
+  }}
+      />}
     </div>
   );
 }
@@ -665,25 +654,17 @@ const getMaterialIconImage = (materialType = "") => {
   return null;
 };
 
-
-
 const getMaterialLabel = (materialType?: string) => {
   if (!materialType) return "Study Material";
 
   return materialType.charAt(0).toUpperCase() + materialType.slice(1);
 };
 
-
-
-
-
-
 export function CourseMaterials({
   curriculum,
   loading = false,
   onItemClick,
 }: CourseMaterialsProps) {
-
   if (loading) {
     return (
       <div className="space-y-4">
@@ -697,7 +678,9 @@ export function CourseMaterials({
     );
   }
 
-  const [openMaterialSections, setOpenMaterialSections] = useState<string[]>([]);
+  const [openMaterialSections, setOpenMaterialSections] = useState<string[]>(
+    [],
+  );
 
   const [expandedMaterials, setExpandedMaterials] = useState<
     Record<string, boolean>
@@ -720,8 +703,6 @@ export function CourseMaterials({
     }));
   };
 
-
-
   const sectionsWithMaterials = curriculum
     ?.map((section) => ({
       ...section,
@@ -732,10 +713,7 @@ export function CourseMaterials({
     .filter((section) => section.items.length > 0);
 
   useEffect(() => {
-    if (
-      sectionsWithMaterials?.length > 0 &&
-      !hasInitializedMaterials.current
-    ) {
+    if (sectionsWithMaterials?.length > 0 && !hasInitializedMaterials.current) {
       setOpenMaterialSections([sectionsWithMaterials[0]._id]);
 
       hasInitializedMaterials.current = true;
@@ -768,8 +746,7 @@ export function CourseMaterials({
         const isOpen = openMaterialSections.includes(section._id);
 
         // Materials View More / Show Less
-        const isMaterialsExpanded =
-          expandedMaterials[section._id] || false;
+        const isMaterialsExpanded = expandedMaterials[section._id] || false;
 
         const visibleMaterials = isMaterialsExpanded
           ? materials
@@ -862,14 +839,10 @@ export function CourseMaterials({
                   >
                     <span>
                       {materials.length}{" "}
-                      {materials.length === 1
-                        ? "Material"
-                        : "Materials"}
+                      {materials.length === 1 ? "Material" : "Materials"}
                     </span>
 
-                    <span className="text-[#C5A99B]">
-                      •
-                    </span>
+                    <span className="text-[#C5A99B]">•</span>
 
                     <span>Study Materials</span>
                   </div>
@@ -947,7 +920,6 @@ export function CourseMaterials({
                   className="overflow-hidden"
                 >
                   <div className="bg-white px-4 pb-2">
-
                     {/* =================================================
                     MATERIAL LIST
                 ================================================== */}
@@ -955,16 +927,13 @@ export function CourseMaterials({
                       {visibleMaterials.map((item: any) => {
                         const isPdf =
                           item?.materialType?.toLowerCase() === "pdf" ||
-                          item?.materialType?.toLowerCase() ===
-                          "document";
+                          item?.materialType?.toLowerCase() === "document";
 
                         const iconImage = isPdf
                           ? "/images/pdf.webp"
                           : getMaterialIconImage(item.materialType);
 
-                        const handleView = (
-                          e: React.MouseEvent,
-                        ) => {
+                        const handleView = (e: React.MouseEvent) => {
                           e.stopPropagation();
 
                           if (item.isLocked) return;
@@ -977,10 +946,7 @@ export function CourseMaterials({
                             key={item._id}
                             onClick={() => {
                               if (!item.isLocked) {
-                                onItemClick(
-                                  item,
-                                  section._id,
-                                );
+                                onItemClick(item, section._id);
                               }
                             }}
                             className={`
@@ -996,10 +962,11 @@ export function CourseMaterials({
                           py-2
                           transition-all
                           duration-200
-                          ${item.isLocked
-                                ? "cursor-not-allowed opacity-60"
-                                : "cursor-pointer hover:bg-[#FFF6DD]/50"
-                              }
+                          ${
+                            item.isLocked
+                              ? "cursor-not-allowed opacity-60"
+                              : "cursor-pointer hover:bg-[#FFF6DD]/50"
+                          }
                         `}
                           >
                             {/* ICON */}
@@ -1033,7 +1000,9 @@ export function CourseMaterials({
                                   />
                                 ) : (
                                   <span className="text-xs font-bold text-orange-600">
-                                    {item.materialType?.charAt(0)?.toUpperCase() || "M"}
+                                    {item.materialType
+                                      ?.charAt(0)
+                                      ?.toUpperCase() || "M"}
                                   </span>
                                 )}
                               </div>
@@ -1046,10 +1015,11 @@ export function CourseMaterials({
                               truncate
                               text-base
                               font-semibold
-                              ${item.isLocked
-                                    ? "text-gray-400"
-                                    : "text-[#2D2D2D]"
-                                  }
+                              ${
+                                item.isLocked
+                                  ? "text-gray-400"
+                                  : "text-[#2D2D2D]"
+                              }
                             `}
                               >
                                 {item.title}
@@ -1077,9 +1047,7 @@ export function CourseMaterials({
                                 text-[#858585]
                               "
                                 >
-                                  {getMaterialLabel(
-                                    item.materialType,
-                                  )}
+                                  {getMaterialLabel(item.materialType)}
                                 </p>
                               )}
                             </div>
@@ -1155,9 +1123,7 @@ export function CourseMaterials({
                       <div className="border-t border-[#F1E7E2]">
                         <button
                           type="button"
-                          onClick={() =>
-                            toggleMaterials(section._id)
-                          }
+                          onClick={() => toggleMaterials(section._id)}
                           className="
                         flex
                         w-full
@@ -1182,10 +1148,7 @@ export function CourseMaterials({
                           w-4
                           transition-transform
                           duration-200
-                          ${isMaterialsExpanded
-                                ? "rotate-180"
-                                : ""
-                              }
+                          ${isMaterialsExpanded ? "rotate-180" : ""}
                         `}
                           />
                         </button>
@@ -1205,6 +1168,7 @@ export function CourseMaterials({
 import { useEffect, useMemo, useState } from "react";
 import { CalendarDays, ChevronLeft, Video } from "lucide-react";
 import { AnimatePresence, motion } from "framer-motion";
+import ConfirmationPopup from "../Confirmation-popup";
 
 interface Session {
   _id: string;
@@ -1395,11 +1359,12 @@ export const TodaySessionsBanner: React.FC<TodaySessionsBannerProps> = ({
                   font-semibold
                   uppercase
                   tracking-wide
-                  ${isLive
-                    ? "bg-[#FFE1D6] text-[#F4511E]"
-                    : isCompleted
-                      ? "bg-gray-100 text-gray-500"
-                      : "bg-[#FFE7D8] text-[#F4511E]"
+                  ${
+                    isLive
+                      ? "bg-[#FFE1D6] text-[#F4511E]"
+                      : isCompleted
+                        ? "bg-gray-100 text-gray-500"
+                        : "bg-[#FFE7D8] text-[#F4511E]"
                   }
                 `}
               >
@@ -1467,9 +1432,10 @@ export const TodaySessionsBanner: React.FC<TodaySessionsBannerProps> = ({
                   font-semibold
                   text-white
                   transition-all
-                  ${session.isLocked || isCompleted
-                    ? "cursor-not-allowed bg-gray-300"
-                    : "bg-[#F36E45] shadow-sm hover:bg-[#e85b35] hover:shadow-md active:scale-[0.98]"
+                  ${
+                    session.isLocked || isCompleted
+                      ? "cursor-not-allowed bg-gray-300"
+                      : "bg-[#F36E45] shadow-sm hover:bg-[#e85b35] hover:shadow-md active:scale-[0.98]"
                   }
                 `}
               >
@@ -1652,9 +1618,10 @@ export const TodaySessionsBanner: React.FC<TodaySessionsBannerProps> = ({
                     rounded-full
                     transition-all
                     duration-300
-                    ${index === currentIndex
-                      ? "w-6 bg-[#F36E45]"
-                      : "w-1.5 bg-[#E5B8A7] hover:bg-[#F36E45]"
+                    ${
+                      index === currentIndex
+                        ? "w-6 bg-[#F36E45]"
+                        : "w-1.5 bg-[#E5B8A7] hover:bg-[#F36E45]"
                     }
                   `}
                 />
