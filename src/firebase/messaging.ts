@@ -46,38 +46,7 @@ export const getFCMToken = async (): Promise<string | null> => {
 
 
 
-export const listenForMessages = (
-  callback: (payload: any) => void
-) => {
-  try {
-    const messaging = getMessaging(app);
 
-    console.log("FCM listener initialized");
-
-    const unsubscribe = onMessage(messaging, (payload) => {
-      console.log("Foreground notification:", payload);
-
-       // 🔊 Play notification sound
-      const audio = new Audio("/pop.mp3");
-
-      audio.play().catch((error) => {
-        console.warn("Notification sound blocked:", error);
-      });
-
-
-      toast(
-        payload?.notification?.title || "New notification"
-      );
-
-      callback(payload);
-    });
-
-    return unsubscribe;
-  } catch (error) {
-    console.error("FCM listener error:", error);
-    return undefined;
-  }
-};
 
 // export const listenForMessages = (
 //   callback: (payload: any) => void
@@ -94,3 +63,32 @@ export const listenForMessages = (
 //     console.error("FCM listener error:", error);
 //   }
 // };
+
+
+export const listenForMessages = (callback?: (payload: any) => void) => {
+  try {
+    const messaging = getMessaging(app);
+
+    return onMessage(messaging, (payload) => {
+      console.log("Foreground notification:", payload);
+       const audio = new Audio("/notify.mp3");
+
+      audio.play().catch((error) => {
+        console.warn("Notification sound blocked:", error);
+      });
+
+      toast(
+        payload?.notification?.title || "New notification"
+      );
+
+      // 1. Dispatch a global browser event with the payload
+      window.dispatchEvent(new CustomEvent('fcm-message', { detail: payload }));
+
+      // 2. Still run the callback if provided
+      if (callback) callback(payload);
+    });
+  } catch (error) {
+    console.error("FCM listener error:", error); 
+    return undefined;
+  }
+};

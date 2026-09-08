@@ -25,8 +25,7 @@ import {
 const AppHeader: React.FC = () => {
   const [isApplicationMenuOpen, setApplicationMenuOpen] = useState(false);
   const [isWalletDropdownOpen, setIsWalletDropdownOpen] = useState(false);
-  const { user, logout, wallet, toggleSound, isSoundEnabled } =
-    useAuth() as any;
+  const { user, logout, wallet, toggleSound, isSoundEnabled } = useAuth() as any;
   let navigate = useNavigate();
   const [isMuted, setIsMuted] = useState(isSoundEnabled);
 
