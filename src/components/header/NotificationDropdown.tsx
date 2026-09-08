@@ -7,6 +7,7 @@ import { useAuth } from "../../context/UserContext";
 import { SpeakerIcon, X } from "lucide-react";
 import { toast } from "react-toastify";
 import api from "../../axiosInstance";
+import { listenForMessages } from "../../firebase/messaging";
 
 export default function NotificationDropdown() {
   const [isOpen, setIsOpen] = useState(false);
@@ -59,8 +60,7 @@ export default function NotificationDropdown() {
     };
   }, [isOpen]);
 
-  useEffect(() => {
-    const fetchNotification = async () => {
+  const fetchNotification = async () => {
       try {
         const res = await api.get(`/notification/my`);
         setnotification(res.data.data);
@@ -68,8 +68,23 @@ export default function NotificationDropdown() {
         toast.error("something went wrong..");
       }
     };
+
+
+  useEffect(() => {
+  fetchNotification();
+
+  const unsubscribe = listenForMessages((payload) => {
+    console.log("FCM callback received:", payload);
+
     fetchNotification();
-  }, []);
+  });
+
+  return () => {
+    if (unsubscribe) {
+      unsubscribe();
+    }
+  };
+}, []);
 
   return (
     <div className="relative" id="notification">

@@ -6,6 +6,7 @@ import {
 } from "firebase/messaging";
 
 import app from "./firebase";
+import { toast } from "react-toastify";
 
 export const getFCMToken = async (): Promise<string | null> => {
   try {
@@ -43,18 +44,53 @@ export const getFCMToken = async (): Promise<string | null> => {
   }
 };
 
+
+
 export const listenForMessages = (
   callback: (payload: any) => void
 ) => {
   try {
     const messaging = getMessaging(app);
 
-    return onMessage(messaging, (payload) => {
+    console.log("FCM listener initialized");
+
+    const unsubscribe = onMessage(messaging, (payload) => {
       console.log("Foreground notification:", payload);
-      alert(payload?.notification?.title || "new notification.");
+
+       // 🔊 Play notification sound
+      const audio = new Audio("/pop.mp3");
+
+      audio.play().catch((error) => {
+        console.warn("Notification sound blocked:", error);
+      });
+
+
+      toast(
+        payload?.notification?.title || "New notification"
+      );
+
       callback(payload);
     });
+
+    return unsubscribe;
   } catch (error) {
     console.error("FCM listener error:", error);
+    return undefined;
   }
 };
+
+// export const listenForMessages = (
+//   callback: (payload: any) => void
+// ) => {
+//   try {
+//     const messaging = getMessaging(app);
+
+//     return onMessage(messaging, (payload) => {
+//       console.log("Foreground notification:", payload);
+//       alert(payload?.notification?.title || "new notification.");
+//       callback(payload);
+//     });
+//   } catch (error) {
+//     console.error("FCM listener error:", error);
+//   }
+// };
