@@ -1062,7 +1062,7 @@ const GREDashboard = () => {
 
   if (!data) {
     return (
-      <div className="min-h-screen max-w-7xl mx-auto flex items-center justify-center pl-20">
+      <div className="min-h-screen max-w-7xl mx-auto flex items-center justify-center pl-20 ">
         <motion.div
           initial={{ scale: 0 }}
           animate={{ scale: 1 }}
@@ -1212,7 +1212,7 @@ const GREDashboard = () => {
                             <div className="xl:col-span-3 px-2 lg:px-0">
                               <div className="flex gap-2 ">
                                 <div>
-                                  <h3 className="text-2xl font-bold text-gray-900 dark:text-white line-clamp-1">
+                                  <h3 className="text-2xl font-bold text-gray-900 dark:text-white line-clamp-2">
                                     {item?.item?.title}
                                   </h3>
 
@@ -1396,7 +1396,7 @@ const GREDashboard = () => {
 
             <div
               ref={sliderRef4}
-              className="keen-slider min-w-0 w-full relative overflow-hidden rounded-3xl h-[300px]"
+              className="keen-slider min-w-0 w-full relative overflow-hidden rounded-3xl h-[335px]"
             >
               {promo?.length > 0 ? (
                 promo.map((item, index) => (
@@ -1418,7 +1418,7 @@ const GREDashboard = () => {
                                         "
                   >
                     {/* ================= TOP ================= */}
-                    <div className="relative z-10 px-4 pt-3 text-center">
+                    <div className="relative z-10 px-4 pt-5 text-center">
                       <div className="mt-0.5 text-[6px] tracking-[1.5px] text-[#102957]">
                         ─── Gateway To Your Dreams ───
                       </div>

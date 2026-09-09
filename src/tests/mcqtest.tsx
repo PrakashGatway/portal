@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo } from "react";
+import { useState, useEffect, useMemo, use } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   BookOpen,
@@ -43,6 +43,7 @@ interface TestTemplate {
 export const MockTestCard = ({
   test,
   index,
+  user
 }: {
   test: TestTemplate;
   index: number;
@@ -108,6 +109,22 @@ export const MockTestCard = ({
   ];
   const theme = cardThemes[index % cardThemes.length];
 
+ const testType = (type: string) => {
+  if (type === "full_length") {
+    return "Full Test Series";
+  }
+
+  if (type === "quiz") {
+    return "Quiz Test Series";
+  }
+
+  if (type === "sectional") {
+    return "Sectional Test";
+  }
+
+  return "";
+};
+
   return (
     <div className="w-full">
       {/* Outer Border */}
@@ -117,16 +134,24 @@ export const MockTestCard = ({
 
           {/* ================= IMAGE ================= */}
           <div className="relative h-[170px] overflow-hidden rounded-t-[18px] p-2">
-            <div
-              style={{ borderRadius: "15px 15px 0px 0px" }}
-              className="relative overflow-hidden h-[170px]"
-            >
-              <img
-                src={test?.thumbnailPic || "/images/test-img.jpg"}
-                alt={test?.title || "Test"}
-                className="h-full w-full object-cover"
-              />
-            </div>
+           <div
+  style={{
+    borderRadius: "15px 15px 0px 0px",
+    backgroundImage: `url(${test?.thumbnailPic || "/images/test-bg.jpg"})`,
+    backgroundSize: "cover",
+    backgroundPosition: "center",
+  }}
+  className="relative overflow-hidden h-[170px] flex justify-center items-center"
+>
+  {/* Optional dark overlay for better text visibility */}
+  <div className="absolute inset-0" />
+
+  {/* Text above background */}
+  <span className="relative z-10 font-semibold text-white">
+   <span className="text-6xl font-bold"> {test?.exam?.name.split(" ")[0]}</span>
+    <br /> <span className="text-xl ml-10">{testType(test?.testType)}</span>
+  </span>
+</div>
 
             {/* Image subtle overlay */}
             <div className="absolute inset-0 bg-gradient-to-t from-black/10 via-transparent to-transparent" />
@@ -717,7 +742,7 @@ export default function MockTests({ testType }: any) {
                       exit={{ opacity: 0, scale: 0.9 }}
                       transition={{ duration: 0.2 }}
                     >
-                      <MockTestCard test={test} index={index} />
+                      <MockTestCard user={user} test={test} index={index} />
                     </motion.div>
                   ))}
                 </AnimatePresence>

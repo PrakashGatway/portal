@@ -279,8 +279,11 @@ const CourseCard = ({
                     </span>
 
                     <span className="text-2xl font-bold text-gray-900">
-                      {formatPrice(price, course.pricing.currency)}
-                    </span>
+  {formatPrice(
+    Math.floor(price),
+    course.pricing.currency
+  )}
+</span>
 
                     {normalDiscount > 0 && (
                       <span className="line-through text-gray-400 text-sm">

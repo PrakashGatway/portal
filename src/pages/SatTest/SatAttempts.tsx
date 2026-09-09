@@ -13,8 +13,9 @@ import Button from "../../components/ui/button/Button";
 import { toast } from "react-toastify";
 import api from "../../axiosInstance";
 import FullScreenLoader from "../../components/fullScreeLoader";
-import QuestionRenderer, { GRETestResults, SectionInstructions, SectionReview } from "./SatComponents";
+import QuestionRenderer, {SectionInstructions, SectionReview } from "./SatComponents";
 import { GRETestHead } from "./SatHeader";
+import { GRETestResults } from "./SatResult";
 
 interface QuestionDoc {
   _id: string;
@@ -136,6 +137,8 @@ export default function SatExamPage() {
   const [currentScreen, setCurrentScreen] = useState<GreScreen>("question");
 
   const isCompleted = attempt?.status === "completed";
+
+  console.log(savingProgress)
 
   const testTitle =
     attempt?.testTemplate.title ||
@@ -592,6 +595,7 @@ export default function SatExamPage() {
     });
   };
 
+  
   const [filter, setFilter] = useState<"all" | "answered" | "not_answered" | "flagged">("all");
 
   if (loading || starting) {
@@ -627,19 +631,21 @@ export default function SatExamPage() {
   return (
     <>
       <div className="relative min-h-screen bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-50">
-        <GRETestHead
+   { currentScreen !== "results" &&    <GRETestHead
           testTitle={testTitle}
+          attempt= {attempt}
           currentSection={currentSection}
           currentQuestion={currentQuestion}
           activeSectionIndex={activeSectionIndex}
           totalSections={attempt?.sections.length || 0}
           timerSecondsLeft={timerSecondsLeft}
           currentScreen={currentScreen}
+          activeQuestionIndex={activeQuestionIndex}
           isCompleted={isCompleted}
           savingProgress={savingProgress}
           saveCurrentQuestionProgress={() => saveCurrentQuestionProgress({ silent: false })}
           navigateBack={() => navigate(-1)}
-        />
+        />}
 
         {/* Scrollable main area between header & footer */}
         <div className="pt-14 pb-14">
@@ -685,6 +691,7 @@ export default function SatExamPage() {
               attempt={attempt}
               navigateBack={() => navigate(-1)}
               onTakeAnotherTest={() => navigate("/gmat/practice")}
+              saving = {savingProgress}
             />
           )}
         </div>

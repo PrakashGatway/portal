@@ -29,7 +29,6 @@ const ConfirmationPopup: React.FC<ConfirmationPopupProps> = ({
               relative
               w-full
               max-w-[560px]
-              
               overflow-hidden
               rounded-[20px]
               bg-white
