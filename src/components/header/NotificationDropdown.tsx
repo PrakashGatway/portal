@@ -107,10 +107,11 @@ export default function NotificationDropdown() {
     await markNotificationAsRead(notificationId);
   };
 
-  const handleRemoveNotification = (
+  const handleRemoveNotification = async (
     notificationId: string
   ) => {
     removeNotification(notificationId);
+    await markNotificationAsRead(notificationId);
   };
 
   const handleViewAll = () => {
@@ -227,7 +228,7 @@ export default function NotificationDropdown() {
                 </div>
               ) : notifications.length > 0 ? (
                 <div className="max-h-[400px] overflow-y-auto">
-                  {notifications.map(
+                  {notifications.filter(ele => !ele.isRead).map(
                     (item, index) => {
                       const notificationId =
                         item._id || item.id;

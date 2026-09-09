@@ -1,6 +1,4 @@
-/* =========================================================
-   DRIVER GLOBAL
-   ========================================================= */
+
 
 .driver-popover {
   background: white !important;
@@ -9,15 +7,11 @@
 
   padding: 24px !important;
 
-  max-width: 600px;
+  max-width: 442px !important;
 
   box-sizing: border-box !important;
 }
 
-
-/* =========================================================
-   DRIVER BUTTONS
-   ========================================================= */
 
 .driver-popover-btn {
   padding: 8px 20px !important;
