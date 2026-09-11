@@ -330,13 +330,17 @@ export default function SatExamPage() {
     if (!timerRunning) return;
     if (currentScreen !== "question") return;
 
-    if (timerSecondsLeft === 0) {
-      setTimerRunning(false);
-      toast.info(
-        "Time is up for this section. Moving to section review."
-      );
-      setCurrentScreen("section_review");
-    }
+     if (timerSecondsLeft <= 0) {
+    setTimerRunning(false);
+
+    toast.info(
+      "Time is up for this section. Moving to section review."
+    );
+
+    setCurrentScreen("section_review");
+
+    return;
+  }
   }, [
     timerSecondsLeft,
     timerRunning,
@@ -679,6 +683,7 @@ export default function SatExamPage() {
               showingReviewScreen={showingReviewScreen}
               filter={filter}
               setFilter={setFilter}
+              timerSecondsLeft={timerSecondsLeft}
               setShowingReviewScreen={setShowingReviewScreen}
               setActiveQuestionIndex={setActiveQuestionIndex}
               setCurrentScreen={(screen) => setCurrentScreen(screen)}

@@ -657,6 +657,7 @@ export const SectionReview: React.FC<SectionReviewProps> = React.memo(
     setShowingReviewScreen,
     setActiveQuestionIndex,
     setCurrentScreen,
+    timerSecondsLeft,
     saveCurrentQuestionProgress,
     handleFinishSectionReview,
   }) => {
@@ -731,6 +732,10 @@ export const SectionReview: React.FC<SectionReviewProps> = React.memo(
                         <button
                           key={`${q.question}-${idx}`}
                           onClick={() => {
+                            if (timerSecondsLeft === 0) {
+                              return;
+                            }
+
                             setActiveQuestionIndex(idx);
                             setCurrentScreen("question");
                           }}
@@ -779,6 +784,9 @@ export const SectionReview: React.FC<SectionReviewProps> = React.memo(
                   <button
                     className="p-1.5 bg-slate-800 text-slate-100 font-semibold border-slate-200 rounded-full px-4"
                     onClick={() => {
+                      if(timerSecondsLeft === 0){
+                        return
+                      }
                       setActiveQuestionIndex(
                         Math.max(0, activeQuestionIndex - 1),
                       );
@@ -805,5 +813,3 @@ export const SectionReview: React.FC<SectionReviewProps> = React.memo(
     );
   },
 );
-
-
