@@ -601,7 +601,7 @@ const HeaderBanner = ({ data, user, filterBanner }) => {
               Expert Guidance. Smart Practice. Top Results.
             </p>
           </div>
-          <div className="relative lg:block hidden w-full md:w-2/5 flex justify-center items-end mt-6 md:-mt-23">
+          <div className="relative lg:block hidden w-full md:w-2/5 flex justify-center items-end mt-6 md:-mt-15">
             <img
               src={"/images/banner-dashboard.webp"}
               alt="Dashboard Illustration"
@@ -841,6 +841,9 @@ const GREDashboard = () => {
       "(max-width:1023px)": {
         slides: { perView: 3, spacing: 16 },
       },
+      "(max-width:923px)": {
+        slides: { perView: 2, spacing: 16 },
+      },
       "(max-width:640px)": {
         slides: { perView: 1, spacing: 12 },
       },
@@ -999,18 +1002,18 @@ const GREDashboard = () => {
                 </h3>
                 <div className="grid grid-cols-1a lg:grid-cols-2 items-center gap-2 mt-3">
                   <div className="flex text-[#FF6B35]">
-                    {[1, 2, 3, 4, 5].map((i) => (
+                    {/* {[1, 2, 3, 4, 5].map((i) => (
                       <Star
                         key={i}
                         size={14}
                         fill="currentColor"
                         className="text-[#FF6B35]"
                       />
-                    ))}
+                    ))} */}
                   </div>
-                  <span className="text-sm font-semibold text-gray-400 dark:text-gray-300">
+                  {/* <span className="text-sm font-semibold text-gray-400 dark:text-gray-300">
                     4.9 · 200+ students
-                  </span>
+                  </span> */}
                 </div>
               </div>
             </div>
@@ -1033,7 +1036,7 @@ const GREDashboard = () => {
         <div className="flex flex-col gap-4 lg:col-span-2">
           <div className="grid min-w-0 grid-cols-1 md:grid-cols-2 lg:grid-cols-2 xl:grid-cols-[1.5fr_0.5fr] gap-4">
             {/* ==================== PURCHASED COURSES / BROWSE ==================== */}
-            <section className="w-full overflow-hidden">
+            <section className={`w-full overflow-hidden ${purchase.length === 0 && 'col-span-2'}`}>
               <div className="w-full mx-auto overflow-hidden">
                 {purchase?.length > 0 ? (
                   <div
@@ -1272,7 +1275,7 @@ const GREDashboard = () => {
                         </p>
                       </div>
                     ) : useCoursesSlider ? (
-                      <div ref={coursesSliderRef} className="keen-slider mt-10">
+                      <div ref={coursesSliderRef1} className="keen-slider mt-10">
                         {courses.map((course) => (
                           <CourseCard
                             key={course._id || course.id}
@@ -1298,7 +1301,7 @@ const GREDashboard = () => {
             </section>
 
 
-            <div
+            {purchase?.length > 0 && <div
               ref={promoSliderRef}
               className="keen-slider min-w-0 w-full relative overflow-hidden rounded-3xl h-[300px]"
             >
@@ -1407,7 +1410,7 @@ const GREDashboard = () => {
                   ))}
                 </div>
               )}
-            </div>
+            </div>}
           </div>
 
           {/* ==================== QUICK ACCESS ==================== */}

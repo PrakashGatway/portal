@@ -1,11 +1,3 @@
-
-
-
-
-
-
-
-
 import {
   ArrowRight,
   Building2,
@@ -16,330 +8,354 @@ import {
   Sparkles,
   Trophy,
   Users,
+  X,
+  Star,
 } from "lucide-react";
-import React from "react";
+import React, { useEffect, useState } from "react";
+import axios from "axios";
+
+const renderHTML = (htmlString) => {
+  return { __html: htmlString || "" };
+};
+
+const TestimonialModal = ({ student, onClose }) => {
+  if (!student) return null;
+
+  const testimonialText =
+    student.about ||
+    student.message ||
+    "I knew the concepts, but timing was my biggest weakness. The practice tests and mock tests at OOSHAS Prep helped me improve my speed, accuracy, and confidence.";
+
+  const accentColor = "#FF6B35";
+
+  return (
+    <div
+      className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4 overflow-y-auto"
+      onClick={onClose}
+    >
+      <div
+        className="relative w-full max-w-4xl bg-white rounded-3xl shadow-2xl overflow-hidden flex flex-col md:flex-row my-8"
+        onClick={(e) => e.stopPropagation()}
+      >
+        {/* Close Button */}
+        <button
+          onClick={onClose}
+          className="absolute top-4 right-4 z-20 p-2 text-gray-400 hover:text-gray-700 transition-colors"
+        >
+          <X size={22} />
+        </button>
+
+        {/* LEFT SIDE - IMAGE */}
+        <div className="w-full md:w-2/5 p-10 flex flex-col items-center justify-center relative">
+          <div className="relative w-44 h-44 md:w-52 md:h-52 mb-6">
+            {/* Triangle */}
+            <svg
+              className="absolute -top-4 -left-4 w-full h-full"
+              viewBox="0 0 60 76"
+              fill="none"
+              preserveAspectRatio="none"
+            >
+              <path d="M0 0 L60 0 L0 76 Z" fill={accentColor} />
+            </svg>
+
+            <div className="relative w-full h-full border-6 border-white overflow-hidden z-[999] bg-[#ffb499]">
+              <img
+                src={student.image}
+                alt={student.name}
+                className="w-full h-full object-cover"
+              />
+            </div>
+          </div>
+          <h3 className="text-xl font-semibold text-gray-900 text-center">
+            {student.name}
+          </h3>
+
+          <div className="h-[75%] w-[.5px] absolute right-0 bg-gray-900" />
+        </div>
+
+
+
+        {/* RIGHT SIDE - CONTENT */}
+        <div className="w-full md:w-3/5 p-8 md:p-12 flex flex-col justify-center 
+        relative max-h-[80vh] overflow-y-auto  border-gray-100">
+
+          {/* Heading */}
+          <div className="mb-6 flex items-start justify-between">
+            <div>
+              <h2
+                className="text-3xl md:text-4xl font-black tracking-tight"
+                style={{ color: accentColor }}
+              >
+                STUDENT
+              </h2>
+              <span className="block text-4xl md:text-5xl font-['cursive'] text-gray-800 -mt-1">
+                Testimonial
+              </span>
+            </div>
+
+            {/* Quote Icon */}
+            <svg
+              width="56"
+              height="56"
+              viewBox="0 0 24 24"
+              fill={accentColor}
+              className="opacity-20 shrink-0 rotate-[180deg]"
+            >
+              <path d="M14.017 21v-7.391c0-5.704 3.731-9.57 8.983-10.609l.995 2.151c-2.432.917-3.995 3.638-3.995 5.849h4v10h-9.983zm-14.017 0v-7.391c0-5.704 3.748-9.57 9-10.609l.996 2.151c-2.433.917-3.996 3.638-3.996 5.849h3.983v10h-9.983z" />
+            </svg>
+          </div>
+
+          {/* Score & Course */}
+          <div className="mb-6">
+            {student.previousScore && (
+              <div className="flex items-center gap-2 text-sm font-semibold text-gray-500 mb-1">
+                <span>{student.previousScore}</span>
+                <span style={{ color: accentColor }}>→</span>
+                <span style={{ color: accentColor }}>{student.score}</span>
+              </div>
+            )}
+
+            <div className="flex items-center gap-3 mb-3">
+              <span
+                className="text-5xl font-black"
+                style={{ color: accentColor }}
+              >
+                {student.score || "N/A"}
+              </span>
+              <span className="text-xs font-bold text-gray-500 tracking-wide mt-1">
+                {(student.course || "SAT SCORE").toUpperCase()}
+              </span>
+            </div>
+
+            <div className="flex items-center gap-2 text-sm">
+              <div className="flex text-yellow-400">
+                {[...Array(5)].map((_, i) => (
+                  <Star key={i} size={16} fill="currentColor" />
+                ))}
+              </div>
+              <span className="text-gray-600 font-medium">
+                | Excellent Preparation
+              </span>
+            </div>
+          </div>
+
+          {/* Testimonial Text */}
+          <div
+            className="text-gray-600 text-sm md:text-base leading-relaxed mb-6 prose prose-sm max-w-none"
+            dangerouslySetInnerHTML={renderHTML(testimonialText)}
+          />
+        </div>
+      </div>
+    </div>
+  );
+};
+
+// const TestimonialModal = ({ student, onClose }) => {
+//   if (!student) return null;
+
+//   const testimonialText =
+//     student.about ||
+//     student.message ||
+//     "I knew the concepts, but timing was my biggest weakness. The practice tests and mock tests at OOSHAS Prep helped me improve my speed, accuracy, and confidence.";
+
+//   const accentColor = student.colorCode || "#FF6B35";
+
+//   return (
+//     <div
+//       className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4 overflow-y-auto"
+//       onClick={onClose}
+//     >
+//       <div
+//         className="relative w-full max-w-4xl bg-white rounded-3xl shadow-2xl overflow-hidden flex flex-col md:flex-row my-8"
+//         onClick={(e) => e.stopPropagation()}
+//       >
+//         {/* Close Button */}
+//         <button
+//           onClick={onClose}
+//           className="absolute top-4 right-4 z-20 p-2 bg-white/80 rounded-full text-gray-500 hover:text-gray-800 hover:bg-white transition-colors shadow-sm"
+//         >
+//           <X size={24} />
+//         </button>
+
+//         {/* LEFT SIDE - IMAGE */}
+//         <div
+//           className="w-full md:w-2/5 p-8 flex flex-col items-center justify-center relative"
+//           style={{ backgroundColor: `${accentColor}15` }}
+//         >
+//           <div className="relative w-48 h-48 md:w-56 md:h-56 mb-6">
+//             <div
+//               className="absolute -top-4 -left-4 w-24 h-24 border-t-4 border-l-4 rounded-tl-3xl"
+//               style={{ borderColor: accentColor }}
+//             ></div>
+//             <div
+//               className="absolute -bottom-4 -right-4 w-24 h-24 border-b-4 border-r-4 rounded-br-3xl"
+//               style={{ borderColor: accentColor }}
+//             ></div>
+
+//             <div className="w-full h-full rounded-full overflow-hidden border-4 border-white shadow-lg">
+//               <img
+//                 src={student.image}
+//                 alt={student.name}
+//                 className="w-full h-full object-cover"
+//               />
+//             </div>
+//           </div>
+//           <h3 className="text-xl font-bold text-gray-900 text-center">
+//             {student.name}
+//           </h3>
+//         </div>
+
+//         {/* RIGHT SIDE - CONTENT */}
+//         <div className="w-full md:w-3/5 p-8 md:p-12 flex flex-col justify-center relative max-h-[80vh] overflow-y-auto">
+//           {/* Heading */}
+//           <div className="mb-6">
+//             <h2
+//               className="text-3xl md:text-4xl font-black tracking-tight"
+//               style={{ color: accentColor }}
+//             >
+//               STUDENT
+//             </h2>
+//             <span className="block text-4xl md:text-5xl font-['cursive'] text-gray-800 -mt-1">
+//               Testimonial
+//             </span>
+//           </div>
+
+//           {/* Quote Icon */}
+//           <div className="absolute top-8 right-8 md:top-12 md:right-12 opacity-10">
+//             <svg width="80" height="80" viewBox="0 0 24 24" fill={accentColor}>
+//               <path d="M14.017 21v-7.391c0-5.704 3.731-9.57 8.983-10.609l.995 2.151c-2.432.917-3.995 3.638-3.995 5.849h4v10h-9.983zm-14.017 0v-7.391c0-5.704 3.748-9.57 9-10.609l.996 2.151c-2.433.917-3.996 3.638-3.996 5.849h3.983v10h-9.983z" />
+//             </svg>
+//           </div>
+
+//           {/* Score & Course */}
+//           <div className="mb-6">
+//             <div className="flex items-center gap-4 mb-3 flex-wrap">
+//               <span
+//                 className="text-4xl font-black"
+//                 style={{ color: accentColor }}
+//               >
+//                 {student.score || "N/A"}
+//               </span>
+//               <span className="text-sm font-bold text-gray-700 uppercase tracking-wider mt-1 border-l-2 pl-3 border-gray-300">
+//                 {student.course || "Score"}
+//               </span>
+//             </div>
+
+//             <div className="flex items-center gap-2 text-sm">
+//               <div className="flex text-yellow-400">
+//                 {[...Array(5)].map((_, i) => (
+//                   <Star key={i} size={16} fill="currentColor" />
+//                 ))}
+//               </div>
+//               <span className="text-gray-600 font-medium">
+//                 | Excellent Preparation
+//               </span>
+//             </div>
+//           </div>
+
+//           {/* Testimonial Text */}
+//           <div
+//             className="text-gray-600 text-sm md:text-base leading-relaxed mb-6 prose prose-sm max-w-none"
+//             dangerouslySetInnerHTML={renderHTML(testimonialText)}
+//           />
+//         </div>
+//       </div>
+//     </div>
+//   );
+// };
 
 const CompactWallOfFame = () => {
-  // Mock data mimicking the varied sizes in the screenshot
-  const profiles = [
-    {
-      id: 1,
-      img: "https://randomuser.me/api/portraits/women/44.jpg",
-      type: "hero",
-    },
-    {
-      id: 2,
-      img: "https://randomuser.me/api/portraits/men/32.jpg",
-      type: "tall",
-    },
-    {
-      id: 3,
-      img: "https://randomuser.me/api/portraits/women/68.jpg",
-      type: "std",
-    },
-    {
-      id: 4,
-      img: "https://randomuser.me/api/portraits/men/45.jpg",
-      type: "std",
-    },
-    {
-      id: 5,
-      img: "https://randomuser.me/api/portraits/women/63.jpg",
-      type: "wide",
-    },
-    {
-      id: 6,
-      img: "https://randomuser.me/api/portraits/men/52.jpg",
-      type: "std",
-    },
-    {
-      id: 7,
-      img: "https://randomuser.me/api/portraits/women/33.jpg",
-      type: "std",
-    },
-    {
-      id: 8,
-      img: "https://randomuser.me/api/portraits/men/67.jpg",
-      type: "std",
-    },
-    {
-      id: 9,
-      img: "https://randomuser.me/api/portraits/women/79.jpg",
-      type: "std",
-    },
-    {
-      id: 10,
-      img: "https://randomuser.me/api/portraits/men/81.jpg",
-      type: "std",
-    },
-    {
-      id: 11,
-      img: "https://randomuser.me/api/portraits/women/57.jpg",
-      type: "std",
-    },
-  ];
 
-  const students2 = [
-  {
-    name: "Rohan Mehta",
-    score: 760,
-    image: "/images/student-1.png",
-  },
-  {
-    name: "Ananya Sharma",
-    score: 710,
-    image: "/images/student-2.png",
-  },
-  {
-    name: "Karan Malhotra",
-    score: 750,
-    image: "/images/student-3.png",
-  },
-  {
-    name: "Mehak Gupta",
-    score: 720,
-    image: "/images/student-4.png",
-  },
-  {
-    name: "Arjun Nair",
-    score: 730,
-    image: "/images/student-5.png",
-  },
-  {
-    name: "Simran Kaur",
-    score: 710,
-    image: "/images/student-6.png",
-  },
-  {
-    name: "Yash Agarwal",
-    score: 740,
-    image: "/images/student-1.png",
-  },
-  {
-    name: "Ishita Verma",
-    score: 700,
-    image: "/images/student-2.png",
-  },
-  {
-    name: "Rahul Deshmukh",
-    score: 720,
-    image: "/images/student-3.png",
-  },
-  {
-    name: "Neha Bansal",
-    score: 710,
-    image: "/images/student-4.png",
-  },
-];
+  const [selectedStudent, setSelectedStudent] = useState(null);
+  const [students2, setstudents2] = useState([]);
+  type Student = {
+    name: string;
+    university?: string;
+    image?: string;
+    flag?: string;
+    rotate?: string;
+  };
 
-  const students = [
-    {
-      name: "Ananya Sharma",
-      university: "Stanford University",
-      image: "/images/student-1.png",
-      flag: "https://flagcdn.com/us.svg",
-      rotate: "md:rotate-2",
-    },
-    {
-      name: "Rohan Mehta",
-      university: "University of Toronto",
-      image: "/images/student-2.png",
-      flag: "https://flagcdn.com/ca.svg",
-      rotate: "md:rotate-5",
-    },
-    {
-      name: "Priya Nair",
-      university: "University of Manchester",
-      image: "/images/student-3.png",
-      flag: "https://flagcdn.com/gb.svg",
-      rotate: "md:rotate-6",
-    },
-    {
-      name: "Karan Verma",
-      university: "University of Sydney",
-      image: "/images/student-4.png",
-      flag: "https://flagcdn.com/au.svg",
-      rotate: "md:-rotate-5",
-    },
-    {
-      name: "Neha Iyer",
-      university: "New York University",
-      image: "/images/student-5.png",
-      flag: "https://flagcdn.com/us.svg",
-      rotate: "md:-rotate-4",
-    },
-    {
-      name: "Arjun Patel",
-      university: "McGill University",
-      image: "/images/student-6.png",
-      flag: "https://flagcdn.com/ca.svg",
-      rotate: "md:rotate-4",
-    },
-  ];
+  type ApiStudent = {
+    name?: string;
+    image?: string;
+    img?: string;
+  };
+
+  const [students, setstudents] = useState<Student[]>([]);
+
+  // const students = ;
 
   const achievements = [
-    {
-      value: "4,23,891+",
-      label: "Total Selections",
-      icon: GraduationCap,
-    },
-    {
-      value: "85+",
-      label: "Countries Worldwide",
-      icon: Globe2,
-    },
-    {
-      value: "1,250+",
-      label: "Partner Universities",
-      icon: Building2,
-    },
-    {
-      value: "92%",
-      label: "Success Rate",
-      icon: Medal,
-    },
-    {
-      value: "50,000+",
-      label: "Students Transformed",
-      icon: Users,
-    },
+    { value: "4,23,891+", label: "Total Selections", icon: GraduationCap },
+    { value: "85+", label: "Countries Worldwide", icon: Globe2 },
+    { value: "1,250+", label: "Partner Universities", icon: Building2 },
+    { value: "92%", label: "Success Rate", icon: Medal },
+    { value: "50,000+", label: "Students Transformed", icon: Users },
   ];
 
   const stats = [
-    {
-      value: "85+",
-      label: "Countries",
-      icon: Globe2,
-    },
-    {
-      value: "1,250+",
-      label: "Universities",
-      icon: Building2,
-    },
-    {
-      value: "50,000+",
-      label: "Happy Students",
-      icon: Users,
-    },
-    {
-      value: "92%",
-      label: "Success Rate",
-      icon: Trophy,
-    },
+    { value: "85+", label: "Countries", icon: Globe2 },
+    { value: "1,250+", label: "Universities", icon: Building2 },
+    { value: "50,000+", label: "Happy Students", icon: Users },
+    { value: "92%", label: "Success Rate", icon: Trophy },
   ];
+
+  const fetchData = async () => {
+    try {
+      const [api, api2] = await Promise.all([
+        axios.get("https://www.ooshasprep.com/api/admin/student"),
+        axios.get("https://www.ooshasprep.com/api/admin/student?limit=6"),
+      ]);
+
+
+      console.log(api?.data?.data, "all data");
+      if (api?.data?.data) {
+        setstudents2(api.data.data);
+        setstudents(
+          (api2.data?.data || []).map(
+            (student: ApiStudent, index: number): Student => ({
+              name: student.name || "Student",
+              image: student.image || student.img,
+              university: student?.course +" "+  student.score,
+              rotate: [
+                "md:rotate-2",
+                "md:rotate-5",
+                "md:rotate-6",
+                "md:-rotate-5",
+                "md:-rotate-4",
+                "md:rotate-4",
+              ][index % 6],
+            })
+          )
+        );
+      }
+    } catch (error) {
+      console.log(error);
+    }
+  };
+
+  useEffect(() => {
+    fetchData();
+  }, []);
 
   return (
     <>
-      <div className=" flex items-center justify-center ">
-        {/* Main Card Container */}
-        <section className="w-full   px-4 py-2 sm:px-6 lg:px-8">
-          <div
-            className="
-                    relative
-                    mx-auto
-                    max-w-[1450px]
-                    overflow-hidden
-                    
-                    rounded-[28px]
-                    border
-                    border-[#f4d9c9]
-                   bg-[#fffaf5]
-                    shadow-[0_15px_50px_rgba(246,103,60,0.10)]
-                "
-          >
-            {/* ===================================================== */}
+      <div className="flex items-center justify-center">
+        <section className="w-full px-4 py-2 sm:px-6 lg:px-8">
+          <div className="relative mx-auto max-w-[1450px] overflow-hidden rounded-[28px] border border-[#f4d9c9] bg-[#fffaf5] shadow-[0_15px_50px_rgba(246,103,60,0.10)]">
             {/* BACKGROUND DECORATIONS */}
-            {/* ===================================================== */}
+            <div className="pointer-events-none absolute right-[-120px] top-[-180px] h-[500px] w-[650px] rounded-full bg-[#ffad87]/55 blur-[110px]" />
+            <div className="pointer-events-none absolute left-[-180px] top-[-150px] h-[400px] w-[500px] rounded-full bg-[#fff8ef] blur-[100px]" />
+            <div className="pointer-events-none absolute bottom-[-200px] left-[0%] h-[350px] w-[600px] rounded-full bg-[#ffad87]/40 blur-[120px]" />
 
-            <div
-              className="
-            pointer-events-none
-            absolute
-            right-[-120px]
-            top-[-180px]
-            h-[500px]
-            w-[650px]
-            rounded-full
-            bg-[#ffad87]/55
-            blur-[110px]
-        "
-            />
-
-            {/* TOP LEFT LIGHT GLOW */}
-            <div
-              className="
-            pointer-events-none
-            absolute
-            left-[-180px]
-            top-[-150px]
-            h-[400px]
-            w-[500px]
-            rounded-full
-            bg-[#fff8ef]
-            blur-[100px]
-        "
-            />
-
-            {/* VERY SUBTLE BOTTOM GLOW */}
-            <div
-              className="
-            pointer-events-none
-            absolute
-            bottom-[-200px]
-            left-[0%]
-            h-[350px]
-            w-[600px]
-            rounded-full
-            bg-[#ffad87]/40
-            blur-[120px]
-        "
-            />
-
-            {/* ===================================================== */}
             {/* MAIN HERO */}
-            {/* ===================================================== */}
-
-            <div
-              className="
-                        relative
-                        grid
-                        grid-cols-1
-                        gap-10
-                        px-6
-                        pb-8
-                        pt-8
-
-                        sm:px-8
-                        sm:pt-10
-
-                        lg:grid-cols-[0.95fr_1.05fr]
-                        lg:gap-8
-                        lg:px-6
-                        lg:pb-1
-                        lg:pt-1
-
-                    
-                    "
-            >
-              {/* ================================================= */}
+            <div className="relative grid grid-cols-1 gap-10 px-6 pb-8 pt-8 sm:px-8 sm:pt-10 lg:grid-cols-[0.95fr_1.05fr] lg:gap-8 lg:px-6 lg:pb-1 lg:pt-1">
               {/* LEFT CONTENT */}
-              {/* ================================================= */}
-
-              <div
-                className="
-                            relative
-                            z-10
-                            flex
-                            flex-col
-                            justify-center
-                            lg:pr-4
-                        "
-              >
+              <div className="relative z-10 flex flex-col justify-center lg:pr-4">
                 <div className="hidden lg:block absolute left-60 top-40 w-70 rotate-13 scale-120">
                   <img src="/images/aeroplane.png" alt="" />
                 </div>
-
-                {/* BRAND */}
 
                 <div className="mb-6 flex items-center w-30">
                   <img
@@ -348,142 +364,34 @@ const CompactWallOfFame = () => {
                   />
                 </div>
 
-                {/* SUCCESS BADGE */}
-
-                <div
-                  className="
-                                mb-5
-                                flex
-                                w-fit
-                                items-center
-                                gap-2
-                                rounded-full
-                                border
-                                border-[#f6673c]/20
-                                bg-white/80
-                                px-3
-                                py-1.5
-                                text-[10px]
-                                font-bold
-                                uppercase
-                                tracking-[0.12em]
-                                text-[#f6673c]
-                                shadow-sm
-                            "
-                >
+                <div className="mb-5 flex w-fit items-center gap-2 rounded-full border border-[#f6673c]/20 bg-white/80 px-3 py-1.5 text-[10px] font-bold uppercase tracking-[0.12em] text-[#f6673c] shadow-sm">
                   <Sparkles className="h-3.5 w-3.5" />
                   Student Success Stories
                 </div>
 
-                {/* SCRIPT HEADING */}
-
-                <div
-                  className="
-                                font-['cursive']
-                                text-xl
-                                leading-none
-                                text-[#f6673c]
-                                sm:text-[46px]
-                                lg:text-4xl
-                              
-                            "
-                >
+                <div className="font-['cursive'] text-xl leading-none text-[#f6673c] sm:text-[46px] lg:text-4xl">
                   Real Dreams.
                 </div>
 
-                {/* MAIN HEADING */}
-
-                <h2
-                  className="
-                                mt-2
-                                max-w-[650px]
-                                text-xl
-                                font-black
-                                leading-[0.98]
-                                tracking-[-0.045em]
-                                text-[#111111]
-
-                                sm:text-[48px]
-
-                                lg:text-4xl
-
-                               
-                            "
-                >
+                <h2 className="mt-2 max-w-[650px] text-xl font-black leading-[0.98] tracking-[-0.045em] text-[#111111] sm:text-[48px] lg:text-4xl">
                   Real Achievements.
                 </h2>
 
-                {/* DESCRIPTION */}
-
-                <p
-                  className="
-                                mt-5
-                                max-w-[590px]
-                                text-sm
-                                leading-7
-                                text-[#4b5563]
-
-                                sm:text-base
-                                lg:text-[17px]
-                                lg:leading-8
-                            "
-                >
+                <p className="mt-5 max-w-[590px] text-sm leading-7 text-[#4b5563] sm:text-base lg:text-[17px] lg:leading-8">
                   Proudly celebrating thousands of students who turned their
                   study abroad dreams into reality with Ooshas Prep.
                 </p>
 
-                {/* CTA */}
-
                 <div className="mt-7 flex flex-wrap items-center gap-4">
                   <button
                     type="button"
-                    className="
-                                    group
-                                    inline-flex
-                                    h-12
-                                    items-center
-                                    justify-center
-                                    gap-3
-                                    rounded-xl
-                                    bg-[#f6673c]
-                                    px-6
-                                    text-xs
-                                    lg:text-sm
-                                    font-bold
-                                    text-white
-                                    shadow-[0_10px_25px_rgba(246,103,60,0.25)]
-                                    transition-all
-                                    duration-300
-
-                                    hover:-translate-y-0.5
-                                    hover:bg-[#ed592f]
-                                    hover:shadow-[0_15px_30px_rgba(246,103,60,0.30)]
-                                "
+                    className="group inline-flex h-12 items-center justify-center gap-3 rounded-xl bg-[#f6673c] px-6 text-xs lg:text-sm font-bold text-white shadow-[0_10px_25px_rgba(246,103,60,0.25)] transition-all duration-300 hover:-translate-y-0.5 hover:bg-[#ed592f] hover:shadow-[0_15px_30px_rgba(246,103,60,0.30)]"
                   >
                     Be Our Next Success Story
-                    <ArrowRight
-                      className="
-                                        h-4
-                                        w-4
-                                        transition-transform
-                                        duration-300
-                                        group-hover:translate-x-1
-                                    "
-                    />
+                    <ArrowRight className="h-4 w-4 transition-transform duration-300 group-hover:translate-x-1" />
                   </button>
 
-                  {/* HANDWRITTEN NOTE */}
-
-                  <div
-                    className="
-                                    hidden
-                                    items-center
-                                    gap-2
-                                    text-[#f6673c]
-
-                                    sm:flex
-                                "
-                  >
+                  <div className="hidden items-center gap-2 text-[#f6673c] sm:flex">
                     <svg
                       width="45"
                       height="30"
@@ -497,7 +405,6 @@ const CompactWallOfFame = () => {
                         strokeWidth="1.5"
                         strokeLinecap="round"
                       />
-
                       <path
                         d="M37 3L43 3L41 9"
                         stroke="currentColor"
@@ -506,15 +413,7 @@ const CompactWallOfFame = () => {
                         strokeLinejoin="round"
                       />
                     </svg>
-
-                    <span
-                      className="
-                                        max-w-[130px]
-                                        font-['cursive']
-                                        text-sm
-                                        leading-5
-                                    "
-                    >
+                    <span className="max-w-[130px] font-['cursive'] text-sm leading-5">
                       Your dream is
                       <br />
                       our mission!
@@ -522,87 +421,26 @@ const CompactWallOfFame = () => {
                   </div>
                 </div>
 
-                {/* ================================================= */}
                 {/* STATS */}
-                {/* ================================================= */}
-
-                <div
-                  className="
-        mt-4
-        grid grid-cols-2 lg:flex
-        items-center
-        gap-4 lg:gap-0
-        
-        justify-between
-        lg:border-t
-        lg:border-[#eadbd0]
-        pt-5
-    "
-                >
+                <div className="mt-4 grid grid-cols-2 lg:flex items-center gap-4 lg:gap-0 justify-between lg:border-t lg:border-[#eadbd0] pt-5">
                   {stats.map((stat, index) => {
                     const Icon = stat.icon;
-
                     return (
                       <div
                         key={stat.label}
-                        className={`
-                    flex
-                    flex-col
-                    items-center
-                    justify-center
-                    text-center
-                    
-
-                    ${
-                      index !== 0
-                        ? "lg:border-l lg:border-[#eadbd0] lg:pl-6"
-                        : ""
-                    }
-                `}
+                        className={`flex flex-col items-center justify-center text-center ${
+                          index !== 0
+                            ? "lg:border-l lg:border-[#eadbd0] lg:pl-6"
+                            : ""
+                        }`}
                       >
-                        {/* ICON */}
-                        <div
-                          className="
-                        flex
-                        h-11
-                        w-11
-                        items-center
-                        justify-center
-                        rounded-full
-                        border
-                        border-[#f6673c]/20
-                        bg-white/80
-                        text-[#f6673c]
-                        shadow-[0_3px_10px_rgba(246,103,60,0.06)]
-                    "
-                        >
+                        <div className="flex h-11 w-11 items-center justify-center rounded-full border border-[#f6673c]/20 bg-white/80 text-[#f6673c] shadow-[0_3px_10px_rgba(246,103,60,0.06)]">
                           <Icon className="h-[19px] w-[19px]" />
                         </div>
-
-                        {/* VALUE */}
-                        <div
-                          className="
-                        mt-2
-                        text-[19px]
-                        font-black
-                        leading-none
-                        tracking-[-0.02em]
-                        text-[#111827]
-                    "
-                        >
+                        <div className="mt-2 text-[19px] font-black leading-none tracking-[-0.02em] text-[#111827]">
                           {stat.value}
                         </div>
-
-                        {/* LABEL */}
-                        <div
-                          className="
-                        mt-1
-                        text-[12px]
-                        font-normal
-                        leading-4
-                        text-[#4b5563]
-                    "
-                        >
+                        <div className="mt-1 text-[12px] font-normal leading-4 text-[#4b5563]">
                           {stat.label}
                         </div>
                       </div>
@@ -611,231 +449,44 @@ const CompactWallOfFame = () => {
                 </div>
               </div>
 
-              {/* ================================================= */}
               {/* RIGHT STUDENT GRID */}
-              {/* ================================================= */}
-
-              <div
-                className="
-                            relative
-                            z-10
-                            flex
-                            min-h-[400px]
-                            items-center
-                            justify-center
-
-                            sm:min-h-[470px]
-
-                            lg:min-h-[540px]
-                        "
-              >
-                {/* Decorative airplane */}
-
-                {/* SUCCESS STAMP */}
-
-                {/* <div
-                            className="
-                                absolute
-                                left-[5%]
-                                top-0
-                                z-30
-                                flex
-                                h-24
-                                w-24
-                                rotate-[-8deg]
-                                items-center
-                                justify-center
-                                rounded-full
-                                border-2
-                                border-[#f6673c]
-                                bg-[#fffaf4]
-                                text-center
-                                text-[9px]
-                                font-black
-                                uppercase
-                                tracking-widest
-                                text-[#f6673c]
-                                shadow-sm
-
-                                sm:h-28
-                                sm:w-28
-
-                                lg:left-[7%]
-                            "
-                            style={{
-                                boxShadow:
-                                    "inset 0 0 0 4px #fffaf4, inset 0 0 0 6px rgba(246,103,60,.35)",
-                            }}
-                        >
-                            <div>
-                                <div className="text-[8px]">
-                                    SUCCESS
-                                </div>
-
-                                <div className="my-1 text-base">
-                                    ★
-                                </div>
-
-                                <div className="text-[7px]">
-                                    OOSHAS PREP
-                                </div>
-
-                                <div className="text-[7px]">
-                                    STUDENTS
-                                </div>
-                            </div>
-                        </div> */}
-
-                {/* STUDENT GRID */}
-
-                <div
-                  className="
-                                relative
-                                mt-5
-                                grid
-                                w-full
-                                max-w-[700px]
-                                grid-cols-2
-                                gap-3
-                                sm:grid-cols-3
-                                sm:gap-4
-                                lg:gap-4
-                            "
-                >
+              <div className="relative z-10 flex min-h-[400px] items-center justify-center sm:min-h-[470px] lg:min-h-[540px]">
+                <div className="relative mt-5 grid w-full max-w-[700px] grid-cols-2 gap-3 sm:grid-cols-3 sm:gap-4 lg:gap-4">
                   {students.map((student, index) => (
                     <div
                       key={student.name}
-                      className={`
-                                        group
-                                        relative
-                                        overflow-visible
-                                        rounded-2xl
-                                        bg-white
-                                        shadow-[0_12px_30px_rgba(0,0,0,0.10)]
-                                        ring-1
-                                        ring-black/[0.04]
-                                        transition-all
-                                        duration-500
-
-                                        hover:z-20
-                                        hover:-translate-y-2
-                                        hover:rotate-0
-                                        ${student.rotate}
-                                        ${index === 3 ? "md:mt-2" : ""}
-                                        ${index === 4 ? "md:-mt-1" : ""}
-                                        ${index === 5 ? "md:mt-3" : ""}
-                                    `}
+                      className={`group relative overflow-visible rounded-2xl bg-white shadow-[0_12px_30px_rgba(0,0,0,0.10)] ring-1 ring-black/[0.04] transition-all duration-500 hover:z-20 hover:-translate-y-2 hover:rotate-0 ${student.rotate} ${
+                        index === 3 ? "md:mt-2" : ""
+                      } ${index === 4 ? "md:-mt-1" : ""} ${
+                        index === 5 ? "md:mt-3" : ""
+                      }`}
                     >
-                      {/* IMAGE */}
-
-                      <div
-                        className="
-        absolute
-        bottom-16
-        right-3
-        flex
-        h-10
-        w-10
-        items-center
-        justify-center
-        overflow-hidden
-        rounded-full
-        border-4
-        border-white
-        bg-white
-        shadow-lg
-        z-10
-    "
-                      >
+                     {student?.flag && <div className="absolute bottom-16 right-3 flex h-10 w-10 items-center justify-center overflow-hidden rounded-full border-4 border-white bg-white shadow-lg z-10">
                         <img
                           src={student.flag}
                           alt={`${student.name} country flag`}
                           className="h-full w-full object-cover"
                         />
-                      </div>
+                      </div>}
 
-                      <div
-                        className="
-                                            relative
-                                            aspect-[1.18]
-                                            overflow-hidden
-                                            rounded-t-2xl
-                                            bg-gray-100
-                                        "
-                      >
+                      <div className="relative aspect-[1.18] overflow-hidden rounded-t-2xl bg-gray-100">
                         <img
                           src={student.image}
                           alt={student.name}
-                          className="
-                                                h-full
-                                                w-full
-                                                object-cover
-                                                transition-transform
-                                                duration-700
-                                                group-hover:scale-105
-                                            "
+                          className="h-full w-full object-contain transition-transform duration-700 group-hover:scale-105"
                         />
-
-                        {/* FLAG */}
                       </div>
 
-                      {/* CARD CONTENT */}
-
-                      <div
-                        className="
-                                            min-h-[76px]
-                                            px-3
-                                            pb-3
-                                            pt-3
-                                            sm:min-h-[74px]
-                                            sm:px-4
-                                        "
-                      >
-                        <h3
-                          className="
-                                                truncate
-                                                text-xs
-                                                font-extrabold
-                                                text-[#111827]
-
-                                                sm:text-sm
-                                            "
-                        >
+                      <div className="min-h-[76px] px-3 pb-3 pt-3 sm:min-h-[74px] sm:px-4">
+                        <h3 className="truncate text-xs font-extrabold text-[#111827] sm:text-sm">
                           {student.name}
                         </h3>
-
-                        <div
-                          className="
-                                                mt-2
-                                                flex
-                                                items-start
-                                                gap-2
-                                            "
-                        >
-                          <GraduationCap
-                            className="
-                                                    mt-0.5
-                                                    h-5
-                                                    w-5
-                                                    shrink-0
-                                                    text-[#f6673c]
-                                                "
-                          />
-
-                          <span
-                            className="
-                                                    line-clamp-2
-                                                    text-[9px]
-                                                    font-medium
-                                                    leading-4
-                                                    text-gray-600
-
-                                                    sm:text-xs
-                                                "
-                          >
+                        {student?.university && <div className="mt-2 flex items-start gap-2">
+                          <GraduationCap className="mt-0.5 h-5 w-5 shrink-0 text-[#f6673c]" />
+                          <span className="line-clamp-2 text-[9px] font-medium leading-4 text-gray-600 sm:text-xs">
                             {student.university}
                           </span>
-                        </div>
+                        </div>}
                       </div>
                     </div>
                   ))}
@@ -843,183 +494,38 @@ const CompactWallOfFame = () => {
               </div>
             </div>
 
-            {/* ===================================================== */}
             {/* BOTTOM ACHIEVEMENT STRIP */}
-            {/* ===================================================== */}
+            <div className="relative mx-5 mb-5 overflow-hidden rounded-[22px] bg-gradient-to-r from-[#ff8a3d] via-[#f6673c] to-[#ff5b25] px-5 py-6 text-white shadow-[0_12px_30px_rgba(246,103,60,0.22)] sm:mx-7 sm:px-7 lg:mx-8 lg:mb-8 lg:px-8 lg:py-5">
+              <div className="pointer-events-none absolute right-[-80px] top-[-100px] h-56 w-56 rounded-full bg-white/10 blur-2xl" />
 
-            <div
-              className="
-                        relative
-                        mx-5
-                        mb-5
-                        overflow-hidden
-                        rounded-[22px]
-                        bg-gradient-to-r
-                        from-[#ff8a3d]
-                        via-[#f6673c]
-                        to-[#ff5b25]
-                        px-5
-                        py-6
-                        text-white
-                        shadow-[0_12px_30px_rgba(246,103,60,0.22)]
-
-                        sm:mx-7
-                        sm:px-7
-
-                        lg:mx-8
-                        lg:mb-8
-                        lg:px-8
-                        lg:py-5
-                    "
-            >
-              {/* subtle highlight */}
-
-              <div
-                className="
-                            pointer-events-none
-                            absolute
-                            right-[-80px]
-                            top-[-100px]
-                            h-56
-                            w-56
-                            rounded-full
-                            bg-white/10
-                            blur-2xl
-                        "
-              />
-
-              <div
-                className="
-                            relative
-                            grid
-                            grid-cols-2
-                            gap-y-7
-
-                            lg:grid-cols-[1.25fr_repeat(5,1fr)]
-                            lg:items-center
-                            lg:gap-0
-                        "
-              >
-                {/* STRIP INTRO */}
-
-                <div
-                  className="
-                                col-span-2
-                                border-b
-                                border-white/20
-                                pb-5
-
-                                lg:col-span-1
-                                lg:border-b-0
-                                lg:border-r
-                                lg:pb-0
-                                lg:pr-7
-                            "
-                >
-                  <div
-                    className="
-                                    font-['cursive']
-                                    text-xl
-                                    leading-none
-                                    text-white/95
-                                "
-                  >
+              <div className="relative grid grid-cols-2 gap-y-7 lg:grid-cols-[1.25fr_repeat(5,1fr)] lg:items-center lg:gap-0">
+                <div className="col-span-2 border-b border-white/20 pb-5 lg:col-span-1 lg:border-b-0 lg:border-r lg:pb-0 lg:pr-7">
+                  <div className="font-['cursive'] text-xl leading-none text-white/95">
                     Proud Moments.
                   </div>
-
-                  <h3
-                    className="
-                                    mt-1
-                                    text-lg
-                                    font-black
-                                "
-                  >
-                    Lifetime Success.
-                  </h3>
-
-                  <p
-                    className="
-                                    mt-2
-                                    max-w-[230px]
-                                    text-[11px]
-                                    leading-5
-                                    text-white/80
-                                "
-                  >
+                  <h3 className="mt-1 text-lg font-black">Lifetime Success.</h3>
+                  <p className="mt-2 max-w-[230px] text-[11px] leading-5 text-white/80">
                     Our students' success is the foundation of our journey.
                   </p>
                 </div>
 
-                {/* ACHIEVEMENTS */}
-
                 {achievements.map((achievement, index) => {
                   const Icon = achievement.icon;
-
                   return (
                     <div
                       key={achievement.label}
-                      className={`
-                                        lg:flex
-                                        grid grid-cols-3
-                                        items-center
-                                        
-                                        px-2
-                        
-                                        sm:px-4
-
-                                        lg:min-h-[65px]
-                                        lg:px-5
-                                        gap-3
-                                        
-
-                                        ${
-                                          index !== 0
-                                            ? "lg:border-l lg:border-white/20"
-                                            : ""
-                                        }
-                                    `}
+                      className={`lg:flex grid grid-cols-3 items-center px-2 sm:px-4 lg:min-h-[65px] lg:px-5 gap-3 ${
+                        index !== 0 ? "lg:border-l lg:border-white/20" : ""
+                      }`}
                     >
-                      <div
-                        className="
-                                            flex
-                                            h-8
-                                            w-8
-                                            lg:h-10
-                                            lg:w-10
-                                            shrink-0
-                                            items-center
-                                            justify-center
-                                            rounded-full
-                                            bg-white/90
-                                            text-[#f6673c]
-                                        "
-                      >
+                      <div className="flex h-8 w-8 lg:h-10 lg:w-10 shrink-0 items-center justify-center rounded-full bg-white/90 text-[#f6673c]">
                         <Icon className="h-4 w-4" />
                       </div>
-
                       <div>
-                        <div
-                          className="
-                                                text-sm
-                                                font-black
-                                                leading-none
-
-                                                sm:text-lg
-                                            "
-                        >
+                        <div className="text-sm font-black leading-none sm:text-lg">
                           {achievement.value}
                         </div>
-
-                        <div
-                          className="
-                                                mt-1
-                                                max-w-[110px]
-                                                lg:text-sm
-                                                text-xs
-                                                leading-4
-                                                text-white/85
-                                            "
-                        >
+                        <div className="mt-1 max-w-[110px] lg:text-sm text-xs leading-4 text-white/85">
                           {achievement.label}
                         </div>
                       </div>
@@ -1029,152 +535,108 @@ const CompactWallOfFame = () => {
               </div>
             </div>
 
+            {/* ================= STUDENT GRID (API DATA) ================= */}
+            <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 max-w-7xl p-6 relative z-10">
+              {students2.map((student, index) => (
+                <div
+                  key={student._id || index}
+                  className="group overflow-hidden rounded-2xl border border-[#F1E8E3] bg-white p-3 shadow-[0_4px_20px_rgba(0,0,0,0.04)] transition-all duration-300 hover:-translate-y-1 hover:shadow-[0_10px_30px_rgba(0,0,0,0.08)]"
+                >
+                  {/* Student Image */}
+                  <div className="relative aspect-[4/3] w-full overflow-hidden rounded-xl bg-[#FFF5F0]">
+                    <img
+                      src={student.image}
+                      alt={student.name}
+                      className="h-full w-full object-contain transition-transform duration-300 group-hover:scale-105"
+                    />
 
-             <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 max-w-7xl p-6 relative z-10">
-  {students2.map((student, index) => (
-    <div
-      key={student.name}
-      className="
-        group
-        overflow-hidden
-        rounded-2xl
-        border border-[#F1E8E3]
-        bg-white
-        p-3
-        shadow-[0_4px_20px_rgba(0,0,0,0.04)]
-        transition-all
-        duration-300
-        hover:-translate-y-1
-        hover:shadow-[0_10px_30px_rgba(0,0,0,0.08)]
-      "
-    >
-      {/* Student Image */}
-      <div className="relative aspect-[4/3] w-full overflow-hidden rounded-xl bg-[#FFF5F0]">
-        <img
-          src={student.image}
-          alt={student.name}
-          className="
-            h-full
-            w-full
-            object-cover
-            transition-transform
-            duration-300
-            group-hover:scale-105
-          "
-        />
+                    {/* Score Badge */}
+                    <div
+                      className="absolute bottom-2 right-2 rounded-lg px-2.5 py-1 text-sm font-bold text-white shadow-md"
+                      style={{
+                        backgroundColor: "#FF6B35",
+                      }}
+                    >
+                      {student.score}
+                    </div>
 
-        {/* Score */}
-        <div
-          className="
-            absolute
-            bottom-2
-            right-2
-            rounded-lg
-            bg-[#FF6B35]
-            px-2.5
-            py-1
-            text-sm
-            font-bold
-            text-white
-            shadow-md
-          "
-        >
-          {student.score}
-        </div>
-      </div>
+                    {/* Course Badge */}
+                    {student.course && (
+                      <div className="absolute top-2 left-2 rounded-lg bg-white/90 backdrop-blur-sm px-2 py-0.5 text-[10px] font-bold text-gray-800 shadow-sm">
+                        {student.course}
+                      </div>
+                    )}
+                  </div>
 
-      {/* Student Details */}
-      <div className="px-1 pt-3">
-        <h3
-          className="
-            truncate
-            text-center
-            text-sm
-            font-semibold
-            text-[#242424]
-            sm:text-base
-          "
-        >
-          {student.name}
-        </h3>
+                  {/* Student Details */}
+                  <div className="px-1 pt-3">
+                    <h3 className="truncate text-center text-sm font-semibold text-[#242424] sm:text-base">
+                      {student.name}
+                    </h3>
 
-        {/* Small divider */}
-        <div className="mx-auto mt-2 h-1 w-7 rounded-full bg-[#FF9B76]" />
+                    <div
+                      className="mx-auto mt-2 h-1 w-7 rounded-full"
+                      style={{
+                        backgroundColor: "#FF9B76",
+                      }}
+                    />
 
-        {/* View Profile */}
-        <button
-          type="button"
-          className="
-            mt-3
-            flex
-            w-full
-            items-center
-            justify-center
-            gap-1.5
-            rounded-lg
-            border
-            border-[#FF6B35]
-            py-2
-            text-xs
-            font-semibold
-            text-[#FF6B35]
-            transition-all
-            duration-200
-            hover:bg-[#FF6B35]
-            hover:text-white
-            sm:text-sm
-          "
-        >
-          View Profile
-          <span>→</span>
-        </button>
-      </div>
-    </div>
-  ))}
-</div>
+                    {/* View Profile Button */}
+                    <button
+                      type="button"
+                      onClick={() => setSelectedStudent(student)}
+                      className="mt-3 flex w-full items-center justify-center gap-1.5 rounded-lg border py-2 text-xs font-semibold transition-all duration-200 hover:text-white sm:text-sm"
+                      style={{
+                        borderColor: "#FF6B35",
+                        color: "#FF6B35",
+                      }}
+                      onMouseEnter={(e) => {
+                        e.currentTarget.style.backgroundColor = "#FF6B35";
+                        e.currentTarget.style.color = "white";
+                      }}
+                      onMouseLeave={(e) => {
+                        e.currentTarget.style.backgroundColor = "transparent";
+                        e.currentTarget.style.color = "#FF6B35";
+                      }}
+                    >
+                      View Profile
+                      <span>→</span>
+                    </button>
+                  </div>
+                </div>
+              ))}
+            </div>
+
+            {/* MODAL */}
+            {selectedStudent && (
+              <TestimonialModal
+                student={selectedStudent}
+                onClose={() => setSelectedStudent(null)}
+              />
+            )}
           </div>
         </section>
       </div>
-
-    
     </>
   );
 };
 
-// HomeStudent.tsx
 ("use client");
 
 import { useKeenSlider } from "keen-slider/react";
 import "keen-slider/keen-slider.min.css";
 import { ChevronLeft, ChevronRight, Stars } from "lucide-react";
 
+
 const AboutSection = () => {
   const [sliderRef, slider] = useKeenSlider(
     {
       loop: true,
-      slides: {
-        perView: 1,
-        spacing: 16,
-      },
+      slides: { perView: 1, spacing: 16 },
       breakpoints: {
-        "(min-width: 640px)": {
-          slides: {
-            perView: 1,
-            spacing: 20,
-          },
-        },
-        "(min-width: 768px)": {
-          slides: {
-            perView: 1,
-            spacing: 24,
-          },
-        },
-        "(min-width: 1024px)": {
-          slides: {
-            perView: 1,
-            spacing: 32,
-          },
-        },
+        "(min-width: 640px)": { slides: { perView: 1, spacing: 20 } },
+        "(min-width: 768px)": { slides: { perView: 1, spacing: 24 } },
+        "(min-width: 1024px)": { slides: { perView: 1, spacing: 32 } },
       },
     },
     [
@@ -1189,7 +651,6 @@ const AboutSection = () => {
         const nextTimeout = () => {
           clearNextTimeout();
           if (mouseOver) return;
-
           timeout = setTimeout(() => {
             if (slider.track && slider.track.details) {
               slider.next();
@@ -1202,23 +663,19 @@ const AboutSection = () => {
             mouseOver = true;
             clearNextTimeout();
           });
-
           slider.container.addEventListener("mouseout", () => {
             mouseOver = false;
             if (slider.track && slider.track.details) {
               nextTimeout();
             }
           });
-
           nextTimeout();
         });
 
         slider.on("dragStarted", clearNextTimeout);
         slider.on("animationEnded", nextTimeout);
         slider.on("updated", nextTimeout);
-        slider.on("destroyed", () => {
-          clearNextTimeout();
-        });
+        slider.on("destroyed", () => clearNextTimeout());
       },
     ],
   );
@@ -1239,19 +696,18 @@ const AboutSection = () => {
   ];
 
   return (
-    <div className="relative py-8 sm:py-10 lg:py-12  font-['Open_Sans','Helvetica_Neue',Arial,sans-serif]">
-      {/* Heading */}
+    <div className="relative py-8 sm:py-10 lg:py-12 font-['Open_Sans','Helvetica_Neue',Arial,sans-serif]">
       <div className="text-center px-4">
-        <h2 className=" text-lg sm:text-xl md:text-3xl lg:text-5xl font-bold flex items-center justify-center gap-3">
+        <h2 className="text-lg sm:text-xl md:text-3xl lg:text-5xl font-bold flex items-center justify-center gap-3">
           {data.fields?.title || "Meet our stars"}{" "}
           <Stars className="w-8 h-8 md:w-10 md:h-10 text-primary fill-primary" />
         </h2>
-        <p className=" mt-3 text-base md:text-lg">
+        <p className="mt-3 text-base md:text-lg">
           {data.fields?.subtitle || "Our students who made us proud"}
         </p>
       </div>
 
-      <section ref={sliderRef} className="keen-slider max-w-6xl mx-auto ">
+      <section ref={sliderRef} className="keen-slider max-w-6xl mx-auto">
         {data.map((student: any, idx: number) => (
           <div
             key={idx}
@@ -1261,17 +717,16 @@ const AboutSection = () => {
               <img
                 src={student.image}
                 alt="logo"
-                className="sm:h-full w-auto mt-6 "
+                className="sm:h-full w-auto mt-6"
               />
             </div>
           </div>
         ))}
       </section>
 
-      {/* Buttons */}
       <button
         onClick={() => slider?.current?.prev()}
-        className="absolute left-1 sm:left-2 md:left-24 bottom-[40%]  z-10"
+        className="absolute left-1 sm:left-2 md:left-24 bottom-[40%] z-10"
       >
         <ChevronLeft
           size={28}
@@ -1281,7 +736,7 @@ const AboutSection = () => {
 
       <button
         onClick={() => slider?.current?.next()}
-        className="absolute right-1 sm:right-2 md:right-24 bottom-[40%]  z-10"
+        className="absolute right-1 sm:right-2 md:right-24 bottom-[40%] z-10"
       >
         <ChevronRight
           size={28}
@@ -1293,18 +748,14 @@ const AboutSection = () => {
 };
 
 export const TestbookSuccessSection = () => {
-  // Profile data for the Wall of Fame grid
-
   return (
-    <div className="h-full  py-2 px-4 md:px-8 md:py-4">
+    <div className="h-full py-2 px-4 md:px-8 md:py-4">
       <div className="max-w-6xl mx-auto space-y-12">
-        {/* ================= SELECTIONS STATS SECTION ================= */}
         <div className="bg-white rounded-[2.5rem] shadow-[0_20px_50px_-12px_rgba(0,0,0,0.05)] p-8 md:p-12 relative overflow-hidden border border-gray-100">
-          {/* Header & Trophy */}
           <div className="relative mb-10 md:mb-14">
             <div className="max-w-xl relative z-10">
               <p className="text-gray-500 font-medium mb-2 text-sm md:text-base uppercase tracking-wide">
-                Selections at Ooshas Global
+                Selections at Ooshas prep
               </p>
               <h2 className="text-2xl md:text-2xl font-bold text-gray-900 leading-tight">
                 We are proud to help thousands of students in securing their
@@ -1312,7 +763,6 @@ export const TestbookSuccessSection = () => {
               </h2>
             </div>
 
-            {/* Decorative Trophy SVG */}
             <div className="hidden md:block absolute -top-4 right-0 w-64 h-64 -mt-12 -mr-8 opacity-90 z-11">
               <svg
                 viewBox="0 0 200 200"
@@ -1390,9 +840,7 @@ export const TestbookSuccessSection = () => {
             </div>
           </div>
 
-          {/* Stats Cards Grid */}
           <div className="grid grid-cols-1 md:grid-cols-5 gap-4 items-stretch">
-            {/* Total Card */}
             <div className="bg-[#FFF8EB] rounded-2xl p-6 flex flex-col items-center justify-center text-center border border-orange-100 shadow-sm relative overflow-hidden group hover:shadow-md transition-shadow">
               <div className="absolute inset-y-0 left-2 flex items-center opacity-60">
                 <svg
@@ -1409,14 +857,12 @@ export const TestbookSuccessSection = () => {
                   <path d="M12 32C10 28 10 22 10 16" />
                 </svg>
               </div>
-
               <div className="z-10">
                 <h3 className="text-3xl md:text-2xl font-bold text-gray-900 mb-1">
                   53567
                 </h3>
                 <p className="text-gray-600 font-medium">Total</p>
               </div>
-
               <div className="absolute inset-y-0 right-2 flex items-center opacity-60 scale-x-[-1]">
                 <svg
                   width="40"
@@ -1434,7 +880,6 @@ export const TestbookSuccessSection = () => {
               </div>
             </div>
 
-            {/* SSC Card */}
             <StatCard
               count="19054"
               label="Selections in SSC"
@@ -1442,8 +887,6 @@ export const TestbookSuccessSection = () => {
               iconColor="text-purple-600"
               icon={<GraduationCapIcon />}
             />
-
-            {/* Banking Card */}
             <StatCard
               count="18921"
               label="Selections in Banking"
@@ -1451,8 +894,6 @@ export const TestbookSuccessSection = () => {
               iconColor="text-blue-600"
               icon={<BankIcon />}
             />
-
-            {/* Railways Card */}
             <StatCard
               count="7087"
               label="Selections in Railways"
@@ -1460,8 +901,6 @@ export const TestbookSuccessSection = () => {
               iconColor="text-orange-600"
               icon={<TrainIcon />}
             />
-
-            {/* Other Govt Card */}
             <StatCard
               count="8505"
               label="Selections in Other Govt Exams"
@@ -1497,6 +936,7 @@ const GraduationCapIcon = () => (
     <path d="M10.394 2.08a1 1 0 00-.788 0l-7 3a1 1 0 000 1.84L5.25 8.051a.999.999 0 01.356-.257l4-1.714a1 1 0 11.788 1.838L7.667 9.088l1.94.831a1 1 0 00.787 0l7-3a1 1 0 000-1.838l-7-3zM3.31 9.397L5 10.12v4.102a8.969 8.969 0 00-1.05-.174 1 1 0 01-.89-.89 11.115 11.115 0 01.25-3.762zM9.3 16.573A9.026 9.026 0 007 14.935v-3.957l1.818.78a3 3 0 002.364 0l5.508-2.361a11.026 11.026 0 01.25 3.762 1 1 0 01-.89.89 8.968 8.968 0 00-5.35 2.524 1 1 0 01-1.4 0zM6 18a1 1 0 001-1v-2.065a8.935 8.935 0 00-2-.712V17a1 1 0 001 1z" />
   </svg>
 );
+
 const BankIcon = () => (
   <svg className="w-6 h-6" fill="currentColor" viewBox="0 0 20 20">
     <path
@@ -1506,6 +946,7 @@ const BankIcon = () => (
     />
   </svg>
 );
+
 const TrainIcon = () => (
   <svg className="w-6 h-6" fill="currentColor" viewBox="0 0 20 20">
     <path
@@ -1515,6 +956,7 @@ const TrainIcon = () => (
     />
   </svg>
 );
+
 const GovtBuildingIcon = () => (
   <svg className="w-6 h-6" fill="currentColor" viewBox="0 0 20 20">
     <path
@@ -1524,6 +966,7 @@ const GovtBuildingIcon = () => (
     />
   </svg>
 );
+
 
 export const WallOfFame = () => {
   const students = [
@@ -1580,10 +1023,8 @@ export const WallOfFame = () => {
   return (
     <div className="w-full py-2 px-4 md:px-8 font-sans">
       <div className="max-w-5xl mx-auto">
-        {/* Header */}
         <div className="flex items-center justify-center mb-8">
           <div className="flex items-center gap-2">
-            {/* Testbook Logo Icon */}
             <div className="w-10 h-10 bg-gradient-to-br from-orange-400 to-orange-500 rounded-lg flex items-center justify-center shadow-md">
               <svg
                 className="w-6 h-6 text-white"
@@ -1594,13 +1035,12 @@ export const WallOfFame = () => {
               </svg>
             </div>
             <h1 className="text-3xl md:text-2xl font-bold">
-              <span className="text-orange-500">Ooshas Global</span>
+              <span className="text-orange-500">Ooshas </span>
               <span className="text-gray-900 ml-2">Wall of Fame</span>
             </h1>
           </div>
         </div>
 
-        {/* Student Cards Grid */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
           {students.map((student, index) => (
             <StudentCard key={index} {...student} />
@@ -1614,9 +1054,7 @@ export const WallOfFame = () => {
 const StudentCard = ({ name, rank, exam, img }) => {
   return (
     <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6 flex flex-col items-center hover:shadow-lg transition-shadow duration-300">
-      {/* Photo Container with Decorations */}
       <div className="relative w-36 h-36 mb-4">
-        {/* Confetti Dots - Scattered around */}
         <div className="absolute -top-2 left-4 w-2 h-2 bg-green-400 rounded-full"></div>
         <div className="absolute top-6 -left-2 w-2 h-2 bg-blue-400 rounded-full"></div>
         <div className="absolute -bottom-1 left-6 w-2 h-2 bg-purple-400 rounded-full"></div>
@@ -1624,14 +1062,12 @@ const StudentCard = ({ name, rank, exam, img }) => {
         <div className="absolute top-8 -right-1 w-2 h-2 bg-pink-400 rounded-full"></div>
         <div className="absolute -bottom-2 right-4 w-2 h-2 bg-pink-400 rounded-full"></div>
 
-        {/* Top Sparkles */}
         <div className="absolute -top-3 left-1/2 -translate-x-1/2 flex gap-1">
           <div className="w-0.5 h-3 bg-amber-400 rounded-full"></div>
           <div className="w-0.5 h-4 bg-amber-400 rounded-full"></div>
           <div className="w-0.5 h-3 bg-amber-400 rounded-full"></div>
         </div>
 
-        {/* Left Wing/Laurel Decoration */}
         <div className="absolute left-0 top-1/2 -translate-y-1/2 -translate-x-2">
           <svg width="24" height="40" viewBox="0 0 24 40" fill="none">
             <path
@@ -1655,7 +1091,6 @@ const StudentCard = ({ name, rank, exam, img }) => {
           </svg>
         </div>
 
-        {/* Right Wing/Laurel Decoration */}
         <div className="absolute right-0 top-1/2 -translate-y-1/2 translate-x-2">
           <svg width="24" height="40" viewBox="0 0 24 40" fill="none">
             <path
@@ -1679,7 +1114,6 @@ const StudentCard = ({ name, rank, exam, img }) => {
           </svg>
         </div>
 
-        {/* Main Photo Circle with Golden Border */}
         <div className="relative w-full h-full rounded-full p-1 bg-gradient-to-br from-amber-300 via-yellow-400 to-amber-500 shadow-md">
           <div className="w-full h-full rounded-full overflow-hidden bg-white p-0.5">
             <img
@@ -1690,7 +1124,6 @@ const StudentCard = ({ name, rank, exam, img }) => {
           </div>
         </div>
 
-        {/* Star Badge - Top Right */}
         <div className="absolute -top-1 -right-1 w-10 h-10 bg-gradient-to-br from-amber-300 to-amber-500 rounded-full flex items-center justify-center shadow-md border-2 border-white">
           <svg
             className="w-5 h-5 text-white"
@@ -1702,12 +1135,9 @@ const StudentCard = ({ name, rank, exam, img }) => {
         </div>
       </div>
 
-      {/* Student Name */}
       <h3 className="text-sm font-semibold text-gray-900 mb-1 text-center">
         {name}
       </h3>
-
-      {/* Rank and Exam */}
       <p className="text-xs font-medium text-emerald-500 text-center">
         {rank} | {exam}
       </p>

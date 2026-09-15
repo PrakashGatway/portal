@@ -10,6 +10,7 @@ import {
   Mic,
   Headphones,
   TrendingUp,
+  Info,
 } from "lucide-react";
 import Button from "../components/ui/button/Button";
 import api from "../axiosInstance";
@@ -133,7 +134,7 @@ export const MockTestCard = ({
           <div className="absolute top-0 left-0 w-full h-[40%] bg-gradient-to-b from-[#ADADAC] to-[#ADADAC]/0" />
 
           {/* ================= IMAGE ================= */}
-          <div className="relative h-[170px] overflow-hidden rounded-t-[18px] p-2">
+          <div className="relative h-[170px] overflow-visible rounded-t-[18px] p-2">
            <div
   style={{
     borderRadius: "15px 15px 0px 0px",
@@ -187,7 +188,7 @@ export const MockTestCard = ({
           {/* ================= CONTENT ================= */}
           <div className="px-4 pt-3 pb-0">
             {/* Title */}
-            <h3
+            {/* <h3
               className="
                     text-[22px]
                     leading-7
@@ -198,10 +199,68 @@ export const MockTestCard = ({
                 "
             >
               {test.title}
-            </h3>
+            </h3> */}
+
+<h3 className="text-[22px] leading-7 font-medium text-[#111111] dark:text-white">
+  {test.title}
+
+  <span className="group relative ml-2 inline-block align-middle">
+    <Info className="h-4 w-4 cursor-pointer text-gray-400" />
+
+    <span
+      className="
+        pointer-events-none
+        invisible
+        absolute
+        bottom-full
+        left-1/2
+        z-50
+        mb-2
+        w-[300px]
+        -translate-x-1/2
+        rounded-lg
+        bg-gray-900
+        px-3
+        py-2
+        text-left
+        text-sm
+        font-normal
+        leading-5
+        text-white
+        opacity-0
+        shadow-lg
+        transition-all
+        duration-200
+        group-hover:visible
+        group-hover:opacity-100
+      "
+    >
+      <span className="mb-1 block font-semibold">
+        {test.title}
+      </span>
+
+      <span className="block text-gray-200">
+        {test.description || "No description available."}
+      </span>
+
+      <span
+        className="
+          absolute
+          left-1/2
+          top-full
+          -translate-x-1/2
+          border-4
+          border-transparent
+          border-t-gray-900
+        "
+      />
+    </span>
+  </span>
+</h3>
+
 
             {/* Description */}
-            <p
+            {/* <p
               className="
                     mt-1
                     text-[16px]
@@ -212,7 +271,7 @@ export const MockTestCard = ({
             >
               {test?.description ||
                 `${test?.exam?.name || "Test"} full test series`}
-            </p>
+            </p> */}
 
             {/* ================= META ================= */}
             <div className="mt-3 grid grid-cols-2 gap-y-2.5 text-[16px] text-gray-600">
