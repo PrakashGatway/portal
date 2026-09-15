@@ -829,6 +829,24 @@ const GREDashboard = () => {
     },
   });
 
+  
+  // ==================== SLIDER: COURSES (when > 3) ====================
+  const [coursesSliderRef1, coursesInstanceRef1] = useKeenSlider<HTMLDivElement>({
+    loop: courses.length > 3,
+    slides: {
+      perView: 3,
+      spacing: 20,
+    },
+    breakpoints: {
+      "(max-width:1023px)": {
+        slides: { perView: 3, spacing: 16 },
+      },
+      "(max-width:640px)": {
+        slides: { perView: 1, spacing: 12 },
+      },
+    },
+  });
+
   // ==================== SLIDER: ALL COURSES (when > 4) ====================
   const [allCoursesSliderRef] = useKeenSlider(
     {
@@ -1486,7 +1504,7 @@ const GREDashboard = () => {
                   </p>
                 </div>
               ) : useCoursesSlider ? (
-                <div ref={coursesSliderRef} className="keen-slider mt-10">
+                <div ref={coursesSliderRef1} className="keen-slider mt-10">
                   {courses.map((course) => (
                     <CourseCard
                       key={course._id || course.id}
