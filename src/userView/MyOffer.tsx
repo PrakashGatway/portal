@@ -505,7 +505,7 @@ export default function OffersPage() {
                                 <button
                                     key={type.id}
                                     onClick={() => handleTypeChange(type.id)}
-                                    className={`flex items-center px-4 py-2.5 rounded-full border-2 transition-all duration-300 transform hover:scale-105 font-medium text-sm ${selectedType === type.id
+                                    className={`flex items-center px-4 py-2.5 rounded-full border-1 transition-all duration-300 transform hover:scale-105 font-medium text-sm ${selectedType === type.id
                                             ? `${type.color} border-${type.color}-500 text-white shadow-lg scale-105`
                                             : "bg-orange-50 dark:bg-gray-800 text-gray-700 dark:text-gray-300 border-gray-200 dark:border-gray-700 hover:border-gray-300 dark:hover:border-gray-600"
                                         }`}

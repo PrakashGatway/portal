@@ -1229,7 +1229,7 @@ body:has(.fixed.inset-0.bg-black\/60)
                         className="group p-3 rounded-xl bg-white border border-orange-100 cursor-pointer hover:border-orange-300 hover:shadow-md transition-all"
                       >
                         <div className="flex items-start gap-3">
-                          <div className={`flex h-10 w-10 items-center justify-center rounded-lg bg-[#ff5321] text-white flex-shrink-0 shadow-sm`}>
+                          <div className={`flex h-10 w-10 items-center justify-center rounded-lg bg-[#F36D45] text-white flex-shrink-0 shadow-sm`}>
                             {React.createElement(event.icon || Video, { className: "h-5 w-5" })}
                           </div>
                           <div className="flex-1 min-w-0">

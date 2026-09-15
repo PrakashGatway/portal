@@ -13,8 +13,9 @@ import Button from "../../components/ui/button/Button";
 import { toast } from "react-toastify";
 import api from "../../axiosInstance";
 import FullScreenLoader from "../../components/fullScreeLoader";
-import QuestionRenderer, { GRETestResults, SectionInstructions, SectionReview } from "./SatComponents";
+import QuestionRenderer, {SectionInstructions, SectionReview } from "./SatComponents";
 import { GRETestHead } from "./SatHeader";
+import { GRETestResults } from "./SatResult";
 
 interface QuestionDoc {
   _id: string;
@@ -137,6 +138,8 @@ export default function SatExamPage() {
 
   const isCompleted = attempt?.status === "completed";
 
+  console.log(savingProgress)
+
   const testTitle =
     attempt?.testTemplate.title ||
     (attempt as any)?.testTemplate?.name ||
@@ -258,7 +261,7 @@ export default function SatExamPage() {
     const secDurationMinutes =
       currentSection.durationMinutes || 0; // 0 → untimed
     if (!secDurationMinutes) {
-      setTimerSecondsLeft(0);
+      // setTimerSecondsLeft(0);
       setTimerRunning(false);
       return;
     }
@@ -327,13 +330,17 @@ export default function SatExamPage() {
     if (!timerRunning) return;
     if (currentScreen !== "question") return;
 
-    if (timerSecondsLeft === 0) {
-      setTimerRunning(false);
-      toast.info(
-        "Time is up for this section. Moving to section review."
-      );
-      setCurrentScreen("section_review");
-    }
+     if (timerSecondsLeft <= 0) {
+    setTimerRunning(false);
+
+    toast.info(
+      "Time is up for this section. Moving to section review."
+    );
+
+    setCurrentScreen("section_review");
+
+    return;
+  }
   }, [
     timerSecondsLeft,
     timerRunning,
@@ -592,6 +599,7 @@ export default function SatExamPage() {
     });
   };
 
+  
   const [filter, setFilter] = useState<"all" | "answered" | "not_answered" | "flagged">("all");
 
   if (loading || starting) {
@@ -626,23 +634,28 @@ export default function SatExamPage() {
 
   return (
     <>
-      <div className="relative min-h-screen bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-50">
-        <GRETestHead
+    
+      <div className="relative min-h-screen bg-white  dark:bg-slate-900 text-slate-900 dark:text-slate-50">
+        <div className="h-[16px] w-full bg-gradient-to-r from-[#fff1dc] via-[#ffd19f] to-[#ff947d]" />
+
+   { currentScreen !== "results" &&    <GRETestHead
           testTitle={testTitle}
+          attempt= {attempt}
           currentSection={currentSection}
           currentQuestion={currentQuestion}
           activeSectionIndex={activeSectionIndex}
           totalSections={attempt?.sections.length || 0}
           timerSecondsLeft={timerSecondsLeft}
           currentScreen={currentScreen}
+          activeQuestionIndex={activeQuestionIndex}
           isCompleted={isCompleted}
           savingProgress={savingProgress}
           saveCurrentQuestionProgress={() => saveCurrentQuestionProgress({ silent: false })}
           navigateBack={() => navigate(-1)}
-        />
+        />}
 
         {/* Scrollable main area between header & footer */}
-        <div className="pt-14 pb-14">
+        <div className="pt-14 ">
           {currentScreen === "question" && currentSection && currentQuestion && (
             <QuestionRenderer
               qDoc={qDoc}
@@ -663,6 +676,7 @@ export default function SatExamPage() {
               goNextQuestion={goNextQuestion}
             />
           )}
+          
           {currentScreen === "section_review" && attempt && currentSection && (
             <SectionReview
               currentSection={currentSection}
@@ -673,6 +687,7 @@ export default function SatExamPage() {
               showingReviewScreen={showingReviewScreen}
               filter={filter}
               setFilter={setFilter}
+              timerSecondsLeft={timerSecondsLeft}
               setShowingReviewScreen={setShowingReviewScreen}
               setActiveQuestionIndex={setActiveQuestionIndex}
               setCurrentScreen={(screen) => setCurrentScreen(screen)}
@@ -680,11 +695,14 @@ export default function SatExamPage() {
               handleFinishSectionReview={handleFinishSectionReview}
             />
           )}
+
+          
           {currentScreen === "results" && attempt && (
             <GRETestResults
               attempt={attempt}
               navigateBack={() => navigate(-1)}
               onTakeAnotherTest={() => navigate("/gmat/practice")}
+              saving = {savingProgress}
             />
           )}
         </div>

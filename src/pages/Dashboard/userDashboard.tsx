@@ -931,7 +931,7 @@ const GREDashboard = () => {
   // ==================== ERROR STATE ====================
   if (!data) {
     return (
-      <div className="min-h-screen max-w-7xl mx-auto flex items-center justify-center pl-20">
+      <div className="min-h-screen max-w-7xl mx-auto flex items-center justify-center pl-20 ">
         <motion.div
           initial={{ scale: 0 }}
           animate={{ scale: 1 }}
@@ -1051,7 +1051,7 @@ const GREDashboard = () => {
                             <div className="xl:col-span-3 px-2 lg:px-0">
                               <div className="flex gap-2">
                                 <div>
-                                  <h3 className="text-2xl font-bold text-gray-900 dark:text-white line-clamp-1">
+                                  <h3 className="text-2xl font-bold text-gray-900 dark:text-white line-clamp-2">
                                     {item?.item?.title}
                                   </h3>
                                   <p className="text-gray-500 text-sm dark:text-gray-400">

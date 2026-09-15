@@ -14,6 +14,9 @@ import {
   ChevronDown,
   Clock,
   ChevronUp,
+  BarChart3,
+  Calculator,
+  BookOpenText,
 } from "lucide-react";
 import Button from "../../components/ui/button/Button";
 
@@ -105,7 +108,8 @@ const QuestionRenderer: any = React.memo(
     };
 
     return (
-      <div className="max-w-7xl mx-auto p-4 space-y-4">
+      <div className="bg-white w-full h-full  py-6 pt-5">
+      <div className="max-w-7xl mx-auto p-4 space-y-4 rounded-2xl border-3 border-dashed border-orange-200">
         {isMCQ && type == "sat_reading_writing" ? (
           <div ref={containerRef} className="flex gap-3">
             {/* LEFT: Passage / Stimulus */}
@@ -129,7 +133,7 @@ const QuestionRenderer: any = React.memo(
               onMouseDown={onDividerDown}
               className="cursor-col-resize flex items-center justify-center"
             >
-              <div className="h-full w-1 bg-slate-400 rounded-full" />
+              <div className="h-full w-1 bg-[#F36D45] rounded-full" />
             </div>
 
             <div
@@ -137,9 +141,9 @@ const QuestionRenderer: any = React.memo(
               className="bg-white rounded dark:bg-slate-900 p-2 min-h-[65vh] overflow-y-auto"
             >
               {/* Question Header */}
-              <div className="flex items-center justify-between mb-4 bg-slate-300 dark:bg-slate-700 border-b-3 border-dashed border-slate-800">
-                <div className="flex items-center justify-between gap-2">
-                  <span className="bg-slate-800 dark:bg-slate-100 text-slate-100 dark:text-slate-800 p-2">
+              <div className="flex items-center justify-between mb-4 bg-orange-50 dark:bg-slate-700 rounded-lg">
+                <div className="flex items-center justify-between gap-2 ">
+                  <span className="bg-[#F36D45] dark:bg-slate-100 text-slate-100 dark:text-slate-800 p-2 rounded-lg">
                     {questionNumber}
                   </span>
                   <span
@@ -167,7 +171,7 @@ const QuestionRenderer: any = React.memo(
                       setShowEliminationMode((prev) => !prev);
                       setCrossedOptions([]);
                     }}
-                    className="bg-blue-800 dark:bg-blue-100 border border-slate-800 rounded-lg text-slate-100 dark:text-slate-800 p-1 mr-2 cursor-pointer select-none"
+                    className="bg-[#F36D45] dark:bg-blue-100 rounded-lg text-slate-100 dark:text-slate-800 p-1 mr-2 cursor-pointer select-none"
                   >
                     {showEliminationMode ? <del>ABC</del> : "ABC"}
                   </span>
@@ -197,10 +201,10 @@ const QuestionRenderer: any = React.memo(
                         <button
                           onClick={() => onOptionClick(i)}
                           disabled={isCompleted}
-                          className={`w-full text-left rounded-lg border-2 px-4 py-2 flex items-start gap-3 transition ${
+                          className={`w-full text-left rounded-2xl border-2 px-4 py-2 flex items-start gap-3 transition ${
                             selected
-                              ? "border-indigo-600 bg-indigo-50 dark:bg-indigo-900/30 shadow-sm"
-                              : "border-slate-300 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-800"
+                              ? "border-[#F36D45] bg-orange-50 dark:bg-indigo-900/30 shadow-sm"
+                              : "border-orange-200 dark:border-slate-700 hover:bg-orange-50 dark:hover:bg-slate-800"
                           } ${
                             isCrossed && !selected
                               ? "opacity-60"
@@ -210,8 +214,8 @@ const QuestionRenderer: any = React.memo(
                           <div
                             className={`flex h-7 w-7 flex-shrink-0 items-center justify-center rounded-full text-xs font-bold ${
                               selected
-                                ? "bg-indigo-600 text-white"
-                                : "border border-slate-400 text-slate-700 dark:border-slate-500 dark:text-slate-300"
+                                ? "bg-[#F36D45] text-white"
+                                : "border border-orange-400 text-[#F36D45] dark:border-slate-500 dark:text-slate-300"
                             }`}
                           >
                             {String.fromCharCode(65 + i)}
@@ -233,14 +237,14 @@ const QuestionRenderer: any = React.memo(
                         <div className="relative">
                           <div
                             onClick={() => toggleCrossOption(i)}
-                            className={`flex h-7 w-7 flex-shrink-0 items-center justify-center border border-slate-400 text-slate-700 dark:border-slate-500 dark:text-slate-300 rounded-full text-sm font-bold cursor-pointer select-none ${
-                              isCrossed ? "bg-slate-800 text-slate-100" : ""
+                            className={`flex h-7 w-7 flex-shrink-0 items-center justify-center border border-orange-400 text-[#F36D45] dark:border-slate-500 dark:text-slate-300 rounded-full text-sm font-bold cursor-pointer select-none ${
+                              isCrossed ? "bg-[#F36D45] text-white" : ""
                             }`}
                           >
                             {isCrossed ? "X" : String.fromCharCode(65 + i)}
                           </div>
                           {isCrossed && (
-                            <span className="absolute h-0.5 w-full bg-slate-900 top-1/2 -translate-y-1/2 pointer-events-none" />
+                            <span className="absolute h-0.5 w-full bg-black top-1/2 -translate-y-1/2 pointer-events-none" />
                           )}
                         </div>
                       )}
@@ -253,9 +257,9 @@ const QuestionRenderer: any = React.memo(
         ) : isMCQ && type != "sat_reading_writing" ? (
           <div className="bg-white rounded dark:bg-slate-900 p-2 min-h-[65vh] max-h-[65vh] overflow-y-auto">
             {/* Question Header */}
-            <div className="flex items-center justify-between mb-4 bg-slate-300 dark:bg-slate-700 border-b-3 border-dashed border-slate-800">
+            <div className="flex items-center justify-between mb-4 bg-orange-50 dark:bg-slate-700 rounded-lg">
               <div className="flex items-center justify-between gap-2">
-                <span className="bg-slate-800 dark:bg-slate-100 text-slate-100 dark:text-slate-800 p-2">
+                <span className="bg-[#F36D45] dark:bg-slate-100 text-slate-100 dark:text-slate-800 p-2 rounded-lg">
                   {questionNumber}
                 </span>
                 <span
@@ -283,7 +287,7 @@ const QuestionRenderer: any = React.memo(
                     setShowEliminationMode((prev) => !prev);
                     setCrossedOptions([]);
                   }}
-                  className="bg-blue-800 dark:bg-blue-100 border border-slate-800 rounded-lg text-slate-100 dark:text-slate-800 p-1 mr-2 cursor-pointer select-none"
+                  className="bg-[#F36D45] dark:bg-blue-100 rounded-lg text-slate-100 dark:text-slate-800 p-1 mr-2 cursor-pointer select-none"
                 >
                   {showEliminationMode ? <del>ABC</del> : "ABC"}
                 </span>
@@ -293,7 +297,7 @@ const QuestionRenderer: any = React.memo(
             {/* Question Text */}
             <div className="flex items-start justify-between mb-4">
               <h2
-                className="text-base sm:text-lg"
+                className="text-base sm:text-lg !font-light"
                 dangerouslySetInnerHTML={{
                   __html: qDoc.questionText || "Question missing",
                 }}
@@ -315,8 +319,8 @@ const QuestionRenderer: any = React.memo(
                         disabled={isCompleted}
                         className={`w-full text-left rounded-lg border-2 px-4 py-2 flex items-start gap-3 transition ${
                           selected
-                            ? "border-indigo-600 bg-indigo-50 dark:bg-indigo-900/30 shadow-sm"
-                            : "border-slate-300 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-800"
+                            ? "border-[#F36D45] bg-orange-50 dark:bg-indigo-900/30 shadow-sm"
+                            : "border-orange-200 dark:border-slate-700 hover:bg-orange-50 dark:hover:bg-slate-800"
                         } ${
                           isCrossed && !selected ? "opacity-60" : "opacity-100"
                         }`}
@@ -324,8 +328,8 @@ const QuestionRenderer: any = React.memo(
                         <div
                           className={`flex h-7 w-7 flex-shrink-0 items-center justify-center rounded-full text-xs font-bold ${
                             selected
-                              ? "bg-indigo-600 text-white"
-                              : "border border-slate-400 text-slate-700 dark:border-slate-500 dark:text-slate-300"
+                              ? "bg-[#F36D45] text-white"
+                              : "border border-orange-400 text-slate-700 dark:border-slate-500 dark:text-slate-300"
                           }`}
                         >
                           {String.fromCharCode(65 + i)}
@@ -347,14 +351,14 @@ const QuestionRenderer: any = React.memo(
                       <div className="relative">
                         <div
                           onClick={() => toggleCrossOption(i)}
-                          className={`flex h-7 w-7 flex-shrink-0 items-center justify-center border border-slate-400 text-slate-700 dark:border-slate-500 dark:text-slate-300 rounded-full text-sm font-bold cursor-pointer select-none ${
-                            isCrossed ? "bg-slate-800 text-slate-100" : ""
+                          className={`flex h-7 w-7 flex-shrink-0 items-center justify-center border border-orange-400 text-[#F36D45] dark:border-slate-500 dark:text-slate-300 rounded-full text-sm font-bold cursor-pointer select-none ${
+                            isCrossed ? "bg-orange-500 text-slate-100" : ""
                           }`}
                         >
                           {isCrossed ? "X" : String.fromCharCode(65 + i)}
                         </div>
                         {isCrossed && (
-                          <span className="absolute h-0.5 w-full bg-slate-900 top-1/2 -translate-y-1/2 pointer-events-none" />
+                          <span className="absolute h-0.5 w-full bg-orange-900 top-1/2 -translate-y-1/2 pointer-events-none" />
                         )}
                       </div>
                     )}
@@ -366,9 +370,9 @@ const QuestionRenderer: any = React.memo(
         ) : (
           <div className="bg-white rounded dark:bg-slate-900 p-2 min-h-[65vh] max-h-[65vh] overflow-y-auto">
             {/* Question Header */}
-            <div className="flex items-center justify-between mb-4 bg-slate-300 dark:bg-slate-700 border-b-3 border-dashed border-slate-800">
+            <div className="flex items-center justify-between mb-4 bg-orange-50 dark:bg-slate-700 rounded-lg ">
               <div className="flex items-center justify-between gap-2">
-                <span className="bg-slate-800 dark:bg-slate-100 text-slate-100 dark:text-slate-800 p-2">
+                <span className="bg-[#F36D45] rounded-lg dark:bg-slate-100 text-slate-100 dark:text-slate-800 p-2">
                   {questionNumber}
                 </span>
                 <span
@@ -485,7 +489,7 @@ const QuestionRenderer: any = React.memo(
 
         {/* BOTTOM BAR */}
         {!mode && (
-          <div className="fixed bottom-0 left-0 right-0 z-40 border-t-3 border-dashed border-slate-900 dark:border-slate-700 bg-slate-300 dark:bg-slate-900/90 backdrop-blur">
+          <div className="fixed bottom-4 left-0 right-0 z-40  dark:border-slate-700 bg-orange-50 dark:bg-slate-900/90 backdrop-blur">
             <div className="mx-auto max-w-7xl px-4 py-3">
               <div className="grid grid-cols-3 items-center gap-3">
                 <div className="flex text-lg text-slate-900 dark:text-slate-100 flex-wrap gap-2">
@@ -497,7 +501,7 @@ const QuestionRenderer: any = React.memo(
                   <button
                     type="button"
                     onClick={togglePalette}
-                    className="text-base  flex items-center bg-slate-800 p-1.5 px-2 rounded-lg text-slate-100 dark:text-slate-300"
+                    className="text-base  flex items-center bg-[#F36D45] p-2 px-4 rounded-3xl text-slate-100 dark:text-slate-300"
                   >
                     Question {questionNumber} of {sectionTotal}
                     {isPaletteOpen ? (
@@ -513,7 +517,7 @@ const QuestionRenderer: any = React.memo(
                     ""
                   ) : (
                     <button
-                      className="p-1.5 bg-slate-800 text-slate-100 font-semibold border-slate-200 rounded-full px-4"
+                      className="p-1.5 bg-[#F36D45] text-white font-semibold border-slate-200 rounded-full px-4"
                       disabled={activeQuestionIndex <= 0 || isCompleted}
                       onClick={() => {
                         goToQuestion(Math.max(0, activeQuestionIndex - 1));
@@ -525,7 +529,7 @@ const QuestionRenderer: any = React.memo(
                   )}
 
                   <button
-                    className="p-1.5 bg-blue-800 text-slate-100 font-semibold border-slate-200 rounded-full px-4"
+                    className="p-1.5 bg-[#F36D45] text-slate-100 font-semibold border-slate-200 rounded-full px-4"
                     disabled={isNextDisabled}
                     onClick={() => {
                       goNextQuestion();
@@ -540,6 +544,8 @@ const QuestionRenderer: any = React.memo(
           </div>
         )}
       </div>
+      <div className="h-[16px] fixed bottom-0 w-full bg-gradient-to-r from-[#fff1dc] via-[#ffd19f] to-[#ff947d]" /></div>
+      
     );
   },
 );
@@ -654,6 +660,7 @@ export const SectionReview: React.FC<SectionReviewProps> = React.memo(
     setShowingReviewScreen,
     setActiveQuestionIndex,
     setCurrentScreen,
+    timerSecondsLeft,
     saveCurrentQuestionProgress,
     handleFinishSectionReview,
   }) => {
@@ -688,22 +695,22 @@ export const SectionReview: React.FC<SectionReviewProps> = React.memo(
                   review. and go to next section without time completed
                 </div>
               </div>
-              <div className="rounded-2xl bg-white dark:bg-slate-900/60 border border-slate-200 dark:border-slate-700 p-6">
+              <div className="rounded-2xl bg-white dark:bg-slate-900/60 border-3 border-dashed border-orange-200 dark:border-slate-700 p-6">
                 <div className="mt-3 flex gap-1 flex-wrap">
                   {(
                     ["all", "answered", "not_answered", "flagged"] as const
                   ).map((f) => {
                     const isActive = filter === f;
                     let bgClass =
-                      "bg-slate-50 dark:bg-slate-800 text-slate-700 dark:text-slate-200";
+                      "bg-orange-50 dark:bg-slate-800 text-[#F36D45] dark:text-slate-200";
                     if (isActive) {
                       if (f === "answered")
-                        bgClass = "bg-emerald-600 text-white";
+                        bgClass = "bg-[#F36D45] text-white";
                       else if (f === "not_answered")
-                        bgClass = "bg-yellow-500 text-white";
+                        bgClass = "bg-[#F36D45] text-white";
                       else if (f === "flagged")
-                        bgClass = "bg-indigo-700 text-white";
-                      else bgClass = "bg-indigo-600 text-white";
+                        bgClass = "bg-[#F36D45] text-white";
+                      else bgClass = "bg-[#F36D45] text-white";
                     }
                     return (
                       <button
@@ -728,6 +735,10 @@ export const SectionReview: React.FC<SectionReviewProps> = React.memo(
                         <button
                           key={`${q.question}-${idx}`}
                           onClick={() => {
+                            if (timerSecondsLeft === 0) {
+                              return;
+                            }
+
                             setActiveQuestionIndex(idx);
                             setCurrentScreen("question");
                           }}
@@ -745,7 +756,7 @@ export const SectionReview: React.FC<SectionReviewProps> = React.memo(
                                 ? "bg-purple-500 text-white"
                                 : isAnsweredLocal
                                   ? "bg-emerald-500 text-white"
-                                  : "bg-slate-200 text-slate-700"
+                                  : "bg-orange-50 text-slate-700"
                             }`}
                           >
                             {q.order || idx + 1}
@@ -761,8 +772,10 @@ export const SectionReview: React.FC<SectionReviewProps> = React.memo(
         </div>
 
         {/* Fixed bottom actions */}
+        <div className="fixed bottom-0 left-0 right-0 h-[16px] w-full bg-gradient-to-r from-[#fff1dc] via-[#ffd19f] to-[#ff947d]" />
 
-        <div className="fixed bottom-0 left-0 right-0 z-40 border-t-3 border-dashed border-slate-900 dark:border-slate-700 bg-slate-300 dark:bg-slate-900/90 backdrop-blur">
+
+        <div className="fixed bottom-4 left-0 right-0 z-40  dark:border-slate-700 bg-orange-50 dark:bg-slate-900/90 backdrop-blur">
           <div className="mx-auto max-w-7xl px-4 py-3">
             <div className="flex flex-wrap items-center justify-between gap-3">
               <div className="flex text-lg text-slate-900 dark:text-slate-100 flex-wrap gap-2">
@@ -774,8 +787,11 @@ export const SectionReview: React.FC<SectionReviewProps> = React.memo(
                   ""
                 ) : (
                   <button
-                    className="p-1.5 bg-slate-800 text-slate-100 font-semibold border-slate-200 rounded-full px-4"
+                    className="p-1.5 bg-[#F36D45] text-slate-100 font-semibold border-slate-200 rounded-full px-4"
                     onClick={() => {
+                      if(timerSecondsLeft === 0){
+                        return
+                      }
                       setActiveQuestionIndex(
                         Math.max(0, activeQuestionIndex - 1),
                       );
@@ -788,7 +804,7 @@ export const SectionReview: React.FC<SectionReviewProps> = React.memo(
                 )}
 
                 <button
-                  className="p-1.5 bg-blue-800 text-slate-100 font-semibold border-slate-200 rounded-full px-4"
+                  className="p-1.5 bg-[#F36D45] text-slate-100 font-semibold border-slate-200 rounded-full px-4"
                   onClick={handleFinishSectionReview}
                   disabled={submitting}
                 >
@@ -797,515 +813,9 @@ export const SectionReview: React.FC<SectionReviewProps> = React.memo(
               </div>
             </div>
           </div>
-        </div>
-      </div>
-    );
-  },
-);
-
-import { AlertTriangle, BookOpen, Edit3 } from "lucide-react";
-
-interface GRETestResultsProps {
-  attempt: any;
-  navigateBack: () => void;
-  onTakeAnotherTest: () => void;
-}
-
-export const GRETestResults: React.FC<GRETestResultsProps> = React.memo(
-  ({ attempt, navigateBack, onTakeAnotherTest }) => {
-    const overall = attempt.overallStats;
-
-    const getQuestionStatus = (q: any, qd?: any | null) => {
-      if (!q.isAnswered) return "skipped";
-      if (typeof q.isCorrect === "boolean") {
-        return q.isCorrect ? "correct" : "incorrect";
-      }
-      if (
-        qd &&
-        typeof qd.correctOptionIndex === "number" &&
-        qd.correctOptionIndex >= 0
-      ) {
-        const userIdx = q.answerOptionIndexes[0];
-        return userIdx === qd.correctOptionIndex ? "correct" : "incorrect";
-      }
-      return "attempted";
-    };
-
-    const getStatusColor = (status: string) => {
-      switch (status) {
-        case "correct":
-          return "bg-gradient-to-r from-emerald-500 to-emerald-600 text-white shadow-emerald-200 dark:shadow-emerald-900/30";
-        case "incorrect":
-          return "bg-gradient-to-r from-red-500 to-red-600 text-white shadow-red-200 dark:shadow-red-900/30";
-        case "skipped":
-          return "bg-gradient-to-r from-slate-400 to-slate-500 text-white shadow-slate-200 dark:shadow-slate-900/30";
-        default:
-          return "bg-gradient-to-r from-indigo-500 to-indigo-600 text-white shadow-indigo-200 dark:shadow-indigo-900/30";
-      }
-    };
-
-    const getStatusIcon = (status: string) => {
-      switch (status) {
-        case "correct":
-          return <CheckCircle2 className="h-4 w-4 mr-1.5" />;
-        case "incorrect":
-          return <AlertTriangle className="h-4 w-4 mr-1.5" />;
-        case "skipped":
-          return <Clock className="h-4 w-4 mr-1.5" />;
-        default:
-          return <Edit3 className="h-4 w-4 mr-1.5" />;
-      }
-    };
-
-    const formatTimeSpent = (seconds: number) => {
-      const m = Math.floor(seconds / 60);
-      const s = seconds % 60;
-      return `${m}:${s.toString().padStart(2, "0")}`;
-    };
-
-    if (!attempt) return null;
-
-    return (
-      <div className="max-w-7xl mx-auto p-4 md:p-6 space-y-6">
-        {/* Header */}
-        <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4 p-4 rounded-2xl bg-gradient-to-r from-slate-50 to-white dark:from-slate-900 dark:to-slate-800 border border-slate-200 dark:border-slate-700 shadow-sm">
-          <div>
-            <h2 className="text-xl md:text-2xl font-bold text-slate-800 dark:text-slate-100">
-              Test Result
-            </h2>
-            <p className="text-sm text-slate-600 dark:text-slate-400 mt-1">
-              Review your performance and detailed answers
-            </p>
-          </div>
-          <Button
-            variant="outline"
-            size="sm"
-            className="border-slate-300 dark:border-slate-600 hover:bg-slate-50 dark:hover:bg-slate-800"
-            onClick={navigateBack}
-          >
-            <LogOut className="h-4 w-4 mr-2" />
-            Back to Dashboard
-          </Button>
+          
         </div>
 
-        {/* Overall Stats */}
-        {overall && (
-          <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
-            {[
-              {
-                label: "Total Questions",
-                value: overall.totalQuestions,
-                icon: BookOpen,
-                color: "indigo",
-              },
-              {
-                label: "Attempted",
-                value: `${overall.totalAttempted} (${Math.round((overall.totalAttempted / overall.totalQuestions) * 100)}%)`,
-                icon: Edit3,
-                color: "blue",
-              },
-              {
-                label: "Correct",
-                value: `${overall.totalCorrect} (${Math.round((overall.totalCorrect / overall.totalQuestions) * 100)}%)`,
-                icon: CheckCircle2,
-                color: "emerald",
-              },
-              {
-                label: "Incorrect",
-                value: `${overall.totalIncorrect} (${Math.round((overall.totalIncorrect / overall.totalQuestions) * 100)}%)`,
-                icon: AlertTriangle,
-                color: "red",
-              },
-              {
-                label: "Raw Score",
-                value: `${overall.rawScore}/${overall.totalQuestions}`,
-                icon: Flag,
-                color: "purple",
-              },
-            ].map((item, i) => (
-              <div
-                key={i}
-                className="rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 p-4 transition-all duration-200 hover:shadow-lg hover:border-slate-300 dark:hover:border-slate-600"
-              >
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="text-xs font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400">
-                      {item.label}
-                    </p>
-                    <p className="text-2xl font-bold text-slate-800 dark:text-slate-100 mt-1">
-                      {item.value}
-                    </p>
-                  </div>
-                  <div
-                    className={`h-10 w-10 rounded-full bg-${item.color}-100 dark:bg-${item.color}-900/30 flex items-center justify-center`}
-                  >
-                    <item.icon
-                      className={`h-5 w-5 text-${item.color}-600 dark:text-${item.color}-400`}
-                    />
-                  </div>
-                </div>
-              </div>
-            ))}
-          </div>
-        )}
-
-        {/* Section-wise Results */}
-        <div className="space-y-6">
-          <h3 className="text-xl font-semibold text-slate-800 dark:text-slate-100 px-2">
-            Section-wise Performance
-          </h3>
-
-          {attempt.sections.map((sec, sIdx) => (
-            <div
-              key={sIdx}
-              className="rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 overflow-hidden transition-all duration-200 hover:shadow-lg"
-            >
-              <div className="p-4 border-b border-slate-100 dark:border-slate-800 bg-gradient-to-r from-slate-50 to-white dark:from-slate-800 dark:to-slate-900">
-                <div className="flex flex-col md:flex-row md:items-center justify-between gap-3">
-                  <div className="flex items-center gap-3">
-                    <div className="h-10 w-10 rounded-lg bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center">
-                      <span className="text-white font-bold">{sIdx + 1}</span>
-                    </div>
-                    <div>
-                      <h4 className="font-semibold text-slate-800 dark:text-slate-100">
-                        {sec.name || `Section ${sIdx + 1}`}
-                      </h4>
-                      <p className="text-sm text-slate-600 dark:text-slate-400">
-                        {sec.questions.length} Questions •{" "}
-                        {sec.durationMinutes || 45} minutes
-                      </p>
-                    </div>
-                  </div>
-
-                  {sec.stats && (
-                    <div className="flex items-center gap-4">
-                      <div className="text-center">
-                        <div className="text-lg font-bold text-emerald-600 dark:text-emerald-400">
-                          {sec.stats.correct}
-                        </div>
-                        <div className="text-xs text-slate-500">Correct</div>
-                      </div>
-                      <div className="h-8 w-px bg-slate-200 dark:bg-slate-700"></div>
-                      <div className="text-center">
-                        <div className="text-lg font-bold text-red-600 dark:text-red-400">
-                          {sec.stats.incorrect}
-                        </div>
-                        <div className="text-xs text-slate-500">Incorrect</div>
-                      </div>
-                      <div className="h-8 w-px bg-slate-200 dark:bg-slate-700"></div>
-                      <div className="text-center">
-                        <div className="text-lg font-bold text-slate-600 dark:text-slate-400">
-                          {sec.stats.skipped}
-                        </div>
-                        <div className="text-xs text-slate-500">Skipped</div>
-                      </div>
-                    </div>
-                  )}
-                </div>
-              </div>
-
-              <div className="overflow-x-auto">
-                <table className="w-full text-sm">
-                  <thead>
-                    <tr className="border-b border-slate-100 dark:border-slate-800">
-                      {[
-                        "Q.No",
-                        "Status",
-                        "Your Answer",
-                        "Correct Answer",
-                        "Time Spent",
-                        "Question Preview",
-                      ].map((col) => (
-                        <th
-                          key={col}
-                          className="py-3 px-4 text-left font-semibold text-slate-700 dark:text-slate-300 text-xs uppercase tracking-wider"
-                        >
-                          {col}
-                        </th>
-                      ))}
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {sec.questions.map((q, qIdx) => {
-                      const qd = q.questionDoc;
-                      const status = getQuestionStatus(q, qd);
-                      const statusClass = getStatusColor(status);
-
-                      const getOptionLabel = (idx: number) => {
-                        if (!qd?.options || !qd.options[idx]) return "--";
-                        return (
-                          qd.options[idx].label ||
-                          String.fromCharCode("A".charCodeAt(0) + idx)
-                        );
-                      };
-
-                      const userLabel =
-                        q.answerOptionIndexes.length > 0
-                          ? q.answerOptionIndexes.map(getOptionLabel).join(", ")
-                          : q.answerText || "--";
-
-                      const correctLabels = qd.options
-                        .filter((o) => o.isCorrect)
-                        .map((o) => `${o.label}. ${o.text}`); // label + text
-
-                      const correctLabel =
-                        correctLabels.length > 0
-                          ? correctLabels.join(", ") // multiple values joined
-                          : qd.correctAnswerText || "--";
-
-                      return (
-                        <tr
-                          key={q.question}
-                          className={`border-b border-slate-50 dark:border-slate-800/50 transition-colors hover:bg-slate-50 dark:hover:bg-slate-800/30 ${status === "correct" ? "bg-emerald-50/20 dark:bg-emerald-900/5" : ""}`}
-                        >
-                          <td className="py-3 px-4 align-middle">
-                            <div className="flex items-center">
-                              <div
-                                className={`h-8 w-8 rounded-lg flex items-center justify-center ${
-                                  status === "correct"
-                                    ? "bg-emerald-100 dark:bg-emerald-900/30 text-emerald-600 dark:text-emerald-400"
-                                    : status === "incorrect"
-                                      ? "bg-red-100 dark:bg-red-900/30 text-red-600 dark:text-red-400"
-                                      : "bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400"
-                                }`}
-                              >
-                                <span className="font-bold">
-                                  {q.order || qIdx + 1}
-                                </span>
-                              </div>
-                            </div>
-                          </td>
-                          <td className="py-3 px-4 align-middle">
-                            <span
-                              className={`inline-flex items-center rounded-full px-3 py-1.5 text-xs font-medium shadow-sm ${statusClass}`}
-                            >
-                              {getStatusIcon(status)}
-                              {status.charAt(0).toUpperCase() + status.slice(1)}
-                            </span>
-                          </td>
-                          <td className="py-3 px-4 align-middle">
-                            <div
-                              className={`font-medium ${
-                                status === "correct"
-                                  ? "text-emerald-700 dark:text-emerald-300"
-                                  : status === "incorrect"
-                                    ? "text-red-700 dark:text-red-300"
-                                    : "text-slate-700 dark:text-slate-300"
-                              }`}
-                            >
-                              {userLabel}
-                            </div>
-                          </td>
-                          <td className="py-3 px-4 align-middle">
-                            <div className="font-medium text-emerald-700 dark:text-emerald-300">
-                              {correctLabel}
-                            </div>
-                          </td>
-                          <td className="py-3 px-4 align-middle">
-                            <div className="flex items-center text-slate-600 dark:text-slate-400">
-                              <Clock className="h-3.5 w-3.5 mr-1.5" />
-                              <span className="font-mono">
-                                {formatTimeSpent(q.timeSpentSeconds)}
-                              </span>
-                            </div>
-                          </td>
-                          <td className="py-3 px-4 align-middle max-w-xs">
-                            {qd ? (
-                              <div className="line-clamp-2 text-slate-700 dark:text-slate-300 text-xs leading-relaxed">
-                                {qd.questionText.replace(/<[^>]*>/g, "")}
-                              </div>
-                            ) : (
-                              <span className="text-slate-400 dark:text-slate-500 italic">
-                                No preview available
-                              </span>
-                            )}
-                          </td>
-                        </tr>
-                      );
-                    })}
-                  </tbody>
-                </table>
-              </div>
-
-              <div className="p-3 border-t border-slate-100 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-800/20">
-                <div className="flex justify-between items-center text-xs text-slate-500 dark:text-slate-400">
-                  <div>Showing {sec.questions.length} questions</div>
-                  {sec.stats && (
-                    <div className="flex items-center gap-2">
-                      {[
-                        {
-                          label: "Correct",
-                          count: sec.stats.correct,
-                          color: "emerald",
-                        },
-                        {
-                          label: "Incorrect",
-                          count: sec.stats.incorrect,
-                          color: "red",
-                        },
-                        {
-                          label: "Skipped",
-                          count: sec.stats.skipped,
-                          color: "slate",
-                        },
-                      ].map((item) => (
-                        <div
-                          key={item.label}
-                          className="flex items-center gap-1"
-                        >
-                          <div
-                            className={`h-2 w-2 rounded-full bg-${item.color}-500`}
-                          ></div>
-                          <span>
-                            {item.label}: {item.count}
-                          </span>
-                        </div>
-                      ))}
-                    </div>
-                  )}
-                </div>
-              </div>
-            </div>
-          ))}
-        </div>
-
-        {/* Performance Summary */}
-        {overall && (
-          <div className="rounded-xl border border-slate-200 dark:border-slate-700 bg-gradient-to-r from-indigo-50 to-white dark:from-indigo-900/20 dark:to-slate-900 p-5">
-            <h3 className="text-lg font-semibold text-slate-800 dark:text-slate-100 mb-3">
-              Performance Summary
-            </h3>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div className="space-y-3">
-                <div className="flex items-center justify-between">
-                  <span className="text-slate-600 dark:text-slate-400">
-                    Accuracy
-                  </span>
-                  <span className="font-bold text-lg text-slate-800 dark:text-slate-100">
-                    {overall.totalAttempted > 0
-                      ? (
-                          (overall.totalCorrect / overall.totalAttempted) *
-                          100
-                        ).toFixed(1)
-                      : "0"}
-                    %
-                  </span>
-                </div>
-                <div className="h-2 bg-slate-200 dark:bg-slate-700 rounded-full overflow-hidden">
-                  <div
-                    className="h-full bg-gradient-to-r from-emerald-500 to-emerald-600 rounded-full"
-                    style={{
-                      width: `${overall.totalAttempted > 0 ? (overall.totalCorrect / overall.totalAttempted) * 100 : 0}%`,
-                    }}
-                  ></div>
-                </div>
-
-                <div className="flex items-center justify-between mt-4">
-                  <span className="text-slate-600 dark:text-slate-400">
-                    Completion Rate
-                  </span>
-                  <span className="font-bold text-lg text-slate-800 dark:text-slate-100">
-                    {(
-                      (overall.totalAttempted / overall.totalQuestions) *
-                      100
-                    ).toFixed(1)}
-                    %
-                  </span>
-                </div>
-                <div className="h-2 bg-slate-200 dark:bg-slate-700 rounded-full overflow-hidden">
-                  <div
-                    className="h-full bg-gradient-to-r from-blue-500 to-blue-600 rounded-full"
-                    style={{
-                      width: `${(overall.totalAttempted / overall.totalQuestions) * 100}%`,
-                    }}
-                  ></div>
-                </div>
-              </div>
-
-              <div className="flex items-center justify-center">
-                <div className="relative h-40 w-40">
-                  <div className="absolute inset-0 flex items-center justify-center">
-                    <div className="text-center">
-                      <div className="text-3xl font-bold text-indigo-600 dark:text-indigo-400">
-                        {overall.rawScore}
-                      </div>
-                      <div className="text-sm text-slate-600 dark:text-slate-400">
-                        Raw Score
-                      </div>
-                    </div>
-                  </div>
-                  <svg className="h-full w-full" viewBox="0 0 100 100">
-                    <circle
-                      cx="50"
-                      cy="50"
-                      r="40"
-                      fill="none"
-                      stroke="#e2e8f0"
-                      strokeWidth="8"
-                      strokeLinecap="round"
-                    />
-                    <circle
-                      cx="50"
-                      cy="50"
-                      r="40"
-                      fill="none"
-                      stroke="url(#gradient1)"
-                      strokeWidth="8"
-                      strokeLinecap="round"
-                      strokeDasharray={`${(overall.rawScore / overall.totalQuestions) * 251.2} 251.2`}
-                      transform="rotate(-90 50 50)"
-                    />
-                    <defs>
-                      <linearGradient
-                        id="gradient1"
-                        x1="0%"
-                        y1="0%"
-                        x2="100%"
-                        y2="0%"
-                      >
-                        <stop offset="0%" stopColor="#6366f1" />
-                        <stop offset="100%" stopColor="#8b5cf6" />
-                      </linearGradient>
-                    </defs>
-                  </svg>
-                </div>
-              </div>
-            </div>
-          </div>
-        )}
-
-        {/* Action Buttons */}
-        <div className="flex flex-col sm:flex-row items-center justify-between gap-4 p-4 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900">
-          <div className="text-sm text-slate-600 dark:text-slate-400">
-            Review your answers carefully before leaving
-          </div>
-          <div className="flex items-center gap-3">
-            <Button
-              variant="outline"
-              size="sm"
-              className="border-slate-300 dark:border-slate-600"
-              onClick={() => window.print()}
-            >
-              Print Results
-            </Button>
-            <Button
-              variant="outline"
-              size="sm"
-              className="border-slate-300 dark:border-slate-600"
-              onClick={navigateBack}
-            >
-              <LogOut className="h-4 w-4 mr-2" />
-              Return to Dashboard
-            </Button>
-            <Button
-              size="sm"
-              className="bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700"
-              onClick={onTakeAnotherTest}
-            >
-              Take Another Test
-            </Button>
-          </div>
-        </div>
       </div>
     );
   },
