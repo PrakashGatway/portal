@@ -108,7 +108,8 @@ const QuestionRenderer: any = React.memo(
     };
 
     return (
-      <div className="max-w-7xl mx-auto p-4 space-y-4">
+      <div className="bg-white w-full h-full  py-6 pt-5">
+      <div className="max-w-7xl mx-auto p-4 space-y-4 rounded-2xl border-3 border-dashed border-orange-200">
         {isMCQ && type == "sat_reading_writing" ? (
           <div ref={containerRef} className="flex gap-3">
             {/* LEFT: Passage / Stimulus */}
@@ -132,7 +133,7 @@ const QuestionRenderer: any = React.memo(
               onMouseDown={onDividerDown}
               className="cursor-col-resize flex items-center justify-center"
             >
-              <div className="h-full w-1 bg-slate-400 rounded-full" />
+              <div className="h-full w-1 bg-[#F36D45] rounded-full" />
             </div>
 
             <div
@@ -140,9 +141,9 @@ const QuestionRenderer: any = React.memo(
               className="bg-white rounded dark:bg-slate-900 p-2 min-h-[65vh] overflow-y-auto"
             >
               {/* Question Header */}
-              <div className="flex items-center justify-between mb-4 bg-slate-300 dark:bg-slate-700 border-b-3 border-dashed border-slate-800">
-                <div className="flex items-center justify-between gap-2">
-                  <span className="bg-slate-800 dark:bg-slate-100 text-slate-100 dark:text-slate-800 p-2">
+              <div className="flex items-center justify-between mb-4 bg-orange-50 dark:bg-slate-700 rounded-lg">
+                <div className="flex items-center justify-between gap-2 ">
+                  <span className="bg-[#F36D45] dark:bg-slate-100 text-slate-100 dark:text-slate-800 p-2 rounded-lg">
                     {questionNumber}
                   </span>
                   <span
@@ -170,7 +171,7 @@ const QuestionRenderer: any = React.memo(
                       setShowEliminationMode((prev) => !prev);
                       setCrossedOptions([]);
                     }}
-                    className="bg-blue-800 dark:bg-blue-100 border border-slate-800 rounded-lg text-slate-100 dark:text-slate-800 p-1 mr-2 cursor-pointer select-none"
+                    className="bg-[#F36D45] dark:bg-blue-100 rounded-lg text-slate-100 dark:text-slate-800 p-1 mr-2 cursor-pointer select-none"
                   >
                     {showEliminationMode ? <del>ABC</del> : "ABC"}
                   </span>
@@ -200,10 +201,10 @@ const QuestionRenderer: any = React.memo(
                         <button
                           onClick={() => onOptionClick(i)}
                           disabled={isCompleted}
-                          className={`w-full text-left rounded-lg border-2 px-4 py-2 flex items-start gap-3 transition ${
+                          className={`w-full text-left rounded-2xl border-2 px-4 py-2 flex items-start gap-3 transition ${
                             selected
-                              ? "border-indigo-600 bg-indigo-50 dark:bg-indigo-900/30 shadow-sm"
-                              : "border-slate-300 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-800"
+                              ? "border-[#F36D45] bg-orange-50 dark:bg-indigo-900/30 shadow-sm"
+                              : "border-orange-200 dark:border-slate-700 hover:bg-orange-50 dark:hover:bg-slate-800"
                           } ${
                             isCrossed && !selected
                               ? "opacity-60"
@@ -213,8 +214,8 @@ const QuestionRenderer: any = React.memo(
                           <div
                             className={`flex h-7 w-7 flex-shrink-0 items-center justify-center rounded-full text-xs font-bold ${
                               selected
-                                ? "bg-indigo-600 text-white"
-                                : "border border-slate-400 text-slate-700 dark:border-slate-500 dark:text-slate-300"
+                                ? "bg-[#F36D45] text-white"
+                                : "border border-orange-400 text-[#F36D45] dark:border-slate-500 dark:text-slate-300"
                             }`}
                           >
                             {String.fromCharCode(65 + i)}
@@ -236,14 +237,14 @@ const QuestionRenderer: any = React.memo(
                         <div className="relative">
                           <div
                             onClick={() => toggleCrossOption(i)}
-                            className={`flex h-7 w-7 flex-shrink-0 items-center justify-center border border-slate-400 text-slate-700 dark:border-slate-500 dark:text-slate-300 rounded-full text-sm font-bold cursor-pointer select-none ${
-                              isCrossed ? "bg-slate-800 text-slate-100" : ""
+                            className={`flex h-7 w-7 flex-shrink-0 items-center justify-center border border-orange-400 text-[#F36D45] dark:border-slate-500 dark:text-slate-300 rounded-full text-sm font-bold cursor-pointer select-none ${
+                              isCrossed ? "bg-[#F36D45] text-white" : ""
                             }`}
                           >
                             {isCrossed ? "X" : String.fromCharCode(65 + i)}
                           </div>
                           {isCrossed && (
-                            <span className="absolute h-0.5 w-full bg-slate-900 top-1/2 -translate-y-1/2 pointer-events-none" />
+                            <span className="absolute h-0.5 w-full bg-black top-1/2 -translate-y-1/2 pointer-events-none" />
                           )}
                         </div>
                       )}
@@ -256,9 +257,9 @@ const QuestionRenderer: any = React.memo(
         ) : isMCQ && type != "sat_reading_writing" ? (
           <div className="bg-white rounded dark:bg-slate-900 p-2 min-h-[65vh] max-h-[65vh] overflow-y-auto">
             {/* Question Header */}
-            <div className="flex items-center justify-between mb-4 bg-slate-300 dark:bg-slate-700 border-b-3 border-dashed border-slate-800">
+            <div className="flex items-center justify-between mb-4 bg-orange-50 dark:bg-slate-700 rounded-lg">
               <div className="flex items-center justify-between gap-2">
-                <span className="bg-slate-800 dark:bg-slate-100 text-slate-100 dark:text-slate-800 p-2">
+                <span className="bg-[#F36D45] dark:bg-slate-100 text-slate-100 dark:text-slate-800 p-2 rounded-lg">
                   {questionNumber}
                 </span>
                 <span
@@ -286,7 +287,7 @@ const QuestionRenderer: any = React.memo(
                     setShowEliminationMode((prev) => !prev);
                     setCrossedOptions([]);
                   }}
-                  className="bg-blue-800 dark:bg-blue-100 border border-slate-800 rounded-lg text-slate-100 dark:text-slate-800 p-1 mr-2 cursor-pointer select-none"
+                  className="bg-[#F36D45] dark:bg-blue-100 rounded-lg text-slate-100 dark:text-slate-800 p-1 mr-2 cursor-pointer select-none"
                 >
                   {showEliminationMode ? <del>ABC</del> : "ABC"}
                 </span>
@@ -296,7 +297,7 @@ const QuestionRenderer: any = React.memo(
             {/* Question Text */}
             <div className="flex items-start justify-between mb-4">
               <h2
-                className="text-base sm:text-lg"
+                className="text-base sm:text-lg !font-light"
                 dangerouslySetInnerHTML={{
                   __html: qDoc.questionText || "Question missing",
                 }}
@@ -318,8 +319,8 @@ const QuestionRenderer: any = React.memo(
                         disabled={isCompleted}
                         className={`w-full text-left rounded-lg border-2 px-4 py-2 flex items-start gap-3 transition ${
                           selected
-                            ? "border-indigo-600 bg-indigo-50 dark:bg-indigo-900/30 shadow-sm"
-                            : "border-slate-300 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-800"
+                            ? "border-[#F36D45] bg-orange-50 dark:bg-indigo-900/30 shadow-sm"
+                            : "border-orange-200 dark:border-slate-700 hover:bg-orange-50 dark:hover:bg-slate-800"
                         } ${
                           isCrossed && !selected ? "opacity-60" : "opacity-100"
                         }`}
@@ -327,8 +328,8 @@ const QuestionRenderer: any = React.memo(
                         <div
                           className={`flex h-7 w-7 flex-shrink-0 items-center justify-center rounded-full text-xs font-bold ${
                             selected
-                              ? "bg-indigo-600 text-white"
-                              : "border border-slate-400 text-slate-700 dark:border-slate-500 dark:text-slate-300"
+                              ? "bg-[#F36D45] text-white"
+                              : "border border-orange-400 text-slate-700 dark:border-slate-500 dark:text-slate-300"
                           }`}
                         >
                           {String.fromCharCode(65 + i)}
@@ -350,14 +351,14 @@ const QuestionRenderer: any = React.memo(
                       <div className="relative">
                         <div
                           onClick={() => toggleCrossOption(i)}
-                          className={`flex h-7 w-7 flex-shrink-0 items-center justify-center border border-slate-400 text-slate-700 dark:border-slate-500 dark:text-slate-300 rounded-full text-sm font-bold cursor-pointer select-none ${
-                            isCrossed ? "bg-slate-800 text-slate-100" : ""
+                          className={`flex h-7 w-7 flex-shrink-0 items-center justify-center border border-orange-400 text-[#F36D45] dark:border-slate-500 dark:text-slate-300 rounded-full text-sm font-bold cursor-pointer select-none ${
+                            isCrossed ? "bg-orange-500 text-slate-100" : ""
                           }`}
                         >
                           {isCrossed ? "X" : String.fromCharCode(65 + i)}
                         </div>
                         {isCrossed && (
-                          <span className="absolute h-0.5 w-full bg-slate-900 top-1/2 -translate-y-1/2 pointer-events-none" />
+                          <span className="absolute h-0.5 w-full bg-orange-900 top-1/2 -translate-y-1/2 pointer-events-none" />
                         )}
                       </div>
                     )}
@@ -369,9 +370,9 @@ const QuestionRenderer: any = React.memo(
         ) : (
           <div className="bg-white rounded dark:bg-slate-900 p-2 min-h-[65vh] max-h-[65vh] overflow-y-auto">
             {/* Question Header */}
-            <div className="flex items-center justify-between mb-4 bg-slate-300 dark:bg-slate-700 border-b-3 border-dashed border-slate-800">
+            <div className="flex items-center justify-between mb-4 bg-orange-50 dark:bg-slate-700 rounded-lg ">
               <div className="flex items-center justify-between gap-2">
-                <span className="bg-slate-800 dark:bg-slate-100 text-slate-100 dark:text-slate-800 p-2">
+                <span className="bg-[#F36D45] rounded-lg dark:bg-slate-100 text-slate-100 dark:text-slate-800 p-2">
                   {questionNumber}
                 </span>
                 <span
@@ -488,7 +489,7 @@ const QuestionRenderer: any = React.memo(
 
         {/* BOTTOM BAR */}
         {!mode && (
-          <div className="fixed bottom-0 left-0 right-0 z-40 border-t-3 border-dashed border-slate-900 dark:border-slate-700 bg-slate-300 dark:bg-slate-900/90 backdrop-blur">
+          <div className="fixed bottom-4 left-0 right-0 z-40  dark:border-slate-700 bg-orange-50 dark:bg-slate-900/90 backdrop-blur">
             <div className="mx-auto max-w-7xl px-4 py-3">
               <div className="grid grid-cols-3 items-center gap-3">
                 <div className="flex text-lg text-slate-900 dark:text-slate-100 flex-wrap gap-2">
@@ -500,7 +501,7 @@ const QuestionRenderer: any = React.memo(
                   <button
                     type="button"
                     onClick={togglePalette}
-                    className="text-base  flex items-center bg-slate-800 p-1.5 px-2 rounded-lg text-slate-100 dark:text-slate-300"
+                    className="text-base  flex items-center bg-[#F36D45] p-2 px-4 rounded-3xl text-slate-100 dark:text-slate-300"
                   >
                     Question {questionNumber} of {sectionTotal}
                     {isPaletteOpen ? (
@@ -516,7 +517,7 @@ const QuestionRenderer: any = React.memo(
                     ""
                   ) : (
                     <button
-                      className="p-1.5 bg-slate-800 text-slate-100 font-semibold border-slate-200 rounded-full px-4"
+                      className="p-1.5 bg-[#F36D45] text-white font-semibold border-slate-200 rounded-full px-4"
                       disabled={activeQuestionIndex <= 0 || isCompleted}
                       onClick={() => {
                         goToQuestion(Math.max(0, activeQuestionIndex - 1));
@@ -528,7 +529,7 @@ const QuestionRenderer: any = React.memo(
                   )}
 
                   <button
-                    className="p-1.5 bg-blue-800 text-slate-100 font-semibold border-slate-200 rounded-full px-4"
+                    className="p-1.5 bg-[#F36D45] text-slate-100 font-semibold border-slate-200 rounded-full px-4"
                     disabled={isNextDisabled}
                     onClick={() => {
                       goNextQuestion();
@@ -543,6 +544,8 @@ const QuestionRenderer: any = React.memo(
           </div>
         )}
       </div>
+      <div className="h-[16px] fixed bottom-0 w-full bg-gradient-to-r from-[#fff1dc] via-[#ffd19f] to-[#ff947d]" /></div>
+      
     );
   },
 );
@@ -692,22 +695,22 @@ export const SectionReview: React.FC<SectionReviewProps> = React.memo(
                   review. and go to next section without time completed
                 </div>
               </div>
-              <div className="rounded-2xl bg-white dark:bg-slate-900/60 border border-slate-200 dark:border-slate-700 p-6">
+              <div className="rounded-2xl bg-white dark:bg-slate-900/60 border-3 border-dashed border-orange-200 dark:border-slate-700 p-6">
                 <div className="mt-3 flex gap-1 flex-wrap">
                   {(
                     ["all", "answered", "not_answered", "flagged"] as const
                   ).map((f) => {
                     const isActive = filter === f;
                     let bgClass =
-                      "bg-slate-50 dark:bg-slate-800 text-slate-700 dark:text-slate-200";
+                      "bg-orange-50 dark:bg-slate-800 text-[#F36D45] dark:text-slate-200";
                     if (isActive) {
                       if (f === "answered")
-                        bgClass = "bg-emerald-600 text-white";
+                        bgClass = "bg-[#F36D45] text-white";
                       else if (f === "not_answered")
-                        bgClass = "bg-yellow-500 text-white";
+                        bgClass = "bg-[#F36D45] text-white";
                       else if (f === "flagged")
-                        bgClass = "bg-indigo-700 text-white";
-                      else bgClass = "bg-indigo-600 text-white";
+                        bgClass = "bg-[#F36D45] text-white";
+                      else bgClass = "bg-[#F36D45] text-white";
                     }
                     return (
                       <button
@@ -753,7 +756,7 @@ export const SectionReview: React.FC<SectionReviewProps> = React.memo(
                                 ? "bg-purple-500 text-white"
                                 : isAnsweredLocal
                                   ? "bg-emerald-500 text-white"
-                                  : "bg-slate-200 text-slate-700"
+                                  : "bg-orange-50 text-slate-700"
                             }`}
                           >
                             {q.order || idx + 1}
@@ -769,8 +772,10 @@ export const SectionReview: React.FC<SectionReviewProps> = React.memo(
         </div>
 
         {/* Fixed bottom actions */}
+        <div className="fixed bottom-0 left-0 right-0 h-[16px] w-full bg-gradient-to-r from-[#fff1dc] via-[#ffd19f] to-[#ff947d]" />
 
-        <div className="fixed bottom-0 left-0 right-0 z-40 border-t-3 border-dashed border-slate-900 dark:border-slate-700 bg-slate-300 dark:bg-slate-900/90 backdrop-blur">
+
+        <div className="fixed bottom-4 left-0 right-0 z-40  dark:border-slate-700 bg-orange-50 dark:bg-slate-900/90 backdrop-blur">
           <div className="mx-auto max-w-7xl px-4 py-3">
             <div className="flex flex-wrap items-center justify-between gap-3">
               <div className="flex text-lg text-slate-900 dark:text-slate-100 flex-wrap gap-2">
@@ -782,7 +787,7 @@ export const SectionReview: React.FC<SectionReviewProps> = React.memo(
                   ""
                 ) : (
                   <button
-                    className="p-1.5 bg-slate-800 text-slate-100 font-semibold border-slate-200 rounded-full px-4"
+                    className="p-1.5 bg-[#F36D45] text-slate-100 font-semibold border-slate-200 rounded-full px-4"
                     onClick={() => {
                       if(timerSecondsLeft === 0){
                         return
@@ -799,7 +804,7 @@ export const SectionReview: React.FC<SectionReviewProps> = React.memo(
                 )}
 
                 <button
-                  className="p-1.5 bg-blue-800 text-slate-100 font-semibold border-slate-200 rounded-full px-4"
+                  className="p-1.5 bg-[#F36D45] text-slate-100 font-semibold border-slate-200 rounded-full px-4"
                   onClick={handleFinishSectionReview}
                   disabled={submitting}
                 >
@@ -808,7 +813,9 @@ export const SectionReview: React.FC<SectionReviewProps> = React.memo(
               </div>
             </div>
           </div>
+          
         </div>
+
       </div>
     );
   },

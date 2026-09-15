@@ -969,9 +969,10 @@ export const GRETestHead: React.FC<GRETestHeaderProps> = React.memo(
 
     return (
       <>
+      
         <div
           style={{ borderBottomWidth: "3px" }}
-          className="fixed top-0 left-0 right-0 z-50 border-dashed border-gray-800 dark:border-slate-700 bg-gray-200 dark:bg-slate-900/95 backdrop-blur"
+          className="fixed top-4 left-0 right-0 z-50 dark:border-slate-700 bg-orange-50 dark:bg-slate-900/95 backdrop-blur"
         >
           <div className="mx-auto grid grid-cols-3 items-center max-w-7xl h-16 items-center justify-between gap-4 px-4 py-2.5">
             <div className="flex items-center gap-3">
@@ -1010,10 +1011,10 @@ export const GRETestHead: React.FC<GRETestHeaderProps> = React.memo(
                   </span>
                   <button
                     onClick={() => setTimerHidden(true)}
-                    className="rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
+                    className="rounded-lg hover:bg-orange-100 dark:hover:bg-slate-800 transition-colors"
                     aria-label="Hide timer"
                   >
-                    <EyeOff className="w-4 h-4 text-slate-600 dark:text-slate-400" />
+                    <EyeOff className="w-4 h-4 text-[#F36D45] dark:text-slate-400" />
                   </button>
                 </div>
               ) : currentSection?.durationMinutes &&
@@ -1042,7 +1043,7 @@ export const GRETestHead: React.FC<GRETestHeaderProps> = React.memo(
                   }}
                   aria-label="Open calculator"
                 >
-                  <CalculatorIcon className="w-5 h-5 text-slate-600 dark:text-slate-400 group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors" />
+                  <CalculatorIcon className="w-5 h-5 text-[#F36D45] dark:text-slate-400 group-hover:text-orange-400 dark:group-hover:text-blue-400 transition-colors" />
                   <span className="text-xs mt-1 font-medium text-slate-700 dark:text-slate-300">
                     Calculator
                   </span>
@@ -1059,7 +1060,7 @@ export const GRETestHead: React.FC<GRETestHeaderProps> = React.memo(
                 }}
                 aria-label="Reference materials"
               >
-                <UserX2 className="w-5 h-5 text-slate-600 dark:text-slate-400 group-hover:text-purple-600 dark:group-hover:text-purple-400 transition-colors" />
+                <UserX2 className="w-5 h-5 text-[#F36D45] dark:text-slate-400 group-hover:text-purple-600 dark:group-hover:text-purple-400 transition-colors" />
                 <span className="text-xs mt-1 font-medium text-slate-700 dark:text-slate-300">
                   Reference
                 </span>
@@ -1077,7 +1078,7 @@ export const GRETestHead: React.FC<GRETestHeaderProps> = React.memo(
                   aria-haspopup="true"
                   aria-expanded={openMore}
                 >
-                  <MoreVertical className="w-5 h-5 text-slate-600 dark:text-slate-400 group-hover:text-slate-900 dark:group-hover:text-slate-100 transition-colors" />
+                  <MoreVertical className="w-5 h-5 text-[#F36D45] dark:text-slate-400 group-hover:text-slate-900 dark:group-hover:text-slate-100 transition-colors" />
                   <span className="text-xs mt-1 font-medium text-slate-700 dark:text-slate-300">
                     More
                   </span>

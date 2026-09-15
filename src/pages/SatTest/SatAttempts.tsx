@@ -261,7 +261,7 @@ export default function SatExamPage() {
     const secDurationMinutes =
       currentSection.durationMinutes || 0; // 0 → untimed
     if (!secDurationMinutes) {
-      setTimerSecondsLeft(0);
+      // setTimerSecondsLeft(0);
       setTimerRunning(false);
       return;
     }
@@ -634,7 +634,10 @@ export default function SatExamPage() {
 
   return (
     <>
-      <div className="relative min-h-screen bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-50">
+    
+      <div className="relative min-h-screen bg-white  dark:bg-slate-900 text-slate-900 dark:text-slate-50">
+        <div className="h-[16px] w-full bg-gradient-to-r from-[#fff1dc] via-[#ffd19f] to-[#ff947d]" />
+
    { currentScreen !== "results" &&    <GRETestHead
           testTitle={testTitle}
           attempt= {attempt}
@@ -652,7 +655,7 @@ export default function SatExamPage() {
         />}
 
         {/* Scrollable main area between header & footer */}
-        <div className="pt-14 pb-14">
+        <div className="pt-14 ">
           {currentScreen === "question" && currentSection && currentQuestion && (
             <QuestionRenderer
               qDoc={qDoc}
@@ -673,6 +676,7 @@ export default function SatExamPage() {
               goNextQuestion={goNextQuestion}
             />
           )}
+          
           {currentScreen === "section_review" && attempt && currentSection && (
             <SectionReview
               currentSection={currentSection}
@@ -691,6 +695,8 @@ export default function SatExamPage() {
               handleFinishSectionReview={handleFinishSectionReview}
             />
           )}
+
+          
           {currentScreen === "results" && attempt && (
             <GRETestResults
               attempt={attempt}
