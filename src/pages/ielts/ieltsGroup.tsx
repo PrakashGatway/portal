@@ -85,6 +85,11 @@ interface Passage {
 interface QuestionSet {
   title?: string;
   instructions?: string;
+  commonOptions?: string | null;
+  questionRange?: {
+    from?: number | null;
+    to?: number | null;
+  };
   questions: Array<{
     _id: string;
     content: string;
@@ -209,7 +214,18 @@ export default function IELTSGroupQuestionManagementPage() {
       groupType: "",
       title: "",
       instructions: "",
-      questionSets: [{ title: "", instructions: "", questions: [] }],
+      questionSets: [
+        {
+          title: "",
+          instructions: "",
+          commonOptions: "",
+          questionRange: {
+            from: null,
+            to: null,
+          },
+          questions: [],
+        },
+      ],
       content: "",
       passage: "",
       isActive: true,
@@ -449,7 +465,18 @@ export default function IELTSGroupQuestionManagementPage() {
       groupType: "",
       title: "",
       instructions: "",
-      questionSets: [{ title: "", instructions: "", questions: [] }],
+      questionSets: [
+        {
+          title: "",
+          instructions: "",
+          commonOptions: "",
+          questionRange: {
+            from: null,
+            to: null,
+          },
+          questions: [],
+        },
+      ],
       content: "",
       passage: "",
       isActive: true,
@@ -505,12 +532,17 @@ export default function IELTSGroupQuestionManagementPage() {
       questionSets: groupQuestion.questionSets?.map((qs) => ({
         title: qs.title || "",
         instructions: qs.instructions || "",
+        commonOptions: qs.commonOptions || "",
+        questionRange: {
+          from: qs.questionRange?.from ?? null,
+          to: qs.questionRange?.to ?? null,
+        },
         questions: qs.questions?.map((q) => q._id) || [],
       })) || [{ title: "", instructions: "", questions: [] }],
       content: groupQuestion.content || "",
       passage:
         typeof groupQuestion.passage === "object"
-          ? (groupQuestion.passage as Passage)._id
+          ? (groupQuestion.passage as Passage)?._id
           : (groupQuestion.passage as string) || "",
       isActive: groupQuestion.isActive,
     });
@@ -554,6 +586,11 @@ export default function IELTSGroupQuestionManagementPage() {
           title: qs.title || undefined,
           instructions: qs.instructions || undefined,
           questions: qs.questions || [],
+          commonOptions: qs.commonOptions || null,
+          questionRange: {
+            from: qs.questionRange?.from ?? null,
+            to: qs.questionRange?.to ?? null,
+          },
         })),
         content: values.content || undefined,
         passage: values.passage || undefined,
@@ -653,7 +690,16 @@ export default function IELTSGroupQuestionManagementPage() {
     const currentSets = watchQuestionSets || [];
     setValue("questionSets", [
       ...currentSets,
-      { title: "", instructions: "", questions: [] },
+      {
+        title: "",
+        instructions: "",
+        commonOptions: "",
+        questionRange: {
+          from: null,
+          to: null,
+        },
+        questions: [],
+      },
     ]);
     setActiveQuestionSetIndex(currentSets.length);
   };
@@ -667,23 +713,63 @@ export default function IELTSGroupQuestionManagementPage() {
     }
   };
 
+  const normalizeQuestionId = (id: any) => {
+    if (!id) return "";
+
+    if (typeof id === "object" && id.$oid) {
+      return String(id.$oid);
+    }
+
+    if (typeof id === "object" && id._id) {
+      return String(id._id);
+    }
+
+    return String(id);
+  };
+
   const isQuestionSelectedInSet = (questionId: string, setIndex: number) => {
-    return (
-      watchQuestionSets?.[setIndex]?.questions?.includes(questionId) || false
+    const selectedQuestions = watchQuestionSets?.[setIndex]?.questions || [];
+
+    const normalizedQuestionId = normalizeQuestionId(questionId);
+
+    return selectedQuestions.some(
+      (id) => normalizeQuestionId(id) === normalizedQuestionId,
     );
   };
 
   const toggleQuestionInSet = (questionId: string, setIndex: number) => {
+    const normalizedQuestionId = normalizeQuestionId(questionId);
+
     const currentSets = watchQuestionSets || [];
-    const currentQuestions = currentSets[setIndex]?.questions || [];
-    if (currentQuestions.includes(questionId)) {
-      currentSets[setIndex].questions = currentQuestions.filter(
-        (id) => id !== questionId,
+
+    const updatedSets = currentSets.map((set, index) => {
+      if (index !== setIndex) {
+        return set;
+      }
+
+      const currentQuestions = set.questions || [];
+
+      const alreadySelected = currentQuestions.some(
+        (id) => normalizeQuestionId(id) === normalizedQuestionId,
       );
-    } else {
-      currentSets[setIndex].questions = [...currentQuestions, questionId];
-    }
-    setValue("questionSets", [...currentSets]);
+
+      const updatedQuestions = alreadySelected
+        ? currentQuestions.filter(
+            (id) => normalizeQuestionId(id) !== normalizedQuestionId,
+          )
+        : [...currentQuestions, normalizedQuestionId];
+
+      return {
+        ...set,
+        questions: updatedQuestions,
+      };
+    });
+
+    setValue("questionSets", updatedSets, {
+      shouldDirty: true,
+      shouldTouch: true,
+      shouldValidate: true,
+    });
   };
 
   return (
@@ -751,7 +837,8 @@ export default function IELTSGroupQuestionManagementPage() {
                       <div className="flex items-center gap-2">
                         <BookOpen className="h-4 w-4 text-purple-600 dark:text-purple-400" />
                         <span className="text-sm font-medium text-purple-800 dark:text-purple-200">
-                          Linked Passage: {getPassageTitle(previewGroupQuestion)}
+                          Linked Passage:{" "}
+                          {getPassageTitle(previewGroupQuestion)}
                         </span>
                       </div>
                     </div>
@@ -1397,7 +1484,7 @@ export default function IELTSGroupQuestionManagementPage() {
                       </div> */}
 
                       {/* Passage Picker - Show for reading section */}
-                      {watchSection === "reading" && (
+                      {(watchSection === "reading") && (
                         <div>
                           <Label className="text-sm font-medium text-gray-700 dark:text-gray-300">
                             Link Passage
@@ -1603,8 +1690,10 @@ export default function IELTSGroupQuestionManagementPage() {
                                   }
                                   onChange={(e) => {
                                     const currentSets = [...watchQuestionSets];
-                                    currentSets[activeQuestionSetIndex].title =
-                                      e.target.value;
+                                    currentSets[activeQuestionSetIndex] = {
+                                      ...currentSets[activeQuestionSetIndex],
+                                      title: e.target.value,
+                                    };
                                     setValue("questionSets", currentSets);
                                   }}
                                   className="mt-1 rounded-xl border-gray-200 dark:border-gray-700"
@@ -1625,13 +1714,135 @@ export default function IELTSGroupQuestionManagementPage() {
                                   }
                                   onChange={(e) => {
                                     const currentSets = [...watchQuestionSets];
-                                    currentSets[
-                                      activeQuestionSetIndex
-                                    ].instructions = e.target.value;
+                                    currentSets[activeQuestionSetIndex] = {
+                                      ...currentSets[activeQuestionSetIndex],
+                                      instructions: e.target.value,
+                                    };
                                     setValue("questionSets", currentSets);
                                   }}
                                   className="mt-1 rounded-xl border-gray-200 dark:border-gray-700"
                                 />
+                              </div>
+
+                              <div className="mb-3">
+                                <Label className="text-xs font-medium text-gray-600 dark:text-gray-400">
+                                  Common Options
+                                </Label>
+
+                                <textarea
+                                  value={
+                                    watchQuestionSets[activeQuestionSetIndex]
+                                      ?.commonOptions || ""
+                                  }
+                                  onChange={(e) => {
+                                    const currentSets = [...watchQuestionSets];
+
+                                    currentSets[activeQuestionSetIndex] = {
+                                      ...currentSets[activeQuestionSetIndex],
+                                      commonOptions: e.target.value,
+                                    };
+
+                                    setValue("questionSets", currentSets, {
+                                      shouldDirty: true,
+                                    });
+                                  }}
+                                  rows={2}
+                                  placeholder="e.g. London,Paris,Delhi,Tokyo"
+                                  className="mt-1 w-full rounded-xl border border-gray-200 bg-white px-3 py-2.5 text-sm outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100"
+                                />
+
+                                <p className="mt-1 text-[11px] text-gray-500 dark:text-gray-400">
+                                  Options that are common for all questions in
+                                  this set.
+                                </p>
+                              </div>
+                              {/* Question Range */}
+                              <div className="mb-3">
+                                <Label className="text-xs font-medium text-gray-600 dark:text-gray-400">
+                                  Question Range
+                                </Label>
+
+                                <div className="mt-1 grid grid-cols-2 gap-3">
+                                  {/* From */}
+                                  <div>
+                                    <Input
+                                      type="number"
+                                      min={1}
+                                      placeholder="From (e.g. 1)"
+                                      value={
+                                        watchQuestionSets[
+                                          activeQuestionSetIndex
+                                        ]?.questionRange?.from ?? ""
+                                      }
+                                      onChange={(e) => {
+                                        const currentSets = [
+                                          ...watchQuestionSets,
+                                        ];
+
+                                        const currentSet =
+                                          currentSets[activeQuestionSetIndex];
+
+                                        currentSets[activeQuestionSetIndex] = {
+                                          ...currentSet,
+                                          questionRange: {
+                                            ...currentSet.questionRange,
+                                            from:
+                                              e.target.value === ""
+                                                ? null
+                                                : Number(e.target.value),
+                                          },
+                                        };
+
+                                        setValue("questionSets", currentSets, {
+                                          shouldDirty: true,
+                                        });
+                                      }}
+                                      className="rounded-xl border-gray-200 dark:border-gray-700"
+                                    />
+                                  </div>
+
+                                  {/* To */}
+                                  <div>
+                                    <Input
+                                      type="number"
+                                      min={1}
+                                      placeholder="To (e.g. 5)"
+                                      value={
+                                        watchQuestionSets[
+                                          activeQuestionSetIndex
+                                        ]?.questionRange?.to ?? ""
+                                      }
+                                      onChange={(e) => {
+                                        const currentSets = [
+                                          ...watchQuestionSets,
+                                        ];
+
+                                        const currentSet =
+                                          currentSets[activeQuestionSetIndex];
+
+                                        currentSets[activeQuestionSetIndex] = {
+                                          ...currentSet,
+                                          questionRange: {
+                                            ...currentSet.questionRange,
+                                            to:
+                                              e.target.value === ""
+                                                ? null
+                                                : Number(e.target.value),
+                                          },
+                                        };
+
+                                        setValue("questionSets", currentSets, {
+                                          shouldDirty: true,
+                                        });
+                                      }}
+                                      className="rounded-xl border-gray-200 dark:border-gray-700"
+                                    />
+                                  </div>
+                                </div>
+
+                                <p className="mt-1 text-[11px] text-gray-500 dark:text-gray-400">
+                                  Example: From 1 to 5
+                                </p>
                               </div>
 
                               {/* Selected Questions Count */}
@@ -1647,8 +1858,10 @@ export default function IELTSGroupQuestionManagementPage() {
                                   type="button"
                                   onClick={() => {
                                     const currentSets = [...watchQuestionSets];
-                                    currentSets[activeQuestionSetIndex].questions =
-                                      [];
+                                    currentSets[activeQuestionSetIndex] = {
+                                      ...currentSets[activeQuestionSetIndex],
+                                      questions: [],
+                                    };
                                     setValue("questionSets", currentSets);
                                   }}
                                   className="text-xs text-red-500 hover:underline"
@@ -1753,13 +1966,18 @@ export default function IELTSGroupQuestionManagementPage() {
                                     </div>
                                   ) : (
                                     availableQuestions.map((q) => {
-                                      const selected = isQuestionSelectedInSet(
+                                      const questionId = normalizeQuestionId(
                                         q._id,
+                                      );
+
+                                      const selected = isQuestionSelectedInSet(
+                                        questionId,
                                         activeQuestionSetIndex,
                                       );
+
                                       return (
                                         <label
-                                          key={q._id}
+                                          key={questionId}
                                           className={`flex cursor-pointer items-start gap-3 border-b p-3 transition last:border-b-0 ${
                                             selected
                                               ? "bg-blue-50 dark:bg-blue-900/20"
@@ -1769,32 +1987,37 @@ export default function IELTSGroupQuestionManagementPage() {
                                           <input
                                             type="checkbox"
                                             checked={selected}
-                                            onChange={(e) => {
+                                            onChange={() =>
                                               toggleQuestionInSet(
-                                                q._id,
+                                                questionId,
                                                 activeQuestionSetIndex,
-                                              );
-                                            }}
+                                              )
+                                            }
                                             className="mt-1 h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
                                           />
+
                                           <div className="min-w-0 flex-1">
                                             <div
                                               className="line-clamp-2 text-sm text-gray-900 dark:text-gray-100"
                                               dangerouslySetInnerHTML={{
-                                                __html: q.content,
+                                                __html: q.content || "",
                                               }}
                                             />
+
                                             <div className="mt-2 flex flex-wrap items-center gap-1.5">
                                               <span className="rounded-full bg-gray-100 px-2 py-0.5 text-[10px] font-medium text-gray-600 dark:bg-gray-800 dark:text-gray-300">
                                                 {q.questionType}
                                               </span>
+
                                               <span className="rounded-full bg-amber-50 px-2 py-0.5 text-[10px] font-medium text-amber-700 dark:bg-amber-500/10 dark:text-amber-300">
                                                 {q.metadata?.difficulty ||
                                                   "Medium"}
                                               </span>
+
                                               <span className="text-[10px] text-gray-500">
                                                 {q.marks} mark
                                               </span>
+
                                               {q.source && (
                                                 <span className="text-[10px] text-gray-500">
                                                   • {q.source}
@@ -1802,6 +2025,7 @@ export default function IELTSGroupQuestionManagementPage() {
                                               )}
                                             </div>
                                           </div>
+
                                           {selected && (
                                             <span className="text-xs font-semibold text-blue-600">
                                               Selected

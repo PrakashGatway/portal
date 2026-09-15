@@ -77,6 +77,7 @@ import IeltsTestPlatform from "./pages/ielts/ieltsTestAttempt";
 import ContentViewPage from "./pages/liveClass/Session";
 import CourseContentManagement from "./pages/Courses/CourseContent";
 import FirebaseNotifications from "./components/firebaseNotifications";
+import IeltsResult from "./pages/ielts/ieltsResult";
 
 // Define roles
 export const ROLES = {
@@ -167,10 +168,7 @@ export default function App() {
                 <Route path="/test/exams" element={<ExamManagement />} />
                 <Route path="/test/sections" element={<SectionManagement />} />
                 <Route path="/test-manage" element={<TestSeriesManagement />} />
-                {/* <Route
-                  path="/test/questions"
-                  element={<QuestionManagement />}
-                /> */}
+               
                 <Route
                   path="/test/questions"
                   element={<IELTSQuestionManagementPage />}
@@ -305,6 +303,11 @@ export default function App() {
             <Route
               path="/ielts/tests/:testId"
               element={<IeltsTestPlatform />}
+            />
+
+            <Route
+              path="/ielts/result/:attemptId"
+              element={<IeltsResult />}
             />
             
             <Route path="*" element={<ComingSoon />} />

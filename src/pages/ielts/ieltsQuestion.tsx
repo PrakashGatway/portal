@@ -737,7 +737,7 @@ export default function IELTSQuestionManagementPage() {
         section: values.section,
         questionType: values.questionType,
         content: values.content,
-        instructions: values.instructions || undefined,
+        instructions: values.instructions || "",
         marks: Number(values.marks) || 1,
         source: values.source || undefined,
         isActive: values.isActive,

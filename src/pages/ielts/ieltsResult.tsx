@@ -1,709 +1,671 @@
-// IeltsTestResultPage.tsx
-import { useEffect, useState, useCallback } from "react";
-import { useParams, useNavigate } from "react-router";
+import React, { useCallback, useEffect, useMemo, useState } from "react";
+import { useNavigate, useParams } from "react-router";
 import {
+  ArrowLeft,
   Award,
-  Clock,
-  FileText,
-  Headphones,
-  PenTool,
-  Mic,
-  CheckCircle2,
-  XCircle,
-  AlertTriangle,
-  Loader2,
-  TrendingUp,
-  TrendingDown,
-  Target,
   BarChart3,
-  PieChart,
-  BookOpen,
+  CheckCircle2,
   ChevronDown,
   ChevronUp,
-  Star,
-  Zap,
-  Lightbulb,
-  RotateCcw,
+  Clock3,
   Download,
-  Share2,
+  FileText,
+  Headphones,
+  Info,
+  Loader2,
+  Mic,
+  PenTool,
+  RefreshCw,
+  Target,
+  TrendingUp,
+  XCircle,
+  BookOpen,
 } from "lucide-react";
-import Button from "../../components/ui/button/Button";
-import { toast } from "react-toastify";
 import api from "../../axiosInstance";
-import { motion, AnimatePresence } from "framer-motion";
+import "./IeltsResult.css";
 
-interface ScoreData {
-  reading: number | null;
-  listening: number | null;
-  writing: number | null;
-  speaking: number | null;
-  overall: number | null;
-}
-
-interface SectionAnalysis {
-  section: string;
-  status: string;
-  timeSpent: number;
-  rawScore: number;
-  totalQuestions: number;
-  attemptedQuestions: number;
-  correctAnswers: number;
-  incorrectAnswers: number;
-  skippedQuestions: number;
-  accuracy: number;
-  bandScore: number | null;
-  averageTimePerQuestion: number;
-  aiScore?: number | null;
-  feedback?: string | null;
-  strengths?: string[];
-  weaknesses?: string[];
-}
-
-interface OverallAnalysis {
-  totalQuestions: number;
-  attemptedQuestions: number;
-  correctAnswers: number;
-  incorrectAnswers: number;
-  skippedQuestions: number;
-  accuracy: number;
-  totalTimeSpent: number;
-  averageTimePerQuestion: number;
-  readingBand?: number | null;
-  listeningBand?: number | null;
-  writingBand?: number | null;
-  speakingBand?: number | null;
-  overallBand?: number | null;
-  summary?: string | null;
-  strengths?: string[];
-  weaknesses?: string[];
-  recommendations?: string[];
-}
-
-interface ResultData {
-  attemptId: string;
-  test: {
-    _id: string;
-    title: string;
-    slug: string;
-    testType?: string;
-    difficulty?: string;
-    duration?: number;
-  };
-  status: string;
-  score: ScoreData;
-  analysis: OverallAnalysis;
-  sections: Array<{
-    section: string;
-    status: string;
-    timeSpent: number;
-    analysis: SectionAnalysis;
-  }>;
-  startedAt: string;
-  submittedAt: string;
-  completedAt: string;
-}
-
-const SECTION_ICONS = {
-  reading: BookOpen,
-  listening: Headphones,
-  writing: PenTool,
-  speaking: Mic,
+const SECTION_META = {
+  reading: { label: "Reading", icon: BookOpen },
+  listening: { label: "Listening", icon: Headphones },
+  writing: { label: "Writing", icon: PenTool },
+  speaking: { label: "Speaking", icon: Mic },
 };
 
-const SECTION_COLORS = {
-  reading: "from-blue-500 to-blue-600",
-  listening: "from-purple-500 to-purple-600",
-  writing: "from-green-500 to-green-600",
-  speaking: "from-orange-500 to-orange-600",
+const SECTION_ORDER = ["reading", "listening", "writing", "speaking"];
+
+const safeNumber = (value, fallback = 0) => {
+  const number = Number(value);
+  return Number.isFinite(number) ? number : fallback;
 };
 
-export default function IeltsTestResultPage() {
-  const { attemptId } = useParams<{ attemptId: string }>();
-  const navigate = useNavigate();
+const idOf = (value) => {
+  if (value === null || value === undefined) return "";
+  if (typeof value === "object" && value._id) return String(value._id);
+  return String(value);
+};
 
-  const [result, setResult] = useState<ResultData | null>(null);
-  const [analysisData, setAnalysisData] = useState<any>(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-  const [activeTab, setActiveTab] = useState("overview");
-  const [expandedSection, setExpandedSection] = useState<string | null>(null);
+const formatDate = (value) => {
+  if (!value) return "—";
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return "—";
+  return date.toLocaleString("en-IN", {
+    dateStyle: "medium",
+    timeStyle: "short",
+  });
+};
 
-  const fetchResult = useCallback(async () => {
-    try {
-      setLoading(true);
-      setError(null);
+const formatDuration = (seconds) => {
+  const total = Math.max(0, Math.round(safeNumber(seconds)));
+  const hours = Math.floor(total / 3600);
+  const minutes = Math.floor((total % 3600) / 60);
+  const secs = total % 60;
+  if (hours > 0) return `${hours}h ${minutes}m ${secs}s`;
+  if (minutes > 0) return `${minutes}m ${secs}s`;
+  return `${secs}s`;
+};
 
-      const [resultRes, analysisRes] = await Promise.all([
-        api.get(`/ielts/attempts/${attemptId}/result`),
-        api.get(`/ielts/attempts/${attemptId}/analysis`),
-      ]);
+const formatBand = (value) => {
+  if (value === null || value === undefined || value === "") return "—";
+  const number = Number(value);
+  if (!Number.isFinite(number)) return String(value);
+  return Number.isInteger(number) ? String(number) : number.toFixed(1);
+};
 
-      if (resultRes.data?.success) {
-        setResult(resultRes.data.data);
-      }
-      if (analysisRes.data?.success) {
-        setAnalysisData(analysisRes.data.data);
-      }
-    } catch (err: any) {
-      console.error("Fetch result error:", err);
-      setError(err.response?.data?.message || "Failed to load results");
-      toast.error("Failed to load results");
-    } finally {
-      setLoading(false);
-    }
-  }, [attemptId]);
+const formatPercentage = (value) => `${Math.round(safeNumber(value))}%`;
 
-  useEffect(() => {
-    fetchResult();
-  }, [fetchResult]);
+const humanize = (value) =>
+  String(value || "")
+    .replace(/[_-]+/g, " ")
+    .replace(/\b\w/g, (character) => character.toUpperCase());
 
-  const formatTime = (seconds: number) => {
-    if (!seconds) return "0m";
-    const mins = Math.floor(seconds / 60);
-    const secs = Math.floor(seconds % 60);
-    if (mins > 0) {
-      return `${mins}m ${secs}s`;
-    }
-    return `${secs}s`;
-  };
-
-  const formatDate = (dateString: string) => {
-    if (!dateString) return "N/A";
-    const date = new Date(dateString);
-    return date.toLocaleDateString("en-US", {
-      year: "numeric",
-      month: "short",
-      day: "numeric",
-      hour: "2-digit",
-      minute: "2-digit",
+const isAnswered = (answer) => {
+  if (Array.isArray(answer)) return answer.length > 0;
+  if (answer && typeof answer === "object") {
+    return Object.values(answer).some((value) => {
+      if (Array.isArray(value)) return value.length > 0;
+      return value !== null && value !== undefined && value !== "";
     });
-  };
-
-  const getBandColor = (band: number | null | undefined) => {
-    if (!band) return "text-gray-400";
-    if (band >= 8) return "text-emerald-600";
-    if (band >= 7) return "text-green-600";
-    if (band >= 6) return "text-blue-600";
-    if (band >= 5) return "text-amber-600";
-    return "text-rose-600";
-  };
-
-  const getBandBackground = (band: number | null | undefined) => {
-    if (!band) return "bg-gray-100";
-    if (band >= 8) return "bg-emerald-50 border-emerald-200";
-    if (band >= 7) return "bg-green-50 border-green-200";
-    if (band >= 6) return "bg-blue-50 border-blue-200";
-    if (band >= 5) return "bg-amber-50 border-amber-200";
-    return "bg-rose-50 border-rose-200";
-  };
-
-  const getBandLabel = (band: number | null | undefined) => {
-    if (!band) return "N/A";
-    if (band >= 8.5) return "Expert User";
-    if (band >= 7.5) return "Very Good User";
-    if (band >= 6.5) return "Good User";
-    if (band >= 5.5) return "Competent User";
-    if (band >= 4.5) return "Modest User";
-    if (band >= 3.5) return "Limited User";
-    return "Extremely Limited";
-  };
-
-  const getAccuracyColor = (accuracy: number) => {
-    if (accuracy >= 80) return "text-emerald-600";
-    if (accuracy >= 60) return "text-green-600";
-    if (accuracy >= 40) return "text-amber-600";
-    return "text-rose-600";
-  };
-
-  if (loading) {
-    return (
-      <div className="flex min-h-screen items-center justify-center">
-        <Loader2 className="h-12 w-12 animate-spin text-blue-600" />
-      </div>
-    );
   }
+  return answer !== null && answer !== undefined && answer !== "";
+};
 
-  if (error || !result) {
-    return (
-      <div className="flex min-h-screen items-center justify-center">
-        <div className="text-center">
-          <AlertTriangle className="mx-auto h-12 w-12 text-rose-500" />
-          <p className="mt-4 text-lg font-medium">{error || "Result not found"}</p>
-          <Button onClick={() => navigate("/ielts/tests")} className="mt-4">
-            Back to Tests
-          </Button>
-        </div>
-      </div>
-    );
+const answerText = (answer) => {
+  if (answer === null || answer === undefined || answer === "") return "Not answered";
+  if (Array.isArray(answer)) return answer.join(", ");
+  if (typeof answer === "object") {
+    return Object.entries(answer)
+      .map(([key, value]) => `${humanize(key)}: ${Array.isArray(value) ? value.join(", ") : value}`)
+      .join(" • ");
   }
+  return String(answer);
+};
 
-  const overallBand = result.score.overall || result.analysis?.overallBand || null;
+const getQuestionCorrectAnswer = (question) => {
+  if (!question) return null;
+  if (question.correctChoiceLabel !== null && question.correctChoiceLabel !== undefined) {
+    return question.correctChoiceLabel;
+  }
+  if (question.correctAnswer !== null && question.correctAnswer !== undefined) {
+    return question.correctAnswer;
+  }
+  if (Array.isArray(question.choices)) {
+    const correct = question.choices.filter((choice) => choice.isCorrect).map((choice) => choice.label);
+    if (correct.length) return correct;
+  }
+  return null;
+};
+
+const getQuestionChoices = (question) => {
+  if (!Array.isArray(question?.choices)) return [];
+  return question.choices.map((choice) => ({
+    label: choice.label,
+    text: choice.text,
+    isCorrect: Boolean(choice.isCorrect),
+  }));
+};
+
+const normalizeResult = (payload) => {
+  const data = payload?.data || payload || {};
+  return {
+    ...data,
+    score: data.score || {},
+    analysis: data.analysis || {},
+    sections: Array.isArray(data.sections) ? data.sections : [],
+  };
+};
+
+const ScoreRing = ({ score, label, size = 180 }) => {
+  const numeric = safeNumber(score, 0);
+  const percentage = Math.max(0, Math.min(100, numeric * 10));
+  const display = score === null || score === undefined ? "—" : formatBand(score);
 
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-gray-950 p-6">
-      <div className="container mx-auto max-w-6xl">
-        {/* Header */}
-        <div className="mb-6 flex items-center justify-between">
-          <div>
-            <h1 className="text-2xl font-bold">Test Results</h1>
-            <p className="text-gray-500">{result.test.title}</p>
-          </div>
-          <div className="flex gap-2">
-            <Button
-              variant="outline"
-              onClick={() => navigate("/ielts/tests")}
-              className="rounded-xl"
-            >
-              <RotateCcw className="mr-1 h-4 w-4" />
-              New Test
-            </Button>
-            <Button
-              variant="outline"
-              onClick={() => window.print()}
-              className="rounded-xl"
-            >
-              <Download className="mr-1 h-4 w-4" />
-              Download
-            </Button>
-          </div>
-        </div>
-
-        {/* Overall Score Card */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="mb-6 rounded-2xl border bg-gradient-to-r from-blue-600 to-indigo-600 p-6 text-white"
-        >
-          <div className="flex items-center justify-between">
-            <div>
-              <h2 className="text-lg font-semibold">Overall Band Score</h2>
-              <p className="text-sm opacity-90">
-                {getBandLabel(overallBand)}
-              </p>
-            </div>
-            <div className="text-center">
-              <div className="text-6xl font-bold">{overallBand?.toFixed(1) || "N/A"}</div>
-              <div className="text-sm opacity-90">out of 9.0</div>
-            </div>
-          </div>
-        </motion.div>
-
-        {/* Section Scores */}
-        <div className="mb-6 grid gap-4 md:grid-cols-4">
-          {["reading", "listening", "writing", "speaking"].map((section) => {
-            const Icon = SECTION_ICONS[section as keyof typeof SECTION_ICONS];
-            const score = result.score[section as keyof ScoreData];
-            const sectionAnalysis = result.sections.find(s => s.section === section);
-            
-            return (
-              <motion.div
-                key={section}
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.1 }}
-                className={`rounded-2xl border p-4 ${getBandBackground(score)}`}
-              >
-                <div className="flex items-center justify-between mb-2">
-                  <Icon className="h-5 w-5 text-gray-500" />
-                  <span className={`text-2xl font-bold ${getBandColor(score)}`}>
-                    {score?.toFixed(1) || "N/A"}
-                  </span>
-                </div>
-                <h3 className="font-semibold capitalize">{section}</h3>
-                <p className="text-xs text-gray-500 mt-1">
-                  {sectionAnalysis?.analysis?.correctAnswers || 0} correct / {sectionAnalysis?.analysis?.totalQuestions || 0} total
-                </p>
-              </motion.div>
-            );
-          })}
-        </div>
-
-        {/* Tabs */}
-        <div className="mb-6 flex gap-2 border-b">
-          {[
-            { id: "overview", label: "Overview" },
-            { id: "sections", label: "Section Analysis" },
-            { id: "questions", label: "Question Review" },
-            { id: "recommendations", label: "Recommendations" },
-          ].map((tab) => (
-            <button
-              key={tab.id}
-              onClick={() => setActiveTab(tab.id)}
-              className={`px-4 py-2 text-sm font-medium border-b-2 transition-all ${
-                activeTab === tab.id
-                  ? "border-blue-600 text-blue-600"
-                  : "border-transparent text-gray-500 hover:text-gray-700"
-              }`}
-            >
-              {tab.label}
-            </button>
-          ))}
-        </div>
-
-        {/* Tab Content */}
-        <AnimatePresence mode="wait">
-          {activeTab === "overview" && (
-            <motion.div
-              key="overview"
-              initial={{ opacity: 0, y: 10 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -10 }}
-              className="space-y-6"
-            >
-              {/* Stats Grid */}
-              <div className="grid gap-4 md:grid-cols-4">
-                <div className="rounded-2xl border p-4">
-                  <div className="flex items-center gap-2 mb-2">
-                    <Target className="h-4 w-4 text-blue-600" />
-                    <span className="text-sm text-gray-500">Accuracy</span>
-                  </div>
-                  <span className={`text-2xl font-bold ${getAccuracyColor(result.analysis?.accuracy || 0)}`}>
-                    {(result.analysis?.accuracy || 0).toFixed(1)}%
-                  </span>
-                </div>
-                <div className="rounded-2xl border p-4">
-                  <div className="flex items-center gap-2 mb-2">
-                    <CheckCircle2 className="h-4 w-4 text-green-600" />
-                    <span className="text-sm text-gray-500">Correct</span>
-                  </div>
-                  <span className="text-2xl font-bold text-green-600">
-                    {result.analysis?.correctAnswers || 0}
-                  </span>
-                </div>
-                <div className="rounded-2xl border p-4">
-                  <div className="flex items-center gap-2 mb-2">
-                    <XCircle className="h-4 w-4 text-rose-600" />
-                    <span className="text-sm text-gray-500">Incorrect</span>
-                  </div>
-                  <span className="text-2xl font-bold text-rose-600">
-                    {result.analysis?.incorrectAnswers || 0}
-                  </span>
-                </div>
-                <div className="rounded-2xl border p-4">
-                  <div className="flex items-center gap-2 mb-2">
-                    <Clock className="h-4 w-4 text-purple-600" />
-                    <span className="text-sm text-gray-500">Time Spent</span>
-                  </div>
-                  <span className="text-2xl font-bold text-purple-600">
-                    {formatTime(result.analysis?.totalTimeSpent || 0)}
-                  </span>
-                </div>
-              </div>
-
-              {/* Summary */}
-              {result.analysis?.summary && (
-                <div className="rounded-2xl border p-6">
-                  <h3 className="mb-3 font-semibold">Performance Summary</h3>
-                  <p className="text-gray-600 dark:text-gray-400">{result.analysis.summary}</p>
-                </div>
-              )}
-
-              {/* Strengths & Weaknesses */}
-              <div className="grid gap-4 md:grid-cols-2">
-                {result.analysis?.strengths && result.analysis.strengths.length > 0 && (
-                  <div className="rounded-2xl border border-green-200 bg-green-50 p-6">
-                    <h3 className="mb-3 flex items-center gap-2 font-semibold text-green-700">
-                      <TrendingUp className="h-5 w-5" />
-                      Strengths
-                    </h3>
-                    <ul className="space-y-2">
-                      {result.analysis.strengths.map((strength, idx) => (
-                        <li key={idx} className="flex items-start gap-2 text-sm text-green-800">
-                          <CheckCircle2 className="mt-0.5 h-4 w-4 flex-shrink-0" />
-                          {strength}
-                        </li>
-                      ))}
-                    </ul>
-                  </div>
-                )}
-                {result.analysis?.weaknesses && result.analysis.weaknesses.length > 0 && (
-                  <div className="rounded-2xl border border-rose-200 bg-rose-50 p-6">
-                    <h3 className="mb-3 flex items-center gap-2 font-semibold text-rose-700">
-                      <TrendingDown className="h-5 w-5" />
-                      Areas for Improvement
-                    </h3>
-                    <ul className="space-y-2">
-                      {result.analysis.weaknesses.map((weakness, idx) => (
-                        <li key={idx} className="flex items-start gap-2 text-sm text-rose-800">
-                          <AlertTriangle className="mt-0.5 h-4 w-4 flex-shrink-0" />
-                          {weakness}
-                        </li>
-                      ))}
-                    </ul>
-                  </div>
-                )}
-              </div>
-            </motion.div>
-          )}
-
-          {activeTab === "sections" && (
-            <motion.div
-              key="sections"
-              initial={{ opacity: 0, y: 10 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -10 }}
-              className="space-y-4"
-            >
-              {result.sections.map((section, idx) => {
-                const Icon = SECTION_ICONS[section.section as keyof typeof SECTION_ICONS];
-                const gradient = SECTION_COLORS[section.section as keyof typeof SECTION_COLORS];
-                const isExpanded = expandedSection === section.section;
-                
-                return (
-                  <div key={idx} className="rounded-2xl border overflow-hidden">
-                    <button
-                      onClick={() => setExpandedSection(isExpanded ? null : section.section)}
-                      className="w-full flex items-center justify-between p-4 hover:bg-gray-50 dark:hover:bg-gray-900"
-                    >
-                      <div className="flex items-center gap-3">
-                        <div className={`rounded-lg bg-gradient-to-r ${gradient} p-2 text-white`}>
-                          <Icon className="h-5 w-5" />
-                        </div>
-                        <div className="text-left">
-                          <h3 className="font-semibold capitalize">{section.section}</h3>
-                          <p className="text-xs text-gray-500">
-                            {section.analysis?.correctAnswers || 0}/{section.analysis?.totalQuestions || 0} correct
-                          </p>
-                        </div>
-                      </div>
-                      <div className="flex items-center gap-3">
-                        <span className={`text-xl font-bold ${getBandColor(section.analysis?.bandScore)}`}>
-                          {section.analysis?.bandScore?.toFixed(1) || "N/A"}
-                        </span>
-                        {isExpanded ? (
-                          <ChevronUp className="h-5 w-5 text-gray-400" />
-                        ) : (
-                          <ChevronDown className="h-5 w-5 text-gray-400" />
-                        )}
-                      </div>
-                    </button>
-
-                    <AnimatePresence>
-                      {isExpanded && (
-                        <motion.div
-                          initial={{ height: 0, opacity: 0 }}
-                          animate={{ height: "auto", opacity: 1 }}
-                          exit={{ height: 0, opacity: 0 }}
-                          className="border-t"
-                        >
-                          <div className="p-4 space-y-4">
-                            {/* Section Stats */}
-                            <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-                              <div className="rounded-xl bg-gray-50 p-3 text-center">
-                                <div className="text-xs text-gray-500">Accuracy</div>
-                                <div className={`text-lg font-bold ${getAccuracyColor(section.analysis?.accuracy || 0)}`}>
-                                  {(section.analysis?.accuracy || 0).toFixed(1)}%
-                                </div>
-                              </div>
-                              <div className="rounded-xl bg-gray-50 p-3 text-center">
-                                <div className="text-xs text-gray-500">Attempted</div>
-                                <div className="text-lg font-bold">
-                                  {section.analysis?.attemptedQuestions || 0}/{section.analysis?.totalQuestions || 0}
-                                </div>
-                              </div>
-                              <div className="rounded-xl bg-gray-50 p-3 text-center">
-                                <div className="text-xs text-gray-500">Skipped</div>
-                                <div className="text-lg font-bold">
-                                  {section.analysis?.skippedQuestions || 0}
-                                </div>
-                              </div>
-                              <div className="rounded-xl bg-gray-50 p-3 text-center">
-                                <div className="text-xs text-gray-500">Avg Time/Q</div>
-                                <div className="text-lg font-bold">
-                                  {formatTime(section.analysis?.averageTimePerQuestion || 0)}
-                                </div>
-                              </div>
-                            </div>
-
-                            {/* Feedback */}
-                            {section.analysis?.feedback && (
-                              <div className="rounded-xl border border-blue-200 bg-blue-50 p-4">
-                                <h4 className="mb-2 text-sm font-semibold text-blue-700">Feedback</h4>
-                                <p className="text-sm text-blue-800">{section.analysis.feedback}</p>
-                              </div>
-                            )}
-
-                            {/* Strengths */}
-                            {section.analysis?.strengths && section.analysis.strengths.length > 0 && (
-                              <div>
-                                <h4 className="mb-2 text-sm font-semibold text-green-700">Strengths</h4>
-                                <ul className="space-y-1">
-                                  {section.analysis.strengths.map((s, i) => (
-                                    <li key={i} className="flex items-start gap-2 text-sm text-green-800">
-                                      <CheckCircle2 className="mt-0.5 h-4 w-4 flex-shrink-0" />
-                                      {s}
-                                    </li>
-                                  ))}
-                                </ul>
-                              </div>
-                            )}
-
-                            {/* Weaknesses */}
-                            {section.analysis?.weaknesses && section.analysis.weaknesses.length > 0 && (
-                              <div>
-                                <h4 className="mb-2 text-sm font-semibold text-rose-700">Areas for Improvement</h4>
-                                <ul className="space-y-1">
-                                  {section.analysis.weaknesses.map((w, i) => (
-                                    <li key={i} className="flex items-start gap-2 text-sm text-rose-800">
-                                      <AlertTriangle className="mt-0.5 h-4 w-4 flex-shrink-0" />
-                                      {w}
-                                    </li>
-                                  ))}
-                                </ul>
-                              </div>
-                            )}
-                          </div>
-                        </motion.div>
-                      )}
-                    </AnimatePresence>
-                  </div>
-                );
-              })}
-            </motion.div>
-          )}
-
-          {activeTab === "questions" && (
-            <motion.div
-              key="questions"
-              initial={{ opacity: 0, y: 10 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -10 }}
-              className="space-y-4"
-            >
-              {analysisData?.sections?.map((section: any, sectionIdx: number) => (
-                <div key={sectionIdx} className="rounded-2xl border overflow-hidden">
-                  <div className="p-4 border-b bg-gray-50 dark:bg-gray-900">
-                    <h3 className="font-semibold capitalize">{section.section}</h3>
-                  </div>
-                  <div className="divide-y">
-                    {section.groups?.map((group: any, groupIdx: number) => (
-                      <div key={groupIdx} className="p-4">
-                        {group.group?.title && (
-                          <h4 className="mb-3 text-sm font-medium text-gray-600">
-                            {group.group.title}
-                          </h4>
-                        )}
-                        <div className="space-y-3">
-                          {group.questions?.map((q: any, qIdx: number) => (
-                            <div
-                              key={qIdx}
-                              className={`rounded-xl border p-4 ${
-                                q.isCorrect === true
-                                  ? "border-green-200 bg-green-50"
-                                  : q.isCorrect === false
-                                  ? "border-rose-200 bg-rose-50"
-                                  : "border-gray-200"
-                              }`}
-                            >
-                              <div className="flex items-start justify-between mb-2">
-                                <div className="flex-1">
-                                  <span className="text-xs text-gray-500">Question {q.order}</span>
-                                  <p className="text-sm font-medium mt-1">{q.question?.content || "Question content not available"}</p>
-                                </div>
-                                {q.isCorrect === true && (
-                                  <CheckCircle2 className="h-5 w-5 text-green-600 flex-shrink-0" />
-                                )}
-                                {q.isCorrect === false && (
-                                  <XCircle className="h-5 w-5 text-rose-600 flex-shrink-0" />
-                                )}
-                                {q.skipped && (
-                                  <AlertTriangle className="h-5 w-5 text-amber-500 flex-shrink-0" />
-                                )}
-                              </div>
-                              <div className="mt-2 text-xs">
-                                <span className="text-gray-500">Your Answer: </span>
-                                <span className="font-medium">
-                                  {q.answer !== null && q.answer !== undefined && q.answer !== ""
-                                    ? Array.isArray(q.answer)
-                                      ? q.answer.join(", ")
-                                      : String(q.answer)
-                                    : "Not answered"}
-                                </span>
-                              </div>
-                              {q.question?.correctAnswer && (
-                                <div className="mt-1 text-xs">
-                                  <span className="text-gray-500">Correct Answer: </span>
-                                  <span className="font-medium text-green-700">
-                                    {q.question.correctAnswer}
-                                  </span>
-                                </div>
-                              )}
-                            </div>
-                          ))}
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              ))}
-            </motion.div>
-          )}
-
-          {activeTab === "recommendations" && (
-            <motion.div
-              key="recommendations"
-              initial={{ opacity: 0, y: 10 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -10 }}
-              className="space-y-6"
-            >
-              {result.analysis?.recommendations && result.analysis.recommendations.length > 0 && (
-                <div className="rounded-2xl border border-blue-200 bg-blue-50 p-6">
-                  <h3 className="mb-4 flex items-center gap-2 font-semibold text-blue-700">
-                    <Lightbulb className="h-5 w-5" />
-                    Recommended Next Steps
-                  </h3>
-                  <ul className="space-y-3">
-                    {result.analysis.recommendations.map((rec, idx) => (
-                      <li key={idx} className="flex items-start gap-3">
-                        <span className="flex h-6 w-6 items-center justify-center rounded-full bg-blue-600 text-xs font-bold text-white flex-shrink-0">
-                          {idx + 1}
-                        </span>
-                        <span className="text-sm text-blue-800">{rec}</span>
-                      </li>
-                    ))}
-                  </ul>
-                </div>
-              )}
-
-              {/* Section-specific recommendations */}
-              {result.sections.map((section, idx) => {
-                if (!section.analysis?.weaknesses || section.analysis.weaknesses.length === 0) return null;
-                
-                const Icon = SECTION_ICONS[section.section as keyof typeof SECTION_ICONS];
-                
-                return (
-                  <div key={idx} className="rounded-2xl border p-6">
-                    <h4 className="mb-3 flex items-center gap-2 font-semibold capitalize">
-                      <Icon className="h-5 w-5 text-gray-500" />
-                      {section.section} - Focus Areas
-                    </h4>
-                    <ul className="space-y-2">
-                      {section.analysis.weaknesses.map((w, i) => (
-                        <li key={i} className="flex items-start gap-2 text-sm text-gray-600">
-                          <Zap className="mt-0.5 h-4 w-4 text-amber-500 flex-shrink-0" />
-                          {w}
-                        </li>
-                      ))}
-                    </ul>
-                  </div>
-                );
-              })}
-            </motion.div>
-          )}
-        </AnimatePresence>
-
-        {/* Test Info */}
-        <div className="mt-6 rounded-2xl border p-4 text-sm text-gray-500">
-          <div className="flex flex-wrap gap-4">
-            <span>Started: {formatDate(result.startedAt)}</span>
-            <span>Submitted: {formatDate(result.submittedAt)}</span>
-            <span>Completed: {formatDate(result.completedAt)}</span>
-            <span>Test Type: {result.test.testType || "N/A"}</span>
-            <span>Difficulty: {result.test.difficulty || "N/A"}</span>
-          </div>
-        </div>
+    <div
+      className="ielts-result-score-ring"
+      style={{
+        width: size,
+        height: size,
+        background: `conic-gradient(var(--ielts-primary) ${percentage}%, var(--ielts-ring-bg) ${percentage}% 100%)`,
+      }}
+    >
+      <div className="ielts-result-score-ring-inner">
+        <strong>{display}</strong>
+        <span>{label}</span>
       </div>
     </div>
   );
-}
+};
+
+const StatCard = ({ icon: Icon, label, value, helper, className = "" }) => (
+  <div className={`ielts-result-stat-card ${className}`}>
+    <div className="ielts-result-stat-icon">
+      <Icon size={19} />
+    </div>
+    <div className="ielts-result-stat-content">
+      <span>{label}</span>
+      <strong>{value}</strong>
+      {helper ? <small>{helper}</small> : null}
+    </div>
+  </div>
+);
+
+const SectionScoreCard = ({ section, index, onOpen }) => {
+  const meta = SECTION_META[section.section] || SECTION_META.reading;
+  const Icon = meta.icon;
+  const analysis = section.analysis || {};
+  const score = section.score ?? analysis.bandScore;
+  const attempted = safeNumber(analysis.attemptedQuestions);
+  const total = safeNumber(analysis.totalQuestions);
+  const accuracy = safeNumber(analysis.accuracy);
+  const correct = safeNumber(analysis.correctAnswers);
+  const incorrect = safeNumber(analysis.incorrectAnswers);
+  const skipped = safeNumber(analysis.skippedQuestions);
+
+  return (
+    <button type="button" className="ielts-result-section-card" onClick={() => onOpen(index)}>
+      <div className="ielts-result-section-card-head">
+        <div className={`ielts-result-section-icon ielts-result-section-${section.section}`}>
+          <Icon size={21} />
+        </div>
+        <div className="ielts-result-section-title">
+          <span>Section {index + 1}</span>
+          <h3>{meta.label}</h3>
+        </div>
+        <div className="ielts-result-section-band">
+          <strong>{formatBand(score)}</strong>
+          <span>Band</span>
+        </div>
+      </div>
+
+      <div className="ielts-result-progress-track">
+        <div className="ielts-result-progress-fill" style={{ width: `${Math.max(0, Math.min(100, accuracy))}%` }} />
+      </div>
+
+      <div className="ielts-result-section-stats">
+        <span><CheckCircle2 size={15} /> {correct} correct</span>
+        <span><XCircle size={15} /> {incorrect} wrong</span>
+        <span><Info size={15} /> {skipped} skipped</span>
+        <span>{attempted}/{total} attempted</span>
+      </div>
+
+      <div className="ielts-result-section-footer">
+        <span>{formatDuration(analysis.timeSpent)}</span>
+        <span>View details →</span>
+      </div>
+    </button>
+  );
+};
+
+const QuestionReview = ({ question, number }) => {
+  const [open, setOpen] = useState(false);
+  const questionData = question.question && typeof question.question === "object" ? question.question : question;
+  const correctAnswer = question.correctAnswer ?? getQuestionCorrectAnswer(questionData);
+  const choices = getQuestionChoices(questionData);
+  const answered = isAnswered(question.answer);
+  const correct = question.isCorrect === true;
+
+  return (
+    <div className={`ielts-result-question ${correct ? "is-correct" : answered ? "is-incorrect" : "is-skipped"}`}>
+      <button type="button" className="ielts-result-question-head" onClick={() => setOpen((value) => !value)}>
+        <div className="ielts-result-question-number">{number}</div>
+        <div className="ielts-result-question-summary">
+          <div className="ielts-result-question-topline">
+            <strong>{humanize(questionData?.questionType || "Question")}</strong>
+            <span>{safeNumber(question.obtainedMarks)} mark{safeNumber(question.obtainedMarks) === 1 ? "" : "s"}</span>
+          </div>
+          <div className="ielts-result-question-status">
+            {correct ? <CheckCircle2 size={15} /> : answered ? <XCircle size={15} /> : <Info size={15} />}
+            <span>{correct ? "Correct" : answered ? "Incorrect" : "Not answered"}</span>
+          </div>
+        </div>
+        {open ? <ChevronUp size={20} /> : <ChevronDown size={20} />}
+      </button>
+
+      {open ? (
+        <div className="ielts-result-question-body">
+          {questionData?.content ? (
+            <div className="ielts-result-question-content" dangerouslySetInnerHTML={{ __html: questionData.content }} />
+          ) : null}
+
+          {questionData?.instructions ? (
+            <div className="ielts-result-question-instructions">
+              <strong>Instructions</strong>
+              <div dangerouslySetInnerHTML={{ __html: questionData.instructions }} />
+            </div>
+          ) : null}
+
+          {choices.length > 0 ? (
+            <div className="ielts-result-options">
+              {choices.map((choice) => {
+                const selected = Array.isArray(question.answer)
+                  ? question.answer.map(String).includes(String(choice.label))
+                  : String(question.answer ?? "") === String(choice.label);
+                return (
+                  <div
+                    key={`${idOf(questionData?._id)}-${choice.label}`}
+                    className={`ielts-result-option ${choice.isCorrect ? "correct-option" : ""} ${selected ? "selected-option" : ""}`}
+                  >
+                    <span className="ielts-result-option-label">{choice.label}</span>
+                    <span>{choice.text || choice.label}</span>
+                    <div className="ielts-result-option-tags">
+                      {selected ? <small>Your answer</small> : null}
+                      {choice.isCorrect ? <small>Correct answer</small> : null}
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          ) : null}
+
+          <div className="ielts-result-answer-grid">
+            <div>
+              <span>Your answer</span>
+              <strong>{answerText(question.answer)}</strong>
+            </div>
+            <div>
+              <span>Correct answer</span>
+              <strong>{answerText(correctAnswer)}</strong>
+            </div>
+            <div>
+              <span>Time spent</span>
+              <strong>{formatDuration(question.timeSpent)}</strong>
+            </div>
+            <div>
+              <span>Flagged</span>
+              <strong>{question.flagged ? "Yes" : "No"}</strong>
+            </div>
+          </div>
+
+          {question.evaluation?.feedback ? (
+            <div className="ielts-result-feedback">
+              <strong>Evaluation feedback</strong>
+              <p>{question.evaluation.feedback}</p>
+            </div>
+          ) : null}
+        </div>
+      ) : null}
+    </div>
+  );
+};
+
+const SectionDetail = ({ section }) => {
+  const meta = SECTION_META[section.section] || SECTION_META.reading;
+  const Icon = meta.icon;
+  const analysis = section.analysis || {};
+  const groups = Array.isArray(section.groups) ? section.groups : [];
+  const flattenedQuestions = groups.flatMap((group) =>
+    (group.questionSets || []).flatMap((set) =>
+      (set.questions || []).map((question) => ({
+        ...question,
+        groupTitle: group.title,
+        questionSetTitle: set.title,
+      })),
+    ),
+  );
+
+  return (
+    <div className="ielts-result-detail-panel">
+      <div className="ielts-result-detail-heading">
+        <div className={`ielts-result-section-icon ielts-result-section-${section.section}`}>
+          <Icon size={20} />
+        </div>
+        <div>
+          <span>Detailed review</span>
+          <h3>{meta.label}</h3>
+        </div>
+        <div className="ielts-result-detail-band">Band {formatBand(section.score ?? analysis.bandScore)}</div>
+      </div>
+
+      <div className="ielts-result-detail-stats">
+        <StatCard icon={Target} label="Accuracy" value={formatPercentage(analysis.accuracy)} />
+        <StatCard icon={CheckCircle2} label="Correct" value={analysis.correctAnswers ?? 0} />
+        <StatCard icon={XCircle} label="Incorrect" value={analysis.incorrectAnswers ?? 0} />
+        <StatCard icon={Clock3} label="Time spent" value={formatDuration(analysis.timeSpent)} />
+      </div>
+
+      {analysis.feedback ? (
+        <div className="ielts-result-evaluation-box">
+          <strong>Section feedback</strong>
+          <p>{analysis.feedback}</p>
+          {Array.isArray(analysis.strengths) && analysis.strengths.length > 0 ? (
+            <div>
+              <span>Strengths</span>
+              <ul>{analysis.strengths.map((item, index) => <li key={index}>{item}</li>)}</ul>
+            </div>
+          ) : null}
+          {Array.isArray(analysis.weaknesses) && analysis.weaknesses.length > 0 ? (
+            <div>
+              <span>Areas to improve</span>
+              <ul>{analysis.weaknesses.map((item, index) => <li key={index}>{item}</li>)}</ul>
+            </div>
+          ) : null}
+        </div>
+      ) : null}
+
+      {flattenedQuestions.length > 0 ? (
+        <div className="ielts-result-question-list">
+          <div className="ielts-result-subheading">
+            <div>
+              <span>Question review</span>
+              <h4>{flattenedQuestions.length} questions</h4>
+            </div>
+            <small>Click a question to view your answer and the correct answer.</small>
+          </div>
+          {flattenedQuestions.map((question, index) => (
+            <QuestionReview key={idOf(question._id) || `${section.section}-${index}`} question={question} number={index + 1} />
+          ))}
+        </div>
+      ) : (
+        <div className="ielts-result-empty-detail">
+          <FileText size={28} />
+          <strong>Question-level review is not available</strong>
+          <p>The server returned section-level analysis, but not individual question details for this attempt.</p>
+        </div>
+      )}
+    </div>
+  );
+};
+
+const IeltsResult = () => {
+  const { attemptId } = useParams();
+  const navigate = useNavigate();
+  const [result, setResult] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
+  const [error, setError] = useState("");
+  const [activeSection, setActiveSection] = useState(null);
+
+  const loadResult = useCallback(async (silent = false) => {
+    if (!attemptId) {
+      setError("Attempt ID is missing from the URL.");
+      setLoading(false);
+      return;
+    }
+
+    try {
+      if (silent) setRefreshing(true);
+      else setLoading(true);
+      setError("");
+
+      const response = await api.get(`/ielts/attempts/${attemptId}/result`);
+      if (response?.data?.success === false) {
+        throw new Error(response?.data?.message || "Failed to load result");
+      }
+
+      const normalized = normalizeResult(response?.data?.data || response?.data);
+      setResult(normalized);
+
+      if (activeSection === null && normalized.sections.length > 0) {
+        setActiveSection(0);
+      }
+    } catch (err) {
+      console.error("IELTS result load error:", err);
+      setError(err?.response?.data?.message || err?.message || "Failed to load IELTS result.");
+    } finally {
+      setLoading(false);
+      setRefreshing(false);
+    }
+  }, [attemptId, activeSection]);
+
+  useEffect(() => {
+    loadResult(false);
+  }, [loadResult]);
+
+  const orderedSections = useMemo(() => {
+    const sections = [...(result?.sections || [])];
+    return sections.sort((a, b) => {
+      const ai = SECTION_ORDER.indexOf(a.section);
+      const bi = SECTION_ORDER.indexOf(b.section);
+      if (ai === -1 && bi === -1) return 0;
+      if (ai === -1) return 1;
+      if (bi === -1) return -1;
+      return ai - bi;
+    });
+  }, [result]);
+
+  const analysis = result?.analysis || {};
+  const score = result?.score || {};
+  const overall = score.overall ?? analysis.overallBand;
+  const totalQuestions = safeNumber(analysis.totalQuestions);
+  const attemptedQuestions = safeNumber(analysis.attemptedQuestions);
+  const correctAnswers = safeNumber(analysis.correctAnswers);
+  const incorrectAnswers = safeNumber(analysis.incorrectAnswers);
+  const skippedQuestions = safeNumber(analysis.skippedQuestions);
+  const accuracy = safeNumber(analysis.accuracy);
+  const passTarget = result?.test?.passingBand ?? result?.test?.scoring?.passingBand ?? null;
+  const isPassed = passTarget !== null && overall !== null && overall !== undefined
+    ? safeNumber(overall) >= safeNumber(passTarget)
+    : null;
+
+  const handlePrint = () => window.print();
+
+  if (loading) {
+    return (
+      <div className="ielts-result-page ielts-result-state">
+        <Loader2 className="ielts-result-spin" size={42} />
+        <h2>Loading your IELTS result</h2>
+        <p>Preparing your score report and performance analysis…</p>
+      </div>
+    );
+  }
+
+  if (error && !result) {
+    return (
+      <div className="ielts-result-page ielts-result-state">
+        <div className="ielts-result-error-icon"><XCircle size={38} /></div>
+        <h2>Unable to load result</h2>
+        <p>{error}</p>
+        <div className="ielts-result-state-actions">
+          <button type="button" className="ielts-result-btn primary" onClick={() => loadResult(false)}>
+            <RefreshCw size={17} /> Try again
+          </button>
+          <button type="button" className="ielts-result-btn secondary" onClick={() => navigate(-1)}>
+            <ArrowLeft size={17} /> Go back
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="ielts-result-page">
+      <div className="ielts-result-container">
+        <header className="ielts-result-topbar">
+          <button type="button" className="ielts-result-back" onClick={() => navigate(-1)}>
+            <ArrowLeft size={18} /> Back
+          </button>
+          <div className="ielts-result-topbar-actions">
+            <button type="button" className="ielts-result-icon-btn" onClick={() => loadResult(true)} disabled={refreshing} title="Refresh result">
+              <RefreshCw className={refreshing ? "ielts-result-spin" : ""} size={18} />
+            </button>
+            <button type="button" className="ielts-result-btn secondary" onClick={handlePrint}>
+              <Download size={17} /> Print / Save PDF
+            </button>
+          </div>
+        </header>
+
+        {error ? <div className="ielts-result-alert"><Info size={18} /> {error}</div> : null}
+
+        <section className="ielts-result-hero">
+          <div className="ielts-result-hero-copy">
+            <div className="ielts-result-eyebrow"><Award size={16} /> IELTS Performance Report</div>
+            <h1>{result?.test?.title || "IELTS Test Result"}</h1>
+            <p>
+              {result?.status === "completed" ? "Your test has been completed." : `Result status: ${humanize(result?.status || "available")}.`}
+            </p>
+            <div className="ielts-result-meta-row">
+              <span>Attempt ID: {attemptId}</span>
+              <span>Submitted: {formatDate(result?.submittedAt)}</span>
+              <span>Completed: {formatDate(result?.completedAt)}</span>
+            </div>
+          </div>
+
+          <div className="ielts-result-hero-score">
+            <ScoreRing score={overall} label="Overall Band" />
+            {isPassed !== null ? (
+              <div className={`ielts-result-pass-badge ${isPassed ? "passed" : "failed"}`}>
+                {isPassed ? <CheckCircle2 size={16} /> : <XCircle size={16} />}
+                {isPassed ? "Passed" : "Below target"}
+              </div>
+            ) : null}
+            {passTarget !== null ? <small>Target band: {formatBand(passTarget)}</small> : null}
+          </div>
+        </section>
+
+        <section className="ielts-result-stats-grid">
+          <StatCard icon={BarChart3} label="Total questions" value={totalQuestions} />
+          <StatCard icon={Target} label="Attempted" value={attemptedQuestions} helper={`${formatPercentage(totalQuestions ? (attemptedQuestions / totalQuestions) * 100 : 0)} attempted`} />
+          <StatCard icon={CheckCircle2} label="Correct" value={correctAnswers} />
+          <StatCard icon={XCircle} label="Incorrect" value={incorrectAnswers} />
+          <StatCard icon={Info} label="Skipped" value={skippedQuestions} />
+          <StatCard icon={Clock3} label="Total time" value={formatDuration(analysis.totalTimeSpent)} helper={`Avg ${formatDuration(analysis.averageTimePerQuestion)} / question`} />
+        </section>
+
+        <section className="ielts-result-overview-grid">
+          <div className="ielts-result-card ielts-result-performance-card">
+            <div className="ielts-result-card-heading">
+              <div>
+                <span>Performance overview</span>
+                <h2>Accuracy & attempt rate</h2>
+              </div>
+              <TrendingUp size={22} />
+            </div>
+            <div className="ielts-result-overview-metrics">
+              <div className="ielts-result-big-metric">
+                <strong>{formatPercentage(accuracy)}</strong>
+                <span>Accuracy</span>
+              </div>
+              <div className="ielts-result-big-metric">
+                <strong>{formatPercentage(totalQuestions ? (attemptedQuestions / totalQuestions) * 100 : 0)}</strong>
+                <span>Attempt rate</span>
+              </div>
+            </div>
+            <div className="ielts-result-dual-progress">
+              <div>
+                <div><span>Accuracy</span><strong>{formatPercentage(accuracy)}</strong></div>
+                <div className="ielts-result-progress-track"><div className="ielts-result-progress-fill" style={{ width: `${Math.min(100, accuracy)}%` }} /></div>
+              </div>
+              <div>
+                <div><span>Attempted</span><strong>{formatPercentage(totalQuestions ? (attemptedQuestions / totalQuestions) * 100 : 0)}</strong></div>
+                <div className="ielts-result-progress-track"><div className="ielts-result-progress-fill secondary-fill" style={{ width: `${Math.min(100, totalQuestions ? (attemptedQuestions / totalQuestions) * 100 : 0)}%` }} /></div>
+              </div>
+            </div>
+          </div>
+
+          <div className="ielts-result-card ielts-result-summary-card">
+            <div className="ielts-result-card-heading">
+              <div>
+                <span>Test information</span>
+                <h2>Attempt summary</h2>
+              </div>
+              <FileText size={22} />
+            </div>
+            <div className="ielts-result-info-list">
+              <div><span>Test type</span><strong>{humanize(result?.test?.testType)}</strong></div>
+              <div><span>Difficulty</span><strong>{result?.test?.difficulty || "Mixed"}</strong></div>
+              <div><span>Duration</span><strong>{result?.test?.duration ? `${result.test.duration} min` : "—"}</strong></div>
+              <div><span>Started</span><strong>{formatDate(result?.startedAt)}</strong></div>
+            </div>
+          </div>
+        </section>
+
+        <section className="ielts-result-section-area">
+          <div className="ielts-result-section-heading">
+            <div>
+              <span>Band scores</span>
+              <h2>Section performance</h2>
+            </div>
+            <small>Click a section to see detailed performance.</small>
+          </div>
+
+          {orderedSections.length > 0 ? (
+            <div className="ielts-result-section-grid">
+              {orderedSections.map((section, index) => (
+                <SectionScoreCard key={`${section.section}-${index}`} section={section} index={index} onOpen={setActiveSection} />
+              ))}
+            </div>
+          ) : (
+            <div className="ielts-result-empty-detail">No section analysis is available yet.</div>
+          )}
+        </section>
+
+        {activeSection !== null && orderedSections[activeSection] ? (
+          <section className="ielts-result-detail-section">
+            <SectionDetail section={orderedSections[activeSection]} />
+          </section>
+        ) : null}
+
+        <section className="ielts-result-recommendation-grid">
+          <div className="ielts-result-card">
+            <div className="ielts-result-card-heading">
+              <div><span>What you did well</span><h2>Strengths</h2></div>
+              <CheckCircle2 size={22} />
+            </div>
+            {Array.isArray(analysis.strengths) && analysis.strengths.length > 0 ? (
+              <ul className="ielts-result-bullet-list positive-list">
+                {analysis.strengths.map((item, index) => <li key={index}>{item}</li>)}
+              </ul>
+            ) : (
+              <p className="ielts-result-muted">No overall strengths were returned by the evaluation service.</p>
+            )}
+          </div>
+
+          <div className="ielts-result-card">
+            <div className="ielts-result-card-heading">
+              <div><span>Next focus</span><h2>Areas to improve</h2></div>
+              <Target size={22} />
+            </div>
+            {Array.isArray(analysis.weaknesses) && analysis.weaknesses.length > 0 ? (
+              <ul className="ielts-result-bullet-list">
+                {analysis.weaknesses.map((item, index) => <li key={index}>{item}</li>)}
+              </ul>
+            ) : (
+              <p className="ielts-result-muted">No overall improvement areas were returned by the evaluation service.</p>
+            )}
+          </div>
+
+          <div className="ielts-result-card">
+            <div className="ielts-result-card-heading">
+              <div><span>Recommended next steps</span><h2>Study plan</h2></div>
+              <TrendingUp size={22} />
+            </div>
+            {Array.isArray(analysis.recommendations) && analysis.recommendations.length > 0 ? (
+              <ol className="ielts-result-bullet-list numbered-list">
+                {analysis.recommendations.map((item, index) => <li key={index}>{item}</li>)}
+              </ol>
+            ) : (
+              <p className="ielts-result-muted">Recommendations will appear here when provided by the evaluation service.</p>
+            )}
+          </div>
+        </section>
+
+        <footer className="ielts-result-footer">
+          <span>IELTS result report</span>
+          <span>{attemptId}</span>
+        </footer>
+      </div>
+    </div>
+  );
+};
+
+export default IeltsResult;

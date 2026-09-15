@@ -106,6 +106,7 @@ interface TestFormValues {
     section: string;
     order: number;
     duration: number;
+    audioUrl: string;
     questionCount: number;
     groups: Array<{
       group: string;
@@ -177,7 +178,9 @@ export default function IeltsTestManagementPage() {
 
   // Group selection states
   const [groupModalOpen, setGroupModalOpen] = useState(false);
-  const [groupModalSection, setGroupModalSection] = useState<number | null>(null);
+  const [groupModalSection, setGroupModalSection] = useState<number | null>(
+    null,
+  );
   const [groupFilters, setGroupFilters] = useState({
     search: "",
     section: "all",
@@ -190,7 +193,8 @@ export default function IeltsTestManagementPage() {
   const [groupsTotalPages, setGroupsTotalPages] = useState(1);
   const [groupsTotal, setGroupsTotal] = useState(0);
   const [selectedGroups, setSelectedGroups] = useState<QuestionGroup[]>([]);
-  const [groupsSearchTimeout, setGroupsSearchTimeout] = useState<NodeJS.Timeout | null>(null);
+  const [groupsSearchTimeout, setGroupsSearchTimeout] =
+    useState<NodeJS.Timeout | null>(null);
   const [debouncedGroupsSearch, setDebouncedGroupsSearch] = useState("");
 
   const [filters, setFilters] = useState({
@@ -202,7 +206,9 @@ export default function IeltsTestManagementPage() {
     isFree: "all",
   });
   const [debouncedSearch, setDebouncedSearch] = useState("");
-  const [searchTimeout, setSearchTimeout] = useState<NodeJS.Timeout | null>(null);
+  const [searchTimeout, setSearchTimeout] = useState<NodeJS.Timeout | null>(
+    null,
+  );
   const [page, setPage] = useState(1);
   const [limit, setLimit] = useState(10);
   const [totalPages, setTotalPages] = useState(1);
@@ -304,7 +310,16 @@ export default function IeltsTestManagementPage() {
 
   useEffect(() => {
     fetchTests();
-  }, [page, limit, debouncedSearch, filters.testType, filters.difficulty, filters.status, filters.isFeatured, filters.isFree]);
+  }, [
+    page,
+    limit,
+    debouncedSearch,
+    filters.testType,
+    filters.difficulty,
+    filters.status,
+    filters.isFeatured,
+    filters.isFree,
+  ]);
 
   const fetchGroups = useCallback(async () => {
     try {
@@ -313,13 +328,14 @@ export default function IeltsTestManagementPage() {
         page: groupsPage,
         limit: groupsLimit,
       };
-      
+
       if (debouncedGroupsSearch) params.search = debouncedGroupsSearch;
       if (groupFilters.section !== "all") params.section = groupFilters.section;
-      if (groupFilters.isActive !== "all") params.isActive = groupFilters.isActive;
-      
+      if (groupFilters.isActive !== "all")
+        params.isActive = groupFilters.isActive;
+
       const res = await api.get("/ielts/group", { params });
-      
+
       if (res.data?.success) {
         const data = res.data.data || [];
         setGroups(data);
@@ -334,7 +350,9 @@ export default function IeltsTestManagementPage() {
       }
     } catch (err: any) {
       console.error("Fetch groups error:", err);
-      toast.error(err.response?.data?.message || "Failed to load question groups");
+      toast.error(
+        err.response?.data?.message || "Failed to load question groups",
+      );
     } finally {
       setGroupsLoading(false);
     }
@@ -402,6 +420,7 @@ export default function IeltsTestManagementPage() {
           order: 1,
           duration: 60,
           questionCount: 0,
+          audioUrl: "",
           groups: [],
         },
         {
@@ -409,6 +428,7 @@ export default function IeltsTestManagementPage() {
           order: 2,
           duration: 30,
           questionCount: 0,
+          audioUrl: "",
           groups: [],
         },
       ],
@@ -443,8 +463,9 @@ export default function IeltsTestManagementPage() {
         order: s.order,
         duration: s.duration,
         questionCount: s.questionCount,
+        audioUrl: s.audioUrl,
         groups: s.groups.map((g) => ({
-          group: typeof g.group === 'object' ? g.group._id : g.group,
+          group: typeof g.group === "object" ? g.group._id : g.group,
           order: g.order,
         })),
       })),
@@ -501,6 +522,7 @@ export default function IeltsTestManagementPage() {
           order: s.order,
           duration: Number(s.duration) || 0,
           questionCount: Number(s.questionCount) || 0,
+          audioUrl: s.audioUrl || "",
           groups: s.groups.map((g) => ({
             group: g.group,
             order: g.order,
@@ -544,7 +566,12 @@ export default function IeltsTestManagementPage() {
   };
 
   const handleDelete = async (test: IeltsTest) => {
-    if (!window.confirm(`Are you sure you want to delete "${test.title}"? This action cannot be undone.`)) return;
+    if (
+      !window.confirm(
+        `Are you sure you want to delete "${test.title}"? This action cannot be undone.`,
+      )
+    )
+      return;
     try {
       await api.delete(`/ielts/test/${test._id}`);
       toast.success("Test deleted successfully");
@@ -569,11 +596,15 @@ export default function IeltsTestManagementPage() {
   const handleToggleFeatured = async (test: IeltsTest) => {
     try {
       await api.patch(`/ielts/test/${test._id}/featured`);
-      toast.success(test.isFeatured ? "Removed from featured" : "Marked as featured");
+      toast.success(
+        test.isFeatured ? "Removed from featured" : "Marked as featured",
+      );
       fetchTests();
     } catch (err: any) {
       console.error("Toggle featured error:", err);
-      toast.error(err.response?.data?.message || "Failed to update featured status");
+      toast.error(
+        err.response?.data?.message || "Failed to update featured status",
+      );
     }
   };
 
@@ -599,7 +630,7 @@ export default function IeltsTestManagementPage() {
 
   const toggleSelectTest = (id: string) => {
     setSelectedTests((prev) =>
-      prev.includes(id) ? prev.filter((t) => t !== id) : [...prev, id]
+      prev.includes(id) ? prev.filter((t) => t !== id) : [...prev, id],
     );
   };
 
@@ -632,38 +663,42 @@ export default function IeltsTestManagementPage() {
 
   const addGroupsToSection = () => {
     if (groupModalSection === null || selectedGroups.length === 0) return;
-    
+
     const currentSections = watchSections || [];
     const section = currentSections[groupModalSection];
-    
+
     if (!section) return;
-    
+
     const existingGroups = section.groups || [];
-    
+
     // Filter out groups that are already added
-    const newGroups = selectedGroups.filter(sg => 
-      !existingGroups.some((eg: any) => 
-        (typeof eg.group === 'object' ? eg.group._id : eg.group) === sg._id
-      )
+    const newGroups = selectedGroups.filter(
+      (sg) =>
+        !existingGroups.some(
+          (eg: any) =>
+            (typeof eg.group === "object" ? eg.group._id : eg.group) === sg._id,
+        ),
     );
-    
+
     const groupsToAdd = newGroups.map((g, idx) => ({
       group: g._id,
       order: existingGroups.length + idx + 1,
     }));
-    
+
     const updatedGroups = [...existingGroups, ...groupsToAdd];
-    
+
     setValue(`sections.${groupModalSection}.groups`, updatedGroups);
-    
+
     // Calculate total questions from selected groups
     const totalQuestions = updatedGroups.reduce((sum, g) => {
-      const groupData = selectedGroups.find(sg => sg._id === g.group);
-      return sum + (groupData?.questionCount || groupData?.questions?.length || 0);
+      const groupData = selectedGroups.find((sg) => sg._id === g.group);
+      return (
+        sum + (groupData?.questionCount || groupData?.questions?.length || 0)
+      );
     }, 0);
-    
+
     setValue(`sections.${groupModalSection}.questionCount`, totalQuestions);
-    
+
     closeGroupModal();
     toast.success(`${newGroups.length} group(s) added successfully`);
   };
@@ -671,38 +706,51 @@ export default function IeltsTestManagementPage() {
   const removeGroupFromSection = (sectionIndex: number, groupIndex: number) => {
     const currentSections = watchSections || [];
     const section = currentSections[sectionIndex];
-    
+
     if (!section) return;
-    
+
     const groups = section.groups || [];
     const updatedGroups = groups.filter((_, i) => i !== groupIndex);
-    
+
     // Reorder remaining groups
     const reorderedGroups = updatedGroups.map((g, idx) => ({
       ...g,
       order: idx + 1,
     }));
-    
+
     setValue(`sections.${sectionIndex}.groups`, reorderedGroups);
-    
+
     // Recalculate question count (subtract removed group's questions)
     const currentCount = watchSections?.[sectionIndex]?.questionCount || 0;
-    setValue(`sections.${sectionIndex}.questionCount`, Math.max(0, currentCount - 10)); // Adjust as needed
-    
+    setValue(
+      `sections.${sectionIndex}.questionCount`,
+      Math.max(0, currentCount - 10),
+    ); // Adjust as needed
+
     toast.success("Group removed from section");
   };
 
   const getGroupDisplayName = (group: QuestionGroup) => {
-    return group.name || group.title || group.passageTitle || group.passage?.title || "Untitled Group";
+    return (
+      group.name ||
+      group.title ||
+      group.passageTitle ||
+      group.passage?.title ||
+      "Untitled Group"
+    );
   };
 
   const getGroupSectionLabel = (section: string) => {
-    return SECTION_OPTIONS.find(s => s.value === section)?.label || section;
+    return SECTION_OPTIONS.find((s) => s.value === section)?.label || section;
   };
 
   const formatDate = (dateString: string) => {
     const date = new Date(dateString);
-    return date.toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' });
+    return date.toLocaleDateString("en-US", {
+      year: "numeric",
+      month: "short",
+      day: "numeric",
+    });
   };
 
   const formatDuration = (minutes: number) => {
@@ -717,24 +765,24 @@ export default function IeltsTestManagementPage() {
 
   const getStatusColor = (status: string) => {
     switch (status) {
-      case 'published':
-        return 'bg-emerald-50 text-emerald-700 border-emerald-200 dark:bg-emerald-500/20 dark:text-emerald-300 dark:border-emerald-500/30';
-      case 'draft':
-        return 'bg-amber-50 text-amber-700 border-amber-200 dark:bg-amber-500/20 dark:text-amber-300 dark:border-amber-500/30';
-      case 'archived':
-        return 'bg-gray-50 text-gray-700 border-gray-200 dark:bg-gray-500/20 dark:text-gray-300 dark:border-gray-500/30';
+      case "published":
+        return "bg-emerald-50 text-emerald-700 border-emerald-200 dark:bg-emerald-500/20 dark:text-emerald-300 dark:border-emerald-500/30";
+      case "draft":
+        return "bg-amber-50 text-amber-700 border-amber-200 dark:bg-amber-500/20 dark:text-amber-300 dark:border-amber-500/30";
+      case "archived":
+        return "bg-gray-50 text-gray-700 border-gray-200 dark:bg-gray-500/20 dark:text-gray-300 dark:border-gray-500/30";
       default:
-        return 'bg-gray-50 text-gray-700 border-gray-200';
+        return "bg-gray-50 text-gray-700 border-gray-200";
     }
   };
 
   const getStatusIcon = (status: string) => {
     switch (status) {
-      case 'published':
+      case "published":
         return <CheckCircle2 className="h-3 w-3" />;
-      case 'draft':
+      case "draft":
         return <FileText className="h-3 w-3" />;
-      case 'archived':
+      case "archived":
         return <Archive className="h-3 w-3" />;
       default:
         return null;
@@ -742,7 +790,7 @@ export default function IeltsTestManagementPage() {
   };
 
   const getTestTypeLabel = (type: string) => {
-    return TEST_TYPE_OPTIONS.find(t => t.value === type)?.label || type;
+    return TEST_TYPE_OPTIONS.find((t) => t.value === type)?.label || type;
   };
 
   return (
@@ -813,27 +861,37 @@ export default function IeltsTestManagementPage() {
 
                   <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                     <div className="rounded-xl border border-gray-200 p-4 dark:border-gray-700">
-                      <div className="text-sm text-gray-500 dark:text-gray-400">Total Questions</div>
+                      <div className="text-sm text-gray-500 dark:text-gray-400">
+                        Total Questions
+                      </div>
                       <div className="mt-1 text-2xl font-bold text-gray-900 dark:text-gray-100">
                         {previewTest.totalQuestions}
                       </div>
                     </div>
                     <div className="rounded-xl border border-gray-200 p-4 dark:border-gray-700">
-                      <div className="text-sm text-gray-500 dark:text-gray-400">Duration</div>
+                      <div className="text-sm text-gray-500 dark:text-gray-400">
+                        Duration
+                      </div>
                       <div className="mt-1 text-2xl font-bold text-gray-900 dark:text-gray-100">
                         {formatDuration(previewTest.duration)}
                       </div>
                     </div>
                     <div className="rounded-xl border border-gray-200 p-4 dark:border-gray-700">
-                      <div className="text-sm text-gray-500 dark:text-gray-400">Difficulty</div>
+                      <div className="text-sm text-gray-500 dark:text-gray-400">
+                        Difficulty
+                      </div>
                       <div className="mt-1 text-2xl font-bold text-gray-900 dark:text-gray-100">
                         {previewTest.difficulty}
                       </div>
                     </div>
                     <div className="rounded-xl border border-gray-200 p-4 dark:border-gray-700">
-                      <div className="text-sm text-gray-500 dark:text-gray-400">Price</div>
+                      <div className="text-sm text-gray-500 dark:text-gray-400">
+                        Price
+                      </div>
                       <div className="mt-1 text-2xl font-bold text-gray-900 dark:text-gray-100">
-                        {previewTest.pricing.isFree ? "Free" : `${previewTest.pricing.currency} ${previewTest.pricing.salePrice}`}
+                        {previewTest.pricing.isFree
+                          ? "Free"
+                          : `${previewTest.pricing.currency} ${previewTest.pricing.salePrice}`}
                       </div>
                     </div>
                   </div>
@@ -853,7 +911,9 @@ export default function IeltsTestManagementPage() {
                               {section.section}
                             </div>
                             <div className="text-xs text-gray-500 dark:text-gray-400">
-                              {section.questionCount} questions • {formatDuration(section.duration)} • {section.groups.length} groups
+                              {section.questionCount} questions •{" "}
+                              {formatDuration(section.duration)} •{" "}
+                              {section.groups.length} groups
                             </div>
                           </div>
                           <span className="text-sm text-gray-500 dark:text-gray-400">
@@ -915,11 +975,15 @@ export default function IeltsTestManagementPage() {
                   Select Question Groups
                 </h3>
                 <p className="text-xs text-gray-500 dark:text-gray-400">
-                  {groupModalSection !== null && watchSections?.[groupModalSection]?.section && (
-                    <>
-                      Section: <span className="capitalize">{watchSections[groupModalSection].section}</span>
-                    </>
-                  )}
+                  {groupModalSection !== null &&
+                    watchSections?.[groupModalSection]?.section && (
+                      <>
+                        Section:{" "}
+                        <span className="capitalize">
+                          {watchSections[groupModalSection].section}
+                        </span>
+                      </>
+                    )}
                 </p>
               </div>
               <button
@@ -952,7 +1016,7 @@ export default function IeltsTestManagementPage() {
                     ]}
                     defaultValue={groupFilters.section}
                     onChange={(value: string) => {
-                      setGroupFilters(prev => ({ ...prev, section: value }));
+                      setGroupFilters((prev) => ({ ...prev, section: value }));
                       setGroupsPage(1);
                     }}
                     className="rounded-xl border-gray-200 dark:border-gray-700"
@@ -967,7 +1031,7 @@ export default function IeltsTestManagementPage() {
                     ]}
                     defaultValue={groupFilters.isActive}
                     onChange={(value: string) => {
-                      setGroupFilters(prev => ({ ...prev, isActive: value }));
+                      setGroupFilters((prev) => ({ ...prev, isActive: value }));
                       setGroupsPage(1);
                     }}
                     className="rounded-xl border-gray-200 dark:border-gray-700"
@@ -984,33 +1048,41 @@ export default function IeltsTestManagementPage() {
               ) : groups.length === 0 ? (
                 <div className="flex flex-col items-center justify-center py-12 text-center">
                   <BookOpen className="h-8 w-8 text-gray-400 mb-2" />
-                  <p className="text-sm text-gray-500">No question groups found</p>
+                  <p className="text-sm text-gray-500">
+                    No question groups found
+                  </p>
                 </div>
               ) : (
                 <div className="space-y-2">
                   {groups.map((group) => {
-                    const isSelected = selectedGroups.some(g => g._id === group._id);
-                    const isAlreadyAdded = groupModalSection !== null && 
+                    const isSelected = selectedGroups.some(
+                      (g) => g._id === group._id,
+                    );
+                    const isAlreadyAdded =
+                      groupModalSection !== null &&
                       watchSections?.[groupModalSection]?.groups?.some(
-                        (g: any) => (typeof g.group === 'object' ? g.group._id : g.group) === group._id
+                        (g: any) =>
+                          (typeof g.group === "object"
+                            ? g.group._id
+                            : g.group) === group._id,
                       );
-                    
+
                     return (
                       <div
                         key={group._id}
                         className={`flex items-center justify-between rounded-xl border p-4 transition-all cursor-pointer ${
                           isSelected
-                            ? 'border-blue-500 bg-blue-50 dark:border-blue-500 dark:bg-blue-900/20'
+                            ? "border-blue-500 bg-blue-50 dark:border-blue-500 dark:bg-blue-900/20"
                             : isAlreadyAdded
-                            ? 'border-gray-200 bg-gray-50 opacity-50 dark:border-gray-700 dark:bg-gray-800'
-                            : 'border-gray-200 hover:border-blue-300 hover:bg-blue-50/50 dark:border-gray-700 dark:hover:border-blue-700 dark:hover:bg-blue-900/10'
+                              ? "border-gray-200 bg-gray-50 opacity-50 dark:border-gray-700 dark:bg-gray-800"
+                              : "border-gray-200 hover:border-blue-300 hover:bg-blue-50/50 dark:border-gray-700 dark:hover:border-blue-700 dark:hover:bg-blue-900/10"
                         }`}
                         onClick={() => {
                           if (isAlreadyAdded) return;
-                          setSelectedGroups(prev =>
+                          setSelectedGroups((prev) =>
                             isSelected
-                              ? prev.filter(g => g._id !== group._id)
-                              : [...prev, group]
+                              ? prev.filter((g) => g._id !== group._id)
+                              : [...prev, group],
                           );
                         }}
                       >
@@ -1029,7 +1101,7 @@ export default function IeltsTestManagementPage() {
                           </div>
                           <div className="ml-6 flex flex-wrap items-center gap-3 text-xs text-gray-500 dark:text-gray-400">
                             <span className="capitalize">
-                              {getGroupSectionLabel(group.section || '')}
+                              {getGroupSectionLabel(group.section || "")}
                             </span>
                             {group.questionType && (
                               <>
@@ -1039,7 +1111,10 @@ export default function IeltsTestManagementPage() {
                             )}
                             <span>•</span>
                             <span>
-                              {group.questionCount || group.questions?.length || 0} Questions
+                              {group.questionCount ||
+                                group.questions?.length ||
+                                0}{" "}
+                              Questions
                             </span>
                           </div>
                         </div>
@@ -1065,7 +1140,7 @@ export default function IeltsTestManagementPage() {
                     variant="outline"
                     size="sm"
                     disabled={groupsPage <= 1}
-                    onClick={() => setGroupsPage(p => Math.max(1, p - 1))}
+                    onClick={() => setGroupsPage((p) => Math.max(1, p - 1))}
                     className="rounded-xl px-3 py-1.5 text-xs"
                   >
                     <ChevronLeft className="h-3.5 w-3.5" />
@@ -1075,7 +1150,9 @@ export default function IeltsTestManagementPage() {
                     variant="outline"
                     size="sm"
                     disabled={groupsPage >= groupsTotalPages}
-                    onClick={() => setGroupsPage(p => Math.min(groupsTotalPages, p + 1))}
+                    onClick={() =>
+                      setGroupsPage((p) => Math.min(groupsTotalPages, p + 1))
+                    }
                     className="rounded-xl px-3 py-1.5 text-xs"
                   >
                     Next
@@ -1176,7 +1253,13 @@ export default function IeltsTestManagementPage() {
                   </div>
                   <span>Filters</span>
                   <span className="text-xs text-gray-500 dark:text-gray-400">
-                    ({Object.values(filters).filter(v => v !== "all" && v !== "").length} active)
+                    (
+                    {
+                      Object.values(filters).filter(
+                        (v) => v !== "all" && v !== "",
+                      ).length
+                    }{" "}
+                    active)
                   </span>
                 </div>
                 <button
@@ -1267,12 +1350,16 @@ export default function IeltsTestManagementPage() {
               <div className="mt-4 flex flex-wrap items-center justify-between gap-3">
                 <div className="flex items-center gap-4 text-xs text-gray-500 dark:text-gray-400">
                   <div className="flex items-center gap-1">
-                    <span className="font-semibold text-gray-700 dark:text-gray-300">{totalTests}</span>
+                    <span className="font-semibold text-gray-700 dark:text-gray-300">
+                      {totalTests}
+                    </span>
                     <span>tests found</span>
                   </div>
                   <div className="hidden sm:flex items-center gap-1">
                     <span>Page</span>
-                    <span className="font-semibold text-blue-600 dark:text-blue-400">{page}</span>
+                    <span className="font-semibold text-blue-600 dark:text-blue-400">
+                      {page}
+                    </span>
                     <span>of</span>
                     <span className="font-semibold">{totalPages}</span>
                   </div>
@@ -1328,7 +1415,9 @@ export default function IeltsTestManagementPage() {
                 onClick={toggleSelectAll}
                 className="text-sm text-blue-600 hover:underline dark:text-blue-400"
               >
-                {selectedTests.length === tests.length ? "Deselect All" : "Select All"}
+                {selectedTests.length === tests.length
+                  ? "Deselect All"
+                  : "Select All"}
               </button>
             </div>
           )}
@@ -1338,7 +1427,9 @@ export default function IeltsTestManagementPage() {
             {loading && (
               <div className="flex flex-col items-center justify-center border border-gray-200/50 bg-white/80 p-12 text-center backdrop-blur-sm dark:border-gray-800/50 dark:bg-gray-900/80">
                 <Loader2 className="mb-3 h-8 w-8 animate-spin text-blue-600" />
-                <p className="text-sm text-gray-500 dark:text-gray-400">Loading tests...</p>
+                <p className="text-sm text-gray-500 dark:text-gray-400">
+                  Loading tests...
+                </p>
               </div>
             )}
 
@@ -1372,209 +1463,231 @@ export default function IeltsTestManagementPage() {
               </div>
             )}
 
-            {!loading && !error && tests.map((test) => (
-              <motion.div
-                key={test._id}
-                layout
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: -20 }}
-                transition={{ duration: 0.3, ease: "easeOut" }}
-                className="group relative overflow-hidden border border-gray-200 bg-white backdrop-blur-sm transition-all hover:-translate-y-1 dark:border-gray-800/50 dark:bg-gray-900/80"
-              >
-                <div className="relative p-5">
-                  <div className="flex flex-col gap-3 lg:flex-row lg:items-start lg:justify-between">
-                    <div className="flex-1 min-w-0">
-                      {bulkMode && (
-                        <input
-                          type="checkbox"
-                          checked={selectedTests.includes(test._id)}
-                          onChange={() => toggleSelectTest(test._id)}
-                          className="mb-2 h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
-                        />
-                      )}
-
-                      <div className="mb-2 flex flex-wrap items-center gap-2">
-                        <span className="inline-flex items-center gap-1 rounded-full bg-gradient-to-r from-blue-500/10 to-indigo-500/10 px-3 py-1 text-xs font-medium text-blue-700 dark:from-blue-500/20 dark:to-indigo-500/20 dark:text-blue-300">
-                          <Layers className="h-3 w-3" />
-                          {getTestTypeLabel(test.testType)}
-                        </span>
-
-                        <span className="inline-flex items-center gap-1 rounded-full bg-purple-50 px-3 py-1 text-xs font-medium text-purple-700 dark:bg-purple-500/20 dark:text-purple-300">
-                          <Award className="h-3 w-3" />
-                          {test.difficulty}
-                        </span>
-
-                        <span className={`inline-flex items-center gap-1 rounded-full border px-3 py-1 text-xs font-medium ${getStatusColor(test.status)}`}>
-                          {getStatusIcon(test.status)}
-                          <span className="capitalize">{test.status}</span>
-                        </span>
-
-                        {test.isFeatured && (
-                          <span className="inline-flex items-center gap-1 rounded-full bg-amber-50 px-3 py-1 text-xs font-medium text-amber-700 dark:bg-amber-500/20 dark:text-amber-300">
-                            <Star className="h-3 w-3 fill-current" />
-                            Featured
-                          </span>
+            {!loading &&
+              !error &&
+              tests.map((test) => (
+                <motion.div
+                  key={test._id}
+                  layout
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -20 }}
+                  transition={{ duration: 0.3, ease: "easeOut" }}
+                  className="group relative overflow-hidden border border-gray-200 bg-white backdrop-blur-sm transition-all hover:-translate-y-1 dark:border-gray-800/50 dark:bg-gray-900/80"
+                >
+                  <div className="relative p-5">
+                    <div className="flex flex-col gap-3 lg:flex-row lg:items-start lg:justify-between">
+                      <div className="flex-1 min-w-0">
+                        {bulkMode && (
+                          <input
+                            type="checkbox"
+                            checked={selectedTests.includes(test._id)}
+                            onChange={() => toggleSelectTest(test._id)}
+                            className="mb-2 h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                          />
                         )}
 
-                        <span className={`inline-flex items-center gap-1 rounded-full px-3 py-1 text-xs font-medium ${
-                          test.pricing.isFree
-                            ? 'bg-emerald-50 text-emerald-700 dark:bg-emerald-500/20 dark:text-emerald-300'
-                            : 'bg-orange-50 text-orange-700 dark:bg-orange-500/20 dark:text-orange-300'
-                        }`}>
-                          <DollarSign className="h-3 w-3" />
-                          {test.pricing.isFree ? 'Free' : `${test.pricing.currency} ${test.pricing.salePrice}`}
-                        </span>
-                      </div>
-
-                      <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100">
-                        {test.title}
-                      </h3>
-
-                      {test.description && (
-                        <p className="mt-1 text-sm text-gray-500 line-clamp-1 dark:text-gray-400">
-                          {test.description}
-                        </p>
-                      )}
-
-                      <div className="mt-3 flex flex-wrap items-center gap-4 text-xs text-gray-500 dark:text-gray-400">
-                        <span className="flex items-center gap-1">
-                          <FileText className="h-3.5 w-3.5" />
-                          {test.totalQuestions} Questions
-                        </span>
-                        <span className="flex items-center gap-1">
-                          <Clock className="h-3.5 w-3.5" />
-                          {formatDuration(test.duration)}
-                        </span>
-                        <span className="flex items-center gap-1">
-                          <Layers className="h-3.5 w-3.5" />
-                          {test.sections.length} Sections
-                        </span>
-                        {test.createdAt && (
-                          <span className="flex items-center gap-1">
-                            <Calendar className="h-3.5 w-3.5" />
-                            {formatDate(test.createdAt)}
+                        <div className="mb-2 flex flex-wrap items-center gap-2">
+                          <span className="inline-flex items-center gap-1 rounded-full bg-gradient-to-r from-blue-500/10 to-indigo-500/10 px-3 py-1 text-xs font-medium text-blue-700 dark:from-blue-500/20 dark:to-indigo-500/20 dark:text-blue-300">
+                            <Layers className="h-3 w-3" />
+                            {getTestTypeLabel(test.testType)}
                           </span>
-                        )}
-                      </div>
-                    </div>
 
-                    <div className="flex flex-col items-center gap-2 lg:flex-shrink-0">
-                      <div className="flex items-center gap-2">
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          className="rounded-2xl px-3 py-2 text-xs border-gray-200 hover:border-green-500 hover:bg-green-50 hover:text-green-600 dark:border-gray-700 dark:hover:border-green-500 dark:hover:bg-green-500/10"
-                          onClick={() => {
-                            setPreviewTest(test);
-                            setPreview(true);
-                          }}
-                        >
-                          <Eye className="mr-1 h-3.5 w-3.5" />
-                          Preview
-                        </Button>
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          className="rounded-2xl px-3 py-2 text-xs border-gray-200 hover:border-blue-500 hover:bg-blue-50 hover:text-blue-600 dark:border-gray-700 dark:hover:border-blue-500 dark:hover:bg-blue-500/10"
-                          onClick={() => openEditDrawer(test)}
-                        >
-                          <Edit3 className="mr-1 h-3.5 w-3.5" />
-                          Edit
-                        </Button>
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          className="rounded-2xl px-3 py-2 text-xs border-gray-200 text-rose-600 hover:border-rose-500 hover:bg-rose-50 hover:text-rose-700 dark:border-gray-700 dark:hover:border-rose-500 dark:hover:bg-rose-500/10"
-                          onClick={() => handleDelete(test)}
-                        >
-                          <Trash2 className="mr-1 h-3.5 w-3.5" />
-                          Delete
-                        </Button>
-                      </div>
-                      <div className="flex flex-wrap items-center gap-2 text-xs">
-                        <button
-                          onClick={() => handleToggleFeatured(test)}
-                          className={`flex items-center gap-1 rounded-xl px-2 py-1 transition-colors ${
-                            test.isFeatured
-                              ? 'text-amber-600 hover:bg-amber-50 dark:hover:bg-amber-500/10'
-                              : 'text-gray-400 hover:text-amber-600 hover:bg-amber-50 dark:hover:bg-amber-500/10'
-                          }`}
-                          title={test.isFeatured ? "Remove from featured" : "Mark as featured"}
-                        >
-                          <Star className="h-3.5 w-3.5" />
-                          {test.isFeatured ? 'Unfeature' : 'Feature'}
-                        </button>
-                        <select
-                          value={test.status}
-                          onChange={(e) => handleStatusChange(test, e.target.value)}
-                          className="h-7 rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 px-2 text-xs outline-none focus:ring-1 focus:ring-blue-500"
-                        >
-                          {STATUS_OPTIONS.map((opt) => (
-                            <option key={opt.value} value={opt.value}>
-                              {opt.label}
-                            </option>
-                          ))}
-                        </select>
-                        <button
-                          onClick={() => setExpandedTest(expandedTest === test._id ? null : test._id)}
-                          className="flex items-center gap-1 rounded-xl px-2 py-1 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300"
-                        >
-                          {expandedTest === test._id ? (
-                            <ChevronUp className="h-3.5 w-3.5" />
-                          ) : (
-                            <ChevronDown className="h-3.5 w-3.5" />
+                          <span className="inline-flex items-center gap-1 rounded-full bg-purple-50 px-3 py-1 text-xs font-medium text-purple-700 dark:bg-purple-500/20 dark:text-purple-300">
+                            <Award className="h-3 w-3" />
+                            {test.difficulty}
+                          </span>
+
+                          <span
+                            className={`inline-flex items-center gap-1 rounded-full border px-3 py-1 text-xs font-medium ${getStatusColor(test.status)}`}
+                          >
+                            {getStatusIcon(test.status)}
+                            <span className="capitalize">{test.status}</span>
+                          </span>
+
+                          {test.isFeatured && (
+                            <span className="inline-flex items-center gap-1 rounded-full bg-amber-50 px-3 py-1 text-xs font-medium text-amber-700 dark:bg-amber-500/20 dark:text-amber-300">
+                              <Star className="h-3 w-3 fill-current" />
+                              Featured
+                            </span>
                           )}
-                          Sections
-                        </button>
+
+                          <span
+                            className={`inline-flex items-center gap-1 rounded-full px-3 py-1 text-xs font-medium ${
+                              test.pricing.isFree
+                                ? "bg-emerald-50 text-emerald-700 dark:bg-emerald-500/20 dark:text-emerald-300"
+                                : "bg-orange-50 text-orange-700 dark:bg-orange-500/20 dark:text-orange-300"
+                            }`}
+                          >
+                            <DollarSign className="h-3 w-3" />
+                            {test.pricing.isFree
+                              ? "Free"
+                              : `${test.pricing.currency} ${test.pricing.salePrice}`}
+                          </span>
+                        </div>
+
+                        <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100">
+                          {test.title}
+                        </h3>
+
+                        {test.description && (
+                          <p className="mt-1 text-sm text-gray-500 line-clamp-1 dark:text-gray-400">
+                            {test.description}
+                          </p>
+                        )}
+
+                        <div className="mt-3 flex flex-wrap items-center gap-4 text-xs text-gray-500 dark:text-gray-400">
+                          <span className="flex items-center gap-1">
+                            <FileText className="h-3.5 w-3.5" />
+                            {test.totalQuestions} Questions
+                          </span>
+                          <span className="flex items-center gap-1">
+                            <Clock className="h-3.5 w-3.5" />
+                            {formatDuration(test.duration)}
+                          </span>
+                          <span className="flex items-center gap-1">
+                            <Layers className="h-3.5 w-3.5" />
+                            {test.sections.length} Sections
+                          </span>
+                          {test.createdAt && (
+                            <span className="flex items-center gap-1">
+                              <Calendar className="h-3.5 w-3.5" />
+                              {formatDate(test.createdAt)}
+                            </span>
+                          )}
+                        </div>
+                      </div>
+
+                      <div className="flex flex-col items-center gap-2 lg:flex-shrink-0">
+                        <div className="flex items-center gap-2">
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            className="rounded-2xl px-3 py-2 text-xs border-gray-200 hover:border-green-500 hover:bg-green-50 hover:text-green-600 dark:border-gray-700 dark:hover:border-green-500 dark:hover:bg-green-500/10"
+                            onClick={() => {
+                              setPreviewTest(test);
+                              setPreview(true);
+                            }}
+                          >
+                            <Eye className="mr-1 h-3.5 w-3.5" />
+                            Preview
+                          </Button>
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            className="rounded-2xl px-3 py-2 text-xs border-gray-200 hover:border-blue-500 hover:bg-blue-50 hover:text-blue-600 dark:border-gray-700 dark:hover:border-blue-500 dark:hover:bg-blue-500/10"
+                            onClick={() => openEditDrawer(test)}
+                          >
+                            <Edit3 className="mr-1 h-3.5 w-3.5" />
+                            Edit
+                          </Button>
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            className="rounded-2xl px-3 py-2 text-xs border-gray-200 text-rose-600 hover:border-rose-500 hover:bg-rose-50 hover:text-rose-700 dark:border-gray-700 dark:hover:border-rose-500 dark:hover:bg-rose-500/10"
+                            onClick={() => handleDelete(test)}
+                          >
+                            <Trash2 className="mr-1 h-3.5 w-3.5" />
+                            Delete
+                          </Button>
+                        </div>
+                        <div className="flex flex-wrap items-center gap-2 text-xs">
+                          <button
+                            onClick={() => handleToggleFeatured(test)}
+                            className={`flex items-center gap-1 rounded-xl px-2 py-1 transition-colors ${
+                              test.isFeatured
+                                ? "text-amber-600 hover:bg-amber-50 dark:hover:bg-amber-500/10"
+                                : "text-gray-400 hover:text-amber-600 hover:bg-amber-50 dark:hover:bg-amber-500/10"
+                            }`}
+                            title={
+                              test.isFeatured
+                                ? "Remove from featured"
+                                : "Mark as featured"
+                            }
+                          >
+                            <Star className="h-3.5 w-3.5" />
+                            {test.isFeatured ? "Unfeature" : "Feature"}
+                          </button>
+                          <select
+                            value={test.status}
+                            onChange={(e) =>
+                              handleStatusChange(test, e.target.value)
+                            }
+                            className="h-7 rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 px-2 text-xs outline-none focus:ring-1 focus:ring-blue-500"
+                          >
+                            {STATUS_OPTIONS.map((opt) => (
+                              <option key={opt.value} value={opt.value}>
+                                {opt.label}
+                              </option>
+                            ))}
+                          </select>
+                          <button
+                            onClick={() =>
+                              setExpandedTest(
+                                expandedTest === test._id ? null : test._id,
+                              )
+                            }
+                            className="flex items-center gap-1 rounded-xl px-2 py-1 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300"
+                          >
+                            {expandedTest === test._id ? (
+                              <ChevronUp className="h-3.5 w-3.5" />
+                            ) : (
+                              <ChevronDown className="h-3.5 w-3.5" />
+                            )}
+                            Sections
+                          </button>
+                        </div>
                       </div>
                     </div>
-                  </div>
 
-                  <AnimatePresence>
-                    {expandedTest === test._id && (
-                      <motion.div
-                        initial={{ opacity: 0, height: 0 }}
-                        animate={{ opacity: 1, height: "auto" }}
-                        exit={{ opacity: 0, height: 0 }}
-                        transition={{ duration: 0.3 }}
-                        className="mt-4 overflow-hidden"
-                      >
-                        <div className="border-t border-gray-200 pt-4 dark:border-gray-700">
-                          <h4 className="mb-3 text-sm font-semibold text-gray-900 dark:text-gray-100">
-                            Test Sections
-                          </h4>
-                          <div className="grid gap-2 md:grid-cols-2">
-                            {test.sections.map((section, idx) => (
-                              <div
-                                key={idx}
-                                className="rounded-xl border border-gray-200 p-3 dark:border-gray-700"
-                              >
-                                <div className="flex items-center justify-between">
-                                  <span className="font-medium text-gray-900 dark:text-gray-100 capitalize">
-                                    {section.section}
-                                  </span>
-                                  <span className="text-xs text-gray-500">
-                                    Order: {section.order}
-                                  </span>
+                    <AnimatePresence>
+                      {expandedTest === test._id && (
+                        <motion.div
+                          initial={{ opacity: 0, height: 0 }}
+                          animate={{ opacity: 1, height: "auto" }}
+                          exit={{ opacity: 0, height: 0 }}
+                          transition={{ duration: 0.3 }}
+                          className="mt-4 overflow-hidden"
+                        >
+                          <div className="border-t border-gray-200 pt-4 dark:border-gray-700">
+                            <h4 className="mb-3 text-sm font-semibold text-gray-900 dark:text-gray-100">
+                              Test Sections
+                            </h4>
+                            <div className="grid gap-2 md:grid-cols-2">
+                              {test.sections.map((section, idx) => (
+                                <div
+                                  key={idx}
+                                  className="rounded-xl border border-gray-200 p-3 dark:border-gray-700"
+                                >
+                                  <div className="flex items-center justify-between">
+                                    <span className="font-medium text-gray-900 dark:text-gray-100 capitalize">
+                                      {section.section}
+                                    </span>
+                                    <span className="text-xs text-gray-500">
+                                      Order: {section.order}
+                                    </span>
+                                  </div>
+                                  <div className="mt-2 flex items-center gap-3 text-xs text-gray-500">
+                                    <span>
+                                      {section.questionCount} Questions
+                                    </span>
+                                    <span>•</span>
+                                    <span>
+                                      {formatDuration(section.duration)}
+                                    </span>
+                                    <span>•</span>
+                                    <span>{section.groups.length} Groups</span>
+                                  </div>
                                 </div>
-                                <div className="mt-2 flex items-center gap-3 text-xs text-gray-500">
-                                  <span>{section.questionCount} Questions</span>
-                                  <span>•</span>
-                                  <span>{formatDuration(section.duration)}</span>
-                                  <span>•</span>
-                                  <span>{section.groups.length} Groups</span>
-                                </div>
-                              </div>
-                            ))}
+                              ))}
+                            </div>
                           </div>
-                        </div>
-                      </motion.div>
-                    )}
-                  </AnimatePresence>
-                </div>
-              </motion.div>
-            ))}
+                        </motion.div>
+                      )}
+                    </AnimatePresence>
+                  </div>
+                </motion.div>
+              ))}
           </div>
 
           {/* Side Drawer - Create/Edit Test */}
@@ -1609,7 +1722,9 @@ export default function IeltsTestManagementPage() {
                         {editingTest ? "Edit Test" : "Create New Test"}
                       </h3>
                       <p className="text-xs text-gray-500 dark:text-gray-400">
-                        {watchTestType ? getTestTypeLabel(watchTestType) : "Select test type"}
+                        {watchTestType
+                          ? getTestTypeLabel(watchTestType)
+                          : "Select test type"}
                       </p>
                     </div>
                     <button
@@ -1621,7 +1736,10 @@ export default function IeltsTestManagementPage() {
                     </button>
                   </div>
 
-                  <form onSubmit={handleSubmit(onSubmit)} className="flex-1 overflow-y-auto">
+                  <form
+                    onSubmit={handleSubmit(onSubmit)}
+                    className="flex-1 overflow-y-auto"
+                  >
                     <div className="px-6 space-y-3 py-4">
                       <div className="grid gap-4 sm:grid-cols-2">
                         <div>
@@ -1641,7 +1759,9 @@ export default function IeltsTestManagementPage() {
                             className="mt-1 rounded-2xl border-gray-200 dark:border-gray-700"
                           />
                           {errors.title && (
-                            <p className="mt-1 text-xs text-rose-500">{errors.title.message}</p>
+                            <p className="mt-1 text-xs text-rose-500">
+                              {errors.title.message}
+                            </p>
                           )}
                         </div>
                         <div>
@@ -1656,7 +1776,9 @@ export default function IeltsTestManagementPage() {
                             className="mt-1 rounded-2xl border-gray-200 dark:border-gray-700"
                           />
                           {errors.slug && (
-                            <p className="mt-1 text-xs text-rose-500">{errors.slug.message}</p>
+                            <p className="mt-1 text-xs text-rose-500">
+                              {errors.slug.message}
+                            </p>
                           )}
                         </div>
                       </div>
@@ -1668,7 +1790,9 @@ export default function IeltsTestManagementPage() {
                         <textarea
                           placeholder="Enter test description"
                           value={watchDescription}
-                          onChange={(e) => setValue("description", e.target.value)}
+                          onChange={(e) =>
+                            setValue("description", e.target.value)
+                          }
                           rows={3}
                           className="mt-1 w-full rounded-2xl border border-gray-200 p-3 text-sm dark:border-gray-700 dark:bg-gray-800"
                         />
@@ -1681,7 +1805,9 @@ export default function IeltsTestManagementPage() {
                         <textarea
                           placeholder="Enter test instructions"
                           value={watchInstructions}
-                          onChange={(e) => setValue("instructions", e.target.value)}
+                          onChange={(e) =>
+                            setValue("instructions", e.target.value)
+                          }
                           rows={3}
                           className="mt-1 w-full rounded-2xl border border-gray-200 p-3 text-sm dark:border-gray-700 dark:bg-gray-800"
                         />
@@ -1695,11 +1821,15 @@ export default function IeltsTestManagementPage() {
                           <Select
                             options={TEST_TYPE_OPTIONS}
                             defaultValue={watchTestType}
-                            onChange={(value: string) => setValue("testType", value)}
+                            onChange={(value: string) =>
+                              setValue("testType", value)
+                            }
                             className="mt-1 rounded-2xl border-gray-200 dark:border-gray-700"
                           />
                           {errors.testType && (
-                            <p className="mt-1 text-xs text-rose-500">{errors.testType.message}</p>
+                            <p className="mt-1 text-xs text-rose-500">
+                              {errors.testType.message}
+                            </p>
                           )}
                         </div>
                         <div>
@@ -1709,7 +1839,9 @@ export default function IeltsTestManagementPage() {
                           <Select
                             options={DIFFICULTY_OPTIONS}
                             defaultValue={watchDifficulty}
-                            onChange={(value: string) => setValue("difficulty", value)}
+                            onChange={(value: string) =>
+                              setValue("difficulty", value)
+                            }
                             className="mt-1 rounded-2xl border-gray-200 dark:border-gray-700"
                           />
                         </div>
@@ -1724,7 +1856,12 @@ export default function IeltsTestManagementPage() {
                             type="number"
                             placeholder="0"
                             value={watchTotalQuestions || ""}
-                            onChange={(e) => setValue("totalQuestions", parseInt(e.target.value) || 0)}
+                            onChange={(e) =>
+                              setValue(
+                                "totalQuestions",
+                                parseInt(e.target.value) || 0,
+                              )
+                            }
                             className="mt-1 rounded-2xl border-gray-200 dark:border-gray-700"
                           />
                         </div>
@@ -1736,7 +1873,12 @@ export default function IeltsTestManagementPage() {
                             type="number"
                             placeholder="0"
                             value={watchDuration || ""}
-                            onChange={(e) => setValue("duration", parseInt(e.target.value) || 0)}
+                            onChange={(e) =>
+                              setValue(
+                                "duration",
+                                parseInt(e.target.value) || 0,
+                              )
+                            }
                             className="mt-1 rounded-2xl border-gray-200 dark:border-gray-700"
                           />
                         </div>
@@ -1758,6 +1900,7 @@ export default function IeltsTestManagementPage() {
                                   section: "reading",
                                   order: currentSections.length + 1,
                                   duration: 0,
+                                  audioUrl: "",
                                   questionCount: 0,
                                   groups: [],
                                 },
@@ -1769,7 +1912,7 @@ export default function IeltsTestManagementPage() {
                             Add Section
                           </button>
                         </div>
-                        
+
                         <div className="space-y-2">
                           {(watchSections || []).map((section, index) => (
                             <div
@@ -1784,8 +1927,12 @@ export default function IeltsTestManagementPage() {
                                   <button
                                     type="button"
                                     onClick={() => {
-                                      const currentSections = watchSections || [];
-                                      const newSections = currentSections.filter((_, i) => i !== index);
+                                      const currentSections =
+                                        watchSections || [];
+                                      const newSections =
+                                        currentSections.filter(
+                                          (_, i) => i !== index,
+                                        );
                                       setValue("sections", newSections);
                                     }}
                                     className="text-rose-500 hover:text-rose-700"
@@ -1794,7 +1941,7 @@ export default function IeltsTestManagementPage() {
                                   </button>
                                 )}
                               </div>
-                              
+
                               <div className="grid gap-3 sm:grid-cols-2">
                                 <div>
                                   <Label className="text-xs font-medium text-gray-600 dark:text-gray-400">
@@ -1802,8 +1949,15 @@ export default function IeltsTestManagementPage() {
                                   </Label>
                                   <Select
                                     options={SECTION_OPTIONS}
-                                    defaultValue={watchSections?.[index]?.section}
-                                    onChange={(value: string) => setValue(`sections.${index}.section`, value)}
+                                    defaultValue={
+                                      watchSections?.[index]?.section
+                                    }
+                                    onChange={(value: string) =>
+                                      setValue(
+                                        `sections.${index}.section`,
+                                        value,
+                                      )
+                                    }
                                     className="mt-1 rounded-xl border-gray-200 dark:border-gray-700"
                                   />
                                 </div>
@@ -1815,7 +1969,12 @@ export default function IeltsTestManagementPage() {
                                     type="number"
                                     placeholder="Order"
                                     value={watchSections?.[index]?.order || ""}
-                                    onChange={(e) => setValue(`sections.${index}.order`, parseInt(e.target.value) || 0)}
+                                    onChange={(e) =>
+                                      setValue(
+                                        `sections.${index}.order`,
+                                        parseInt(e.target.value) || 0,
+                                      )
+                                    }
                                     className="mt-1 rounded-xl border-gray-200 dark:border-gray-700"
                                   />
                                 </div>
@@ -1826,8 +1985,15 @@ export default function IeltsTestManagementPage() {
                                   <Input
                                     type="number"
                                     placeholder="Duration"
-                                    value={watchSections?.[index]?.duration || ""}
-                                    onChange={(e) => setValue(`sections.${index}.duration`, parseInt(e.target.value) || 0)}
+                                    value={
+                                      watchSections?.[index]?.duration || ""
+                                    }
+                                    onChange={(e) =>
+                                      setValue(
+                                        `sections.${index}.duration`,
+                                        parseInt(e.target.value) || 0,
+                                      )
+                                    }
                                     className="mt-1 rounded-xl border-gray-200 dark:border-gray-700"
                                   />
                                 </div>
@@ -1838,18 +2004,51 @@ export default function IeltsTestManagementPage() {
                                   <Input
                                     type="number"
                                     placeholder="Questions"
-                                    value={watchSections?.[index]?.questionCount || ""}
-                                    onChange={(e) => setValue(`sections.${index}.questionCount`, parseInt(e.target.value) || 0)}
+                                    value={
+                                      watchSections?.[index]?.questionCount ||
+                                      ""
+                                    }
+                                    onChange={(e) =>
+                                      setValue(
+                                        `sections.${index}.questionCount`,
+                                        parseInt(e.target.value) || 0,
+                                      )
+                                    }
                                     className="mt-1 rounded-xl border-gray-200 dark:border-gray-700"
                                   />
                                 </div>
                               </div>
+                              {watchSections?.[index]?.section ==
+                                "listening" && (
+                                <div className="mt-3">
+                                  <Label className="text-xs font-medium text-gray-600 dark:text-gray-400">
+                                    Audio url
+                                  </Label>
+                                  <Input
+                                    type="text"
+                                    placeholder="https://audiourl/audio.mp3"
+                                    value={
+                                      watchSections?.[index]?.audioUrl || ""
+                                    }
+                                    onChange={(e) =>
+                                      setValue(
+                                        `sections.${index}.audioUrl`,
+                                        e.target.value || "",
+                                      )
+                                    }
+                                    className="mt-1 rounded-xl border-gray-200 dark:border-gray-700"
+                                  />
+                                </div>
+                              )}
 
                               {/* Question Groups */}
                               <div className="mt-4">
                                 <div className="flex items-center justify-between mb-2">
                                   <Label className="text-xs font-medium text-gray-600 dark:text-gray-400">
-                                    Question Groups ({watchSections?.[index]?.groups?.length || 0})
+                                    Question Groups (
+                                    {watchSections?.[index]?.groups?.length ||
+                                      0}
+                                    )
                                   </Label>
                                   <button
                                     type="button"
@@ -1863,45 +2062,60 @@ export default function IeltsTestManagementPage() {
 
                                 {watchSections?.[index]?.groups?.length > 0 ? (
                                   <div className="space-y-2">
-                                    {watchSections[index].groups.map((group: any, groupIndex: number) => {
-                                      const groupData = group.group;
-                                      const groupId = typeof groupData === 'object' ? groupData._id : groupData;
-                                      const groupName = typeof groupData === 'object' 
-                                        ? (groupData.name || groupData.title || groupData.passage?.title || "Untitled Group")
-                                        : `Group ${groupIndex + 1}`;
-                                      
-                                      return (
-                                        <div
-                                          key={groupIndex}
-                                          className="flex items-center justify-between rounded-xl border border-gray-200 bg-white p-3 dark:border-gray-700 dark:bg-gray-800"
-                                        >
-                                          <div className="flex items-center gap-2">
-                                            <span className="flex h-6 w-6 items-center justify-center rounded-full bg-gray-100 text-xs font-bold text-gray-600 dark:bg-gray-700 dark:text-gray-300">
-                                              {group.order || groupIndex + 1}
-                                            </span>
-                                            <div>
-                                              <div className="text-sm font-medium text-gray-900 dark:text-gray-100">
-                                                {groupName}
-                                              </div>
-                                              <div className="text-xs text-gray-500">
-                                                ID: {groupId}
+                                    {watchSections[index].groups.map(
+                                      (group: any, groupIndex: number) => {
+                                        const groupData = group.group;
+                                        const groupId =
+                                          typeof groupData === "object"
+                                            ? groupData._id
+                                            : groupData;
+                                        const groupName =
+                                          typeof groupData === "object"
+                                            ? groupData.name ||
+                                              groupData.title ||
+                                              groupData.passage?.title ||
+                                              "Untitled Group"
+                                            : `Group ${groupIndex + 1}`;
+
+                                        return (
+                                          <div
+                                            key={groupIndex}
+                                            className="flex items-center justify-between rounded-xl border border-gray-200 bg-white p-3 dark:border-gray-700 dark:bg-gray-800"
+                                          >
+                                            <div className="flex items-center gap-2">
+                                              <span className="flex h-6 w-6 items-center justify-center rounded-full bg-gray-100 text-xs font-bold text-gray-600 dark:bg-gray-700 dark:text-gray-300">
+                                                {group.order || groupIndex + 1}
+                                              </span>
+                                              <div>
+                                                <div className="text-sm font-medium text-gray-900 dark:text-gray-100">
+                                                  {groupName}
+                                                </div>
+                                                <div className="text-xs text-gray-500">
+                                                  ID: {groupId}
+                                                </div>
                                               </div>
                                             </div>
+                                            <button
+                                              type="button"
+                                              onClick={() =>
+                                                removeGroupFromSection(
+                                                  index,
+                                                  groupIndex,
+                                                )
+                                              }
+                                              className="text-rose-500 hover:text-rose-700"
+                                            >
+                                              <X className="h-4 w-4" />
+                                            </button>
                                           </div>
-                                          <button
-                                            type="button"
-                                            onClick={() => removeGroupFromSection(index, groupIndex)}
-                                            className="text-rose-500 hover:text-rose-700"
-                                          >
-                                            <X className="h-4 w-4" />
-                                          </button>
-                                        </div>
-                                      );
-                                    })}
+                                        );
+                                      },
+                                    )}
                                   </div>
                                 ) : (
                                   <div className="rounded-xl border border-dashed border-gray-300 p-4 text-center text-xs text-gray-400 dark:border-gray-600">
-                                    No question groups added yet. Click "Add Groups" to select groups.
+                                    No question groups added yet. Click "Add
+                                    Groups" to select groups.
                                   </div>
                                 )}
                               </div>
@@ -1919,7 +2133,9 @@ export default function IeltsTestManagementPage() {
                           <input
                             type="checkbox"
                             checked={watchIsFree}
-                            onChange={(e) => setValue("isFree", e.target.checked)}
+                            onChange={(e) =>
+                              setValue("isFree", e.target.checked)
+                            }
                             className="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
                           />
                           <Label className="text-sm font-medium text-gray-700 dark:text-gray-300">
@@ -1940,7 +2156,9 @@ export default function IeltsTestManagementPage() {
                                   { value: "GBP", label: "GBP (£)" },
                                 ]}
                                 defaultValue={watchCurrency}
-                                onChange={(value: string) => setValue("currency", value)}
+                                onChange={(value: string) =>
+                                  setValue("currency", value)
+                                }
                                 className="mt-1 rounded-xl border-gray-200 dark:border-gray-700"
                               />
                             </div>
@@ -1952,7 +2170,12 @@ export default function IeltsTestManagementPage() {
                                 type="number"
                                 placeholder="0"
                                 value={watchRegularPrice || ""}
-                                onChange={(e) => setValue("regularPrice", parseFloat(e.target.value) || 0)}
+                                onChange={(e) =>
+                                  setValue(
+                                    "regularPrice",
+                                    parseFloat(e.target.value) || 0,
+                                  )
+                                }
                                 className="mt-1 rounded-xl border-gray-200 dark:border-gray-700"
                               />
                             </div>
@@ -1964,7 +2187,12 @@ export default function IeltsTestManagementPage() {
                                 type="number"
                                 placeholder="0"
                                 value={watchSalePrice || ""}
-                                onChange={(e) => setValue("salePrice", parseFloat(e.target.value) || 0)}
+                                onChange={(e) =>
+                                  setValue(
+                                    "salePrice",
+                                    parseFloat(e.target.value) || 0,
+                                  )
+                                }
                                 className="mt-1 rounded-xl border-gray-200 dark:border-gray-700"
                               />
                             </div>
@@ -1982,7 +2210,9 @@ export default function IeltsTestManagementPage() {
                             <input
                               type="checkbox"
                               checked={watchRandomizeQuestions}
-                              onChange={(e) => setValue("randomizeQuestions", e.target.checked)}
+                              onChange={(e) =>
+                                setValue("randomizeQuestions", e.target.checked)
+                              }
                               className="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
                             />
                             <Label className="text-sm font-medium text-gray-700 dark:text-gray-300">
@@ -1993,7 +2223,9 @@ export default function IeltsTestManagementPage() {
                             <input
                               type="checkbox"
                               checked={watchShowTimer}
-                              onChange={(e) => setValue("showTimer", e.target.checked)}
+                              onChange={(e) =>
+                                setValue("showTimer", e.target.checked)
+                              }
                               className="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
                             />
                             <Label className="text-sm font-medium text-gray-700 dark:text-gray-300">
@@ -2013,7 +2245,12 @@ export default function IeltsTestManagementPage() {
                           step="0.5"
                           placeholder="e.g., 6.5"
                           value={watchPassingBand || ""}
-                          onChange={(e) => setValue("passingBand", parseFloat(e.target.value) || null)}
+                          onChange={(e) =>
+                            setValue(
+                              "passingBand",
+                              parseFloat(e.target.value) || null,
+                            )
+                          }
                           className="mt-1 rounded-2xl border-gray-200 dark:border-gray-700"
                         />
                       </div>
@@ -2027,7 +2264,9 @@ export default function IeltsTestManagementPage() {
                           <Select
                             options={STATUS_OPTIONS}
                             defaultValue={watchStatus}
-                            onChange={(value: string) => setValue("status", value)}
+                            onChange={(value: string) =>
+                              setValue("status", value)
+                            }
                             className="mt-1 rounded-2xl border-gray-200 dark:border-gray-700"
                           />
                         </div>
@@ -2035,7 +2274,9 @@ export default function IeltsTestManagementPage() {
                           <input
                             type="checkbox"
                             checked={watchIsFeatured}
-                            onChange={(e) => setValue("isFeatured", e.target.checked)}
+                            onChange={(e) =>
+                              setValue("isFeatured", e.target.checked)
+                            }
                             className="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
                           />
                           <Label className="text-sm font-medium text-gray-700 dark:text-gray-300">
