@@ -38,7 +38,6 @@ export default function ArticleManagement() {
         Slug: "",
         blogDescription: "",
         descriptions: "",
-        metaDesctiptions: "",
         image: "",
         category: "",
         keyword: "",
@@ -109,7 +108,6 @@ export default function ArticleManagement() {
             Slug: article.Slug || "",
             blogDescription: article.blogDescription || "",
             descriptions: article.descriptions || "",
-            metaDesctiptions: article.metaDesctiptions || "",
             image: article.image || "",
             category: article.category || "",
             keyword: article.keyword || "",
@@ -218,7 +216,6 @@ export default function ArticleManagement() {
             Slug: "",
             blogDescription: "",
             descriptions: "",
-            metaDesctiptions: "",
             image: "",
             category: "",
             keyword: "",
@@ -319,7 +316,7 @@ export default function ArticleManagement() {
                     >
                         <option value="">All Categories</option>
                         {allCategories.map((cat) => (
-                            <option key={cat._id} value={cat._id}>
+                            <option key={cat._id} value={cat.name}>
                                 {cat.name}
                             </option>
                         ))}
@@ -388,7 +385,9 @@ export default function ArticleManagement() {
                             </thead>
                             <tbody className="divide-y divide-gray-200 bg-white dark:divide-gray-700 dark:bg-gray-800">
                                 {articles.length > 0 ? (
-                                    articles.map((art : any) => (
+                                    articles.map((art : any) =>{
+                                        console.log(art.category)
+                                         return(
                                         <tr key={art._id} className="hover:bg-gray-50 dark:hover:bg-gray-700">
                                             <td className="whitespace-nowrap px-2 py-4">
                                                 <div className="text-sm font-semibold text-gray-900 dark:text-white">{art.blogTitle}</div>
@@ -431,7 +430,7 @@ export default function ArticleManagement() {
                                                 </div>
                                             </td>
                                         </tr>
-                                    ))
+                                    )})
                                 ) : (
                                     <tr>
                                         <td colSpan={6} className="px-2 py-4 text-center text-sm text-gray-500 dark:text-gray-300">
@@ -551,10 +550,7 @@ export default function ArticleManagement() {
                                     <p className="text-sm text-gray-500 dark:text-gray-400">No image</p>
                                 )}
                             </div>
-                            <div>
-                                <p className="text-sm text-gray-500 dark:text-gray-400">Meta Description</p>
-                                <p className="text-sm font-medium text-gray-800 dark:text-white/90">{selectedArticle.metaDesctiptions || "—"}</p>
-                            </div>
+                          
                         </div>
                     )}
                     <div className="flex items-center gap-3 px-2 mt-6 lg:justify-end">
@@ -616,7 +612,7 @@ export default function ArticleManagement() {
                                 >
                                     <option value="">Select category</option>
                                     {allCategories.map((cat) => (
-                                        <option key={cat._id} value={cat._id}>
+                                        <option key={cat._id} value={cat.name}>
                                             {cat.name}
                                         </option>
                                     ))}
@@ -624,7 +620,7 @@ export default function ArticleManagement() {
                                 {errors.category && <p className="mt-1 text-sm text-red-600">{errors.category}</p>}
                             </div>
                             <div className="md:col-span-2">
-                                <Label>Short Description *</Label>
+                                <Label>Meta Description *</Label>
                                 <textarea
                                     name="descriptions"
                                     value={formData.descriptions}
@@ -703,18 +699,7 @@ export default function ArticleManagement() {
                                     </div>
                                 )}
                             </div>
-                            <div className="md:col-span-2">
-                                <Label>Meta Description (SEO) *</Label>
-                                <textarea
-                                    name="metaDesctiptions"
-                                    value={formData.metaDesctiptions}
-                                    onChange={handleChange}
-                                    rows={2}
-                                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-200 focus:border-blue-500 dark:bg-gray-800 dark:border-gray-600 dark:text-white"
-                                    placeholder="Meta description for SEO (up to 160 characters)"
-                                />
-                                {errors.metaDesctiptions && <p className="mt-1 text-sm text-red-600">{errors.metaDesctiptions}</p>}
-                            </div>
+                        
                         </div>
 
                         <div className="mt-4 flex items-center">

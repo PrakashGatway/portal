@@ -109,7 +109,7 @@ const QuestionRenderer: any = React.memo(
 
     return (
       <div className="bg-white w-full h-full  py-6 pt-5">
-      <div className="max-w-7xl mx-auto p-4 space-y-4 rounded-2xl border-3 border-dashed border-orange-200">
+      <div className="max-w-7xl mx-auto px-4 pt-2 space-y-4 rounded-2xl border-3 border-dashed border-orange-200 xl:h-130 overflow-y-auto">
         {isMCQ && type == "sat_reading_writing" ? (
           <div ref={containerRef} className="flex gap-3">
             {/* LEFT: Passage / Stimulus */}
@@ -304,6 +304,17 @@ const QuestionRenderer: any = React.memo(
               />
             </div>
 
+               {qDoc.stimulus ? (
+                <div
+                  className="prose text-base sm:text-lg prose-sm dark:prose-invert max-w-none "
+                  dangerouslySetInnerHTML={{ __html: qDoc.stimulus }}
+                />
+              ) : (
+                <p className="text-lg text-slate-500 italic">
+                  No passage provided.
+                </p>
+              )}
+
             {/* Options */}
             <div className="space-y-3 mt-4">
               {qDoc.options.map((opt: any, i: number) => {
@@ -366,6 +377,10 @@ const QuestionRenderer: any = React.memo(
                 );
               })}
             </div>
+
+          
+
+            <div></div>
           </div>
         ) : (
           <div className="bg-white rounded dark:bg-slate-900 p-2 min-h-[65vh] max-h-[65vh] overflow-y-auto">
@@ -402,6 +417,16 @@ const QuestionRenderer: any = React.memo(
                 }}
               />
             </div>
+               {qDoc.stimulus ? (
+                <div
+                  className="prose text-base sm:text-lg prose-sm dark:prose-invert max-w-none "
+                  dangerouslySetInnerHTML={{ __html: qDoc.stimulus }}
+                />
+              ) : (
+                <p className="text-lg text-slate-500 italic">
+                  No passage provided.
+                </p>
+              )}
             <div className="space-y-3 mt-4">
               <textarea
                 value={currentQuestion.answerText || ""}
@@ -820,3 +845,78 @@ export const SectionReview: React.FC<SectionReviewProps> = React.memo(
     );
   },
 );
+
+export const BreakComponent=({setBreakSeconds,breakSeconds,setCurrentScreen})=>{
+  return(
+    <><div className="relative flex  w-full items-center justify-center overflow-hidden bg-white px-4 py-10 sm:px-6 lg:px-8 xl:mt-20">
+  <div className="relative z-10 flex w-full max-w-2xl flex-col items-center text-center">
+
+  
+
+    {/* Heading */}
+    <h2 className="text-3xl font-bold tracking-tight text-slate-900 sm:text-4xl lg:text-5xl">
+      Take a <span className="text-[#F36D45]">Break!</span>
+    </h2>
+
+    <p className="mt-3 max-w-md text-sm leading-6 text-slate-500 sm:text-base">
+      You have a 10-minute break before the next section.
+    </p>
+
+    {/* Timer */}
+    <div className="mt-8 sm:mt-10">
+      <div className="text-6xl font-bold tracking-tight text-[#F36D45] sm:text-7xl lg:text-8xl">
+        {String(Math.floor(breakSeconds / 60)).padStart(2, "0")}:
+        {String(breakSeconds % 60).padStart(2, "0")}
+      </div>
+
+      <div className="mt-1 flex justify-center gap-10 text-[10px] font-semibold uppercase tracking-[0.25em] text-slate-400 sm:text-xs">
+        <span>Minutes</span>
+        <span>Seconds</span>
+      </div>
+    </div>
+
+ 
+
+    <p className="mt-2 text-xs text-slate-400 sm:text-sm">
+      The next section will start automatically when the timer ends.
+    </p>
+
+    {/* Actions */}
+    <div className="mt-8  max-w-md flex-col gap-3 sm:mt-9 sm:flex-row">
+      {/* Skip Break */}
+      <button
+        type="button"
+        onClick={() => {
+          const confirmed = window.confirm(
+            "Are you sure you want to skip the break?"
+          );
+
+          if (confirmed) {
+            setBreakSeconds(0);
+            setCurrentScreen("question");
+          }
+        }}
+        className="w-full rounded-full bg-[#F36D45] px-6 py-3 text-sm font-semibold text-white shadow-sm transition-all duration-200 hover:bg-[#e85f38] focus:outline-none focus:ring-2 focus:ring-[#F36D45]/30 sm:py-3.5"
+      >
+        Skip Break
+      </button>
+
+     
+    </div>
+
+    {/* Bottom Tip */}
+    <div className="mt-6 flex max-w-md items-center justify-center gap-2 text-xs text-slate-400 sm:mt-7 sm:text-sm">
+      <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-[#F36D45]/10 font-semibold text-[#F36D45]">
+        i
+      </span>
+      <span>
+        You can skip the break if you're ready to continue.
+      </span>
+    </div>
+
+  
+  </div>
+</div>
+   <div className="fixed bottom-0 left-0 right-0 h-[16px] w-full bg-gradient-to-r from-[#fff1dc] via-[#ffd19f] to-[#ff947d]" /></>
+  )
+}

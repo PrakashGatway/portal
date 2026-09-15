@@ -143,14 +143,14 @@ export default function UserDropdown({ user, logout }: any) {
                                     <DropdownItem
                                         onItemClick={closeDropdown}
                                         tag="a"
-                                        to="/settings"
+                                        to="/referrals"
                                         className="flex items-center gap-3 px-3 py-2 rounded-xl text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700/50 hover:text-gray-900 dark:hover:text-white transition-all duration-200 group"
                                     >
                                         <div className="p-2.5 bg-[#F6673C]/20 dark:bg-gray-700 rounded-full">
                                             <Settings className="w-4 h-4 text-gray-600 dark:text-gray-400" />
                                         </div>
                                         <div>
-                                            <div className="font-medium">Settings</div>
+                                            <div className="font-medium">Refer and Earn</div>
                                             <div className="text-xs text-gray-500 dark:text-gray-400">Account preferences</div>
                                         </div>
                                     </DropdownItem>
@@ -158,14 +158,14 @@ export default function UserDropdown({ user, logout }: any) {
                                     <DropdownItem
                                         onItemClick={closeDropdown}
                                         tag="a"
-                                        to="/billing"
+                                        to="/transactions"
                                         className="flex items-center gap-3 px-3 py-2 rounded-xl text-gray-700 dark:text-gray-300 hover:bg-green-50 dark:hover:bg-green-900/20 hover:text-green-600 dark:hover:text-green-400 transition-all duration-200 group"
                                     >
                                         <div className="p-2.5 bg-[#F6673C]/20 dark:bg-green-900/30 rounded-full">
                                             <CreditCard className="w-4 h-4 text-green-600 dark:text-green-400" />
                                         </div>
                                         <div>
-                                            <div className="font-medium">Billing</div>
+                                            <div className="font-medium">Orders</div>
                                             <div className="text-xs text-gray-500 dark:text-gray-400">Payment methods & invoices</div>
                                         </div>
                                     </DropdownItem>
@@ -179,7 +179,7 @@ export default function UserDropdown({ user, logout }: any) {
                                             <HelpCircle className="w-4 h-4 text-purple-600 dark:text-purple-400" />
                                         </div>
                                         <div>
-                                            <div className="font-medium">Help & Support</div>
+                                            <div className="font-medium">Support</div>
                                             <div className="text-xs text-gray-500 dark:text-gray-400">Get help and contact support</div>
                                         </div>
                                     </DropdownItem>

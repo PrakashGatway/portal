@@ -847,7 +847,7 @@ export const GRETestHead: React.FC<GRETestHeaderProps> = React.memo(
     }
   };
 
-  console.log(reportForm)
+  
     // Close all on ESC
     useEffect(() => {
       const onKey = (e: KeyboardEvent) => {

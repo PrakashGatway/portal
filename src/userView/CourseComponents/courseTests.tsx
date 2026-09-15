@@ -1205,31 +1205,40 @@ export const TodaySessionsBanner: React.FC<TodaySessionsBannerProps> = ({
   }, []);
 
   const todaySessions = useMemo(() => {
-    const today = new Date();
+  const today = new Date();
 
-    const todayYear = today.getFullYear();
-    const todayMonth = today.getMonth();
-    const todayDate = today.getDate();
+  const todayYear = today.getFullYear();
+  const todayMonth = today.getMonth();
+  const todayDate = today.getDate();
 
-    return sessions
-      .filter((session) => {
-        if (!session?.scheduledStart) return false;
+  const nowTimestamp = now.getTime();
 
-        const start = new Date(session.scheduledStart);
+  return sessions
+    .filter((session) => {
+      if (!session?.scheduledStart || !session?.scheduledEnd) {
+        return false;
+      }
 
-        return (
-          start.getFullYear() === todayYear &&
-          start.getMonth() === todayMonth &&
-          start.getDate() === todayDate
-        );
-      })
-      .sort(
-        (a, b) =>
-          new Date(a.scheduledStart).getTime() -
-          new Date(b.scheduledStart).getTime(),
-      );
-  }, [sessions, now]);
+      const start = new Date(session.scheduledStart);
+      const end = new Date(session.scheduledEnd);
 
+      // Only today's sessions
+      const isToday =
+        start.getFullYear() === todayYear &&
+        start.getMonth() === todayMonth &&
+        start.getDate() === todayDate;
+
+      // Hide session after it has ended
+      const hasNotEnded = end.getTime() > nowTimestamp;
+
+      return isToday && hasNotEnded;
+    })
+    .sort(
+      (a, b) =>
+        new Date(a.scheduledStart).getTime() -
+        new Date(b.scheduledStart).getTime()
+    );
+}, [sessions, now]);
   useEffect(() => {
     if (currentIndex >= todaySessions.length) {
       setCurrentIndex(0);

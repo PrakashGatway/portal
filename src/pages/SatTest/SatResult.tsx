@@ -169,55 +169,83 @@ export const GRETestResults: React.FC<GRETestResultsProps> = React.memo(
       return "attempted";
     };
 
-    const getStatusColor = (status: string) => {
-      switch (status) {
-        case "correct":
-          return "bg-emerald-100 text-emerald-700 border-emerald-200 dark:bg-emerald-900/30 dark:text-emerald-400 dark:border-emerald-800";
-        case "incorrect":
-          return "bg-red-100 text-red-700 border-red-200 dark:bg-red-900/30 dark:text-red-400 dark:border-red-800";
-        case "skipped":
-          return "bg-slate-100 text-slate-600 border-slate-200 dark:bg-slate-800 dark:text-slate-400 dark:border-slate-700";
-        default:
-          return "bg-indigo-100 text-indigo-700 border-indigo-200 dark:bg-indigo-900/30 dark:text-indigo-400 dark:border-indigo-800";
-      }
-    };
-
-    const getStatusIcon = (status: string) => {
-      switch (status) {
-        case "correct":
-          return <CheckCircle2 className="h-3.5 w-3.5 mr-1.5" />;
-        case "incorrect":
-          return <AlertTriangle className="h-3.5 w-3.5 mr-1.5" />;
-        case "skipped":
-          return <Clock className="h-3.5 w-3.5 mr-1.5" />;
-        default:
-          return <Edit3 className="h-3.5 w-3.5 mr-1.5" />;
-      }
-    };
-
     const formatTimeSpent = (seconds: number) => {
       const m = Math.floor(seconds / 60);
       const s = seconds % 60;
       return `${m}:${s.toString().padStart(2, "0")}`;
     };
 
-    const getAccuracyColor = (accuracy: number) => {
-      if (accuracy >= 70) return "#10b981"; // emerald-500
-      if (accuracy >= 50) return "#3b82f6"; // blue-500
-      if (accuracy >= 30) return "#f59e0b"; // amber-500
-      return "#ef4444"; // red-500
+    const calculateSectionScore = (correct, total) => {
+      if (!total) return 200;
+
+      const score = 200 + (Number(correct) / Number(total)) * 600;
+
+      return Math.round(Math.max(200, Math.min(score, 800)));
     };
 
-    const readingWritingSections =
-      attempt?.sections?.filter(
-        (section: any) =>
-          section?.name?.toLowerCase() === attempt?.sections?.name,
-      ) || [];
+    const calculateSATResult = (sections = []) => {
+      let readingCorrect = 0;
+      let readingTotal = 0;
 
-    const mathSections =
-      attempt?.sections?.filter(
-        (section: any) => section?.name?.toLowerCase() === "math",
-      ) || [];
+      let mathCorrect = 0;
+      let mathTotal = 0;
+
+      sections.forEach((section) => {
+        const correct = Number(section.stats?.correct || 0);
+        const total = Number(section.questions?.length || 0);
+
+        const sectionName = section.name?.toLowerCase() || "";
+
+        if (sectionName.includes("reading")) {
+          readingCorrect += correct;
+          readingTotal += total;
+        }
+
+        if (sectionName.includes("math")) {
+          mathCorrect += correct;
+          mathTotal += total;
+        }
+      });
+
+      const readingWriting = readingTotal
+        ? calculateSectionScore(readingCorrect, readingTotal)
+        : null;
+
+      const math = mathTotal
+        ? calculateSectionScore(mathCorrect, mathTotal)
+        : null;
+
+      const hasReadingWriting = readingTotal > 0;
+      const hasMath = mathTotal > 0;
+
+      const total =
+        hasReadingWriting && hasMath
+          ? readingWriting + math
+          : hasReadingWriting
+            ? readingWriting
+            : math;
+
+      const maxScore = hasReadingWriting && hasMath ? 1600 : 800;
+
+      return {
+        readingWriting,
+        math,
+        total,
+        maxScore,
+      };
+    };
+
+    const result = calculateSATResult(attempt.sections);
+
+    const hasReadingWriting = attempt?.sections.some((section) =>
+      section.name?.toLowerCase().includes("reading"),
+    );
+
+    const hasMath = attempt?.sections.some((section) =>
+      section.name?.toLowerCase().includes("math"),
+    );
+
+    console.log(result);
 
     const renderModule = (section: any, moduleNumber: number) => {
       const correct = section?.stats?.correct || 0;
@@ -287,7 +315,6 @@ export const GRETestResults: React.FC<GRETestResultsProps> = React.memo(
     };
 
     if (!attempt) return null;
-    console.log(attempt);
 
     return (
       <div className="bg-[#fdf4ef] min-h-screen">
@@ -472,7 +499,11 @@ export const GRETestResults: React.FC<GRETestResultsProps> = React.memo(
           )}
 
           {/* Tabs - No "All" option, defaults to RW */}
-          <TotalSATScore/>
+          <TotalSATScore
+            result={result}
+            hasReadingWriting={hasReadingWriting}
+            hasMath={hasMath}
+          />
 
           {/* Section-wise Results */}
           <div className="space-y-8">
@@ -480,7 +511,7 @@ export const GRETestResults: React.FC<GRETestResultsProps> = React.memo(
               <h3 className="text-xl md:text-2xl font-bold text-slate-800 dark:text-slate-100">
                 <span className="text-[#f6673c]">Section</span> Breakdown
               </h3>
-              
+
               {/* Scrollable tabs for mobile */}
               <div className="flex overflow-x-auto pb-2 md:pb-0 w-full md:w-auto gap-2 no-scrollbar">
                 {attempt?.sections?.map((item: any, index: number) => (
@@ -509,7 +540,7 @@ export const GRETestResults: React.FC<GRETestResultsProps> = React.memo(
               </div>
             </div>
 
-                                  {filteredSections.length > 0 ? (
+            {filteredSections.length > 0 ? (
               filteredSections.map((sec: any, sIdx: number) => (
                 <div
                   key={`${sec.sectionConfigId}-${sIdx}`}
@@ -579,9 +610,7 @@ export const GRETestResults: React.FC<GRETestResultsProps> = React.memo(
 
                       const userLabel =
                         q.answerOptionIndexes.length > 0
-                          ? q.answerOptionIndexes
-                              .map(getOptionLabel)
-                              .join(", ")
+                          ? q.answerOptionIndexes.map(getOptionLabel).join(", ")
                           : q.answerText || "--";
 
                       const correctLabels = qd?.options
@@ -596,7 +625,10 @@ export const GRETestResults: React.FC<GRETestResultsProps> = React.memo(
                       const hasExplanation = !!qd?.explanation;
 
                       return (
-                        <div key={q.question} className={`${isExpanded ? "px-8" : ""}`}>
+                        <div
+                          key={q.question}
+                          className={`${isExpanded ? "px-8" : ""}`}
+                        >
                           <div
                             className={`
                               transition-all duration-300
@@ -610,111 +642,156 @@ export const GRETestResults: React.FC<GRETestResultsProps> = React.memo(
                             {/* ================================
             QUESTION ROW
         ================================= */}
-                            
+
                             {/* DESKTOP VIEW (Hidden on Mobile) - Original Layout */}
                             <div className="hidden md:grid grid-cols-[58px_110px_minmax(0,1fr)_50px] items-center gap-3">
-                                {/* QUESTION NUMBER */}
-                                <div className="flex items-center justify-center">
-                                  <div className="w-[43px] h-[43px] rounded-[11px] bg-[#ffe1d0] flex items-center justify-center text-[16px] font-medium text-[#4a4a4a]">
-                                    {String(q.order || qIdx + 1).padStart(2, "0")}
+                              {/* QUESTION NUMBER */}
+                              <div className="flex items-center justify-center">
+                                <div className="w-[43px] h-[43px] rounded-[11px] bg-[#ffe1d0] flex items-center justify-center text-[16px] font-medium text-[#4a4a4a]">
+                                  {String(q.order || qIdx + 1).padStart(2, "0")}
+                                </div>
+                              </div>
+
+                              {/* STATUS */}
+                              <div>
+                                <span
+                                  className={`flex items-center justify-center w-[100px] h-[33px] rounded-[8px] text-sm font-semibold whitespace-nowrap ${status === "incorrect" ? "bg-[#df0000] text-white" : status === "correct" ? "bg-[#ff704b] text-white" : "bg-[#ffedc0] text-black"}`}
+                                >
+                                  {status.charAt(0).toUpperCase() +
+                                    status.slice(1)}
+                                </span>
+                              </div>
+
+                              {/* QUESTION TEXT & ANSWERS */}
+                              <div className="min-w-0 pr-2">
+                                <p className="text-[17px] leading-[1.55] font-medium text-[#4a4a4a] line-clamp-2">
+                                  {qd
+                                    ? qd.questionText.replace(/<[^>]*>/g, "")
+                                    : "No question text available"}
+                                </p>
+                                <div className="flex items-center mt-5 text-[16px] text-[#4b4b4b] relative">
+                                  <div className="flex items-center pr-2 w-40">
+                                    <span className="font-medium text-sm">
+                                      Your Answer:
+                                    </span>
+                                    <span
+                                      className={`ml-2 font-medium text-sm ${status === "correct" ? "text-[#159600]" : status === "incorrect" ? "text-[#df0000]" : "text-[#4b4b4b]"}`}
+                                    >
+                                      {userLabel}
+                                    </span>
+                                  </div>
+                                  <div className="h-8 w-px bg-[#ff8060]" />
+                                  <div className="flex items-center px-3 gap-2 w-180">
+                                    <span className="font-medium text-sm">
+                                      Correct:
+                                    </span>
+                                    <span className="ml-2 font-medium text-sm line-clamp-2">
+                                      {correctLabel}
+                                    </span>
+                                  </div>
+                                  <div
+                                    className={`flex items-center  absolute -right-15 ${isExpanded ? "hidden" : "block"}`}
+                                  >
+                                    <div className="h-8 w-px bg-[#ff8060] mr-4" />
+                                    <span className="font-medium text-sm">
+                                      Time:
+                                    </span>
+                                    <span className="ml-2 font-medium text-sm">
+                                      {formatTimeSpent(q.timeSpentSeconds)}
+                                    </span>
                                   </div>
                                 </div>
+                              </div>
 
-                                {/* STATUS */}
-                                <div>
-                                  <span className={`flex items-center justify-center w-[100px] h-[33px] rounded-[8px] text-sm font-semibold whitespace-nowrap ${status === "incorrect" ? "bg-[#df0000] text-white" : status === "correct" ? "bg-[#ff704b] text-white" : "bg-[#ffedc0] text-black"}`}>
-                                    {status.charAt(0).toUpperCase() + status.slice(1)}
-                                  </span>
-                                </div>
-
-                                {/* QUESTION TEXT & ANSWERS */}
-                                <div className="min-w-0 pr-2">
-                                  <p className="text-[17px] leading-[1.55] font-medium text-[#4a4a4a] line-clamp-2">
-                                    {qd ? qd.questionText.replace(/<[^>]*>/g, "") : "No question text available"}
-                                  </p>
-                                  <div className="flex items-center mt-5 text-[16px] text-[#4b4b4b] relative">
-                                    <div className="flex items-center pr-2 w-40">
-                                      <span className="font-medium text-sm">Your Answer:</span>
-                                      <span className={`ml-2 font-medium text-sm ${status === "correct" ? "text-[#159600]" : status === "incorrect" ? "text-[#df0000]" : "text-[#4b4b4b]"}`}>{userLabel}</span>
-                                    </div>
-                                    <div className="h-8 w-px bg-[#ff8060]" />
-                                    <div className="flex items-center px-3 gap-2 w-180">
-                                      <span className="font-medium text-sm">Correct:</span>
-                                      <span className="ml-2 font-medium text-sm line-clamp-2">{correctLabel}</span>
-                                    </div>
-                                    <div className="flex items-center  absolute -right-15">
-                                      <div className="h-8 w-px bg-[#ff8060] mr-4" />
-                                      <span className="font-medium text-sm">Time:</span>
-                                      <span className="ml-2 font-medium text-sm">{formatTimeSpent(q.timeSpentSeconds)}</span>
-                                    </div>
-                                  </div>
-                                </div>
-
-                                {/* CHEVRON */}
-                                <div className="flex items-center justify-end">
-                                  {hasExplanation ? (
-                                    <button type="button" onClick={() => toggleQuestion(q.question)} className="flex items-center justify-center w-8 h-8 rounded-full hover:bg-white/60 transition-all duration-200">
-                                      <ChevronDown className={`w-[25px] h-[25px] text-[#4b4b4b] transition-transform duration-300 ${isExpanded ? "rotate-180 text-[#f6673c]" : ""}`} />
-                                    </button>
-                                  ) : (
-                                    <ChevronDown className="w-[25px] h-[25px] text-[#4b4b4b] -rotate-90" />
-                                  )}
-                                </div>
+                              {/* CHEVRON */}
+                              <div className="flex items-center justify-end xl:-mt-10">
+                                {hasExplanation ? (
+                                  <button
+                                    type="button"
+                                    onClick={() => toggleQuestion(q.question)}
+                                    className="flex items-center justify-center w-8 h-8 rounded-full hover:bg-white/60 transition-all duration-200"
+                                  >
+                                    <ChevronDown
+                                      className={`w-[25px] h-[25px] text-[#4b4b4b] transition-transform duration-300 ${isExpanded ? "rotate-180 text-[#f6673c]" : ""}`}
+                                    />
+                                  </button>
+                                ) : (
+                                  <ChevronDown className="w-[25px] h-[25px] text-[#4b4b4b] -rotate-90" />
+                                )}
+                              </div>
                             </div>
 
                             {/* MOBILE VIEW (Visible only on Mobile) - Stacked Layout with Separate Rows */}
                             <div className="md:hidden flex flex-col gap-3">
-                                {/* Top Row: Number & Chevron */}
+                              {/* Top Row: Number & Chevron */}
+                              <div className="flex justify-between items-center">
+                                <div className="w-[38px] h-[38px] rounded-[10px] bg-[#ffe1d0] flex items-center justify-center text-[14px] font-medium text-[#4a4a4a]">
+                                  {String(q.order || qIdx + 1).padStart(2, "0")}
+                                </div>
+
+                                {hasExplanation ? (
+                                  <button
+                                    type="button"
+                                    onClick={() => toggleQuestion(q.question)}
+                                    className="flex items-center justify-center w-8 h-8 rounded-full hover:bg-white/60 transition-all duration-200"
+                                  >
+                                    <ChevronDown
+                                      className={`w-[24px] h-[24px] text-[#4b4b4b] transition-transform duration-300 ${isExpanded ? "rotate-180 text-[#f6673c]" : ""}`}
+                                    />
+                                  </button>
+                                ) : (
+                                  <ChevronDown className="w-[24px] h-[24px] text-[#4b4b4b] -rotate-90" />
+                                )}
+                              </div>
+
+                              {/* Question Text */}
+                              <p className="text-[15px] leading-[1.5] font-medium text-[#4a4a4a]">
+                                {qd
+                                  ? qd.questionText.replace(/<[^>]*>/g, "")
+                                  : "No question text available"}
+                              </p>
+
+                              {/* Info Block */}
+                              <div className="bg-white/60 rounded-xl p-3 space-y-2">
+                                {/* Row 1: Status & Time */}
                                 <div className="flex justify-between items-center">
-                                    <div className="w-[38px] h-[38px] rounded-[10px] bg-[#ffe1d0] flex items-center justify-center text-[14px] font-medium text-[#4a4a4a]">
-                                        {String(q.order || qIdx + 1).padStart(2, "0")}
-                                    </div>
-                                    
-                                    {hasExplanation ? (
-                                        <button type="button" onClick={() => toggleQuestion(q.question)} className="flex items-center justify-center w-8 h-8 rounded-full hover:bg-white/60 transition-all duration-200">
-                                          <ChevronDown className={`w-[24px] h-[24px] text-[#4b4b4b] transition-transform duration-300 ${isExpanded ? "rotate-180 text-[#f6673c]" : ""}`} />
-                                        </button>
-                                      ) : (
-                                        <ChevronDown className="w-[24px] h-[24px] text-[#4b4b4b] -rotate-90" />
-                                      )}
+                                  <span
+                                    className={`px-2.5 py-1 rounded-md text-xs font-bold whitespace-nowrap ${status === "incorrect" ? "bg-[#df0000] text-white" : status === "correct" ? "bg-[#ff704b] text-white" : "bg-[#ffedc0] text-black"}`}
+                                  >
+                                    {status.charAt(0).toUpperCase() +
+                                      status.slice(1)}
+                                  </span>
+
+                                  <div className="flex items-center text-xs font-medium text-slate-500">
+                                    <Clock className="w-3 h-3 mr-1" />
+                                    {formatTimeSpent(q.timeSpentSeconds)}
+                                  </div>
                                 </div>
 
-                                {/* Question Text */}
-                                <p className="text-[15px] leading-[1.5] font-medium text-[#4a4a4a]">
-                                    {qd ? qd.questionText.replace(/<[^>]*>/g, "") : "No question text available"}
-                                </p>
-
-                                {/* Info Block */}
-                                <div className="bg-white/60 rounded-xl p-3 space-y-2">
-                                    
-                                    {/* Row 1: Status & Time */}
-                                    <div className="flex justify-between items-center">
-                                        <span className={`px-2.5 py-1 rounded-md text-xs font-bold whitespace-nowrap ${status === "incorrect" ? "bg-[#df0000] text-white" : status === "correct" ? "bg-[#ff704b] text-white" : "bg-[#ffedc0] text-black"}`}>
-                                            {status.charAt(0).toUpperCase() + status.slice(1)}
-                                        </span>
-                                        
-                                        <div className="flex items-center text-xs font-medium text-slate-500">
-                                            <Clock className="w-3 h-3 mr-1" />
-                                            {formatTimeSpent(q.timeSpentSeconds)}
-                                        </div>
-                                    </div>
-
-                                    {/* Row 2: Your Answer */}
-                                    <div className="flex items-start text-[13px]">
-                                        <span className="font-medium text-slate-500 min-w-[70px]">Yours:</span>
-                                        <span className={`font-semibold ${status === "correct" ? "text-[#159600]" : status === "incorrect" ? "text-[#df0000]" : "text-[#4b4b4b]"}`}>
-                                            {userLabel}
-                                        </span>
-                                    </div>
-
-                                    {/* Row 3: Correct Answer (Full Width) */}
-                                    <div className="flex items-start text-[13px] pt-1 border-t border-slate-200/50 mt-1">
-                                        <span className="font-medium text-slate-500 min-w-[70px]">Correct:</span>
-                                        <span className="font-semibold text-slate-800 break-words">
-                                            {correctLabel}
-                                        </span>
-                                    </div>
+                                {/* Row 2: Your Answer */}
+                                <div className="flex items-start text-[13px]">
+                                  <span className="font-medium text-slate-500 min-w-[70px]">
+                                    Yours:
+                                  </span>
+                                  <span
+                                    className={`font-semibold ${status === "correct" ? "text-[#159600]" : status === "incorrect" ? "text-[#df0000]" : "text-[#4b4b4b]"}`}
+                                  >
+                                    {userLabel}
+                                  </span>
                                 </div>
+
+                                {/* Row 3: Correct Answer (Full Width) */}
+                                <div className="flex items-start text-[13px] pt-1 border-t border-slate-200/50 mt-1">
+                                  <span
+                                    className={`font-medium text-slate-500  ${isExpanded ? "min-w-40" : "min-w-[70px]"}`}
+                                  >
+                                    Correct:
+                                  </span>
+                                  <span className="font-semibold text-slate-800 break-words">
+                                    {correctLabel}
+                                  </span>
+                                </div>
+                              </div>
                             </div>
 
                             {/* =================================
@@ -910,8 +987,8 @@ export const AttemptAnalysis = ({
                     M 50 50
                     L 50 0
                     A 50 50 0 ${correctPercent > 50 ? 1 : 0} 1 ${
-                    50 + 50 * Math.sin((correctPercent * 3.6 * Math.PI) / 180)
-                  } ${50 - 50 * Math.cos((correctPercent * 3.6 * Math.PI) / 180)}
+                      50 + 50 * Math.sin((correctPercent * 3.6 * Math.PI) / 180)
+                    } ${50 - 50 * Math.cos((correctPercent * 3.6 * Math.PI) / 180)}
                     Z
                   `}
                   fill="#ff9b89"
@@ -927,23 +1004,27 @@ export const AttemptAnalysis = ({
                     L ${
                       50 + 50 * Math.sin((correctPercent * 3.6 * Math.PI) / 180)
                     } ${
-                    50 - 50 * Math.cos((correctPercent * 3.6 * Math.PI) / 180)
-                  }
+                      50 - 50 * Math.cos((correctPercent * 3.6 * Math.PI) / 180)
+                    }
                     A 50 50 0 ${incorrectPercent > 50 ? 1 : 0} 1 ${
-                    50 +
-                    50 *
-                      Math.sin(
-                        ((correctPercent + incorrectPercent) * 3.6 * Math.PI) /
-                          180,
-                      )
-                  } ${
-                    50 -
-                    50 *
-                      Math.cos(
-                        ((correctPercent + incorrectPercent) * 3.6 * Math.PI) /
-                          180,
-                      )
-                  }
+                      50 +
+                      50 *
+                        Math.sin(
+                          ((correctPercent + incorrectPercent) *
+                            3.6 *
+                            Math.PI) /
+                            180,
+                        )
+                    } ${
+                      50 -
+                      50 *
+                        Math.cos(
+                          ((correctPercent + incorrectPercent) *
+                            3.6 *
+                            Math.PI) /
+                            180,
+                        )
+                    }
                     Z
                   `}
                   fill="#d90000"
@@ -960,17 +1041,21 @@ export const AttemptAnalysis = ({
                       50 +
                       50 *
                         Math.sin(
-                          ((correctPercent + incorrectPercent) * 3.6 * Math.PI) /
+                          ((correctPercent + incorrectPercent) *
+                            3.6 *
+                            Math.PI) /
                             180,
                         )
                     } ${
-                    50 -
-                    50 *
-                      Math.cos(
-                        ((correctPercent + incorrectPercent) * 3.6 * Math.PI) /
-                          180,
-                      )
-                  }
+                      50 -
+                      50 *
+                        Math.cos(
+                          ((correctPercent + incorrectPercent) *
+                            3.6 *
+                            Math.PI) /
+                            180,
+                        )
+                    }
                     A 50 50 0 ${unattemptedPercent > 50 ? 1 : 0} 1 50 0
                     Z
                   `}
@@ -1055,15 +1140,18 @@ export const AttemptAnalysis = ({
   );
 };
 
+export const TotalSATScore = ({ hasMath, hasReadingWriting, result }) => {
+  const totalScore =
+    hasReadingWriting && hasMath
+      ? result.readingWriting + result.math
+      : hasReadingWriting
+        ? result.readingWriting
+        : result.math;
 
+  const maxScore = hasReadingWriting && hasMath ? 1600 : 800;
 
-export const TotalSATScore = ({
-  totalScore = 1240,
-  readingWritingScore = 620,
-  mathScore = 620,
-}) => {
-  const maxScore = 1600;
-  const scorePercentage = Math.round((totalScore / maxScore) * 100);
+  const scorePercentage =
+    maxScore > 0 ? Math.round((totalScore / maxScore) * 100) : 0;
 
   return (
     <div className="w-full rounded-[28px] bg-white p-5 sm:p-6 lg:p-8 shadow-sm">
@@ -1096,16 +1184,13 @@ export const TotalSATScore = ({
         "
       >
         <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-6">
-          
           {/* Score */}
           <div>
-            <p className="text-sm font-medium text-[#777]">
-              Your Total Score
-            </p>
+            <p className="text-sm font-medium text-[#777]">Your Total Score</p>
 
             <div className="flex items-baseline gap-2 mt-1">
               <span className="text-5xl sm:text-6xl font-bold text-[#f6673c]">
-                {totalScore}
+                {Math.round(totalScore / 10) * 10}
               </span>
 
               <span className="text-lg sm:text-xl font-medium text-[#999]">
@@ -1157,9 +1242,7 @@ export const TotalSATScore = ({
                   {scorePercentage}%
                 </span>
 
-                <span className="text-xs text-[#888]">
-                  Score
-                </span>
+                <span className="text-xs text-[#888]">Score</span>
               </div>
             </div>
           </div>
@@ -1168,86 +1251,67 @@ export const TotalSATScore = ({
 
       {/* Section Scores */}
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mt-5">
-        
-        {/* Reading & Writing */}
-        <div
-          className="
-            rounded-[18px]
-            border
-            border-[#ffe2d8]
-            bg-[#fffaf8]
-            p-5
-          "
-        >
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm text-[#777]">
-                Reading & Writing
-              </p>
+        {hasReadingWriting && (
+          <div className="rounded-[18px] border border-[#ffe2d8] bg-[#fffaf8] p-5">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm text-[#777]">Reading & Writing</p>
 
-              <p className="mt-1 text-2xl font-bold text-[#484848]">
-                {readingWritingScore}
-                <span className="text-sm font-medium text-[#999]">
-                  {" "}
-                  / 800
-                </span>
-              </p>
+                <p className="mt-1 text-2xl font-bold text-[#484848]">
+                  {Math.round(result?.readingWriting/10)*10}
+                  <span className="text-sm font-medium text-[#999]">
+                    {" "}
+                    / 800
+                  </span>
+                </p>
+              </div>
+
+              <div className="w-10 h-10 rounded-xl bg-[#ffe5dc] flex items-center justify-center">
+                <BookOpenText className="w-5 h-5 text-[#f6673c]" />
+              </div>
             </div>
 
-            <div className="w-10 h-10 rounded-xl bg-[#ffe5dc] flex items-center justify-center">
-              <BookOpenText className="w-5 h-5 text-[#f6673c]" />
+            <div className="mt-4 h-2 rounded-full bg-[#ffe8df] overflow-hidden">
+              <div
+                className="h-full rounded-full bg-[#f6673c]"
+                style={{
+                  width: `${(result?.readingWriting / 800) * 100}%`,
+                }}
+              />
             </div>
           </div>
+        )}
 
-          <div className="mt-4 h-2 rounded-full bg-[#ffe8df] overflow-hidden">
-            <div
-              className="h-full rounded-full bg-[#f6673c]"
-              style={{
-                width: `${(readingWritingScore / 800) * 100}%`,
-              }}
-            />
-          </div>
-        </div>
+        {hasMath && (
+          <div className="rounded-[18px] border border-[#ffe2d8] bg-[#fffaf8] p-5">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm text-[#777]">Math</p>
 
-        {/* Math */}
-        <div
-          className="
-            rounded-[18px]
-            border
-            border-[#ffe2d8]
-            bg-[#fffaf8]
-            p-5
-          "
-        >
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm text-[#777]">
-                Math
-              </p>
+                <p className="mt-1 text-2xl font-bold text-[#484848]">
+                  {Math.round(result?.math/10)*10}
+                  <span className="text-sm font-medium text-[#999]">
+                    {" "}
+                    / 800
+                  </span>
+                </p>
+              </div>
 
-              <p className="mt-1 text-2xl font-bold text-[#484848]">
-                {mathScore}
-                <span className="text-sm font-medium text-[#999]">
-                  {" "}
-                  / 800
-                </span>
-              </p>
+              <div className="w-10 h-10 rounded-xl bg-[#ffe5dc] flex items-center justify-center">
+                <Calculator className="w-5 h-5 text-[#f6673c]" />
+              </div>
             </div>
 
-            <div className="w-10 h-10 rounded-xl bg-[#ffe5dc] flex items-center justify-center">
-              <Calculator className="w-5 h-5 text-[#f6673c]" />
+            <div className="mt-4 h-2 rounded-full bg-[#ffe8df] overflow-hidden">
+              <div
+                className="h-full rounded-full bg-[#ff7048]"
+                style={{
+                  width: `${(result?.math / 800) * 100}%`,
+                }}
+              />
             </div>
           </div>
-
-          <div className="mt-4 h-2 rounded-full bg-[#ffe8df] overflow-hidden">
-            <div
-              className="h-full rounded-full bg-[#ff7048]"
-              style={{
-                width: `${(mathScore / 800) * 100}%`,
-              }}
-            />
-          </div>
-        </div>
+        )}
       </div>
     </div>
   );

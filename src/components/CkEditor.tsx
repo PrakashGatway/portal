@@ -454,7 +454,23 @@ const CKEditorComponent = forwardRef(({
 	}
 
 	return (
-		<div className={`editor-container editor-container_classic-editor editor-container_include-style editor-container_include-fullscreen ${containerClassName}`}>
+	<>
+		<style>
+			{`
+				.ck-editor__editable a {
+					color: #2563eb !important;
+					cursor: pointer;
+				}
+
+				.ck-editor__editable a:hover {
+					color: #1d4ed8 !important;
+				}
+			`}
+		</style>
+
+		<div
+			className={`editor-container editor-container_classic-editor editor-container_include-style editor-container_include-fullscreen ${containerClassName}`}
+		>
 			<div className="editor-container__editor">
 				<CKEditor
 					editor={ClassicEditor}
@@ -482,7 +498,8 @@ const CKEditorComponent = forwardRef(({
 				/>
 			</div>
 		</div>
-	);
+	</>
+);
 });
 
 CKEditorComponent.displayName = 'CKEditorComponent';

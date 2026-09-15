@@ -460,6 +460,7 @@ export default function CourseDetailPage() {
 
   price = price - (price * normalDiscount) / 100;
 
+
   if (loading) {
     return (
       <div className="min-h-screen">

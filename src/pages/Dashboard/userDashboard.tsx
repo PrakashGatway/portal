@@ -593,7 +593,7 @@ const HeaderBanner = ({ data, user, filterBanner }) => {
             <h3 className="text-white text-2xl sm:text-3xl md:text-4xl font-medium">
               Hi {user?.name || "Student"}!
             </h3>
-            <h1 className="mt-2 text-white font-[800] uppercase leading-none text-[42px] sm:text-[60px] md:text-[72px] 
+            <h1 className="mt-2 text-white font-[800] uppercase font-medium leading-none text-[42px] sm:text-[60px] md:text-[72px] 
             lg:text-[80px]">
               {user?.category?.name || "EXAM"} PREP
             </h1>
@@ -1069,7 +1069,7 @@ const GREDashboard = () => {
                             <div className="xl:col-span-3 px-2 lg:px-0">
                               <div className="flex gap-2">
                                 <div>
-                                  <h3 className="text-2xl font-bold text-gray-900 dark:text-white line-clamp-2">
+                                  <h3 className="text-2xl font-bold text-gray-900 dark:text-white line-clamp-1">
                                     {item?.item?.title}
                                   </h3>
                                   <p className="text-gray-500 text-sm dark:text-gray-400">
@@ -1110,7 +1110,7 @@ const GREDashboard = () => {
                                       strokeDasharray={314}
                                       strokeDashoffset={
                                         314 -
-                                        (314 * (item?.progress?.percentage || 0)) /
+                                        (314 * (item?.progress?.percentage || 5)) /
                                           100
                                       }
                                     />
@@ -1118,7 +1118,7 @@ const GREDashboard = () => {
                                   <div className="absolute inset-0 flex flex-col justify-center items-center dark:text-white">
                                     <div className="flex items-end gap-1">
                                       <h2 className="text-5xl font-bold">
-                                        {item?.progress?.percentage || 0}
+                                        {item?.progress?.percentage || 5}
                                       </h2>
                                       <span className="text-2xl">%</span>
                                     </div>

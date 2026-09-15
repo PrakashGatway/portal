@@ -1,19 +1,16 @@
-import React, {
-  useCallback,
-  useEffect,
-  useMemo,
-  useState,
-} from "react";
+import React, { useCallback, useEffect, useMemo, useState } from "react";
 import { useParams, useNavigate } from "react-router";
-import {
-  AlertTriangle
-} from "lucide-react";
+import { AlertTriangle } from "lucide-react";
 
 import Button from "../../components/ui/button/Button";
 import { toast } from "react-toastify";
 import api from "../../axiosInstance";
 import FullScreenLoader from "../../components/fullScreeLoader";
-import QuestionRenderer, {SectionInstructions, SectionReview } from "./SatComponents";
+import QuestionRenderer, {
+  BreakComponent,
+  SectionInstructions,
+  SectionReview,
+} from "./SatComponents";
 import { GRETestHead } from "./SatHeader";
 import { GRETestResults } from "./SatResult";
 
@@ -115,6 +112,7 @@ type GreScreen =
   | "section_instructions"
   | "question"
   | "section_review"
+  | "break"
   | "results";
 
 export default function SatExamPage() {
@@ -126,6 +124,7 @@ export default function SatExamPage() {
   const [savingProgress, setSavingProgress] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [breakSeconds, setBreakSeconds] = useState(10 * 60);
 
   const [activeSectionIndex, setActiveSectionIndex] = useState(0);
   const [activeQuestionIndex, setActiveQuestionIndex] = useState(0);
@@ -138,99 +137,90 @@ export default function SatExamPage() {
 
   const isCompleted = attempt?.status === "completed";
 
-  console.log(savingProgress)
-
   const testTitle =
     attempt?.testTemplate.title ||
     (attempt as any)?.testTemplate?.name ||
     "Practice Test";
 
-  const startAttempt = useCallback(
-    async () => {
-      if (!testTemplateId) {
-        setError("Missing testTemplateId in route");
+  const startAttempt = useCallback(async () => {
+    if (!testTemplateId) {
+      setError("Missing testTemplateId in route");
+      setLoading(false);
+      return;
+    }
+
+    try {
+      setStarting(true);
+      setError(null);
+
+      const startRes = await api.post("/mcu/start", { testTemplateId });
+      if (!startRes.data?.success) {
+        throw new Error(startRes.data?.message || "Failed to start attempt");
+      }
+
+      const started: StartAttemptResponse = startRes.data.data;
+      const attemptId = (started as any)._id || startRes.data.data._id;
+
+      const detailRes = await api.get(`/mcu/attempts/${attemptId}`);
+      if (!detailRes.data?.success) {
+        throw new Error(detailRes.data?.message || "Failed to load attempt");
+      }
+
+      const loaded: TestAttempt = detailRes.data.data;
+
+      if (!loaded.sections || loaded.sections.length === 0) {
+        setError("This test has no sections configured.");
         setLoading(false);
         return;
       }
 
-      try {
-        setStarting(true);
-        setError(null);
+      setAttempt(loaded);
 
-        const startRes = await api.post("/mcu/start", { testTemplateId });
-        if (!startRes.data?.success) {
-          throw new Error(startRes.data?.message || "Failed to start attempt");
-        }
+      const meta = loaded.gmatMeta;
+      let secIdx = 0;
+      let qIdx = 0;
+      let nextScreen: GreScreen = "question";
 
-        const started: StartAttemptResponse = startRes.data.data;
-        const attemptId = (started as any)._id || startRes.data.data._id;
+      if (loaded.status === "completed") {
+        setCurrentScreen("results");
+        setLoading(false);
+        return;
+      }
 
-        const detailRes = await api.get(`/mcu/attempts/${attemptId}`);
-        if (!detailRes.data?.success) {
-          throw new Error(detailRes.data?.message || "Failed to load attempt");
-        }
-
-        const loaded: TestAttempt = detailRes.data.data;
-
-        if (!loaded.sections || loaded.sections.length === 0) {
-          setError("This test has no sections configured.");
-          setLoading(false);
-          return;
-        }
-
-        setAttempt(loaded);
-
-        const meta = loaded.gmatMeta;
-        let secIdx = 0;
-        let qIdx = 0;
-        let nextScreen: GreScreen = "question";
-
-        if (loaded.status === "completed") {
-          setCurrentScreen("results");
-          setLoading(false);
-          return;
-        }
-
-        if (meta && typeof meta.currentSectionIndex === "number") {
-          secIdx = meta.currentSectionIndex;
-          qIdx = meta.currentQuestionIndex || 0;
-          if (meta.phase === "in_section") nextScreen = "question";
-          else if (meta.phase === "review") nextScreen = "section_review";
-          else nextScreen = "question";
-        } else {
-          outer: for (let s = 0; s < loaded.sections.length; s++) {
-            const sec = loaded.sections[s];
-            for (let i = 0; i < sec.questions.length; i++) {
-              if (!sec.questions[i].isAnswered) {
-                secIdx = s;
-                qIdx = i;
-                nextScreen = "question";
-                break outer;
-              }
+      if (meta && typeof meta.currentSectionIndex === "number") {
+        secIdx = meta.currentSectionIndex;
+        qIdx = meta.currentQuestionIndex || 0;
+        if (meta.phase === "in_section") nextScreen = "question";
+        else if (meta.phase === "review") nextScreen = "section_review";
+        else nextScreen = "question";
+      } else {
+        outer: for (let s = 0; s < loaded.sections.length; s++) {
+          const sec = loaded.sections[s];
+          for (let i = 0; i < sec.questions.length; i++) {
+            if (!sec.questions[i].isAnswered) {
+              secIdx = s;
+              qIdx = i;
+              nextScreen = "question";
+              break outer;
             }
           }
         }
-
-        setActiveSectionIndex(secIdx);
-        setActiveQuestionIndex(qIdx);
-        setCurrentScreen(nextScreen || "question");
-      } catch (err: any) {
-        console.error("startAttempt error:", err);
-        setError(
-          err?.response?.data?.message ||
-          err.message ||
-          "Failed to start test"
-        );
-        toast.error(
-          err?.response?.data?.message || "Failed to start test"
-        );
-      } finally {
-        setStarting(false);
-        setLoading(false);
       }
-    },
-    [testTemplateId]
-  );
+
+      setActiveSectionIndex(secIdx);
+      setActiveQuestionIndex(qIdx);
+      setCurrentScreen(nextScreen || "question");
+    } catch (err: any) {
+      console.error("startAttempt error:", err);
+      setError(
+        err?.response?.data?.message || err.message || "Failed to start test",
+      );
+      toast.error(err?.response?.data?.message || "Failed to start test");
+    } finally {
+      setStarting(false);
+      setLoading(false);
+    }
+  }, [testTemplateId]);
 
   useEffect(() => {
     startAttempt();
@@ -241,16 +231,15 @@ export default function SatExamPage() {
       attempt && attempt.sections[activeSectionIndex]
         ? attempt.sections[activeSectionIndex]
         : null,
-    [attempt, activeSectionIndex]
+    [attempt, activeSectionIndex],
   );
 
   const currentQuestion = useMemo(
     () =>
-      currentSection &&
-        currentSection.questions[activeQuestionIndex]
+      currentSection && currentSection.questions[activeQuestionIndex]
         ? currentSection.questions[activeQuestionIndex]
         : null,
-    [currentSection, activeQuestionIndex]
+    [currentSection, activeQuestionIndex],
   );
 
   const qDoc = currentQuestion?.questionDoc || null;
@@ -258,8 +247,7 @@ export default function SatExamPage() {
   useEffect(() => {
     if (!attempt || !currentSection) return;
 
-    const secDurationMinutes =
-      currentSection.durationMinutes || 0; // 0 → untimed
+    const secDurationMinutes = currentSection.durationMinutes || 0; // 0 → untimed
     if (!secDurationMinutes) {
       // setTimerSecondsLeft(0);
       setTimerRunning(false);
@@ -269,15 +257,15 @@ export default function SatExamPage() {
     const secDurationSeconds = secDurationMinutes * 60;
     const usedInSection = currentSection.questions.reduce(
       (sum, q) => sum + (q.timeSpentSeconds || 0),
-      0
+      0,
     );
     const left = Math.max(0, secDurationSeconds - usedInSection);
     setTimerSecondsLeft(left);
     setTimerRunning(
       attempt.status === "in_progress" &&
-      left > 0 &&
-      !isCompleted &&
-      currentScreen === "question"
+        left > 0 &&
+        !isCompleted &&
+        currentScreen === "question",
     );
   }, [attempt, currentSection, currentScreen, isCompleted]);
 
@@ -297,14 +285,10 @@ export default function SatExamPage() {
       setAttempt((prev) => {
         if (!prev) return prev;
         const clone = structuredClone(prev) as TestAttempt;
-        clone.totalTimeUsedSeconds =
-          (clone.totalTimeUsedSeconds || 0) + 1;
+        clone.totalTimeUsedSeconds = (clone.totalTimeUsedSeconds || 0) + 1;
         const sIdx = activeSectionIndex;
         const qIdx = activeQuestionIndex;
-        if (
-          clone.sections[sIdx] &&
-          clone.sections[sIdx].questions[qIdx]
-        ) {
+        if (clone.sections[sIdx] && clone.sections[sIdx].questions[qIdx]) {
           clone.sections[sIdx].questions[qIdx].timeSpentSeconds =
             (clone.sections[sIdx].questions[qIdx].timeSpentSeconds || 0) + 1;
         }
@@ -330,24 +314,16 @@ export default function SatExamPage() {
     if (!timerRunning) return;
     if (currentScreen !== "question") return;
 
-     if (timerSecondsLeft <= 0) {
-    setTimerRunning(false);
+    if (timerSecondsLeft <= 0) {
+      setTimerRunning(false);
 
-    toast.info(
-      "Time is up for this section. Moving to section review."
-    );
+      toast.info("Time is up for this section. Moving to section review.");
 
-    setCurrentScreen("section_review");
+      setCurrentScreen("section_review");
 
-    return;
-  }
-  }, [
-    timerSecondsLeft,
-    timerRunning,
-    attempt,
-    currentSection,
-    currentScreen,
-  ]);
+      return;
+    }
+  }, [timerSecondsLeft, timerRunning, attempt, currentSection, currentScreen]);
 
   const saveCurrentQuestionProgress = useCallback(
     async (opts?: {
@@ -372,8 +348,7 @@ export default function SatExamPage() {
             {
               sectionIndex,
               questionIndex,
-              answerOptionIndexes:
-                currentQuestion.answerOptionIndexes || [],
+              answerOptionIndexes: currentQuestion.answerOptionIndexes || [],
               answerText: currentQuestion.answerText || "",
               isAnswered: currentQuestion.isAnswered,
               markedForReview: currentQuestion.markedForReview,
@@ -385,25 +360,18 @@ export default function SatExamPage() {
 
         if (opts?.phase) {
           body.gmatPhase = opts.phase;
-          body.currentSectionIndex =
-            opts.metaSectionIndex ?? sectionIndex;
-          body.currentQuestionIndex =
-            opts.metaQuestionIndex ?? questionIndex;
+          body.currentSectionIndex = opts.metaSectionIndex ?? sectionIndex;
+          body.currentQuestionIndex = opts.metaQuestionIndex ?? questionIndex;
         }
 
-        await api.patch(
-          `/mcu/attempts/${attempt._id}/save-progress`,
-          body
-        );
+        await api.patch(`/mcu/attempts/${attempt._id}/save-progress`, body);
 
         if (!silent) {
           toast.success("Progress saved");
         }
       } catch (err: any) {
         if (!silent) {
-          toast.error(
-            err.response?.data?.message || "Failed to save progress"
-          );
+          toast.error(err.response?.data?.message || "Failed to save progress");
         }
       } finally {
         setSavingProgress(false);
@@ -415,7 +383,7 @@ export default function SatExamPage() {
       currentQuestion,
       activeSectionIndex,
       activeQuestionIndex,
-    ]
+    ],
   );
 
   const handleOptionClick = (optionIndex: number) => {
@@ -434,7 +402,7 @@ export default function SatExamPage() {
   };
 
   const handleTextAnswerChange = (
-    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
+    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>,
   ) => {
     const value = e.target.value;
     if (!attempt || !currentSection || !currentQuestion) return;
@@ -497,7 +465,7 @@ export default function SatExamPage() {
     });
 
     toast.info(
-      "You’ve reached the end of this section. Review your answers before moving on."
+      "You’ve reached the end of this section. Review your answers before moving on.",
     );
     setCurrentScreen("section_review");
   };
@@ -528,17 +496,42 @@ export default function SatExamPage() {
     }
 
     const nextIndex = activeSectionIndex + 1;
+
+    // After section index 1 → 10 minute break
+    if (activeSectionIndex === 1) {
+      setActiveSectionIndex(nextIndex);
+      setActiveQuestionIndex(0);
+      setBreakSeconds(10 * 60);
+      setCurrentScreen("break");
+      return;
+    }
+
+    // Normal next section
     setActiveSectionIndex(nextIndex);
     setActiveQuestionIndex(0);
     setCurrentScreen("question");
   };
 
+  useEffect(() => {
+    if (currentScreen !== "break") return;
+
+    if (breakSeconds <= 0) {
+      setCurrentScreen("question");
+      return;
+    }
+
+    const timer = setInterval(() => {
+      setBreakSeconds((prev) => prev - 1);
+    }, 1000);
+
+    return () => clearInterval(timer);
+  }, [currentScreen, breakSeconds]);
 
   const submitTestAttempt = async () => {
     if (!attempt || isCompleted) return;
 
     const confirmed = window.confirm(
-      "Are you sure you want to submit your test? You won’t be able to change your answers afterwards."
+      "Are you sure you want to submit your test? You won’t be able to change your answers afterwards.",
     );
     if (!confirmed) return;
 
@@ -573,9 +566,7 @@ export default function SatExamPage() {
       // navigate(`/gre/analysis/${submittedAttempt._id}`);
     } catch (err: any) {
       console.error("submitTestAttempt error:", err);
-      toast.error(
-        err.response?.data?.message || "Failed to submit GRE test"
-      );
+      toast.error(err.response?.data?.message || "Failed to submit GRE test");
     } finally {
       setSubmitting(false);
     }
@@ -583,7 +574,7 @@ export default function SatExamPage() {
 
   // Helper to update the current question partially and immutably
   const updateCurrentQuestion = (patch: Partial<AttemptQuestion>) => {
-    setAttempt(prev => {
+    setAttempt((prev) => {
       if (!prev) return prev;
       const clone = { ...prev };
       const sIdx = activeSectionIndex;
@@ -599,8 +590,9 @@ export default function SatExamPage() {
     });
   };
 
-  
-  const [filter, setFilter] = useState<"all" | "answered" | "not_answered" | "flagged">("all");
+  const [filter, setFilter] = useState<
+    "all" | "answered" | "not_answered" | "flagged"
+  >("all");
 
   if (loading || starting) {
     return <FullScreenLoader />;
@@ -616,14 +608,9 @@ export default function SatExamPage() {
               <h2 className="font-semibold">Unable to load test</h2>
             </div>
             <p className="mb-3">
-              {error ||
-                "Something went wrong while loading your attempt."}
+              {error || "Something went wrong while loading your attempt."}
             </p>
-            <Button
-              onClick={() => navigate(-1)}
-              variant="outline"
-              size="sm"
-            >
+            <Button onClick={() => navigate(-1)} variant="outline" size="sm">
               Go Back
             </Button>
           </div>
@@ -634,49 +621,54 @@ export default function SatExamPage() {
 
   return (
     <>
-    
       <div className="relative min-h-screen bg-white  dark:bg-slate-900 text-slate-900 dark:text-slate-50">
         <div className="h-[16px] w-full bg-gradient-to-r from-[#fff1dc] via-[#ffd19f] to-[#ff947d]" />
 
-   { currentScreen !== "results" &&    <GRETestHead
-          testTitle={testTitle}
-          attempt= {attempt}
-          currentSection={currentSection}
-          currentQuestion={currentQuestion}
-          activeSectionIndex={activeSectionIndex}
-          totalSections={attempt?.sections.length || 0}
-          timerSecondsLeft={timerSecondsLeft}
-          currentScreen={currentScreen}
-          activeQuestionIndex={activeQuestionIndex}
-          isCompleted={isCompleted}
-          savingProgress={savingProgress}
-          saveCurrentQuestionProgress={() => saveCurrentQuestionProgress({ silent: false })}
-          navigateBack={() => navigate(-1)}
-        />}
+        {currentScreen !== "results" && (
+          <GRETestHead
+            testTitle={testTitle}
+            attempt={attempt}
+            currentSection={currentSection}
+            currentQuestion={currentQuestion}
+            activeSectionIndex={activeSectionIndex}
+            totalSections={attempt?.sections.length || 0}
+            timerSecondsLeft={timerSecondsLeft}
+            currentScreen={currentScreen}
+            activeQuestionIndex={activeQuestionIndex}
+            isCompleted={isCompleted}
+            savingProgress={savingProgress}
+            saveCurrentQuestionProgress={() =>
+              saveCurrentQuestionProgress({ silent: false })
+            }
+            navigateBack={() => navigate(-1)}
+          />
+        )}
 
         {/* Scrollable main area between header & footer */}
         <div className="pt-14 ">
-          {currentScreen === "question" && currentSection && currentQuestion && (
-            <QuestionRenderer
-              qDoc={qDoc}
-              sectionQuestions={currentSection.questions}
-              currentQuestion={currentQuestion}
-              onReviewSection={setCurrentScreen}
-              isCompleted={isCompleted}
-              handleOptionClick={handleOptionClick}
-              handleTextAnswerChange={handleTextAnswerChange}
-              toggleMarkForReview={toggleMarkForReview}
-              updateCurrentQuestion={updateCurrentQuestion}
-              saveCurrentQuestionProgress={saveCurrentQuestionProgress}
-              activeQuestionIndex={activeQuestionIndex}
-              sectionTotal={currentSection.questions.length}
-              isLastQuestionInCurrentSection={isLastQuestionInCurrentSection}
-              isNextDisabled={isNextDisabled}
-              goToQuestion={goToQuestion}
-              goNextQuestion={goNextQuestion}
-            />
-          )}
-          
+          {currentScreen === "question" &&
+            currentSection &&
+            currentQuestion && (
+              <QuestionRenderer
+                qDoc={qDoc}
+                sectionQuestions={currentSection.questions}
+                currentQuestion={currentQuestion}
+                onReviewSection={setCurrentScreen}
+                isCompleted={isCompleted}
+                handleOptionClick={handleOptionClick}
+                handleTextAnswerChange={handleTextAnswerChange}
+                toggleMarkForReview={toggleMarkForReview}
+                updateCurrentQuestion={updateCurrentQuestion}
+                saveCurrentQuestionProgress={saveCurrentQuestionProgress}
+                activeQuestionIndex={activeQuestionIndex}
+                sectionTotal={currentSection.questions.length}
+                isLastQuestionInCurrentSection={isLastQuestionInCurrentSection}
+                isNextDisabled={isNextDisabled}
+                goToQuestion={goToQuestion}
+                goNextQuestion={goNextQuestion}
+              />
+            )}
+
           {currentScreen === "section_review" && attempt && currentSection && (
             <SectionReview
               currentSection={currentSection}
@@ -696,13 +688,20 @@ export default function SatExamPage() {
             />
           )}
 
-          
           {currentScreen === "results" && attempt && (
             <GRETestResults
               attempt={attempt}
               navigateBack={() => navigate(-1)}
               onTakeAnotherTest={() => navigate("/gmat/practice")}
-              saving = {savingProgress}
+              saving={savingProgress}
+            />
+          )}
+
+          {currentScreen === "break" && (
+            <BreakComponent
+              setBreakSeconds={setBreakSeconds}
+              breakSeconds={breakSeconds}
+              setCurrentScreen={setCurrentScreen}
             />
           )}
         </div>
