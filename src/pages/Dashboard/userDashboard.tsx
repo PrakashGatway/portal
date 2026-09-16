@@ -1040,8 +1040,8 @@ const GREDashboard = () => {
                         key={item?._id}
                         className="relative dark:bg-gray-800 bg-white rounded-3xl overflow-hidden p-6 lg:p-0 keen-slider__slide"
                       >
-                        <div className="grid grid-cols-1 xl:grid-cols-[0.9fr_1.1fr] lg:gap-4 py-4 px-4">
-                          <div className="flex flex-col gap-4 lg:py-0 px-2">
+                        <div className="grid grid-cols-1 xl:grid-cols-[0.9fr_1.1fr] lg:gap-4 py-4 sm:px-4">
+                          <div className="flex flex-col gap-4 lg:py-0">
                             <div>
                               <h2 className="text-xl lg:-mt-0 lg:mb-4 lg:text-2xl font-bold text-[#202020] dark:text-white">
                                 My Courses
@@ -1055,44 +1055,44 @@ const GREDashboard = () => {
                                     : "/images/course-thumbnail.webp"
                                 }
                                 alt=""
-                                className="w-full h-[140px] lg:h-full object-contain"
+                                className="w-full h-full sm:h-[140px] lg:h-full object-contain"
                               />
                             </div>
                           </div>
 
                           <div className="flex flex-col gap-4">
-                            <div className="xl:col-span-3 px-2 lg:px-0">
+                            <div className="xl:col-span-3  lg:px-0">
                               <div className="flex gap-2">
                                 <div>
-                                  <h3 className="text-2xl font-semibold capitalize text-gray-900 dark:text-white line-clamp-1">
+                                  <h3 className="text-lg sm:text-2xl font-semibold capitalize text-gray-900 dark:text-white sm:line-clamp-1">
                                     {item?.item?.title}
                                   </h3>
-                                  {/* <p className="text-gray-500 text-sm dark:text-gray-400  line-clamp-1">
+                                  <p className="text-gray-600 sm:hidden text-sm dark:text-gray-400 ">
                                     {item?.item?.shortDescription?.length > 100
                                       ? item.item.shortDescription.substring(
                                           0,
                                           100,
                                         ) + "..."
                                       : item?.item?.shortDescription}
-                                  </p> */}
+                                  </p>
                                 </div>
                               </div>
                             </div>
 
-                            <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-0 justify-center items-center">
+                            <div className="grid grid-cols-2 lg:grid-cols-2 gap-8 lg:gap-0 justify-center items-center">
                               <div className="space-y-2">
                                 <div className="flex gap-3 items-start">
-                                  <div className="w-10 h-10 rounded-xl bg-orange-50 dark:bg-gray-600 flex items-center justify-center">
+                                  <div className="w-10 h-10 rounded-xl bg-orange-50 dark:bg-gray-600 hidden sm:flex items-center justify-center">
                                     <Clock3
                                       size={22}
                                       className="text-black dark:text-white"
                                     />
                                   </div>
                                   <div>
-                                    <p className="text-gray-500 dark:text-white text-sm">
+                                    <p className="text-gray-500 dark:text-white text-xs sm:text-sm">
                                       Duration
                                     </p>
-                                    <h3 className="font-bold text-sm dark:text-white">
+                                    <h3 className="font-bold text-xs sm:text-sm dark:text-white">
                                       {item?.item?.schedule_pattern?.duration
                                         ? `${item.item.schedule_pattern.duration} Hours`
                                         : "Flexible"}
@@ -1101,17 +1101,17 @@ const GREDashboard = () => {
                                 </div>
                                 <hr />
                                 <div className="flex gap-3 items-start">
-                                  <div className="w-10 h-10 rounded-xl bg-orange-50 flex items-center justify-center dark:bg-gray-600">
+                                  <div className="w-10 h-10 rounded-xl bg-orange-50 hidden sm:flex items-center justify-center dark:bg-gray-600">
                                     <Users2
                                       size={22}
                                       className="text-black dark:text-white"
                                     />
                                   </div>
                                   <div>
-                                    <p className="text-gray-500 dark:text-white text-sm">
+                                    <p className="text-gray-500 dark:text-white text-xs sm:text-sm">
                                       Instructor
                                     </p>
-                                    <h3 className="font-bold text-sm dark:text-white">
+                                    <h3 className="font-bold text-xs sm:text-sm dark:text-white">
                                       {item?.instructorNames?.[0]?.name ||
                                         "Expert Instructor"}
                                     </h3>
@@ -1119,17 +1119,17 @@ const GREDashboard = () => {
                                 </div>
                                 <hr />
                                 <div className="flex gap-3 items-start">
-                                  <div className="w-10 h-10 rounded-xl bg-orange-50 flex items-center justify-center dark:bg-gray-600">
+                                  <div className="w-10 h-10 rounded-xl bg-orange-50 hidden sm:flex items-center justify-center dark:bg-gray-600">
                                     <Video
                                       size={22}
                                       className="text-black dark:text-white"
                                     />
                                   </div>
                                   <div>
-                                    <p className="text-gray-500 dark:text-white text-sm">
+                                    <p className="text-gray-500 dark:text-white text-xs sm:text-sm">
                                       Mode
                                     </p>
-                                    <h3 className="font-bold text-sm dark:text-white">
+                                    <h3 className="font-bold text-xs sm:text-sm dark:text-white">
                                       {item?.item?.mode === "sessions"
                                         ? "Live Sessions"
                                         : item?.item?.mode || "Online"}
@@ -1138,53 +1138,53 @@ const GREDashboard = () => {
                                 </div>
                               </div>
 
-                              <div className="space-y-2 pl-4 lg:pl-6">
+                              <div className="space-y-2 lg:pl-6">
                                 <div className="flex gap-4 items-start">
-                                  <div className="w-10 h-10 rounded-xl bg-orange-50 dark:bg-gray-600 flex items-center justify-center">
+                                  <div className="w-10 h-10 rounded-xl bg-orange-50 dark:bg-gray-600 hidden sm:flex items-center justify-center">
                                     <BookOpen
                                       size={22}
                                       className="text-black dark:text-white"
                                     />
                                   </div>
                                   <div>
-                                    <p className="text-gray-500 dark:text-white text-sm">
+                                    <p className="text-gray-500 dark:text-white text-xs sm:text-sm">
                                       Language
                                     </p>
-                                    <h3 className="font-bold text-sm dark:text-white">
+                                    <h3 className="font-bold text-xs sm:text-sm dark:text-white">
                                       {item?.item?.language}
                                     </h3>
                                   </div>
                                 </div>
                                 <hr />
                                 <div className="flex gap-4 items-start">
-                                  <div className="w-10 h-10 rounded-xl bg-orange-50 flex items-center justify-center dark:bg-gray-600">
+                                  <div className="w-10 h-10 rounded-xl bg-orange-50 hidden sm:flex items-center justify-center dark:bg-gray-600">
                                     <Clock3
                                       size={22}
                                       className="text-black dark:text-white"
                                     />
                                   </div>
                                   <div>
-                                    <p className="text-gray-500 dark:text-white text-sm">
+                                    <p className="text-gray-500 dark:text-white text-xs sm:text-sm">
                                       Level
                                     </p>
-                                    <h3 className="font-bold text-sm dark:text-white">
+                                    <h3 className="font-bold text-xs sm:text-sm dark:text-white">
                                       {item?.item?.level}
                                     </h3>
                                   </div>
                                 </div>
                                 <hr />
                                 <div className="flex gap-4 items-start">
-                                  <div className="w-10 h-10 rounded-xl bg-orange-50 flex items-center justify-center dark:bg-gray-600">
+                                  <div className="w-10 h-10 rounded-xl bg-orange-50 hidden sm:flex items-center justify-center dark:bg-gray-600">
                                     <CalendarDays
                                       size={22}
                                       className="text-black dark:text-white"
                                     />
                                   </div>
                                   <div>
-                                    <p className="text-gray-500 dark:text-white text-sm">
+                                    <p className="text-gray-500 dark:text-white text-xs sm:text-sm">
                                       Days Left
                                     </p>
-                                    <h3 className="font-bold text-sm text-[#FF5A14]">
+                                    <h3 className="font-bold text-xs sm:text-sm text-[#FF5A14]">
                                       {Math.max(
                                         0,
                                         Math.ceil(
