@@ -158,8 +158,7 @@ const NotificationDetailModal = ({
   formatDate: (date: string) => string;
   isActing: boolean;
 }) => {
-  const { Icon, bg, text } = getIconConfig(notification);
-  const isGlobal = notification.isGlobal || notification.notificationScope === "global";
+  
 
   const getPriorityColor = (priority: string) => {
     switch (priority) {
@@ -176,7 +175,7 @@ const NotificationDetailModal = ({
   return (
     <>
       <div
-        className="fixed inset-0 bg-black/40 backdrop-blur-sm z-50 flex items-center justify-center p-4 animate-in fade-in duration-200"
+        className="fixed inset-0 bg-black/40 backdrop-blur-xm z-50 flex items-center justify-center p-4 animate-in fade-in duration-200"
         onClick={onClose}
       >
         <div
@@ -185,12 +184,9 @@ const NotificationDetailModal = ({
         >
           <div className="sticky top-0 bg-white/95 backdrop-blur-sm border-b border-gray-100 px-6 py-4 flex items-start justify-between z-10">
             <div className="flex items-center gap-3">
-              <div className={`p-2.5 rounded-xl ${bg} ${text}`}>
-                <Icon className="h-5 w-5" />
-              </div>
+              
               <div>
                 <h2 className="text-lg font-bold text-gray-900">Notification Details</h2>
-                <p className="text-xs text-gray-500">ID: {notification._id.slice(0, 12)}...</p>
               </div>
             </div>
             <button
@@ -219,108 +215,7 @@ const NotificationDetailModal = ({
                 {notification.message}
               </p>
             </div>
-
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-              <div className="bg-gray-50 rounded-lg p-3 border border-gray-100">
-                <div className="flex items-center gap-2 text-xs text-gray-500 mb-1">
-                  <Layers className="h-3.5 w-3.5" />
-                  <span>Type</span>
-                </div>
-                <p className="text-sm font-medium text-gray-800 capitalize">{notification.type || "General"}</p>
-              </div>
-
-              <div className="bg-gray-50 rounded-lg p-3 border border-gray-100">
-                <div className="flex items-center gap-2 text-xs text-gray-500 mb-1">
-                  <AlertCircle className="h-3.5 w-3.5" />
-                  <span>Priority</span>
-                </div>
-                <span className={`inline-block rounded-full px-3 py-0.5 text-xs font-medium border ${getPriorityColor(notification.priority)}`}>
-                  {notification.priority || "Normal"}
-                </span>
-              </div>
-
-              <div className="bg-gray-50 rounded-lg p-3 border border-gray-100">
-                <div className="flex items-center gap-2 text-xs text-gray-500 mb-1">
-                  {isGlobal ? <Globe className="h-3.5 w-3.5" /> : <User className="h-3.5 w-3.5" />}
-                  <span>Scope</span>
-                </div>
-                <span className={`inline-flex items-center gap-1.5 rounded-full px-3 py-0.5 text-xs font-medium ${isGlobal ? "bg-blue-50 text-blue-600" : "bg-green-50 text-green-600"}`}>
-                  {isGlobal ? <Globe className="h-3 w-3" /> : <User className="h-3 w-3" />}
-                  {isGlobal ? "Global" : "Personal"}
-                </span>
-              </div>
-
-              <div className="bg-gray-50 rounded-lg p-3 border border-gray-100">
-                <div className="flex items-center gap-2 text-xs text-gray-500 mb-1">
-                  <Info className="h-3.5 w-3.5" />
-                  <span>Status</span>
-                </div>
-                <span className={`inline-flex items-center gap-1.5 rounded-full px-3 py-0.5 text-xs font-medium ${notification.isActive ? "bg-green-50 text-green-600" : "bg-gray-100 text-gray-500"}`}>
-                  <Circle className={`h-2 w-2 ${notification.isActive ? "fill-green-500" : "fill-gray-400"}`} />
-                  {notification.isActive ? "Active" : "Inactive"}
-                </span>
-              </div>
-            </div>
-
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-              <div className="bg-gray-50 rounded-lg p-3 border border-gray-100">
-                <div className="flex items-center gap-2 text-xs text-gray-500 mb-1">
-                  <Calendar className="h-3.5 w-3.5" />
-                  <span>Created</span>
-                </div>
-                <p className="text-sm text-gray-800">{formatDate(notification.createdAt)}</p>
-                <p className="text-xs text-gray-400 mt-0.5">{new Date(notification.createdAt).toLocaleString()}</p>
-              </div>
-
-              <div className="bg-gray-50 rounded-lg p-3 border border-gray-100">
-                <div className="flex items-center gap-2 text-xs text-gray-500 mb-1">
-                  <Clock className="h-3.5 w-3.5" />
-                  <span>Updated</span>
-                </div>
-                <p className="text-sm text-gray-800">{formatDate(notification.updatedAt)}</p>
-                <p className="text-xs text-gray-400 mt-0.5">{new Date(notification.updatedAt).toLocaleString()}</p>
-              </div>
-            </div>
-
-            {notification.readAt && (
-              <div className="bg-blue-50/50 rounded-lg p-3 border border-blue-100">
-                <div className="flex items-center gap-2 text-xs text-blue-600 mb-1">
-                  <Check className="h-3.5 w-3.5" />
-                  <span>Read At</span>
-                </div>
-                <p className="text-sm text-gray-800">{formatDate(notification.readAt)}</p>
-                <p className="text-xs text-gray-400 mt-0.5">{new Date(notification.readAt).toLocaleString()}</p>
-              </div>
-            )}
-
-            {notification.data && (
-              <div className="bg-gray-50 rounded-lg p-3 border border-gray-100">
-                <div className="flex items-center gap-2 text-xs text-gray-500 mb-2">
-                  <Hash className="h-3.5 w-3.5" />
-                  <span>Associated Data</span>
-                </div>
-                <div className="space-y-1.5 text-sm text-gray-700">
-                  {notification.data.courseId && (
-                    <p><span className="text-gray-500">Course ID:</span> {notification.data.courseId}</p>
-                  )}
-                  {notification.data.contentId && (
-                    <p><span className="text-gray-500">Content ID:</span> {notification.data.contentId}</p>
-                  )}
-                  {notification.data.testId && (
-                    <p><span className="text-gray-500">Test ID:</span> {notification.data.testId}</p>
-                  )}
-                  {notification.data.actionText && (
-                    <p><span className="text-gray-500">Action:</span> {notification.data.actionText}</p>
-                  )}
-                  {notification.data.url && (
-                    <p className="truncate"><span className="text-gray-500">URL:</span> <span className="text-blue-600">{notification.data.url}</span></p>
-                  )}
-                  {!notification.data.courseId && !notification.data.contentId && !notification.data.testId && !notification.data.actionText && !notification.data.url && (
-                    <p className="text-gray-400 italic">No additional data</p>
-                  )}
-                </div>
-              </div>
-            )}
+            
 
             <div className="flex flex-wrap gap-3 pt-2 border-t border-gray-100">
               <button
@@ -331,6 +226,7 @@ const NotificationDetailModal = ({
                   if (notification.data?.url) {
                     window.location.href = notification.data.url;
                   }
+                  onClose();
                 }}
                 className={`flex-1 inline-flex items-center justify-center gap-2 rounded-lg px-4 py-2.5 text-sm font-medium transition-colors ${
                   notification.isRead

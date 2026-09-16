@@ -143,6 +143,7 @@ const navItemsUser: NavItem[] = [
 
 const navItemsCoun: NavItem[] = [
   { icon: LayoutDashboard, name: "Dashboard", path: "/users-to" },
+  { icon: "💬", name: "Reviews", path: "/reviews-to" },
   // { icon: "👥", name: "Users", path: "/" },
 ];
 
@@ -261,7 +262,7 @@ const othersItems: NavItem[] = [
 const teacherOthersItems: NavItem[] = [
   { icon: "👤", name: "Profile", path: "/profile" },
   { icon: "🔒", name: "Privacy", path: "/privacy-policy" },
-  { icon: "💬", name: "Support", path: "/support" },
+  { icon: "💬", name: "Support", path: "/all-tickets" },
 ];
 
 const AppSidebar: React.FC = () => {

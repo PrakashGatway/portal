@@ -252,6 +252,8 @@ export default function App() {
                 <Route path="/leads" element={<LeadManagement />} />
                 <Route path="/lead-report" element={<DailyReport />} />
                 <Route path="/users-to" element={<CounselorUser />} />
+                <Route path="/reviews-to" element={<FeedbackPage />} />
+
               </Route>
             
               <Route
