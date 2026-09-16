@@ -506,25 +506,29 @@ const handleBack = () => {
       {/* HELP BANNER */}
       <section className="w-full px-3 py-2 sm:px-5 lg:px-7">
         <div className="relative mx-auto flex w-full max-w-[1400px] flex-col overflow-hidden rounded-[12px] border border-[#F3E5DE] bg-gradient-to-r from-[#FFF5F0] via-[#FFF9F7] to-[#FFF5F1] px-5 py-5 sm:px-7 md:flex-row md:items-center md:justify-between lg:px-10 lg:py-4">
-          <div className="pointer-events-none absolute -left-7 top-1/2 h-[95px] w-[95px] -translate-y-1/2 rounded-full border border-[#F5D8CC]" />
-          <div className="pointer-events-none absolute -left-1 top-1/2 h-[70px] w-[70px] -translate-y-1/2 rounded-full border border-[#F2CFC2]" />
+          {/* <div className="pointer-events-none absolute -left-7 top-1/2 h-[95px] w-[95px] -translate-y-1/2 rounded-full border border-[#F5D8CC]" />
+          <div className="pointer-events-none absolute -left-1 top-1/2 h-[70px] w-[70px] -translate-y-1/2 rounded-full border border-[#F2CFC2]" /> */}
           
           <div className="relative z-10 flex items-center gap-5 sm:gap-7">
-            <div className="relative flex h-[65px] w-[65px] shrink-0 items-center justify-center sm:h-[72px] sm:w-[72px]">
+            {/* <div className="relative flex h-[65px] w-[65px] shrink-0 items-center justify-center sm:h-[72px] sm:w-[72px]">
               <Headphones size={58} strokeWidth={1.5} className="text-[#292929]" />
               <span className="absolute left-[7px] top-[30px] h-[17px] w-[7px] rounded-full bg-[#F36A3D]" />
               <span className="absolute right-[7px] top-[30px] h-[17px] w-[7px] rounded-full bg-[#F36A3D]" />
               <div className="absolute left-1/2 top-1/2 flex h-[28px] w-[36px] -translate-x-1/2 -translate-y-1/2 items-center justify-center rounded-[7px] bg-[#F36A3D] shadow-[0_3px_8px_rgba(243,106,61,0.18)]">
                 <MessageSquare size={17} strokeWidth={2.2} className="fill-white text-white" />
               </div>
-            </div>
+            </div> */}
+
+            
+            <img src="/images/headphone.webp" alt="" className="w-25 h-25 scale-90" />
+
             <div>
               <h2 className="text-[15px] font-bold leading-5 tracking-[-0.2px] text-[#282828] sm:text-[16px]">Need more help?</h2>
               <p className="mt-1 text-[11px] leading-5 text-[#777777] sm:text-[12px]">Can’t find what you’re looking for? Our support team is here for you.</p>
             </div>
           </div>
 
-          <a href="tel:8302092630"  className="group relative z-10 mt-5 flex h-[36px] w-full items-center justify-center gap-3 rounded-[7px] border border-[#F0835F] bg-white/60 px-5 text-[11px] font-semibold text-[#E9673D] transition-all duration-300 hover:bg-[#FFF0E9] hover:shadow-[0_4px_12px_rgba(233,103,61,0.12)] md:mt-0 md:w-auto md:min-w-[199px]">
+          <a href="tel:9166146538"  className="group relative z-10 mt-5 flex h-[36px] w-full items-center justify-center gap-3 rounded-[7px] border border-[#F0835F] bg-white/60 px-5 text-[11px] font-semibold text-[#E9673D] transition-all duration-300 hover:bg-[#FFF0E9] hover:shadow-[0_4px_12px_rgba(233,103,61,0.12)] md:mt-0 md:w-auto md:min-w-[199px]">
             <span>Contact Support Team</span>
             <ArrowUpRight size={16} strokeWidth={1.8} className="transition-transform duration-300 group-hover:translate-x-0.5 group-hover:-translate-y-0.5" />
           </a>

@@ -833,10 +833,10 @@ export default function MockTests({ testType }: any) {
                 <p className="text-gray-600 leading-snug">
                   Call Us at{" "}
                   <a
-                    href="tel:09509829849"
+                    href="tel:9166146538"
                     className="text-[#FF7046] font-semibold hover:underline"
                   >
-                    09509829849
+                    9166146538
                   </a>
                   <br />
                   Or chat with our customer support

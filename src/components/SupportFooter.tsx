@@ -35,7 +35,7 @@ export default function CourseSupportFooter() {
                 className="flex items-center gap-2 text-gray-700 hover:text-[#FF6A3D]"
               >
                 <Phone className="w-4 h-4 text-[#FF6A3D]" />
-                +91 9875863347
+                +91 9166146538
 
 
               </a>

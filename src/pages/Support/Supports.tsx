@@ -305,11 +305,11 @@ const SupportPage = () => {
     {
       title: "Call Support",
       description: "Mon – Sat, 10AM – 7PM",
-      action: "+91 98765 43210",
+      action: "+91 9166146538",
       icon: Phone,
       actionClass: "bg-orange-50 text-orange-500",
       onClick: () => {
-        window.location.href = "tel:+919876543210";
+        window.location.href = "tel:+919166146538";
       },
     },
     {
@@ -583,23 +583,24 @@ const SupportPage = () => {
             {/* ================= SUPPORT CTA ================= */}
             <div className="relative overflow-hidden flex flex-col gap-6 rounded-[14px] border border-[#F3E7E1] bg-gradient-to-r from-[#FFF4EE] to-[#FFF8F5] px-6 py-6 sm:px-8 sm:py-7 md:flex-row md:items-center md:justify-between lg:px-10">
               {/* Decorative circles */}
-              <div className="pointer-events-none absolute -left-5 top-1/2 h-20 w-20 -translate-y-1/2 rounded-full border border-[#F7D9CB]" />
-              <div className="pointer-events-none absolute -left-2 top-1/2 h-12 w-12 -translate-y-1/2 rounded-full border border-[#F4CDBD]" />
+              {/* <div className="pointer-events-none absolute -left-5 top-1/2 h-20 w-20 -translate-y-1/2 rounded-full border border-[#F7D9CB]" />
+              <div className="pointer-events-none absolute -left-2 top-1/2 h-12 w-12 -translate-y-1/2 rounded-full border border-[#F4CDBD]" /> */}
 
               {/* Left Content */}
               <div className="relative z-10 flex items-center gap-5 sm:gap-7">
-                {/* Headphone Icon */}
-                <div className="relative flex h-[68px] w-[68px] shrink-0 items-center justify-center rounded-full bg-[#FFF0E8] sm:h-[76px] sm:w-[76px]">
+                
+                
+          <img src="/images/headphone.webp" alt="" className="w-20 h-20 scale-90" />
+                {/* <div className="relative flex h-[68px] w-[68px] shrink-0 items-center justify-center rounded-full bg-[#FFF0E8] sm:h-[76px] sm:w-[76px]">
                   <Headphones
                     size={42}
                     strokeWidth={1.8}
                     className="text-[#262626]"
                   />
 
-                  {/* Small orange ear pads */}
                   <span className="absolute left-[15px] top-[31px] h-[14px] w-[6px] rounded-full bg-[#F15B2A]" />
                   <span className="absolute right-[15px] top-[31px] h-[14px] w-[6px] rounded-full bg-[#F15B2A]" />
-                </div>
+                </div> */}
 
                 {/* Text */}
                 <div>
@@ -1320,11 +1321,11 @@ export default SupportPage;
 //   {
 //     title: "Call Support",
 //     description: "Mon – Sat, 10AM – 7PM",
-//     action: "+91 98765 43210",
+//     action: "+91 9166146538",
 //     icon: Phone,
 //     actionClass: "bg-orange-50 text-orange-500",
 //     onClick: () => {
-//       window.location.href = "tel:+919876543210";
+//       window.location.href = "tel:+919166146538";
 //     },
 //   },
 //   {
