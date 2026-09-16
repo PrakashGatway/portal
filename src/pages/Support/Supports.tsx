@@ -678,7 +678,19 @@ const SupportPage = () => {
         {/* Create Ticket Modal */}
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
           {showCreateForm && (
-            <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/40 px-4 py-6">
+           <CreateTicket setShowCreateForm={setShowCreateForm} newTicket={newTicket} setNewTicket={setNewTicket} categoryOptions={categoryOptions} priorityOptions={priorityOptions} handleCreateTicket={handleCreateTicket} errors={errors}/>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+};
+
+export default SupportPage;
+
+export const CreateTicket=({setShowCreateForm,newTicket,setNewTicket,categoryOptions,priorityOptions,handleCreateTicket,errors,disabledSubject=false,title="Create New Ticket",disabledCategory=false,disabledPriority=false} , disabledAttach=false)=>{
+  return(<>
+   <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/40 px-4 py-6">
               <motion.div
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
@@ -694,7 +706,7 @@ const SupportPage = () => {
                     </button>
                     <div>
                       <h2 className="text-xl font-bold text-gray-900 dark:text-white">
-                        Create New Ticket
+                        {title}
                       </h2>
                       <p className="text-sm text-gray-500 dark:text-gray-400">
                         We'll get back to you as soon as possible
@@ -717,6 +729,7 @@ const SupportPage = () => {
                     <input
                       type="text"
                       value={newTicket.subject}
+                      disabled={disabledSubject}
                       onChange={(e) =>
                         setNewTicket((prev) => ({
                           ...prev,
@@ -740,6 +753,7 @@ const SupportPage = () => {
                       </Label>
                       <select
                         value={newTicket.category}
+                        disabled={disabledCategory}
                         onChange={(e) =>
                           setNewTicket((prev) => ({
                             ...prev,
@@ -763,6 +777,7 @@ const SupportPage = () => {
                       </Label>
                       <select
                         value={newTicket.priority}
+                        disabled={disabledPriority}
                         onChange={(e) =>
                           setNewTicket((prev) => ({
                             ...prev,
@@ -805,13 +820,13 @@ const SupportPage = () => {
                     )}
                   </div>
 
-                  <div className="flex items-center gap-3 pt-2">
+                 {disabledAttach && <div className="flex items-center gap-3 pt-2">
                     <button className="flex items-center gap-1.5 px-4 py-2 text-sm text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 bg-gray-50 dark:bg-gray-700/50 rounded-xl transition-colors">
                       <Paperclip className="h-4 w-4" />
                       Attach files
                     </button>
                     <span className="text-xs text-gray-400">Max size 10MB</span>
-                  </div>
+                  </div>}
 
                   <div className="flex justify-end gap-3 pt-4 border-t border-gray-100 dark:border-gray-700">
                     <Button
@@ -831,15 +846,8 @@ const SupportPage = () => {
                   </div>
                 </div>
               </motion.div>
-            </div>
-          )}
-        </div>
-      </div>
-    </div>
-  );
-};
-
-export default SupportPage;
+            </div></>)
+}
 
 
 // // src/pages/SupportPage.jsx

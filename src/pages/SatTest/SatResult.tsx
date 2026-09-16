@@ -329,6 +329,12 @@ export const GRETestResults: React.FC<GRETestResultsProps> = React.memo(
             Back to Dashboard
           </Button>
           <AttemptAnalysis sections={attempt?.sections} />
+          {/* Tabs - No "All" option, defaults to RW */}
+          <TotalSATScore
+            result={result}
+            hasReadingWriting={hasReadingWriting}
+            hasMath={hasMath}
+          />
 
           {/* Overall Stats Grid */}
           <div>
@@ -427,6 +433,8 @@ export const GRETestResults: React.FC<GRETestResultsProps> = React.memo(
             )}
           </div>
 
+          
+
           {attempt?.sections?.length > 0 && (
             <div className="w-full">
               {/* Header */}
@@ -472,38 +480,14 @@ export const GRETestResults: React.FC<GRETestResultsProps> = React.memo(
                       {renderModule(section, index + 1)}
                     </div>
 
-                    {/* View Solutions */}
-                    <button
-                      type="button"
-                      className="
-                        w-full
-                        h-[53px]
-                        mt-8
-                        rounded-[10px]
-                        border
-                        border-[#ff7048]
-                        bg-white
-                        text-[#f6673c]
-                        text-[16px] md:text-[18px]
-                        font-medium
-                        hover:bg-[#fff5f1]
-                        transition
-                      "
-                    >
-                      View Solutions
-                    </button>
+                   
                   </div>
                 ))}
               </div>
             </div>
           )}
 
-          {/* Tabs - No "All" option, defaults to RW */}
-          <TotalSATScore
-            result={result}
-            hasReadingWriting={hasReadingWriting}
-            hasMath={hasMath}
-          />
+          
 
           {/* Section-wise Results */}
           <div className="space-y-8">

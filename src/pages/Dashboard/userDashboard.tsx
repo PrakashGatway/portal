@@ -1541,13 +1541,13 @@ const GREDashboard = () => {
         {useAllCoursesSlider ? (
           <div ref={allCoursesSliderRef} className="keen-slider">
             {allCourses.map((item) => (
-              <AllCourseCard key={item._id || item.id} item={item} />
+              <AllCourseCard key={item._id || item.id} item={item} user={user}/>
             ))}
           </div>
         ) : (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-2 xl:grid-cols-4 gap-6">
             {allCourses.map((item) => (
-              <AllCourseCard key={item._id || item.id} item={item} />
+              <AllCourseCard key={item._id || item.id} item={item} user={user}/>
             ))}
           </div>
         )}
@@ -1605,29 +1605,7 @@ const AllCourseCard = ({ item }) => {
             </span>
           </h3>
 
-          <div className="mt-4 flex items-center flex-wrap gap-2">
-            <span className="text-base font-bold text-[#222] dark:text-white">
-              ₹{Math.ceil(price)}
-            </span>
-            <span className="text-sm text-gray-400 line-through dark:text-gray-500">
-              ₹{item?.pricing?.amount}
-            </span>
-
-            {normalDiscount > 0 && earlyBirdDiscount > 0 ? (
-              <span className="rounded-full bg-green-50 px-2 py-0.5 text-sm font-semibold text-green-600">
-                {normalDiscount}%
-                <span className="text-xs font-medium">
-                  {" + "}
-                  {earlyBirdDiscount}%
-                </span>
-                <span className="text-xs font-medium"> OFF</span>
-              </span>
-            ) : (
-              <span className="rounded-full bg-green-50 px-2 py-0.5 text-xs font-semibold text-green-600">
-                {normalDiscount}% OFF
-              </span>
-            )}
-          </div>
+      
 
           <Link to={`/course/${item?.slug}`} className="flex justify-center">
             <button className="mt-5 py-2 w-1/2 text-base rounded-xl border border-[#ff5b2e] text-[#ff5b2e] font-medium transition-all duration-300 hover:bg-[#ff5b2e] hover:text-white">

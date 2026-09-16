@@ -168,8 +168,7 @@ const AppHeader: React.FC = () => {
           className={`${isApplicationMenuOpen ? "flex" : "hidden"} items-center justify-between w-full gap-4 px-4 py-3 lg:flex lg:justify-end lg:px-0 lg:py-2`}
         >
           <div className="flex items-center gap-2 2xsm:gap-2">
-            {/* Theme Toggle */}
-            <ThemeToggleButton />
+          
             {/* <button
                 className="relative flex items-center justify-center text-gray-500 transition-colors bg-white border border-gray-200 rounded-full dropdown-toggle hover:text-gray-700 h-10 w-10 hover:bg-gray-100 dark:border-gray-800 dark:bg-gray-900 dark:text-gray-400 dark:hover:bg-gray-800 dark:hover:text-white"
                 onClick={() => {toggleSound();setIsMuted(!isMuted)}}>

@@ -786,6 +786,7 @@ export const GRETestHead: React.FC<GRETestHeaderProps> = React.memo(
     const [openReference, setOpenReference] = useState(false);
     const [openCalculator, setOpenCalculator] = useState(false);
     const [openMore, setOpenMore] = useState(false);
+    const [showExitModal, setShowExitModal] = useState(false);
 
     // Modal states
     const [helpOpen, setHelpOpen] = useState(false);
@@ -1087,7 +1088,7 @@ export const GRETestHead: React.FC<GRETestHeaderProps> = React.memo(
 
               {(currentScreen === "results" || isCompleted) && navigateBack && (
                 <button
-                  onClick={navigateBack}
+                  onClick={() => setShowExitModal(true)}
                   className="ml-2 px-4 py-2 rounded-lg bg-gradient-to-r from-blue-500 to-purple-500 hover:from-blue-600 hover:to-purple-600 text-white font-medium transition-all shadow hover:shadow-lg"
                 >
                   <span className="flex items-center gap-2">
@@ -1201,7 +1202,7 @@ export const GRETestHead: React.FC<GRETestHeaderProps> = React.memo(
                         </button> */}
 
             <button
-              onClick={navigateBack}
+             onClick={() => setShowExitModal(true)}
               role="menuitem"
               className="
     w-full
@@ -1470,6 +1471,101 @@ export const GRETestHead: React.FC<GRETestHeaderProps> = React.memo(
             </div>
           </div>
         </Modal>
+        {showExitModal && (
+  <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/60 px-4 py-5 backdrop-blur-[2px]">
+    <div className="relative w-full max-w-[520px] overflow-hidden rounded-xl bg-white shadow-2xl sm:rounded-2xl">
+
+      {/* Close Button */}
+      <button
+        type="button"
+        onClick={() => setShowExitModal(false)}
+        className="absolute right-4 top-4 z-10 flex h-8 w-8 items-center justify-center rounded-full text-slate-500 transition hover:bg-slate-100 hover:text-slate-800 sm:right-5 sm:top-5"
+        aria-label="Close"
+      >
+        <svg
+          className="h-5 w-5"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          strokeWidth="2"
+        >
+          <path
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            d="M6 6l12 12M18 6L6 18"
+          />
+        </svg>
+      </button>
+
+      {/* Content */}
+      <div className="px-5 pb-5 pt-7 text-center sm:px-8 sm:pb-7 sm:pt-8">
+
+        {/* Exit Icon */}
+        <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-full bg-[#F36D45]/10 sm:mb-5 sm:h-16 sm:w-16">
+          <svg
+            className="h-7 w-7 text-[#F36D45] sm:h-8 sm:w-8"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="1.8"
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              d="M10 17l5-5-5-5"
+            />
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              d="M15 12H3"
+            />
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              d="M21 19V5a2 2 0 00-2-2h-6"
+            />
+          </svg>
+        </div>
+
+        {/* Heading */}
+        <h2 className="text-xl font-bold tracking-tight text-slate-900 sm:text-2xl">
+          Do You Want to Exit this Practice Test?
+        </h2>
+
+        {/* Description */}
+        <p className="mx-auto mt-3 max-w-[440px] text-sm leading-5 text-slate-500 sm:text-[15px] sm:leading-6">
+          If you exit now, your test will be submitted, and you won't be able
+          to make further changes.
+        </p>
+
+        {/* Divider */}
+        <div className="my-5 h-px bg-slate-100 sm:my-6" />
+
+        {/* Buttons */}
+        <div className="flex flex-col-reverse gap-3 sm:flex-row sm:justify-end">
+
+          {/* Continue */}
+          <button
+            type="button"
+            onClick={() => setShowExitModal(false)}
+            className="w-full rounded-full border border-[#F36D45] bg-white px-5 py-2.5 text-sm font-semibold text-[#F36D45] transition-all duration-200 hover:bg-[#F36D45]/5 focus:outline-none focus:ring-2 focus:ring-[#F36D45]/20 sm:w-auto sm:min-w-[190px]"
+          >
+            Continue Practice Test
+          </button>
+
+          {/* Submit & Exit */}
+          <button
+            type="button"
+            onClick={navigateBack}
+            className="w-full rounded-full bg-[#F36D45] px-5 py-2.5 text-sm font-semibold text-white shadow-sm transition-all duration-200 hover:bg-[#e85d38] hover:shadow-md focus:outline-none focus:ring-2 focus:ring-[#F36D45]/30 active:scale-[0.98] sm:w-auto sm:min-w-[150px]"
+          >
+            Save and Exit
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+)}
       </>
     );
   },

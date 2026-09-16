@@ -1,20 +1,85 @@
 import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { ArrowLeft, X } from 'lucide-react';
-import { useNavigate } from 'react-router';
+import { Link, useNavigate } from 'react-router';
 import api from '../../axiosInstance';
 import { toast } from 'react-toastify';
 import DynamicIcon from '../../components/DynamicIcon';
 import { Loader } from '../../components/fullScreeLoader';
 import { useAuth } from '../../context/UserContext';
+import { CreateTicket } from '../Support/Supports';
 
 const CategorySelectionPage = () => {
     const [selectedCategory, setSelectedCategory] = useState(null);
+    const [categorySelect,setcategorySelect] = useState(null)
     const [showPopup, setShowPopup] = useState(false);
     const [categories, setCategories] = useState([]);
+    const [showComingSoon, setShowComingSoon] = useState(false);
+    const [showcreateSupport, setshowcreateSupport] = useState(false)
     const [loading, setLoading] = useState(true);
+      const [errors, setErrors] = useState<Record<string, string>>({});
     const navigate = useNavigate();
-    const { fetchUserProfile } = useAuth() as any;
+    const { fetchUserProfile,user } = useAuth() as any;
+    const [newTicket, setNewTicket] = useState({
+        subject: "",
+        description: "",
+        category: "general",
+        priority: "medium",
+      });
+
+      useEffect(()=>{
+        if(categorySelect){
+          setNewTicket((prev)=>({
+            ...prev,
+            subject: `Intrested in ${categorySelect}`
+          }))
+        }
+      },[categorySelect])
+
+      console.log(categorySelect)
+ const categoryOptions = [
+    { value: "all", label: "All Categories" },
+    { value: "account", label: "Account" },
+    { value: "payment", label: "Payment" },
+    { value: "technical", label: "Technical" },
+    { value: "content", label: "Content" },
+    { value: "billing", label: "Billing" },
+    { value: "feature_request", label: "Feature Request" },
+    { value: "general", label: "General" },
+    { value: "other", label: "Other" },
+  ];
+
+   const priorityOptions = [
+    { value: "all", label: "All Priority" },
+    { value: "urgent", label: "Urgent" },
+    { value: "high", label: "High" },
+    { value: "medium", label: "Medium" },
+    { value: "low", label: "Low" },
+  ];
+
+   const handleCreateTicket = async () => {
+    const newErrors: Record<string, string> = {};
+    if (!newTicket.subject.trim()) newErrors.subject = "Subject is required";
+    if (!newTicket.description.trim())
+      newErrors.description = "Description is required";
+    setErrors(newErrors);
+
+    if (Object.keys(newErrors).length > 0) return;
+
+    try {
+      const res = await api.post("/support", newTicket);
+      toast.success("Support ticket created successfully!");
+      setshowcreateSupport(false);
+      setNewTicket({
+        subject: "",
+        description: "",
+        category: "general",
+        priority: "medium",
+      });
+    } catch (error) {
+      toast.error(error.response?.data?.message || "Failed to create ticket");
+    }
+  };
 
     useEffect(() => {
         fetchCategories();
@@ -129,6 +194,9 @@ const CategorySelectionPage = () => {
         </div>
     }
 
+
+
+
     return (
         <div className="min-h-screen bg-white text-gray-900 dark:text-white transition-colors duration-300">
             {/* Header */}
@@ -163,81 +231,127 @@ const CategorySelectionPage = () => {
     md:gap-6
     justify-items-center
   ">
-                            {popularCategories.map((category) => {
+                           {popularCategories.map((category) => {
+  const isActive = category.isActive;
 
-                                return (
-                                    <div key={category._id} className="relative flex justify-center w-full max-w-[180px] sm:max-w-[200px] md:max-w-[220px] pt-1.5">
-                                        <div
-                                            className="absolute top-0 left-1/2 -translate-x-1/2 w-[75%] h-4 rounded-t-lg"
-                                            style={{ backgroundColor: category.color }}
-                                        />
-                                        <motion.button
-                                            whileHover={{
-                                                scale: 1.01,
-                                                y: -1,
-                                                boxShadow: `20px 22px 40px ${category.color}65`,
-                                            }}
-                                            whileTap={{ scale: 0.98 }}
-                                            onClick={() => handleCategoryClick(category)}
-                                            className="relative  z-1 w-full h-44 rounded-lg !bg-white overflow-hidden"
-                                            style={{
-                                                background: `linear-gradient(180deg, ${category.color}30 100%`,
-                                            }}
-                                        >
-                                            <div className="flex flex-col items-center justify-center h-full px-3">
-                                                <h3
-                                                    className="text-4xl font-bold mb-2"
-                                                    style={{ color: category.color }}
-                                                >
-                                                    {category.name}
-                                                </h3>
+  return (
+    <div
+      key={category._id}
+      className="relative flex justify-center w-full max-w-[180px] sm:max-w-[200px] md:max-w-[220px] pt-1.5"
+    >
+      {/* Top Color Bar */}
+      <div
+        className="absolute top-0 left-1/2 -translate-x-1/2 w-[75%] h-4 rounded-t-lg"
+        style={{ backgroundColor: category.color }}
+      />
 
-                                                {category.description && (
-                                                    <p className="text-center text-gray-600 text-[15px] font-medium leading-6 line-clamp-2">
-                                                        {category.description}
-                                                    </p>
-                                                )}
-                                            </div>
-                                        </motion.button>
-                                    </div>
-                                );
-                            })}
+      <motion.button
+        whileHover={
+          isActive
+            ? {
+                scale: 1.01,
+                y: -1,
+                boxShadow: `20px 22px 40px ${category.color}65`,
+              }
+            : {
+                scale: 1.005,
+              }
+        }
+        whileTap={{ scale: 0.98 }}
+        onClick={() => {
+          if (isActive) {
+            handleCategoryClick(category);
+          } else {
+            setShowComingSoon(true);
+          }
+          setcategorySelect(category.name)
+        }}
+        className="relative z-1 w-full h-44 rounded-lg !bg-white overflow-hidden cursor-pointer transition-all duration-200"
+        style={{
+          background: `linear-gradient(180deg, ${category.color}30 100%)`,
+        }}
+      >
+        <div className="flex flex-col items-center justify-center h-full px-3">
+          <h3
+            className={`text-4xl font-bold mb-2 ${
+              !isActive ? "text-gray-400" : ""
+            }`}
+            style={{
+              color: isActive ? category.color : undefined,
+            }}
+          >
+            {category.name}
+          </h3>
+
+          {category.description && (
+            <p
+              className={`text-center text-[15px] font-medium leading-6 line-clamp-2 ${
+                !isActive ? "text-gray-400" : "text-gray-600"
+              }`}
+            >
+              {category.description}
+            </p>
+          )}
+
+        </div>
+      </motion.button>
+    </div>
+  );
+})}
                         </div>
                     </section>
 
                     {/* All Categories */}
-                    <section className="mb-8 p-6 rounded-xl bg-[#fdf4ef]">
-                        <h2 className="text-xl font-semibold text-gray-800 dark:text-white mb-4">All Categories</h2>
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                            {groupedCategories.map((category) => {
-                                const colorClasses = getCategoryColorClasses(category);
-                                return (
-                                    <motion.button
-                                        key={category._id}
-                                        whileHover={{ scale: 1.01, y: -1 }}
-                                        whileTap={{ scale: 0.98 }}
-                                        onClick={() => handleCategoryClick(category)}
-                                        className="p-2.5 px-4 rounded-xl bg-white dark:bg-gray-800 dark:border-gray-700 hover:shadow-lg transition-all duration-100 flex items-center space-x-3 cursor-pointer"
-                                    >
-                                        <div className={`p-3 rounded-full bg-[#f36e45]`}>
-                                            <DynamicIcon
-                                                name={category.icon}
-                                                className="h-7 w-7 text-white stroke-[1.30]"
-                                            />
-                                        </div>
-                                        <div className="flex flex-col items-start text-left">
-                                            <span className="font-semibold text-lg text-gray-800 dark:text-white block">
-                                                {category.name}
-                                            </span>
-                                            <span className="text-sm text-gray-500 font-medium dark:text-gray-400">
-                                                {category.subcategories?.length || 0} subcategories
-                                            </span>
-                                        </div>
-                                    </motion.button>
-                                );
-                            })}
-                        </div>
-                    </section>
+                   <section className="mb-8 p-6 rounded-xl bg-[#fdf4ef]">
+  <h2 className="text-xl font-semibold text-gray-800 dark:text-white mb-4">
+    All Categories
+  </h2>
+
+  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+    {groupedCategories.map((category) => {
+      const isActive = category.isActive;
+
+      return (
+        <motion.button
+          key={category._id}
+          whileHover={{ scale: 1.01, y: -1 }}
+          whileTap={{ scale: 0.98 }}
+          onClick={() => {
+            if (isActive) {
+              handleCategoryClick(category);
+            } else {
+              setShowComingSoon(true);
+            }
+          }}
+          className="p-2.5 px-4 rounded-xl dark:border-gray-700
+            bg-white dark:bg-gray-800
+            hover:shadow-lg
+            transition-all duration-100
+            flex items-center space-x-3 cursor-pointer"
+        >
+          {/* Icon */}
+          <div className="p-3 rounded-full bg-[#f36e45]">
+            <DynamicIcon
+              name={category.icon}
+              className="h-7 w-7 text-white stroke-[1.30]"
+            />
+          </div>
+
+          {/* Content */}
+          <div className="flex flex-col items-start text-left">
+            <span className="font-semibold text-lg text-gray-800 dark:text-white block">
+              {category.name}
+            </span>
+
+            <span className="text-sm text-gray-500 font-medium dark:text-gray-400">
+              {category.subcategories?.length || 0} subcategories
+            </span>
+          </div>
+        </motion.button>
+      );
+    })}
+  </div>
+</section>
 
                     {/* Other Offerings */}
                     <section className="mb-8 p-6 rounded-xl bg-[#fdf4ef]">
@@ -373,6 +487,102 @@ const CategorySelectionPage = () => {
                     </motion.div>
                 )}
             </AnimatePresence>
+
+            {showComingSoon && (
+  <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/40 px-4 py-6 backdrop-blur-[2px]">
+    <div className="relative w-full max-w-5xl overflow-hidden rounded-2xl bg-white shadow-2xl">
+
+      {/* Close Button */}
+      <button
+        type="button"
+        onClick={() => setShowComingSoon(false)}
+        className="absolute right-4 top-4 z-20 flex h-8 w-8 items-center justify-center rounded-full text-gray-400 transition hover:bg-gray-100 hover:text-gray-700"
+        aria-label="Close"
+      >
+        <svg
+          xmlns="http://www.w3.org/2000/svg"
+          className="h-4 w-4"
+          fill="none"
+          viewBox="0 0 24 24"
+          stroke="currentColor"
+          strokeWidth={2}
+        >
+          <path
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            d="M6 18L18 6M6 6l12 12"
+          />
+        </svg>
+      </button>
+
+      {/* Content */}
+      <div className="flex min-h-[380px] flex-col items-center justify-center px-6 py-12 text-center sm:px-10 md:min-h-[400px]">
+
+        {/* Icon */}
+        <div className="mb-5 flex h-20 w-20 items-center justify-center rounded-full bg-[#F36D45]/10">
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            className="h-10 w-10 text-[#F36D45]"
+            fill="none"
+            viewBox="0 0 24 24"
+            stroke="currentColor"
+            strokeWidth={1.7}
+          >
+            <circle cx="12" cy="12" r="9" />
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              d="M12 7v5l3 2"
+            />
+          </svg>
+        </div>
+
+        {/* Title */}
+        <h2 className="text-2xl font-bold tracking-tight text-gray-900 sm:text-3xl">
+          Coming Soon
+        </h2>
+
+        {/* Description */}
+        <p className="mx-auto mt-3 max-w-xl text-sm leading-6 text-gray-500 sm:text-base">
+          This feature is coming soon. Stay tuned for something exciting!
+        </p>
+
+        {/* Buttons */}
+        <div className="mt-7 flex w-full max-w-md flex-col gap-3 sm:flex-row sm:justify-center">
+
+          {/* Query Button */}
+          <button
+            type="button"
+            onClick={()=>{
+                setshowcreateSupport(true)
+                setShowComingSoon(false)
+            }}
+            className="w-full rounded-full border border-[#F36D45] bg-white px-6 py-3 text-sm font-semibold text-[#F36D45] transition-all duration-200 hover:bg-[#F36D45]/5 hover:shadow-sm active:scale-[0.98] focus:outline-none focus:ring-2 focus:ring-[#F36D45]/20 sm:w-auto sm:min-w-[160px]"
+          >
+            Have a Query?
+          </button>
+
+          {/* Got It */}
+          <button
+            type="button"
+            onClick={() => setShowComingSoon(false)}
+            className="w-full rounded-full bg-[#F36D45] px-6 py-3 text-sm font-semibold text-white shadow-sm transition-all duration-200 hover:bg-[#e85d38] hover:shadow-md active:scale-[0.98] focus:outline-none focus:ring-2 focus:ring-[#F36D45]/20 sm:w-auto sm:min-w-[120px]"
+          >
+            Got it
+          </button>
+
+        </div>
+      </div>
+
+      {/* Bottom Accent */}
+      <div className="h-1 bg-[#F36D45]" />
+    </div>
+  </div>
+)}
+
+{showcreateSupport && (
+    <CreateTicket setShowCreateForm={setshowcreateSupport} newTicket={newTicket} setNewTicket={setNewTicket} categoryOptions={categoryOptions} priorityOptions={priorityOptions} handleCreateTicket={handleCreateTicket} errors={errors} disabledSubject={true} title="Raise a Query" disabledCategory={true} disabledPriority={true} disabledAttach={true} />
+)}
         </div>
     );
 };

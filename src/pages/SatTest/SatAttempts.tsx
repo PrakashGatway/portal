@@ -339,6 +339,7 @@ export default function SatExamPage() {
 
       try {
         setSavingProgress(!silent);
+        setSubmitting(true)
 
         const sectionIndex = activeSectionIndex;
         const questionIndex = activeQuestionIndex;
@@ -375,6 +376,7 @@ export default function SatExamPage() {
         }
       } finally {
         setSavingProgress(false);
+        setSubmitting(false)
       }
     },
     [
@@ -448,6 +450,8 @@ export default function SatExamPage() {
 
   const goNextQuestion = async () => {
     if (!attempt || !currentSection || !currentQuestion) return;
+
+    
 
     const isLastQuestionInSection =
       activeQuestionIndex >= currentSection.questions.length - 1;
@@ -666,6 +670,7 @@ export default function SatExamPage() {
                 isNextDisabled={isNextDisabled}
                 goToQuestion={goToQuestion}
                 goNextQuestion={goNextQuestion}
+                submitting={submitting}
               />
             )}
 
@@ -692,7 +697,7 @@ export default function SatExamPage() {
             <GRETestResults
               attempt={attempt}
               navigateBack={() => navigate(-1)}
-              onTakeAnotherTest={() => navigate("/gmat/practice")}
+              onTakeAnotherTest={() => navigate("/practice-tests")}
               saving={savingProgress}
             />
           )}

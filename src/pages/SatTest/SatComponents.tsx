@@ -35,6 +35,7 @@ const QuestionRenderer: any = React.memo(
     isLastQuestionInCurrentSection,
     isNextDisabled,
     goToQuestion,
+    submitting,
     goNextQuestion,
     // NEW: full palette + review button
     sectionQuestions, // array of all questions in current section
@@ -63,6 +64,7 @@ const QuestionRenderer: any = React.memo(
       document.body.style.userSelect = "";
     }, []);
 
+    console.log(submitting)
     useEffect(() => {
       window.addEventListener("mousemove", onMove);
       window.addEventListener("mouseup", onUp);
@@ -440,7 +442,7 @@ const QuestionRenderer: any = React.memo(
           </div>
         )}
         <div
-          className={`fixed left-0 right-0 z-30 max-w-3xl mx-auto transition-transform duration-300 ease-out ${
+          className={`fixed left-0 right-0 z-0 max-w-3xl mx-auto transition-transform duration-300 ease-out ${
             isPaletteOpen ? "translate-y-0" : "translate-y-[200%]"
           } bottom-10 sm:bottom-12`}
         >
@@ -452,7 +454,7 @@ const QuestionRenderer: any = React.memo(
                 </div>
                 <button
                   onClick={() => onReviewSection("section_review")}
-                  className="text-sm font-semibold px-3 py-1 rounded-full bg-blue-800 text-white dark:bg-blue-500"
+                  className="text-sm font-semibold px-3 py-1 rounded-full bg-[#f36d45] text-white dark:bg-blue-500"
                 >
                   Review Section
                 </button>
@@ -472,7 +474,7 @@ const QuestionRenderer: any = React.memo(
                   Marked for Review
                 </div>
                 <div className="flex items-center gap-1">
-                  <span className="h-3 w-3 rounded-full bg-blue-700" />
+                  <span className="h-3 w-3 rounded-full bg-[#f36d45]" />
                   Current Question
                 </div>
               </div>
@@ -488,7 +490,7 @@ const QuestionRenderer: any = React.memo(
 
                   let stateClass = "bg-slate-700 text-slate-100";
                   if (isCurrent) {
-                    stateClass = "bg-blue-700 text-white";
+                    stateClass = "bg-[#f36d45] text-white";
                   } else if (marked) {
                     stateClass =
                       "bg-yellow-400 text-slate-900 border border-yellow-700";
@@ -554,8 +556,8 @@ const QuestionRenderer: any = React.memo(
                   )}
 
                   <button
-                    className="p-1.5 bg-[#F36D45] text-slate-100 font-semibold border-slate-200 rounded-full px-4"
-                    disabled={isNextDisabled}
+                    className={`p-1.5 text-white  font-semibold border-slate-200 rounded-full px-4 ${submitting ? "bg-orange-400" : "bg-[#F36D45] "}`}
+                    disabled={submitting}
                     onClick={() => {
                       goNextQuestion();
                       setCrossedOptions([]);
