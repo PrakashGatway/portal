@@ -1,4 +1,3 @@
-
 // EventCalendar.jsx
 import React, { useState, useEffect, useCallback, useMemo } from "react";
 import { Calendar, momentLocalizer, Views } from "react-big-calendar";
@@ -48,10 +47,10 @@ const EventCalendar = () => {
   const [eventCategory, setEventCategory] = useState("session");
   const [eventInstructor, setEventInstructor] = useState("");
   const [hoveredDate, setHoveredDate] = useState(null);
-const [cellPopupPosition, setCellPopupPosition] = useState({
-  left: 0,
-  top: 0,
-});
+  const [cellPopupPosition, setCellPopupPosition] = useState({
+    left: 0,
+    top: 0,
+  });
 
   const colorMap = {
     session: {
@@ -158,62 +157,56 @@ const [cellPopupPosition, setCellPopupPosition] = useState({
 
   const navigateToday = () => setDate(new Date());
 
- const handleSelectSlot = useCallback(
-  (slotInfo) => {
-    // Clear cell hover popup
-    setHoveredDate(null);
+  const handleSelectSlot = useCallback(
+    (slotInfo) => {
+      // Clear cell hover popup
+      setHoveredDate(null);
 
-    const clickedDate = moment(slotInfo.start).format("YYYY-MM-DD");
+      const clickedDate = moment(slotInfo.start).format("YYYY-MM-DD");
 
-    const eventsOnClickedDate = events.filter(
-      (event) =>
-        moment(event.start).format("YYYY-MM-DD") === clickedDate
-    );
+      const eventsOnClickedDate = events.filter(
+        (event) => moment(event.start).format("YYYY-MM-DD") === clickedDate,
+      );
 
-    // Empty cell → do nothing
-    if (eventsOnClickedDate.length === 0) {
-      return;
-    }
+      // Empty cell → do nothing
+      if (eventsOnClickedDate.length === 0) {
+        return;
+      }
 
-    const firstEvent = eventsOnClickedDate[0];
+      const firstEvent = eventsOnClickedDate[0];
 
-    setViewingEvent({
-      ...firstEvent,
-      siblings: eventsOnClickedDate.sort(
-        (a, b) => a.start - b.start
-      ),
-    });
+      setViewingEvent({
+        ...firstEvent,
+        siblings: eventsOnClickedDate.sort((a, b) => a.start - b.start),
+      });
 
-    setEditingEvent(null);
-    setShowEventModal(true);
-  },
-  [events],
-);
+      setEditingEvent(null);
+      setShowEventModal(true);
+    },
+    [events],
+  );
 
- const handleSelectEvent = useCallback(
-  (event) => {
-    // Clear cell hover popup
-    setHoveredDate(null);
+  const handleSelectEvent = useCallback(
+    (event) => {
+      // Clear cell hover popup
+      setHoveredDate(null);
 
-    const eventDate = moment(event.start).format("YYYY-MM-DD");
+      const eventDate = moment(event.start).format("YYYY-MM-DD");
 
-    const allEventsOnSameDay = events
-      .filter(
-        (e) =>
-          moment(e.start).format("YYYY-MM-DD") === eventDate
-      )
-      .sort((a, b) => a.start - b.start);
+      const allEventsOnSameDay = events
+        .filter((e) => moment(e.start).format("YYYY-MM-DD") === eventDate)
+        .sort((a, b) => a.start - b.start);
 
-    setViewingEvent({
-      ...event,
-      siblings: allEventsOnSameDay,
-    });
+      setViewingEvent({
+        ...event,
+        siblings: allEventsOnSameDay,
+      });
 
-    setEditingEvent(null);
-    setShowEventModal(true);
-  },
-  [events],
-);
+      setEditingEvent(null);
+      setShowEventModal(true);
+    },
+    [events],
+  );
 
   const handleEditEvent = (event) => {
     if (user.role !== "admin") return;
@@ -282,322 +275,45 @@ const [cellPopupPosition, setCellPopupPosition] = useState({
     },
   });
 
-
   const handleCalendarCellHover = (calendarDate, e) => {
-  const dateKey = moment(calendarDate).format("YYYY-MM-DD");
+    const dateKey = moment(calendarDate).format("YYYY-MM-DD");
 
-  const dateEvents = events
-    .filter(
-      (event) =>
-        moment(event.start).format("YYYY-MM-DD") === dateKey
-    )
-    .sort((a, b) => a.start - b.start);
+    const dateEvents = events
+      .filter((event) => moment(event.start).format("YYYY-MM-DD") === dateKey)
+      .sort((a, b) => a.start - b.start);
 
-  if (dateEvents.length === 0) {
-    setHoveredDate(null);
-    return;
-  }
-
-  const popupWidth = window.innerWidth <= 767 ? 260 : 290;
-  const popupHeight = Math.min(
-    100 + dateEvents.length * 45,
-    300
-  );
-
-  const offset = window.innerWidth <= 767 ? 12 : 16;
-
-  let left = e.clientX + offset;
-  let top = e.clientY + offset;
-
-  // Right edge
-  if (left + popupWidth > window.innerWidth - 10) {
-    left = e.clientX - popupWidth - offset;
-  }
-
-  // Left edge
-  if (left < 10) {
-    left = 10;
-  }
-
-  // Bottom edge
-  if (top + popupHeight > window.innerHeight - 10) {
-    top = e.clientY - popupHeight - offset;
-  }
-
-  // Top edge
-  if (top < 10) {
-    top = 10;
-  }
-
-  setCellPopupPosition({
-    left,
-    top,
-  });
-
-  setHoveredDate({
-    dateKey,
-    events: dateEvents,
-  });
-};
-
- const dayPropGetter = (calendarDate) => {
-  const today = new Date();
-
-  const isToday =
-    calendarDate.getDate() === today.getDate() &&
-    calendarDate.getMonth() === today.getMonth() &&
-    calendarDate.getFullYear() === today.getFullYear();
-
-  const isCurrentMonth = calendarDate.getMonth() === date.getMonth();
-
-  const firstDayOfMonth = new Date(
-    calendarDate.getFullYear(),
-    calendarDate.getMonth(),
-    1
-  );
-
-  const firstDayWeekday = firstDayOfMonth.getDay();
-  const dateDay = calendarDate.getDate();
-
-  const rowIndex = Math.floor(
-    (firstDayWeekday + dateDay - 1) / 7
-  );
-
-  const rowColors = [
-    "#fdf3e7",
-    "#FDEDD3",
-    "#fde3c2",
-    "#ffd5ad",
-    "#fed9c9",
-    "#fed9c9",
-  ];
-
-  const bgColor = isCurrentMonth
-    ? rowColors[Math.min(rowIndex, 5)]
-    : "#FEF7EF";
-
-  // Check whether this particular date has an event
-  const dateKey = moment(calendarDate).format("YYYY-MM-DD");
-
-  const hasEvents = events.some(
-    (event) =>
-      moment(event.start).format("YYYY-MM-DD") === dateKey
-  );
-
-  return {
-    className: `
-  rbc-day-bg-custom
-  calendar-date-${dateKey}
-  ${isToday ? "rbc-today-custom" : ""}
-  ${hasEvents && !showEventModal ? "has-calendar-event" : ""}
-`,
-
-    style: {
-      backgroundColor: isToday ? "#fff" : bgColor,
-      borderRadius: "16px",
-      margin: "4px",
-      border: isToday
-        ? "2px solid #FB923C"
-        : "1px solid transparent",
-      opacity: isCurrentMonth ? 1 : 0.6,
-    },
-  };
-};
-
-  const CustomMonthEvent = ({ event }) => {
-  const sameDateEvents = event.sameDateEvents || [event];
-  const [showPopup, setShowPopup] = useState(false);
-  const [popupPosition, setPopupPosition] = useState({ left: 0, top: 0 });
-
-  const updatePopupPosition = (e) => {
-    const popupWidth = window.innerWidth <= 767 ? 260 : 290;
-    const popupHeight = window.innerWidth <= 767 ? 200 : 220;
-    const offset = window.innerWidth <= 767 ? 12 : 20;
-
-    let left = e.clientX + offset;
-    let top = e.clientY + offset;
-
-    if (left + popupWidth > window.innerWidth - 10) {
-      left = e.clientX - popupWidth - offset;
-    }
-
-    if (left < 10) left = 10;
-
-    if (top + popupHeight > window.innerHeight - 10) {
-      top = e.clientY - popupHeight - offset;
-    }
-
-    if (top < 10) top = 10;
-
-    setPopupPosition({ left, top });
-  };
-
-  return (
-    <>
-      <div
-        className="
-         w-full
-    cursor-pointer
-    z-10
-    flex
-    justify-end
-    items-start
-        "
-        onMouseEnter={(e) => {
-          updatePopupPosition(e);
-          setShowPopup(true);
-        }}
-        onMouseMove={(e) => {
-          updatePopupPosition(e);
-        }}
-        onMouseLeave={() => setShowPopup(false)}
-      >
-      
-      </div>
-
-      {showPopup &&
-        createPortal(
-          <div
-            className="calendar-event-hover-popup"
-            style={{
-              position: "fixed",
-              left: `${popupPosition.left}px`,
-              top: `${popupPosition.top}px`,
-              zIndex: 2147483647,
-              pointerEvents: "none",
-            }}
-          >
-            <div
-              className="
-                w-[220px]
-                rounded-lg
-                border border-[#FFD6C7]
-                bg-white
-                p-2
-                shadow-[0_6px_20px_rgba(249,115,22,0.18)]
-              "
-            >
-              {/* Date Header */}
-              <div
-                className="
-                  mb-1.5
-                  flex items-center justify-between
-                  rounded-md
-                  bg-[#FFF3ED]
-                  px-2.5 py-1.5
-                "
-              >
-                <span className="text-[11px] font-semibold text-[#E85D2A]">
-                  {moment(event.start).format("MMM DD, YYYY")}
-                </span>
-
-                <span
-                  className="
-                    rounded-full
-                    bg-[#F97316]
-                    px-1.5 py-0.5
-                    text-[9px]
-                    font-bold
-                    text-white
-                  "
-                >
-                  {sameDateEvents.length}
-                </span>
-              </div>
-
-              {/* Events */}
-              <div className="space-y-1">
-                {sameDateEvents.map((item) => (
-                  <div
-                    key={item.id}
-                    className="
-                      flex items-center gap-2
-                      rounded-md
-                      border border-transparent
-                      px-2 py-1.5
-                      hover:border-[#FFE0D5]
-                      hover:bg-[#FFF9F6]
-                    "
-                  >
-                    {/* Orange Dot */}
-                    <span
-                      className="
-                        h-2 w-2
-                        shrink-0
-                        rounded-full
-                        bg-[#F97316]
-                        shadow-[0_0_0_3px_rgba(249,115,22,0.12)]
-                      "
-                    />
-
-                    {/* Title */}
-                    <span
-                      className="
-                        min-w-0
-                        flex-1
-                        text-[11px]
-                        font-semibold
-                        text-[#333]
-                      "
-                      title={item.title}
-                    >
-                      {item.title}
-                    </span>
-
-                    {/* Time */}
-                    <span className="shrink-0 text-[9px] font-medium text-[#9A8F89]">
-                      {moment(item.start).format("HH:mm")}
-                    </span>
-                  </div>
-                ))}
-              </div>
-            </div>
-          </div>,
-          document.body
-        )}
-    </>
-  );
-};
-
-
-// Add this custom date cell component
-const CustomDateCell = ({ value, children }) => {
-  const dateKey = moment(value).format("YYYY-MM-DD");
-
-  const dateEvents = events
-    .filter(
-      (event) =>
-        moment(event.start).format("YYYY-MM-DD") === dateKey
-    )
-    .sort((a, b) => new Date(a.start) - new Date(b.start));
-
-  const handleEnter = (e) => {
-    if (!dateEvents.length) {
+    if (dateEvents.length === 0) {
       setHoveredDate(null);
       return;
     }
 
-    const popupWidth = window.innerWidth < 768 ? 260 : 290;
-    const popupHeight = Math.min(
-      90 + dateEvents.length * 40,
-      280
-    );
+    const popupWidth = window.innerWidth <= 767 ? 260 : 290;
+    const popupHeight = Math.min(100 + dateEvents.length * 45, 300);
 
-    const offset = 14;
+    const offset = window.innerWidth <= 767 ? 12 : 16;
 
     let left = e.clientX + offset;
     let top = e.clientY + offset;
 
+    // Right edge
     if (left + popupWidth > window.innerWidth - 10) {
       left = e.clientX - popupWidth - offset;
     }
 
+    // Left edge
+    if (left < 10) {
+      left = 10;
+    }
+
+    // Bottom edge
     if (top + popupHeight > window.innerHeight - 10) {
       top = e.clientY - popupHeight - offset;
     }
 
-    left = Math.max(10, left);
-    top = Math.max(10, top);
+    // Top edge
+    if (top < 10) {
+      top = 10;
+    }
 
     setCellPopupPosition({
       left,
@@ -610,64 +326,316 @@ const CustomDateCell = ({ value, children }) => {
     });
   };
 
-  const handleMove = (e) => {
-    if (!dateEvents.length) return;
+  const dayPropGetter = (calendarDate) => {
+    const today = new Date();
 
-    const popupWidth = window.innerWidth < 768 ? 260 : 290;
-    const popupHeight = Math.min(
-      90 + dateEvents.length * 40,
-      280
+    const isToday =
+      calendarDate.getDate() === today.getDate() &&
+      calendarDate.getMonth() === today.getMonth() &&
+      calendarDate.getFullYear() === today.getFullYear();
+
+    const isCurrentMonth = calendarDate.getMonth() === date.getMonth();
+
+    const firstDayOfMonth = new Date(
+      calendarDate.getFullYear(),
+      calendarDate.getMonth(),
+      1,
     );
 
-    const offset = 14;
+    const firstDayWeekday = firstDayOfMonth.getDay();
+    const dateDay = calendarDate.getDate();
 
-    let left = e.clientX + offset;
-    let top = e.clientY + offset;
+    const rowIndex = Math.floor((firstDayWeekday + dateDay - 1) / 7);
 
-    if (left + popupWidth > window.innerWidth - 10) {
-      left = e.clientX - popupWidth - offset;
-    }
+    const rowColors = [
+      "#fdf3e7",
+      "#FDEDD3",
+      "#fde3c2",
+      "#ffd5ad",
+      "#fed9c9",
+      "#fed9c9",
+    ];
 
-    if (top + popupHeight > window.innerHeight - 10) {
-      top = e.clientY - popupHeight - offset;
-    }
+    const bgColor = isCurrentMonth
+      ? rowColors[Math.min(rowIndex, 5)]
+      : "#FEF7EF";
 
-    left = Math.max(10, left);
-    top = Math.max(10, top);
+    // Check whether this particular date has an event
+    const dateKey = moment(calendarDate).format("YYYY-MM-DD");
 
-    setCellPopupPosition({
-      left,
-      top,
+    const hasEvents = events.some(
+      (event) => moment(event.start).format("YYYY-MM-DD") === dateKey,
+    );
+
+    return {
+      className: `
+  rbc-day-bg-custom
+  calendar-date-${dateKey}
+  ${isToday ? "rbc-today-custom" : ""}
+  ${hasEvents && !showEventModal ? "has-calendar-event" : ""}
+`,
+
+      style: {
+        backgroundColor: isToday ? "#fff" : bgColor,
+        borderRadius: "16px",
+        margin: "4px",
+        border: isToday ? "2px solid #FB923C" : "1px solid transparent",
+        opacity: isCurrentMonth ? 1 : 0.6,
+      },
+    };
+  };
+
+  const CustomMonthEvent = ({ event }) => {
+    const sameDateEvents = event.sameDateEvents || [event];
+    const [showPopup, setShowPopup] = useState(false);
+    const [popupPosition, setPopupPosition] = useState({ left: 0, top: 0 });
+
+    const updatePopupPosition = (e) => {
+      const popupWidth = window.innerWidth <= 767 ? 260 : 290;
+      const popupHeight = window.innerWidth <= 767 ? 200 : 220;
+      const offset = window.innerWidth <= 767 ? 12 : 20;
+
+      let left = e.clientX + offset;
+      let top = e.clientY + offset;
+
+      if (left + popupWidth > window.innerWidth - 10) {
+        left = e.clientX - popupWidth - offset;
+      }
+
+      if (left < 10) left = 10;
+
+      if (top + popupHeight > window.innerHeight - 10) {
+        top = e.clientY - popupHeight - offset;
+      }
+
+      if (top < 10) top = 10;
+
+      setPopupPosition({ left, top });
+    };
+
+    return (
+      <>
+        <div
+          className="
+         w-full
+    cursor-pointer
+    z-10
+    flex
+    justify-end
+    items-start
+        "
+          onMouseEnter={(e) => {
+            updatePopupPosition(e);
+            setShowPopup(true);
+          }}
+          onMouseMove={(e) => {
+            updatePopupPosition(e);
+          }}
+          onMouseLeave={() => setShowPopup(false)}
+        ></div>
+
+        {showPopup &&
+          createPortal(
+            <div
+              className="calendar-event-hover-popup"
+              style={{
+                position: "fixed",
+                left: `${popupPosition.left}px`,
+                top: `${popupPosition.top}px`,
+                zIndex: 2147483647,
+                pointerEvents: "none",
+              }}
+            >
+              <div
+                className="
+                w-[220px]
+                rounded-lg
+                border border-[#FFD6C7]
+                bg-white
+                p-2
+                shadow-[0_6px_20px_rgba(249,115,22,0.18)]
+              "
+              >
+                {/* Date Header */}
+                <div
+                  className="
+                  mb-1.5
+                  flex items-center justify-between
+                  rounded-md
+                  bg-[#FFF3ED]
+                  px-2.5 py-1.5
+                "
+                >
+                  <span className="text-[11px] font-semibold text-[#E85D2A]">
+                    {moment(event.start).format("MMM DD, YYYY")}
+                  </span>
+
+                  <span
+                    className="
+                    rounded-full
+                    bg-[#F97316]
+                    px-1.5 py-0.5
+                    text-[9px]
+                    font-bold
+                    text-white
+                  "
+                  >
+                    {sameDateEvents.length}
+                  </span>
+                </div>
+
+                {/* Events */}
+                <div className="space-y-1">
+                  {sameDateEvents.map((item) => (
+                    <div
+                      key={item.id}
+                      className="
+                      flex items-center gap-2
+                      rounded-md
+                      border border-transparent
+                      px-2 py-1.5
+                      hover:border-[#FFE0D5]
+                      hover:bg-[#FFF9F6]
+                    "
+                    >
+                      {/* Orange Dot */}
+                      <span
+                        className="
+                        xl:h-2 xl:w-2
+                        h-1 w-1
+                        shrink-0
+                        rounded-full
+                        bg-[#F97316]
+                        shadow-[0_0_0_3px_rgba(249,115,22,0.12)]
+                      "
+                      />
+
+                      {/* Title */}
+                      <span
+                        className="
+                        min-w-0
+                        flex-1
+                        text-[11px]
+                        font-semibold
+                        text-[#333]
+                      "
+                        title={item.title}
+                      >
+                        {item.title}
+                      </span>
+
+                      {/* Time */}
+                      <span className="shrink-0 text-[9px] font-medium text-[#9A8F89]">
+                        {moment(item.start).format("HH:mm")}
+                      </span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>,
+            document.body,
+          )}
+      </>
+    );
+  };
+
+  // Add this custom date cell component
+  const CustomDateCell = ({ value, children }) => {
+    const dateKey = moment(value).format("YYYY-MM-DD");
+
+    const dateEvents = events
+      .filter((event) => moment(event.start).format("YYYY-MM-DD") === dateKey)
+      .sort((a, b) => new Date(a.start) - new Date(b.start));
+
+    const handleEnter = (e) => {
+      if (!dateEvents.length) {
+        setHoveredDate(null);
+        return;
+      }
+
+      const popupWidth = window.innerWidth < 768 ? 260 : 290;
+      const popupHeight = Math.min(90 + dateEvents.length * 40, 280);
+
+      const offset = 14;
+
+      let left = e.clientX + offset;
+      let top = e.clientY + offset;
+
+      if (left + popupWidth > window.innerWidth - 10) {
+        left = e.clientX - popupWidth - offset;
+      }
+
+      if (top + popupHeight > window.innerHeight - 10) {
+        top = e.clientY - popupHeight - offset;
+      }
+
+      left = Math.max(10, left);
+      top = Math.max(10, top);
+
+      setCellPopupPosition({
+        left,
+        top,
+      });
+
+      setHoveredDate({
+        dateKey,
+        events: dateEvents,
+      });
+    };
+
+    const handleMove = (e) => {
+      if (!dateEvents.length) return;
+
+      const popupWidth = window.innerWidth < 768 ? 260 : 290;
+      const popupHeight = Math.min(90 + dateEvents.length * 40, 280);
+
+      const offset = 14;
+
+      let left = e.clientX + offset;
+      let top = e.clientY + offset;
+
+      if (left + popupWidth > window.innerWidth - 10) {
+        left = e.clientX - popupWidth - offset;
+      }
+
+      if (top + popupHeight > window.innerHeight - 10) {
+        top = e.clientY - popupHeight - offset;
+      }
+
+      left = Math.max(10, left);
+      top = Math.max(10, top);
+
+      setCellPopupPosition({
+        left,
+        top,
+      });
+    };
+
+    const handleLeave = () => {
+      setHoveredDate(null);
+    };
+
+    // IMPORTANT:
+    // Don't create another div.
+    // Attach handlers directly to RBC's original day cell.
+    return React.cloneElement(children, {
+      onMouseEnter: handleEnter,
+      onMouseMove: handleMove,
+      onMouseLeave: handleLeave,
     });
   };
 
-  const handleLeave = () => {
-    setHoveredDate(null);
-  };
-
-  // IMPORTANT:
-  // Don't create another div.
-  // Attach handlers directly to RBC's original day cell.
-  return React.cloneElement(children, {
-    onMouseEnter: handleEnter,
-    onMouseMove: handleMove,
-    onMouseLeave: handleLeave,
-  });
-};
-
-
-
- const CustomEvent = ({ event }) => {
-  return (
-    <div
-      className="w-full min-w-0 overflow-hidden cursor-pointer"
-      onClick={(e) => {
-        e.stopPropagation();
-        handleSelectEvent(event);
-      }}
-    >
+  const CustomEvent = ({ event }) => {
+    return (
       <div
-        className="
+        className="w-full min-w-0 overflow-hidden cursor-pointer"
+        onClick={(e) => {
+          e.stopPropagation();
+          handleSelectEvent(event);
+        }}
+      >
+        <div
+          className="
           w-full
           min-w-0
           overflow-hidden
@@ -679,205 +647,177 @@ const CustomDateCell = ({ value, children }) => {
           leading-tight
           cursor-pointer
         "
-      >
-        {event.title}
+        >
+          {event.title}
+        </div>
       </div>
-    </div>
-  );
-};
+    );
+  };
 
   const filteredEvents = useMemo(() => {
-  // MONTH VIEW
-  if (view === Views.MONTH) {
-    const grouped = new Map();
+    // MONTH VIEW
+    if (view === Views.MONTH) {
+      const grouped = new Map();
 
-    events.forEach((event) => {
-      const dateKey = moment(event.start).format("YYYY-MM-DD");
+      events.forEach((event) => {
+        const dateKey = moment(event.start).format("YYYY-MM-DD");
 
-      if (!grouped.has(dateKey)) {
-        grouped.set(dateKey, []);
+        if (!grouped.has(dateKey)) {
+          grouped.set(dateKey, []);
+        }
+
+        grouped.get(dateKey).push(event);
+      });
+
+      return Array.from(grouped.values()).map((dateEvents) => {
+        const sortedEvents = dateEvents.sort(
+          (a, b) => new Date(a.start).getTime() - new Date(b.start).getTime(),
+        );
+
+        const firstEvent = sortedEvents[0];
+
+        return {
+          ...firstEvent,
+          sameDateEvents: sortedEvents,
+        };
+      });
+    }
+
+    // WEEK VIEW
+    if (view === Views.WEEK) {
+      const grouped = new Map();
+
+      events.forEach((event) => {
+        const dateKey = moment(event.start).format("YYYY-MM-DD");
+
+        // Group only events having the same start time
+        const timeKey = moment(event.start).format("YYYY-MM-DD-HH-mm");
+
+        if (!grouped.has(timeKey)) {
+          grouped.set(timeKey, []);
+        }
+
+        grouped.get(timeKey).push(event);
+      });
+
+      return Array.from(grouped.values()).map((sameTimeEvents) => {
+        const sortedEvents = sameTimeEvents.sort(
+          (a, b) => new Date(a.start).getTime() - new Date(b.start).getTime(),
+        );
+
+        const firstEvent = sortedEvents[0];
+
+        return {
+          ...firstEvent,
+          sameTimeEvents: sortedEvents,
+        };
+      });
+    }
+
+    // DAY / AGENDA
+    return events;
+  }, [events, view]);
+
+  useEffect(() => {
+    if (view !== Views.WEEK) {
+      setHoveredDate(null);
+      return;
+    }
+
+    const handleWeekMouseMove = (e) => {
+      const target = e.target.closest(".rbc-day-slot");
+
+      if (!target) {
+        setHoveredDate(null);
+        return;
       }
 
-      grouped.get(dateKey).push(event);
-    });
+      const rect = target.getBoundingClientRect();
 
-    return Array.from(grouped.values()).map((dateEvents) => {
-      const sortedEvents = dateEvents.sort(
-        (a, b) =>
-          new Date(a.start).getTime() -
-          new Date(b.start).getTime()
-      );
+      // Find which day column the mouse is inside
+      const timeContent = target.closest(".rbc-time-content");
 
-      const firstEvent = sortedEvents[0];
-
-      return {
-        ...firstEvent,
-        sameDateEvents: sortedEvents,
-      };
-    });
-  }
-
-  // WEEK VIEW
-  if (view === Views.WEEK) {
-    const grouped = new Map();
-
-    events.forEach((event) => {
-      const dateKey = moment(event.start).format("YYYY-MM-DD");
-
-      // Group only events having the same start time
-      const timeKey = moment(event.start).format(
-        "YYYY-MM-DD-HH-mm"
-      );
-
-      if (!grouped.has(timeKey)) {
-        grouped.set(timeKey, []);
+      if (!timeContent) {
+        setHoveredDate(null);
+        return;
       }
 
-      grouped.get(timeKey).push(event);
-    });
-
-    return Array.from(grouped.values()).map((sameTimeEvents) => {
-      const sortedEvents = sameTimeEvents.sort(
-        (a, b) =>
-          new Date(a.start).getTime() -
-          new Date(b.start).getTime()
+      const daySlots = Array.from(
+        timeContent.querySelectorAll(".rbc-day-slot"),
       );
 
-      const firstEvent = sortedEvents[0];
+      const dayIndex = daySlots.indexOf(target);
 
-      return {
-        ...firstEvent,
-        sameTimeEvents: sortedEvents,
-      };
-    });
-  }
+      if (dayIndex === -1) {
+        setHoveredDate(null);
+        return;
+      }
 
-  // DAY / AGENDA
-  return events;
-}, [events, view]);
+      const weekStart = moment(date).startOf("week");
+      const hoveredDay = weekStart.clone().add(dayIndex, "days");
 
+      const dateKey = hoveredDay.format("YYYY-MM-DD");
 
+      const dateEvents = events
+        .filter((event) => moment(event.start).format("YYYY-MM-DD") === dateKey)
+        .sort(
+          (a, b) => new Date(a.start).getTime() - new Date(b.start).getTime(),
+        );
 
-useEffect(() => {
-  if (view !== Views.WEEK) {
-    setHoveredDate(null);
-    return;
-  }
+      // Only show popup when multiple events exist
+      if (dateEvents.length <= 1) {
+        setHoveredDate(null);
+        return;
+      }
 
-  const handleWeekMouseMove = (e) => {
-    const target = e.target.closest(".rbc-day-slot");
+      const popupWidth = window.innerWidth < 768 ? 260 : 290;
+      const popupHeight = Math.min(100 + dateEvents.length * 45, 300);
 
-    if (!target) {
+      const offset = 14;
+
+      let left = e.clientX + offset;
+      let top = e.clientY + offset;
+
+      if (left + popupWidth > window.innerWidth - 10) {
+        left = e.clientX - popupWidth - offset;
+      }
+
+      if (top + popupHeight > window.innerHeight - 10) {
+        top = e.clientY - popupHeight - offset;
+      }
+
+      left = Math.max(10, left);
+      top = Math.max(10, top);
+
+      setCellPopupPosition({
+        left,
+        top,
+      });
+
+      setHoveredDate({
+        dateKey,
+        events: dateEvents,
+      });
+    };
+
+    const handleWeekMouseLeave = () => {
       setHoveredDate(null);
-      return;
-    }
+    };
 
-    const rect = target.getBoundingClientRect();
+    const calendarElement = document.querySelector(".rbc-time-view");
 
-    // Find which day column the mouse is inside
-    const timeContent = target.closest(".rbc-time-content");
+    if (!calendarElement) return;
 
-    if (!timeContent) {
-      setHoveredDate(null);
-      return;
-    }
+    calendarElement.addEventListener("mousemove", handleWeekMouseMove);
 
-    const daySlots = Array.from(
-      timeContent.querySelectorAll(".rbc-day-slot")
-    );
+    calendarElement.addEventListener("mouseleave", handleWeekMouseLeave);
 
-    const dayIndex = daySlots.indexOf(target);
+    return () => {
+      calendarElement.removeEventListener("mousemove", handleWeekMouseMove);
 
-    if (dayIndex === -1) {
-      setHoveredDate(null);
-      return;
-    }
-
-    const weekStart = moment(date).startOf("week");
-    const hoveredDay = weekStart.clone().add(dayIndex, "days");
-
-    const dateKey = hoveredDay.format("YYYY-MM-DD");
-
-    const dateEvents = events
-      .filter(
-        (event) =>
-          moment(event.start).format("YYYY-MM-DD") === dateKey
-      )
-      .sort(
-        (a, b) =>
-          new Date(a.start).getTime() -
-          new Date(b.start).getTime()
-      );
-
-    // Only show popup when multiple events exist
-    if (dateEvents.length <= 1) {
-      setHoveredDate(null);
-      return;
-    }
-
-    const popupWidth = window.innerWidth < 768 ? 260 : 290;
-    const popupHeight = Math.min(
-      100 + dateEvents.length * 45,
-      300
-    );
-
-    const offset = 14;
-
-    let left = e.clientX + offset;
-    let top = e.clientY + offset;
-
-    if (left + popupWidth > window.innerWidth - 10) {
-      left = e.clientX - popupWidth - offset;
-    }
-
-    if (top + popupHeight > window.innerHeight - 10) {
-      top = e.clientY - popupHeight - offset;
-    }
-
-    left = Math.max(10, left);
-    top = Math.max(10, top);
-
-    setCellPopupPosition({
-      left,
-      top,
-    });
-
-    setHoveredDate({
-      dateKey,
-      events: dateEvents,
-    });
-  };
-
-  const handleWeekMouseLeave = () => {
-    setHoveredDate(null);
-  };
-
-  const calendarElement = document.querySelector(".rbc-time-view");
-
-  if (!calendarElement) return;
-
-  calendarElement.addEventListener(
-    "mousemove",
-    handleWeekMouseMove
-  );
-
-  calendarElement.addEventListener(
-    "mouseleave",
-    handleWeekMouseLeave
-  );
-
-  return () => {
-    calendarElement.removeEventListener(
-      "mousemove",
-      handleWeekMouseMove
-    );
-
-    calendarElement.removeEventListener(
-      "mouseleave",
-      handleWeekMouseLeave
-    );
-  };
-}, [view, date, events]);
+      calendarElement.removeEventListener("mouseleave", handleWeekMouseLeave);
+    };
+  }, [view, date, events]);
 
   const todayEvents = useMemo(
     () =>
@@ -900,7 +840,8 @@ useEffect(() => {
     () => ({
       total: events.length,
       today: todayEvents.length,
-      thisWeek: events.filter((e) => moment(e.start).isSame(moment(), "week")).length,
+      thisWeek: events.filter((e) => moment(e.start).isSame(moment(), "week"))
+        .length,
     }),
     [events, todayEvents],
   );
@@ -959,11 +900,20 @@ useEffect(() => {
         </div>
       </div>
 
-      <div className="flex flex-col lg:flex-row gap-4 md:gap-6 bg-white rounded-3xl p-2 md:p-4 overflow-hidden 
-      h-[calc(100vh-120px)] md:h-[calc(100vh-160px)] relative">
+      <div
+        className="
+    flex flex-col lg:flex-row
+    gap-4 md:gap-6
+    bg-white rounded-3xl
+    p-2 md:p-4
+    overflow-hidden
+    min-h-[calc(100vh-120px)]
+    lg:h-[calc(100vh-160px)]
+    relative
+  "
+      >
         {/* MAIN CALENDAR AREA */}
-        <main className="flex-1 min-w-0 relative transition-all duration-300 h-full min-h-0">
-          
+        <main className="w-full lg:flex-1 min-w-0 relative transition-all duration-300 h-full min-h-0">
           <style>{`
             .rbc-calendar { height: 100% !important; font-family: inherit; display: flex; flex-direction: column; }
             .rbc-toolbar { display: none !important; }
@@ -987,6 +937,27 @@ useEffect(() => {
   box-shadow: 0 0 6px rgba(249, 115, 22, 0.6);
   pointer-events: none;
   z-index: 100;
+}
+
+/* Tablet */
+@media (max-width: 1024px) {
+  .rbc-day-bg-custom.has-calendar-event::after {
+    width: 7px;
+    height: 7px;
+    top: 10px;
+    right: 8px;
+  }
+}
+
+/* Mobile */
+@media (max-width: 640px) {
+  .rbc-day-bg-custom.has-calendar-event::after {
+    width: 5px;
+    height: 5px;
+    top: 8px;
+    right: 6px;
+    box-shadow: 0 0 4px rgba(249, 115, 22, 0.5);
+  }
 }
   /* Hide calendar event indicators while modal is open */
 body:has(.fixed.inset-0.bg-black\/60) 
@@ -1018,7 +989,13 @@ body:has(.fixed.inset-0.bg-black\/60)
             .rbc-header { border: none; padding: 15px 0; color: #1F2937; font-weight: 700; text-transform: uppercase; font-size: 0.85rem; letter-spacing: 0.05em; }
             .rbc-header:nth-child(1) { color: #f36d45; }
             .rbc-header:nth-child(7) { color: #f36d45; }
-            .rbc-month-row { display: flex; flex-direction: column; flex: 1; min-height: 0; overflow: hidden; }
+            .rbc-month-row {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-height: 0;
+  overflow: hidden !important;
+}
             .rbc-row-content {
   flex: 1;
   z-index: 1;
@@ -1035,6 +1012,38 @@ body:has(.fixed.inset-0.bg-black\/60)
 /* Keep date number clickable */
 .rbc-row-content .rbc-date-cell a {
   pointer-events: auto;
+}
+
+
+
+@media (min-width: 768px) and (max-width: 1023px) {
+  .rbc-calendar {
+    height: 100% !important;
+    min-height: 0 !important;
+  }
+
+  .rbc-month-view {
+    height: 100% !important;
+    min-height: 0 !important;
+  }
+
+  .rbc-month-row {
+    min-height: 0 !important;
+    overflow: hidden !important;
+  }
+
+  .rbc-date-cell {
+    padding: 8px 10px !important;
+  }
+
+  .rbc-date-cell > a {
+    font-size: 0.85rem !important;
+  }
+
+  .rbc-header {
+    padding: 12px 0 !important;
+    font-size: 0.8rem !important;
+  }
 }
 
 
@@ -1119,6 +1128,24 @@ body:has(.fixed.inset-0.bg-black\/60)
               .rbc-time-header-content .rbc-header > span { height: 28px; border-radius: 14px; font-size: 0.7rem; max-width: 60px; }
               .rbc-label { font-size: 0.65rem; }
             }
+
+            /* Tablet */
+@media (min-width: 768px) and (max-width: 1023px) {
+  .rbc-header {
+    padding: 8px 0 !important;
+    font-size: 0.7rem !important;
+    letter-spacing: 0.03em !important;
+  }
+}
+
+/* Mobile */
+@media (max-width: 767px) {
+  .rbc-header {
+    padding: 6px 0 !important;
+    font-size: 0.65rem !important;
+    letter-spacing: 0.02em !important;
+  }
+}
           `}</style>
 
           {loading ? (
@@ -1142,46 +1169,62 @@ body:has(.fixed.inset-0.bg-black\/60)
               date={date}
               onNavigate={handleNavigate}
               views={[Views.MONTH, Views.WEEK, Views.DAY, Views.AGENDA]}
-               components={{
-  toolbar: () => null,
+              components={{
+                toolbar: () => null,
 
-  month: {
-    event: CustomMonthEvent,
+                month: {
+                  event: CustomMonthEvent,
 
-    dateCellWrapper: CustomDateCell,
-  },
+                  dateCellWrapper: CustomDateCell,
+                },
 
-  week: {
-    event: CustomEvent,
-  },
+                week: {
+                  event: CustomEvent,
+                },
 
-  day: {
-    event: CustomEvent,
-  },
+                day: {
+                  event: CustomEvent,
+                },
 
-  agenda: {
-    event: CustomEvent,
-  },
-}}
+                agenda: {
+                  event: CustomEvent,
+                },
+              }}
             />
           )}
         </main>
 
         {/* RIGHT SIDEBAR */}
-        <aside className={`w-full lg:w-80 lg:flex-shrink-0 h-full transition-all duration-300 overflow-hidden`}>
+        <aside
+          className={`
+    w-full
+    h-auto
+    max-h-[45vh]
+    overflow-hidden
+    transition-all duration-300
+
+    lg:w-80
+    lg:flex-shrink-0
+    lg:h-full
+    lg:max-h-none
+  `}
+        >
           <div className="flex flex-col gap-3 h-full">
-            <div className="bg-orange-50 rounded-xl p-6 shrink-0">
-              <div className="mb-6">
-                <div className="flex flex-col lg:flex-row lg:items-end justify-between mb-6">
+            {/* DATE / STATS */}
+            <div className="bg-orange-50 rounded-xl p-4 lg:p-6 shrink-0">
+              <div className="mb-4 lg:mb-6">
+                <div className="flex items-center justify-between mb-4 lg:mb-6">
                   <div>
-                    <h1 className="text-xl font-bold text-[#f36d45] leading-none">
+                    <h1 className="text-lg lg:text-xl font-bold text-[#f36d45] leading-none">
                       {moment(date).format("dddd")}
                     </h1>
-                    <p className="text-sm text-[#f36d45] mt-2 font-medium">
+
+                    <p className="text-xs lg:text-sm text-[#f36d45] mt-2 font-medium">
                       {moment(date).format("MMMM DD, YYYY")}
                     </p>
                   </div>
-                  <div className="text-7xl font-black text-[#f36d45] leading-none opacity-90 font-medium">
+
+                  <div className="text-5xl lg:text-7xl font-black text-[#f36d45] leading-none opacity-90">
                     {moment(date).format("DD")}
                   </div>
                 </div>
@@ -1194,48 +1237,77 @@ body:has(.fixed.inset-0.bg-black\/60)
                         end: new Date(new Date().getTime() + 3600000),
                       })
                     }
-                    className="w-full mb-6 px-4 py-3.5 bg-[#ff5321] text-white rounded-xl hover:shadow-lg hover:shadow-orange-500/30 transition-all font-bold flex items-center justify-center gap-2 active:scale-95"
+                    className="w-full mb-4 lg:mb-6 px-4 py-3 lg:py-3.5 bg-[#ff5321] text-white rounded-xl hover:shadow-lg hover:shadow-orange-500/30 transition-all font-bold flex items-center justify-center gap-2 active:scale-95"
                   >
                     <Plus className="h-5 w-5" />
                     Schedule Class
                   </button>
                 )}
 
-                <div className="grid grid-cols-2 gap-3 mb-8">
-                  <div className="bg-[#f36d45] rounded-2xl p-4 text-white shadow-lg shadow-orange-500/20">
-                    <div className="text-3xl font-bold">{stats.today}</div>
-                    <div className="text-xs opacity-80 font-medium mt-1">Today</div>
+                <div className="grid grid-cols-2 gap-2 lg:gap-3 mb-0 lg:mb-8">
+                  <div className="bg-[#f36d45] rounded-xl lg:rounded-2xl p-3 lg:p-4 text-white shadow-lg shadow-orange-500/20">
+                    <div className="text-2xl lg:text-3xl font-bold">
+                      {stats.today}
+                    </div>
+
+                    <div className="text-[11px] lg:text-xs opacity-80 font-medium mt-1">
+                      Today
+                    </div>
                   </div>
-                  <div className="bg-white border-2 border-orange-200 rounded-2xl p-4 shadow-sm">
-                    <div className="text-3xl font-bold text-[#f36d45]">{stats.thisWeek}</div>
-                    <div className="text-xs text-gray-500 font-medium mt-1">This Week</div>
+
+                  <div className="bg-white border-2 border-orange-200 rounded-xl lg:rounded-2xl p-3 lg:p-4 shadow-sm">
+                    <div className="text-2xl lg:text-3xl font-bold text-[#f36d45]">
+                      {stats.thisWeek}
+                    </div>
+
+                    <div className="text-[11px] lg:text-xs text-gray-500 font-medium mt-1">
+                      This Week
+                    </div>
                   </div>
                 </div>
               </div>
             </div>
 
-            <div className="flex-1 overflow-y-auto scrollbar-hide min-h-0 flex flex-col gap-3">
-              <div className="bg-orange-100/50 rounded-xl p-3 flex flex-col lg:h-52 shrink-0">
+            {/* SCHEDULE + UPCOMING */}
+            <div
+  className="
+    flex-1 min-h-0 flex flex-col gap-3
+    overflow-y-auto scrollbar-hide
+    max-h-[40vh]
+    md:max-h-[45vh]
+    lg:max-h-none
+  "
+>
+              {/* TODAY */}
+              <div className="bg-orange-100/50 rounded-xl p-3 flex flex-col shrink-0 lg:h-52">
                 <h3 className="font-bold text-[#f36d45] text-sm flex items-center gap-2 shrink-0">
-                  <Clock className="h-4 w-4" /> Today's Schedule
+                  <Clock className="h-4 w-4" />
+                  Today's Schedule
                 </h3>
 
                 {todayEvents.length > 0 ? (
-                  <div className="space-y-3 mt-3 overflow-y-auto scrollbar-hide flex-1 min-h-0">
+                  <div className="space-y-2 lg:space-y-3 mt-3 overflow-y-auto scrollbar-hide flex-1 min-h-0">
                     {todayEvents.map((event) => (
                       <div
                         key={event.id}
                         onClick={() => handleSelectEvent(event)}
-                        className="group p-3 rounded-xl bg-white border border-orange-100 cursor-pointer hover:border-orange-300 hover:shadow-md transition-all"
+                        className="group p-2.5 lg:p-3 rounded-xl bg-white border border-orange-100 cursor-pointer hover:border-orange-300 hover:shadow-md transition-all"
                       >
                         <div className="flex items-start gap-3">
-                          <div className={`flex h-10 w-10 items-center justify-center rounded-lg bg-[#F36D45] text-white flex-shrink-0 shadow-sm`}>
-                            {React.createElement(event.icon || Video, { className: "h-5 w-5" })}
+                          <div className="flex h-9 w-9 lg:h-10 lg:w-10 items-center justify-center rounded-lg bg-[#F36D45] text-white flex-shrink-0 shadow-sm">
+                            {React.createElement(event.icon || Video, {
+                              className: "h-4 w-4 lg:h-5 lg:w-5",
+                            })}
                           </div>
+
                           <div className="flex-1 min-w-0">
-                            <div className="font-bold text-gray-900 text-sm truncate">{event.title}</div>
-                            <div className="text-xs text-gray-500 mt-0.5">
-                              {moment(event.start).format("HH:mm")} - {moment(event.end).format("HH:mm")}
+                            <div className="font-bold text-gray-900 text-xs lg:text-sm truncate">
+                              {event.title}
+                            </div>
+
+                            <div className="text-[11px] lg:text-xs text-gray-500 mt-0.5">
+                              {moment(event.start).format("HH:mm")} -{" "}
+                              {moment(event.end).format("HH:mm")}
                             </div>
                           </div>
                         </div>
@@ -1243,22 +1315,30 @@ body:has(.fixed.inset-0.bg-black\/60)
                     ))}
                   </div>
                 ) : (
-                  <div className="flex-1 flex flex-col items-center justify-center text-center py-6 mt-2">
-                    <div className="bg-white p-4 rounded-full mb-3 shadow-sm">
-                      <Clock className="h-8 w-8 text-orange-300" />
+                  <div className="flex-1 flex flex-col items-center justify-center text-center py-4">
+                    <div className="bg-white p-3 rounded-full mb-2 shadow-sm">
+                      <Clock className="h-6 w-6 lg:h-8 lg:w-8 text-orange-300" />
                     </div>
-                    <p className="text-sm text-gray-500 font-medium">No classes today</p>
-                    <p className="text-xs text-gray-400 mt-1">Enjoy your free time!</p>
+
+                    <p className="text-xs lg:text-sm text-gray-500 font-medium">
+                      No classes today
+                    </p>
+
+                    <p className="text-[11px] lg:text-xs text-gray-400 mt-1">
+                      Enjoy your free time!
+                    </p>
                   </div>
                 )}
               </div>
 
-              <div className="bg-orange-100/50 rounded-xl p-3 flex flex-col lg:h-52 shrink-0">
+              {/* UPCOMING */}
+              <div className="bg-orange-100/50 rounded-xl p-3 flex flex-col shrink-0 lg:h-52">
                 <h3 className="font-bold text-[#f36d45] text-sm flex items-center gap-2 shrink-0">
-                  <Award className="h-4 w-4" /> Upcoming
+                  <Award className="h-4 w-4" />
+                  Upcoming
                 </h3>
-                <div className="flex-1 min-h-0 mt-3 overflow-y-auto [scrollbar-width:none]
-    [&::-webkit-scrollbar]:hidden">
+
+                <div className="flex-1 min-h-0 mt-3 overflow-y-auto scrollbar-hide">
                   {upcomingEvents.length > 0 ? (
                     <div className="space-y-2">
                       {upcomingEvents.map((event) => (
@@ -1267,17 +1347,22 @@ body:has(.fixed.inset-0.bg-black\/60)
                           onClick={() => handleSelectEvent(event)}
                           className="flex items-center gap-3 p-2.5 rounded-xl bg-white border border-transparent hover:border-orange-200 cursor-pointer transition-all"
                         >
-                          <div className="text-center min-w-[45px] bg-orange-50 rounded-lg py-1.5 border border-orange-100">
+                          <div className="text-center min-w-[42px] lg:min-w-[45px] bg-orange-50 rounded-lg py-1.5 border border-orange-100">
                             <div className="text-[10px] font-bold text-orange-500 uppercase">
                               {moment(event.start).format("MMM")}
                             </div>
-                            <div className="text-lg font-bold text-gray-800 leading-none">
+
+                            <div className="text-base lg:text-lg font-bold text-gray-800 leading-none">
                               {moment(event.start).format("DD")}
                             </div>
                           </div>
+
                           <div className="flex-1 min-w-0">
-                            <div className="text-sm font-semibold text-gray-800 truncate">{event.title}</div>
-                            <div className="text-xs text-orange-500 font-medium">
+                            <div className="text-xs lg:text-sm font-semibold text-gray-800 truncate">
+                              {event.title}
+                            </div>
+
+                            <div className="text-[11px] lg:text-xs text-orange-500 font-medium">
                               {moment(event.start).format("HH:mm")}
                             </div>
                           </div>
@@ -1285,12 +1370,18 @@ body:has(.fixed.inset-0.bg-black\/60)
                       ))}
                     </div>
                   ) : (
-                    <div className="flex-1 flex flex-col items-center justify-center text-center py-6 mt-2 h-full">
-                      <div className="bg-white p-4 rounded-full mb-3 shadow-sm">
-                        <CalendarIcon className="h-8 w-8 text-orange-300" />
+                    <div className="flex-1 flex flex-col items-center justify-center text-center py-4">
+                      <div className="bg-white p-3 rounded-full mb-2 shadow-sm">
+                        <CalendarIcon className="h-6 w-6 lg:h-8 lg:w-8 text-orange-300" />
                       </div>
-                      <p className="text-sm text-gray-500 font-medium">No upcoming events</p>
-                      <p className="text-xs text-gray-400 mt-1">Check back later for new schedules</p>
+
+                      <p className="text-xs lg:text-sm text-gray-500 font-medium">
+                        No upcoming events
+                      </p>
+
+                      <p className="text-[11px] lg:text-xs text-gray-400 mt-1">
+                        Check back later for new schedules
+                      </p>
                     </div>
                   )}
                 </div>
@@ -1312,7 +1403,11 @@ body:has(.fixed.inset-0.bg-black\/60)
           >
             <div className="sticky top-0 bg-[#f6673c] text-white px-6 py-4 flex items-center justify-between rounded-t-2xl z-10">
               <h3 className="text-xl font-bold">
-                {viewingEvent ? "Event Details" : editingEvent ? "Edit Event" : "Create New Event"}
+                {viewingEvent
+                  ? "Event Details"
+                  : editingEvent
+                    ? "Edit Event"
+                    : "Create New Event"}
               </h3>
               <button
                 onClick={() => setShowEventModal(false)}
@@ -1334,75 +1429,86 @@ body:has(.fixed.inset-0.bg-black\/60)
                   </div>
 
                   <div className="space-y-3 max-h-[60vh] overflow-y-auto pr-2 custom-scrollbar">
-                    {(viewingEvent.siblings || [viewingEvent]).map((evt, index) => (
-                      <div
-                        key={evt.id || index}
-                        className="p-4 bg-orange-50 rounded-xl border border-orange-100 relative group"
-                      >
-                        <div className="grid grid-cols-[1.5fr_0.5fr] justify-between items-start mb-2 gap-2">
-                          <Link to={`/sessions/${evt?.slug}`} className="font-bold text-gray-800 text-base line-clamp-2">{evt.title}</Link>
-                          <span className="text-xs font-bold bg-white px-2 py-1 rounded-md text-orange-600 border border-orange-200 shadow-sm">
-                            {moment(evt.start).format("HH:mm")} - {moment(evt.end).format("HH:mm")}
-                          </span>
-                        </div>
-
-                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-sm">
-                          <div>
-                            <div className="text-xs text-orange-600 font-bold uppercase mb-1">Start</div>
-                            <div className="font-semibold text-gray-700">
-                              {moment(evt.start).format("MMM DD, YYYY HH:mm")}
-                            </div>
-                          </div>
-                          <div>
-                            <div className="text-xs text-orange-600 font-bold uppercase mb-1">End</div>
-                            <div className="font-semibold text-gray-700">
-                              {moment(evt.end).format("MMM DD, YYYY HH:mm")}
-                            </div>
-                          </div>
-                        </div>
-
-                        <div className="flex justify-between items-center mt-3 pt-3 border-t border-orange-200/50">
-
-                        {evt.instructor && (
-                          <div className="mt-3 pt-3 border-t border-orange-200/50 flex items-center gap-2">
-                            <User className="h-4 w-4 text-orange-500" />
-                            <span className="text-sm text-gray-600 font-medium">
-                              {evt.instructor.name}
+                    {(viewingEvent.siblings || [viewingEvent]).map(
+                      (evt, index) => (
+                        <div
+                          key={evt.id || index}
+                          className="p-4 bg-orange-50 rounded-xl border border-orange-100 relative group"
+                        >
+                          <div className="grid grid-cols-[1.5fr_0.5fr] justify-between items-start mb-2 gap-2">
+                            <Link
+                              to={`/sessions/${evt?.slug}`}
+                              className="font-bold text-gray-800 text-base line-clamp-2"
+                            >
+                              {evt.title}
+                            </Link>
+                            <span className="text-xs font-bold bg-white px-2 py-1 rounded-md text-orange-600 border border-orange-200 shadow-sm">
+                              {moment(evt.start).format("HH:mm")} -{" "}
+                              {moment(evt.end).format("HH:mm")}
                             </span>
                           </div>
-                        )}
 
-                        {evt.slug && (
-  <div className="flex justify-end mt-4">
-    <Link
-      to = {`/sessions/${evt?.slug}`}
-      className="px-5 py-2.5 bg-[#f6673c] text-white rounded-lg text-sm font-bold hover:bg-orange-600 transition-colors flex items-center gap-2 shadow-sm"
-    >
-      <Video className="h-4 w-4" />
-      Join Now
-    </Link>
-  </div>
-)}
-                        </div>
-
-                        {user.role === "admin" && (
-                          <div className="flex gap-2 mt-4 pt-2 border-t border-orange-200/50 opacity-100 transition-opacity">
-                            <button
-                              onClick={() => handleEditEvent(evt)}
-                              className="flex-1 py-2 bg-orange-500 text-white rounded-lg text-sm font-bold hover:bg-orange-600 transition-colors flex items-center justify-center gap-2"
-                            >
-                              <Edit2 className="h-4 w-4" /> Edit
-                            </button>
-                            <button
-                              onClick={() => handleDeleteEvent(evt.id)}
-                              className="px-4 py-2 bg-red-50 text-red-600 rounded-lg text-sm font-bold hover:bg-red-100 transition-colors flex items-center justify-center gap-2"
-                            >
-                              <Trash2 className="h-4 w-4" /> Delete
-                            </button>
+                          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-sm">
+                            <div>
+                              <div className="text-xs text-orange-600 font-bold uppercase mb-1">
+                                Start
+                              </div>
+                              <div className="font-semibold text-gray-700">
+                                {moment(evt.start).format("MMM DD, YYYY HH:mm")}
+                              </div>
+                            </div>
+                            <div>
+                              <div className="text-xs text-orange-600 font-bold uppercase mb-1">
+                                End
+                              </div>
+                              <div className="font-semibold text-gray-700">
+                                {moment(evt.end).format("MMM DD, YYYY HH:mm")}
+                              </div>
+                            </div>
                           </div>
-                        )}
-                      </div>
-                    ))}
+
+                          <div className="flex justify-between items-center mt-3 pt-3 border-t border-orange-200/50">
+                            {evt.instructor && (
+                              <div className="mt-3 pt-3 border-t border-orange-200/50 flex items-center gap-2">
+                                <User className="h-4 w-4 text-orange-500" />
+                                <span className="text-sm text-gray-600 font-medium">
+                                  {evt.instructor.name}
+                                </span>
+                              </div>
+                            )}
+
+                            {evt.slug && (
+                              <div className="flex justify-end mt-4">
+                                <Link
+                                  to={`/sessions/${evt?.slug}`}
+                                  className="px-5 py-2.5 bg-[#f6673c] text-white rounded-lg text-sm font-bold hover:bg-orange-600 transition-colors flex items-center gap-2 shadow-sm"
+                                >
+                                  <Video className="h-4 w-4" />
+                                  Join Now
+                                </Link>
+                              </div>
+                            )}
+                          </div>
+
+                          {user.role === "admin" && (
+                            <div className="flex gap-2 mt-4 pt-2 border-t border-orange-200/50 opacity-100 transition-opacity">
+                              <button
+                                onClick={() => handleEditEvent(evt)}
+                                className="flex-1 py-2 bg-orange-500 text-white rounded-lg text-sm font-bold hover:bg-orange-600 transition-colors flex items-center justify-center gap-2"
+                              >
+                                <Edit2 className="h-4 w-4" /> Edit
+                              </button>
+                              <button
+                                onClick={() => handleDeleteEvent(evt.id)}
+                                className="px-4 py-2 bg-red-50 text-red-600 rounded-lg text-sm font-bold hover:bg-red-100 transition-colors flex items-center justify-center gap-2"
+                              >
+                                <Trash2 className="h-4 w-4" /> Delete
+                              </button>
+                            </div>
+                          )}
+                        </div>
+                      ),
+                    )}
                   </div>
                 </div>
               ) : (
@@ -1442,21 +1548,21 @@ body:has(.fixed.inset-0.bg-black\/60)
       )}
 
       {!showEventModal &&
-  hoveredDate &&
-  hoveredDate.events.length > 0 &&
-  createPortal(
-    <div
-      className="calendar-cell-hover-popup"
-      style={{
-        position: "fixed",
-        left: `${cellPopupPosition.left}px`,
-        top: `${cellPopupPosition.top}px`,
-        zIndex: 2147483647,
-        pointerEvents: "none",
-      }}
-    >
-      <div
-        className="
+        hoveredDate &&
+        hoveredDate.events.length > 0 &&
+        createPortal(
+          <div
+            className="calendar-cell-hover-popup"
+            style={{
+              position: "fixed",
+              left: `${cellPopupPosition.left}px`,
+              top: `${cellPopupPosition.top}px`,
+              zIndex: 2147483647,
+              pointerEvents: "none",
+            }}
+          >
+            <div
+              className="
           w-[260px]
           sm:w-[290px]
           rounded-xl
@@ -1466,10 +1572,10 @@ body:has(.fixed.inset-0.bg-black\/60)
           p-2
           shadow-[0_8px_25px_rgba(249,115,22,0.18)]
         "
-      >
-        {/* Header */}
-        <div
-          className="
+            >
+              {/* Header */}
+              <div
+                className="
             mb-2
             flex
             items-center
@@ -1479,21 +1585,19 @@ body:has(.fixed.inset-0.bg-black\/60)
             px-3
             py-2
           "
-        >
-          <span
-            className="
+              >
+                <span
+                  className="
               text-[11px]
               font-semibold
               text-[#E85D2A]
             "
-          >
-            {moment(hoveredDate.dateKey).format(
-              "MMMM DD, YYYY"
-            )}
-          </span>
+                >
+                  {moment(hoveredDate.dateKey).format("MMMM DD, YYYY")}
+                </span>
 
-          <span
-            className="
+                <span
+                  className="
               rounded-full
               bg-[#F97316]
               px-2
@@ -1502,17 +1606,17 @@ body:has(.fixed.inset-0.bg-black\/60)
               font-bold
               text-white
             "
-          >
-            {hoveredDate.events.length}
-          </span>
-        </div>
+                >
+                  {hoveredDate.events.length}
+                </span>
+              </div>
 
-        {/* Events */}
-        <div className="space-y-1">
-          {hoveredDate.events.map((event) => (
-            <div
-              key={event.id}
-              className="
+              {/* Events */}
+              <div className="space-y-1">
+                {hoveredDate.events.map((event) => (
+                  <div
+                    key={event.id}
+                    className="
                 flex
                 items-center
                 gap-2
@@ -1522,21 +1626,21 @@ body:has(.fixed.inset-0.bg-black\/60)
                 px-2
                 py-2
               "
-            >
-              {/* Dot */}
-              <span
-                className="
+                  >
+                    {/* Dot */}
+                    <span
+                      className="
                   h-2
                   w-2
                   shrink-0
                   rounded-full
                   bg-[#F97316]
                 "
-              />
+                    />
 
-              {/* Title */}
-              <span
-                className="
+                    {/* Title */}
+                    <span
+                      className="
                   min-w-0
                   flex-1
                   truncate
@@ -1544,42 +1648,33 @@ body:has(.fixed.inset-0.bg-black\/60)
                   font-semibold
                   text-[#333]
                 "
-              >
-                {event.title}
-              </span>
+                    >
+                      {event.title}
+                    </span>
 
-              {/* Time */}
-              <span
-                className="
+                    {/* Time */}
+                    <span
+                      className="
                   shrink-0
                   text-[9px]
                   font-medium
                   text-[#9A8F89]
                 "
-              >
-                {moment(event.start).format("HH:mm")}
-              </span>
+                    >
+                      {moment(event.start).format("HH:mm")}
+                    </span>
+                  </div>
+                ))}
+              </div>
             </div>
-          ))}
-        </div>
-      </div>
-    </div>,
-    document.body
-  )}
+          </div>,
+          document.body,
+        )}
     </div>
   );
 };
 
 export default EventCalendar;
-
-
-
-
-
-
-
-
-
 
 // // EventCalendar.jsx
 // import React, { useState, useEffect, useCallback, useMemo } from "react";
@@ -1885,7 +1980,6 @@ export default EventCalendar;
 //     };
 //   };
 
-
 //   const CustomMonthEvent = ({ event }) => {
 //   const sameDateEvents = event.sameDateEvents || [event];
 
@@ -1979,7 +2073,7 @@ export default EventCalendar;
 //             rounded-lg
 //             shadow-sm
 //             truncate
-//             w-10 lg:w-26 md:w-18 
+//             w-10 lg:w-26 md:w-18
 //             cursor-pointer
 //           "
 //         >
@@ -2031,7 +2125,6 @@ export default EventCalendar;
 //     </>
 //   );
 // };
-
 
 //   // const CustomMonthEvent = ({ event }) => {
 //   //   const sameDateEvents = event.sameDateEvents || [event];
@@ -2317,7 +2410,7 @@ export default EventCalendar;
 //               /* --- GLOBAL & MONTH VIEW (UNCHANGED) --- */
 //               .rbc-calendar { height: 100%; font-family: inherit; display: flex; flex-direction: column; }
 //               .rbc-toolbar { display: none !important; }
-              
+
 //               .rbc-month-view {
 //     border: none;
 //     border-radius: 24px;
@@ -2383,12 +2476,12 @@ export default EventCalendar;
 
 //              /* --- WEEK/DAY VIEW FIXES --- */
 // .rbc-time-view {
-//   border: none !important; 
-//   border-radius: 24px; 
-  
-//   display: flex; 
-//   flex-direction: column; 
-//   height: 100%; 
+//   border: none !important;
+//   border-radius: 24px;
+
+//   display: flex;
+//   flex-direction: column;
+//   height: 100%;
 //   background: transparent;
 // }
 
@@ -2405,22 +2498,22 @@ export default EventCalendar;
 
 // /* Fixed Header Height */
 // .rbc-time-header {
-//   flex-shrink: 0; 
-//   height: 70px !important; 
+//   flex-shrink: 0;
+//   height: 70px !important;
 //   padding: 10px 0;
-//   border-bottom: none !important; 
+//   border-bottom: none !important;
 //   background: transparent;
 // }
 
 // /* Hide the SECOND empty header row (All Day row) */
-// .rbc-time-header .rbc-row:last-child { 
-//   display: none !important; 
+// .rbc-time-header .rbc-row:last-child {
+//   display: none !important;
 // }
 
 // /* Style the FIRST header row */
 // .rbc-time-header .rbc-row:first-child {
-//   display: flex; 
-//   align-items: center; 
+//   display: flex;
+//   align-items: center;
 //   height: 100%;
 // }
 //   /* ✅ Events in Week/Day View ONLY */
@@ -2441,22 +2534,20 @@ export default EventCalendar;
 //     display: none !important;
 // }
 
-// define width 
-// date cut 
+// define width
+// date cut
 
 // .rbc-time-header-content .rbc-header {
-//   padding: 0 4px !important; 
+//   padding: 0 4px !important;
 //   border: none !important;
-//   text-transform: none; 
+//   text-transform: none;
 //   font-size: 0.85rem; /* Fixed: removed invalid md: prefix */
-//   font-weight: 700; 
-//   display: flex; 
-//   align-items: center; 
-//   justify-content: center; 
+//   font-weight: 700;
+//   display: flex;
+//   align-items: center;
+//   justify-content: center;
 //   height: 100%;
 // }
-
-
 
 // /* Pill Styling for Headers */
 // .rbc-time-header-content .rbc-header > span {
@@ -2471,10 +2562,6 @@ export default EventCalendar;
 //   color: #1F2937;
 //   white-space: nowrap;
 // }
-
-
-
-
 
 // /* Weekend Colors */
 // .rbc-time-header-content .rbc-header:nth-child(1) > span,
@@ -2492,9 +2579,9 @@ export default EventCalendar;
 // /* Scrollable Content Area - CRITICAL FOR VISIBILITY */
 // .rbc-time-content {
 //   flex: 1;
-  
+
 //   overflow: hidden !important
- 
+
 // }
 
 // /* Time Column (Left Side) */
@@ -2509,8 +2596,6 @@ export default EventCalendar;
 //   font-weight: 500;
 //   padding: 0 8px;
 // }
-
-
 
 // /* Light orange background for Week/Day time slots */
 // .rbc-time-view .rbc-time-slot {
@@ -2535,7 +2620,7 @@ export default EventCalendar;
 //   padding: 2px 6px;
 //   font-size: 0.75rem;
 //   font-weight: 600;
- 
+
 // }
 
 // /* Custom Scrollbar */
@@ -2549,29 +2634,27 @@ export default EventCalendar;
 //                 border-radius: 16px; background: #FED7AA; color: #1F2937;
 //                 white-space: nowrap; font-weight: 700;
 //               }
-              
+
 //               /* Weekend Colors */
 //               .rbc-time-header-content .rbc-header:nth-child(1) > span,
 //               .rbc-time-header-content .rbc-header:nth-child(7) > span { color: #EA580C; }
-              
+
 //               /* Today Highlight */
 //               .rbc-time-header-content .rbc-header.rbc-today > span {
 //                 background: #fff; border: 2px solid #FB923C; color: #EA580C;
 //               }
-              
+
 //               /* Scrollable Content */
 //               .rbc-time-content {
 //                 flex: 1; overflow-y: auto !important; overflow-x: hidden;
 //                 border-top: 1px solid rgba(251, 146, 60, 0.2) !important;
 //               }
-              
+
 //               .rbc-time-gutter { background: transparent; border-right: 1px solid rgba(251, 146, 60, 0.1) !important; }
 //               .rbc-label { color: #9CA3AF; font-size: 0.7rem; md:font-size: 0.75rem; font-weight: 500; padding: 0 4px; md:padding: 0 8px; }
-              
-             
-              
+
 //               .rbc-time-slot { border: none !important; background: #FED7AA !important; }
-              
+
 //               .rbc-day-slot.rbc-today { background: white !important; overflow: hidden }
 //               .rbc-day-slot.rbc-today .rbc-time-slot { background: white !important; }
 
@@ -2579,15 +2662,15 @@ export default EventCalendar;
 // .rbc-time-content > .rbc-day-slot {
 //   overflow: hidden !important;
 // }
-              
+
 //               .rbc-timeslot-group { border-bottom: 1px solid rgba(251, 146, 60, 0.15) !important; border: none !important; }
-              
+
 //               .rbc-event { border: none !important; border-radius: 6px; padding: 2px 6px; font-size: 0.7rem; md:font-size: 0.75rem; font-weight: 600; }
-              
+
 //               .rbc-time-content::-webkit-scrollbar { width: 6px; }
 //               .rbc-time-content::-webkit-scrollbar-track { background: transparent; }
 //               .rbc-time-content::-webkit-scrollbar-thumb { background: #FDBA74; border-radius: 3px; }
-              
+
 //               /* Mobile Adjustments */
 //               @media (max-width: 768px) {
 //                 .rbc-time-header { height: 50px !important; }

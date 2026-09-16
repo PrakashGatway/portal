@@ -40,6 +40,7 @@ import {
   Clock,
   Users2,
   Video,
+  MessageCircleQuestion,
 } from "lucide-react";
 import {
   XAxis,
@@ -990,11 +991,7 @@ const GREDashboard = () => {
         <div className="p-[2px] h-full rounded-3xl bg-gradient-to-b from-orange-500 via-orange-500 to-orange-200/40">
           <div className="h-full rounded-3xl bg-white dark:bg-gray-800 p-4">
             <div className="flex items-center gap-2">
-              <img
-                className="rounded-full border border-white shadow-md object-cover w-12 h-12"
-                src="https://cdn.pixabay.com/photo/2023/02/18/11/00/icon-7797704_1280.png"
-                alt=""
-              />
+              <MessageCircleQuestion size={22} />
               <div className="flex-1">
                 <p className="text-gray-800 text-sm font-semibold dark:text-white">
                   Need Help ?
@@ -1385,13 +1382,13 @@ const GREDashboard = () => {
 
                       <div className="absolute bottom-0 left-0 right-0 h-[92px] rounded-t-[50%] bg-[#06265d] px-5 pt-4">
                         <div className="absolute left-0 right-0 top-0 h-[5px] bg-[#ff764b]" />
-                        <button
-                          type="button"
+                        <Link
+                          to={"/offers"}
                           className="absolute bottom-[28px] left-1/2 flex -translate-x-1/2 items-center gap-2 whitespace-nowrap rounded-full bg-gradient-to-r from-[#ff8a00] to-[#ff5b00] px-7 py-2 text-[11px] font-extrabold text-white shadow-lg"
                         >
                           Explore
                           <ArrowRight className="h-3.5 w-3.5" />
-                        </button>
+                        </Link>
                       </div>
                     </div>
                   ))
