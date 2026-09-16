@@ -433,6 +433,50 @@ export default function CourseDetailPage() {
     navigate(`/class/${item._id}/${course?._id}?module=${sectionId}`);
   };
 
+  const upcomingSchedules = useMemo(() => {
+    if (!curriculum?.length) return [];
+
+    const now = new Date();
+
+    // Start of today
+    const startOfToday = new Date(now);
+    startOfToday.setHours(0, 0, 0, 0);
+
+    // End of next 7 days
+    const endDate = new Date(startOfToday);
+    endDate.setDate(endDate.getDate() + 7);
+    endDate.setHours(23, 59, 59, 999);
+
+    return curriculum
+      .flatMap((section) =>
+        (section.items || []).map((item: any) => ({
+          ...item,
+          sectionId: section._id,
+          sectionTitle: section.title,
+        })),
+      )
+      .filter((item: any) => {
+        const type = String(item?.type || "")
+          .trim()
+          .toLowerCase();
+
+        const scheduledStart = new Date(item?.scheduledStart);
+
+        return (
+          (type === "liveclasses" || type === "sessions") &&
+          item?.scheduledStart &&
+          !Number.isNaN(scheduledStart.getTime()) &&
+          scheduledStart >= now &&
+          scheduledStart <= endDate
+        );
+      })
+      .sort(
+        (a: any, b: any) =>
+          new Date(a.scheduledStart).getTime() -
+          new Date(b.scheduledStart).getTime(),
+      );
+  }, [curriculum]);
+
   const getDaysRemaining = (date: string) => {
     const today = new Date();
     const targetDate = new Date(date);
@@ -459,7 +503,6 @@ export default function CourseDetailPage() {
   const normalDiscount = course?.pricing?.discount || 0;
 
   price = price - (price * normalDiscount) / 100;
-
 
   if (loading) {
     return (
@@ -660,6 +703,9 @@ export default function CourseDetailPage() {
                         {[
                           { id: "overview", label: "Overview" },
                           { id: "curriculum", label: "Curriculum" },
+                          ...(course.mode == "sessions"
+                            ? [{ id: "schedules", label: "Schedules" }]
+                            : []),
                           { id: "materials", label: "Materials" },
                           { id: "tests", label: "Tests" },
                           // { id: "instructors", label: "Instructors" },
@@ -895,8 +941,9 @@ export default function CourseDetailPage() {
                                           {section.title}
                                         </h3>
 
-                                        <div
-                                          className="
+                                        {course.mode != "sessions" && (
+                                          <div
+                                            className="
                           flex
                           items-center
                           gap-2
@@ -905,23 +952,27 @@ export default function CourseDetailPage() {
                           text-[#8B6F61]
                           sm:text-xs
                         "
-                                        >
-                                          <span>{lessons.length} Lessons</span>
+                                          >
+                                            <span>
+                                              {lessons.length} Lessons
+                                            </span>
 
-                                          <span className="text-[#C5A99B]">
-                                            •
-                                          </span>
+                                            <span className="text-[#C5A99B]">
+                                              •
+                                            </span>
 
-                                          <span>Course Section</span>
-                                        </div>
+                                            <span>Course Section</span>
+                                          </div>
+                                        )}
                                       </div>
                                     </div>
 
                                     {/* RIGHT SIDE */}
-                                    <div className="flex shrink-0 items-center gap-3">
-                                      {/* LESSON COUNT */}
-                                      <div
-                                        className="
+                                    {course.mode != "sessions" && (
+                                      <div className="flex shrink-0 items-center gap-3">
+                                        {/* LESSON COUNT */}
+                                        <div
+                                          className="
                         hidden
                         rounded-full
                         border
@@ -933,13 +984,13 @@ export default function CourseDetailPage() {
                         font-semibold
                         sm:block
                       "
-                                      >
-                                        {lessons.length} Lessons
-                                      </div>
+                                        >
+                                          {lessons.length} Lessons
+                                        </div>
 
-                                      {/* CHEVRON */}
-                                      <div
-                                        className="
+                                        {/* CHEVRON */}
+                                        <div
+                                          className="
                         flex
                         h-8
                         w-8
@@ -949,9 +1000,9 @@ export default function CourseDetailPage() {
                         transition-all
                         duration-300
                       "
-                                      >
-                                        <ChevronDown
-                                          className={`
+                                        >
+                                          <ChevronDown
+                                            className={`
                           h-5
                           w-5
                           text-[#F04F23]
@@ -959,49 +1010,51 @@ export default function CourseDetailPage() {
                           duration-300
                           ${isOpen ? "rotate-180" : ""}
                         `}
-                                        />
+                                          />
+                                        </div>
                                       </div>
-                                    </div>
+                                    )}
                                   </button>
 
-                                  <AnimatePresence initial={false}>
-                                    {isOpen && (
-                                      <motion.div
-                                        initial={{
-                                          height: 0,
-                                          opacity: 0,
-                                        }}
-                                        animate={{
-                                          height: "auto",
-                                          opacity: 1,
-                                        }}
-                                        exit={{
-                                          height: 0,
-                                          opacity: 0,
-                                        }}
-                                        transition={{
-                                          duration: 0.3,
-                                          ease: "easeInOut",
-                                        }}
-                                        className="overflow-hidden"
-                                      >
-                                        <div className="bg-white px-4 pb-2">
-                                          <div className="relative">
+                                  {course.mode != "sessions" && (
+                                    <AnimatePresence initial={false}>
+                                      {isOpen && (
+                                        <motion.div
+                                          initial={{
+                                            height: 0,
+                                            opacity: 0,
+                                          }}
+                                          animate={{
+                                            height: "auto",
+                                            opacity: 1,
+                                          }}
+                                          exit={{
+                                            height: 0,
+                                            opacity: 0,
+                                          }}
+                                          transition={{
+                                            duration: 0.3,
+                                            ease: "easeInOut",
+                                          }}
+                                          className="overflow-hidden"
+                                        >
+                                          <div className="bg-white px-4 pb-2">
                                             <div className="relative">
-                                              {visibleLessons.map(
-                                                (item, itemIndex) => {
-                                                  const isCompleted =
-                                                    item.isCompleted === true;
+                                              <div className="relative">
+                                                {visibleLessons.map(
+                                                  (item, itemIndex) => {
+                                                    const isCompleted =
+                                                      item.isCompleted === true;
 
-                                                  const isCurrent =
-                                                    item.isCurrent === true ||
-                                                    (!isCompleted &&
-                                                      itemIndex === 0);
+                                                    const isCurrent =
+                                                      item.isCurrent === true ||
+                                                      (!isCompleted &&
+                                                        itemIndex === 0);
 
-                                                  return (
-                                                    <div
-                                                      key={item._id}
-                                                      className="
+                                                    return (
+                                                      <div
+                                                        key={item._id}
+                                                        className="
                                       group/lesson
                                       relative
                                       flex
@@ -1013,9 +1066,9 @@ export default function CourseDetailPage() {
                                       last:border-b-0
                                       sm:gap-4
                                     "
-                                                    >
-                                                      <div
-                                                        className="
+                                                      >
+                                                        <div
+                                                          className="
                                 relative
                                 h-[58px]
                                 w-[90px]
@@ -1026,27 +1079,27 @@ export default function CourseDetailPage() {
                                 sm:h-[70px]
                                 sm:w-[120px]
                               "
-                                                      >
-                                                        <img
-                                                          src={`${ImageBaseUrl}/${item.thumbnailPic}`}
-                                                          alt={item.title}
-                                                          loading="lazy"
-                                                          onError={(e) => {
-                                                            e.currentTarget.src =
-                                                              "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSzZItwLsuYvbDFTqu2u1MmCBR3dT1X0DAEWwXgo88c4FW8_WArEm7TQFFP&s=10";
-                                                          }}
-                                                          className="
+                                                        >
+                                                          <img
+                                                            src={`${ImageBaseUrl}/${item.thumbnailPic}`}
+                                                            alt={item.title}
+                                                            loading="lazy"
+                                                            onError={(e) => {
+                                                              e.currentTarget.src =
+                                                                "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSzZItwLsuYvbDFTqu2u1MmCBR3dT1X0DAEWwXgo88c4FW8_WArEm7TQFFP&s=10";
+                                                            }}
+                                                            className="
     h-full
     w-full
     object-cover
     transition-transform
     duration-300
   "
-                                                        />
-                                                      </div>
+                                                          />
+                                                        </div>
 
-                                                      <div
-                                                        className={`
+                                                        <div
+                                                          className={`
                                         min-w-0
                                         flex-1
                                         ${
@@ -1055,17 +1108,19 @@ export default function CourseDetailPage() {
                                             : "cursor-pointer"
                                         }
                                       `}
-                                                        onClick={() => {
-                                                          if (!item.isLocked) {
-                                                            handleItemNavigation(
-                                                              item,
-                                                              section._id,
-                                                            );
-                                                          }
-                                                        }}
-                                                      >
-                                                        <h4
-                                                          className={`
+                                                          onClick={() => {
+                                                            if (
+                                                              !item.isLocked
+                                                            ) {
+                                                              handleItemNavigation(
+                                                                item,
+                                                                section._id,
+                                                              );
+                                                            }
+                                                          }}
+                                                        >
+                                                          <h4
+                                                            className={`
                                           truncate
                                           text-sm
                                           font-semibold
@@ -1080,14 +1135,14 @@ export default function CourseDetailPage() {
                                                 : "text-[#111827] group-hover/lesson:text-[#F04F23]"
                                           }
                                         `}
-                                                        >
-                                                          {item.title}
-                                                        </h4>
+                                                          >
+                                                            {item.title}
+                                                          </h4>
 
-                                                        {/* TYPE + DURATION */}
+                                                          {/* TYPE + DURATION */}
 
-                                                        <div
-                                                          className="
+                                                          <div
+                                                            className="
                                           mt-1
                                           flex
                                           flex-wrap
@@ -1097,86 +1152,88 @@ export default function CourseDetailPage() {
                                           text-[#9B8277]
                                           sm:text-sm
                                         "
-                                                        >
-                                                          <span
-                                                            className={
-                                                              isCurrent
-                                                                ? "font-medium text-[#F04F23]"
-                                                                : ""
-                                                            }
                                                           >
-                                                            {item.type ===
-                                                            "LiveClasses"
-                                                              ? "Live Class"
-                                                              : item.type ===
-                                                                  "RecordedClasses"
-                                                                ? "Recorded Class"
+                                                            <span
+                                                              className={
+                                                                isCurrent
+                                                                  ? "font-medium text-[#F04F23]"
+                                                                  : ""
+                                                              }
+                                                            >
+                                                              {item.type ===
+                                                              "LiveClasses"
+                                                                ? "Live Class"
                                                                 : item.type ===
-                                                                    "Sessions"
-                                                                  ? "1:1 Session"
-                                                                  : item.materialType ||
-                                                                    item.type}
-                                                          </span>
+                                                                    "RecordedClasses"
+                                                                  ? "Recorded Class"
+                                                                  : item.type ===
+                                                                      "Sessions"
+                                                                    ? "1:1 Session"
+                                                                    : item.materialType ||
+                                                                      item.type}
+                                                            </span>
 
-                                                          {item.duration && (
-                                                            <>
-                                                              <span className="text-[#D8C5BC]">
-                                                                •
-                                                              </span>
+                                                            {item.duration && (
+                                                              <>
+                                                                <span className="text-[#D8C5BC]">
+                                                                  •
+                                                                </span>
 
-                                                              <span>
-                                                                {item.duration}
-                                                              </span>
-                                                            </>
-                                                          )}
-                                                          {item.scheduledStart && (
-                                                            <>
-                                                              <span className="text-[#D8C5BC]">
-                                                                •
-                                                              </span>
-                                                              <span>
-                                                                {new Date(
-                                                                  item.scheduledStart,
-                                                                ).toLocaleDateString(
-                                                                  "en-IN",
+                                                                <span>
                                                                   {
-                                                                    day: "2-digit",
-                                                                    month:
-                                                                      "short",
-                                                                    year: "numeric",
-                                                                  },
-                                                                )}{" "}
-                                                                <span className="ps-3">
+                                                                    item.duration
+                                                                  }
+                                                                </span>
+                                                              </>
+                                                            )}
+                                                            {item.scheduledStart && (
+                                                              <>
+                                                                <span className="text-[#D8C5BC]">
+                                                                  •
+                                                                </span>
+                                                                <span>
                                                                   {new Date(
                                                                     item.scheduledStart,
-                                                                  ).toLocaleTimeString(
+                                                                  ).toLocaleDateString(
                                                                     "en-IN",
                                                                     {
-                                                                      hour: "2-digit",
-                                                                      minute:
-                                                                        "2-digit",
-                                                                      hour12: true,
+                                                                      day: "2-digit",
+                                                                      month:
+                                                                        "short",
+                                                                      year: "numeric",
                                                                     },
-                                                                  )}
+                                                                  )}{" "}
+                                                                  <span className="ps-3">
+                                                                    {new Date(
+                                                                      item.scheduledStart,
+                                                                    ).toLocaleTimeString(
+                                                                      "en-IN",
+                                                                      {
+                                                                        hour: "2-digit",
+                                                                        minute:
+                                                                          "2-digit",
+                                                                        hour12: true,
+                                                                      },
+                                                                    )}
+                                                                  </span>
                                                                 </span>
-                                                              </span>
-                                                            </>
-                                                          )}
+                                                              </>
+                                                            )}
+                                                          </div>
                                                         </div>
-                                                      </div>
 
-                                                      {/* ================================= */}
-                                                      {/* ACTION */}
-                                                      {/* ================================= */}
+                                                        {/* ================================= */}
+                                                        {/* ACTION */}
+                                                        {/* ================================= */}
 
-                                                      <div className="shrink-0">
-                                                        {item.isLocked ? (
-                                                          <Button
-                                                            type="button"
-                                                            disabled
-                                                            variant="outline"
-                                                            size="sm"
-                                                            className="
+                                                        <div className="shrink-0">
+                                                          {item.isLocked ? (
+                                                            <Button
+                                                              type="button"
+                                                              disabled
+                                                              variant="outline"
+                                                              size="sm"
+                                                              className="
                                             hidden
                                             rounded-full
                                             border-[#E8E0DC]
@@ -1185,20 +1242,20 @@ export default function CourseDetailPage() {
                                             text-[#B5AAA5]
                                             sm:inline-flex
                                           "
-                                                          >
-                                                            <Lock className="mr-1.5 h-3.5 w-3.5" />
-                                                            Locked
-                                                          </Button>
-                                                        ) : (
-                                                          <button
-                                                            type="button"
-                                                            onClick={() =>
-                                                              handleItemNavigation(
-                                                                item,
-                                                                section._id,
-                                                              )
-                                                            }
-                                                            className="
+                                                            >
+                                                              <Lock className="mr-1.5 h-3.5 w-3.5" />
+                                                              Locked
+                                                            </Button>
+                                                          ) : (
+                                                            <button
+                                                              type="button"
+                                                              onClick={() =>
+                                                                handleItemNavigation(
+                                                                  item,
+                                                                  section._id,
+                                                                )
+                                                              }
+                                                              className="
                                             flex
                                             h-9
                                             w-9
@@ -1211,30 +1268,30 @@ export default function CourseDetailPage() {
                                             hover:bg-[#FFF0E9]
                                             hover:text-[#F4511E]
                                           "
-                                                          >
-                                                            <ChevronRight className="h-4 w-4" />
-                                                          </button>
-                                                        )}
+                                                            >
+                                                              <ChevronRight className="h-4 w-4" />
+                                                            </button>
+                                                          )}
+                                                        </div>
                                                       </div>
-                                                    </div>
-                                                  );
-                                                },
-                                              )}
+                                                    );
+                                                  },
+                                                )}
+                                              </div>
                                             </div>
-                                          </div>
 
-                                          {/* ======================================= */}
-                                          {/* VIEW ALL LESSONS */}
-                                          {/* ======================================= */}
+                                            {/* ======================================= */}
+                                            {/* VIEW ALL LESSONS */}
+                                            {/* ======================================= */}
 
-                                          {lessons.length > 5 && (
-                                            <div className="border-t border-[#F1E7E2]">
-                                              <button
-                                                type="button"
-                                                onClick={() =>
-                                                  toggleLessons(section._id)
-                                                }
-                                                className="
+                                            {lessons.length > 5 && (
+                                              <div className="border-t border-[#F1E7E2]">
+                                                <button
+                                                  type="button"
+                                                  onClick={() =>
+                                                    toggleLessons(section._id)
+                                                  }
+                                                  className="
                                 flex
                                 w-full
                                 items-center
@@ -1247,27 +1304,28 @@ export default function CourseDetailPage() {
                                 transition-colors
                                 hover:text-[#D93F0D]
                               "
-                                              >
-                                                {isLessonsExpanded
-                                                  ? "Show less"
-                                                  : `View all ${lessons.length} lessons`}
+                                                >
+                                                  {isLessonsExpanded
+                                                    ? "Show less"
+                                                    : `View all ${lessons.length} lessons`}
 
-                                                <ChevronDown
-                                                  className={`
+                                                  <ChevronDown
+                                                    className={`
                                   h-4
                                   w-4
                                   transition-transform
                                   duration-200
                                   ${isLessonsExpanded ? "rotate-180" : ""}
                                 `}
-                                                />
-                                              </button>
-                                            </div>
-                                          )}
-                                        </div>
-                                      </motion.div>
-                                    )}
-                                  </AnimatePresence>
+                                                  />
+                                                </button>
+                                              </div>
+                                            )}
+                                          </div>
+                                        </motion.div>
+                                      )}
+                                    </AnimatePresence>
+                                  )}
                                 </div>
                               );
                             })}
@@ -1314,6 +1372,159 @@ export default function CourseDetailPage() {
                             </p>
                           </div>
                         </>
+                      )}
+                    </div>
+                  )}
+
+                  {activeTab === "schedules" && (
+                    <div className="space-y-3">
+                      {upcomingSchedules.length === 0 ? (
+                        <div className="rounded-2xl border border-[#F2DDD4] bg-[#FFF9F6] px-5 py-12 text-center">
+                          <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-[#FFE9DF] text-[#F4511E]">
+                            <Calendar className="h-5 w-5" />
+                          </div>
+
+                          <h3 className="mt-4 text-base font-bold text-[#172033]">
+                            No upcoming classes
+                          </h3>
+
+                          <p className="mt-1 text-sm text-gray-500">
+                            No classes are scheduled for the next 7 days.
+                          </p>
+                        </div>
+                      ) : (
+                        <div className="overflow-hidden rounded-2xl border border-[#ffded5] bg-white">
+                          {upcomingSchedules.map((item: any) => {
+                            const scheduledStart = new Date(
+                              item.scheduledStart,
+                            );
+
+                            const type = String(item?.type || "")
+                              .trim()
+                              .toLowerCase();
+
+                            const isLiveClass = type === "liveclasses";
+
+                            return (
+                              <div
+                                key={item._id}
+                                className="
+                group flex items-center gap-3
+                border-b border-[#F3E5DF]
+                px-4 py-3
+                last:border-b-0
+                hover:bg-[#FFF9F6]
+                transition-colors
+                sm:gap-4
+              "
+                              >
+                                {/* DATE */}
+                                <div
+                                  className="
+                  flex h-14 w-14 shrink-0
+                  flex-col items-center justify-center
+                  rounded-xl
+                  bg-[#FFF1EB]
+                "
+                                >
+                                  <span className="text-[10px] font-semibold uppercase text-[#F4511E]">
+                                    {scheduledStart.toLocaleDateString(
+                                      "en-IN",
+                                      {
+                                        month: "short",
+                                      },
+                                    )}
+                                  </span>
+
+                                  <span className="text-xl font-bold leading-5 text-[#172033]">
+                                    {scheduledStart.getDate()}
+                                  </span>
+                                </div>
+
+                                <div className="min-w-0 flex-1">
+                                  <h3 className="truncate text-sm font-semibold text-[#111827] sm:text-base">
+                                    {item.title || "Scheduled Class"}
+                                  </h3>
+
+                                  <div className="mt-1 flex flex-wrap items-center gap-2 text-xs text-[#9B8277] sm:text-sm">
+                                    <span>
+                                      {scheduledStart.toLocaleDateString(
+                                        "en-IN",
+                                        {
+                                          weekday: "short",
+                                          day: "2-digit",
+                                          month: "short",
+                                        },
+                                      )}
+                                    </span>
+
+                                    <span className="text-[#D8C5BC]">•</span>
+
+                                    <span>
+                                      {scheduledStart.toLocaleTimeString(
+                                        "en-IN",
+                                        {
+                                          hour: "2-digit",
+                                          minute: "2-digit",
+                                          hour12: true,
+                                        },
+                                      )}
+                                    </span>
+
+                                    <span className="text-[#D8C5BC]">•</span>
+
+                                    <span className="capitalize">
+                                      {isLiveClass
+                                        ? "Live Class"
+                                        : "1:1 Session"}
+                                    </span>
+
+                                    {item.duration && (
+                                      <>
+                                        <span className="text-[#D8C5BC]">
+                                          •
+                                        </span>
+                                        <span>{item.duration}</span>
+                                      </>
+                                    )}
+                                  </div>
+                                </div>
+
+                                {/* ACTION */}
+                                <button
+                                  type="button"
+                                  disabled={item.isLocked}
+                                  onClick={() => {
+                                    if (!item.isLocked) {
+                                      handleItemNavigation(
+                                        item,
+                                        item.sectionId,
+                                      );
+                                    }
+                                  }}
+                                  className="
+                  flex h-9 w-9 shrink-0
+                  items-center justify-center
+                  rounded-full
+                  bg-[#FAF7F5]
+                  text-[#9B8A82]
+                  transition-all
+                  hover:bg-[#FFF0E9]
+                  hover:text-[#F4511E]
+                  disabled:cursor-not-allowed
+                  disabled:opacity-40
+                "
+                                >
+                                  {item.isLocked ? (
+                                    <Lock className="h-4 w-4" />
+                                  ) : (
+                                    <ChevronRight className="h-4 w-4" />
+                                  )}
+                                </button>
+                              </div>
+                            );
+                          })}
+                        </div>
                       )}
                     </div>
                   )}
@@ -1605,60 +1816,60 @@ export default function CourseDetailPage() {
                   <div className="space-y-1">
                     {[
                       {
-                        question: "What do your study abroad courses include?",
+                        question: "What does this course include?",
                         answer:
-                          "Our courses cover everything from English language prep, IELTS/TOEFL training, and subject-specific coaching to application guidance, interview prep, and cultural orientation.",
+                          "This course consists of lessons, guidance from experts, practice materials, test papers, and many more to help you prepare and gain confidence in this course.",
                       },
                       {
-                        question: "Are these courses suitable for beginners?",
+                        question: "Is this course suitable for beginners?",
                         answer:
-                          "Yes! Whether you’re just starting or already advanced, we have beginner, intermediate, and advanced-level courses tailored to your needs.",
+                          "Yes. This course is appropriate for both beginner level learners as well as those learners who wish to improve on their current knowledge base.",
                       },
                       {
-                        question:
-                          "How do these courses help with my study abroad application?",
+                        question: "Is the course available online or offline?",
                         answer:
-                          "We focus on strengthening your academic profile, language skills, and test performance so that you can meet admission requirements at top universities abroad.",
-                      },
-                      {
-                        question:
-                          "Do you provide guidance for visa and admissions along with courses?",
-                        answer:
-                          "Absolutely. Along with coaching, we guide you through application essays, SOPs, LORs, and visa interview preparation.",
+                          "Depending on the program, courses can be found in online or offline modes. Ooshas Prep provides you with a variety of ways to prepare you for your desired academic field.",
                       },
                       {
                         question:
-                          "Are the courses conducted online or offline?",
+                          "How long does it take to complete the course?",
                         answer:
-                          "We offer both flexible online classes and offline sessions (depending on your location). You can choose what fits you best.",
+                          "It depends on the course, mode of learning, and the student preparedness. Check out the course to know more details about the duration.",
                       },
                       {
                         question:
-                          "What makes your study abroad courses different from others?",
+                          "Do you provide study materials and practice tests?",
                         answer:
-                          "Our trainers have years of experience helping students secure admissions abroad. We provide personalized feedback, mock tests, and one-on-one mentoring.",
-                      },
-                      {
-                        question: "How long does it take to complete a course?",
-                        answer:
-                          "Course duration ranges from 4 weeks to 6 months, depending on the program and your target university requirements.",
+                          "Yes, course members are provided with study materials and practice sets that can help them prepare regularly to gain in-depth knowledge.",
                       },
                       {
                         question:
-                          "Will these courses improve my chances of getting scholarships?",
+                          "Will I get mock tests as part of the course?",
                         answer:
-                          "Yes, stronger academic and language skills increase your chances of securing merit-based scholarships abroad.",
+                          "Depending on the course, mock tests may be available to students. This is to ensure that the students are prepared in accordance with the true examination pattern.",
                       },
                       {
                         question:
-                          "Do you provide practice tests and study materials?",
+                          "Do I get guidance from experienced instructors?",
                         answer:
-                          "Yes, we provide updated study guides, sample papers, mock exams, and practice sessions for standardized tests like IELTS, TOEFL, GRE, and GMAT.",
+                          "Yes. Students will be provided with expert guidance and support throughout the course for concepts, preparation, practice, and other relevant content.",
                       },
                       {
-                        question: "How do I enroll in a course?",
+                        question:
+                          "Can this course help me improve my test score?",
                         answer:
-                          "Simply click on the “Enroll Now” button, fill in your details, and our team will contact you with the next steps.",
+                          "The course is intended to strengthen your concepts, test techniques, and provide you with regular practice. However, your marks also depend on your own preparation and practice.",
+                      },
+                      {
+                        question:
+                          "Can I get help if I have questions during the course?",
+                        answer:
+                          "Yes, you will get the necessary support and guidance if any queries arise regarding the course within the guidance time provided for your chosen package.",
+                      },
+                      {
+                        question: "How can I enroll in a course?",
+                        answer:
+                          "You can choose your favorite course and explore the complete detail about it. Then, you can go to the enrollment button to get started. You can also contact us before registration to know more about the course.",
                       },
                     ]?.map((faq, index) => (
                       <div

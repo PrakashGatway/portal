@@ -242,49 +242,40 @@ export default function TestSeriesPage() {
                         <LeftSlider />
                     </div>
 
-                    <div className="flex flex-col gap-4 lg:block hidden">
+                    <div className="flex flex-col lg:block hidden">
 
- <div className="p-[2px] h-full rounded-3xl bg-gradient-to-b from-orange-500 via-orange-500 to-orange-200/40">
+<div className="p-[2px] h-full rounded-3xl bg-gradient-to-b from-orange-500 via-orange-500 to-orange-200/40">
           <div className="h-full rounded-3xl bg-white dark:bg-gray-800 p-4">
-            <div className="flex items-start gap-4">
+            <div className="flex items-center gap-2">
               <img
-                className="rounded-full border border-white shadow-md object-cover w-16 h-16"
+                className="rounded-full border border-white shadow-md object-cover w-12 h-12"
                 src="https://cdn.pixabay.com/photo/2023/02/18/11/00/icon-7797704_1280.png"
                 alt=""
               />
               <div className="flex-1">
-                <p className="text-gray-500 text-sm font-medium dark:text-white">
-                  Your Counsellor
+                <p className="text-gray-800 text-sm font-semibold dark:text-white">
+                  Need Help ?
                 </p>
-                <h3 className="text-base leading-none font-bold text-[#222] mt-1 dark:text-white">
-                  Expert Study Abroad Counsellor
+                <h3 className="text-base leading-none font-bold text-[#F36D45] mt-1 dark:text-white">
+                  Raise a Ticket
                 </h3>
-                <div className="grid grid-cols-1a lg:grid-cols-2 items-center gap-2 mt-3">
-                  <div className="flex text-[#FF6B35]">
-                    {/* {[1, 2, 3, 4, 5].map((i) => (
-                      <Star
-                        key={i}
-                        size={14}
-                        fill="currentColor"
-                        className="text-[#FF6B35]"
-                      />
-                    ))} */}
-                  </div>
-                  {/* <span className="text-sm font-semibold text-gray-400 dark:text-gray-300">
-                    4.9 · 200+ students
-                  </span> */}
-                </div>
               </div>
             </div>
-            <p className="mt-2 text-[14px] text-[#6B7280] leading-6 dark:text-gray-400">
-              Specializes in Canada & UK admissions.
-              <br />
-              Available Mon–Fri, 10am–7pm IST.
+            <p className="mt-2 flex-1 text-sm text-[#6B7280] dark:text-gray-400">
+              Having an issue with your account, payment, course access, or
+              classes? Raise a support ticket and our team will help you resolve
+              it.
             </p>
-            <Link to="/support">
-              <button className="mt-4 w-full rounded-2xl bg-gradient-to-r from-[#FF6B2C] to-[#FF5123] py-2 text-base font-semibold text-white">
-                Book a Session →
-              </button>
+            <span className="text-gray-800 text-sm font-medium pt-1 flex items-center">
+              <Clock className="h-4 text-[#F36D45]" /> Track your ticket status
+              anytime
+            </span>
+
+            <Link
+              to="/support"
+              className="mt-3 block w-full rounded-full bg-gradient-to-r from-[#FF6B2C] to-[#FF5123] py-2 text-center text-base font-semibold text-white transition-all duration-200 hover:scale-[1.02] hover:shadow-lg"
+            >
+              Raise a Ticket →
             </Link>
           </div>
         </div>

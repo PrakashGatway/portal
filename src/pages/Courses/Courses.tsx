@@ -239,6 +239,7 @@ export default function CourseManagement() {
                             <option value="offline">Offline</option>
                             <option value="hybrid">Hybrid</option>
                             <option value="recorded">Recorded</option>
+                            <option value="sessions">Sessions</option>
                         </select>
                     </div>
                     {/* Sort By */}

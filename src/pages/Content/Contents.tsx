@@ -435,9 +435,7 @@ export default function ContentManagement({ type, from, course }: any) {
                   <th className="px-4 py-3 text-sm font-semibold text-gray-700 dark:text-gray-300">
                     Module
                   </th>
-                  <th className="px-4 py-3 text-sm font-semibold text-gray-700 dark:text-gray-300">
-                    Instructor
-                  </th>
+                  
                   <th className="px-4 py-3 text-sm font-semibold text-gray-700 dark:text-gray-300">
                     Status
                   </th>
@@ -1104,7 +1102,7 @@ const ContentTableRow = ({
               <img
                 src={`${ImageBaseUrl}/${content.thumbnailPic}`}
                 alt={content.title}
-                className="h-10 w-10 rounded-lg object-cover"
+                className="h-10 rounded-lg object-cover"
                 onError={(e) => {
                   e.currentTarget.onerror = null;
                   e.currentTarget.src =
@@ -1115,7 +1113,7 @@ const ContentTableRow = ({
               <img
                 src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRBF52Tho9MYOQfIEpjvyqZYtejVZ_JOlqMCKmGVfCtUdfIMZ91FxQqGp0&s=10"
                 alt="Default thumbnail"
-                className="h-10 w-10 rounded-lg object-cover"
+                className="h-14 rounded-lg object-cover"
               />
             )}
             <div>
@@ -1154,12 +1152,11 @@ const ContentTableRow = ({
           <p className="text-sm text-gray-700 dark:text-gray-300 line-clamp-1">
             {content.moduleInfo?.title || "N/A"}
           </p>
-        </td>
-        <td className="px-4 py-3">
           <p className="text-sm font-medium text-gray-700 dark:text-gray-300">
-            {content.instructorInfo?.name || "N/A"}
+            Instructor : {content.instructorInfo?.name || "N/A"}
           </p>
         </td>
+       
         <td className="px-4 py-3">
           <span
             className={`inline-flex capitalize items-center rounded-full px-2 py-1 text-xs font-semibold ${getStatusColor(content.status)}`}
@@ -1648,8 +1645,8 @@ const ContentForm = ({
     if (!formData.title.trim()) newErrors.title = "Title is required";
     if (!formData.course) newErrors.course = "Course is required";
     if (formData.__t === "LiveClasses" || formData.__t === "Sessions") {
-      if (!formData.thumbnailPic && !thumbnailFile)
-        newErrors.thumbnailPic = "Thumbnail is required";
+      // if (!formData.thumbnailPic && !thumbnailFile)
+      //   newErrors.thumbnailPic = "Thumbnail is required";
       if (!formData.instructor) newErrors.instructor = "Instructor is required";
       if (!formData.scheduledStart)
         newErrors.scheduledStart = "Scheduled start time is required";

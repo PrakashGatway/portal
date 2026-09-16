@@ -173,9 +173,9 @@ export default function UserDropdown({ user, logout }: any) {
                                         onItemClick={closeDropdown}
                                         tag="a"
                                         to="/support"
-                                        className="flex items-center gap-3 px-3 py-2.5 rounded-xl text-gray-700 dark:text-gray-300 hover:bg-purple-50 dark:hover:bg-purple-900/20 hover:text-purple-600 dark:hover:text-purple-400 transition-all duration-200 group"
+                                        className="flex items-center gap-3 px-3 py-2.5 rounded-xl text-gray-700 dark:text-gray-300 hover:bg-orange-50 dark:hover:bg-orange-900/20 hover:text-purple-600 dark:hover:text-purple-400 transition-all duration-200 group"
                                     >
-                                        <div className="p-2.5 bg-[#F6673C]/20 dark:bg-purple-900/30 rounded-full">
+                                        <div className="p-2.5 bg-[#F6673C]/20 dark:bg-orange-900/30 rounded-full">
                                             <HelpCircle className="w-4 h-4 text-purple-600 dark:text-purple-400" />
                                         </div>
                                         <div>

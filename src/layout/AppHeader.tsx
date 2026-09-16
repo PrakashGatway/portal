@@ -187,7 +187,7 @@ const AppHeader: React.FC = () => {
                     whileHover={{ scale: 1.02 }}
                     whileTap={{ scale: 0.98 }}
                     onClick={toggleWalletDropdown}
-                    className="flex items-center gap-2 px-3 py-2 bg-[#FF6B35]/10 dark:from-purple-900/20 dark:to-pink-900/20 border border-[#FF6B35]/30 dark:border-purple-800 rounded-xl hover:shadow-md transition-all duration-200 group"
+                    className="flex items-center gap-2 px-3 py-2 bg-[#FF6B35]/10 dark:from-orange-900/20 dark:to-pink-900/20 border border-[#FF6B35]/30 dark:border-orange-800 rounded-xl hover:shadow-md transition-all duration-200 group"
                   >
                     <div className="flex items-center gap-2">
                       <span className="text-sm font-semibold">
@@ -195,7 +195,7 @@ const AppHeader: React.FC = () => {
                       </span>
                     </div>
                     <ChevronDown
-                      className={`h-3 w-3 text-purple-600 dark:text-purple-400 transition-transform duration-200 ${isWalletDropdownOpen ? "rotate-180" : ""}`}
+                      className={`h-3 w-3 text-orange-600 dark:text-orange-400 transition-transform duration-200 ${isWalletDropdownOpen ? "rotate-180" : ""}`}
                     />
                   </motion.button>
                   <AnimatePresence>
@@ -212,9 +212,9 @@ const AppHeader: React.FC = () => {
                           <h3 className="font-semibold text-gray-900 dark:text-white flex items-center gap-2">
                             Referral Rewards
                           </h3>
-                          <div className="flex items-center gap-1 px-2 py-1 bg-purple-100 dark:bg-purple-900/30 rounded-lg">
-                            <Percent className="h-3 w-3 text-purple-500" />
-                            <span className="text-xs font-medium text-purple-700 dark:text-purple-300">
+                          <div className="flex items-center gap-1 px-2 py-1 bg-orange-100 dark:bg-orange-900/30 rounded-lg">
+                            <Percent className="h-3 w-3 text-orange-500" />
+                            <span className="text-xs font-medium text-orange-700 dark:text-orange-300">
                               Max 10%
                             </span>
                           </div>
@@ -260,7 +260,7 @@ const AppHeader: React.FC = () => {
                               <span className="text-gray-600 dark:text-gray-400">
                                 ₹10,000 :
                               </span>
-                              <span className="font-semibold text-purple-600 dark:text-purple-400">
+                              <span className="font-semibold text-orange-600 dark:text-orange-400">
                                 Save up to{" "}
                                 {formatCurrency(getMaxUsableAmount(10000))}
                               </span>
@@ -284,7 +284,7 @@ const AppHeader: React.FC = () => {
                               whileHover={{ scale: 1.02 }}
                               whileTap={{ scale: 0.98 }}
                               onClick={() => navigate("/referrals")}
-                              className="flex items-center justify-center gap-2 p-2 text-xs text-purple-600 dark:text-purple-400 border border-purple-200 dark:border-purple-800 rounded-lg hover:bg-purple-50 dark:hover:bg-purple-900/20 transition-colors"
+                              className="flex items-center justify-center gap-2 p-2 text-xs text-orange-600 dark:text-orange-400 border border-orange-200 dark:border-orange-800 rounded-lg hover:bg-orange-50 dark:hover:bg-orange-900/20 transition-colors"
                             >
                               <Coins className="h-3 w-3" />
                               Earn More
@@ -296,7 +296,7 @@ const AppHeader: React.FC = () => {
                         <div className="border-t border-gray-200 dark:border-gray-700 pt-3 mt-3">
                           <motion.button
                             whileHover={{ scale: 1.02 }}
-                            className="w-full text-center text-xs text-purple-600 dark:text-purple-400 font-medium hover:text-purple-700 dark:hover:text-purple-300 transition-colors"
+                            className="w-full text-center text-xs text-orange-600 dark:text-orange-400 font-medium hover:text-orange-700 dark:hover:text-orange-300 transition-colors"
                             onClick={() => navigate("/referrals?tab=history")}
                           >
                             View Reward History →
@@ -320,13 +320,13 @@ const AppHeader: React.FC = () => {
                     id="category"
                     className={`
                         inline-flex items-center justify-center
-                        px-4 py-2 bg-[#FF6B35]/10 dark:from-purple-900/20 dark:to-pink-900/20 border border-[#FF6B35]/30
+                        px-4 py-2 bg-[#FF6B35]/10 dark:from-orange-900/20 dark:to-pink-900/20 border border-[#FF6B35]/30
                         font-medium text-sm
                         rounded-xl
                         border border-blue-200 dark:border-blue-800
                         transition-all duration-200
                         focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-opacity-50
-                        hover:shadow-md hover:from-blue-100 hover:to-purple-100 dark:hover:from-blue-800/30 dark:hover:to-purple-800/30
+                        hover:shadow-md hover:from-blue-100 hover:to-orange-100 dark:hover:from-blue-800/30 dark:hover:to-orange-800/30
                     `}
                   >
                     <DynamicIcon
