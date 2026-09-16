@@ -142,8 +142,8 @@ const navItemsUser: NavItem[] = [
 ];
 
 const navItemsCoun: NavItem[] = [
-  { icon: LayoutDashboard, name: "Dashboard", path: "/" },
-  { icon: "👥", name: "Users", path: "/users" },
+  { icon: LayoutDashboard, name: "Dashboard", path: "/users-to" },
+  // { icon: "👥", name: "Users", path: "/" },
 ];
 
 const navItemsMan: NavItem[] = [

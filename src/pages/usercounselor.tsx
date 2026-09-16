@@ -33,8 +33,9 @@ import {
   ChevronUp,
   Plus
 } from "lucide-react";
+import { useAuth } from "../context/UserContext";
 
-const UserListPage = () => {
+const CounselorUser = () => {
   const [users, setUsers] = useState([]);
   const [loading, setLoading] = useState(true);
   const [total, setTotal] = useState(0);
@@ -56,7 +57,8 @@ const UserListPage = () => {
   });
 
   const userRoles = ["admin", "manager", "user", "teacher", "super_admin", "editor", "counselor"];
-
+  const {user} = useAuth();
+  console.log(user._id,"user")
   const {
     register,
     handleSubmit,
@@ -71,7 +73,7 @@ const UserListPage = () => {
       email: "",
       phoneNumber: "",
       course: "",
-      leader:"",
+      leader: user._id ,
       isActive: true,
       address: {
         street: "",
@@ -85,7 +87,6 @@ const UserListPage = () => {
 
   useEffect(() => {
     fetchUsers();
-    fetchUsers2();
   }, [filters]);
 
   const fetchUsers = async () => {
@@ -95,7 +96,8 @@ const UserListPage = () => {
         ...filters,
         page: filters.page,
         limit: filters.limit,
-        sort: filters.sortBy
+        sort: filters.sortBy,
+        assignto : true
       };
 
       const response = await api.get("/users", { params });
@@ -108,24 +110,6 @@ const UserListPage = () => {
     }
   };
 
-  const [Assignto,setAssignto] = useState([]);
-
-  const fetchUsers2 = async () => {
-    // setLoading(true);
-    try {
-      const params = {
-        role: 'counselor'
-      };
-
-      const response = await api.get("/users", { params });
-      // console
-      setAssignto(response.data?.users);
-    } catch (error) {
-      toast.error("Failed to load users");
-    } finally {
-      // setLoading(false);
-    }
-  };
 
   const fetchWalletData = async (userId) => {
     setWalletLoading(true);
@@ -843,7 +827,7 @@ const UserListPage = () => {
                     />
                   </div>
 
-                  <div>
+                  {/* <div>
                     <label htmlFor="role" className="mb-1.5 block text-sm font-medium text-gray-700 dark:text-gray-300">
                       Role
                     </label>
@@ -859,10 +843,8 @@ const UserListPage = () => {
                       ))}
                     </select>
                     {errors.role && <p className="mt-1 text-xs text-red-600">{errors.role.message}</p>}
-                  </div>
-                </div>
-
-                <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
+                  </div> */}
+                  
                   <div>
                     <label htmlFor="email" className="mb-1.5 block text-sm font-medium text-gray-700 dark:text-gray-300">
                       Email
@@ -897,7 +879,7 @@ const UserListPage = () => {
                   </div>
 
                   
-                  <div>
+                  {/* <div>
                     <label htmlFor="assignto" className="mb-1.5 block text-sm font-medium text-gray-700 dark:text-gray-300">
                       Assign to  
                     </label>
@@ -916,8 +898,9 @@ const UserListPage = () => {
                     </select>
                     {errors.phoneNumber && <p className="mt-1 text-xs text-red-600">{errors.phoneNumber.message}</p>}
                   </div>
+                  */}
 
-                </div>
+                </div> 
 
                 
 
@@ -1039,7 +1022,7 @@ const UserListPage = () => {
                     />
                   </div>
 
-                  <div>
+                  {/* <div>
                     <label htmlFor="role" className="mb-1.5 block text-sm font-medium text-gray-700 dark:text-gray-300">
                       Role
                     </label>
@@ -1055,10 +1038,8 @@ const UserListPage = () => {
                       ))}
                     </select>
                     {errors.role && <p className="mt-1 text-xs text-red-600">{errors.role.message}</p>}
-                  </div>
-                </div>
-
-                <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
+                  </div> */}
+                  
                   <div>
                     <label htmlFor="email" className="mb-1.5 block text-sm font-medium text-gray-700 dark:text-gray-300">
                       Email
@@ -1186,4 +1167,4 @@ const UserListPage = () => {
   );
 };
 
-export default UserListPage;
+export default CounselorUser;

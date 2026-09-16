@@ -52,6 +52,7 @@ import Input from "../../components/form/input/InputField";
 import Label from "../../components/form/Label";
 import api from "../../axiosInstance";
 import { Link } from "react-router";
+import { useAuth } from "../../context/UserContext";
 
 // Types
 interface Ticket {
@@ -85,6 +86,7 @@ interface NewTicket {
   category: string;
   priority: string;
   attachments?: File[];
+  assignedTo?: string;
 }
 
 interface SupportCategory {
@@ -116,12 +118,14 @@ const SupportPage = () => {
     priority: "all",
     category: "all",
   });
+  const {user} = useAuth();
   const [replyMessage, setReplyMessage] = useState("");
   const [newTicket, setNewTicket] = useState<NewTicket>({
     subject: "",
     description: "",
     category: "general",
     priority: "medium",
+    assignedTo : user?._id || ""
   });
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [isSending, setIsSending] = useState(false);
@@ -194,6 +198,7 @@ const SupportPage = () => {
     if (Object.keys(newErrors).length > 0) return;
 
     try {
+      // console.log
       const res = await api.post("/support", newTicket);
       toast.success("Support ticket created successfully!");
       await fetchTickets();

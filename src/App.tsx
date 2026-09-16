@@ -72,7 +72,7 @@ import IELTSGroupQuestionManagementPage from "./pages/ielts/ieltsGroup";
 import IELTSPassageManagementPage from "./pages/ielts/ieltsPassage";
 import IeltsTestManagementPage from "./pages/ielts/ieltsTest";
 // import IeltsTestResultPage from "./pages/ielts/IeltsResult";
-
+import CounselorUser from "./pages/usercounselor";
 import IeltsTestPlatform from "./pages/ielts/ieltsTestAttempt";
 import ContentViewPage from "./pages/liveClass/Session";
 import CourseContentManagement from "./pages/Courses/CourseContent";
@@ -251,6 +251,7 @@ export default function App() {
               >
                 <Route path="/leads" element={<LeadManagement />} />
                 <Route path="/lead-report" element={<DailyReport />} />
+                <Route path="/users-to" element={<CounselorUser />} />
               </Route>
             
               <Route

@@ -15,18 +15,18 @@ import Button from "../../components/ui/button/Button";
 import { useNavigate } from "react-router";
 
 export default function SupportTickets() {
-  // ================= STATE =================
+  
   const [tickets, setTickets] = useState([]);
   const [selectedTicket, setSelectedTicket] = useState(null);
   const [loading, setLoading] = useState(true);
   const [isSending, setIsSending] = useState(false);
   const [replyMessage, setReplyMessage] = useState("");
-const [search, setSearch] = useState("");
-const [dateSort, setDateSort] = useState("newest");
-const [showDateSort, setShowDateSort] = useState(false);
-const [currentPage, setCurrentPage] = useState(1);
-const [totalPages, setTotalPages] = useState(1);
-const [totalTickets, setTotalTickets] = useState(0);
+  const [search, setSearch] = useState("");
+  const [dateSort, setDateSort] = useState("newest");
+  const [showDateSort, setShowDateSort] = useState(false);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
+  const [totalTickets, setTotalTickets] = useState(0);
 
 const navigate = useNavigate()
   // Unified filter state
