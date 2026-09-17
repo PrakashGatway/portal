@@ -1087,7 +1087,7 @@ export default function SupportTickets() {
                     className="w-full resize-none rounded-xl border border-gray-200 p-3 text-sm outline-none focus:border-orange-400 dark:border-gray-700 dark:bg-gray-800 dark:text-white"
                   />
                 </div>
-
+{/* 
                 <div className="rounded-xl border border-dashed border-gray-200 p-3 text-xs text-gray-500 dark:border-gray-700">
                   Related records are supported by the API. If you already have
                   a MongoDB ObjectId, you can optionally add it after selecting
@@ -1126,7 +1126,7 @@ export default function SupportTickets() {
                     placeholder="Related record ObjectId"
                     className="h-11 rounded-xl border border-gray-200 px-3 text-sm outline-none dark:border-gray-700 dark:bg-gray-800 dark:text-white"
                   />
-                </div>
+                </div> */}
               </div>
 
               <div className="mt-6 flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
