@@ -101,7 +101,7 @@ const FeedbackPage = () => {
 };
 
     return (
-        <div className="min-h-screen p-4 md:p-8 font-sans text-gray-800">
+        <div className="min-h-screen p-2 font-sans text-gray-800">
             {/* Header */}
             <div className="max-w-7xl mx-auto mb-8">
                 <h1 className="text-2xl md:text-3xl font-bold text-gray-900">Feedback Management</h1>

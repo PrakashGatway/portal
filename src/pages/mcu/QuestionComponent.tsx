@@ -1277,12 +1277,12 @@ const QuestionBody= ({
     const questionHtml = qDoc.questionText || "";
 
     return (
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 p-4">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 ">
         {/* Left: Passage */}
-        <div className="max-h-[460px] overflow-auto">
+        <div className="max-h-[70vh] overflow-auto">
           <div className="text-lg text-justify">
             <div
-              className="text-lg text-justify"
+              className="text-lg text-justify p-2"
               dangerouslySetInnerHTML={{ __html: passage }}
             />
           </div>
@@ -1580,7 +1580,8 @@ const QuestionBody= ({
   return (
     <>
       {qDoc.stimulus && (
-        <div className="mb-3 max-h-60 overflow-auto rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-900/60 p-4 text-sm leading-relaxed text-slate-700 dark:text-slate-300">
+        <div className="mb-3 max-h-60 overflow-auto rounded-xl border border-slate-200 dark:border-slate-700
+         bg-slate-50 dark:bg-slate-900/60 p-4 text-sm leading-relaxed text-slate-700 dark:text-slate-300">
           <div className="prose prose-sm dark:prose-invert max-w-none"
             dangerouslySetInnerHTML={{ __html: qDoc?.stimulus }} />
         </div>

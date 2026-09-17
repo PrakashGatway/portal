@@ -159,18 +159,13 @@ export default function GmatHelpModal({ open, onClose }: GmatHelpModalProps) {
 }
 
 
-import { Tldraw } from "tldraw";
-import "tldraw/tldraw.css";
-
-interface GmatWhiteboardModalProps {
-  open: boolean;
-  onClose: () => void;
-}
+import { Excalidraw } from "@excalidraw/excalidraw";
+import "@excalidraw/excalidraw/index.css";
 
 export function GmatWhiteboardModal({
   open,
   onClose,
-}: GmatWhiteboardModalProps) {
+}: any) {
   const modalRef = useRef<HTMLDivElement>(null);
 
   const [position, setPosition] = useState({ x: 180, y: 100 });
@@ -179,9 +174,9 @@ export function GmatWhiteboardModal({
 
   if (!open) return null;
 
-  /* ---------------- Drag logic (header only) ---------------- */
   const onMouseDown = (e: React.MouseEvent) => {
     setDragging(true);
+
     dragOffset.current = {
       x: e.clientX - position.x,
       y: e.clientY - position.y,
@@ -190,44 +185,87 @@ export function GmatWhiteboardModal({
 
   const onMouseMove = (e: React.MouseEvent) => {
     if (!dragging) return;
+
     setPosition({
       x: e.clientX - dragOffset.current.x,
       y: e.clientY - dragOffset.current.y,
     });
   };
 
-  const onMouseUp = () => setDragging(false);
+  const onMouseUp = () => {
+    setDragging(false);
+  };
 
   return (
     <div
-      className="fixed inset-0 z-[90]"
+      className="fixed inset-0 z-[90] pointer-events-none"
       onMouseMove={onMouseMove}
       onMouseUp={onMouseUp}
     >
       <div
         ref={modalRef}
-        style={{ left: position.x, top: position.y }}
-        className="absolute w-[700px] h-[560px] bg-white rounded shadow-2xl flex flex-col"
+        style={{
+          left: position.x,
+          top: position.y,
+        }}
+        className="
+          absolute
+          w-[calc(100vw-20px)]
+          h-[calc(100vh-20px)]
+          max-w-[700px]
+          max-h-[560px]
+          bg-white
+          rounded-lg
+          shadow-2xl
+          flex
+          flex-col
+          pointer-events-auto
+          overflow-hidden
+
+          sm:w-[700px]
+          sm:h-[560px]
+        "
       >
+        {/* Header */}
         <div
           onMouseDown={onMouseDown}
-          className="cursor-pointer flex items-center justify-between px-4 py-2 bg-gray-600 text-white font-semibold select-none"
+          className="
+            flex
+            items-center
+            justify-between
+            px-3
+            sm:px-4
+            py-2
+            bg-gray-600
+            text-white
+            font-semibold
+            select-none
+            cursor-move
+            shrink-0
+          "
         >
-          Whiteboard
-          <button onClick={onClose}>
+          <span className="text-sm sm:text-base">
+            Whiteboard
+          </span>
+
+          <button
+            type="button"
+            onMouseDown={(e) => e.stopPropagation()}
+            onClick={onClose}
+            className="
+              p-1
+              rounded
+              hover:bg-gray-700
+              active:bg-gray-700
+            "
+          >
             <X className="h-5 w-5" />
           </button>
         </div>
 
-        <div className="flex-1 relative">
-          <Tldraw
-            autoFocus
-            inferDarkMode={false}
-            hideUi={false}
-            onMount={(editor) => {
-              editor.setCamera({ x: 0, y: 0, z: 1 });
-            }}
-          />
+        {/* Excalidraw */}
+        <div className="flex-1 relative min-h-0">
+          <Excalidraw autoFocus />
         </div>
       </div>
     </div>

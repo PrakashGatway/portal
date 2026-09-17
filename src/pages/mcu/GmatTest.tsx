@@ -26,6 +26,7 @@ import {
     SkipForward,
     NotebookPenIcon,
     CalculatorIcon,
+    Expand,
 } from "lucide-react";
 import PageMeta from "../../components/common/PageMeta";
 import Button from "../../components/ui/button/Button";
@@ -202,7 +203,8 @@ export default function GmatTestAttemptPage() {
 
     const [showAnswerRequiredModal, setShowAnswerRequiredModal] =
         useState(false);
-
+    
+    const [showConfirmModal, setShowConfirmModal] = useState(false);
     const [isInReviewMode, setIsInReviewMode] = useState(false);
     const [editsRemaining, setEditsRemaining] = useState(3);
 
@@ -633,7 +635,9 @@ export default function GmatTestAttemptPage() {
         setCurrentScreen("question");
     };
 
-    const goNextQuestion = async () => {
+    const goNextQuestion = async (
+        {isConfirmed = false}: {isConfirmed?: boolean} = {}
+    ) => {
         if (!attempt || !currentSection || !currentQuestion) return;
 
         const isLastQuestionInSection =
@@ -644,6 +648,17 @@ export default function GmatTestAttemptPage() {
             setShowAnswerRequiredModal(true);
             return;
         }
+
+            console.log(isConfirmed,'ijojoijo')
+        // State updates are asynchronous, so do not use a state value as the
+        // confirmation flag for the same click that updates it.
+        if (isConfirmed) {
+            setShowConfirmModal(true);
+            return;
+        }
+
+        setShowConfirmModal(false);
+
 
         // 1) Not last question → go to next
         if (!isLastQuestionInSection && !isInReviewMode) {
@@ -1320,103 +1335,123 @@ export default function GmatTestAttemptPage() {
                 : undefined;
 
     return (
-        <>
-            <GmatHelpModal
-                open={showHelp}
-                onClose={() => setShowHelp(false)}
-            />
+      <>
+        <GmatHelpModal open={showHelp} onClose={() => setShowHelp(false)} />
 
-            <GmatWhiteboardModal
-                open={openBoard}
-                onClose={() => setOpenBoard(false)}
-            />
+        <GmatWhiteboardModal
+          open={openBoard}
+          onClose={() => setOpenBoard(false)}
+        />
 
-            <GmatCalculatorModal
-                open={openCalc}
-                onClose={() => setOpenCalc(false)}
-            />
+        <GmatCalculatorModal
+          open={openCalc}
+          onClose={() => setOpenCalc(false)}
+        />
 
-            {showAnswerRequiredModal && (
-                <div className="fixed inset-0 z-60 flex items-center justify-center bg-black/60 dark:bg-black/80 backdrop-blur-[1px] p-4">
-                    <div className="rounded-2xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 p-8 text-center shadow-2xl shadow-black/10 dark:shadow-black/40 w-full max-w-md mx-auto">
-                        <div className="flex justify-center mb-4">
-                            <div className="flex h-16 w-16 items-center justify-center rounded-full bg-yellow-100 dark:bg-yellow-500/20 border-2 border-yellow-200 dark:border-yellow-500/30">
-                                <AlertTriangle className="h-8 w-8 text-yellow-600 dark:text-yellow-400" />
-                            </div>
-                        </div>
+        {showAnswerRequiredModal && (
+          <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/50 p-4">
+            <div className="w-full max-w-sm rounded bg-white p-6 text-left shadow-xl dark:bg-slate-900">
+              {/* <AlertTriangle className="mx-auto mb-3 h-8 w-8 text-yellow-500" /> */}
 
-                        <div className="mb-6">
-                            <h3 className="text-xl font-bold text-slate-800 dark:text-slate-100 mb-3">
-                                Answer Required
-                            </h3>
-                            <p className="text-slate-600 dark:text-slate-300 leading-relaxed text-base">
-                                Please select an answer before proceeding to the next question.
-                                This ensures your progress is properly recorded.
-                            </p>
-                        </div>
+              <h3 className="mb-2 text-lg font-semibold text-slate-800 dark:text-white">
+                Answer Required
+              </h3>
 
-                        <div className="flex gap-3">
-                            <Button
-                                variant="outline"
-                                size="sm"
-                                className="flex-1 py-2 border-slate-300 dark:border-slate-600 text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-800 font-semibold"
-                                onClick={() => setShowAnswerRequiredModal(false)}
-                            >
-                                Cancel
-                            </Button>
-                            <Button
-                                size="sm"
-                                className="flex-1 py-2 bg-gradient-to-r from-indigo-500 to-purple-600 hover:from-indigo-600 hover:to-purple-700 text-white font-semibold shadow-lg"
-                                onClick={() => setShowAnswerRequiredModal(false)}
-                            >
-                                Understand
-                            </Button>
-                        </div>
-                    </div>
-                </div>
-            )}
+              <p className="mb-5 text-sm text-slate-600 dark:text-slate-300">
+                Please select an answer before proceeding to the next question.
+              </p>
 
-            <div className="relative min-h-screen bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-50">
-                {/* Fixed Top bar (shared) */}
-                <div className="fixed top-0 left-0 mb-0 right-0 z-50 border-b border-slate-200 dark:border-slate-700 bg-[#3c3737] dark:bg-slate-900/95 backdrop-blur supports-backdrop-blur:bg-white/60">
-                    <div className="mx-auto flex max-w-8xl items-center justify-between gap-4 px-4 py-2">
-                        <div className="flex items-center gap-3">
-                            <div>
-                                <p className="py-2 text-base uppercase text-white dark:text-slate-400 font-semibold">
-                                    {testTitle || "GMAT EXAM"}
-                                </p>
-                                {/* {currentScreen !== "introduction" && <h1 className="text-sm font-bold text-slate-800 dark:text-slate-100">
+              <Button
+                size="sm"
+                className="w-full bg-[#0a8cbd] text-white hover:bg-[#087da9] rounded-lg "
+                onClick={() => setShowAnswerRequiredModal(false)}
+              >
+                OK
+              </Button>
+            </div>
+          </div>
+        )}
+
+        
+        {showConfirmModal && (
+            <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/50 p-4">
+  <div className="w-full max-w-sm rounded-xl bg-white p-6 text-center shadow-xl dark:bg-slate-900">
+    <h3 className="mb-2 text-lg font-semibold text-slate-800 dark:text-white">
+      Confirm Action
+    </h3>
+
+    <p className="mb-6 text-sm text-slate-600 dark:text-slate-300">
+      Are you sure you want to continue?
+    </p>
+
+    <div className="flex gap-3">
+      <Button
+        variant="outline"
+        size="sm"
+        className="flex-1"
+        onClick={() => setShowConfirmModal(false)}
+      >
+        Cancel
+      </Button>
+
+      <Button
+        size="sm"
+        className="flex-1 bg-[#0a8cbd] text-white hover:bg-[#087da9]"
+                onClick={() => goNextQuestion({ isConfirmed: false })}
+      >
+        Confirm
+      </Button>
+    </div>
+  </div>
+</div>
+        )}
+
+        <div className="relative min-h-screen bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-50">
+          {/* Fixed Top bar (shared) */}
+          <div className="fixed top-0 left-0 mb-0 right-0 z-50 border-b border-slate-200 dark:border-slate-700 bg-[#3c3737] dark:bg-slate-900/95 backdrop-blur supports-backdrop-blur:bg-white/60">
+            <div className="mx-auto flex max-w-8xl items-center justify-between gap-4 px-4 py-2">
+              <div className="flex items-center gap-3">
+                <div>
+                  <p className="py-2 text-base uppercase text-white dark:text-slate-400 font-semibold">
+                    {testTitle || "GMAT EXAM"}
+                  </p>
+                  {/* {currentScreen !== "introduction" && <h1 className="text-sm font-bold text-slate-800 dark:text-slate-100">
                                     {testTitle}
                                 </h1>} */}
-                            </div>
-                        </div>
+                </div>
+              </div>
 
-                        <div className="flex flex-col items-end ">
-                            {showTimerOnHeader && (
-                                <div className="flex items-center gap-2">
-                                    <Clock className="h-4 w-4 text-[#FFD400]" />
-                                    <span className="text-[#FFD400] font-semibold">
-                                        Time Remaining:
-                                    </span>
-                                    <span className="font-mono font-bold text-[#FFD400] tracking-wider">
-                                        {showTimerOnHeader}
-                                    </span>
-                                </div>
-                            )}
-                            {showQuestionTopMeta && (
-                                <div className="hidden flex text-sm text-slate-700 dark:text-slate-200 sm:flex gap-4">
-                                    <button onClick={toggleMarkForReview}>
-                                        {currentQuestion?.markedForReview ? <BookmarkCheckIcon className="text-[#FFD400] h-5 w-5" /> : <BookmarkIcon className="text-[#E0E0E0] h-5 w-5" />}
-                                    </button>
+              <div className="flex flex-col items-end ">
+                {showTimerOnHeader && (
+                  <div className="flex items-center gap-2">
+                    <Clock className="h-4 w-4 text-[#FFD400]" />
+                    <span className="text-[#FFD400] font-semibold">
+                      Time Remaining:
+                    </span>
+                    <span className="font-mono font-bold text-[#FFD400] tracking-wider">
+                      {showTimerOnHeader}
+                    </span>
+                  </div>
+                )}
+                {showQuestionTopMeta && (
+                  <div className="hidden flex text-sm text-slate-700 dark:text-slate-200 sm:flex gap-4">
+                    <button onClick={toggleMarkForReview}>
+                      {currentQuestion?.markedForReview ? (
+                        <BookmarkCheckIcon className="text-[#FFD400] h-5 w-5" />
+                      ) : (
+                        <BookmarkIcon className="text-[#E0E0E0] h-5 w-5" />
+                      )}
+                    </button>
 
-                                    <div className="flex gap-2 text-[#E0E0E0] font-medium">
-                                        <FileStack className="h-5 w-5" />
-                                        {currentQuestion!.order} of {totalQuestionsForCurrentSection}
-                                    </div>
-                                </div>
-                            )}
+                    <div className="flex gap-2 text-[#E0E0E0] font-medium">
+                      <FileStack className="h-5 w-5" />
+                      {currentQuestion!.order} of{" "}
+                      {totalQuestionsForCurrentSection}
+                    </div>
+                  </div>
+                )}
 
-                            {/* {currentScreen !== "introduction" && <Button
+                {/* {currentScreen !== "introduction" && <Button
                                 variant="outline"
                                 size="sm"
                                 className="hidden items-center gap-2 rounded-lg border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 px-4 py-1 text-sm text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-700 sm:flex"
@@ -1425,98 +1460,97 @@ export default function GmatTestAttemptPage() {
                                 <LogOut className="h-4 w-4" />
                                 Exit
                             </Button>} */}
-                        </div>
-                    </div>
-                    <div className="h-8 mt-0 bg-[#0a8cbd] flex gap-3 items-center justify-start">
-                        {currentScreen == "question" && <span className="px-4 text-base font-semibold  capitalize tracking-wider text-white dark:text-indigo-300">
-                            {getSectionTypeBadge()}
-                        </span>}
-                        {currentScreen == "question" && <button onClick={() => setOpenBoard(true)}>
-                            <NotebookPenIcon className="h-6 w-6 text-white" />
-                        </button>}
-                        {currentScreen == "question" && getSectionTypeBadge() == "Data Insights" && <button onClick={() => setOpenCalc(true)}>
-                            <CalculatorIcon className="h-6 w-6 text-white" />
-                        </button>}
+              </div>
+            </div>
+            <div className="h-8 mt-0 bg-[#0a8cbd] flex gap-3 items-center justify-start">
+              {currentScreen == "question" && (
+                <span className="px-4 text-base font-semibold  capitalize tracking-wider text-white dark:text-indigo-300">
+                  {getSectionTypeBadge()}
+                </span>
+              )}
+              {currentScreen == "question" && (
+                <button onClick={() => setOpenBoard(true)}>
+                  <NotebookPenIcon className="h-6 w-6 text-white" />
+                </button>
+              )}
+              {currentScreen == "question" &&
+                getSectionTypeBadge() == "Data Insights" && (
+                  <button onClick={() => setOpenCalc(true)}>
+                    <CalculatorIcon className="h-6 w-6 text-white" />
+                  </button>
+                )}
+            </div>
+          </div>
 
+          {/* Scrollable main area (between header & footer) */}
+          <div className="pt-14 pb-16">
+            {currentScreen === "introduction" && (
+              <IntroScreen
+                introPage={introPage}
+                setIntroPage={setIntroPage}
+                onContinue={() => {
+                  setCurrentScreen("select_order");
+                  setOrderSelectionTimer(120);
+                  setIsOrderSelectionTimerRunning(true);
+                }}
+              />
+            )}
+            {currentScreen === "select_order" && (
+              <SelectOrderScreen
+                moduleSequenceOptions={moduleSequenceOptions}
+                selectedSequenceIndex={selectedSequenceIndex}
+                setSelectedSequenceIndex={setSelectedSequenceIndex}
+                onStartTest={handleConfirmSequence}
+              />
+            )}
+
+            {/* Only enforce section+question on question screen */}
+            {currentScreen === "question" &&
+              (!currentSection || !currentQuestion) && (
+                <div className="flex min-h-[60vh] items-center justify-center">
+                  <div className="max-w-md rounded-2xl border border-red-200 bg-red-50 p-5 text-sm text-red-700 shadow-sm dark:border-red-800 dark:bg-red-900/20 dark:text-red-200">
+                    <div className="mb-2 flex items-center gap-2">
+                      <AlertTriangle className="h-5 w-5" />
+                      <h2 className="font-semibold">
+                        Unable to load questions
+                      </h2>
                     </div>
+                    <p className="mb-3">
+                      Test loaded, but no questions found for the current
+                      module.
+                    </p>
+                    <Button
+                      onClick={() => navigate(-1)}
+                      variant="outline"
+                      size="sm"
+                    >
+                      Go Back
+                    </Button>
+                  </div>
                 </div>
+              )}
 
+            {currentScreen == "pause" && renderPauseScreen()}
 
+            {currentScreen === "section_instructions" && currentSection && (
+              <SectionInstructionsScreen
+                sectionName={getSectionTypeBadge()}
+                sectionDuration={currentSection.durationMinutes || 45}
+                questionCount={currentSection.questions.length}
+                onNext={() => setCurrentScreen("question")}
+              />
+            )}
 
-                {/* Scrollable main area (between header & footer) */}
-                <div className="pt-14 pb-16">
-                    {
-                        currentScreen === "introduction" && (
-                            <IntroScreen
-                                introPage={introPage}
-                                setIntroPage={setIntroPage}
-                                onContinue={() => {
-                                    setCurrentScreen("select_order");
-                                    setOrderSelectionTimer(120);
-                                    setIsOrderSelectionTimerRunning(true);
-                                }}
-                            />
-                        )
-                    }
-                    {
-                        currentScreen === "select_order" && (
-                            <SelectOrderScreen
-                                moduleSequenceOptions={moduleSequenceOptions}
-                                selectedSequenceIndex={selectedSequenceIndex}
-                                setSelectedSequenceIndex={setSelectedSequenceIndex}
-                                onStartTest={handleConfirmSequence}
-                            />
-                        )
-                    }
+            {currentScreen === "break" && renderBreak()}
 
+            {currentScreen === "review" && renderReview()}
 
-                    {/* Only enforce section+question on question screen */}
-                    {currentScreen === "question" &&
-                        (!currentSection || !currentQuestion) && (
-                            <div className="flex min-h-[60vh] items-center justify-center">
-                                <div className="max-w-md rounded-2xl border border-red-200 bg-red-50 p-5 text-sm text-red-700 shadow-sm dark:border-red-800 dark:bg-red-900/20 dark:text-red-200">
-                                    <div className="mb-2 flex items-center gap-2">
-                                        <AlertTriangle className="h-5 w-5" />
-                                        <h2 className="font-semibold">Unable to load questions</h2>
-                                    </div>
-                                    <p className="mb-3">
-                                        Test loaded, but no questions found for the current module.
-                                    </p>
-                                    <Button
-                                        onClick={() => navigate(-1)}
-                                        variant="outline"
-                                        size="sm"
-                                    >
-                                        Go Back
-                                    </Button>
-                                </div>
-                            </div>
-                        )}
-
-                    {currentScreen == "pause" && renderPauseScreen()}
-
-                    {
-                        currentScreen === "section_instructions" &&
-                        currentSection && (
-                            <SectionInstructionsScreen
-                                sectionName={getSectionTypeBadge()}
-                                sectionDuration={currentSection.durationMinutes || 45}
-                                questionCount={currentSection.questions.length}
-                                onNext={() => setCurrentScreen("question")}
-                            />
-                        )
-                    }
-
-                    {currentScreen === "break" && renderBreak()}
-
-                    {currentScreen === "review" && renderReview()}
-
-                    {currentScreen === "question" &&
-                        currentSection &&
-                        currentQuestion && (
-                            <div className="mx-auto max-w-8xl px-4 pb-4 mt-10">
-                                <div className="bg-white dark:bg-slate-900/80 py-4">
-                                    {/* <div className="flex flex-wrap items-center justify-between gap-2 dark:bg-black/30 px-1 pb-2 text-sm ">
+            {currentScreen === "question" &&
+              currentSection &&
+              currentQuestion && (
+                <div className="mx-auto max-w-8xl px-4 pb-4 mt-10">
+                  <div className="bg-white dark:bg-slate-900/80 py-4">
+                    {/* <div className="flex flex-wrap items-center justify-between gap-2 dark:bg-black/30 px-1 pb-2 text-sm ">
                                         <div className="flex items-center gap-4 text-xs text-slate-600 dark:text-slate-400">
                                             <span className="font-medium">
                                                 <Clock className="inline-block h-4 w-4 mr-1.5 text-emerald-500 dark:text-emerald-400" />
@@ -1530,122 +1564,125 @@ export default function GmatTestAttemptPage() {
                                             )}
                                         </div>
                                     </div> */}
-                                    <QuestionBody
-                                        qDoc={qDoc}
-                                        currentQuestion={currentQuestion}
-                                        isCompleted={isCompleted}
-                                        onOptionClick={handleOptionClick}
-                                        onTextAnswerChange={handleTextAnswerChange}
-                                        getDiAnswers={getDiAnswers}
-                                        updateDiAnswers={updateDiAnswers}
-                                    />
-                                </div>
-                            </div>
-                        )}
+                    <QuestionBody
+                      qDoc={qDoc}
+                      currentQuestion={currentQuestion}
+                      isCompleted={isCompleted}
+                      onOptionClick={handleOptionClick}
+                      onTextAnswerChange={handleTextAnswerChange}
+                      getDiAnswers={getDiAnswers}
+                      updateDiAnswers={updateDiAnswers}
+                    />
+                  </div>
                 </div>
+              )}
+          </div>
 
-                {/* Fixed Bottom Navigation (question only) */}
-                {(currentScreen === "question" || currentScreen == "pause") && currentQuestion && (
-                    <div className="fixed bottom-0 left-0 right-0 z-50  px-4 border-slate-200 dark:border-slate-700 bg-[#0a8cbd] dark:bg-slate-900/95 backdrop-blur supports-backdrop-blur:bg-white/60">
-                        <div className="mx-auto max-w-8xl px-4 py-2">
-                            <div className="flex flex-wrap items-center justify-between gap-4">
-                                {/* Left Actions */}
-                                <div className="flex flex-wrap items-center gap-3">
-                                    <Button
-                                        variant=""
-                                        size="sm"
-                                        className="flex items-center gap-2 rounded-xl dark:border-slate-600 px-4 py-2 font-semibold text-white dark:text-slate-200 hover:outline dark:hover:bg-slate-800" onClick={() => setShowHelp(true)}
-                                    >
+          {/* Fixed Bottom Navigation */}
+          {(currentScreen === "question" || currentScreen === "pause") &&
+            currentQuestion && (
+              <div className="fixed bottom-0 left-0 right-0 z-50 border-t border-slate-200 bg-[#0a8cbd] backdrop-blur dark:border-slate-700 dark:bg-slate-900/95">
+                <div className="mx-auto w-full max-w-8xl px-2 sm:px-4">
+                  <div className="flex flex-col gap-2 py-2 sm:flex-row sm:items-center sm:justify-between sm:gap-4">
+                    {/* Left Actions */}
+                    <div className="flex w-full items-center gap-1.5 overflow-x-auto sm:w-auto sm:gap-3">
+                      <Button
+                        variant=""
+                        size="sm"
+                        onClick={() => setShowHelp(true)}
+                        className="flex shrink-0 items-center gap-1.5 rounded-lg px-2.5 py-2 text-xs font-semibold text-white hover:outline sm:gap-2 sm:rounded-xl sm:px-4 sm:text-sm"
+                      >
+                        <HelpCircle className="h-4 w-4 shrink-0" />
+                        <span>Help</span>
+                      </Button>
 
-                                        <HelpCircle className="h-4 w-4" />
-                                        Help
-                                    </Button>
-                                    <Button
-                                        variant=""
-                                        size="sm"
-                                        onClick={handlePauseExam}
-                                        disabled={savingProgress || isCompleted || currentScreen == "pause"}
-                                        className="flex items-center gap-2 rounded-xl dark:border-slate-600 px-4 py-2 font-semibold text-white dark:text-slate-200 hover:outline dark:hover:bg-slate-800"
-                                    >
+                    <Button
+                        variant=""
+                        size="sm"
+                        onClick={() => !document.fullscreenElement ? document.documentElement.requestFullscreen() : document.exitFullscreen()}
+                        className="flex shrink-0 items-center gap-1.5 rounded-lg px-2.5 py-2 text-xs font-semibold text-white hover:outline sm:gap-2 sm:rounded-xl sm:px-4 sm:text-sm"
+                      >
+                        <Expand className="h-4 w-4 shrink-0" />
+                        <span>Expend</span>
+                      </Button>
 
-                                        <Pause className="h-4 w-4" />
-                                        Pause
-                                    </Button>
 
-                                    <Button
-                                        variant=""
-                                        size="sm"
-                                        onClick={() =>
-                                            saveCurrentQuestionProgress({
-                                                silent: false,
-                                                phase: "in_section",
-                                            })
-                                        }
-                                        disabled={savingProgress || isCompleted}
-                                        isLoading={savingProgress}
-                                        className="flex items-center gap-2 rounded-xl dark:border-slate-600 px-4 py-2 font-semibold text-white dark:text-slate-200 hover:outline dark:hover:bg-slate-800"
-                                    >
-                                        <DownloadIcon className="h-4 w-4" />
-                                        Save for Later
-                                    </Button>
+                      <Button
+                        variant=""
+                        size="sm"
+                        onClick={handlePauseExam}
+                        disabled={
+                          savingProgress ||
+                          isCompleted ||
+                          currentScreen === "pause"
+                        }
+                        className="flex shrink-0 items-center gap-1.5 rounded-lg px-2.5 py-2 text-xs font-semibold text-white hover:outline sm:gap-2 sm:rounded-xl sm:px-4 sm:text-sm"
+                      >
+                        <Pause className="h-4 w-4 shrink-0" />
+                        <span>Pause</span>
+                      </Button>
 
-                                    {currentScreen == "pause" && <Button
-                                        variant=""
-                                        size="sm"
-                                        onClick={() => handleResumeExam(false)}
-                                        className="flex items-center gap-2 rounded-xl dark:border-slate-600 px-4 py-2 font-semibold text-white dark:text-slate-200 hover:outline dark:hover:bg-slate-800"
-                                    >
+                      <Button
+                        variant=""
+                        size="sm"
+                        onClick={() =>
+                          saveCurrentQuestionProgress({
+                            silent: false,
+                            phase: "in_section",
+                          })
+                        }
+                        disabled={savingProgress || isCompleted}
+                        isLoading={savingProgress}
+                        className="flex shrink-0 items-center gap-1.5 rounded-lg px-2.5 py-2 text-xs font-semibold text-white hover:outline sm:gap-2 sm:rounded-xl sm:px-4 sm:text-sm"
+                      >
+                        <DownloadIcon className="h-4 w-4 shrink-0" />
+                        <span className="sm:hidden">Save</span>
+                        <span className="hidden sm:inline">Save for Later</span>
+                      </Button>
 
-                                        <ForwardIcon className="h-4 w-4" />
-                                        Resume Exam
-                                    </Button>}
-                                    {/* <Button
-                                        variant="outline"
-                                        size="sm"
-                                        className={`flex items-center gap-2 rounded-xl border-2 px-4 py-2 text-sm font-semibold ${currentQuestion.markedForReview
-                                            ? "border-purple-500 text-purple-700 dark:text-purple-300 bg-purple-50 dark:bg-purple-500/20"
-                                            : "border-slate-300 dark:border-slate-600 text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-800"
-                                            }`}
-                                        onClick={toggleMarkForReview}
-                                        disabled={isCompleted}
-                                    >
-                                        <Flag className="h-4 w-4" />
-                                        {currentQuestion.markedForReview
-                                            ? "Unmark Review"
-                                            : "Mark for Review"}
-                                    </Button> */}
-
-                                </div>
-
-                                {/* Right Navigation */}
-                                <div className="flex items-center gap-3">
-                                    {isInReviewMode ? (
-                                        <Button
-                                            variant=""
-                                            size="sm"
-                                            className="flex items-center gap-2 rounded-xl dark:border-slate-600 px-4 py-2 text-base font-semibold text-white dark:text-slate-200 hover:outline dark:hover:bg-slate-800"
-                                            onClick={handleBackToReview}
-                                        >
-                                            Back to Review
-                                        </Button>
-                                    ) : (
-                                        <Button
-                                            variant=""
-                                            size="sm"
-                                            className="flex items-center gap-2 rounded-xl dark:border-slate-600 px-4 py-2 text-base font-semibold text-white dark:text-slate-200 hover:outline dark:hover:bg-slate-800"
-                                            onClick={goNextQuestion}
-                                            disabled={isNextDisabled || currentScreen == "pause"}
-                                        >
-                                            Next
-                                            <ChevronRight className="h-5 w-5" />
-                                        </Button>
-                                    )}
-                                </div>
-                            </div>
-                        </div>
+                      {currentScreen === "pause" && (
+                        <Button
+                          variant=""
+                          size="sm"
+                          onClick={() => handleResumeExam(false)}
+                          className="flex shrink-0 items-center gap-1.5 rounded-lg px-2.5 py-2 text-xs font-semibold text-white hover:outline sm:gap-2 sm:rounded-xl sm:px-4 sm:text-sm"
+                        >
+                          <ForwardIcon className="h-4 w-4 shrink-0" />
+                          <span>Resume</span>
+                          <span className="hidden sm:inline">Exam</span>
+                        </Button>
+                      )}
                     </div>
-                )}
-            </div>
-        </>
+
+                    {/* Right Navigation */}
+                    <div className="flex w-full items-center justify-end sm:w-auto">
+                      {isInReviewMode ? (
+                        <Button
+                          variant=""
+                          size="sm"
+                          className="flex w-full items-center justify-center gap-2 rounded-lg px-4 py-2 text-sm font-semibold text-white hover:outline sm:w-auto sm:rounded-xl sm:px-4 sm:text-base"
+                          onClick={handleBackToReview}
+                        >
+                          Back to Review
+                        </Button>
+                      ) : (
+                        <Button
+                          variant=""
+                          size="sm"
+                          className="flex w-full items-center justify-center gap-2 rounded-lg px-5 py-2 text-sm font-semibold text-white hover:outline sm:w-auto sm:rounded-xl sm:px-4 sm:text-base"
+                          onClick={() => goNextQuestion({ isConfirmed: true })}
+                          disabled={isNextDisabled || currentScreen === "pause"}
+                        >
+                          Next
+                          <ChevronRight className="h-5 w-5" />
+                        </Button>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
+        </div>
+      </>
     );
 }
