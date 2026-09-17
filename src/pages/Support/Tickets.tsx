@@ -65,7 +65,7 @@ const STATUS_META = {
     label: "Open",
     icon: AlertCircle,
     className:
-      "bg-orange-50 text-orange-700 dark:bg-orange-900/20 dark:text-orange-300",
+      "bg-orange-50 text-orange-500 dark:bg-orange-900/20 dark:text-orange-300",
   },
   in_progress: {
     label: "In Progress",
@@ -151,9 +151,9 @@ function UserCard({ user }) {
   if (!user) return null;
 
   return (
-    <div className="rounded-2xl border border-gray-200 bg-gray-50 p-4 dark:border-gray-700 dark:bg-gray-900/60">
+    <div className="rounded-2xl border border-gray-200 bg-orange-50 p-4 dark:border-gray-700 dark:bg-gray-900/60">
       <div className="mb-3 flex items-center gap-3">
-        <div className="flex h-10 w-10 items-center justify-center rounded-full bg-orange-100 font-bold text-orange-600 dark:bg-orange-900/30 dark:text-orange-300">
+        <div className="flex border border-orange-500 h-10 w-10 items-center justify-center rounded-full bg-white font-bold text-orange-600 dark:bg-orange-900/30 dark:text-orange-300">
           {user.name?.charAt(0)?.toUpperCase() || "U"}
         </div>
         <div className="min-w-0">
@@ -168,7 +168,7 @@ function UserCard({ user }) {
 
       <div className="grid grid-cols-1 gap-2 text-xs sm:grid-cols-2">
         <div className="rounded-xl bg-white p-2.5 dark:bg-gray-800">
-          <p className="text-gray-400">User ID</p>
+          <p className="text-orange-500">User ID</p>
           <p className="mt-0.5 truncate font-medium text-gray-700 dark:text-gray-200">
             {user._id || "-"}
           </p>
@@ -1176,7 +1176,7 @@ export default function SupportTickets() {
             >
               <div className="flex min-w-0 flex-1 flex-col">
                 {/* MODAL HEADER */}
-                <div className="border-b border-gray-100 p-4 dark:border-gray-800 sm:p-5">
+                <div className="border-b-2 border-orange-500 p-4 dark:border-gray-800 sm:p-5">
                   <div className="flex items-start justify-between gap-4">
                     <div className="min-w-0">
                       <div className="flex items-center gap-2">
@@ -1199,7 +1199,7 @@ export default function SupportTickets() {
                       <div className="mt-3 flex flex-wrap items-center gap-2 pl-9">
                         <StatusBadge status={selectedTicket.status} />
                         <PriorityBadge priority={selectedTicket.priority} />
-                        <span className="rounded-full bg-gray-100 px-2.5 py-1 text-xs font-medium text-gray-600 dark:bg-gray-800 dark:text-gray-300">
+                        <span className="rounded-full bg-orange-50 px-2.5 py-1 text-xs font-medium text-orange-500 dark:bg-gray-800 dark:text-gray-300">
                           {labelize(selectedTicket.category)}
                         </span>
                       </div>
@@ -1213,7 +1213,7 @@ export default function SupportTickets() {
                     </button>
                   </div>
 
-                  <div className="mt-4 flex flex-wrap gap-4 pl-9 text-xs text-gray-400">
+                  <div className="mt-4 flex flex-wrap gap-4 pl-9 text-xs text-black">
                     <span>Created: {formatDate(selectedTicket.createdAt)}</span>
                     <span>Updated: {formatDate(selectedTicket.updatedAt)}</span>
                   </div>
@@ -1239,12 +1239,12 @@ export default function SupportTickets() {
                                   "User"
                                 : "You"}
                             </span>
-                            <span className="text-[11px] text-gray-400">
+                            <span className="text-[11px] text-black">
                               {formatDate(selectedTicket.createdAt)}
                             </span>
                           </div>
-                          <div className="rounded-2xl rounded-tl-md bg-gray-50 p-4 dark:bg-gray-800">
-                            <p className="whitespace-pre-line text-sm leading-6 text-gray-700 dark:text-gray-200">
+                          <div className="rounded-2xl rounded-tl-md bg-orange-50 p-4 dark:bg-gray-800 border border-orange-500">
+                            <p className="whitespace-pre-line text-sm leading-6 text-orange-700 dark:text-gray-200">
                               {selectedTicket.description}
                             </p>
                           </div>
@@ -1264,8 +1264,8 @@ export default function SupportTickets() {
                             <div
                               className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-full ${
                                 supportReply
-                                  ? "bg-blue-100 text-blue-600 dark:bg-blue-900/30 dark:text-blue-300"
-                                  : "bg-gray-100 text-gray-500 dark:bg-gray-800"
+                                  ? "bg-orange-100 text-orange-700 dark:bg-blue-900/30 dark:text-blue-300"
+                                  : "bg-orange-100 text-orange-700 dark:bg-gray-800"
                               }`}
                             >
                               {supportReply ? (
@@ -1290,19 +1290,19 @@ export default function SupportTickets() {
                                     ? reply.createdBy?.name || "Support Team"
                                     : reply.createdBy?.name || "User"}
                                 </span>
-                                <span className="text-[11px] text-gray-400">
+                                <span className="text-[11px] text-black">
                                   {formatDate(reply.createdAt)}
                                 </span>
                               </div>
 
                               <div
-                                className={`inline-block max-w-[90%] rounded-2xl p-4 text-left ${
+                                className={`inline-block max-w-[90%] rounded-2xl p-4 text-left border border-orange-500 ${
                                   supportReply
-                                    ? "rounded-tr-md bg-blue-50 dark:bg-blue-900/20"
-                                    : "rounded-tl-md bg-gray-50 dark:bg-gray-800"
+                                    ? "rounded-tr-md bg-orange-50 dark:bg-blue-900/20"
+                                    : "rounded-tl-md bg-orange-50 dark:bg-gray-800"
                                 }`}
                               >
-                                <p className="whitespace-pre-line text-sm leading-6 text-gray-700 dark:text-gray-200">
+                                <p className="whitespace-pre-line text-sm leading-6 text-orange-700 dark:text-gray-200 ">
                                   {reply.message}
                                 </p>
                               </div>
@@ -1316,13 +1316,13 @@ export default function SupportTickets() {
 
                 {/* REPLY */}
                 {selectedTicket.status !== "closed" ? (
-                  <div className="border-t border-gray-100 bg-gray-50/70 p-3 dark:border-gray-800 dark:bg-gray-950/40 sm:p-4">
-                    <div className="mb-2 flex gap-2 overflow-x-auto pb-1">
+                  <div className="border-t border-gray-100 bg-orange-50/70 p-3 dark:border-gray-800 dark:bg-gray-950/40 sm:p-4">
+                    <div className="mb-2 flex gap-2 overflow-x-auto scrollbar-hide pb-1">
                       {quickReplies.map((reply) => (
                         <button
                           key={reply}
                           onClick={() => setReplyMessage(reply)}
-                          className="shrink-0 rounded-full border border-gray-200 bg-white px-3 py-1.5 text-[11px] text-gray-600 hover:border-orange-300 hover:text-orange-600 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-300"
+                          className="shrink-0 rounded-full border border-orange-200 bg-white px-3 py-1.5 text-[11px] text-orange-600 hover:border-orange-300 hover:text-orange-600 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-300"
                         >
                           {reply.length > 45
                             ? `${reply.slice(0, 45)}...`
@@ -1347,13 +1347,13 @@ export default function SupportTickets() {
                             ? "Reply to the user..."
                             : "Type your reply..."
                         }
-                        className="min-h-[52px] flex-1 resize-none rounded-2xl border border-gray-200 bg-white px-4 py-3 text-sm outline-none focus:border-orange-400 dark:border-gray-700 dark:bg-gray-800 dark:text-white"
+                        className="min-h-[52px] flex-1 resize-none rounded-2xl border border-orange-500 bg-white px-4 py-3 text-sm outline-none focus:border-orange-400 dark:border-gray-700 dark:bg-gray-800 dark:text-white"
                       />
 
                       <button
                         onClick={handleSendReply}
                         disabled={!replyMessage.trim() || isSending}
-                        className="flex h-[52px] items-center gap-2 rounded-2xl bg-orange-500 px-4 text-sm font-semibold text-white hover:bg-orange-600 disabled:cursor-not-allowed disabled:opacity-50"
+                        className="flex min-h-[52px] items-center gap-2 rounded-2xl bg-orange-500 px-4 text-sm font-semibold text-white hover:bg-orange-600 disabled:cursor-not-allowed disabled:opacity-50"
                       >
                         {isSending ? (
                           <Loader2 size={16} className="animate-spin" />
@@ -1376,7 +1376,7 @@ export default function SupportTickets() {
 
               {/* STAFF SIDE PANEL */}
               {isStaff ? (
-                <aside className="hidden w-[310px] shrink-0 border-l border-gray-100 bg-gray-50/70 p-4 dark:border-gray-800 dark:bg-gray-950/30 xl:block">
+                <aside className="hidden w-[310px] shrink-0 border-l border-orange-500 bg-white p-4 dark:border-gray-800 dark:bg-gray-950/30 xl:block">
                   <div className="mb-4 flex items-center gap-2">
                     <UserRound size={16} className="text-orange-500" />
                     <h3 className="text-sm font-bold text-gray-900 dark:text-white">
@@ -1387,13 +1387,13 @@ export default function SupportTickets() {
                   <UserCard user={getUserFromTicket(selectedTicket)} />
 
                   <div className="mt-5">
-                    <p className="mb-2 text-xs font-bold uppercase tracking-wider text-gray-400">
+                    <p className="mb-2 text-xs font-bold uppercase tracking-wider text-black">
                       Ticket Controls
                     </p>
 
                     <div className="space-y-3">
                       <div>
-                        <label className="mb-1 block text-xs font-medium text-gray-600 dark:text-gray-300">
+                        <label className="mb-1 block text-xs font-medium text-black dark:text-gray-300">
                           Status
                         </label>
                         <select
@@ -1402,7 +1402,7 @@ export default function SupportTickets() {
                           onChange={(e) =>
                             handleTicketUpdate("status", e.target.value)
                           }
-                          className="h-10 w-full rounded-xl border border-gray-200 bg-white px-3 text-sm dark:border-gray-700 dark:bg-gray-800 dark:text-white"
+                          className="h-10 w-full rounded-xl border border-orange-500 bg-white px-3 text-sm dark:border-gray-700 dark:bg-gray-800 dark:text-white"
                         >
                           {STATUS_OPTIONS.map((item) => (
                             <option key={item.value} value={item.value}>
@@ -1413,7 +1413,7 @@ export default function SupportTickets() {
                       </div>
 
                       <div>
-                        <label className="mb-1 block text-xs font-medium text-gray-600 dark:text-gray-300">
+                        <label className="mb-1 block text-xs font-medium text-black dark:text-gray-300">
                           Priority
                         </label>
                         <select
@@ -1422,7 +1422,7 @@ export default function SupportTickets() {
                           onChange={(e) =>
                             handleTicketUpdate("priority", e.target.value)
                           }
-                          className="h-10 w-full rounded-xl border border-gray-200 bg-white px-3 text-sm dark:border-gray-700 dark:bg-gray-800 dark:text-white"
+                          className="h-10 w-full rounded-xl border border-orange-500 bg-white px-3 text-sm dark:border-gray-700 dark:bg-gray-800 dark:text-white"
                         >
                           {PRIORITY_OPTIONS.map((item) => (
                             <option key={item.value} value={item.value}>
@@ -1433,7 +1433,7 @@ export default function SupportTickets() {
                       </div>
 
                       <div>
-                        <label className="mb-1 block text-xs font-medium text-gray-600 dark:text-gray-300">
+                        <label className="mb-1 block text-xs font-medium text-black dark:text-gray-300">
                           Category
                         </label>
                         <select
@@ -1442,7 +1442,7 @@ export default function SupportTickets() {
                           onChange={(e) =>
                             handleTicketUpdate("category", e.target.value)
                           }
-                          className="h-10 w-full rounded-xl border border-gray-200 bg-white px-3 text-sm dark:border-gray-700 dark:bg-gray-800 dark:text-white"
+                          className="h-10 w-full rounded-xl border border-orange-500 bg-white px-3 text-sm dark:border-gray-700 dark:bg-gray-800 dark:text-white"
                         >
                           {CATEGORY_OPTIONS.map((item) => (
                             <option key={item.value} value={item.value}>
@@ -1455,7 +1455,7 @@ export default function SupportTickets() {
                   </div>
 
                   <div className="mt-5 space-y-2">
-                    <p className="text-xs font-bold uppercase tracking-wider text-gray-400">
+                    <p className="text-xs font-bold uppercase tracking-wider text-black">
                       Actions
                     </p>
 
