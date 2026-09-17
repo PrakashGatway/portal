@@ -618,11 +618,11 @@ const HeaderBanner = ({ data, user, filterBanner }) => {
   return (
     <section className="w-full overflow-hidden">
       <div
-        className="relative w-full h-[220px] md:h-[280px] lg:h-[250px] rounded-3xl bg-[#FF764B]"
+        className="relative w-full h-[100px] md:h-[280px] lg:h-[250px] rounded-xl overflow-hidden sm:rounded-3xl bg-[#FF764B]"
         onMouseEnter={stopAutoplay}
         onMouseLeave={startAutoplay}
       >
-        <div ref={sliderRef} className="keen-slider w-full h-full rounded-3xl">
+        <div ref={sliderRef} className="keen-slider w-full h-full">
           {filterBanner.Banners.map((item, index) => {
             const fileName = item.Banner?.file;
             const imageUrl = fileName
@@ -634,13 +634,13 @@ const HeaderBanner = ({ data, user, filterBanner }) => {
             return (
               <div
                 key={item._id || index}
-                className="keen-slider__slide w-full h-full overflow-hidden relative rounded-3xl"
+                className="keen-slider__slide w-full h-full overflow-hidden relative"
               >
                 {imageUrl ? (
                   <img
                     src={imageUrl}
                     alt={item.Banner?.alt || `Banner ${index + 1}`}
-                    className="w-full h-full object-cover rounded-3xl"
+                    className="w-full h-full object-cover"
                     onError={(e) => {
                       e.target.style.display = "none";
                       e.target.parentElement.classList.add(
@@ -665,13 +665,13 @@ const HeaderBanner = ({ data, user, filterBanner }) => {
           <>
             <button
               onClick={goToPrev}
-              className="absolute left-4 top-1/2 -translate-y-1/2 w-10 h-10 rounded-full bg-white/20 backdrop-blur-sm flex items-center justify-center text-white hover:bg-white/30 transition-all duration-300 z-10"
+              className="absolute hidden sm:block left-4 top-1/2 -translate-y-1/2 w-10 h-10 rounded-full bg-white/20 backdrop-blur-sm flex items-center justify-center text-white hover:bg-white/30 transition-all duration-300 z-10"
             >
               <ChevronLeft size={20} />
             </button>
             <button
               onClick={goToNext}
-              className="absolute right-4 top-1/2 -translate-y-1/2 w-10 h-10 rounded-full bg-white/20 backdrop-blur-sm flex items-center justify-center text-white hover:bg-white/30 transition-all duration-300 z-10"
+              className="absolute hidden sm:block right-4 top-1/2 -translate-y-1/2 w-10 h-10 rounded-full bg-white/20 backdrop-blur-sm flex items-center justify-center text-white hover:bg-white/30 transition-all duration-300 z-10"
             >
               <ChevronRight size={20} />
             </button>
@@ -988,35 +988,51 @@ const GREDashboard = () => {
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 xl:grid-cols-[1.5fr_0.5fr] gap-4 my-4">
         <HeaderBanner data={data} user={user} filterBanner={filterBanner} />
 
-        <div className="p-[2px] h-full rounded-3xl bg-gradient-to-b from-orange-500 via-orange-500 to-orange-200/40">
-          <div className="h-full rounded-3xl bg-white dark:bg-gray-800 p-4">
-            <div className="flex items-center gap-2">
-              <MessageCircleQuestion size={22} />
-              <div className="flex-1">
-                <p className="text-gray-800 text-sm font-semibold dark:text-white">
-                  Need Help ?
+        <div className="hidden sm:block p-[2px] h-full rounded-3xl bg-gradient-to-b from-orange-500 via-orange-500 to-orange-200/40">
+          <div className="flex h-full flex-col rounded-3xl bg-white p-5 dark:bg-gray-800">
+            {/* Header */}
+            <div className="flex items-center gap-3">
+              <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-[#F36D45]/10 text-[#F36D45]">
+                <MessageCircleQuestion size={25} className="stroke-[1.5px]" />
+              </div>
+
+              <div className="min-w-0">
+                <p className="text-sm font-medium text-gray-500 dark:text-gray-400">
+                  Need Help?
                 </p>
-                <h3 className="text-base leading-none font-bold text-[#F36D45] mt-1 dark:text-white">
+
+                <h3 className="mt-0.5 text-lg font-bold leading-tight text-[#F36D45]">
                   Raise a Ticket
                 </h3>
               </div>
             </div>
-            <p className="mt-2 flex-1 text-sm text-[#6B7280] dark:text-gray-400">
-              Having an issue with your account, payment, course access, or
-              classes? Raise a support ticket and our team will help you resolve
-              it.
-            </p>
-            <span className="text-gray-800 text-sm font-medium pt-1 flex items-center">
-              <Clock className="h-4 text-[#F36D45]" /> Track your ticket status
-              anytime
-            </span>
 
-            <Link
-              to="/support"
-              className="mt-3 block w-full rounded-full bg-gradient-to-r from-[#FF6B2C] to-[#FF5123] py-2 text-center text-base font-semibold text-white transition-all duration-200 hover:scale-[1.02] hover:shadow-lg"
-            >
-              Raise a Ticket →
-            </Link>
+            {/* Description */}
+            <p className="mt-4 text-sm leading-6 text-gray-600 font-medium dark:text-gray-400">
+              Get help with account, payment, course or class issues
+            </p>
+
+            {/* Ticket Info */}
+            <div className="mt-2 flex items-center gap-2 rounded-xl bg-gray-50 px-3 py-2.5 dark:bg-gray-900/60">
+              <Clock size={16} className="shrink-0 text-[#F36D45]" />
+
+              <span className="text-xs font-medium text-gray-600 dark:text-gray-300">
+                Track your ticket status anytime
+              </span>
+            </div>
+
+            {/* CTA */}
+            <div className="mt-auto pt-3">
+              <Link
+                to="/support"
+                className="group flex w-full items-center justify-center gap-2 rounded-full bg-gradient-to-r from-[#FF6B2C] to-[#FF5123] px-5 py-2.5 text-sm font-semibold text-white shadow-sm transition-all duration-200 hover:-translate-y-0.5 hover:shadow-lg"
+              >
+                Raise a Ticket
+                <span className="text-base transition-transform duration-200 group-hover:translate-x-1">
+                  →
+                </span>
+              </Link>
+            </div>
           </div>
         </div>
       </div>
@@ -1550,17 +1566,73 @@ const GREDashboard = () => {
         {useAllCoursesSlider ? (
           <div ref={allCoursesSliderRef} className="keen-slider">
             {allCourses.map((item) => (
-              <AllCourseCard key={item._id || item.id} item={item} user={user}/>
+              <AllCourseCard
+                key={item._id || item.id}
+                item={item}
+                user={user}
+              />
             ))}
           </div>
         ) : (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-2 xl:grid-cols-4 gap-6">
             {allCourses.map((item) => (
-              <AllCourseCard key={item._id || item.id} item={item} user={user}/>
+              <AllCourseCard
+                key={item._id || item.id}
+                item={item}
+                user={user}
+              />
             ))}
           </div>
         )}
       </section>
+
+       <div className="block sm:hidden p-[2px] h-full rounded-3xl bg-gradient-to-b from-orange-500 via-orange-500 to-orange-200/40">
+          <div className="flex h-full flex-col rounded-3xl bg-white p-5 dark:bg-gray-800">
+            {/* Header */}
+            <div className="flex items-center gap-3">
+              <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-[#F36D45]/10 text-[#F36D45]">
+                <MessageCircleQuestion size={25} className="stroke-[1.5px]" />
+              </div>
+
+              <div className="min-w-0">
+                <p className="text-sm font-medium text-gray-500 dark:text-gray-400">
+                  Need Help?
+                </p>
+
+                <h3 className="mt-0.5 text-lg font-bold leading-tight text-[#F36D45]">
+                  Raise a Ticket
+                </h3>
+              </div>
+            </div>
+
+            {/* Description */}
+            <p className="mt-4 text-sm leading-6 text-gray-600 font-medium dark:text-gray-400">
+              Get help with account, payment, course or class issues
+            </p>
+
+            {/* Ticket Info */}
+            <div className="mt-2 flex items-center gap-2 rounded-xl bg-gray-50 px-3 py-2.5 dark:bg-gray-900/60">
+              <Clock size={16} className="shrink-0 text-[#F36D45]" />
+
+              <span className="text-xs font-medium text-gray-600 dark:text-gray-300">
+                Track your ticket status anytime
+              </span>
+            </div>
+
+            {/* CTA */}
+            <div className="mt-auto pt-3">
+              <Link
+                to="/support"
+                className="group flex w-full items-center justify-center gap-2 rounded-full bg-gradient-to-r from-[#FF6B2C] to-[#FF5123] px-5 py-2.5 text-sm font-semibold text-white shadow-sm transition-all duration-200 hover:-translate-y-0.5 hover:shadow-lg"
+              >
+                Raise a Ticket
+                <span className="text-base transition-transform duration-200 group-hover:translate-x-1">
+                  →
+                </span>
+              </Link>
+            </div>
+          </div>
+        </div>
     </div>
   );
 };
@@ -1614,9 +1686,14 @@ const AllCourseCard = ({ item }) => {
             </span>
           </h3>
 
-      
-
-          <Link to={`/course/${item?.slug}`} className="flex justify-center">
+          <Link
+            to={
+              item.categoryInfo.name == "SAT"
+                ? `/course/${item?.slug}`
+                : "/coming-soon"
+            }
+            className="flex justify-center"
+          >
             <button className="mt-5 py-2 w-1/2 text-base rounded-xl border border-[#ff5b2e] text-[#ff5b2e] font-medium transition-all duration-300 hover:bg-[#ff5b2e] hover:text-white">
               Explore
             </button>

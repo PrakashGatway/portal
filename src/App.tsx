@@ -276,7 +276,9 @@ export default function App() {
               path="/course/category"
               element={<CategorySelectionPage />}
             />
-            <Route path="/checkout/:slug" element={<CheckoutPage />} />
+            {/* <Route path="/checkout/:slug" element={<CheckoutPage />} /> */}
+            <Route path="/checkout/:slug" element={<ComingSoon />} />
+
             <Route path="/payment-status" element={<PaymentStatusPage />} />
             <Route
               path="/full/:testSeriesId"

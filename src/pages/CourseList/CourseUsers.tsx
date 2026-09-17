@@ -559,7 +559,7 @@ export default function CourseListingPage() {
   return (
     <div className="min-h-screen pb-12 ">
       <div className="max-w-7xl mx-auto px-5 py-6 space-y-4 bg-white rounded-2xl ">
-        <ImageSlider images={heroImages} autoPlay={true} interval={6000} height="h-44 md:h-[240px]" />
+        <ImageSlider images={heroImages} autoPlay={true} interval={6000} height="h-26 md:h-[240px]" />
 
         <div className="flex items-end justify-between pt-2">
           <div>
