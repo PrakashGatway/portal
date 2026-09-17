@@ -44,14 +44,14 @@ interface TestTemplate {
 export const MockTestCard = ({
   test,
   index,
-  user
+  user,
 }: {
   test: TestTemplate;
   index: number;
 }) => {
   let navigate = useNavigate();
 
-  const [isOpen,setisOpen] = useState(false)
+  const [isOpen, setisOpen] = useState(false);
 
   const getPriceLabel = () => {
     if (test.isFree) return "Free";
@@ -110,21 +110,21 @@ export const MockTestCard = ({
   ];
   const theme = cardThemes[index % cardThemes.length];
 
- const testType = (type: string) => {
-  if (type === "full_length") {
-    return "Full Test Series";
-  }
+  const testType = (type: string) => {
+    if (type === "full_length") {
+      return "Full Test Series";
+    }
 
-  if (type === "quiz") {
-    return "Quiz Test Series";
-  }
+    if (type === "quiz") {
+      return "Quiz Test Series";
+    }
 
-  if (type === "sectional") {
-    return "Sectional Test";
-  }
+    if (type === "sectional") {
+      return "Sectional Test";
+    }
 
-  return "";
-};
+    return "";
+  };
 
   return (
     <div className="w-full">
@@ -135,24 +135,30 @@ export const MockTestCard = ({
 
           {/* ================= IMAGE ================= */}
           <div className="relative h-[170px] overflow-visible rounded-t-[18px] p-2">
-           <div
-  style={{
-    borderRadius: "15px 15px 0px 0px",
-    backgroundImage: `url(${test?.thumbnailPic || "/images/test-bg.jpg"})`,
-    backgroundSize: "cover",
-    backgroundPosition: "center",
-  }}
-  className="relative overflow-hidden h-[170px] flex justify-center items-center"
->
-  {/* Optional dark overlay for better text visibility */}
-  <div className="absolute inset-0" />
+            <div
+              style={{
+                borderRadius: "15px 15px 0px 0px",
+                backgroundImage: `url(${test?.thumbnailPic || "/images/test-bg.jpg"})`,
+                backgroundSize: "cover",
+                backgroundPosition: "center",
+              }}
+              className="relative overflow-hidden h-[170px] flex justify-center items-center"
+            >
+              {/* Optional dark overlay for better text visibility */}
+              <div className="absolute inset-0" />
 
-  {/* Text above background */}
-  <span className="relative z-10 font-semibold text-white">
-   <span className="text-6xl font-bold"> {test?.exam?.name.split(" ")[0]}</span>
-    <br /> <span className="text-xl ml-10">{testType(test?.testType)}</span>
-  </span>
-</div>
+              {/* Text above background */}
+              <span className="relative z-10 font-semibold text-white">
+                <span className="text-6xl font-bold">
+                  {" "}
+                  {test?.exam?.name.split(" ")[0]}
+                </span>
+                <br />{" "}
+                <span className="text-xl ml-10">
+                  {testType(test?.testType)}
+                </span>
+              </span>
+            </div>
 
             {/* Image subtle overlay */}
             <div className="absolute inset-0 bg-gradient-to-t from-black/10 via-transparent to-transparent" />
@@ -201,63 +207,13 @@ export const MockTestCard = ({
               {test.title}
             </h3> */}
 
-<h3 className="text-[22px] leading-7 font-medium text-[#111111] dark:text-white">
-  {test.title}
+            <h3 className="text-[20px] leading-7 flex items-center font-medium text-[#111111] dark:text-white">
+              {test.title}
 
-  <span className="group relative ml-2 inline-block align-middle">
-    <Info className="h-4 w-4 cursor-pointer text-gray-400" />
-
-    <span
-      className="
-        pointer-events-none
-        invisible
-        absolute
-        bottom-full
-        left-1/2
-        z-50
-        mb-2
-        w-[300px]
-        -translate-x-1/2
-        rounded-lg
-        bg-gray-900
-        px-3
-        py-2
-        text-left
-        text-sm
-        font-normal
-        leading-5
-        text-white
-        opacity-0
-        shadow-lg
-        transition-all
-        duration-200
-        group-hover:visible
-        group-hover:opacity-100
-      "
-    >
-      <span className="mb-1 block font-semibold">
-        {test.title}
-      </span>
-
-      <span className="block text-gray-200">
-        {test.description || "No description available."}
-      </span>
-
-      <span
-        className="
-          absolute
-          left-1/2
-          top-full
-          -translate-x-1/2
-          border-4
-          border-transparent
-          border-t-gray-900
-        "
-      />
-    </span>
-  </span>
-</h3>
-
+              <span title={test.description || "No description available."}>
+                <Info className="ml-2 h-5 w-5 shrink-0 cursor-help text-gray-400" />
+              </span>
+            </h3>
 
             {/* Description */}
             {/* <p
@@ -344,15 +300,13 @@ export const MockTestCard = ({
               {/* Button */}
               <button
                 style={{ borderRadius: "0px 0px 15px 0px" }}
-                onClick={()=> {
-                  if(test.isPurchased === true || test.isFree === true){
-                   setisOpen(true)
+                onClick={() => {
+                  if (test.isPurchased === true || test.isFree === true) {
+                    setisOpen(true);
+                  } else {
+                    handleAction();
                   }
-                  else{
-                    handleAction()
-                  }
-
-                  }}
+                }}
                 className="
                             flex-1 h-10 bg-[#3B3B3B] text-white font-medium py-2 bg-gradient-to-b from-[#545454] via-[#ffffff]/30 to-[#545454] hover:bg-black transition
                         "
@@ -369,7 +323,13 @@ export const MockTestCard = ({
           </div>
         </div>
       </div>
-     {isOpen&& <ConfirmationPopup isOpen={isOpen} onClose={()=>setisOpen(false)} onConfirm={handleAction} />}
+      {isOpen && (
+        <ConfirmationPopup
+          isOpen={isOpen}
+          onClose={() => setisOpen(false)}
+          onConfirm={handleAction}
+        />
+      )}
     </div>
   );
 };

@@ -34,7 +34,7 @@ const TestimonialModal = ({ student, onClose }) => {
       onClick={onClose}
     >
       <div
-        className="relative w-full max-w-4xl bg-white rounded-3xl shadow-2xl overflow-hidden flex flex-col md:flex-row my-8"
+        className="relative w-full max-w-4xl max-h-[85vh] bg-white rounded-3xl shadow-2xl overflow-hidden flex flex-col md:flex-row my-8"
         onClick={(e) => e.stopPropagation()}
       >
         {/* Close Button */}
@@ -50,15 +50,15 @@ const TestimonialModal = ({ student, onClose }) => {
           <div className="relative w-44 h-44 md:w-52 md:h-52 mb-6">
             {/* Triangle */}
             <svg
-              className="absolute -top-4 -left-4 w-full h-full"
-              viewBox="0 0 60 76"
+              className="absolute -top-3 -left-3 w-full h-full"
+              viewBox="0 5 60 76"
               fill="none"
               preserveAspectRatio="none"
             >
               <path d="M0 0 L60 0 L0 76 Z" fill={accentColor} />
             </svg>
 
-            <div className="relative w-full h-full border-6 border-white overflow-hidden z-[999] bg-[#ffb499]">
+            <div className="relative w-full h-full border-5 border-white overflow-hidden z-[999] bg-[#ffb499]">
               <img
                 src={student.image}
                 alt={student.name}
@@ -80,7 +80,7 @@ const TestimonialModal = ({ student, onClose }) => {
         relative max-h-[80vh] overflow-y-auto  border-gray-100">
 
           {/* Heading */}
-          <div className="mb-6 flex items-start justify-between">
+          <div className="mb-6 mt-42 sm:mt-0 flex items-start justify-between">
             <div>
               <h2
                 className="text-3xl md:text-4xl font-black tracking-tight"
@@ -149,120 +149,6 @@ const TestimonialModal = ({ student, onClose }) => {
     </div>
   );
 };
-
-// const TestimonialModal = ({ student, onClose }) => {
-//   if (!student) return null;
-
-//   const testimonialText =
-//     student.about ||
-//     student.message ||
-//     "I knew the concepts, but timing was my biggest weakness. The practice tests and mock tests at OOSHAS Prep helped me improve my speed, accuracy, and confidence.";
-
-//   const accentColor = student.colorCode || "#FF6B35";
-
-//   return (
-//     <div
-//       className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4 overflow-y-auto"
-//       onClick={onClose}
-//     >
-//       <div
-//         className="relative w-full max-w-4xl bg-white rounded-3xl shadow-2xl overflow-hidden flex flex-col md:flex-row my-8"
-//         onClick={(e) => e.stopPropagation()}
-//       >
-//         {/* Close Button */}
-//         <button
-//           onClick={onClose}
-//           className="absolute top-4 right-4 z-20 p-2 bg-white/80 rounded-full text-gray-500 hover:text-gray-800 hover:bg-white transition-colors shadow-sm"
-//         >
-//           <X size={24} />
-//         </button>
-
-//         {/* LEFT SIDE - IMAGE */}
-//         <div
-//           className="w-full md:w-2/5 p-8 flex flex-col items-center justify-center relative"
-//           style={{ backgroundColor: `${accentColor}15` }}
-//         >
-//           <div className="relative w-48 h-48 md:w-56 md:h-56 mb-6">
-//             <div
-//               className="absolute -top-4 -left-4 w-24 h-24 border-t-4 border-l-4 rounded-tl-3xl"
-//               style={{ borderColor: accentColor }}
-//             ></div>
-//             <div
-//               className="absolute -bottom-4 -right-4 w-24 h-24 border-b-4 border-r-4 rounded-br-3xl"
-//               style={{ borderColor: accentColor }}
-//             ></div>
-
-//             <div className="w-full h-full rounded-full overflow-hidden border-4 border-white shadow-lg">
-//               <img
-//                 src={student.image}
-//                 alt={student.name}
-//                 className="w-full h-full object-cover"
-//               />
-//             </div>
-//           </div>
-//           <h3 className="text-xl font-bold text-gray-900 text-center">
-//             {student.name}
-//           </h3>
-//         </div>
-
-//         {/* RIGHT SIDE - CONTENT */}
-//         <div className="w-full md:w-3/5 p-8 md:p-12 flex flex-col justify-center relative max-h-[80vh] overflow-y-auto">
-//           {/* Heading */}
-//           <div className="mb-6">
-//             <h2
-//               className="text-3xl md:text-4xl font-black tracking-tight"
-//               style={{ color: accentColor }}
-//             >
-//               STUDENT
-//             </h2>
-//             <span className="block text-4xl md:text-5xl font-['cursive'] text-gray-800 -mt-1">
-//               Testimonial
-//             </span>
-//           </div>
-
-//           {/* Quote Icon */}
-//           <div className="absolute top-8 right-8 md:top-12 md:right-12 opacity-10">
-//             <svg width="80" height="80" viewBox="0 0 24 24" fill={accentColor}>
-//               <path d="M14.017 21v-7.391c0-5.704 3.731-9.57 8.983-10.609l.995 2.151c-2.432.917-3.995 3.638-3.995 5.849h4v10h-9.983zm-14.017 0v-7.391c0-5.704 3.748-9.57 9-10.609l.996 2.151c-2.433.917-3.996 3.638-3.996 5.849h3.983v10h-9.983z" />
-//             </svg>
-//           </div>
-
-//           {/* Score & Course */}
-//           <div className="mb-6">
-//             <div className="flex items-center gap-4 mb-3 flex-wrap">
-//               <span
-//                 className="text-4xl font-black"
-//                 style={{ color: accentColor }}
-//               >
-//                 {student.score || "N/A"}
-//               </span>
-//               <span className="text-sm font-bold text-gray-700 uppercase tracking-wider mt-1 border-l-2 pl-3 border-gray-300">
-//                 {student.course || "Score"}
-//               </span>
-//             </div>
-
-//             <div className="flex items-center gap-2 text-sm">
-//               <div className="flex text-yellow-400">
-//                 {[...Array(5)].map((_, i) => (
-//                   <Star key={i} size={16} fill="currentColor" />
-//                 ))}
-//               </div>
-//               <span className="text-gray-600 font-medium">
-//                 | Excellent Preparation
-//               </span>
-//             </div>
-//           </div>
-
-//           {/* Testimonial Text */}
-//           <div
-//             className="text-gray-600 text-sm md:text-base leading-relaxed mb-6 prose prose-sm max-w-none"
-//             dangerouslySetInnerHTML={renderHTML(testimonialText)}
-//           />
-//         </div>
-//       </div>
-//     </div>
-//   );
-// };
 
 const CompactWallOfFame = () => {
 
@@ -621,131 +507,8 @@ const CompactWallOfFame = () => {
   );
 };
 
-("use client");
-
-import { useKeenSlider } from "keen-slider/react";
-import "keen-slider/keen-slider.min.css";
-import { ChevronLeft, ChevronRight, Stars } from "lucide-react";
 
 
-const AboutSection = () => {
-  const [sliderRef, slider] = useKeenSlider(
-    {
-      loop: true,
-      slides: { perView: 1, spacing: 16 },
-      breakpoints: {
-        "(min-width: 640px)": { slides: { perView: 1, spacing: 20 } },
-        "(min-width: 768px)": { slides: { perView: 1, spacing: 24 } },
-        "(min-width: 1024px)": { slides: { perView: 1, spacing: 32 } },
-      },
-    },
-    [
-      (slider) => {
-        let timeout: any;
-        let mouseOver = false;
-
-        const clearNextTimeout = () => {
-          if (timeout) clearTimeout(timeout);
-        };
-
-        const nextTimeout = () => {
-          clearNextTimeout();
-          if (mouseOver) return;
-          timeout = setTimeout(() => {
-            if (slider.track && slider.track.details) {
-              slider.next();
-            }
-          }, 4000);
-        };
-
-        slider.on("created", () => {
-          slider.container.addEventListener("mouseover", () => {
-            mouseOver = true;
-            clearNextTimeout();
-          });
-          slider.container.addEventListener("mouseout", () => {
-            mouseOver = false;
-            if (slider.track && slider.track.details) {
-              nextTimeout();
-            }
-          });
-          nextTimeout();
-        });
-
-        slider.on("dragStarted", clearNextTimeout);
-        slider.on("animationEnded", nextTimeout);
-        slider.on("updated", nextTimeout);
-        slider.on("destroyed", () => clearNextTimeout());
-      },
-    ],
-  );
-
-  const data = [
-    {
-      image:
-        "https://res.cloudinary.com/drsainihk/image/upload/v1784617369/cway-admin/xevetpgcyottnpfgjojd.webp",
-    },
-    {
-      image:
-        "https://res.cloudinary.com/drsainihk/image/upload/v1784617377/cway-admin/tu8kufrzkqf4buypnd7o.webp",
-    },
-    {
-      image:
-        "https://res.cloudinary.com/drsainihk/image/upload/v1784617377/cway-admin/tu8kufrzkqf4buypnd7o.webp",
-    },
-  ];
-
-  return (
-    <div className="relative py-8 sm:py-10 lg:py-12 font-['Open_Sans','Helvetica_Neue',Arial,sans-serif]">
-      <div className="text-center px-4">
-        <h2 className="text-lg sm:text-xl md:text-3xl lg:text-5xl font-bold flex items-center justify-center gap-3">
-          {data.fields?.title || "Meet our stars"}{" "}
-          <Stars className="w-8 h-8 md:w-10 md:h-10 text-primary fill-primary" />
-        </h2>
-        <p className="mt-3 text-base md:text-lg">
-          {data.fields?.subtitle || "Our students who made us proud"}
-        </p>
-      </div>
-
-      <section ref={sliderRef} className="keen-slider max-w-6xl mx-auto">
-        {data.map((student: any, idx: number) => (
-          <div
-            key={idx}
-            className="keen-slider__slide flex flex-col lg:flex-row gap-10 sm:gap-16 lg:gap-20"
-          >
-            <div className="lg:w-full flex flex-col items-center p-2">
-              <img
-                src={student.image}
-                alt="logo"
-                className="sm:h-full w-auto mt-6"
-              />
-            </div>
-          </div>
-        ))}
-      </section>
-
-      <button
-        onClick={() => slider?.current?.prev()}
-        className="absolute left-1 sm:left-2 md:left-24 bottom-[40%] z-10"
-      >
-        <ChevronLeft
-          size={28}
-          className="sm:size-[32px] md:size-[36px] text-[#FF6B35]"
-        />
-      </button>
-
-      <button
-        onClick={() => slider?.current?.next()}
-        className="absolute right-1 sm:right-2 md:right-24 bottom-[40%] z-10"
-      >
-        <ChevronRight
-          size={28}
-          className="sm:size-[32px] md:size-[36px] text-[#FF6B35]"
-        />
-      </button>
-    </div>
-  );
-};
 
 export const TestbookSuccessSection = () => {
   return (
