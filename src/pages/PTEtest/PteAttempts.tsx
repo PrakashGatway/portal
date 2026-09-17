@@ -215,15 +215,7 @@ export default function PteExamPage() {
           throw new Error(startRes.data?.message || "Failed to start attempt");
         }
 
-        const started: StartAttemptResponse = startRes.data.data;
-        const attemptId = (started as any)._id || startRes.data.data._id;
-
-        const detailRes = await api.get(`/mcu/attempts/${attemptId}`);
-        if (!detailRes.data?.success) {
-          throw new Error(detailRes.data?.message || "Failed to load attempt");
-        }
-
-        const loaded: TestAttempt = detailRes.data.data;
+       const loaded: TestAttempt = startRes.data.data;
         const testType = loaded?.testType;
         if (!loaded.sections || loaded.sections.length === 0) {
           setError("This GRE test has no sections configured.");

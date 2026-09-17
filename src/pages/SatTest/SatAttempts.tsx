@@ -158,15 +158,7 @@ export default function SatExamPage() {
         throw new Error(startRes.data?.message || "Failed to start attempt");
       }
 
-      const started: StartAttemptResponse = startRes.data.data;
-      const attemptId = (started as any)._id || startRes.data.data._id;
-
-      const detailRes = await api.get(`/mcu/attempts/${attemptId}`);
-      if (!detailRes.data?.success) {
-        throw new Error(detailRes.data?.message || "Failed to load attempt");
-      }
-
-      const loaded: TestAttempt = detailRes.data.data;
+      const loaded: TestAttempt = startRes.data.data;
 
       if (!loaded.sections || loaded.sections.length === 0) {
         setError("This test has no sections configured.");
@@ -339,7 +331,7 @@ export default function SatExamPage() {
 
       try {
         setSavingProgress(!silent);
-        setSubmitting(true)
+        setSubmitting(true);
 
         const sectionIndex = activeSectionIndex;
         const questionIndex = activeQuestionIndex;
@@ -376,7 +368,7 @@ export default function SatExamPage() {
         }
       } finally {
         setSavingProgress(false);
-        setSubmitting(false)
+        setSubmitting(false);
       }
     },
     [
@@ -450,8 +442,6 @@ export default function SatExamPage() {
 
   const goNextQuestion = async () => {
     if (!attempt || !currentSection || !currentQuestion) return;
-
-    
 
     const isLastQuestionInSection =
       activeQuestionIndex >= currentSection.questions.length - 1;

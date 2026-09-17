@@ -1,19 +1,18 @@
-import React, {
-  useCallback,
-  useEffect,
-  useMemo,
-  useState,
-} from "react";
+import React, { useCallback, useEffect, useMemo, useState } from "react";
 import { useParams, useNavigate } from "react-router";
-import {
-  AlertTriangle
-} from "lucide-react";
+import { AlertTriangle } from "lucide-react";
 
 import Button from "../../components/ui/button/Button";
 import { toast } from "react-toastify";
 import api from "../../axiosInstance";
 import FullScreenLoader from "../../components/fullScreeLoader";
-import QuestionRenderer, { GRETestHeader, GRETestResults, IntroScreen, SectionInstructions, SectionReview } from "./GreComponents";
+import QuestionRenderer, {
+  GRETestHeader,
+  GRETestResults,
+  IntroScreen,
+  SectionInstructions,
+  SectionReview,
+} from "./GreComponents";
 
 interface QuestionDoc {
   _id: string;
@@ -143,92 +142,79 @@ export default function GRETestAttemptPage() {
     (attempt as any)?.testTemplate?.name ||
     "GRE Practice Test";
 
-  const startAttempt = useCallback(
-    async () => {
-      if (!testTemplateId) {
-        setError("Missing testTemplateId in route");
+  const startAttempt = useCallback(async () => {
+    if (!testTemplateId) {
+      setError("Missing testTemplateId in route");
+      setLoading(false);
+      return;
+    }
+
+    try {
+      setStarting(true);
+      setError(null);
+
+      const startRes = await api.post("/mcu/start", { testTemplateId });
+      if (!startRes.data?.success) {
+        throw new Error(startRes.data?.message || "Failed to start attempt");
+      }
+      const loaded: TestAttempt = startRes.data.data;
+      const testType = loaded?.testType;
+      if (!loaded.sections || loaded.sections.length === 0) {
+        setError("This GRE test has no sections configured.");
         setLoading(false);
         return;
       }
 
-      try {
-        setStarting(true);
-        setError(null);
+      setAttempt(loaded);
 
-        const startRes = await api.post("/mcu/start", { testTemplateId });
-        if (!startRes.data?.success) {
-          throw new Error(startRes.data?.message || "Failed to start attempt");
-        }
+      const meta = loaded.gmatMeta;
+      let secIdx = 0;
+      let qIdx = 0;
+      let nextScreen: GreScreen =
+        testType !== "full_length" ? "question" : "intro";
 
-        const started: StartAttemptResponse = startRes.data.data;
-        const attemptId = (started as any)._id || startRes.data.data._id;
+      if (loaded.status === "completed") {
+        setCurrentScreen("results");
+        setLoading(false);
+        return;
+      }
 
-        const detailRes = await api.get(`/mcu/attempts/${attemptId}`);
-        if (!detailRes.data?.success) {
-          throw new Error(detailRes.data?.message || "Failed to load attempt");
-        }
-
-        const loaded: TestAttempt = detailRes.data.data;
-        const testType = loaded?.testType;
-        if (!loaded.sections || loaded.sections.length === 0) {
-          setError("This GRE test has no sections configured.");
-          setLoading(false);
-          return;
-        }
-
-        setAttempt(loaded);
-
-        const meta = loaded.gmatMeta;
-        let secIdx = 0;
-        let qIdx = 0;
-        let nextScreen: GreScreen = (testType !== "full_length") ? "question" : "intro";
-
-        if (loaded.status === "completed") {
-          setCurrentScreen("results");
-          setLoading(false);
-          return;
-        }
-
-        if (meta && typeof meta.currentSectionIndex === "number") {
-          secIdx = meta.currentSectionIndex;
-          qIdx = meta.currentQuestionIndex || 0;
-          if (meta.phase === "in_section") nextScreen = "question";
-          else if (meta.phase === "review") nextScreen = "section_review";
-          else nextScreen = (testType !== "full_length") ? "question" : "intro";
-        } else {
-          outer: for (let s = 0; s < loaded.sections.length; s++) {
-            const sec = loaded.sections[s];
-            for (let i = 0; i < sec.questions.length; i++) {
-              if (!sec.questions[i].isAnswered) {
-                secIdx = s;
-                qIdx = i;
-                nextScreen = "intro";
-                break outer;
-              }
+      if (meta && typeof meta.currentSectionIndex === "number") {
+        secIdx = meta.currentSectionIndex;
+        qIdx = meta.currentQuestionIndex || 0;
+        if (meta.phase === "in_section") nextScreen = "question";
+        else if (meta.phase === "review") nextScreen = "section_review";
+        else nextScreen = testType !== "full_length" ? "question" : "intro";
+      } else {
+        outer: for (let s = 0; s < loaded.sections.length; s++) {
+          const sec = loaded.sections[s];
+          for (let i = 0; i < sec.questions.length; i++) {
+            if (!sec.questions[i].isAnswered) {
+              secIdx = s;
+              qIdx = i;
+              nextScreen = "intro";
+              break outer;
             }
           }
         }
-
-        setActiveSectionIndex(secIdx);
-        setActiveQuestionIndex(qIdx);
-        setCurrentScreen(nextScreen || "intro");
-      } catch (err: any) {
-        console.error("startAttempt error:", err);
-        setError(
-          err?.response?.data?.message ||
-          err.message ||
-          "Failed to start GRE test"
-        );
-        toast.error(
-          err?.response?.data?.message || "Failed to start GRE test"
-        );
-      } finally {
-        setStarting(false);
-        setLoading(false);
       }
-    },
-    [testTemplateId]
-  );
+
+      setActiveSectionIndex(secIdx);
+      setActiveQuestionIndex(qIdx);
+      setCurrentScreen(nextScreen || "intro");
+    } catch (err: any) {
+      console.error("startAttempt error:", err);
+      setError(
+        err?.response?.data?.message ||
+          err.message ||
+          "Failed to start GRE test",
+      );
+      toast.error(err?.response?.data?.message || "Failed to start GRE test");
+    } finally {
+      setStarting(false);
+      setLoading(false);
+    }
+  }, [testTemplateId]);
 
   useEffect(() => {
     startAttempt();
@@ -239,16 +225,15 @@ export default function GRETestAttemptPage() {
       attempt && attempt.sections[activeSectionIndex]
         ? attempt.sections[activeSectionIndex]
         : null,
-    [attempt, activeSectionIndex]
+    [attempt, activeSectionIndex],
   );
 
   const currentQuestion = useMemo(
     () =>
-      currentSection &&
-        currentSection.questions[activeQuestionIndex]
+      currentSection && currentSection.questions[activeQuestionIndex]
         ? currentSection.questions[activeQuestionIndex]
         : null,
-    [currentSection, activeQuestionIndex]
+    [currentSection, activeQuestionIndex],
   );
 
   const qDoc = currentQuestion?.questionDoc || null;
@@ -256,8 +241,7 @@ export default function GRETestAttemptPage() {
   useEffect(() => {
     if (!attempt || !currentSection) return;
 
-    const secDurationMinutes =
-      currentSection.durationMinutes || 0; // 0 → untimed
+    const secDurationMinutes = currentSection.durationMinutes || 0; // 0 → untimed
     if (!secDurationMinutes) {
       setTimerSecondsLeft(0);
       setTimerRunning(false);
@@ -267,15 +251,15 @@ export default function GRETestAttemptPage() {
     const secDurationSeconds = secDurationMinutes * 60;
     const usedInSection = currentSection.questions.reduce(
       (sum, q) => sum + (q.timeSpentSeconds || 0),
-      0
+      0,
     );
     const left = Math.max(0, secDurationSeconds - usedInSection);
     setTimerSecondsLeft(left);
     setTimerRunning(
       attempt.status === "in_progress" &&
-      left > 0 &&
-      !isCompleted &&
-      currentScreen === "question"
+        left > 0 &&
+        !isCompleted &&
+        currentScreen === "question",
     );
   }, [attempt, currentSection, currentScreen, isCompleted]);
 
@@ -295,14 +279,10 @@ export default function GRETestAttemptPage() {
       setAttempt((prev) => {
         if (!prev) return prev;
         const clone = structuredClone(prev) as TestAttempt;
-        clone.totalTimeUsedSeconds =
-          (clone.totalTimeUsedSeconds || 0) + 1;
+        clone.totalTimeUsedSeconds = (clone.totalTimeUsedSeconds || 0) + 1;
         const sIdx = activeSectionIndex;
         const qIdx = activeQuestionIndex;
-        if (
-          clone.sections[sIdx] &&
-          clone.sections[sIdx].questions[qIdx]
-        ) {
+        if (clone.sections[sIdx] && clone.sections[sIdx].questions[qIdx]) {
           clone.sections[sIdx].questions[qIdx].timeSpentSeconds =
             (clone.sections[sIdx].questions[qIdx].timeSpentSeconds || 0) + 1;
         }
@@ -330,18 +310,10 @@ export default function GRETestAttemptPage() {
 
     if (timerSecondsLeft === 0) {
       setTimerRunning(false);
-      toast.info(
-        "Time is up for this section. Moving to section review."
-      );
+      toast.info("Time is up for this section. Moving to section review.");
       setCurrentScreen("section_review");
     }
-  }, [
-    timerSecondsLeft,
-    timerRunning,
-    attempt,
-    currentSection,
-    currentScreen,
-  ]);
+  }, [timerSecondsLeft, timerRunning, attempt, currentSection, currentScreen]);
 
   const saveCurrentQuestionProgress = useCallback(
     async (opts?: {
@@ -366,8 +338,7 @@ export default function GRETestAttemptPage() {
             {
               sectionIndex,
               questionIndex,
-              answerOptionIndexes:
-                currentQuestion.answerOptionIndexes || [],
+              answerOptionIndexes: currentQuestion.answerOptionIndexes || [],
               answerText: currentQuestion.answerText || "",
               isAnswered: currentQuestion.isAnswered,
               markedForReview: currentQuestion.markedForReview,
@@ -379,25 +350,18 @@ export default function GRETestAttemptPage() {
 
         if (opts?.phase) {
           body.gmatPhase = opts.phase;
-          body.currentSectionIndex =
-            opts.metaSectionIndex ?? sectionIndex;
-          body.currentQuestionIndex =
-            opts.metaQuestionIndex ?? questionIndex;
+          body.currentSectionIndex = opts.metaSectionIndex ?? sectionIndex;
+          body.currentQuestionIndex = opts.metaQuestionIndex ?? questionIndex;
         }
 
-        await api.patch(
-          `/mcu/attempts/${attempt._id}/save-progress`,
-          body
-        );
+        await api.patch(`/mcu/attempts/${attempt._id}/save-progress`, body);
 
         if (!silent) {
           toast.success("Progress saved");
         }
       } catch (err: any) {
         if (!silent) {
-          toast.error(
-            err.response?.data?.message || "Failed to save progress"
-          );
+          toast.error(err.response?.data?.message || "Failed to save progress");
         }
       } finally {
         setSavingProgress(false);
@@ -409,7 +373,7 @@ export default function GRETestAttemptPage() {
       currentQuestion,
       activeSectionIndex,
       activeQuestionIndex,
-    ]
+    ],
   );
 
   const handleOptionClick = (optionIndex: number) => {
@@ -428,7 +392,7 @@ export default function GRETestAttemptPage() {
   };
 
   const handleTextAnswerChange = (
-    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
+    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>,
   ) => {
     const value = e.target.value;
     if (!attempt || !currentSection || !currentQuestion) return;
@@ -491,7 +455,7 @@ export default function GRETestAttemptPage() {
     });
 
     toast.info(
-      "You’ve reached the end of this section. Review your answers before moving on."
+      "You’ve reached the end of this section. Review your answers before moving on.",
     );
     setCurrentScreen("section_review");
   };
@@ -527,12 +491,11 @@ export default function GRETestAttemptPage() {
     setCurrentScreen("section_instructions");
   };
 
-
   const submitTestAttempt = async () => {
     if (!attempt || isCompleted) return;
 
     const confirmed = window.confirm(
-      "Are you sure you want to submit your GRE test? You won’t be able to change your answers afterwards."
+      "Are you sure you want to submit your GRE test? You won’t be able to change your answers afterwards.",
     );
     if (!confirmed) return;
 
@@ -567,9 +530,7 @@ export default function GRETestAttemptPage() {
       // navigate(`/gre/analysis/${submittedAttempt._id}`);
     } catch (err: any) {
       console.error("submitTestAttempt error:", err);
-      toast.error(
-        err.response?.data?.message || "Failed to submit GRE test"
-      );
+      toast.error(err.response?.data?.message || "Failed to submit GRE test");
     } finally {
       setSubmitting(false);
     }
@@ -577,7 +538,7 @@ export default function GRETestAttemptPage() {
 
   // Helper to update the current question partially and immutably
   const updateCurrentQuestion = (patch: Partial<AttemptQuestion>) => {
-    setAttempt(prev => {
+    setAttempt((prev) => {
       if (!prev) return prev;
       const clone = { ...prev };
       const sIdx = activeSectionIndex;
@@ -593,7 +554,9 @@ export default function GRETestAttemptPage() {
     });
   };
 
-  const [filter, setFilter] = useState<"all" | "answered" | "not_answered" | "flagged">("all");
+  const [filter, setFilter] = useState<
+    "all" | "answered" | "not_answered" | "flagged"
+  >("all");
 
   if (loading || starting) {
     return <FullScreenLoader />;
@@ -609,14 +572,9 @@ export default function GRETestAttemptPage() {
               <h2 className="font-semibold">Unable to load GRE test</h2>
             </div>
             <p className="mb-3">
-              {error ||
-                "Something went wrong while loading your attempt."}
+              {error || "Something went wrong while loading your attempt."}
             </p>
-            <Button
-              onClick={() => navigate(-1)}
-              variant="outline"
-              size="sm"
-            >
+            <Button onClick={() => navigate(-1)} variant="outline" size="sm">
               Go Back
             </Button>
           </div>
@@ -638,7 +596,9 @@ export default function GRETestAttemptPage() {
           currentScreen={currentScreen}
           isCompleted={isCompleted}
           savingProgress={savingProgress}
-          saveCurrentQuestionProgress={() => saveCurrentQuestionProgress({ silent: false })}
+          saveCurrentQuestionProgress={() =>
+            saveCurrentQuestionProgress({ silent: false })
+          }
           navigateBack={() => navigate(-1)}
         />
 
@@ -658,24 +618,26 @@ export default function GRETestAttemptPage() {
               setCurrentScreen={(screen) => setCurrentScreen(screen)}
             />
           )}
-          {currentScreen === "question" && currentSection && currentQuestion && (
-            <QuestionRenderer
-              qDoc={qDoc}
-              currentQuestion={currentQuestion}
-              isCompleted={isCompleted}
-              handleOptionClick={handleOptionClick}
-              handleTextAnswerChange={handleTextAnswerChange}
-              toggleMarkForReview={toggleMarkForReview}
-              updateCurrentQuestion={updateCurrentQuestion}
-              saveCurrentQuestionProgress={saveCurrentQuestionProgress}
-              activeQuestionIndex={activeQuestionIndex}
-              sectionTotal={currentSection.questions.length}
-              isLastQuestionInCurrentSection={isLastQuestionInCurrentSection}
-              isNextDisabled={isNextDisabled}
-              goToQuestion={goToQuestion}
-              goNextQuestion={goNextQuestion}
-            />
-          )}
+          {currentScreen === "question" &&
+            currentSection &&
+            currentQuestion && (
+              <QuestionRenderer
+                qDoc={qDoc}
+                currentQuestion={currentQuestion}
+                isCompleted={isCompleted}
+                handleOptionClick={handleOptionClick}
+                handleTextAnswerChange={handleTextAnswerChange}
+                toggleMarkForReview={toggleMarkForReview}
+                updateCurrentQuestion={updateCurrentQuestion}
+                saveCurrentQuestionProgress={saveCurrentQuestionProgress}
+                activeQuestionIndex={activeQuestionIndex}
+                sectionTotal={currentSection.questions.length}
+                isLastQuestionInCurrentSection={isLastQuestionInCurrentSection}
+                isNextDisabled={isNextDisabled}
+                goToQuestion={goToQuestion}
+                goNextQuestion={goNextQuestion}
+              />
+            )}
           {currentScreen === "section_review" && attempt && currentSection && (
             <SectionReview
               currentSection={currentSection}
