@@ -78,6 +78,7 @@ import ContentViewPage from "./pages/liveClass/Session";
 import CourseContentManagement from "./pages/Courses/CourseContent";
 import FirebaseNotifications from "./components/firebaseNotifications";
 import IeltsResult from "./pages/ielts/ieltsResult";
+import OoshasChatbot from "./components/chatbot/chatbot";
 
 // Define roles
 export const ROLES = {
@@ -96,6 +97,7 @@ export default function App() {
 
       <AuthProvider>
         <FirebaseNotifications />
+        {/* <OoshasChatbot/> */}
         <ToastContainer style={{ zIndex: 999999 }} />
         <Toaster position="top-center" richColors closeButton />
         <ScrollToTop />
