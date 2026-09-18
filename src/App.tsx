@@ -97,7 +97,7 @@ export default function App() {
 
       <AuthProvider>
         <FirebaseNotifications />
-        {/* <OoshasChatbot/> */}
+        <OoshasChatbot/>
         <ToastContainer style={{ zIndex: 999999 }} />
         <Toaster position="top-center" richColors closeButton />
         <ScrollToTop />

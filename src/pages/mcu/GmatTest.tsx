@@ -420,6 +420,21 @@ export default function GmatTestAttemptPage() {
 
   const qDoc = currentQuestion?.questionDoc || null;
 
+//   useEffect(() => {
+//   const handleBeforeUnload = (event: BeforeUnloadEvent) => {
+//     event.preventDefault();
+//     event.returnValue = "";
+//   };
+
+//   window.addEventListener("beforeunload", handleBeforeUnload);
+
+//   return () => {
+//     window.removeEventListener("beforeunload", handleBeforeUnload);
+//   };
+//  }, []);
+
+
+
   useEffect(() => {
     if (!attempt) return;
     if (!hasChosenSequence) return;
@@ -1336,10 +1351,10 @@ export default function GmatTestAttemptPage() {
 
       <GmatCalculatorModal open={openCalc} onClose={() => setOpenCalc(false)} />
 
-      {showAnswerRequiredModal && (
-        <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/50 p-4">
-          <div className="w-full max-w-sm rounded bg-white p-6 text-left shadow-xl dark:bg-slate-900">
-            {/* <AlertTriangle className="mx-auto mb-3 h-8 w-8 text-yellow-500" /> */}
+        {showAnswerRequiredModal && (
+          <div className="fixed inset-0 z-[999] flex items-center justify-center bg-black/50 p-4">
+            <div className="w-full max-w-sm rounded bg-white p-6 text-left shadow-xl dark:bg-slate-900">
+              {/* <AlertTriangle className="mx-auto mb-3 h-8 w-8 text-yellow-500" /> */}
 
             <h3 className="mb-2 text-lg font-semibold text-slate-800 dark:text-white">
               Answer Required
@@ -1349,23 +1364,24 @@ export default function GmatTestAttemptPage() {
               Please select an answer before proceeding to the next question.
             </p>
 
-            <Button
-              size="sm"
-              className="w-full bg-[#0a8cbd] text-white hover:bg-[#087da9] rounded-lg "
-              onClick={() => setShowAnswerRequiredModal(false)}
-            >
-              OK
-            </Button>
+              <Button
+                size="sm"
+                className="w-full bg-[#0a8cbd] text-white hover:bg-[#087da9] rounded-lg "
+                onClick={() => setShowAnswerRequiredModal(false)}
+              >
+                OK
+              </Button>
+            </div>
           </div>
-        </div>
-      )}
+        )}
 
-      {showConfirmModal && (
-        <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/50 p-4">
-          <div className="w-full max-w-sm rounded-xl bg-white p-6 text-center shadow-xl dark:bg-slate-900">
-            <h3 className="mb-2 text-lg font-semibold text-slate-800 dark:text-white">
-              Confirm Action
-            </h3>
+        
+        {showConfirmModal && (
+            <div className="fixed inset-0 z-[999] flex items-center justify-center bg-black/50 p-4">
+  <div className="w-full max-w-sm rounded-xl bg-white p-6 text-center shadow-xl dark:bg-slate-900">
+    <h3 className="mb-2 text-lg font-semibold text-slate-800 dark:text-white">
+      Confirm Action
+    </h3>
 
             <p className="mb-6 text-sm text-slate-600 dark:text-slate-300">
               Are you sure you want to continue?
@@ -1447,27 +1463,27 @@ export default function GmatTestAttemptPage() {
                                 <LogOut className="h-4 w-4" />
                                 Exit
                             </Button>} */}
+              </div>
             </div>
-          </div>
-          <div className="h-8 mt-0 bg-[#0a8cbd] flex gap-3 items-center justify-start">
-            {currentScreen == "question" && (
-              <span className="px-4 text-base font-semibold  capitalize tracking-wider text-white dark:text-indigo-300">
-                {getSectionTypeBadge()}
-              </span>
-            )}
-            {currentScreen == "question" && (
-              <button onClick={() => setOpenBoard(true)}>
-                <NotebookPenIcon className="h-6 w-6 text-white" />
-              </button>
-            )}
-            {currentScreen == "question" &&
-              getSectionTypeBadge() == "Data Insights" && (
-                <button onClick={() => setOpenCalc(true)}>
-                  <CalculatorIcon className="h-6 w-6 text-white" />
+            <div className="h-8 mt-0 bg-[#0a8cbd] flex gap-3 items-center justify-start">
+              {currentScreen == "question" && (
+                <span className="px-4 text-base font-semibold  capitalize tracking-wider text-white dark:text-indigo-300">
+                  {getSectionTypeBadge()}
+                </span>
+              )}
+              {currentScreen == "question" && (
+                <button onClick={() => setOpenBoard(true)}>
+                  <NotebookPenIcon className="h-6 w-6 text-white" />
                 </button>
               )}
+              {/* {currentScreen == "question" &&
+                getSectionTypeBadge() == "Data Insights" && ( */}
+                  <button onClick={() => setOpenCalc(true)}>
+                    <CalculatorIcon className="h-6 w-6 text-white" />
+                  </button>
+                {/* )} */}
+            </div>
           </div>
-        </div>
 
         {/* Scrollable main area (between header & footer) */}
         <div className="pt-14 pb-16">
@@ -1569,7 +1585,7 @@ export default function GmatTestAttemptPage() {
               <div className="mx-auto w-full max-w-8xl px-2 sm:px-4">
                 <div className="flex flex-col gap-2 py-2 sm:flex-row sm:items-center sm:justify-between sm:gap-4">
                   {/* Left Actions */}
-                  <div className="flex w-full items-center gap-1.5 overflow-x-auto sm:w-auto sm:gap-3">
+                  <div className="flex w-full items-center gap-1.5 p-1 overflow-x-auto sm:w-auto sm:gap-3">
                     <Button
                       variant=""
                       size="sm"

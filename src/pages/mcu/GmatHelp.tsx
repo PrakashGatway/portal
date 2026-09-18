@@ -1,4 +1,4 @@
-import React, { useRef, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { X } from "lucide-react";
 
 interface GmatHelpModalProps {
@@ -162,51 +162,231 @@ export default function GmatHelpModal({ open, onClose }: GmatHelpModalProps) {
 import { Excalidraw } from "@excalidraw/excalidraw";
 import "@excalidraw/excalidraw/index.css";
 
+// export function GmatWhiteboardModal({
+//   open,
+//   onClose,
+// }: any) {
+//   const modalRef = useRef<HTMLDivElement>(null);
+
+//   const [position, setPosition] = useState({ x: 180, y: 100 });
+//   const [dragging, setDragging] = useState(false);
+//   const dragOffset = useRef({ x: 0, y: 0 });
+
+//   if (!open) return null;
+
+//   const onMouseDown = (e: React.MouseEvent) => {
+//     setDragging(true);
+
+//     dragOffset.current = {
+//       x: e.clientX - position.x,
+//       y: e.clientY - position.y,
+//     };
+//   };
+
+//   const onMouseMove = (e: React.MouseEvent) => {
+//     if (!dragging) return;
+
+//     setPosition({
+//       x: e.clientX - dragOffset.current.x,
+//       y: e.clientY - dragOffset.current.y,
+//     });
+//   };
+
+//   const onMouseUp = () => {
+//     setDragging(false);
+//   };
+
+//   return (
+//     <div
+//       className="fixed inset-0 z-[90] pointer-events-none"
+//       onMouseMove={onMouseMove}
+//       onMouseUp={onMouseUp}
+//     >
+//       <div
+//         ref={modalRef}
+//         style={{
+//           left: position.x,
+//           top: position.y,
+//         }}
+//         className="
+//           absolute
+//           w-[calc(100vw-20px)]
+//           h-[calc(100vh-20px)]
+//           max-w-[700px]
+//           max-h-[560px]
+//           bg-white
+//           rounded-lg
+//           shadow-2xl
+//           flex
+//           flex-col
+//           pointer-events-auto
+//           overflow-hidden
+
+//           sm:w-[700px]
+//           sm:h-[560px]
+//         "
+//       >
+//         {/* Header */}
+//         <div
+//           onMouseDown={onMouseDown}
+//           className="
+//             flex
+//             items-center
+//             justify-between
+//             px-3
+//             sm:px-4
+//             py-2
+//             bg-gray-600
+//             text-white
+//             font-semibold
+//             select-none
+//             cursor-move
+//             shrink-0
+//           "
+//         >
+//           <span className="text-sm sm:text-base">
+//             Whiteboard
+//           </span>
+
+//           <button
+//             type="button"
+//             onMouseDown={(e) => e.stopPropagation()}
+//             onClick={onClose}
+//             className="
+//               p-1
+//               rounded
+//               hover:bg-gray-700
+//               active:bg-gray-700
+//             "
+//           >
+//             <X className="h-5 w-5" />
+//           </button>
+//         </div>
+
+//         {/* Excalidraw */}
+//         <div className="flex-1 relative min-h-0">
+//           <Excalidraw autoFocus />
+//         </div>
+//       </div>
+//     </div>
+//   );
+// }
+
+
 export function GmatWhiteboardModal({
   open,
   onClose,
 }: any) {
   const modalRef = useRef<HTMLDivElement>(null);
 
-  const [position, setPosition] = useState({ x: 180, y: 100 });
-  const [dragging, setDragging] = useState(false);
-  const dragOffset = useRef({ x: 0, y: 0 });
+  const [position, setPosition] = useState({
+    x: 180,
+    y: 100,
+  });
+
+  const dragging = useRef(false);
+  const dragOffset = useRef({
+    x: 0,
+    y: 0,
+  });
+
+  const animationFrame = useRef<number | null>(null);
+
+  const pendingPosition = useRef({
+    x: 180,
+    y: 100,
+  });
+
+  useEffect(() => {
+    return () => {
+      if (animationFrame.current !== null) {
+        cancelAnimationFrame(animationFrame.current);
+      }
+
+      document.body.style.userSelect = "";
+    };
+  }, []);
 
   if (!open) return null;
 
-  const onMouseDown = (e: React.MouseEvent) => {
-    setDragging(true);
+  /* ───────── Smooth Drag ───────── */
+
+  const onPointerDown = (
+    e: React.PointerEvent<HTMLDivElement>
+  ) => {
+    if ((e.target as HTMLElement).closest("button")) return;
+
+    e.preventDefault();
+
+    dragging.current = true;
 
     dragOffset.current = {
       x: e.clientX - position.x,
       y: e.clientY - position.y,
     };
+
+    pendingPosition.current = {
+      ...position,
+    };
+
+    e.currentTarget.setPointerCapture(e.pointerId);
+
+    document.body.style.userSelect = "none";
   };
 
-  const onMouseMove = (e: React.MouseEvent) => {
-    if (!dragging) return;
+  const onPointerMove = (
+    e: React.PointerEvent<HTMLDivElement>
+  ) => {
+    if (!dragging.current) return;
 
-    setPosition({
+    pendingPosition.current = {
       x: e.clientX - dragOffset.current.x,
       y: e.clientY - dragOffset.current.y,
-    });
+    };
+
+    if (animationFrame.current === null) {
+      animationFrame.current = requestAnimationFrame(() => {
+        if (modalRef.current) {
+          const { x, y } = pendingPosition.current;
+
+          modalRef.current.style.transform = `translate3d(${x}px, ${y}px, 0)`;
+        }
+
+        animationFrame.current = null;
+      });
+    }
   };
 
-  const onMouseUp = () => {
-    setDragging(false);
+  const onPointerUp = (
+    e: React.PointerEvent<HTMLDivElement>
+  ) => {
+    if (!dragging.current) return;
+
+    dragging.current = false;
+
+    try {
+      e.currentTarget.releasePointerCapture(e.pointerId);
+    } catch {
+      // Pointer capture may already be released.
+    }
+
+    setPosition(pendingPosition.current);
+
+    document.body.style.userSelect = "";
+
+    if (animationFrame.current !== null) {
+      cancelAnimationFrame(animationFrame.current);
+      animationFrame.current = null;
+    }
   };
 
   return (
-    <div
-      className="fixed inset-0 z-[90] pointer-events-none"
-      onMouseMove={onMouseMove}
-      onMouseUp={onMouseUp}
-    >
+    <div className="fixed inset-0 z-[90] pointer-events-none">
       <div
         ref={modalRef}
         style={{
-          left: position.x,
-          top: position.y,
+          transform: `translate3d(${position.x}px, ${position.y}px, 0)`,
+          willChange: "transform",
         }}
         className="
           absolute
@@ -221,14 +401,16 @@ export function GmatWhiteboardModal({
           flex-col
           pointer-events-auto
           overflow-hidden
-
           sm:w-[700px]
           sm:h-[560px]
         "
       >
         {/* Header */}
         <div
-          onMouseDown={onMouseDown}
+          onPointerDown={onPointerDown}
+          onPointerMove={onPointerMove}
+          onPointerUp={onPointerUp}
+          onPointerCancel={onPointerUp}
           className="
             flex
             items-center
@@ -242,6 +424,7 @@ export function GmatWhiteboardModal({
             select-none
             cursor-move
             shrink-0
+            touch-none
           "
         >
           <span className="text-sm sm:text-base">
@@ -250,7 +433,7 @@ export function GmatWhiteboardModal({
 
           <button
             type="button"
-            onMouseDown={(e) => e.stopPropagation()}
+            onPointerDown={(e) => e.stopPropagation()}
             onClick={onClose}
             className="
               p-1
@@ -279,12 +462,318 @@ interface Props {
 
 type Op = "+" | "-" | "*" | "/" | null;
 
+
+
+// export function GmatCalculatorModal({ open, onClose }: Props) {
+//   const [pos, setPos] = useState({ x: 220, y: 120 });
+//   const [dragging, setDragging] = useState(false);
+//   const drag = useRef({ x: 0, y: 0 });
+
+//   const [display, setDisplay] = useState("0");
+//   const [expression, setExpression] = useState(""); // shows full calculation
+//   const [acc, setAcc] = useState<number | null>(null);
+//   const [op, setOp] = useState<Op>(null);
+//   const [reset, setReset] = useState(false);
+
+//   const [memory, setMemory] = useState(0);
+//   const [mrcPressed, setMrcPressed] = useState(false);
+
+//   if (!open) return null;
+
+//   /* ───────── Helpers ───────── */
+//   const formatNumber = (num: number): string => {
+//     if (!isFinite(num)) return "Error";
+//     if (Number.isInteger(num)) return num.toString();
+//     return parseFloat(num.toFixed(3)).toString();
+//   };
+
+//   const opSymbol = (operator: Op): string => {
+//     if (operator === "+") return "+";
+//     if (operator === "-") return "−";
+//     if (operator === "*") return "×";
+//     if (operator === "/") return "÷";
+//     return "";
+//   };
+
+//   /* ───────── Drag ───────── */
+//   const start = (e: React.MouseEvent) => {
+//     setDragging(true);
+//     drag.current = { x: e.clientX - pos.x, y: e.clientY - pos.y };
+//   };
+//   const move = (e: React.MouseEvent) =>
+//     dragging &&
+//     setPos({ x: e.clientX - drag.current.x, y: e.clientY - drag.current.y });
+//   const stop = () => setDragging(false);
+
+//   /* ───────── Logic ───────── */
+//   const num = (n: string) => {
+//     let newDisplay: string;
+//     if (reset) {
+//       newDisplay = n;
+//       setReset(false);
+//     } else {
+//       newDisplay = display === "0" ? n : display + n;
+//     }
+//     setDisplay(newDisplay);
+//     setMrcPressed(false);
+
+//     // Update expression to show current number being typed
+//     if (acc !== null && op) {
+//       setExpression(`${formatNumber(acc)} ${opSymbol(op)} ${newDisplay}`);
+//     } else {
+//       setExpression("");
+//     }
+//   };
+
+//   const dot = () => {
+//     if (reset) {
+//       setDisplay("0.");
+//       setReset(false);
+//     } else if (!display.includes(".")) {
+//       setDisplay(display + ".");
+//     }
+//     setMrcPressed(false);
+
+//     if (acc !== null && op) {
+//       setExpression(`${formatNumber(acc)} ${opSymbol(op)} ${display}`);
+//     }
+//   };
+
+//   const clear = () => {
+//     setDisplay("0");
+//     setExpression("");
+//     setAcc(null);
+//     setOp(null);
+//     setReset(false);
+//     setMrcPressed(false);
+//   };
+
+//   const sign = () => {
+//     const val = parseFloat(display);
+//     if (!isNaN(val)) {
+//       const newVal = formatNumber(val * -1);
+//       setDisplay(newVal);
+//       if (acc !== null && op) {
+//         setExpression(`${formatNumber(acc)} ${opSymbol(op)} ${newVal}`);
+//       }
+//     }
+//     setMrcPressed(false);
+//   };
+
+//   const percent = () => {
+//     const val = parseFloat(display);
+//     if (!isNaN(val)) {
+//       const newVal = formatNumber(val / 100);
+//       setDisplay(newVal);
+//       if (acc !== null && op) {
+//         setExpression(`${formatNumber(acc)} ${opSymbol(op)} ${newVal}`);
+//       }
+//     }
+//     setMrcPressed(false);
+//   };
+
+//   const sqrt = () => {
+//     const val = parseFloat(display);
+//     if (!isNaN(val) && val >= 0) {
+//       const newVal = formatNumber(Math.sqrt(val));
+//       setDisplay(newVal);
+//       setExpression(`√(${display}) =`);
+//     } else {
+//       setDisplay("Error");
+//       setExpression("");
+//     }
+//     setReset(true);
+//     setMrcPressed(false);
+//   };
+
+//   const operate = (nextOp: Op) => {
+//     const cur = parseFloat(display);
+//     if (isNaN(cur) && display !== "Error") return;
+
+//     if (display === "Error") {
+//       clear();
+//       return;
+//     }
+
+//     if (acc === null) {
+//       // First operator press: store current value as accumulator
+//       setAcc(cur);
+//       setOp(nextOp);
+//       setExpression(`${formatNumber(cur)} ${opSymbol(nextOp)}`);
+//     } else if (op) {
+//       // Compute intermediate result
+//       let r = acc;
+//       if (op === "+") r += cur;
+//       if (op === "-") r -= cur;
+//       if (op === "*") r *= cur;
+//       if (op === "/") r = cur === 0 ? 0 : r / cur;
+
+//       const formatted = formatNumber(r);
+//       setAcc(r);
+//       setDisplay(formatted);
+
+//       if (nextOp !== null) {
+//         setExpression(`${formatted} ${opSymbol(nextOp)}`);
+//         setOp(nextOp);
+//       } else {
+//         // equals pressed (nextOp is null)
+//         setExpression(`${formatNumber(acc)} ${opSymbol(op)} ${formatNumber(cur)} =`);
+//         setOp(null);
+//         setAcc(null);
+//       }
+//     } else {
+//       // No pending op but acc exists (unusual) - just set new op
+//       setOp(nextOp);
+//       setExpression(`${formatNumber(acc)} ${opSymbol(nextOp)}`);
+//     }
+//     setReset(true);
+//     setMrcPressed(false);
+//   };
+
+//   const equals = () => {
+//     const cur = parseFloat(display);
+//     if (isNaN(cur) && display !== "Error") return;
+
+//     if (display === "Error") {
+//       clear();
+//       return;
+//     }
+
+//     if (acc !== null && op) {
+//       let r = acc;
+//       if (op === "+") r += cur;
+//       if (op === "-") r -= cur;
+//       if (op === "*") r *= cur;
+//       if (op === "/") r = cur === 0 ? 0 : r / cur;
+
+//       // Show the full equation in the expression line
+//       setExpression(`${formatNumber(acc)} ${opSymbol(op)} ${formatNumber(cur)} =`);
+//       setDisplay(formatNumber(r));
+//       setAcc(r); // keep result for chaining
+//       setOp(null);
+//     } else {
+//       // No pending operation – just show the number with "="
+//       setExpression(`${formatNumber(cur)} =`);
+//     }
+//     setReset(true);
+//     setMrcPressed(false);
+//   };
+
+//   /* ───────── Memory (TI-108 accurate) ───────── */
+//   const mPlus = () => {
+//     setMemory(memory + parseFloat(display));
+//     setMrcPressed(false);
+//   };
+
+//   const mMinus = () => {
+//     setMemory(memory - parseFloat(display));
+//     setMrcPressed(false);
+//   };
+
+//   const mrc = () => {
+//     if (!mrcPressed) {
+//       const recalled = formatNumber(memory);
+//       setDisplay(recalled);
+//       setMrcPressed(true);
+//       setReset(true);
+//       if (acc !== null && op) {
+//         setExpression(`${formatNumber(acc)} ${opSymbol(op)} ${recalled}`);
+//       }
+//     } else {
+//       setMemory(0);
+//       setMrcPressed(false);
+//     }
+//   };
+
+//   /* ───────── UI ───────── */
+//   return (
+//     <div className="fixed z-[90]" onMouseMove={move} onMouseUp={stop}>
+//       <div
+//         style={{ left: pos.x, top: pos.y }}
+//         className="absolute w-[280px] bg-white shadow-2xl rounded overflow-hidden"
+//       >
+//         {/* Title bar */}
+//         <div
+//           onMouseDown={start}
+//           className="cursor-grab active:cursor-grabbing flex justify-between items-center px-4 py-3 bg-[#2d3f5e] text-white font-semibold select-none"
+//         >
+//           <span>Calculator</span>
+//           <button
+//             onClick={onClose}
+//             className="w-8 h-8 flex items-center justify-center rounded-lg hover:bg-white/15 transition-colors"
+//           >
+//             <X size={18} />
+//           </button>
+//         </div>
+
+//         {/* Display with expression + current value */}
+//         <div className="bg-[#0f1a2b] text-white px-5  min-h-[70px] flex flex-col justify-end">
+//           <div className="text-sm text-blue-200/70 font-mono min-h-[10px] mb-1 text-right break-all">
+//             {expression}
+//           </div>
+//           <div className="text-4xl font-mono font-medium text-right tracking-wide break-all">
+//             {display}
+//           </div>
+//         </div>
+
+//         {/* Keypad */}
+//         <div className="grid grid-cols-4 gap-2.5 p-4 bg-[#1f3b63]">
+//           <Btn red onClick={sign}>±</Btn>
+//           <Btn red onClick={sqrt}>√</Btn>
+//           <Btn red onClick={percent}>%</Btn>
+//           <Btn red onClick={() => operate("/")}>÷</Btn>
+
+//           <Btn red onClick={mrc}>MRC</Btn>
+//           <Btn red onClick={mMinus}>M-</Btn>
+//           <Btn red onClick={mPlus}>M+</Btn>
+//           <Btn red onClick={clear}>ON/C</Btn>
+
+//           {[7, 8, 9].map((n) => (
+//             <Btn key={n} onClick={() => num(String(n))}>
+//               {n}
+//             </Btn>
+//           ))}
+//           <Btn red onClick={() => operate("*")}>×</Btn>
+
+//           {[4, 5, 6].map((n) => (
+//             <Btn key={n} onClick={() => num(String(n))}>
+//               {n}
+//             </Btn>
+//           ))}
+//           <Btn red onClick={() => operate("-")}>−</Btn>
+
+//           {[1, 2, 3].map((n) => (
+//             <Btn key={n} onClick={() => num(String(n))}>
+//               {n}
+//             </Btn>
+//           ))}
+//           <Btn red onClick={() => operate("+")}>+</Btn>
+
+//           <Btn className="col-span-2" onClick={() => num("0")}>
+//             0
+//           </Btn>
+//           <Btn onClick={dot}>.</Btn>
+//           <Btn red onClick={equals}>=</Btn>
+//         </div>
+//       </div>
+//     </div>
+//   );
+// }
+
+
+
+
 export function GmatCalculatorModal({ open, onClose }: Props) {
   const [pos, setPos] = useState({ x: 220, y: 120 });
-  const [dragging, setDragging] = useState(false);
-  const drag = useRef({ x: 0, y: 0 });
+
+  const calculatorRef = useRef<HTMLDivElement>(null);
+  const dragging = useRef(false);
+  const dragOffset = useRef({ x: 0, y: 0 });
+  const animationFrame = useRef<number | null>(null);
+  const pendingPosition = useRef({ x: 220, y: 120 });
 
   const [display, setDisplay] = useState("0");
+  const [expression, setExpression] = useState("");
   const [acc, setAcc] = useState<number | null>(null);
   const [op, setOp] = useState<Op>(null);
   const [reset, setReset] = useState(false);
@@ -292,73 +781,332 @@ export function GmatCalculatorModal({ open, onClose }: Props) {
   const [memory, setMemory] = useState(0);
   const [mrcPressed, setMrcPressed] = useState(false);
 
-  if (!open) return null;
+  /* ───────── Cleanup ───────── */
 
-  /* ───────── Drag ───────── */
-  const start = (e: React.MouseEvent) => {
-    setDragging(true);
-    drag.current = { x: e.clientX - pos.x, y: e.clientY - pos.y };
+  useEffect(() => {
+    return () => {
+      if (animationFrame.current !== null) {
+        cancelAnimationFrame(animationFrame.current);
+      }
+
+      document.body.style.userSelect = "";
+    };
+  }, []);
+
+  /* ───────── Helpers ───────── */
+
+  const formatNumber = (num: number): string => {
+    if (!isFinite(num)) return "Error";
+
+    if (Number.isInteger(num)) return num.toString();
+
+    return parseFloat(num.toFixed(3)).toString();
   };
-  const move = (e: React.MouseEvent) =>
-    dragging &&
-    setPos({ x: e.clientX - drag.current.x, y: e.clientY - drag.current.y });
-  const stop = () => setDragging(false);
 
-  /* ───────── Logic ───────── */
+  const opSymbol = (operator: Op): string => {
+    if (operator === "+") return "+";
+    if (operator === "-") return "−";
+    if (operator === "*") return "×";
+    if (operator === "/") return "÷";
+
+    return "";
+  };
+
+  /* ───────── Smooth Drag ───────── */
+
+  const start = (e: React.PointerEvent<HTMLDivElement>) => {
+    if ((e.target as HTMLElement).closest("button")) return;
+
+    e.preventDefault();
+
+    dragging.current = true;
+
+    dragOffset.current = {
+      x: e.clientX - pos.x,
+      y: e.clientY - pos.y,
+    };
+
+    pendingPosition.current = { ...pos };
+
+    e.currentTarget.setPointerCapture(e.pointerId);
+
+    document.body.style.userSelect = "none";
+  };
+
+  const move = (e: React.PointerEvent<HTMLDivElement>) => {
+    if (!dragging.current) return;
+
+    const newX = e.clientX - dragOffset.current.x;
+    const newY = e.clientY - dragOffset.current.y;
+
+    pendingPosition.current = {
+      x: newX,
+      y: newY,
+    };
+
+    if (animationFrame.current === null) {
+      animationFrame.current = requestAnimationFrame(() => {
+        if (calculatorRef.current) {
+          const { x, y } = pendingPosition.current;
+
+          calculatorRef.current.style.transform = `translate3d(${x}px, ${y}px, 0)`;
+        }
+
+        animationFrame.current = null;
+      });
+    }
+  };
+
+  const stop = (e?: React.PointerEvent<HTMLDivElement>) => {
+    if (!dragging.current) return;
+
+    dragging.current = false;
+
+    if (e) {
+      try {
+        e.currentTarget.releasePointerCapture(e.pointerId);
+      } catch {
+        // Pointer capture may already be released.
+      }
+    }
+
+    const finalPosition = pendingPosition.current;
+
+    setPos(finalPosition);
+
+    document.body.style.userSelect = "";
+
+    if (animationFrame.current !== null) {
+      cancelAnimationFrame(animationFrame.current);
+      animationFrame.current = null;
+    }
+  };
+
+  /* ───────── Calculator Logic ───────── */
+
   const num = (n: string) => {
+    let newDisplay: string;
+
     if (reset) {
-      setDisplay(n);
+      newDisplay = n;
       setReset(false);
     } else {
-      setDisplay(display === "0" ? n : display + n);
+      newDisplay = display === "0" ? n : display + n;
     }
+
+    setDisplay(newDisplay);
     setMrcPressed(false);
+
+    if (acc !== null && op) {
+      setExpression(
+        `${formatNumber(acc)} ${opSymbol(op)} ${newDisplay}`
+      );
+    } else {
+      setExpression("");
+    }
   };
 
-  const dot = () => !display.includes(".") && setDisplay(display + ".");
+  const dot = () => {
+    let newDisplay = display;
+
+    if (reset) {
+      newDisplay = "0.";
+      setReset(false);
+    } else if (!display.includes(".")) {
+      newDisplay = display + ".";
+    }
+
+    setDisplay(newDisplay);
+    setMrcPressed(false);
+
+    if (acc !== null && op) {
+      setExpression(
+        `${formatNumber(acc)} ${opSymbol(op)} ${newDisplay}`
+      );
+    }
+  };
 
   const clear = () => {
     setDisplay("0");
+    setExpression("");
     setAcc(null);
     setOp(null);
     setReset(false);
     setMrcPressed(false);
   };
 
-  const sign = () => setDisplay(String(parseFloat(display) * -1));
-  const percent = () => setDisplay(String(parseFloat(display) / 100));
-  const sqrt = () => {
-    setDisplay(String(Math.sqrt(parseFloat(display))));
-    setReset(true);
+  const sign = () => {
+    const val = parseFloat(display);
+
+    if (!isNaN(val)) {
+      const newVal = formatNumber(val * -1);
+
+      setDisplay(newVal);
+
+      if (acc !== null && op) {
+        setExpression(
+          `${formatNumber(acc)} ${opSymbol(op)} ${newVal}`
+        );
+      }
+    }
+
+    setMrcPressed(false);
   };
 
-  const operate = (nextOp: Op) => {
-    const cur = parseFloat(display);
-    if (acc === null) setAcc(cur);
-    else if (op) {
-      let r = acc;
-      if (op === "+") r += cur;
-      if (op === "-") r -= cur;
-      if (op === "*") r *= cur;
-      if (op === "/") r = cur === 0 ? 0 : r / cur;
-      setAcc(r);
-      setDisplay(String(r));
+  const percent = () => {
+    const val = parseFloat(display);
+
+    if (!isNaN(val)) {
+      const newVal = formatNumber(val / 100);
+
+      setDisplay(newVal);
+
+      if (acc !== null && op) {
+        setExpression(
+          `${formatNumber(acc)} ${opSymbol(op)} ${newVal}`
+        );
+      }
     }
-    setOp(nextOp);
+
+    setMrcPressed(false);
+  };
+
+  const sqrt = () => {
+    const val = parseFloat(display);
+
+    if (!isNaN(val) && val >= 0) {
+      const newVal = formatNumber(Math.sqrt(val));
+
+      setDisplay(newVal);
+      setExpression(`√(${display}) =`);
+    } else {
+      setDisplay("Error");
+      setExpression("");
+    }
+
     setReset(true);
     setMrcPressed(false);
   };
 
-  const equals = () => operate(null);
+  const calculate = (
+    first: number,
+    operator: Op,
+    second: number
+  ): number => {
+    if (operator === "+") return first + second;
+    if (operator === "-") return first - second;
+    if (operator === "*") return first * second;
+    if (operator === "/") {
+      return second === 0 ? Infinity : first / second;
+    }
 
-  /* ───────── Memory (TI-108 accurate) ───────── */
-  const mPlus = () => setMemory(memory + parseFloat(display));
-  const mMinus = () => setMemory(memory - parseFloat(display));
+    return second;
+  };
+
+  const operate = (nextOp: Op) => {
+    const cur = parseFloat(display);
+
+    if (isNaN(cur) && display !== "Error") return;
+
+    if (display === "Error") {
+      clear();
+      return;
+    }
+
+    if (acc === null) {
+      setAcc(cur);
+      setOp(nextOp);
+      setExpression(`${formatNumber(cur)} ${opSymbol(nextOp)}`);
+    } else if (op) {
+      const r = calculate(acc, op, cur);
+      const formatted = formatNumber(r);
+
+      setAcc(r);
+      setDisplay(formatted);
+
+      if (nextOp !== null) {
+        setExpression(`${formatted} ${opSymbol(nextOp)}`);
+        setOp(nextOp);
+      } else {
+        setExpression(
+          `${formatNumber(acc)} ${opSymbol(op)} ${formatNumber(cur)} =`
+        );
+
+        setOp(null);
+        setAcc(null);
+      }
+    } else {
+      setOp(nextOp);
+      setExpression(`${formatNumber(acc)} ${opSymbol(nextOp)}`);
+    }
+
+    setReset(true);
+    setMrcPressed(false);
+  };
+
+  const equals = () => {
+    const cur = parseFloat(display);
+
+    if (isNaN(cur) && display !== "Error") return;
+
+    if (display === "Error") {
+      clear();
+      return;
+    }
+
+    if (acc !== null && op) {
+      const r = calculate(acc, op, cur);
+
+      setExpression(
+        `${formatNumber(acc)} ${opSymbol(op)} ${formatNumber(cur)} =`
+      );
+
+      setDisplay(formatNumber(r));
+      setAcc(r);
+      setOp(null);
+    } else {
+      setExpression(`${formatNumber(cur)} =`);
+    }
+
+    setReset(true);
+    setMrcPressed(false);
+  };
+
+  /* ───────── Memory ───────── */
+
+  const mPlus = () => {
+    const value = parseFloat(display);
+
+    if (!isNaN(value)) {
+      setMemory((prev) => prev + value);
+    }
+
+    setMrcPressed(false);
+  };
+
+  const mMinus = () => {
+    const value = parseFloat(display);
+
+    if (!isNaN(value)) {
+      setMemory((prev) => prev - value);
+    }
+
+    setMrcPressed(false);
+  };
+
   const mrc = () => {
     if (!mrcPressed) {
-      setDisplay(String(memory));
+      const recalled = formatNumber(memory);
+
+      setDisplay(recalled);
       setMrcPressed(true);
       setReset(true);
+
+      if (acc !== null && op) {
+        setExpression(
+          `${formatNumber(acc)} ${opSymbol(op)} ${recalled}`
+        );
+      }
     } else {
       setMemory(0);
       setMrcPressed(false);
@@ -366,52 +1114,132 @@ export function GmatCalculatorModal({ open, onClose }: Props) {
   };
 
   /* ───────── UI ───────── */
+
+  if (!open) return null;
+
   return (
-    <div className="fixed inset-0 z-[90]" onMouseMove={move} onMouseUp={stop}>
+    <div className="fixed inset-0 z-[90] pointer-events-none">
       <div
-        style={{ left: pos.x, top: pos.y }}
-        className="absolute w-[300px] bg-white shadow-2xl"
+        ref={calculatorRef}
+        style={{
+          transform: `translate3d(${pos.x}px, ${pos.y}px, 0)`,
+          willChange: "transform",
+        }}
+        className="absolute w-[280px] bg-white shadow-2xl rounded overflow-hidden pointer-events-auto"
+        onPointerMove={move}
+        onPointerUp={stop}
+        onPointerCancel={stop}
       >
+        {/* Title Bar */}
+
         <div
-          onMouseDown={start}
-          className="cursor-pointer flex justify-between items-center px-3 py-2 bg-gray-600 text-white font-semibold select-none"
+          onPointerDown={start}
+          className="cursor-grab active:cursor-grabbing flex justify-between items-center px-4 py-3 bg-[#2d3f5e] text-white font-semibold select-none touch-none"
         >
-          Calculator
-          <button onClick={onClose}><X size={18} /></button>
+          <span>Calculator</span>
+
+          <button
+            onClick={onClose}
+            className="w-8 h-8 flex items-center justify-center rounded-lg hover:bg-white/15 transition-colors"
+          >
+            <X size={18} />
+          </button>
         </div>
 
-        <div className="bg-[#1e293b] text-white text-3xl text-right px-3 py-4 font-mono">
-          {display}
+        {/* Display */}
+
+        <div className="bg-[#0f1a2b] text-white px-5 min-h-[70px] flex flex-col justify-end">
+          <div className="text-sm text-blue-200/70 font-mono min-h-[10px] mb-1 text-right break-all">
+            {expression}
+          </div>
+
+          <div className="text-4xl font-mono font-medium text-right tracking-wide break-all">
+            {display}
+          </div>
         </div>
 
-        <div className="grid grid-cols-4 gap-2 p-3 bg-[#1f3b63]">
-          <Btn red onClick={sign}>±</Btn>
-          <Btn red onClick={sqrt}>√</Btn>
-          <Btn red onClick={percent}>%</Btn>
-          <Btn red onClick={() => operate("/")}>÷</Btn>
+        {/* Keypad */}
 
-          <Btn red onClick={mrc}>MRC</Btn>
-          <Btn red onClick={mMinus}>M-</Btn>
-          <Btn red onClick={mPlus}>M+</Btn>
-          <Btn red onClick={clear}>ON/C</Btn>
+        <div className="grid grid-cols-4 gap-2.5 p-4 bg-[#1f3b63]">
+          <Btn red onClick={sign}>
+            ±
+          </Btn>
 
-          {[7, 8, 9].map(n => <Btn key={n} onClick={() => num(String(n))}>{n}</Btn>)}
-          <Btn red onClick={() => operate("*")}>×</Btn>
+          <Btn red onClick={sqrt}>
+            √
+          </Btn>
 
-          {[4, 5, 6].map(n => <Btn key={n} onClick={() => num(String(n))}>{n}</Btn>)}
-          <Btn red onClick={() => operate("-")}>−</Btn>
+          <Btn red onClick={percent}>
+            %
+          </Btn>
 
-          {[1, 2, 3].map(n => <Btn key={n} onClick={() => num(String(n))}>{n}</Btn>)}
-          <Btn red onClick={() => operate("+")}>+</Btn>
+          <Btn red onClick={() => operate("/")}>
+            ÷
+          </Btn>
 
-          <Btn className="col-span-2" onClick={() => num("0")}>0</Btn>
+          <Btn red onClick={mrc}>
+            MRC
+          </Btn>
+
+          <Btn red onClick={mMinus}>
+            M-
+          </Btn>
+
+          <Btn red onClick={mPlus}>
+            M+
+          </Btn>
+
+          <Btn red onClick={clear}>
+            ON/C
+          </Btn>
+
+          {[7, 8, 9].map((n) => (
+            <Btn key={n} onClick={() => num(String(n))}>
+              {n}
+            </Btn>
+          ))}
+
+          <Btn red onClick={() => operate("*")}>
+            ×
+          </Btn>
+
+          {[4, 5, 6].map((n) => (
+            <Btn key={n} onClick={() => num(String(n))}>
+              {n}
+            </Btn>
+          ))}
+
+          <Btn red onClick={() => operate("-")}>
+            −
+          </Btn>
+
+          {[1, 2, 3].map((n) => (
+            <Btn key={n} onClick={() => num(String(n))}>
+              {n}
+            </Btn>
+          ))}
+
+          <Btn red onClick={() => operate("+")}>
+            +
+          </Btn>
+
+          <Btn className="col-span-2" onClick={() => num("0")}>
+            0
+          </Btn>
+
           <Btn onClick={dot}>.</Btn>
-          <Btn red onClick={equals}>=</Btn>
+
+          <Btn red onClick={equals}>
+            =
+          </Btn>
         </div>
       </div>
     </div>
   );
 }
+
+
+
 
 function Btn({
   children,
