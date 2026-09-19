@@ -395,10 +395,9 @@ export default function CourseListingPage() {
   const searchContainerRef = useRef<HTMLDivElement>(null)
   let navigate = useNavigate();
 
-  const [filters, setFilters] = useState<FilterState>({
+  const [filters, setFilters] = useState<any>({
     category: "", subcategory: "", status: "", level: "", mode: "",
-    featured: null, language: "", startDate: "", endDate: "",
-    minPrice: 0, maxPrice: 99000, sort: "-createdAt", page: 1, limit: 9, search: ""
+    featured: null, language: "", startDate: "", endDate: "", sort: "-createdAt", page: 1, limit: 50, search: ""
   })
 
   const [courses, setCourses] = useState<Course[]>([])
