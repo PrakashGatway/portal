@@ -103,10 +103,6 @@ interface TestAttempt {
   gmatMeta?: GmatMetaLike; // reused to resume position if backend uses it
 }
 
-interface StartAttemptResponse {
-  _id: string;
-}
-
 // Screens for GRE flow
 type GreScreen =
   | "section_instructions"
@@ -117,6 +113,7 @@ type GreScreen =
 
 export default function SatExamPage() {
   const { testTemplateId } = useParams<{ testTemplateId: string }>();
+  const type = new URLSearchParams(window.location.search).get("type");
   const navigate = useNavigate();
   const [attempt, setAttempt] = useState<TestAttempt | null>(null);
   const [loading, setLoading] = useState(true);
@@ -138,7 +135,7 @@ export default function SatExamPage() {
   const isCompleted = attempt?.status === "completed";
 
   const testTitle =
-    attempt?.testTemplate.title ||
+    attempt?.testTemplate?.title ||
     (attempt as any)?.testTemplate?.name ||
     "Practice Test";
 
@@ -153,12 +150,20 @@ export default function SatExamPage() {
       setStarting(true);
       setError(null);
 
-      const startRes = await api.post("/mcu/start", { testTemplateId });
-      if (!startRes.data?.success) {
-        throw new Error(startRes.data?.message || "Failed to start attempt");
+      let startRes;
+      if (type == "custom") {
+        startRes = await api.get(`/mcu/attempts/${testTemplateId}`);
+        if (!startRes.data?.success) {
+          throw new Error(startRes.data?.message || "Failed to start attempt");
+        }
+      } else {
+        startRes = await api.post("/mcu/start", { testTemplateId });
+        if (!startRes.data?.success) {
+          throw new Error(startRes.data?.message || "Failed to start attempt");
+        }
       }
 
-      const loaded: TestAttempt = startRes.data.data;
+      const loaded: TestAttempt = startRes?.data?.data;
 
       if (!loaded.sections || loaded.sections.length === 0) {
         setError("This test has no sections configured.");

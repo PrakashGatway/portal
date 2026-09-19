@@ -125,9 +125,7 @@ const QuestionRenderer: any = React.memo(
                   dangerouslySetInnerHTML={{ __html: qDoc.stimulus }}
                 />
               ) : (
-                <p className="text-lg text-slate-500 italic">
-                  No passage provided.
-                </p>
+               null
               )}
             </div>
 
@@ -312,9 +310,7 @@ const QuestionRenderer: any = React.memo(
                   dangerouslySetInnerHTML={{ __html: qDoc.stimulus }}
                 />
               ) : (
-                <p className="text-lg text-slate-500 italic">
-                  No passage provided.
-                </p>
+               null
               )}
 
             {/* Options */}
@@ -425,9 +421,7 @@ const QuestionRenderer: any = React.memo(
                   dangerouslySetInnerHTML={{ __html: qDoc.stimulus }}
                 />
               ) : (
-                <p className="text-lg text-slate-500 italic">
-                  No passage provided.
-                </p>
+                null
               )}
             <div className="space-y-3 mt-4">
               <textarea

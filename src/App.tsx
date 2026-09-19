@@ -79,6 +79,8 @@ import CourseContentManagement from "./pages/Courses/CourseContent";
 import FirebaseNotifications from "./components/firebaseNotifications";
 import IeltsResult from "./pages/ielts/ieltsResult";
 import OoshasChatbot from "./components/chatbot/chatbot";
+import CreateCustomTestPage from "./components/customTest/createCustomTest";
+import CustomTestsPage from "./components/customTest/customTestlisting";
 
 // Define roles
 export const ROLES = {
@@ -97,7 +99,7 @@ export default function App() {
 
       <AuthProvider>
         <FirebaseNotifications />
-        <OoshasChatbot/>
+        {/* <OoshasChatbot/> */}
         <ToastContainer style={{ zIndex: 999999 }} />
         <Toaster position="top-center" richColors closeButton />
         <ScrollToTop />
@@ -128,6 +130,12 @@ export default function App() {
               <Route path="/courses/:slug" element={<CourseDetailPageee />} />
             
               <Route path="/resources" element={<StudyMaterialPage />} />
+
+
+              <Route path="/custom-test" element={< CustomTestsPage/>} />
+
+              <Route path="/custom-test/create" element={< CreateCustomTestPage/>} />
+
               <Route
                 path="/resources/:slug"
                 element={<SecureMaterialViewer />}
