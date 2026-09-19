@@ -5,8 +5,7 @@ import {
   Hourglass,
 } from "lucide-react";
 
-export default function StepOneSATDetails() {
-  const [durationMinutes, setDurationMinutes] = useState(45);
+export default function StepOneSATDetails({durationMinutes ,setDurationMinutes}:any) {
   const [secondAngle, setSecondAngle] = useState(0);
 
   // Animate the second hand smoothly

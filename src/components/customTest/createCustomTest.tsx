@@ -6,83 +6,80 @@ import {
   Check,
   ListChecks,
   Loader2,
-  Search,
-  Sparkles,
-  Target,
-  Trash2,
-  X,
   RotateCcw,
+  X,
 } from "lucide-react";
+
 import api from "../../axiosInstance";
 import StepOneSATDetails from "./step1";
 
-/* =========================================================
-   TYPES
-========================================================= */
-
-interface Exam {
+interface FilterSection {
   _id: string;
   name: string;
-  description?: string;
-}
-
-interface QuestionOption {
-  _id?: string;
-  text?: string;
-  label?: string;
-}
-
-interface Question {
-  _id: string;
-
-  question?: string;
-  questionText?: string;
-  title?: string;
-
-  section?: string | any;
-  sectionName?: string;
-
-  questionType?: string;
-  type?: string;
-
-  difficulty?: string;
-
   tags?: string[];
+}
 
-  options?: QuestionOption[];
+interface FilterApiData {
+  sections?: FilterSection[];
+  difficulties?: string[];
+  difficulty?: string[];
+  questionTypes?: string[];
+  question_types?: string[];
+}
 
-  [key: string]: any;
+interface FilterState {
+  sections: string[];
+  tags: string[];
+  difficulties: string[];
+  questionPool: "unanswered" | "answered" | "answered_unanswered";
+}
+
+interface QuestionIdsApiResponse {
+  success: boolean;
+  data?: {
+    questionIds?: string[];
+    count?: number;
+  };
+  message?: string;
 }
 
 type TestType = "quiz" | "sectional" | "full_length";
 
-type SelectionMode = "questions" | "filters";
+function useDebounce<T>(value: T, delay = 500): T {
+  const [debouncedValue, setDebouncedValue] = useState<T>(value);
 
-interface FilterState {
-  sections: string[];
-  questionTypes: string[];
-  difficulties: string[];
-  tags: string[];
+  useEffect(() => {
+    const timer = window.setTimeout(() => {
+      setDebouncedValue(value);
+    }, delay);
+
+    return () => {
+      window.clearTimeout(timer);
+    };
+  }, [value, delay]);
+
+  return debouncedValue;
 }
 
 export default function CreateCustomTestPage() {
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
+
   const [testType, setTestType] = useState<TestType>("quiz");
+
   const [durationMinutes, setDurationMinutes] = useState(30);
+
   const [examId, setExamId] = useState("6924328024d744b891c17172");
-  const [exams, setExams] = useState<Exam[]>([]);
-  const [questions, setQuestions] = useState<Question[]>([]);
-  const [loadingQuestions, setLoadingQuestions] = useState(false);
 
-  const [selectionMode, setSelectionMode] =
-    useState<SelectionMode>("questions");
+  const [filterData, setFilterData] = useState<FilterApiData>({
+    sections: [],
+    difficulties: [],
+    questionTypes: [],
+  });
 
-  const [selectedQuestions, setSelectedQuestions] = useState<string[]>([]);
+  const [loadingFilters, setLoadingFilters] = useState(false);
 
-  const [search, setSearch] = useState("");
-
-  const [filters, setFilters] = useState<any>({
+  const [filters, setFilters] = useState<FilterState>({
     sections: [],
     tags: [],
     difficulties: [],
@@ -92,10 +89,10 @@ export default function CreateCustomTestPage() {
   const [questionCount, setQuestionCount] = useState(10);
 
   const [filteredQuestionIds, setFilteredQuestionIds] = useState<string[]>([]);
-  const [availableCount, setAvailableCount] = useState(0);
-  const [loadingFilterQuestions, setLoadingFilterQuestions] = useState(false);
 
-  const [tagInput, setTagInput] = useState("");
+  const [availableCount, setAvailableCount] = useState(0);
+
+  const [loadingFilterQuestions, setLoadingFilterQuestions] = useState(false);
 
   const [step, setStep] = useState(1);
 
@@ -103,49 +100,211 @@ export default function CreateCustomTestPage() {
 
   const [error, setError] = useState("");
 
+  const [tagInput, setTagInput] = useState("");
+
+  const debouncedFilters = useDebounce(
+    {
+      sections: filters.sections,
+      tags: filters.tags,
+      difficulties: filters.difficulties,
+      questionPool: filters.questionPool,
+      questionCount,
+    },
+    500,
+  );
+
   useEffect(() => {
     if (!examId) {
+      setFilterData({
+        sections: [],
+        difficulties: [],
+        questionTypes: [],
+      });
+
       return;
     }
 
     loadFilters();
   }, [examId]);
 
+  const loadFilters = async () => {
+    try {
+      setLoadingFilters(true);
+      setError("");
+
+      const response = await api.get("/mcu/questions/filters", {
+        params: {
+          examId,
+        },
+      });
+
+      const data: FilterApiData = response?.data?.data || {};
+
+      const sections = Array.isArray(data?.sections) ? data.sections : [];
+      const difficulties = Array.isArray(data?.difficulties)
+        ? data.difficulties
+        : Array.isArray(data?.difficulty)
+          ? data.difficulty
+          : [];
+
+      const questionTypes = Array.isArray(data?.questionTypes)
+        ? data.questionTypes
+        : Array.isArray(data?.question_types)
+          ? data.question_types
+          : [];
+
+      setFilterData({
+        sections,
+        difficulties: difficulties.filter(Boolean).map(String),
+
+        questionTypes: questionTypes.filter(Boolean).map(String),
+      });
+      setFilters((previous) => ({
+        ...previous,
+        sections: previous.sections.filter((sectionId) =>
+          sections.some((section) => String(section._id) === String(sectionId)),
+        ),
+
+        tags: previous.tags.filter((tag) =>
+          sections.some((section) =>
+            Array.isArray(section.tags) ? section.tags.includes(tag) : false,
+          ),
+        ),
+
+        difficulties: previous.difficulties.filter((difficulty) =>
+          difficulties.includes(difficulty),
+        ),
+      }));
+    } catch (error: any) {
+      console.error("Load question filters error:", error);
+
+      setFilterData({
+        sections: [],
+        difficulties: [],
+        questionTypes: [],
+      });
+
+      setError(
+        error?.response?.data?.message || "Failed to load question filters.",
+      );
+    } finally {
+      setLoadingFilters(false);
+    }
+  };
+
+  const availableSections = useMemo(() => {
+    return Array.isArray(filterData.sections) ? filterData.sections : [];
+  }, [filterData.sections]);
+
+  const availableTags = useMemo(() => {
+    const tagSet = new Set<string>();
+
+    availableSections.forEach((section) => {
+      if (!Array.isArray(section.tags)) {
+        return;
+      }
+
+      section.tags.forEach((tag) => {
+        if (typeof tag === "string" && tag.trim()) {
+          tagSet.add(tag.trim());
+        }
+      });
+    });
+
+    return Array.from(tagSet).sort((a, b) => a.localeCompare(b));
+  }, [availableSections]);
+
+  const availableDifficulties = useMemo(() => {
+    const defaultDifficulties = ["Easy", "Medium", "Hard"];
+
+    return Array.from(new Set([...defaultDifficulties])).sort((a, b) =>
+      a.localeCompare(b),
+    );
+  }, [filterData.difficulties]);
+
+  const visibleTags = useMemo(() => {
+    if (filters.sections.length === 0) {
+      return availableTags;
+    }
+
+    const selectedSectionIds = new Set(filters.sections);
+
+    const tagSet = new Set<string>();
+
+    availableSections
+      .filter((section) => selectedSectionIds.has(String(section._id)))
+      .forEach((section) => {
+        if (!Array.isArray(section.tags)) {
+          return;
+        }
+
+        section.tags.forEach((tag) => {
+          if (typeof tag === "string" && tag.trim()) {
+            tagSet.add(tag.trim());
+          }
+        });
+      });
+
+    return Array.from(tagSet).sort((a, b) => a.localeCompare(b));
+  }, [availableSections, availableTags, filters.sections]);
+
   const fetchFilteredQuestions = async () => {
-    if (!examId) return;
+    if (!examId) {
+      return;
+    }
+    if (
+      debouncedFilters.questionCount == 0 ||
+      !debouncedFilters.questionCount
+    ) {
+      return;
+    }
 
     try {
       setLoadingFilterQuestions(true);
       setError("");
 
-      const response = await api.get("/mcu/questions/list", {
-        params: {
-          examId,
+      const params: Record<string, string | number | undefined> = {
+        examId,
+        sections:
+          debouncedFilters.sections.length > 0
+            ? debouncedFilters.sections.join(",")
+            : undefined,
+        tags:
+          debouncedFilters.tags.length > 0
+            ? debouncedFilters.tags.join(",")
+            : undefined,
+        difficulties:
+          debouncedFilters.difficulties.length > 0
+            ? debouncedFilters.difficulties.join(",")
+            : undefined,
+        questionPool: debouncedFilters.questionPool,
+        questionCount: Number(debouncedFilters.questionCount),
+      };
 
-          sections:
-            filters.sections.length > 0
-              ? filters.sections.join(",")
-              : undefined,
-
-          tags: filters.tags.length > 0 ? filters.tags.join(",") : undefined,
-
-          difficulties:
-            filters.difficulties.length > 0
-              ? filters.difficulties.join(",")
-              : undefined,
-
-          questionPool: filters.questionPool,
-
-          questionCount: Number(questionCount),
+      const response = await api.get<QuestionIdsApiResponse>(
+        "/mcu/questions/list",
+        {
+          params,
         },
-      });
+      );
 
-      const data = response?.data?.data || response?.data;
+      const apiData = response?.data?.data || {};
 
-      setFilteredQuestionIds(data?.questionIds || []);
-      setAvailableCount(Number(data?.count || 0));
+      const questionIds = Array.isArray(apiData?.questionIds)
+        ? apiData.questionIds.filter(Boolean).map(String)
+        : [];
+
+      const count = Number(apiData?.count || 0);
+
+      setFilteredQuestionIds(questionIds);
+
+      setAvailableCount(count);
+
+      if (count === 0) {
+        setError("No questions match your selected filters.");
+      }
     } catch (error: any) {
-      console.error("Filter questions error:", error);
+      console.error("Fetch question IDs error:", error);
 
       setFilteredQuestionIds([]);
       setAvailableCount(0);
@@ -157,52 +316,52 @@ export default function CreateCustomTestPage() {
   };
 
   useEffect(() => {
-    if (step !== 2 || !examId) return;
+    if (step !== 2 || !examId) {
+      return;
+    }
 
     fetchFilteredQuestions();
   }, [
     step,
     examId,
-    filters.sections,
-    filters.tags,
-    filters.difficulties,
-    filters.questionPool,
-    questionCount,
+    debouncedFilters.sections,
+    debouncedFilters.tags,
+    debouncedFilters.difficulties,
+    debouncedFilters.questionPool,
+    debouncedFilters.questionCount,
   ]);
-
-  const loadFilters = async () => {
-    try {
-      setLoadingQuestions(true);
-      setError("");
-
-      const response = await api.get(`/mcu/questions/filters`, {
-        params: {
-          examId: examId
-        },
-      });
-
-      const data = response.data
-
-      
-    } catch (error: any) {
-      console.error("Load questions error:", error);
-
-      setError(error?.response?.data?.message || "Failed to load questions.");
-    } finally {
-      setLoadingQuestions(false);
-    }
-  };
 
   const toggleFilter = (
     key: "sections" | "tags" | "difficulties",
     value: string,
   ) => {
+    setError("");
+
     setFilters((previous) => {
       const current = previous[key];
+      const exists = current.includes(value);
 
+      // Section: only one selection
+      if (key === "sections") {
+        return {
+          ...previous,
+          sections: exists ? [] : [value],
+          tags: [], // Reset tags whenever section changes
+        };
+      }
+
+      // Difficulty: only one selection
+      if (key === "difficulties") {
+        return {
+          ...previous,
+          difficulties: exists ? [] : [value],
+        };
+      }
+
+      // Tags: multiple selection
       return {
         ...previous,
-        [key]: current.includes(value)
+        tags: exists
           ? current.filter((item) => item !== value)
           : [...current, value],
       };
@@ -210,10 +369,33 @@ export default function CreateCustomTestPage() {
   };
 
   const setQuestionPool = (value: FilterState["questionPool"]) => {
+    setError("");
+
     setFilters((previous) => ({
       ...previous,
       questionPool: value,
     }));
+  };
+
+  const addTag = () => {
+    const tag = tagInput.trim();
+
+    if (!tag) {
+      return;
+    }
+
+    const matchingTag = availableTags.find(
+      (item) => item.toLowerCase() === tag.toLowerCase(),
+    );
+
+    if (matchingTag && !filters.tags.includes(matchingTag)) {
+      setFilters((previous) => ({
+        ...previous,
+        tags: [...previous.tags, matchingTag],
+      }));
+    }
+
+    setTagInput("");
   };
 
   const clearFilters = () => {
@@ -225,152 +407,55 @@ export default function CreateCustomTestPage() {
     });
 
     setQuestionCount(10);
+
+    setFilteredQuestionIds([]);
+
+    setAvailableCount(0);
+
+    setError("");
   };
 
-  const availableSections = useMemo(() => {
-    const values = new Set<string>();
-
-    questions.forEach((question) => {
-      const section =
-        question.sectionName || question.section?.name || question.section;
-
-      if (typeof section === "string" && section.trim()) {
-        values.add(section);
-      }
-    });
-
-    return Array.from(values).sort();
-  }, [questions]);
-
-
-  const availableDifficulties = useMemo(() => {
-    const values = new Set<string>();
-
-    questions.forEach((question) => {
-      if (question.difficulty) {
-        values.add(String(question.difficulty));
-      }
-    });
-
-    return Array.from(values).sort((a, b) => a.localeCompare(b));
-  }, [questions]);
-
-  const availableTags = useMemo(() => {
-    const values = new Set<string>();
-
-    questions.forEach((question) => {
-      if (Array.isArray(question.tags)) {
-        question.tags.forEach((tag) => {
-          if (tag) {
-            values.add(String(tag));
-          }
-        });
-      }
-    });
-
-    return Array.from(values).sort();
-  }, [questions]);
-
-  const clearSelection = () => {
-    setSelectedQuestions([]);
-  };
-
-
-  const addTag = () => {
-    const tag = tagInput.trim();
-
-    if (!tag) return;
-
-    if (!filters.tags.includes(tag)) {
+  useEffect(() => {
+    if (availableSections.length > 0 && filters.sections.length === 0) {
       setFilters((previous) => ({
         ...previous,
-        tags: [...previous.tags, tag],
+        sections: [availableSections[0]._id],
+        tags: [],
       }));
     }
-
-    setTagInput("");
-  };
-
-  /* =======================================================
-     VALIDATION
-  ======================================================= */
+  }, [availableSections]);
 
   const validateStep = () => {
     setError("");
 
-    // if (step === 1) {
-    //   if (!examId) {
-    //     setError(
-    //       "Please select an exam.",
-    //     );
-    //     return false;
-    //   }
+    if (step === 2) {
+      if (loadingFilterQuestions) {
+        setError("Please wait while questions are being loaded.");
 
-    //   if (!title.trim()) {
-    //     setError(
-    //       "Please enter a test title.",
-    //     );
-    //     return false;
-    //   }
+        return false;
+      }
 
-    //   if (
-    //     !durationMinutes ||
-    //     durationMinutes < 1
-    //   ) {
-    //     setError(
-    //       "Please enter a valid duration.",
-    //     );
-    //     return false;
-    //   }
-    // }
+      if (availableCount <= 0 || filteredQuestionIds.length === 0) {
+        setError("No questions are available for the selected filters.");
 
-    // if (step === 2) {
-    //   if (
-    //     selectionMode ===
-    //     "questions"
-    //   ) {
-    //     if (
-    //       selectedQuestions.length ===
-    //       0
-    //     ) {
-    //       setError(
-    //         "Please select at least one question.",
-    //       );
-    //       return false;
-    //     }
-    //   }
+        return false;
+      }
 
-    //   if (
-    //     selectionMode ===
-    //     "filters"
-    //   ) {
-    //     if (
-    //       questionCount < 1
-    //     ) {
-    //       setError(
-    //         "Question count must be at least 1.",
-    //       );
-    //       return false;
-    //     }
+      if (questionCount > 0 && filteredQuestionIds.length < questionCount) {
+        setError(
+          `Only ${filteredQuestionIds.length} questions are available for the selected filters.`,
+        );
 
-    //     const possible =
-    //       getFilteredQuestionCount();
-
-    //     if (
-    //       possible <
-    //       questionCount
-    //     ) {
-    //       setError(
-    //         `Only ${possible} questions match your filters.`,
-    //       );
-    //       return false;
-    //     }
-    //   }
-    // }
+        return false;
+      }
+    }
 
     return true;
   };
 
+  /* =========================================================
+     CREATE CUSTOM TEST
+  ========================================================= */
 
   const handleCreate = async () => {
     if (!validateStep()) {
@@ -381,37 +466,29 @@ export default function CreateCustomTestPage() {
       setCreating(true);
       setError("");
 
-      const payload: any = {
+      const payload = {
         exam: examId,
 
-        title: title.trim(),
+        title: title.trim() || "Custom SAT Practice Test",
 
         description: description.trim(),
 
         testType,
 
-        selectionMode,
+        selectionMode: "filters",
 
         durationMinutes: Number(durationMinutes),
-      };
 
-      if (selectionMode === "questions") {
-        payload.questionIds = selectedQuestions;
-      }
+        questionIds: filteredQuestionIds,
 
-      if (selectionMode === "filters") {
-        payload.filters = {
+        filters: {
           sections: filters.sections,
-
-          questionTypes: filters.questionTypes,
-
-          difficulties: filters.difficulties,
-
           tags: filters.tags,
-
+          difficulties: filters.difficulties,
+          questionPool: filters.questionPool,
           questionCount: Number(questionCount),
-        };
-      }
+        },
+      };
 
       const response = await api.post("/mcu/custom", payload);
 
@@ -421,18 +498,17 @@ export default function CreateCustomTestPage() {
         );
       }
 
-      const customTest = response.data.data;
+      const customTest = response?.data?.data;
 
-      /*
-        After creation you can either:
+      const startres = await api.post(`/mcu/custom/${customTest?._id}/start`);
+      if (!startres?.data?.success) {
+        throw new Error(
+          startres?.data?.message || "Failed to start custom test.",
+        );
+      }
+      const startTest = startres?.data?.data;
 
-        1. Go to My Custom Tests
-        2. Immediately start the test
-
-        Here we go to My Custom Tests.
-      */
-
-      window.location.href = "/custom-tests";
+      window.location.href = `/mcq/tests/${startTest?._id}?type=custom`;
 
       return customTest;
     } catch (error: any) {
@@ -448,55 +524,39 @@ export default function CreateCustomTestPage() {
     }
   };
 
-  const nextStep = () => {
-    if (!validateStep()) {
-      return;
-    }
-
-    setStep((previous) => Math.min(3, previous + 1));
-  };
-
   const previousStep = () => {
     setError("");
 
-    setStep((previous) => Math.max(1, previous - 1));
+    setStep(1);
   };
 
   const resetBuilder = () => {
     setTitle("");
     setDescription("");
-    setExamId("");
+
+    setExamId("6924328024d744b891c17172");
+
     setTestType("quiz");
+
     setDurationMinutes(30);
 
-    setSelectionMode("questions");
-
-    setSelectedQuestions([]);
-
-    setSearch("");
-
-    clearFilters();
+    setFilters({
+      sections: [],
+      tags: [],
+      difficulties: [],
+      questionPool: "answered_unanswered",
+    });
 
     setQuestionCount(10);
+
+    setFilteredQuestionIds([]);
+
+    setAvailableCount(0);
 
     setStep(1);
 
     setError("");
   };
-
-  /* =======================================================
-     SELECTED QUESTION OBJECTS
-  ======================================================= */
-
-  const selectedQuestionObjects = useMemo(() => {
-    const map = new Map(questions.map((question) => [question._id, question]));
-
-    return selectedQuestions.map((id) => map.get(id)).filter(Boolean);
-  }, [selectedQuestions, questions]);
-
-  /* =======================================================
-     RENDER
-  ======================================================= */
 
   return (
     <div className="min-h-screen">
@@ -508,8 +568,8 @@ export default function CreateCustomTestPage() {
             </h1>
 
             <p className="mt-px max-w-2xl text-sm text-slate-600 md:text-base">
-              Build your own practice test by selecting specific questions or
-              generating a test using filters.
+              Build your own practice test by selecting filters and generating
+              your question pool.
             </p>
           </div>
 
@@ -533,10 +593,6 @@ export default function CreateCustomTestPage() {
               {
                 number: 2,
                 label: "Questions",
-              },
-              {
-                number: 3,
-                label: "Review",
               },
             ].map((item, index) => (
               <React.Fragment key={item.number}>
@@ -570,7 +626,7 @@ export default function CreateCustomTestPage() {
                   </span>
                 </button>
 
-                {index < 2 && (
+                {index < 1 && (
                   <div
                     className={`h-px flex-1 ${
                       step > item.number
@@ -592,12 +648,8 @@ export default function CreateCustomTestPage() {
           </div>
         )}
 
-        {/* =================================================
-            STEP 1
-        ================================================= */}
-
         {step === 1 && (
-          <div className="rounded-2xl mx-auto border border-slate-200 bg-white p-5 dark:border-slate-800 dark:bg-slate-900">
+          <div className="mx-auto rounded-2xl border border-slate-200 bg-white p-5 dark:border-slate-800 dark:bg-slate-900">
             <div className="mb-8">
               <h2 className="text-xl font-semibold text-slate-800 dark:text-white">
                 Test Details
@@ -608,212 +660,15 @@ export default function CreateCustomTestPage() {
               </p>
             </div>
 
-            {/* <div className="grid gap-6 md:grid-cols-2">
-
-
-              <div>
-                <label className="mb-2 block text-sm font-bold">
-                  Exam
-                </label>
-
-                <div className="relative">
-                  <select
-                    value={examId}
-                    onChange={(e) =>
-                      setExamId(
-                        e.target.value,
-                      )
-                    }
-                    className="w-full appearance-none rounded-xl border border-slate-200 bg-white px-4 py-3.5 pr-10 text-sm outline-none transition focus:border-orange-500 focus:ring-2 focus:ring-orange-500/10 dark:border-slate-700 dark:bg-slate-800 dark:text-white"
-                  >
-                    <option value="">
-                      {loadingExams
-                        ? "Loading exams..."
-                        : "Select Exam"}
-                    </option>
-
-                    {exams.map(
-                      (exam) => (
-                        <option
-                          key={
-                            exam._id
-                          }
-                          value={
-                            exam._id
-                          }
-                        >
-                          {
-                            exam.name
-                          }
-                        </option>
-                      ),
-                    )}
-                  </select>
-
-                  <ChevronDown
-                    size={17}
-                    className="pointer-events-none absolute right-4 top-4 text-slate-400"
-                  />
-                </div>
-              </div>
-
-
-              <div>
-                <label className="mb-2 block text-sm font-bold">
-                  Test Type
-                </label>
-
-                <div className="grid grid-cols-3 gap-2">
-                  {[
-                    {
-                      value:
-                        "quiz",
-                      label:
-                        "Quiz",
-                    },
-                    {
-                      value:
-                        "sectional",
-                      label:
-                        "Sectional",
-                    },
-                    {
-                      value:
-                        "full_length",
-                      label:
-                        "Full Length",
-                    },
-                  ].map(
-                    (item) => (
-                      <button
-                        type="button"
-                        key={
-                          item.value
-                        }
-                        onClick={() =>
-                          setTestType(
-                            item.value as TestType,
-                          )
-                        }
-                        className={`rounded-xl border px-3 py-3 text-xs font-bold transition md:text-sm ${
-                          testType ===
-                          item.value
-                            ? "border-orange-500 bg-orange-500 text-white"
-                            : "border-slate-200 bg-white text-slate-600 hover:border-orange-300 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-300"
-                        }`}
-                      >
-                        {
-                          item.label
-                        }
-                      </button>
-                    ),
-                  )}
-                </div>
-              </div>
-
-
-              <div className="md:col-span-2">
-                <label className="mb-2 block text-sm font-bold">
-                  Test Title
-                </label>
-
-                <input
-                  type="text"
-                  value={title}
-                  onChange={(e) =>
-                    setTitle(
-                      e.target.value,
-                    )
-                  }
-                  placeholder="e.g. SAT Math — Algebra Practice"
-                  className="w-full rounded-xl border border-slate-200 bg-white px-4 py-3.5 text-sm outline-none focus:border-orange-500 focus:ring-2 focus:ring-orange-500/10 dark:border-slate-700 dark:bg-slate-800 dark:text-white"
-                />
-              </div>
-
-
-              <div className="md:col-span-2">
-                <label className="mb-2 block text-sm font-bold">
-                  Description
-                </label>
-
-                <textarea
-                  rows={4}
-                  value={description}
-                  onChange={(e) =>
-                    setDescription(
-                      e.target.value,
-                    )
-                  }
-                  placeholder="Describe what you want to practice..."
-                  className="w-full resize-none rounded-xl border border-slate-200 bg-white px-4 py-3.5 text-sm outline-none focus:border-orange-500 focus:ring-2 focus:ring-orange-500/10 dark:border-slate-700 dark:bg-slate-800 dark:text-white"
-                />
-              </div>
-
-
-              <div>
-                <label className="mb-2 block text-sm font-bold">
-                  Duration
-                </label>
-
-                <div className="relative">
-                  <Clock3
-                    size={17}
-                    className="absolute left-4 top-4 text-slate-400"
-                  />
-
-                  <input
-                    type="number"
-                    min={1}
-                    max={600}
-                    value={
-                      durationMinutes
-                    }
-                    onChange={(e) =>
-                      setDurationMinutes(
-                        Number(
-                          e.target
-                            .value,
-                        ),
-                      )
-                    }
-                    className="w-full rounded-xl border border-slate-200 bg-white py-3.5 pl-11 pr-4 text-sm outline-none focus:border-orange-500 dark:border-slate-700 dark:bg-slate-800 dark:text-white"
-                  />
-                </div>
-              </div>
-
-
-              <div className="rounded-2xl bg-orange-50 p-5 dark:bg-orange-500/10">
-                <div className="flex items-center gap-3">
-                  <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-orange-500 text-white">
-                    <Target
-                      size={19}
-                    />
-                  </div>
-
-                  <div>
-                    <div className="text-xs font-medium text-slate-500">
-                      Test Type
-                    </div>
-
-                    <div className="font-bold capitalize text-orange-600">
-                      {testType.replace(
-                        "_",
-                        " ",
-                      )}
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div> */}
-
-            <StepOneSATDetails />
-
-            {/* Footer */}
+            <StepOneSATDetails durationMinutes={durationMinutes} setDurationMinutes={setDurationMinutes} />
 
             <div className="pt-6 dark:border-slate-800">
               <button
                 type="button"
-                onClick={nextStep}
+                onClick={() => {
+                  setError("");
+                  setStep(2);
+                }}
                 className="inline-flex items-center gap-2 rounded-full bg-orange-500 px-6 py-2.5 font-semibold text-white shadow-lg shadow-orange-500/20 hover:bg-orange-600"
               >
                 Continue
@@ -826,11 +681,10 @@ export default function CreateCustomTestPage() {
         {step === 2 && (
           <div>
             <div className="grid gap-5 lg:grid-cols-[minmax(0,1fr)_300px]">
-              {/* FILTERS */}
               <FilterSelection
                 sections={availableSections}
                 difficulties={availableDifficulties}
-                tags={availableTags}
+                tags={visibleTags}
                 filters={filters}
                 toggleFilter={toggleFilter}
                 setQuestionPool={setQuestionPool}
@@ -841,11 +695,10 @@ export default function CreateCustomTestPage() {
                 setTagInput={setTagInput}
                 addTag={addTag}
                 availableCount={availableCount}
-                loading={loadingFilterQuestions}
+                loading={loadingFilterQuestions || loadingFilters}
               />
 
-              {/* SELECTED QUESTIONS */}
-              <div className="h-fit rounded-2xl border border-slate-200 bg-white p-4 dark:border-slate-800 dark:bg-slate-900 lg:sticky lg:top-5">
+              <div className="h-fit rounded-2xl border border-slate-200 bg-white p-4 dark:border-slate-800 dark:bg-slate-900 lg:sticky lg:top-20">
                 <div className="mb-3">
                   <h3 className="font-semibold">Selected Questions</h3>
 
@@ -854,18 +707,16 @@ export default function CreateCustomTestPage() {
                   </p>
                 </div>
 
-                {/* TOTAL */}
                 <div className="mb-4 flex items-end justify-between rounded-2xl bg-orange-50 p-3 dark:bg-orange-500/10">
                   <div className="text-sm font-medium text-slate-500">
                     Total Questions
                   </div>
 
                   <div className="text-2xl font-black text-orange-600">
-                    {filteredQuestionIds.length}
+                    {availableCount}
                   </div>
                 </div>
 
-                {/* QUESTION IDS */}
                 {loadingFilterQuestions ? (
                   <div className="flex min-h-[180px] items-center justify-center">
                     <Loader2
@@ -889,7 +740,7 @@ export default function CreateCustomTestPage() {
                 ) : (
                   <div className="max-h-[400px] overflow-y-auto">
                     <div className="flex flex-wrap gap-2">
-                      {filteredQuestionIds.map((id: string, index: number) => (
+                      {filteredQuestionIds.map((id, index) => (
                         <div
                           key={id}
                           className="relative flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-slate-200 dark:bg-slate-800"
@@ -905,11 +756,14 @@ export default function CreateCustomTestPage() {
                 )}
 
                 {/* REQUESTED VS AVAILABLE */}
+
                 <div className="mt-4 rounded-xl bg-slate-50 p-3 dark:bg-slate-800">
                   <div className="flex justify-between text-xs">
                     <span className="text-slate-500">Requested</span>
 
-                    <span className="font-bold">{questionCount}</span>
+                    <span className="font-bold">
+                      {questionCount === 0 ? "No Limit" : questionCount}
+                    </span>
                   </div>
 
                   <div className="mt-2 flex justify-between text-xs">
@@ -919,295 +773,53 @@ export default function CreateCustomTestPage() {
                       {availableCount}
                     </span>
                   </div>
+
+                  <div className="mt-2 flex justify-between text-xs">
+                    <span className="text-slate-500">Selected</span>
+
+                    <span className="font-bold text-orange-600">
+                      {filteredQuestionIds.length}
+                    </span>
+                  </div>
                 </div>
               </div>
             </div>
 
-            {/* FOOTER */}
             <div className="mt-5 flex justify-between">
               <button
                 type="button"
                 onClick={previousStep}
-                className="inline-flex items-center gap-2 rounded-full px-5 py-2.5 font-semibold text-slate-600 hover:bg-slate-100 dark:text-slate-300 dark:hover:bg-slate-800"
+                disabled={creating}
+                className="inline-flex items-center gap-2 rounded-full px-5 py-2.5 font-semibold text-slate-600 hover:bg-slate-100 disabled:opacity-50 dark:text-slate-300 dark:hover:bg-slate-800"
               >
                 <ArrowLeft size={18} />
                 Back
               </button>
 
+              {/* CREATE DIRECTLY - NO REVIEW STEP */}
+
               <button
                 type="button"
-                onClick={nextStep}
+                onClick={handleCreate}
                 disabled={
+                  creating ||
                   loadingFilterQuestions ||
                   filteredQuestionIds.length === 0 ||
-                  filteredQuestionIds.length < questionCount
+                  availableCount === 0 ||
+                  (questionCount > 0 &&
+                    filteredQuestionIds.length < questionCount)
                 }
-                className="inline-flex items-center gap-2 rounded-full bg-orange-500 px-5 py-2.5 font-semibold text-white disabled:cursor-not-allowed disabled:opacity-50"
+                className="inline-flex items-center gap-2 rounded-full bg-orange-500 px-5 py-2.5 font-semibold text-white shadow-lg shadow-orange-500/20 hover:bg-orange-600 disabled:cursor-not-allowed disabled:opacity-50"
               >
-                Review Test
-                <ArrowRight size={18} />
+                {creating ? (
+                  <Loader2 size={18} className="animate-spin" />
+                ) : (
+                  <Check size={18} />
+                )}
+
+                {creating ? "Creating..." : "Create Test"}
               </button>
             </div>
-          </div>
-        )}
-
-        {/* =================================================
-            STEP 3
-        ================================================= */}
-
-        {step === 3 && (
-          <Review
-            exam={exams.find((item) => item._id === examId)}
-            title={title}
-            description={description}
-            testType={testType}
-            selectionMode={selectionMode}
-            durationMinutes={durationMinutes}
-            questionCount={
-              selectionMode === "questions"
-                ? selectedQuestions.length
-                : questionCount
-            }
-            filters={filters}
-            selectedQuestionObjects={selectedQuestionObjects}
-          />
-        )}
-
-        {/* =================================================
-            STEP 3 FOOTER
-        ================================================= */}
-
-        {step === 3 && (
-          <div className="mt-2 flex justify-between">
-            <button
-              type="button"
-              onClick={previousStep}
-              disabled={creating}
-              className="inline-flex items-center gap-2 rounded-full px-5 py-2.5 font-semibold text-slate-600 hover:bg-slate-100 disabled:opacity-50 dark:text-slate-300 dark:hover:bg-slate-800"
-            >
-              <ArrowLeft size={18} />
-              Back
-            </button>
-
-            <button
-              type="button"
-              onClick={handleCreate}
-              disabled={creating}
-              className="inline-flex items-center gap-2 rounded-full bg-orange-500 px-5 py-2.5 font-semibold text-white shadow-lg shadow-orange-500/20 hover:bg-orange-600 disabled:opacity-60"
-            >
-              {creating ? <Loader2 size={18} className="animate-spin" /> : ""}
-
-              {creating ? "Creating..." : "Create  Test"}
-            </button>
-          </div>
-        )}
-      </div>
-    </div>
-  );
-}
-
-/* =========================================================
-   MANUAL SELECTION
-========================================================= */
-
-function ManualSelection({
-  questions,
-  selectedQuestions,
-  search,
-  setSearch,
-  toggleQuestion,
-  selectAllVisible,
-  clearSelection,
-  loading,
-}: any) {
-  return (
-    <div className="grid gap-5 lg:grid-cols-[minmax(0,1fr)_300px]">
-      {/* QUESTIONS */}
-
-      <div className="min-w-0 rounded-2xl border border-slate-200 bg-white p-5 dark:border-slate-800 dark:bg-slate-900">
-        <div className="mb-2 flex flex-col gap-3 md:flex-row">
-          <div className="relative flex-1">
-            <Search
-              size={18}
-              className="absolute left-4 top-3.5 text-slate-400"
-            />
-
-            <input
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-              placeholder="Search questions..."
-              className="w-full rounded-xl border border-slate-200 py-3 pl-11 pr-4 text-sm outline-none focus:border-orange-500 dark:border-slate-700 dark:bg-slate-800 dark:text-white"
-            />
-          </div>
-
-          <button
-            type="button"
-            onClick={selectAllVisible}
-            className="rounded-xl border border-slate-200 px-4 py-3 text-sm font-semibold hover:border-orange-300 hover:text-orange-600 dark:border-slate-700"
-          >
-            Select Visible
-          </button>
-
-          <button
-            type="button"
-            onClick={clearSelection}
-            className="rounded-xl border border-red-200 px-4 py-3 text-sm font-semibold text-red-500 hover:bg-red-50 dark:border-red-900"
-          >
-            Clear
-          </button>
-        </div>
-
-        <div className="mb-3 px-1 flex items-center justify-between">
-          <div>
-            <h3 className="font-semibold">Question Bank</h3>
-
-            <p className="text-xs text-slate-600">
-              {questions.length} questions available
-            </p>
-          </div>
-
-          <div className="rounded-full bg-orange-100 px-3 py-1.5 text-xs font-bold text-orange-600 dark:bg-orange-500/10">
-            {selectedQuestions.length} Selected
-          </div>
-        </div>
-
-        {loading ? (
-          <div className="flex min-h-[400px] items-center justify-center">
-            <Loader2 className="animate-spin text-orange-500" size={30} />
-          </div>
-        ) : questions.length === 0 ? (
-          <div className="rounded-2xl border border-dashed border-slate-300 p-12 text-center dark:border-slate-700">
-            <Search size={32} className="mx-auto mb-3 text-slate-400" />
-
-            <p className="font-semibold">No questions found</p>
-
-            <p className="mt-1 text-sm text-slate-500">
-              Try changing your search or selecting another exam.
-            </p>
-          </div>
-        ) : (
-          <div className="max-h-[450px] space-y-3 overflow-y-auto pr-1">
-            {questions.map((question: Question, index: number) => {
-              const selected = selectedQuestions.includes(question._id);
-
-              const text =
-                question.question ||
-                question.questionText ||
-                question.title ||
-                "Question";
-
-              const textWithoutImages = text.replace(/<img\b[^>]*>/gi, "");
-
-              return (
-                <button
-                  key={question._id}
-                  type="button"
-                  onClick={() => toggleQuestion(question._id)}
-                  className={`w-full rounded-2xl border p-3 py-2.5 text-left transition ${
-                    selected
-                      ? "border-orange-500 bg-orange-50 dark:bg-orange-500/10"
-                      : "border-slate-200 hover:border-orange-300 dark:border-slate-700"
-                  }`}
-                >
-                  <div className="flex gap-4">
-                    <div
-                      className={`mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-md border ${
-                        selected
-                          ? "border-orange-500 bg-orange-500 text-white"
-                          : "border-slate-300 dark:border-slate-600"
-                      }`}
-                    >
-                      {selected && <Check size={10} />}
-                    </div>
-
-                    <div className="min-w-0 flex-1">
-                      <div className="mb-px flex items-center justify-between">
-                        <span className="text-xs font-bold text-slate-400">
-                          Q{index + 1}
-                        </span>
-
-                        <div className="flex flex-wrap gap-1.5">
-                          {question.difficulty && (
-                            <span className="rounded-full bg-slate-100 px-2 py-1 text-[10px] font-semibold capitalize dark:bg-slate-800">
-                              {question.difficulty}
-                            </span>
-                          )}
-
-                          {/* {(question.questionType ||
-                              question.type) && (
-                              <span className="rounded-full bg-orange-100 px-2 py-1 text-[10px] font-semibold text-orange-600 dark:bg-orange-500/10">
-                                {question.questionType ||
-                                  question.type}
-                              </span>
-                            )} */}
-                        </div>
-                      </div>
-
-                      <div
-                        className="line-clamp-3 text-sm font-medium leading-6 text-slate-700 dark:text-slate-200"
-                        dangerouslySetInnerHTML={{
-                          __html: String(textWithoutImages),
-                        }}
-                      />
-                    </div>
-                  </div>
-                </button>
-              );
-            })}
-          </div>
-        )}
-      </div>
-
-      {/* SELECTED */}
-
-      <div className="h-fit rounded-2xl border border-slate-200 bg-white p-4 dark:border-slate-800 dark:bg-slate-900 lg:sticky lg:top-5">
-        <div className="mb-3">
-          <h3 className="font-semibold">Selected Questions</h3>
-
-          <p className="mt-px text-xs text-slate-500">
-            These questions will be included in your test.
-          </p>
-        </div>
-
-        <div className="mb-4 flex justify-between items-end rounded-2xl bg-orange-50 p-3 py-3 dark:bg-orange-500/10">
-          <div className="text-sm font-medium text-slate-500">
-            Total Questions
-          </div>
-
-          <div className="mt-1 text-2xl font-black text-orange-600">
-            {selectedQuestions.length}
-          </div>
-        </div>
-
-        {selectedQuestions.length === 0 ? (
-          <div className="rounded-2xl bg-slate-50 p-8 text-center dark:bg-slate-800">
-            <ListChecks size={28} className="mx-auto mb-3 text-slate-400" />
-
-            <p className="text-sm font-semibold">No questions selected</p>
-          </div>
-        ) : (
-          <div className="max-h-[400px] flex flex-wrap gap-2 justify-between overflow-y-auto">
-            {selectedQuestions.map((id: string, index: number) => (
-              <div
-                key={id}
-                className="flex relative items-center gap-3 rounded-full bg-slate-200 p-1 dark:bg-slate-800"
-              >
-                <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-orange-500 text-sm font-semibold text-white">
-                  {index + 1}
-                </span>
-
-                {/* <span className="min-w-0 flex-1 truncate text-xs font-medium">
-                  Question {index + 1}
-                </span> */}
-                <button
-                  type="button"
-                  onClick={() => toggleQuestion(id)}
-                  className="absolute top-0 right-0 bg-white border rounded-full p-px text-slate-400 hover:text-red-500"
-                >
-                  <X size={15} />
-                </button>
-              </div>
-            ))}
           </div>
         )}
       </div>
@@ -1234,10 +846,41 @@ function FilterSelection({
   addTag,
   availableCount,
   loading,
-}: any) {
+}: {
+  sections: FilterSection[];
+  difficulties: string[];
+  tags: string[];
+  filters: FilterState;
+
+  toggleFilter: (
+    key: "sections" | "tags" | "difficulties",
+    value: string,
+  ) => void;
+
+  setQuestionPool: (value: FilterState["questionPool"]) => void;
+
+  clearFilters: () => void;
+
+  questionCount: number;
+
+  setQuestionCount: (value: number) => void;
+
+  tagInput: string;
+
+  setTagInput: (value: string) => void;
+
+  addTag: () => void;
+
+  availableCount: number;
+
+  loading: boolean;
+}) {
   return (
     <div className="rounded-3xl border border-slate-200 bg-white p-5 dark:border-slate-800 dark:bg-slate-900 md:p-7">
-      {/* HEADER */}
+      {/* =================================================
+          HEADER
+      ================================================= */}
+
       <div className="mb-7">
         <div className="flex items-center justify-between">
           <div>
@@ -1254,7 +897,10 @@ function FilterSelection({
         </div>
       </div>
 
-      {/* NUMBER OF QUESTIONS */}
+      {/* =================================================
+          NUMBER OF QUESTIONS
+      ================================================= */}
+
       <div className="mb-7 rounded-2xl bg-orange-50 p-4 dark:bg-orange-500/10">
         <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
           <div>
@@ -1275,35 +921,73 @@ function FilterSelection({
             >
               <option value={0}>No Limit</option>
 
-              {Array.from({ length: 12 }, (_, index) => {
-                const count = (index + 1) * 5;
+              {Array.from(
+                {
+                  length: 12,
+                },
+                (_, index) => {
+                  const count = (index + 1) * 5;
 
-                return (
-                  <option key={count} value={count}>
-                    {count} questions
-                  </option>
-                );
-              })}
+                  return (
+                    <option key={count} value={count}>
+                      {count} questions
+                    </option>
+                  );
+                },
+              )}
             </select>
           </div>
         </div>
       </div>
 
       <div className="space-y-7">
-        {/* SECTIONS */}
-        <FilterGroup
-          title="Sections"
-          values={sections}
-          selected={filters.sections}
-          onToggle={(value: string) => toggleFilter("sections", value)}
-        />
+        {/* =================================================
+            SECTIONS
+        ================================================= */}
 
-        {/* TAGS */}
+        <div>
+          <label className="mb-3 block text-sm font-bold">Sections</label>
+
+          {sections.length === 0 ? (
+            <p className="text-sm text-slate-400">No sections available.</p>
+          ) : (
+            <div className="flex max-h-48 flex-wrap gap-2 overflow-y-auto">
+              {sections.map((section) => {
+                const value = String(section._id);
+
+                const active = filters.sections.includes(value);
+
+                return (
+                  <button
+                    type="button"
+                    key={value}
+                    onClick={() => toggleFilter("sections", value)}
+                    className={`rounded-xl border px-3.5 py-2 text-xs font-semibold transition ${
+                      active
+                        ? "border-orange-500 bg-orange-500 text-white"
+                        : "border-slate-200 bg-white text-slate-600 hover:border-orange-300 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-300"
+                    }`}
+                  >
+                    {section.name}
+                  </button>
+                );
+              })}
+            </div>
+          )}
+        </div>
+
+        {/* =================================================
+            TAGS
+        ================================================= */}
+
         <div>
           <label className="mb-3 block text-sm font-bold">Subjects</label>
+
+          {/* SELECTED TAGS */}
+
           {filters.tags.length > 0 && (
             <div className="mt-3 flex flex-wrap gap-2">
-              {filters.tags.map((tag: string) => (
+              {filters.tags.map((tag) => (
                 <button
                   type="button"
                   key={tag}
@@ -1316,12 +1000,13 @@ function FilterSelection({
             </div>
           )}
 
-          {tags.length > 0 && (
-            <div className="mt-4 flex max-h-32 flex-wrap gap-2 overflow-y-auto">
+          {/* AVAILABLE TAGS */}
+
+          {tags.length > 0 ? (
+            <div className="mt-4 flex max-h-40 flex-wrap gap-2 overflow-y-auto">
               {tags
-                .filter((tag: string) => !filters.tags.includes(tag))
-                .slice(0, 40)
-                .map((tag: string) => (
+                .filter((tag) => !filters.tags.includes(tag))
+                .map((tag) => (
                   <button
                     type="button"
                     key={tag}
@@ -1332,18 +1017,22 @@ function FilterSelection({
                   </button>
                 ))}
             </div>
+          ) : (
+            <p className="text-sm text-slate-400">No tags available.</p>
           )}
         </div>
 
-        {/* DIFFICULTY */}
         <FilterGroup
           title="Difficulty"
           values={difficulties}
           selected={filters.difficulties}
-          onToggle={(value: string) => toggleFilter("difficulties", value)}
+          onToggle={(value) => toggleFilter("difficulties", value)}
         />
 
-        {/* QUESTION POOL */}
+        {/* =================================================
+            QUESTION POOL
+        ================================================= */}
+
         <div>
           <label className="mb-3 block text-sm font-bold">Question Pool</label>
 
@@ -1368,7 +1057,9 @@ function FilterSelection({
                 <button
                   key={item.value}
                   type="button"
-                  onClick={() => setQuestionPool(item.value)}
+                  onClick={() =>
+                    setQuestionPool(item.value as FilterState["questionPool"])
+                  }
                   className={`rounded-xl border px-4 py-3 text-sm font-semibold transition ${
                     active
                       ? "border-orange-500 bg-orange-500 text-white"
@@ -1383,7 +1074,10 @@ function FilterSelection({
         </div>
       </div>
 
-      {/* CLEAR */}
+      {/* =================================================
+          CLEAR
+      ================================================= */}
+
       <div className="mt-8 flex justify-end border-t border-slate-200 pt-5 dark:border-slate-800">
         <button
           type="button"
@@ -1398,8 +1092,21 @@ function FilterSelection({
   );
 }
 
+/* =========================================================
+   FILTER GROUP
+========================================================= */
 
-function FilterGroup({ title, values, selected, onToggle }: any) {
+function FilterGroup({
+  title,
+  values,
+  selected,
+  onToggle,
+}: {
+  title: string;
+  values: string[];
+  selected: string[];
+  onToggle: (value: string) => void;
+}) {
   return (
     <div>
       <label className="mb-3 block text-sm font-bold">{title}</label>
@@ -1408,7 +1115,7 @@ function FilterGroup({ title, values, selected, onToggle }: any) {
         <p className="text-sm text-slate-400">No options available.</p>
       ) : (
         <div className="flex max-h-48 flex-wrap gap-2 overflow-y-auto">
-          {values.map((value: string) => {
+          {values.map((value) => {
             const active = selected.includes(value);
 
             return (
@@ -1428,160 +1135,6 @@ function FilterGroup({ title, values, selected, onToggle }: any) {
           })}
         </div>
       )}
-    </div>
-  );
-}
-
-/* =========================================================
-   REVIEW
-========================================================= */
-
-function Review({
-  exam,
-  title,
-  description,
-  testType,
-  selectionMode,
-  durationMinutes,
-  questionCount,
-  filters,
-  selectedQuestionObjects,
-}: any) {
-  return (
-    <div className="rounded-3xl border border-slate-200 bg-white p-6 dark:border-slate-800 dark:bg-slate-900">
-      <div className="mb-4 flex items-center gap-4">
-        <div>
-          <h2 className="text-xl font-semibold">Review Your Test</h2>
-
-          <p className="mt-px text-sm text-slate-500">
-            Everything looks ready. Create your personalized test.
-          </p>
-        </div>
-      </div>
-
-      {/* SUMMARY */}
-
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-        <SummaryCard label="Exam" value={exam?.name || "SAT"} />
-
-        <SummaryCard label="Questions" value={questionCount} />
-
-        <SummaryCard label="Duration" value={`${durationMinutes} min`} />
-
-        <SummaryCard label="Type" value={testType.replace("_", " ")} />
-      </div>
-
-      {/* MODE */}
-
-      <div className="mt-5">
-        <div className="text-xs font-semibold uppercase tracking-wide text-slate-400">
-          Selection Method
-        </div>
-
-        <div className="mt-2 text-lg font-semibold capitalize">
-          {selectionMode === "questions"
-            ? "Individual Questions"
-            : "Filter Based Generation"}
-        </div>
-      </div>
-
-      {selectionMode === "filters" && (
-        <div className="mt-5 rounded-2xl border border-slate-200 p-5 dark:border-slate-700">
-          <div className="mb-4 text-sm font-semibold">Applied Filters</div>
-
-          <div className="space-y-3 text-sm">
-            <ReviewFilter label="Sections" values={filters.sections} />
-
-            <ReviewFilter
-              label="Question Types"
-              values={filters.questionTypes}
-            />
-
-            <ReviewFilter label="Difficulty" values={filters.difficulties} />
-
-            <ReviewFilter label="Tags" values={filters.tags} />
-          </div>
-        </div>
-      )}
-
-      {/* SELECTED QUESTIONS */}
-
-      {selectionMode === "questions" && (
-        <div className="mt-5">
-          <div className="mb-4 flex items-center justify-between">
-            <div className="font-bold">Selected Questions</div>
-
-            <span className="rounded-full bg-orange-100 px-3 py-1 text-xs font-bold text-orange-600 dark:bg-orange-500/10">
-              {selectedQuestionObjects.length}
-            </span>
-          </div>
-
-          <div className="max-h-72 space-y-2 overflow-y-auto">
-            {selectedQuestionObjects.map(
-              (question: Question, index: number) => {
-                const text =
-                  question.question ||
-                  question.questionText ||
-                  question.title ||
-                  "Question";
-
-                const textWithoutImages = text.replace(/<img\b[^>]*>/gi, "");
-
-                return (
-                  <div
-                    key={question._id}
-                    className="flex gap-3 rounded-xl bg-slate-50 p-3 dark:bg-slate-800"
-                  >
-                    <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-orange-500 text-xs font-bold text-white">
-                      {index + 1}
-                    </span>
-
-                    <div
-                      className="line-clamp-2 text-sm !font-medium leading-5"
-                      dangerouslySetInnerHTML={{
-                        __html: String(textWithoutImages),
-                      }}
-                    />
-                  </div>
-                );
-              },
-            )}
-          </div>
-        </div>
-      )}
-
-      {/* FINAL NOTE */}
-
-      <div className="mt-6 rounded-2xl bg-orange-50 p-5 text-sm text-slate-600 dark:bg-orange-500/10 dark:text-slate-300">
-        <strong className="text-orange-600">Ready to practice?</strong> Your
-        selected questions will be snapshotted into this custom test. You can
-        then start it from your Custom Tests.
-      </div>
-    </div>
-  );
-}
-
-function SummaryCard({ label, value }: { label: string; value: any }) {
-  return (
-    <div className="rounded-2xl bg-slate-50 p-5 dark:bg-slate-800">
-      <div className="text-xs font-semibold uppercase tracking-wide text-slate-400">
-        {label}
-      </div>
-      <div className="mt-px truncate text-lg font-bold text-slate-700 capitalize">
-        {value}
-      </div>
-    </div>
-  );
-}
-
-function ReviewFilter({ label, values }: { label: string; values: string[] }) {
-  return (
-    <div className="flex flex-col gap-1 sm:flex-row sm:gap-3">
-      <span className="font-semibold">{label}:</span>
-
-      <span className="text-slate-500">
-        {values.length ? values.join(", ") : "All"}
-      </span>
     </div>
   );
 }
