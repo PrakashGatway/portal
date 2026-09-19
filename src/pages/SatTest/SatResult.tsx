@@ -194,7 +194,7 @@ export const GRETestResults: React.FC<GRETestResultsProps> = React.memo(
         const correct = Number(section.stats?.correct || 0);
         const total = Number(section.questions?.length || 0);
 
-        const sectionName = section.name?.toLowerCase() || "";
+        const sectionName = section.refer?.toLowerCase() || "";
 
         if (sectionName.includes("reading")) {
           readingCorrect += correct;
@@ -330,11 +330,11 @@ export const GRETestResults: React.FC<GRETestResultsProps> = React.memo(
           </Button>
           <AttemptAnalysis sections={attempt?.sections} />
           {/* Tabs - No "All" option, defaults to RW */}
-          <TotalSATScore
+         {attempt?.testType!=="quiz" && <TotalSATScore
             result={result}
             hasReadingWriting={hasReadingWriting}
             hasMath={hasMath}
-          />
+          />}
 
           {/* Overall Stats Grid */}
           <div>
@@ -518,7 +518,7 @@ export const GRETestResults: React.FC<GRETestResultsProps> = React.memo(
                   >
                     <BookOpenText className="h-4 w-4" />
 
-                    {item?.name}
+                    {item?.name || item.refer}
                   </button>
                 ))}
               </div>
@@ -669,9 +669,11 @@ export const GRETestResults: React.FC<GRETestResultsProps> = React.memo(
                                     <span className="font-medium text-sm">
                                       Correct:
                                     </span>
-                                    <span className="ml-2 font-medium text-sm line-clamp-2">
-                                      {correctLabel}
-                                    </span>
+                                    <div className="ml-2 font-medium text-sm line-clamp-2" dangerouslySetInnerHTML={{
+                                      __html : correctLabel
+                                    }}>
+                                      
+                                    </div>
                                   </div>
                                   <div
                                     className={`flex items-center  absolute -right-15 ${isExpanded ? "hidden" : "block"}`}
@@ -838,13 +840,7 @@ export const GRETestResults: React.FC<GRETestResultsProps> = React.memo(
               Ready to improve your score?
             </div>
             <div className="flex flex-col sm:flex-row items-center gap-3 w-full sm:w-auto">
-              <Button
-                variant="outline"
-                onClick={() => window.print()}
-                className="w-full sm:w-auto border-slate-300 dark:border-slate-600"
-              >
-                Print Report
-              </Button>
+           
               <Button
                 className="w-full sm:w-auto bg-[#f6673c] hover:bg-orange-600 text-white shadow-lg shadow-orange-500/20 transition-all hover:-translate-y-0.5"
                 onClick={onTakeAnotherTest}

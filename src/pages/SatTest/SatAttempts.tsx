@@ -512,6 +512,28 @@ export default function SatExamPage() {
   };
 
   useEffect(() => {
+  window.history.pushState(null, "", window.location.href);
+
+  const handleBackButton = () => {
+    const confirmBack = window.confirm(
+      "Are you sure you want to go back?"
+    );
+
+    if (confirmBack) {
+      window.history.back();
+    } else {
+      window.history.pushState(null, "", window.location.href);
+    }
+  };
+
+  window.addEventListener("popstate", handleBackButton);
+
+  return () => {
+    window.removeEventListener("popstate", handleBackButton);
+  };
+}, []);
+
+  useEffect(() => {
     if (currentScreen !== "break") return;
 
     if (breakSeconds <= 0) {

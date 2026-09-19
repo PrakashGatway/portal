@@ -842,7 +842,7 @@ const GREDashboard = () => {
       },
       breakpoints: {
         "(max-width:1023px)": {
-          slides: { perView: 3, spacing: 16 },
+          slides: { perView: 2, spacing: 16 },
         },
         "(max-width:923px)": {
           slides: { perView: 2, spacing: 16 },

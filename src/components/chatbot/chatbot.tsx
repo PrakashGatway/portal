@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import {
+  ArrowDown,
   ArrowLeft,
   ArrowRight,
   BookOpen,
@@ -87,12 +88,26 @@ export default function OoshasChatbot() {
   const [selectedArticle, setSelectedArticle] = useState(null);
   const [search, setSearch] = useState("");
   const [isLoading, setIsLoading] = useState(true);
+  const [selectedCategory, setSelectedCategory] = useState("");
 
   const abortControllerRef = useRef(null);
   const messagesEndRef = useRef(null);
 
   const [topics, setTopics] = useState([]);
   const [articles, setArticles] = useState([]);
+  const dragConstraintsRef = useRef(null);
+
+  const [buttonPosition, setButtonPosition] = useState({
+    x: 0,
+    y: 0,
+  });
+
+  const handleButtonDragEnd = (event, info) => {
+    setButtonPosition((prev) => ({
+      x: prev.x + info.offset.x,
+      y: prev.y + info.offset.y,
+    }));
+  };
 
   /* =========================================================
      SCROLL
@@ -106,19 +121,23 @@ export default function OoshasChatbot() {
   /* =========================================================
      FETCH ARTICLES & TOPICS
   ========================================================= */
+  const filterCategoryArticle = articles.filter((item) => {
+    console.log(item.category);
+    return item.category === selectedCategory;
+  });
 
   const fetchArticlesAndTopics = async (data) => {
     try {
       setIsLoading(true);
 
       const query = {
-        search : data
-      }
-      
+        search: data,
+      };
+
       const [topicsRes, articlesRes] = await Promise.all([
         axios.get("https://www.ooshasprep.com/api/article-category"),
         axios.get("https://www.ooshasprep.com/api/articles", {
-          params : query
+          params: query,
         }),
       ]);
 
@@ -426,11 +445,30 @@ export default function OoshasChatbot() {
       <AnimatePresence>
         {isOpen && (
           <motion.div
-            initial={{ opacity: 0, scale: 0.92, y: 18 }}
-            animate={{ opacity: 1, scale: 1, y: 0 }}
-            exit={{ opacity: 0, scale: 0.94, y: 18 }}
-            transition={spring}
-            className="fixed bottom-4 right-4 z-[9999] flex h-[min(720px,calc(100vh-8rem))] w-[calc(100vw-24px)] max-w-[430px] flex-col overflow-hidden  rounded-[26px] border border-[#eadfd9] bg-white shadow-[0_30px_90px_-20px_rgba(23,36,58,0.35)] sm:right-6 sm:bottom-6"
+            initial={{
+              opacity: 0,
+              scale: 0.85,
+              y: 30,
+            }}
+            animate={{
+              opacity: 1,
+              scale: 1,
+              y: 0,
+            }}
+            exit={{
+              opacity: 0,
+              scale: 0.08,
+              x: 35,
+              y: 35,
+            }}
+            transition={{
+              duration: 0.35,
+              ease: [0.4, 0, 1, 1],
+            }}
+            style={{
+              transformOrigin: "bottom right",
+            }}
+            className="fixed bottom-4 right-4 z-[9999] flex h-[min(680px,calc(100vh-8rem))] w-[calc(100vw-24px)] max-w-[390px] flex-col overflow-hidden rounded-[26px] bg-gradient-to-b from-[#d94f2f] via-[#f36d45] via-[30%] to-gray-100 to-[55%] shadow-[12px_3px_90px_-20px_rgba(23,46,58,1)] sm:right-6 sm:bottom-22"
           >
             {/* HEADER (hidden on the help home, since the hero below carries its own header) */}
             {view !== "help" && (
@@ -449,7 +487,7 @@ export default function OoshasChatbot() {
                     </motion.button>
 
                     <div className="relative">
-                      <div className="flex h-10 w-10 items-center justify-center rounded-[13px] bg-[#ff704f] text-white shadow-lg shadow-[#ff704f]/30">
+                      <div className="flex h-10 w-10 items-center justify-center rounded-full bg-[#ff704f] text-white shadow-lg shadow-[#ff704f]/30">
                         {/* <Bot size={20} /> */}
                         <img src="/gif/1.gif" alt="gif" />
                       </div>
@@ -504,10 +542,10 @@ export default function OoshasChatbot() {
                 initial="hidden"
                 animate="visible"
                 variants={stagger}
-                className="scrollbar-hide min-h-0 flex-1 overflow-y-auto bg-[#fffaf6]"
+                className="scrollbar-hide min-h-0 flex-1 overflow-y-auto bg-transparent"
               >
                 {/* Hero */}
-                <div className="relative overflow-hidden bg-[#17243a] px-5 pb-16 pt-5">
+                <div className="relative overflow-hidden  px-5 pb-16 pt-5">
                   <div className="pointer-events-none absolute -right-16 -top-16 h-52 w-52 rounded-full bg-[#ff704f]/20 blur-3xl" />
 
                   {/* Top row: brand + close, replaces the generic header on this screen */}
@@ -516,7 +554,7 @@ export default function OoshasChatbot() {
                     className="relative z-10 flex items-center justify-between"
                   >
                     <div className="flex items-center gap-2">
-                      <div className="flex h-9 w-9 items-center justify-center rounded-[11px] bg-[#ff704f] text-white">
+                      <div className="flex h-9 w-9 items-center justify-center rounded-full bg-black text-white">
                         {/* <Bot size={18} /> */}
                         <img src="/gif/1.gif" alt="gif" />
                       </div>
@@ -533,13 +571,13 @@ export default function OoshasChatbot() {
                     </motion.button>
                   </motion.div>
 
-                  <motion.div variants={fadeUp} className="relative z-10 mt-9">
+                  <motion.div variants={fadeUp} className="relative z-10 mt-4">
                     <h2 className="text-[30px] font-bold leading-[1.15] tracking-tight text-white">
                       Hello there!
                       <br />
                       How can we help?
                     </h2>
-                    <p className="mt-2.5 max-w-[300px] text-sm leading-6 text-white/70">
+                    <p className="mt-2.5 max-w-[300px] text-sm leading-6 text-white">
                       Ask about exam prep, courses, admissions or study abroad —
                       we're here for it.
                     </p>
@@ -730,22 +768,27 @@ export default function OoshasChatbot() {
                         ))}
                       </div>
                     ) : (
-                      <div className="space-y-2 grid grid-cols-2 gap-2">
+                      <div className=" grid grid-cols-2 gap-2">
                         {topics.map((topic, key) => {
                           const Icon = topic.icon || GraduationCap;
+
                           return (
                             <motion.button
                               key={topic.id || key}
                               variants={fadeUp}
                               whileTap={{ scale: 0.99 }}
-                              onClick={() => openTopic(topic)}
-                              className="group flex w-full items-center gap-3 rounded-2xl hover:outline  bg-white p-3.5 text-left transition hover:outline-[#ff9a82] hover:shadow-[0_10px_25px_-10px_rgba(255,112,79,0.2)]"
+                              onClick={() => {
+                                openTopic(topic);
+                                setSelectedCategory(topic.slug);
+                                setView("category");
+                              }}
+                              className="group flex w-full items-center gap-1 rounded-2xl hover:outline  bg-white p-3 text-left transition hover:outline-[#ff9a82] hover:shadow-[0_10px_25px_-10px_rgba(255,112,79,0.2)]"
                             >
                               {/* <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-[12px] bg-[#fff5f0] text-[#ff6040]">
                                 <Icon size={18} />
                               </div> */}
                               <div className="min-w-0 flex-1">
-                                <p className="text-sm font-bold text-[#17243a]">
+                                <p className="text-xs font-bold text-[#17243a]">
                                   {topic.name}
                                 </p>
                                 {/* <p
@@ -777,30 +820,10 @@ export default function OoshasChatbot() {
                   >
                     {/* <div className="absolute -right-5 -top-8 h-24 w-24 rounded-full bg-[#ff704f]/30 blur-2xl" /> */}
                     <div className="relative flex h-6 w-6 shrink-0 items-center justify-center rounded bg-[#ff704f] text-white">
-                      <Sparkles size={18} />
-                    </div>
-                    <div className="relative flex-1">
-                      <p className="text-sm font-bold">
-                        Ask Ooshas AI anything
-                      </p>
-                    </div>
-                    <ArrowRight size={18} className="relative" />
-                  </motion.button>
-                  
-                  <motion.button
-                    whileHover={{ scale: 1.01, y: -1 }}
-                    whileTap={{ scale: 0.98 }}
-                    onClick={() => setView("chat")}
-                    className="relative flex w-full items-center gap-3 overflow-hidden rounded-2xl outline-2 outline-[#17243a] p-3 text-left text-black shadow-[0_10px_30px_-8px_rgba(23,36,58,0.25)]"
-                  >
-                    {/* <div className="absolute -right-5 -top-8 h-24 w-24 rounded-full bg-[#ff704f]/30 blur-2xl" /> */}
-                    <div className="relative flex h-6 w-6 shrink-0 items-center justify-center rounded bg-[#ff704f] text-white">
                       <Ticket size={18} />
                     </div>
                     <div className="relative flex-1">
-                      <p className="text-sm font-bold">
-                        Raise Ticket
-                      </p>
+                      <p className="text-sm font-bold">Raise Ticket</p>
                     </div>
                     <ArrowRight size={18} className="relative" />
                   </motion.button>
@@ -809,27 +832,19 @@ export default function OoshasChatbot() {
             )}
 
             {/* ARTICLE VIEW */}
-            {view === "article" && selectedArticle && (
+            {view === "article" && selectedArticle ? (
               <motion.div
                 initial={{ opacity: 0, x: 15 }}
                 animate={{ opacity: 1, x: 0 }}
-                className="scrollbar-hide min-h-0 flex-1 overflow-y-auto bg-[#fffaf6]"
+                className="scrollbar-hide min-h-0 h-full w-full flex-1 overflow-y-auto bg-[#fffaf6]"
               >
-                <div className="border-b border-[#eadfd9] bg-white px-5 pb-5 pt-5">
+                <div className=" bg-white px-5  pt-5">
                   <div className="flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-[#ff6040]">
                     <BookOpen size={13} />
                     {selectedArticle.category}
                   </div>
-                  <h1 className="mt-3 text-2xl font-bold leading-tight tracking-tight text-[#17243a]">
-                    {selectedArticle.title}
-                  </h1>
-                  <div className="mt-3 flex items-center gap-3 text-xs text-[#8791a3]">
-                    <span className="flex items-center gap-1">
-                      <Clock3 size={12} />
-                      {selectedArticle.readTime}
-                    </span>
-                    <span>•</span>
-                    <span>Ooshas Prep Help</span>
+                  <div className="text-[#ff6040] mt-3 font-medium">
+                    {selectedArticle?.title}
                   </div>
                 </div>
 
@@ -874,7 +889,93 @@ export default function OoshasChatbot() {
                   </motion.div>
                 </div>
               </motion.div>
-            )}
+            ) : null}
+
+            {view === "category" && selectedCategory ? (
+              <motion.div
+                initial={{ opacity: 0, x: 15 }}
+                animate={{ opacity: 1, x: 0 }}
+                className="flex min-h-0 flex-1 flex-col overflow-hidden bg-white"
+              >
+                {/* Header */}
+                <div className="shrink-0 bg-white px-5 pb-5 pt-5">
+                  <div className="flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-[#ff6040]">
+                    <BookOpen size={13} />
+                    {selectedCategory}
+                  </div>
+                </div>
+
+                {/* Articles - only this section scrolls */}
+                <div className="min-h-0 flex-1 overflow-y-auto scrollbar-hide px-5">
+                  <div className="mx-auto w-full max-w-3xl space-y-2 pb-4">
+                    {filterCategoryArticle.map((article: any) => (
+                      <button
+                        key={article._id}
+                        onClick={() => openArticle(article)}
+                        className="group w-full rounded-xl border border-[#f36d45]/30 bg-gradient-to-r from-[#fff3ee] to-[#fff8f5] px-3.5 py-3 text-left transition-all duration-200 hover:border-[#f36d45]/50 hover:shadow-[0_6px_20px_-8px_rgba(243,109,69,0.3)] active:scale-[0.99]"
+                      >
+                        <div className="flex items-center justify-between gap-3">
+                          <h4 className="min-w-0 flex-1 truncate text-sm font-semibold text-[#d94f2f]">
+                            {article.title}
+                          </h4>
+
+                          <span className="shrink-0 text-[10px] font-medium text-[#8791a3]">
+                            {article.views || 0} views
+                          </span>
+
+                          <ChevronRight
+                            size={16}
+                            className="shrink-0 translate-x-0.5 text-[#f36d45]"
+                          />
+                        </div>
+
+                        <p
+                          className="mt-1 line-clamp-1 text-xs text-[#8791a3]"
+                          dangerouslySetInnerHTML={{
+                            __html: article.description,
+                          }}
+                        />
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Fixed bottom footer */}
+                <div className="shrink-0 bg-white px-5 py-4">
+                  <motion.div
+                    initial={{ opacity: 0, y: 10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    className="rounded-2xl border border-[#ffd8c9] bg-[#fff5f0] p-4"
+                  >
+                    <div className="flex items-start gap-3">
+                      <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-[#ff704f] text-white">
+                        <img src="/gif/1.gif" alt="gif" />
+                      </div>
+
+                      <div className="flex-1">
+                        <p className="text-sm font-bold text-[#17243a]">
+                          Still have questions?
+                        </p>
+
+                        <p className="mt-0.5 text-xs leading-5 text-[#8791a3]">
+                          Let Ooshas AI explain this specifically for you.
+                        </p>
+                      </div>
+                    </div>
+
+                    <motion.button
+                      whileTap={{ scale: 0.98 }}
+                      onClick={startConversation}
+                      className="mt-3.5 flex w-full items-center justify-center gap-2 rounded-xl bg-[#17243a] px-3 py-3 text-sm font-bold text-white shadow-sm transition hover:bg-[#26344b]"
+                    >
+                      <MessageCircle size={15} />
+                      Ask Ooshas AI
+                      <ArrowRight size={14} />
+                    </motion.button>
+                  </motion.div>
+                </div>
+              </motion.div>
+            ) : null}
 
             {/* CHAT */}
             {view === "chat" && (
@@ -1021,53 +1122,86 @@ export default function OoshasChatbot() {
         )}
       </AnimatePresence>
 
-      <AnimatePresence>
-        {!isOpen && (
-          <motion.button
-            initial={{ opacity: 0, scale: 0.6 }}
-            animate={{ opacity: 1, scale: 1 }}
-            exit={{ opacity: 0, scale: 0.6 }}
-            whileHover={{ scale: 1.06 }}
-            whileTap={{ scale: 0.92 }}
-            onClick={() => setIsOpen(true)}
-            className="fixed bottom-5 right-5 z-[9999] flex h-[58px] w-[58px] items-center justify-center sm:right-7 sm:bottom-7"
-          >
-            <motion.span
+      <div className="fixed inset-0 z-[9999] pointer-events-none">
+        <AnimatePresence mode="wait">
+          {!isOpen ? (
+            <motion.button
+              key="open-button"
+              initial={{ opacity: 0, scale: 0.6 }}
               animate={{
-                scale: [1, 1.45, 1.45],
-                opacity: [0.5, 0, 0],
+                opacity: 1,
+                scale: 1,
+                x: buttonPosition.x,
+                y: buttonPosition.y,
               }}
-              transition={{
-                duration: 2.2,
-                repeat: Infinity,
-                ease: "easeOut",
-              }}
-              className="absolute inset-[-8px] -z-10 rounded-full bg-[#ff704f]"
-            />
+              exit={{ opacity: 0, scale: 0.6 }}
+              whileHover={{ scale: 1.06 }}
+              whileTap={{ scale: 0.92 }}
+              whileDrag={{ scale: 1.08 }}
+              drag
+              dragMomentum={false}
+              dragElastic={0.05}
+              onDragEnd={handleButtonDragEnd}
+              onClick={() => setIsOpen(true)}
+              className="pointer-events-auto fixed bottom-2 right-5 flex h-[58px] w-[58px] cursor-grab items-center justify-center sm:bottom-7 sm:right-7"
+            >
+              <motion.span
+               
+                transition={{
+                  duration: 2.2,
+                  repeat: Infinity,
+                  ease: "easeOut",
+                }}
+                className="absolute inset-[-8px] -z-10 "
+              />
 
-            <motion.span
+              <motion.span
+               
+                transition={{
+                  duration: 2.2,
+                  repeat: Infinity,
+                  ease: "easeOut",
+                  delay: 0.5,
+                }}
+                className="absolute inset-[-3px] -z-10 rounded-full bg-[#ff704f]"
+              />
+
+              <span className="relative z-10 flex h-[58px] w-[58px] items-center justify-center rounded-full bg-[#17243a] text-white shadow-[0_12px_40px_-10px_rgba(23,36,58,0.5)]">
+                <img
+                  src="/gif/1.gif"
+                  alt="gif"
+                  className="h-full w-full rounded-full object-cover"
+                />
+              </span>
+
+              <span className="absolute right-0 top-0 z-20 h-3.5 w-3.5 rounded-full border-2 border-white bg-[#16a77a]" />
+            </motion.button>
+          ) : (
+            <motion.button
+              key="close-button"
+              initial={{ opacity: 0, scale: 0.7 }}
               animate={{
-                scale: [1, 1.25, 1.25],
-                opacity: [0.35, 0, 0],
+                opacity: 1,
+                scale: 1,
+                x: buttonPosition.x,
+                y: buttonPosition.y,
               }}
-              transition={{
-                duration: 2.2,
-                repeat: Infinity,
-                ease: "easeOut",
-                delay: 0.5,
-              }}
-              className="absolute inset-[-3px] -z-10 rounded-full bg-[#ff704f]"
-            />
-
-            <span className="relative z-10 flex h-[58px] w-[58px] items-center justify-center rounded-full bg-[#17243a] text-white shadow-[0_12px_40px_-10px_rgba(23,36,58,0.5)]">
-              {/* <Bot size={25} /> */}
-              <img src="/gif/1.gif" alt="gif" />
-            </span>
-
-            <span className="absolute right-0 top-0 z-20 h-3.5 w-3.5 rounded-full border-2 border-white bg-[#16a77a]" />
-          </motion.button>
-        )}
-      </AnimatePresence>
+              exit={{ opacity: 0, scale: 0.7 }}
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
+              whileDrag={{ scale: 1.08 }}
+              drag
+              dragMomentum={false}
+              dragElastic={0.05}
+              onDragEnd={handleButtonDragEnd}
+              onClick={closeChat}
+              className="pointer-events-auto fixed bottom-2 right-5 flex h-12 w-12 cursor-grab items-center justify-center rounded-full bg-[#f36d45] text-white shadow-lg sm:right-7"
+            >
+              <ArrowDown size={20} />
+            </motion.button>
+          )}
+        </AnimatePresence>
+      </div>
     </>
   );
 }

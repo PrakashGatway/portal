@@ -110,462 +110,1155 @@ const QuestionRenderer: any = React.memo(
     };
 
     return (
-      <div className="bg-white w-full h-full  py-6 pt-5">
-      <div className="max-w-7xl mx-auto px-4 pt-2 space-y-4 rounded-2xl border-3 border-dashed border-orange-200 xl:h-130 overflow-y-auto">
-        {isMCQ && type == "sat_reading_writing" ? (
-          <div ref={containerRef} className="flex gap-3">
-            {/* LEFT: Passage / Stimulus */}
+     <div className="bg-white w-full h-full py-6 px-4 pt-5">
+  <div
+    className="
+      max-w-7xl mx-auto
+      px-3 sm:px-4
+      pt-2
+      space-y-4
+      rounded-2xl
+      border-3 border-dashed border-orange-200
+      h-full
+      xl:h-130
+      
+      pb-24
+    "
+  >
+    {/* =========================================================
+        SAT READING / WRITING
+        Desktop  : Passage | Divider | Question
+        Tablet/Mobile : Passage
+                        Question
+    ========================================================= */}
+    {isMCQ && type === "sat_reading_writing" ? (
+      <div
+        ref={containerRef}
+        className="
+          grid
+          grid-cols-1
+          lg:grid-cols-[minmax(0,var(--left-width))_12px_minmax(0,1fr)]
+          gap-3
+          lg:gap-0
+        "
+        style={
+          {
+            "--left-width": `${leftPercent}%`,
+          } as React.CSSProperties
+        }
+      >
+        {/* =====================================================
+            LEFT - PASSAGE / STIMULUS
+        ===================================================== */}
+        <div
+          className="
+            min-w-0
+            w-full
+            rounded-xl
+            bg-white
+            dark:bg-slate-900
+            min-h-[40vh]
+            sm:min-h-[0]
+            md:min-h-[0]
+            lg:min-h-[60vh]
+            max-h-[65vh]
+            p-2
+            overflow-y-auto
+          "
+        >
+          {qDoc.stimulus ? (
             <div
-              style={{ width: `${leftPercent}%` }}
-              className="rounded-xl bg-white dark:bg-slate-900 min-h-[60vh] p-2 overflow-y-auto"
-            >
-              {qDoc.stimulus ? (
-                <div
-                  className="prose text-base sm:text-lg prose-sm dark:prose-invert max-w-none"
-                  dangerouslySetInnerHTML={{ __html: qDoc.stimulus }}
-                />
-              ) : (
-               null
-              )}
+              className="
+                prose
+                prose-sm
+                sm:prose
+                text-sm
+                sm:text-base
+                lg:text-lg
+                dark:prose-invert
+                max-w-none
+              "
+              dangerouslySetInnerHTML={{
+                __html: qDoc.stimulus,
+              }}
+            />
+          ) : null}
+        </div>
+
+        {/* =====================================================
+            DIVIDER
+            Only visible on desktop
+        ===================================================== */}
+        <div
+          onMouseDown={onDividerDown}
+          className="
+            hidden
+            lg:flex
+            cursor-col-resize
+            items-center
+            justify-center
+            w-3
+            select-none
+          "
+        >
+          <div className="h-full w-1 bg-[#F36D45] rounded-full" />
+        </div>
+
+        {/* =====================================================
+            RIGHT - QUESTION
+        ===================================================== */}
+        <div
+          className="
+            min-w-0
+            w-full
+            bg-white
+            rounded
+            dark:bg-slate-900
+            p-2
+            min-h-[55vh]
+            lg:min-h-[65vh]
+            max-h-[65vh]
+            overflow-y-auto
+          "
+        >
+          {/* QUESTION HEADER */}
+          <div
+            className="
+              flex
+              items-center
+              justify-between
+              gap-2
+              mb-4
+              bg-orange-50
+              dark:bg-slate-700
+              rounded-lg
+              p-1
+            "
+          >
+            {/* Question number + review */}
+            <div className="flex items-center gap-2 min-w-0">
+              <span
+                className="
+                  shrink-0
+                  bg-[#F36D45]
+                  dark:bg-slate-100
+                  text-white
+                  dark:text-slate-800
+                  px-2.5
+                  py-1.5
+                  rounded-lg
+                  text-sm
+                  font-semibold
+                "
+              >
+                {questionNumber}
+              </span>
+
+              <span
+                className="
+                  flex
+                  items-center
+                  cursor-pointer
+                  text-xs
+                  sm:text-sm
+                  whitespace-nowrap
+                "
+                onClick={toggleMarkForReview}
+              >
+                {currentQuestion.markedForReview ? (
+                  <>
+                    <BookmarkCheck
+                      className="mr-1 h-5 w-5 text-slate-900"
+                    />
+                    Marked
+                  </>
+                ) : (
+                  <>
+                    <BookmarkIcon className="mr-1 h-5 w-5" />
+                    Mark for Review
+                  </>
+                )}
+              </span>
             </div>
 
-            <div
-              onMouseDown={onDividerDown}
-              className="cursor-col-resize flex items-center justify-center"
-            >
-              <div className="h-full w-1 bg-[#F36D45] rounded-full" />
-            </div>
-
-            <div
-              style={{ width: `${100 - leftPercent}%` }}
-              className="bg-white rounded dark:bg-slate-900 p-2 min-h-[65vh] overflow-y-auto"
-            >
-              {/* Question Header */}
-              <div className="flex items-center justify-between mb-4 bg-orange-50 dark:bg-slate-700 rounded-lg">
-                <div className="flex items-center justify-between gap-2 ">
-                  <span className="bg-[#F36D45] dark:bg-slate-100 text-slate-100 dark:text-slate-800 p-2 rounded-lg">
-                    {questionNumber}
-                  </span>
-                  <span
-                    className="flex cursor-pointer"
-                    onClick={toggleMarkForReview}
-                  >
-                    {currentQuestion.markedForReview ? (
-                      <>
-                        <BookmarkCheck className="mr-1 h-6 w-6 text-slate-900" />
-                        Marked
-                      </>
-                    ) : (
-                      <>
-                        <BookmarkIcon className="mr-1 h-6 w-6" />
-                        Mark for Review
-                      </>
-                    )}
-                  </span>
-                </div>
-
-                {/* ABC / elimination switch */}
-                <div>
-                  <span
-                    onClick={() => {
-                      setShowEliminationMode((prev) => !prev);
-                      setCrossedOptions([]);
-                    }}
-                    className="bg-[#F36D45] dark:bg-blue-100 rounded-lg text-slate-100 dark:text-slate-800 p-1 mr-2 cursor-pointer select-none"
-                  >
-                    {showEliminationMode ? <del>ABC</del> : "ABC"}
-                  </span>
-                </div>
-              </div>
-
-              {/* Question Text */}
-              <div className="flex items-start justify-between mb-4">
-                <h2
-                  className="text-base sm:text-lg"
-                  dangerouslySetInnerHTML={{
-                    __html: qDoc.questionText || "Question missing",
-                  }}
-                />
-              </div>
-
-              {/* Options */}
-              <div className="space-y-3 mt-4">
-                {qDoc.options.map((opt: any, i: number) => {
-                  const selected =
-                    currentQuestion.answerOptionIndexes?.includes(i);
-                  const isCrossed = crossedOptions.includes(i);
-
-                  return (
-                    <div key={i} className="flex items-center gap-2">
-                      <div className="w-full relative">
-                        <button
-                          onClick={() => onOptionClick(i)}
-                          disabled={isCompleted}
-                          className={`w-full text-left rounded-2xl border-2 px-4 py-2 flex items-start gap-3 transition ${
-                            selected
-                              ? "border-[#F36D45] bg-orange-50 dark:bg-indigo-900/30 shadow-sm"
-                              : "border-orange-200 dark:border-slate-700 hover:bg-orange-50 dark:hover:bg-slate-800"
-                          } ${
-                            isCrossed && !selected
-                              ? "opacity-60"
-                              : "opacity-100"
-                          }`}
-                        >
-                          <div
-                            className={`flex h-7 w-7 flex-shrink-0 items-center justify-center rounded-full text-xs font-bold ${
-                              selected
-                                ? "bg-[#F36D45] text-white"
-                                : "border border-orange-400 text-[#F36D45] dark:border-slate-500 dark:text-slate-300"
-                            }`}
-                          >
-                            {String.fromCharCode(65 + i)}
-                          </div>
-                          <div
-                            className="prose prose-sm dark:prose-invert"
-                            dangerouslySetInnerHTML={{ __html: opt.text }}
-                          />
-                        </button>
-
-                        {/* Strike-through on main option when crossed */}
-                        {showEliminationMode && isCrossed && !selected && (
-                          <span className="absolute h-0.5 w-full bg-slate-900 top-1/2 -translate-y-1/2 pointer-events-none" />
-                        )}
-                      </div>
-
-                      {/* Elimination control on right */}
-                      {showEliminationMode && (
-                        <div className="relative">
-                          <div
-                            onClick={() => toggleCrossOption(i)}
-                            className={`flex h-7 w-7 flex-shrink-0 items-center justify-center border border-orange-400 text-[#F36D45] dark:border-slate-500 dark:text-slate-300 rounded-full text-sm font-bold cursor-pointer select-none ${
-                              isCrossed ? "bg-[#F36D45] text-white" : ""
-                            }`}
-                          >
-                            {isCrossed ? "X" : String.fromCharCode(65 + i)}
-                          </div>
-                          {isCrossed && (
-                            <span className="absolute h-0.5 w-full bg-black top-1/2 -translate-y-1/2 pointer-events-none" />
-                          )}
-                        </div>
-                      )}
-                    </div>
-                  );
-                })}
-              </div>
+            {/* ABC elimination */}
+            <div className="shrink-0">
+              <span
+                onClick={() => {
+                  setShowEliminationMode((prev) => !prev);
+                  setCrossedOptions([]);
+                }}
+                className="
+                  inline-flex
+                  items-center
+                  justify-center
+                  bg-[#F36D45]
+                  dark:bg-blue-100
+                  rounded-lg
+                  text-white
+                  dark:text-slate-800
+                  px-2
+                  py-1
+                  text-xs
+                  sm:text-sm
+                  cursor-pointer
+                  select-none
+                "
+              >
+                {showEliminationMode ? <del>ABC</del> : "ABC"}
+              </span>
             </div>
           </div>
-        ) : isMCQ && type != "sat_reading_writing" ? (
-          <div className="bg-white rounded dark:bg-slate-900 p-2 min-h-[65vh] max-h-[65vh] overflow-y-auto">
-            {/* Question Header */}
-            <div className="flex items-center justify-between mb-4 bg-orange-50 dark:bg-slate-700 rounded-lg">
-              <div className="flex items-center justify-between gap-2">
-                <span className="bg-[#F36D45] dark:bg-slate-100 text-slate-100 dark:text-slate-800 p-2 rounded-lg">
-                  {questionNumber}
-                </span>
-                <span
-                  className="flex cursor-pointer"
-                  onClick={toggleMarkForReview}
-                >
-                  {currentQuestion.markedForReview ? (
-                    <>
-                      <BookmarkCheck className="mr-1 h-6 w-6 text-slate-900" />
-                      Marked
-                    </>
-                  ) : (
-                    <>
-                      <BookmarkIcon className="mr-1 h-6 w-6" />
-                      Mark for Review
-                    </>
-                  )}
-                </span>
-              </div>
 
-              {/* ABC / elimination switch */}
-              <div>
-                <span
-                  onClick={() => {
-                    setShowEliminationMode((prev) => !prev);
-                    setCrossedOptions([]);
-                  }}
-                  className="bg-[#F36D45] dark:bg-blue-100 rounded-lg text-slate-100 dark:text-slate-800 p-1 mr-2 cursor-pointer select-none"
-                >
-                  {showEliminationMode ? <del>ABC</del> : "ABC"}
-                </span>
-              </div>
-            </div>
+          {/* QUESTION TEXT */}
+          <div className="flex items-start justify-between mb-4">
+            <h2
+              className="
+                text-sm
+                sm:text-base
+                lg:text-lg
+                leading-relaxed
+                min-w-0
+              "
+              dangerouslySetInnerHTML={{
+                __html:
+                  qDoc.questionText || "Question missing",
+              }}
+            />
+          </div>
 
-            {/* Question Text */}
-            <div className="flex items-start justify-between mb-4">
-              <h2
-                className="text-base sm:text-lg !font-light"
-                dangerouslySetInnerHTML={{
-                  __html: qDoc.questionText || "Question missing",
-                }}
-              />
-            </div>
+          {/* OPTIONS */}
+          <div className="space-y-3 mt-4">
+            {qDoc.options.map((opt: any, i: number) => {
+              const selected =
+                currentQuestion.answerOptionIndexes?.includes(i);
 
-               {qDoc.stimulus ? (
+              const isCrossed =
+                crossedOptions.includes(i);
+
+              return (
                 <div
-                  className="prose text-base sm:text-lg prose-sm dark:prose-invert max-w-none "
-                  dangerouslySetInnerHTML={{ __html: qDoc.stimulus }}
-                />
-              ) : (
-               null
-              )}
-
-            {/* Options */}
-            <div className="space-y-3 mt-4">
-              {qDoc.options.map((opt: any, i: number) => {
-                const selected =
-                  currentQuestion.answerOptionIndexes?.includes(i);
-                const isCrossed = crossedOptions.includes(i);
-
-                return (
-                  <div key={i} className="flex items-center gap-2">
-                    <div className="w-full relative">
-                      <button
-                        onClick={() => onOptionClick(i)}
-                        disabled={isCompleted}
-                        className={`w-full text-left rounded-lg border-2 px-4 py-2 flex items-start gap-3 transition ${
+                  key={i}
+                  className="
+                    flex
+                    items-center
+                    gap-2
+                    min-w-0
+                  "
+                >
+                  {/* OPTION */}
+                  <div className="w-full min-w-0 relative">
+                    <button
+                      onClick={() => onOptionClick(i)}
+                      disabled={isCompleted}
+                      className={`
+                        w-full
+                        text-left
+                        rounded-2xl
+                        border-2
+                        px-3
+                        sm:px-4
+                        py-2
+                        flex
+                        items-start
+                        gap-2
+                        sm:gap-3
+                        transition
+                        min-w-0
+                        ${
                           selected
                             ? "border-[#F36D45] bg-orange-50 dark:bg-indigo-900/30 shadow-sm"
                             : "border-orange-200 dark:border-slate-700 hover:bg-orange-50 dark:hover:bg-slate-800"
-                        } ${
-                          isCrossed && !selected ? "opacity-60" : "opacity-100"
-                        }`}
-                      >
-                        <div
-                          className={`flex h-7 w-7 flex-shrink-0 items-center justify-center rounded-full text-xs font-bold ${
+                        }
+                        ${
+                          isCrossed && !selected
+                            ? "opacity-60"
+                            : "opacity-100"
+                        }
+                      `}
+                    >
+                      {/* A/B/C/D */}
+                      <div
+                        className={`
+                          flex
+                          h-7
+                          w-7
+                          shrink-0
+                          items-center
+                          justify-center
+                          rounded-full
+                          text-xs
+                          font-bold
+                          ${
                             selected
                               ? "bg-[#F36D45] text-white"
-                              : "border border-orange-400 text-slate-700 dark:border-slate-500 dark:text-slate-300"
-                          }`}
-                        >
-                          {String.fromCharCode(65 + i)}
-                        </div>
-                        <div
-                          className="prose prose-sm dark:prose-invert"
-                          dangerouslySetInnerHTML={{ __html: opt.text }}
-                        />
-                      </button>
+                              : "border border-orange-400 text-[#F36D45] dark:border-slate-500 dark:text-slate-300"
+                          }
+                        `}
+                      >
+                        {String.fromCharCode(65 + i)}
+                      </div>
 
-                      {/* Strike-through on main option when crossed */}
-                      {showEliminationMode && isCrossed && !selected && (
-                        <span className="absolute h-0.5 w-full bg-slate-900 top-1/2 -translate-y-1/2 pointer-events-none" />
+                      {/* OPTION TEXT */}
+                      <div
+                        className="
+                          prose
+                          prose-sm
+                          dark:prose-invert
+                          max-w-none
+                          min-w-0
+                          break-words
+                        "
+                        dangerouslySetInnerHTML={{
+                          __html: opt.text,
+                        }}
+                      />
+                    </button>
+
+                    {/* STRIKE THROUGH */}
+                    {showEliminationMode &&
+                      isCrossed &&
+                      !selected && (
+                        <span
+                          className="
+                            absolute
+                            h-0.5
+                            w-full
+                            bg-slate-900
+                            top-1/2
+                            -translate-y-1/2
+                            pointer-events-none
+                          "
+                        />
+                      )}
+                  </div>
+
+                  {/* ELIMINATION BUTTON */}
+                  {showEliminationMode && (
+                    <div className="relative shrink-0">
+                      <div
+                        onClick={() =>
+                          toggleCrossOption(i)
+                        }
+                        className={`
+                          flex
+                          h-7
+                          w-7
+                          items-center
+                          justify-center
+                          border
+                          border-orange-400
+                          text-[#F36D45]
+                          dark:border-slate-500
+                          dark:text-slate-300
+                          rounded-full
+                          text-sm
+                          font-bold
+                          cursor-pointer
+                          select-none
+                          ${
+                            isCrossed
+                              ? "bg-[#F36D45] text-white"
+                              : ""
+                          }
+                        `}
+                      >
+                        {isCrossed
+                          ? "X"
+                          : String.fromCharCode(65 + i)}
+                      </div>
+
+                      {isCrossed && (
+                        <span
+                          className="
+                            absolute
+                            h-0.5
+                            w-full
+                            bg-black
+                            top-1/2
+                            -translate-y-1/2
+                            pointer-events-none
+                          "
+                        />
                       )}
                     </div>
-
-                    {/* Elimination control on right */}
-                    {showEliminationMode && (
-                      <div className="relative">
-                        <div
-                          onClick={() => toggleCrossOption(i)}
-                          className={`flex h-7 w-7 flex-shrink-0 items-center justify-center border border-orange-400 text-[#F36D45] dark:border-slate-500 dark:text-slate-300 rounded-full text-sm font-bold cursor-pointer select-none ${
-                            isCrossed ? "bg-orange-500 text-slate-100" : ""
-                          }`}
-                        >
-                          {isCrossed ? "X" : String.fromCharCode(65 + i)}
-                        </div>
-                        {isCrossed && (
-                          <span className="absolute h-0.5 w-full bg-orange-900 top-1/2 -translate-y-1/2 pointer-events-none" />
-                        )}
-                      </div>
-                    )}
-                  </div>
-                );
-              })}
-            </div>
-
-          
-
-            <div></div>
-          </div>
-        ) : (
-          <div className="bg-white rounded dark:bg-slate-900 p-2 min-h-[65vh] max-h-[65vh] overflow-y-auto">
-            {/* Question Header */}
-            <div className="flex items-center justify-between mb-4 bg-orange-50 dark:bg-slate-700 rounded-lg ">
-              <div className="flex items-center justify-between gap-2">
-                <span className="bg-[#F36D45] rounded-lg dark:bg-slate-100 text-slate-100 dark:text-slate-800 p-2">
-                  {questionNumber}
-                </span>
-                <span
-                  className="flex cursor-pointer"
-                  onClick={toggleMarkForReview}
-                >
-                  {currentQuestion.markedForReview ? (
-                    <>
-                      <BookmarkCheck className="mr-1 h-6 w-6 text-slate-900" />
-                      Marked
-                    </>
-                  ) : (
-                    <>
-                      <BookmarkIcon className="mr-1 h-6 w-6" />
-                      Mark for Review
-                    </>
                   )}
-                </span>
-              </div>
-            </div>
-
-            <div className="flex items-start justify-between mb-4">
-              <h2
-                className="text-base sm:text-lg"
-                dangerouslySetInnerHTML={{
-                  __html: qDoc.questionText || "Question missing",
-                }}
-              />
-            </div>
-               {qDoc.stimulus ? (
-                <div
-                  className="prose text-base sm:text-lg prose-sm dark:prose-invert max-w-none "
-                  dangerouslySetInnerHTML={{ __html: qDoc.stimulus }}
-                />
-              ) : (
-                null
-              )}
-            <div className="space-y-3 mt-4">
-              <textarea
-                value={currentQuestion.answerText || ""}
-                onChange={handleTextAnswerChange}
-                rows={2}
-                disabled={isCompleted}
-                className="min-w-xl rounded-lg border border-slate-300 dark:border-slate-600 px-3 py-2 text-base focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 dark:bg-slate-800 dark:text-white"
-                placeholder="Type your answer..."
-              />
-            </div>
+                </div>
+              );
+            })}
           </div>
-        )}
+        </div>
+      </div>
+    ) : isMCQ && type !== "sat_reading_writing" ? (
+      /* =========================================================
+         OTHER MCQ QUESTIONS
+         Always single column
+      ========================================================= */
+      <div
+        className="
+          bg-white
+          rounded
+          dark:bg-slate-900
+          p-2
+          min-h-[55vh]
+          lg:min-h-[65vh]
+          max-h-[65vh]
+          overflow-y-auto
+        "
+      >
+        {/* QUESTION HEADER */}
         <div
-          className={`fixed left-0 right-0 z-0 max-w-3xl mx-auto transition-transform duration-300 ease-out ${
-            isPaletteOpen ? "translate-y-0" : "translate-y-[200%]"
-          } bottom-10 sm:bottom-12`}
+          className="
+            flex
+            items-center
+            justify-between
+            gap-2
+            mb-4
+            bg-orange-50
+            dark:bg-slate-700
+            rounded-lg
+            p-1
+          "
         >
-          <div className="mx-auto max-w-3xl min-h-[50vh] rounded-t-2xl border border-slate-300 dark:border-slate-700 bg-slate-200 dark:bg-slate-900 shadow-xl p-6">
-            <div className="">
-              <div className="flex items-center justify-between mb-4">
-                <div className="font-semibold text-lg text-slate-800 dark:text-slate-100">
-                  Question
-                </div>
-                <button
-                  onClick={() => onReviewSection("section_review")}
-                  className="text-sm font-semibold px-3 py-1 rounded-full bg-[#f36d45] text-white dark:bg-blue-500"
-                >
-                  Review Section
-                </button>
-              </div>
+          <div className="flex items-center gap-2 min-w-0">
+            <span
+              className="
+                shrink-0
+                bg-[#F36D45]
+                dark:bg-slate-100
+                text-white
+                dark:text-slate-800
+                px-2.5
+                py-1.5
+                rounded-lg
+                text-sm
+                font-semibold
+              "
+            >
+              {questionNumber}
+            </span>
 
-              <div className="flex flex-wrap gap-3 text-sm mb-4 text-slate-700 dark:text-slate-300">
-                <div className="flex items-center gap-1">
-                  <span className="h-3 w-3 rounded-full bg-green-600" />
-                  Answered
-                </div>
-                <div className="flex items-center gap-1">
-                  <span className="h-3 w-3 rounded-full bg-slate-700" />
-                  Not Answered
-                </div>
-                <div className="flex items-center gap-1">
-                  <span className="h-3 w-3 rounded-full bg-yellow-400" />
-                  Marked for Review
-                </div>
-                <div className="flex items-center gap-1">
-                  <span className="h-3 w-3 rounded-full bg-[#f36d45]" />
-                  Current Question
-                </div>
-              </div>
+            <span
+              className="
+                flex
+                items-center
+                cursor-pointer
+                text-xs
+                sm:text-sm
+              "
+              onClick={toggleMarkForReview}
+            >
+              {currentQuestion.markedForReview ? (
+                <>
+                  <BookmarkCheck className="mr-1 h-5 w-5 text-slate-900" />
+                  Marked
+                </>
+              ) : (
+                <>
+                  <BookmarkIcon className="mr-1 h-5 w-5" />
+                  Mark for Review
+                </>
+              )}
+            </span>
+          </div>
 
-              <div className="grid grid-cols-8 sm:grid-cols-10 gap-3 mb-3">
-                {(sectionQuestions || []).map((q: any, idx: number) => {
-                  const answered =
-                    (q.answerOptionIndexes &&
-                      q.answerOptionIndexes.length > 0) ||
-                    (q.answerText && String(q.answerText).trim().length > 0);
-                  const marked = q.markedForReview;
-                  const isCurrent = idx === activeQuestionIndex;
-
-                  let stateClass = "bg-slate-700 text-slate-100";
-                  if (isCurrent) {
-                    stateClass = "bg-[#f36d45] text-white";
-                  } else if (marked) {
-                    stateClass =
-                      "bg-yellow-400 text-slate-900 border border-yellow-700";
-                  } else if (answered) {
-                    stateClass = "bg-green-600 text-white";
-                  }
-
-                  return (
-                    <button
-                      key={q._id || idx}
-                      onClick={() => goToQuestion(idx)}
-                      className={`h-10 w-10 rounded-full flex items-center justify-center text-base font-semibold ${stateClass}`}
-                      disabled={isCompleted}
-                    >
-                      {q.order || idx + 1}
-                    </button>
-                  );
-                })}
-              </div>
-            </div>
+          <div className="shrink-0">
+            <span
+              onClick={() => {
+                setShowEliminationMode((prev) => !prev);
+                setCrossedOptions([]);
+              }}
+              className="
+                inline-flex
+                bg-[#F36D45]
+                dark:bg-blue-100
+                rounded-lg
+                text-white
+                dark:text-slate-800
+                px-2
+                py-1
+                text-xs
+                cursor-pointer
+                select-none
+              "
+            >
+              {showEliminationMode ? <del>ABC</del> : "ABC"}
+            </span>
           </div>
         </div>
 
-        {/* BOTTOM BAR */}
-        {!mode && (
-          <div className="fixed bottom-4 left-0 right-0 z-40  dark:border-slate-700 bg-orange-50 dark:bg-slate-900/90 backdrop-blur">
-            <div className="mx-auto max-w-7xl px-4 py-3">
-              <div className="grid grid-cols-3 items-center gap-3">
-                <div className="flex text-lg text-slate-900 dark:text-slate-100 flex-wrap gap-2">
-                  SAT TEST
-                </div>
+        {/* QUESTION */}
+        <div className="flex items-start justify-between mb-4">
+          <h2
+            className="
+              text-sm
+              sm:text-base
+              lg:text-lg
+              !font-light
+              leading-relaxed
+            "
+            dangerouslySetInnerHTML={{
+              __html:
+                qDoc.questionText || "Question missing",
+            }}
+          />
+        </div>
 
-                {/* Palette toggle button */}
-                <div className="flex-1 mx-auto">
+        {/* STIMULUS */}
+        {qDoc.stimulus ? (
+          <div
+            className="
+              prose
+              prose-sm
+              sm:prose
+              text-sm
+              sm:text-base
+              lg:text-lg
+              dark:prose-invert
+              max-w-none
+            "
+            dangerouslySetInnerHTML={{
+              __html: qDoc.stimulus,
+            }}
+          />
+        ) : null}
+
+        {/* OPTIONS */}
+        <div className="space-y-3 mt-4">
+          {qDoc.options.map((opt: any, i: number) => {
+            const selected =
+              currentQuestion.answerOptionIndexes?.includes(i);
+
+            const isCrossed =
+              crossedOptions.includes(i);
+
+            return (
+              <div
+                key={i}
+                className="flex items-center gap-2"
+              >
+                <div className="w-full relative">
                   <button
-                    type="button"
-                    onClick={togglePalette}
-                    className="text-base  flex items-center bg-[#F36D45] p-2 px-4 rounded-3xl text-slate-100 dark:text-slate-300"
+                    onClick={() => onOptionClick(i)}
+                    disabled={isCompleted}
+                    className={`
+                      w-full
+                      text-left
+                      rounded-lg
+                      border-2
+                      px-3
+                      sm:px-4
+                      py-2
+                      flex
+                      items-start
+                      gap-2
+                      sm:gap-3
+                      transition
+                      ${
+                        selected
+                          ? "border-[#F36D45] bg-orange-50 dark:bg-indigo-900/30 shadow-sm"
+                          : "border-orange-200 dark:border-slate-700 hover:bg-orange-50 dark:hover:bg-slate-800"
+                      }
+                      ${
+                        isCrossed && !selected
+                          ? "opacity-60"
+                          : "opacity-100"
+                      }
+                    `}
                   >
-                    Question {questionNumber} of {sectionTotal}
-                    {isPaletteOpen ? (
-                      <ChevronDown className="ml-1 h-4 w-4" />
-                    ) : (
-                      <ChevronUp className="ml-1 h-4 w-4" />
-                    )}
-                  </button>
-                </div>
-
-                <div className="flex justify-end gap-2">
-                  {activeQuestionIndex <= 0 ? (
-                    ""
-                  ) : (
-                    <button
-                      className="p-1.5 bg-[#F36D45] text-white font-semibold border-slate-200 rounded-full px-4"
-                      disabled={activeQuestionIndex <= 0 || isCompleted}
-                      onClick={() => {
-                        goToQuestion(Math.max(0, activeQuestionIndex - 1));
-                        setCrossedOptions([]);
-                      }}
+                    <div
+                      className={`
+                        flex
+                        h-7
+                        w-7
+                        shrink-0
+                        items-center
+                        justify-center
+                        rounded-full
+                        text-xs
+                        font-bold
+                        ${
+                          selected
+                            ? "bg-[#F36D45] text-white"
+                            : "border border-orange-400 text-slate-700 dark:border-slate-500 dark:text-slate-300"
+                        }
+                      `}
                     >
-                      Previous
-                    </button>
-                  )}
+                      {String.fromCharCode(65 + i)}
+                    </div>
 
-                  <button
-                    className={`p-1.5 text-white  font-semibold border-slate-200 rounded-full px-4 ${submitting ? "bg-orange-400" : "bg-[#F36D45] "}`}
-                    disabled={submitting}
-                    onClick={() => {
-                      goNextQuestion();
-                      setCrossedOptions([]);
-                    }}
-                  >
-                    {isLastQuestionInCurrentSection ? "Review Section" : "Next"}
+                    <div
+                      className="
+                        prose
+                        prose-sm
+                        dark:prose-invert
+                        min-w-0
+                        break-words
+                      "
+                      dangerouslySetInnerHTML={{
+                        __html: opt.text,
+                      }}
+                    />
                   </button>
+
+                  {showEliminationMode &&
+                    isCrossed &&
+                    !selected && (
+                      <span
+                        className="
+                          absolute
+                          h-0.5
+                          w-full
+                          bg-slate-900
+                          top-1/2
+                          -translate-y-1/2
+                          pointer-events-none
+                        "
+                      />
+                    )}
                 </div>
+
+                {showEliminationMode && (
+                  <div className="relative shrink-0">
+                    <div
+                      onClick={() =>
+                        toggleCrossOption(i)
+                      }
+                      className={`
+                        flex
+                        h-7
+                        w-7
+                        items-center
+                        justify-center
+                        border
+                        border-orange-400
+                        text-[#F36D45]
+                        dark:border-slate-500
+                        dark:text-slate-300
+                        rounded-full
+                        text-sm
+                        font-bold
+                        cursor-pointer
+                        select-none
+                        ${
+                          isCrossed
+                            ? "bg-orange-500 text-white"
+                            : ""
+                        }
+                      `}
+                    >
+                      {isCrossed
+                        ? "X"
+                        : String.fromCharCode(65 + i)}
+                    </div>
+
+                    {isCrossed && (
+                      <span
+                        className="
+                          absolute
+                          h-0.5
+                          w-full
+                          bg-orange-900
+                          top-1/2
+                          -translate-y-1/2
+                          pointer-events-none
+                        "
+                      />
+                    )}
+                  </div>
+                )}
               </div>
+            );
+          })}
+        </div>
+      </div>
+    ) : (
+      /* =========================================================
+         NON MCQ QUESTION
+      ========================================================= */
+      <div
+        className="
+          bg-white
+          rounded
+          dark:bg-slate-900
+          p-2
+          min-h-[55vh]
+          lg:min-h-[65vh]
+          max-h-[65vh]
+          overflow-y-auto
+        "
+      >
+        {/* HEADER */}
+        <div
+          className="
+            flex
+            items-center
+            justify-between
+            mb-4
+            bg-orange-50
+            dark:bg-slate-700
+            rounded-lg
+            p-1
+          "
+        >
+          <div className="flex items-center gap-2">
+            <span
+              className="
+                bg-[#F36D45]
+                rounded-lg
+                dark:bg-slate-100
+                text-white
+                dark:text-slate-800
+                px-2.5
+                py-1.5
+                text-sm
+                font-semibold
+              "
+            >
+              {questionNumber}
+            </span>
+
+            <span
+              className="
+                flex
+                items-center
+                cursor-pointer
+                text-xs
+                sm:text-sm
+              "
+              onClick={toggleMarkForReview}
+            >
+              {currentQuestion.markedForReview ? (
+                <>
+                  <BookmarkCheck className="mr-1 h-5 w-5 text-slate-900" />
+                  Marked
+                </>
+              ) : (
+                <>
+                  <BookmarkIcon className="mr-1 h-5 w-5" />
+                  Mark for Review
+                </>
+              )}
+            </span>
+          </div>
+        </div>
+
+        {/* QUESTION */}
+        <div className="flex items-start justify-between mb-4">
+          <h2
+            className="
+              text-sm
+              sm:text-base
+              lg:text-lg
+              leading-relaxed
+            "
+            dangerouslySetInnerHTML={{
+              __html:
+                qDoc.questionText || "Question missing",
+            }}
+          />
+        </div>
+
+        {/* STIMULUS */}
+        {qDoc.stimulus ? (
+          <div
+            className="
+              prose
+              prose-sm
+              sm:prose
+              text-sm
+              sm:text-base
+              lg:text-lg
+              dark:prose-invert
+              max-w-none
+            "
+            dangerouslySetInnerHTML={{
+              __html: qDoc.stimulus,
+            }}
+          />
+        ) : null}
+
+        {/* TEXT ANSWER */}
+        <div className="space-y-3 mt-4">
+          <textarea
+            value={currentQuestion.answerText || ""}
+            onChange={handleTextAnswerChange}
+            rows={3}
+            disabled={isCompleted}
+            className="
+              w-full
+              min-w-0
+              rounded-lg
+              border
+              border-slate-300
+              dark:border-slate-600
+              px-3
+              py-2
+              text-sm
+              sm:text-base
+              focus:ring-2
+              focus:ring-indigo-500
+              focus:border-indigo-500
+              dark:bg-slate-800
+              dark:text-white
+              resize-y
+            "
+            placeholder="Type your answer..."
+          />
+        </div>
+      </div>
+    )}
+
+    {/* =========================================================
+        QUESTION PALETTE
+    ========================================================= */}
+    <div
+      className={`
+        fixed
+        left-0
+        right-0
+        z-0
+        max-w-3xl
+        mx-auto
+        transition-transform
+        duration-300
+        ease-out
+        ${
+          isPaletteOpen
+            ? "translate-y-0"
+            : "translate-y-[200%]"
+        }
+        bottom-10
+        sm:bottom-12
+      `}
+    >
+      <div
+        className="
+          mx-auto
+          max-w-3xl
+          min-h-[40vh]
+          sm:min-h-[50vh]
+          rounded-t-2xl
+          border
+          border-slate-300
+          dark:border-slate-700
+          bg-slate-200
+          dark:bg-slate-900
+          shadow-xl
+          p-4
+          sm:p-6
+        "
+      >
+        {/* PALETTE HEADER */}
+        <div className="flex items-center justify-between mb-4 gap-2">
+          <div
+            className="
+              font-semibold
+              text-base
+              sm:text-lg
+              text-slate-800
+              dark:text-slate-100
+            "
+          >
+            Question
+          </div>
+
+          <button
+            onClick={() =>
+              onReviewSection("section_review")
+            }
+            className="
+              text-xs
+              sm:text-sm
+              font-semibold
+              px-3
+              py-1
+              rounded-full
+              bg-[#f36d45]
+              text-white
+              dark:bg-blue-500
+            "
+          >
+            Review Section
+          </button>
+        </div>
+
+        {/* LEGEND */}
+        <div
+          className="
+            flex
+            flex-wrap
+            gap-x-4
+            gap-y-2
+            text-xs
+            sm:text-sm
+            mb-4
+            text-slate-700
+            dark:text-slate-300
+          "
+        >
+          <div className="flex items-center gap-1">
+            <span className="h-3 w-3 rounded-full bg-green-600" />
+            Answered
+          </div>
+
+          <div className="flex items-center gap-1">
+            <span className="h-3 w-3 rounded-full bg-slate-700" />
+            Not Answered
+          </div>
+
+          <div className="flex items-center gap-1">
+            <span className="h-3 w-3 rounded-full bg-yellow-400" />
+            Marked for Review
+          </div>
+
+          <div className="flex items-center gap-1">
+            <span className="h-3 w-3 rounded-full bg-[#f36d45]" />
+            Current Question
+          </div>
+        </div>
+
+        {/* QUESTION NUMBERS */}
+        <div
+          className="
+            grid
+            grid-cols-5
+            sm:grid-cols-8
+            md:grid-cols-10
+            gap-2
+            sm:gap-3
+            mb-3
+          "
+        >
+          {(sectionQuestions || []).map(
+            (q: any, idx: number) => {
+              const answered =
+                (q.answerOptionIndexes &&
+                  q.answerOptionIndexes.length > 0) ||
+                (q.answerText &&
+                  String(q.answerText).trim().length > 0);
+
+              const marked = q.markedForReview;
+
+              const isCurrent =
+                idx === activeQuestionIndex;
+
+              let stateClass =
+                "bg-slate-700 text-slate-100";
+
+              if (isCurrent) {
+                stateClass =
+                  "bg-[#f36d45] text-white";
+              } else if (marked) {
+                stateClass =
+                  "bg-yellow-400 text-slate-900 border border-yellow-700";
+              } else if (answered) {
+                stateClass =
+                  "bg-green-600 text-white";
+              }
+
+              return (
+                <button
+                  key={q._id || idx}
+                  onClick={() =>
+                    goToQuestion(idx)
+                  }
+                  className={`
+                    h-9
+                    w-9
+                    sm:h-10
+                    sm:w-10
+                    rounded-full
+                    flex
+                    items-center
+                    justify-center
+                    text-sm
+                    sm:text-base
+                    font-semibold
+                    ${stateClass}
+                  `}
+                  disabled={isCompleted}
+                >
+                  {q.order || idx + 1}
+                </button>
+              );
+            }
+          )}
+        </div>
+      </div>
+    </div>
+
+    {/* =========================================================
+        BOTTOM BAR
+    ========================================================= */}
+    {!mode && (
+      <div
+        className="
+          fixed
+          bottom-4
+          left-0
+          right-0
+          z-40
+          dark:border-slate-700
+          bg-orange-50
+          dark:bg-slate-900/90
+          backdrop-blur
+        "
+      >
+        <div
+          className="
+            mx-auto
+            max-w-7xl
+            px-3
+            sm:px-4
+            py-2
+            sm:py-3
+          "
+        >
+          <div
+            className="
+              grid
+              grid-cols-1
+              sm:grid-cols-3
+              items-center
+              gap-2
+              sm:gap-3
+            "
+          >
+            {/* TEST TITLE */}
+            <div
+              className="
+                hidden
+                sm:flex
+                text-sm
+                lg:text-lg
+                text-slate-900
+                dark:text-slate-100
+                flex-wrap
+                gap-2
+              "
+            >
+              SAT TEST
+            </div>
+
+            {/* PALETTE TOGGLE */}
+            <div className="flex justify-center">
+              <button
+                type="button"
+                onClick={togglePalette}
+                className="
+                  text-sm
+                  sm:text-base
+                  flex
+                  items-center
+                  bg-[#F36D45]
+                  p-2
+                  px-4
+                  rounded-3xl
+                  text-white
+                  dark:text-slate-300
+                "
+              >
+                Question {questionNumber} of{" "}
+                {sectionTotal}
+
+                {isPaletteOpen ? (
+                  <ChevronDown className="ml-1 h-4 w-4" />
+                ) : (
+                  <ChevronUp className="ml-1 h-4 w-4" />
+                )}
+              </button>
+            </div>
+
+            {/* NEXT/PREVIOUS */}
+            <div
+              className="
+                flex
+                justify-center
+                sm:justify-end
+                gap-2
+              "
+            >
+              {activeQuestionIndex <= 0 ? (
+                ""
+              ) : (
+                <button
+                  className="
+                    p-1.5
+                    bg-[#F36D45]
+                    text-white
+                    font-semibold
+                    rounded-full
+                    px-3
+                    sm:px-4
+                    text-xs
+                    sm:text-sm
+                  "
+                  disabled={
+                    activeQuestionIndex <= 0 ||
+                    isCompleted
+                  }
+                  onClick={() => {
+                    goToQuestion(
+                      Math.max(
+                        0,
+                        activeQuestionIndex - 1
+                      )
+                    );
+                    setCrossedOptions([]);
+                  }}
+                >
+                  Previous
+                </button>
+              )}
+
+              <button
+                className={`
+                  p-1.5
+                  text-white
+                  font-semibold
+                  rounded-full
+                  px-3
+                  sm:px-4
+                  text-xs
+                  sm:text-sm
+                  ${
+                    submitting
+                      ? "bg-orange-400"
+                      : "bg-[#F36D45]"
+                  }
+                `}
+                disabled={submitting}
+                onClick={() => {
+                  goNextQuestion();
+                  setCrossedOptions([]);
+                }}
+              >
+                {isLastQuestionInCurrentSection
+                  ? "Review Section"
+                  : "Next"}
+              </button>
             </div>
           </div>
-        )}
+        </div>
       </div>
-      <div className="h-[16px] fixed bottom-0 w-full bg-gradient-to-r from-[#fff1dc] via-[#ffd19f] to-[#ff947d]" /></div>
+    )}
+  </div>
+
+  {/* BOTTOM GRADIENT */}
+  <div
+    className="
+      h-[16px]
+      fixed
+      bottom-0
+      w-full
+      bg-gradient-to-r
+      from-[#fff1dc]
+      via-[#ffd19f]
+      to-[#ff947d]
+    "
+  />
+</div>
       
     );
   },

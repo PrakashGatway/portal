@@ -972,134 +972,407 @@ export const GRETestHead: React.FC<GRETestHeaderProps> = React.memo(
       <>
       
         <div
-          style={{ borderBottomWidth: "3px" }}
-          className="fixed top-4 left-0 right-0 z-50 dark:border-slate-700 bg-orange-50 dark:bg-slate-900/95 backdrop-blur"
+  style={{ borderBottomWidth: "3px" }}
+  className="
+    fixed
+    xl:top-4
+    top-0
+    left-0
+    right-0
+    z-50
+    dark:border-slate-700
+    bg-orange-50
+    dark:bg-slate-900/95
+    backdrop-blur
+  "
+>
+  <div
+    className="
+      mx-auto
+      grid
+      grid-cols-[1fr_auto_1fr]
+      lg:grid-cols-3
+      items-center
+      max-w-7xl
+      h-16
+      gap-1
+      sm:gap-2
+      lg:gap-4
+      px-2
+      sm:px-3
+      lg:px-4
+      py-2.5
+    "
+  >
+    {/* =====================================================
+        LEFT - SECTION + DIRECTIONS
+    ====================================================== */}
+    <div className="flex items-center min-w-0">
+      <div className="min-w-0">
+        <p
+          className="
+            text-xs
+            sm:text-sm
+            lg:text-lg
+            capitalize
+            text-slate-800
+            dark:text-slate-200
+            truncate
+          "
         >
-          <div className="mx-auto grid grid-cols-3 items-center max-w-7xl h-16 items-center justify-between gap-4 px-4 py-2.5">
-            <div className="flex items-center gap-3">
-              <div>
-                <p className="text-lg capitalize text-slate-800 dark:text-slate-200">
-                  Section {activeSectionIndex + 1} :{" "}
-                  {currentSection?.name || "Section"}
-                </p>
-                <button
-                  ref={directionsRef}
-                  onClick={() => {
-                    setOpenDirections(!openDirections);
-                    // setOpenReference(!openReference);
-                    // setOpenMore(false);
-                  }}
-                  className="text-sm text-slate-700 dark:text-slate-400 inline-flex items-center gap-2"
-                >
-                  <span className="font-medium">Directions</span>
-                  {openDirections ? (
-                    <ChevronUp className="w-4 h-4" />
-                  ) : (
-                    <ChevronDown className="w-4 h-4" />
-                  )}
-                </button>
-              </div>
-            </div>
+          Section {activeSectionIndex + 1} :{" "}
+          {currentSection?.name || "Section"}
+        </p>
 
-            {/* Center timer */}
-            <div className="flex-1 flex justify-center">
-              {currentSection?.durationMinutes &&
-              currentScreen !== "intro" &&
-              !timerHidden ? (
-                <div className="flex flex-col items-center rounded-full px-3 py-1">
-                  <span className="text-lg tabular-nums">
-                    {formatTime(timerSecondsLeft)}
-                  </span>
-                  <button
-                    onClick={() => setTimerHidden(true)}
-                    className="rounded-lg hover:bg-orange-100 dark:hover:bg-slate-800 transition-colors"
-                    aria-label="Hide timer"
-                  >
-                    <EyeOff className="w-4 h-4 text-[#F36D45] dark:text-slate-400" />
-                  </button>
-                </div>
-              ) : currentSection?.durationMinutes &&
-                currentScreen !== "intro" ? (
-                <button
-                  onClick={() => setTimerHidden(false)}
-                  className="flex items-center flex-col gap-2 rounded-lg transition-colors group"
-                >
-                  <div className="relative">
-                    <Clock className="w-6 h-6 text-slate-600 dark:text-slate-400" />
-                  </div>
-                  <Eye className="w-4 h-4 text-slate-600 dark:text-slate-400 group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors" />
-                </button>
-              ) : null}
-            </div>
+        <button
+          ref={directionsRef}
+          onClick={() => {
+            setOpenDirections(!openDirections);
+          }}
+          className="
+            text-[11px]
+            sm:text-xs
+            lg:text-sm
+            text-slate-700
+            dark:text-slate-400
+            inline-flex
+            items-center
+            gap-1
+            sm:gap-2
+          "
+        >
+          <span className="font-medium">
+            Directions
+          </span>
 
-            <div className="flex items-center justify-end gap-3">
-              {currentSection?.name?.toLowerCase()?.includes("math") && (
-                <button
-                  className="flex flex-col items-center p-2 colors group relative"
-                  onClick={() => {
-                    setOpenCalculator(!openCalculator);
-                    setOpenDirections(false);
-                    setOpenReference(false);
-                    setOpenMore(false);
-                  }}
-                  aria-label="Open calculator"
-                >
-                  <CalculatorIcon className="w-5 h-5 text-[#F36D45] dark:text-slate-400 group-hover:text-orange-400 dark:group-hover:text-blue-400 transition-colors" />
-                  <span className="text-xs mt-1 font-medium text-slate-700 dark:text-slate-300">
-                    Calculator
-                  </span>
-                </button>
-              )}
+          {openDirections ? (
+            <ChevronUp className="w-3 h-3 sm:w-4 sm:h-4" />
+          ) : (
+            <ChevronDown className="w-3 h-3 sm:w-4 sm:h-4" />
+          )}
+        </button>
+      </div>
+    </div>
 
-              <button
-                ref={referenceRef}
-                className="flex flex-col items-center p-2 group relative"
-                onClick={() => {
-                  setOpenReference(!openReference);
-                  setOpenDirections(false);
-                  setOpenMore(false);
-                }}
-                aria-label="Reference materials"
-              >
-                <UserX2 className="w-5 h-5 text-[#F36D45] dark:text-slate-400 group-hover:text-purple-600 dark:group-hover:text-purple-400 transition-colors" />
-                <span className="text-xs mt-1 font-medium text-slate-700 dark:text-slate-300">
-                  Reference
-                </span>
-              </button>
+    {/* =====================================================
+        CENTER - TIMER
+    ====================================================== */}
+    <div className="flex justify-center items-center min-w-0">
+      {currentSection?.durationMinutes &&
+      currentScreen !== "intro" &&
+      !timerHidden ? (
+        <div
+          className="
+            flex
+            flex-col
+            items-center
+            rounded-full
+            px-2
+            sm:px-3
+            py-1
+          "
+        >
+          <span
+            className="
+              text-sm
+              sm:text-base
+              lg:text-lg
+              tabular-nums
+              whitespace-nowrap
+            "
+          >
+            {formatTime(timerSecondsLeft)}
+          </span>
 
-              <div className="relative">
-                <button
-                  ref={moreRef}
-                  className="flex flex-col items-center p-2 group"
-                  onClick={() => {
-                    setOpenMore(!openMore);
-                    setOpenDirections(false);
-                    setOpenReference(false);
-                  }}
-                  aria-haspopup="true"
-                  aria-expanded={openMore}
-                >
-                  <MoreVertical className="w-5 h-5 text-[#F36D45] dark:text-slate-400 group-hover:text-slate-900 dark:group-hover:text-slate-100 transition-colors" />
-                  <span className="text-xs mt-1 font-medium text-slate-700 dark:text-slate-300">
-                    More
-                  </span>
-                </button>
-              </div>
-
-              {(currentScreen === "results" || isCompleted) && navigateBack && (
-                <button
-                  onClick={() => setShowExitModal(true)}
-                  className="ml-2 px-4 py-2 rounded-lg bg-gradient-to-r from-blue-500 to-purple-500 hover:from-blue-600 hover:to-purple-600 text-white font-medium transition-all shadow hover:shadow-lg"
-                >
-                  <span className="flex items-center gap-2">
-                    <LogOut className="w-4 h-4" />
-                    Exit Test
-                  </span>
-                </button>
-              )}
-            </div>
-          </div>
+          <button
+            onClick={() => setTimerHidden(true)}
+            className="
+              rounded-lg
+              hover:bg-orange-100
+              dark:hover:bg-slate-800
+              transition-colors
+            "
+            aria-label="Hide timer"
+          >
+            <EyeOff
+              className="
+                w-3.5
+                h-3.5
+                sm:w-4
+                sm:h-4
+                text-[#F36D45]
+                dark:text-slate-400
+              "
+            />
+          </button>
         </div>
+      ) : currentSection?.durationMinutes &&
+        currentScreen !== "intro" ? (
+        <button
+          onClick={() => setTimerHidden(false)}
+          className="
+            flex
+            items-center
+            flex-col
+            gap-1
+            sm:gap-2
+            rounded-lg
+            transition-colors
+            group
+          "
+        >
+          <div className="relative">
+            <Clock
+              className="
+                w-5
+                h-5
+                sm:w-6
+                sm:h-6
+                text-slate-600
+                dark:text-slate-400
+              "
+            />
+          </div>
+
+          <Eye
+            className="
+              w-3
+              h-3
+              sm:w-4
+              sm:h-4
+              text-slate-600
+              dark:text-slate-400
+              group-hover:text-blue-600
+              dark:group-hover:text-blue-400
+              transition-colors
+            "
+          />
+        </button>
+      ) : null}
+    </div>
+
+    {/* =====================================================
+        RIGHT - ACTIONS
+    ====================================================== */}
+    <div
+      className="
+        flex
+        items-center
+        justify-end
+        gap-0
+        sm:gap-1
+        lg:gap-3
+        min-w-0
+      "
+    >
+      {/* CALCULATOR */}
+      {currentSection?.name
+        ?.toLowerCase()
+        ?.includes("math") && (
+        <button
+          className="
+            flex
+            flex-col
+            items-center
+            p-1
+            sm:p-2
+            colors
+            group
+            relative
+            shrink-0
+          "
+          onClick={() => {
+            setOpenCalculator(!openCalculator);
+            setOpenDirections(false);
+            setOpenReference(false);
+            setOpenMore(false);
+          }}
+          aria-label="Open calculator"
+        >
+          <CalculatorIcon
+            className="
+              w-4
+              h-4
+              sm:w-5
+              sm:h-5
+              text-[#F36D45]
+              dark:text-slate-400
+              group-hover:text-orange-400
+              dark:group-hover:text-blue-400
+              transition-colors
+            "
+          />
+
+          <span
+            className="
+              text-[9px]
+              sm:text-xs
+              mt-0.5
+              sm:mt-1
+              font-medium
+              text-slate-700
+              dark:text-slate-300
+            "
+          >
+            Calculator
+          </span>
+        </button>
+      )}
+
+      {/* REFERENCE */}
+      <button
+        ref={referenceRef}
+        className="
+          flex
+          flex-col
+          items-center
+          p-1
+          sm:p-2
+          group
+          relative
+          shrink-0
+        "
+        onClick={() => {
+          setOpenReference(!openReference);
+          setOpenDirections(false);
+          setOpenMore(false);
+        }}
+        aria-label="Reference materials"
+      >
+        <UserX2
+          className="
+            w-4
+            h-4
+            sm:w-5
+            sm:h-5
+            text-[#F36D45]
+            dark:text-slate-400
+            group-hover:text-purple-600
+            dark:group-hover:text-purple-400
+            transition-colors
+          "
+        />
+
+        <span
+          className="
+            text-[9px]
+            sm:text-xs
+            mt-0.5
+            sm:mt-1
+            font-medium
+            text-slate-700
+            dark:text-slate-300
+          "
+        >
+          Reference
+        </span>
+      </button>
+
+      {/* MORE */}
+      <div className="relative shrink-0">
+        <button
+          ref={moreRef}
+          className="
+            flex
+            flex-col
+            items-center
+            p-1
+            sm:p-2
+            group
+          "
+          onClick={() => {
+            setOpenMore(!openMore);
+            setOpenDirections(false);
+            setOpenReference(false);
+          }}
+          aria-haspopup="true"
+          aria-expanded={openMore}
+        >
+          <MoreVertical
+            className="
+              w-4
+              h-4
+              sm:w-5
+              sm:h-5
+              text-[#F36D45]
+              dark:text-slate-400
+              group-hover:text-slate-900
+              dark:group-hover:text-slate-100
+              transition-colors
+            "
+          />
+
+          <span
+            className="
+              text-[9px]
+              sm:text-xs
+              mt-0.5
+              sm:mt-1
+              font-medium
+              text-slate-700
+              dark:text-slate-300
+            "
+          >
+            More
+          </span>
+        </button>
+      </div>
+
+      {/* EXIT TEST */}
+      {(currentScreen === "results" || isCompleted) &&
+        navigateBack && (
+          <button
+            onClick={() => setShowExitModal(true)}
+            className="
+              ml-0
+              sm:ml-1
+              lg:ml-2
+              px-2
+              sm:px-3
+              lg:px-4
+              py-1.5
+              sm:py-2
+              rounded-lg
+              bg-gradient-to-r
+              from-blue-500
+              to-purple-500
+              hover:from-blue-600
+              hover:to-purple-600
+              text-white
+              text-[10px]
+              sm:text-xs
+              lg:text-sm
+              font-medium
+              transition-all
+              shadow
+              hover:shadow-lg
+              shrink-0
+            "
+          >
+            <span className="flex items-center gap-1 sm:gap-2">
+              <LogOut
+                className="
+                  w-3
+                  h-3
+                  sm:w-4
+                  sm:h-4
+                "
+              />
+
+              <span className="hidden sm:inline">
+                Exit Test
+              </span>
+
+              {/* On very small screens only icon */}
+              <span className="inline sm:hidden">
+                Exit
+              </span>
+            </span>
+          </button>
+        )}
+    </div>
+  </div>
+</div>
 
         <Popover
           anchorRef={directionsRef}
