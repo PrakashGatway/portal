@@ -9,9 +9,10 @@ import Label from "../../components/form/Label";
 import Select from "../../components/form/Select";
 import { toast } from "react-toastify";
 import api, { ImageBaseUrl } from "../../axiosInstance";
-import { Eye, Pencil, Trash2, Plus } from "lucide-react";
+import { Eye, Pencil, Trash2, Plus, Upload } from "lucide-react";
 import { useDropzone } from "react-dropzone";
 import DynamicIcon from "../../components/DynamicIcon";
+import BulkImportModal from "./BulkModules";
 
 export default function ModuleManagement({ course, from }) {
   const [modules, setModules] = useState([]);
@@ -79,6 +80,14 @@ export default function ModuleManagement({ course, from }) {
     }));
   };
 
+  const [isBulkImportOpen, setBulkImportOpen] = useState(false);
+
+  // Add this handler function:
+  const handleBulkImportSuccess = () => {
+    fetchModules();
+    toast.success("Modules imported successfully!");
+  };
+
   const handlePageChange = (newPage) => {
     setFilters((prev) => ({
       ...prev,
@@ -121,297 +130,320 @@ export default function ModuleManagement({ course, from }) {
   };
 
   return (
-    <div className="w-full overflow-x-auto">
-      <div className="p-4 border border-gray-200 rounded-2xl dark:border-gray-800 lg:p-4 mb-3 bg-white dark:border-gray-700 dark:bg-gray-800 dark:text-gray-400">
-        <div className="flex flex-col gap-5 xl:flex-row xl:items-center xl:justify-between">
-          <div className="flex flex-col items-start w-full gap-3 xl:flex-row">
-            <div className="p-3 overflow-hidden border border-gray-200 rounded-full dark:border-gray-800 flex items-center justify-center bg-blue-50">
-              <svg
-                width="24"
-                height="24"
-                viewBox="0 0 24 24"
-                fill="none"
-                className="text-blue-600"
-              >
-                <path
-                  d="M14 2H6C4.9 2 4 2.9 4 4V20C4 21.1 4.9 22 6 22H18C19.1 22 20 21.1 20 20V8L14 2ZM18 20H6V4H13V9H18V20ZM10 12H8V14H10V12ZM14 12H12V14H14V12ZM10 16H8V18H10V16ZM14 16H12V18H14V16Z"
-                  fill="currentColor"
-                />
-              </svg>
-            </div>
-            <div className="order-3 xl:order-2">
-              <h4 className=" text-lg font-semibold text-center text-gray-800 dark:text-white/90 xl:text-left">
-                Module Management
-              </h4>
-              <div className="flex flex-col items-center gap-1 text-center xl:flex-row xl:gap-3 xl:text-left">
-                <div className="hidden h-3.5 w-px bg-gray-300 dark:bg-gray-700 xl:block"></div>
-                <p className="text-sm text-gray-500 dark:text-gray-400">
-                  {modules.length} modules
-                </p>
+    <>
+      <BulkImportModal
+        isOpen={isBulkImportOpen}
+        onClose={() => setBulkImportOpen(false)}
+        onSuccess={handleBulkImportSuccess}
+        courses={courses}
+        from={from}
+        course={course}
+      />
+      <div className="w-full overflow-x-auto">
+        <div className="p-4 border border-gray-200 rounded-2xl dark:border-gray-800 lg:p-4 mb-3 bg-white dark:border-gray-700 dark:bg-gray-800 dark:text-gray-400">
+          <div className="flex flex-col gap-5 xl:flex-row xl:items-center xl:justify-between">
+            <div className="flex flex-col items-start w-full gap-3 xl:flex-row">
+              <div className="p-3 overflow-hidden border border-gray-200 rounded-full dark:border-gray-800 flex items-center justify-center bg-blue-50">
+                <svg
+                  width="24"
+                  height="24"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  className="text-blue-600"
+                >
+                  <path
+                    d="M14 2H6C4.9 2 4 2.9 4 4V20C4 21.1 4.9 22 6 22H18C19.1 22 20 21.1 20 20V8L14 2ZM18 20H6V4H13V9H18V20ZM10 12H8V14H10V12ZM14 12H12V14H14V12ZM10 16H8V18H10V16ZM14 16H12V18H14V16Z"
+                    fill="currentColor"
+                  />
+                </svg>
+              </div>
+              <div className="order-3 xl:order-2">
+                <h4 className=" text-lg font-semibold text-center text-gray-800 dark:text-white/90 xl:text-left">
+                  Module Management
+                </h4>
+                <div className="flex flex-col items-center gap-1 text-center xl:flex-row xl:gap-3 xl:text-left">
+                  <div className="hidden h-3.5 w-px bg-gray-300 dark:bg-gray-700 xl:block"></div>
+                  <p className="text-sm text-gray-500 dark:text-gray-400">
+                    {modules.length} modules
+                  </p>
+                </div>
               </div>
             </div>
-          </div>
-          <div className="flex w-full flex-col gap-3 sm:flex-row sm:items-center sm:justify-end xl:gap-4">
-            <button
-              onClick={openCreateModal}
-              className="flex w-full items-center justify-center gap-2 rounded-full border border-gray-300 bg-white px-4 py-3 text-sm font-medium text-gray-700 shadow-theme-xs hover:bg-gray-50 hover:text-gray-800 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-400 dark:hover:bg-white/[0.03] dark:hover:text-gray-200 lg:inline-flex lg:w-auto"
-            >
-              <Plus className="h-5 w-5" />
-              Add Module
-            </button>
+            <div className="flex w-full flex-col gap-3 sm:flex-row sm:items-center sm:justify-end xl:gap-4">
+              <button
+                onClick={() => setBulkImportOpen(true)}
+                className="flex w-full items-center justify-center gap-2 rounded-full border border-gray-300 bg-white px-4 py-3 text-sm font-medium text-gray-700 shadow-theme-xs hover:bg-gray-50 hover:text-gray-800 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-400 dark:hover:bg-white/[0.03] dark:hover:text-gray-200 lg:inline-flex lg:w-auto"
+              >
+                <Upload className="h-5 w-5" />
+                Bulk Import
+              </button>
+              <button
+                onClick={openCreateModal}
+                className="flex w-full items-center justify-center gap-2 rounded-full border border-gray-300 bg-white px-4 py-3 text-sm font-medium text-gray-700 shadow-theme-xs hover:bg-gray-50 hover:text-gray-800 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-400 dark:hover:bg-white/[0.03] dark:hover:text-gray-200 lg:inline-flex lg:w-auto"
+              >
+                <Plus className="h-5 w-5" />
+                Add Module
+              </button>
+            </div>
           </div>
         </div>
-      </div>
-      <div className="min-h-[70vh] overflow-x-auto rounded-2xl border border-gray-200 bg-white px-4 py-4 dark:border-gray-800 dark:bg-white/[0.03] xl:px-4 xl:py-4">
-        {/* Filters Section */}
-        <div className="mb-6 grid grid-cols-1 gap-4 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4">
-          <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-              Search (Title)
-            </label>
-            <input
-              type="text"
-              name="search"
-              value={filters.search}
-              onChange={handleFilterChange}
-              placeholder="Search modules..."
-              className="w-full rounded-md border border-gray-300 bg-white py-2 px-3 text-sm focus:border-indigo-500 focus:outline-none focus:ring-indigo-500 dark:border-gray-600 dark:bg-gray-800 dark:text-white"
-            />
-          </div>
-          {from != "content" && (
+        <div className="min-h-[70vh] overflow-x-auto rounded-2xl border border-gray-200 bg-white px-4 py-4 dark:border-gray-800 dark:bg-white/[0.03] xl:px-4 xl:py-4">
+          {/* Filters Section */}
+          <div className="mb-6 grid grid-cols-1 gap-4 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4">
             <div>
               <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                Course
+                Search (Title)
+              </label>
+              <input
+                type="text"
+                name="search"
+                value={filters.search}
+                onChange={handleFilterChange}
+                placeholder="Search modules..."
+                className="w-full rounded-md border border-gray-300 bg-white py-2 px-3 text-sm focus:border-indigo-500 focus:outline-none focus:ring-indigo-500 dark:border-gray-600 dark:bg-gray-800 dark:text-white"
+              />
+            </div>
+            {from != "content" && (
+              <div>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                  Course
+                </label>
+                <select
+                  name="course"
+                  value={filters.course}
+                  onChange={handleFilterChange}
+                  className="w-full rounded-md border border-gray-300 bg-white py-2 px-3 text-sm focus:border-indigo-500 focus:outline-none focus:ring-indigo-500 dark:border-gray-600 dark:bg-gray-800 dark:text-white"
+                >
+                  <option value="">All Courses</option>
+                  {courses.map((course) => (
+                    <option key={course._id} value={course._id}>
+                      {course.title}
+                    </option>
+                  ))}
+                </select>
+              </div>
+            )}
+            <div>
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                Status
               </label>
               <select
-                name="course"
-                value={filters.course}
+                name="isPublished"
+                value={filters.isPublished}
                 onChange={handleFilterChange}
                 className="w-full rounded-md border border-gray-300 bg-white py-2 px-3 text-sm focus:border-indigo-500 focus:outline-none focus:ring-indigo-500 dark:border-gray-600 dark:bg-gray-800 dark:text-white"
               >
-                <option value="">All Courses</option>
-                {courses.map((course) => (
-                  <option key={course._id} value={course._id}>
-                    {course.title}
-                  </option>
-                ))}
+                <option value="">All Statuses</option>
+                <option value="true">Published</option>
+                <option value="false">Draft</option>
               </select>
             </div>
-          )}
-          <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-              Status
-            </label>
-            <select
-              name="isPublished"
-              value={filters.isPublished}
-              onChange={handleFilterChange}
-              className="w-full rounded-md border border-gray-300 bg-white py-2 px-3 text-sm focus:border-indigo-500 focus:outline-none focus:ring-indigo-500 dark:border-gray-600 dark:bg-gray-800 dark:text-white"
-            >
-              <option value="">All Statuses</option>
-              <option value="true">Published</option>
-              <option value="false">Draft</option>
-            </select>
-          </div>
-          <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-              Sort By
-            </label>
-            <select
-              name="sortBy"
-              value={filters.sortBy}
-              onChange={handleFilterChange}
-              className="w-full rounded-md border border-gray-300 bg-white py-2 px-3 text-sm focus:border-indigo-500 focus:outline-none focus:ring-indigo-500 dark:border-gray-600 dark:bg-gray-800 dark:text-white"
-            >
-              <option value="-createdAt">Newest First</option>
-              <option value="createdAt">Oldest First</option>
-              <option value="title">Title (A-Z)</option>
-              <option value="-title">Title (Z-A)</option>
-              <option value="order">Order (Low to High)</option>
-              <option value="-order">Order (High to Low)</option>
-            </select>
-          </div>
-          <div className="flex items-end">
-            <button
-              onClick={() =>
-                setFilters({
-                  page: 1,
-                  limit: 10,
-                  sortBy: "-createdAt",
-                  isPublished: "",
-                  search: "",
-                  course: "",
-                })
-              }
-              className="w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm font-medium text-gray-700 shadow-sm hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 dark:border-gray-600 dark:bg-gray-800 dark:text-white dark:hover:bg-gray-700"
-            >
-              Reset Filters
-            </button>
-          </div>
-        </div>
-        {/* Actions Section */}
-        <div className="mb-4 flex flex-col justify-between space-y-4 sm:flex-row sm:items-center sm:space-y-0">
-          <div className="flex items-center space-x-4">
-            <div className="flex items-center space-x-2">
-              <label className="text-sm font-medium text-gray-700 dark:text-gray-300">
-                Rows per page:
+            <div>
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                Sort By
               </label>
               <select
-                name="limit"
-                value={filters.limit}
+                name="sortBy"
+                value={filters.sortBy}
                 onChange={handleFilterChange}
-                className="rounded-md border border-gray-300 bg-white py-1 px-2 text-sm focus:border-indigo-500 focus:outline-none focus:ring-indigo-500 dark:border-gray-600 dark:bg-gray-800 dark:text-white"
+                className="w-full rounded-md border border-gray-300 bg-white py-2 px-3 text-sm focus:border-indigo-500 focus:outline-none focus:ring-indigo-500 dark:border-gray-600 dark:bg-gray-800 dark:text-white"
               >
-                <option value="5">5</option>
-                <option value="10">10</option>
-                <option value="20">20</option>
-                <option value="50">50</option>
+                <option value="-createdAt">Newest First</option>
+                <option value="createdAt">Oldest First</option>
+                <option value="title">Title (A-Z)</option>
+                <option value="-title">Title (Z-A)</option>
+                <option value="order">Order (Low to High)</option>
+                <option value="-order">Order (High to Low)</option>
               </select>
             </div>
-          </div>
-        </div>
-        {/* Modules Table */}
-
-        <div className="mb-6">
-          {loading && modules.length === 0 ? (
-            <div className="flex h-64 items-center justify-center">
-              <div className="h-8 w-8 animate-spin rounded-full border-4 border-indigo-500 border-t-transparent"></div>
+            <div className="flex items-end">
+              <button
+                onClick={() =>
+                  setFilters({
+                    page: 1,
+                    limit: 10,
+                    sortBy: "-createdAt",
+                    isPublished: "",
+                    search: "",
+                    course: "",
+                  })
+                }
+                className="w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm font-medium text-gray-700 shadow-sm hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 dark:border-gray-600 dark:bg-gray-800 dark:text-white dark:hover:bg-gray-700"
+              >
+                Reset Filters
+              </button>
             </div>
-          ) : modules.length > 0 ? (
-            <>
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                {modules.map((module) => (
-                  <ModuleCard
-                    key={module._id}
-                    module={module}
-                    onView={viewModuleDetails}
-                    onEdit={() => {
-                      setSelectedModule(module);
-                      setEditModalOpen(true);
-                    }}
-                    onDelete={() => {
-                      setSelectedModule(module);
-                      setDeleteModalOpen(true);
-                    }}
-                  />
-                ))}
+          </div>
+          {/* Actions Section */}
+          <div className="mb-4 flex flex-col justify-between space-y-4 sm:flex-row sm:items-center sm:space-y-0">
+            <div className="flex items-center space-x-4">
+              <div className="flex items-center space-x-2">
+                <label className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                  Rows per page:
+                </label>
+                <select
+                  name="limit"
+                  value={filters.limit}
+                  onChange={handleFilterChange}
+                  className="rounded-md border border-gray-300 bg-white py-1 px-2 text-sm focus:border-indigo-500 focus:outline-none focus:ring-indigo-500 dark:border-gray-600 dark:bg-gray-800 dark:text-white"
+                >
+                  <option value="5">5</option>
+                  <option value="10">10</option>
+                  <option value="20">20</option>
+                  <option value="50">50</option>
+                </select>
               </div>
-            </>
-          ) : (
-            <div className="text-center py-10 text-gray-500 dark:text-gray-400">
-              No modules found matching your criteria.
+            </div>
+          </div>
+          {/* Modules Table */}
+
+          <div className="mb-6">
+            {loading && modules.length === 0 ? (
+              <div className="flex h-64 items-center justify-center">
+                <div className="h-8 w-8 animate-spin rounded-full border-4 border-indigo-500 border-t-transparent"></div>
+              </div>
+            ) : modules.length > 0 ? (
+              <>
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                  {modules.map((module) => (
+                    <ModuleCard
+                      key={module._id}
+                      module={module}
+                      onView={viewModuleDetails}
+                      onEdit={() => {
+                        setSelectedModule(module);
+                        setEditModalOpen(true);
+                      }}
+                      onDelete={() => {
+                        setSelectedModule(module);
+                        setDeleteModalOpen(true);
+                      }}
+                    />
+                  ))}
+                </div>
+              </>
+            ) : (
+              <div className="text-center py-10 text-gray-500 dark:text-gray-400">
+                No modules found matching your criteria.
+              </div>
+            )}
+          </div>
+          {/* Pagination */}
+          {total > 0 && (
+            <div className="mt-4 flex flex-col items-center justify-between space-y-4 sm:flex-row sm:space-y-0">
+              <div className="text-sm text-gray-500 dark:text-gray-300">
+                Showing{" "}
+                <span className="font-medium">
+                  {(filters.page - 1) * filters.limit + 1}
+                </span>{" "}
+                to{" "}
+                <span className="font-medium">
+                  {Math.min(filters.page * filters.limit, total)}
+                </span>{" "}
+                of <span className="font-medium">{total}</span> results
+              </div>
+              <div className="flex space-x-2">
+                <button
+                  onClick={() => handlePageChange(filters.page - 1)}
+                  disabled={filters.page === 1}
+                  className={`rounded-md border border-gray-300 px-3 py-1 text-sm ${
+                    filters.page === 1
+                      ? "cursor-not-allowed bg-gray-100 text-gray-400 dark:bg-gray-700 dark:text-gray-500"
+                      : "bg-white text-gray-700 hover:bg-gray-50 dark:bg-gray-800 dark:text-white dark:hover:bg-gray-700"
+                  }`}
+                >
+                  Previous
+                </button>
+                {Array.from(
+                  { length: Math.ceil(total / filters.limit) },
+                  (_, i) => i + 1,
+                )
+                  .slice(
+                    Math.max(0, filters.page - 3),
+                    Math.min(
+                      Math.ceil(total / filters.limit),
+                      filters.page + 2,
+                    ),
+                  )
+                  .map((pageNum) => (
+                    <button
+                      key={pageNum}
+                      onClick={() => handlePageChange(pageNum)}
+                      className={`rounded-md border px-3 py-1 text-sm ${
+                        filters.page === pageNum
+                          ? "border-indigo-500 bg-indigo-500 text-white"
+                          : "border-gray-300 bg-white text-gray-700 hover:bg-gray-50 dark:border-gray-600 dark:bg-gray-800 dark:text-white dark:hover:bg-gray-700"
+                      }`}
+                    >
+                      {pageNum}
+                    </button>
+                  ))}
+                <button
+                  onClick={() => handlePageChange(filters.page + 1)}
+                  disabled={filters.page * filters.limit >= total}
+                  className={`rounded-md border border-gray-300 px-3 py-1 text-sm ${
+                    filters.page * filters.limit >= total
+                      ? "cursor-not-allowed bg-gray-100 text-gray-400 dark:bg-gray-700 dark:text-gray-500"
+                      : "bg-white text-gray-700 hover:bg-gray-50 dark:bg-gray-800 dark:text-white dark:hover:bg-gray-700"
+                  }`}
+                >
+                  Next
+                </button>
+              </div>
             </div>
           )}
         </div>
-        {/* Pagination */}
-        {total > 0 && (
-          <div className="mt-4 flex flex-col items-center justify-between space-y-4 sm:flex-row sm:space-y-0">
-            <div className="text-sm text-gray-500 dark:text-gray-300">
-              Showing{" "}
-              <span className="font-medium">
-                {(filters.page - 1) * filters.limit + 1}
-              </span>{" "}
-              to{" "}
-              <span className="font-medium">
-                {Math.min(filters.page * filters.limit, total)}
-              </span>{" "}
-              of <span className="font-medium">{total}</span> results
-            </div>
-            <div className="flex space-x-2">
-              <button
-                onClick={() => handlePageChange(filters.page - 1)}
-                disabled={filters.page === 1}
-                className={`rounded-md border border-gray-300 px-3 py-1 text-sm ${
-                  filters.page === 1
-                    ? "cursor-not-allowed bg-gray-100 text-gray-400 dark:bg-gray-700 dark:text-gray-500"
-                    : "bg-white text-gray-700 hover:bg-gray-50 dark:bg-gray-800 dark:text-white dark:hover:bg-gray-700"
-                }`}
-              >
-                Previous
-              </button>
-              {Array.from(
-                { length: Math.ceil(total / filters.limit) },
-                (_, i) => i + 1,
-              )
-                .slice(
-                  Math.max(0, filters.page - 3),
-                  Math.min(Math.ceil(total / filters.limit), filters.page + 2),
-                )
-                .map((pageNum) => (
-                  <button
-                    key={pageNum}
-                    onClick={() => handlePageChange(pageNum)}
-                    className={`rounded-md border px-3 py-1 text-sm ${
-                      filters.page === pageNum
-                        ? "border-indigo-500 bg-indigo-500 text-white"
-                        : "border-gray-300 bg-white text-gray-700 hover:bg-gray-50 dark:border-gray-600 dark:bg-gray-800 dark:text-white dark:hover:bg-gray-700"
-                    }`}
-                  >
-                    {pageNum}
-                  </button>
-                ))}
-              <button
-                onClick={() => handlePageChange(filters.page + 1)}
-                disabled={filters.page * filters.limit >= total}
-                className={`rounded-md border border-gray-300 px-3 py-1 text-sm ${
-                  filters.page * filters.limit >= total
-                    ? "cursor-not-allowed bg-gray-100 text-gray-400 dark:bg-gray-700 dark:text-gray-500"
-                    : "bg-white text-gray-700 hover:bg-gray-50 dark:bg-gray-800 dark:text-white dark:hover:bg-gray-700"
-                }`}
-              >
-                Next
-              </button>
-            </div>
-          </div>
-        )}
-      </div>
 
-      {/* Module Details Modal */}
-      <Modal isOpen={isOpen} onClose={closeModal} className="max-w-[700px] m-4">
-        <div className="no-scrollbar relative w-full max-w-[700px] overflow-y-auto rounded-3xl bg-white p-4 dark:bg-gray-900 lg:p-11">
-          <div className="px-2 pr-14">
-            <h4 className="mb-2 text-2xl font-semibold text-gray-800 dark:text-white/90">
-              Module Details
-            </h4>
-            <p className="mb-6 text-sm text-gray-500 dark:text-gray-400 lg:mb-7">
-              Detailed information about this module
-            </p>
-          </div>
-          <div className="flex flex-col">
-            <div className="custom-scrollbar h-[420px] overflow-y-auto px-2 pb-3">
-              {selectedModule && (
-                <div className="space-y-8">
-                  {/* Basic Information */}
-                  <div>
-                    <h5 className="mb-4 text-lg font-medium text-gray-800 dark:text-white/90">
-                      Basic Information
-                    </h5>
-                    <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
-                      <div>
-                        <p className="text-sm text-gray-500 dark:text-gray-400">
-                          Title
-                        </p>
-                        <p className="text-sm font-medium text-gray-800 dark:text-white/90">
-                          {selectedModule.title}
-                        </p>
-                      </div>
-                      <div>
-                        <p className="text-sm text-gray-500 dark:text-gray-400">
-                          Course
-                        </p>
-                        <p className="text-sm font-medium text-gray-800 dark:text-white/90">
-                          {selectedModule.courseInfo?.title || "N/A"}
-                        </p>
-                      </div>
-                      <div>
-                        <p className="text-sm text-gray-500 dark:text-gray-400">
-                          Order
-                        </p>
-                        <p className="text-sm font-medium text-gray-800 dark:text-white/90">
-                          {selectedModule.order}
-                        </p>
-                      </div>
-                      {/* <div>
+        {/* Module Details Modal */}
+        <Modal
+          isOpen={isOpen}
+          onClose={closeModal}
+          className="max-w-[700px] m-4"
+        >
+          <div className="no-scrollbar relative w-full max-w-[700px] overflow-y-auto rounded-3xl bg-white p-4 dark:bg-gray-900 lg:p-11">
+            <div className="px-2 pr-14">
+              <h4 className="mb-2 text-2xl font-semibold text-gray-800 dark:text-white/90">
+                Module Details
+              </h4>
+              <p className="mb-6 text-sm text-gray-500 dark:text-gray-400 lg:mb-7">
+                Detailed information about this module
+              </p>
+            </div>
+            <div className="flex flex-col">
+              <div className="custom-scrollbar h-[420px] overflow-y-auto px-2 pb-3">
+                {selectedModule && (
+                  <div className="space-y-8">
+                    {/* Basic Information */}
+                    <div>
+                      <h5 className="mb-4 text-lg font-medium text-gray-800 dark:text-white/90">
+                        Basic Information
+                      </h5>
+                      <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
+                        <div>
+                          <p className="text-sm text-gray-500 dark:text-gray-400">
+                            Title
+                          </p>
+                          <p className="text-sm font-medium text-gray-800 dark:text-white/90">
+                            {selectedModule.title}
+                          </p>
+                        </div>
+                        <div>
+                          <p className="text-sm text-gray-500 dark:text-gray-400">
+                            Course
+                          </p>
+                          <p className="text-sm font-medium text-gray-800 dark:text-white/90">
+                            {selectedModule.courseInfo?.title || "N/A"}
+                          </p>
+                        </div>
+                        <div>
+                          <p className="text-sm text-gray-500 dark:text-gray-400">
+                            Order
+                          </p>
+                          <p className="text-sm font-medium text-gray-800 dark:text-white/90">
+                            {selectedModule.order}
+                          </p>
+                        </div>
+                        {/* <div>
                         <p className="text-sm text-gray-500 dark:text-gray-400">
                           Duration
                         </p>
@@ -421,255 +453,258 @@ export default function ModuleManagement({ course, from }) {
                             : "N/A"}
                         </p>
                       </div> */}
+                      </div>
                     </div>
-                  </div>
 
-                  {/* Description */}
-                  {selectedModule.description && (
-                    <div>
-                      <h5 className="mb-4 text-lg font-medium text-gray-800 dark:text-white/90">
-                        Description
-                      </h5>
-                      <p className="text-sm text-gray-800 dark:text-white/90">
-                        {selectedModule.description}
-                      </p>
-                    </div>
-                  )}
-
-                  {/* Status Information */}
-                  <div>
-                    <h5 className="mb-4 text-lg font-medium text-gray-800 dark:text-white/90">
-                      Status
-                    </h5>
-                    <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
+                    {/* Description */}
+                    {selectedModule.description && (
                       <div>
-                        <p className="text-sm text-gray-500 dark:text-gray-400">
-                          Publication Status
-                        </p>
-                        <p className="text-sm font-medium text-gray-800 dark:text-white/90">
-                          <span
-                            className={`inline-flex rounded-full px-2 text-xs font-semibold leading-5 ${
-                              selectedModule.isPublished
-                                ? "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200"
-                                : "bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200"
-                            }`}
-                          >
-                            {selectedModule.isPublished ? "Published" : "Draft"}
-                          </span>
+                        <h5 className="mb-4 text-lg font-medium text-gray-800 dark:text-white/90">
+                          Description
+                        </h5>
+                        <p className="text-sm text-gray-800 dark:text-white/90">
+                          {selectedModule.description}
                         </p>
                       </div>
+                    )}
+
+                    {/* Status Information */}
+                    <div>
+                      <h5 className="mb-4 text-lg font-medium text-gray-800 dark:text-white/90">
+                        Status
+                      </h5>
+                      <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
+                        <div>
+                          <p className="text-sm text-gray-500 dark:text-gray-400">
+                            Publication Status
+                          </p>
+                          <p className="text-sm font-medium text-gray-800 dark:text-white/90">
+                            <span
+                              className={`inline-flex rounded-full px-2 text-xs font-semibold leading-5 ${
+                                selectedModule.isPublished
+                                  ? "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200"
+                                  : "bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200"
+                              }`}
+                            >
+                              {selectedModule.isPublished
+                                ? "Published"
+                                : "Draft"}
+                            </span>
+                          </p>
+                        </div>
+                        <div>
+                          <p className="text-sm text-gray-500 dark:text-gray-400">
+                            Published At
+                          </p>
+                          <p className="text-sm font-medium text-gray-800 dark:text-white/90">
+                            {selectedModule.publishedAt
+                              ? moment(selectedModule.publishedAt).format(
+                                  "MMM D, YYYY h:mm A",
+                                )
+                              : "N/A"}
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Content Statistics */}
+                    <div>
+                      <h5 className="mb-4 text-lg font-medium text-gray-800 dark:text-white/90">
+                        Content Statistics
+                      </h5>
+                      <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
+                        <div className="bg-gray-50 dark:bg-gray-800 p-3 rounded-lg">
+                          <p className="text-sm text-gray-500 dark:text-gray-400">
+                            Live Classes
+                          </p>
+                          <p className="text-lg font-bold text-gray-800 dark:text-white">
+                            {selectedModule.liveClassesCount || 0}
+                          </p>
+                        </div>
+                        <div className="bg-gray-50 dark:bg-gray-800 p-3 rounded-lg">
+                          <p className="text-sm text-gray-500 dark:text-gray-400">
+                            Recorded Classes
+                          </p>
+                          <p className="text-lg font-bold text-gray-800 dark:text-white">
+                            {selectedModule.recordedClassesCount || 0}
+                          </p>
+                        </div>
+                        <div className="bg-gray-50 dark:bg-gray-800 p-3 rounded-lg">
+                          <p className="text-sm text-gray-500 dark:text-gray-400">
+                            Tests
+                          </p>
+                          <p className="text-lg font-bold text-gray-800 dark:text-white">
+                            {selectedModule.testsCount || 0}
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Objectives */}
+                    {selectedModule.objectives?.length > 0 && (
                       <div>
-                        <p className="text-sm text-gray-500 dark:text-gray-400">
-                          Published At
-                        </p>
-                        <p className="text-sm font-medium text-gray-800 dark:text-white/90">
-                          {selectedModule.publishedAt
-                            ? moment(selectedModule.publishedAt).format(
-                                "MMM D, YYYY h:mm A",
-                              )
-                            : "N/A"}
-                        </p>
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* Content Statistics */}
-                  <div>
-                    <h5 className="mb-4 text-lg font-medium text-gray-800 dark:text-white/90">
-                      Content Statistics
-                    </h5>
-                    <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
-                      <div className="bg-gray-50 dark:bg-gray-800 p-3 rounded-lg">
-                        <p className="text-sm text-gray-500 dark:text-gray-400">
-                          Live Classes
-                        </p>
-                        <p className="text-lg font-bold text-gray-800 dark:text-white">
-                          {selectedModule.liveClassesCount || 0}
-                        </p>
-                      </div>
-                      <div className="bg-gray-50 dark:bg-gray-800 p-3 rounded-lg">
-                        <p className="text-sm text-gray-500 dark:text-gray-400">
-                          Recorded Classes
-                        </p>
-                        <p className="text-lg font-bold text-gray-800 dark:text-white">
-                          {selectedModule.recordedClassesCount || 0}
-                        </p>
-                      </div>
-                      <div className="bg-gray-50 dark:bg-gray-800 p-3 rounded-lg">
-                        <p className="text-sm text-gray-500 dark:text-gray-400">
-                          Tests
-                        </p>
-                        <p className="text-lg font-bold text-gray-800 dark:text-white">
-                          {selectedModule.testsCount || 0}
-                        </p>
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* Objectives */}
-                  {selectedModule.objectives?.length > 0 && (
-                    <div>
-                      <h5 className="mb-4 text-lg font-medium text-gray-800 dark:text-white/90">
-                        Objectives
-                      </h5>
-                      <ul className="space-y-2">
-                        {selectedModule.objectives.map((objective, index) => (
-                          <li key={index} className="flex items-start">
-                            <span className="mr-2 text-gray-500 dark:text-gray-400">
-                              •
-                            </span>
-                            <span className="text-sm text-gray-800 dark:text-white/90">
-                              {objective}
-                            </span>
-                          </li>
-                        ))}
-                      </ul>
-                    </div>
-                  )}
-
-                  {/* Prerequisites */}
-                  {selectedModule.prerequisites?.length > 0 && (
-                    <div>
-                      <h5 className="mb-4 text-lg font-medium text-gray-800 dark:text-white/90">
-                        Prerequisites
-                      </h5>
-                      <ul className="space-y-2">
-                        {selectedModule.prerequisites.map(
-                          (prerequisite, index) => (
+                        <h5 className="mb-4 text-lg font-medium text-gray-800 dark:text-white/90">
+                          Objectives
+                        </h5>
+                        <ul className="space-y-2">
+                          {selectedModule.objectives.map((objective, index) => (
                             <li key={index} className="flex items-start">
                               <span className="mr-2 text-gray-500 dark:text-gray-400">
                                 •
                               </span>
                               <span className="text-sm text-gray-800 dark:text-white/90">
-                                {prerequisite}
+                                {objective}
                               </span>
                             </li>
-                          ),
-                        )}
-                      </ul>
-                    </div>
-                  )}
-
-                  {/* Dates */}
-                  <div>
-                    <h5 className="mb-4 text-lg font-medium text-gray-800 dark:text-white/90">
-                      Dates
-                    </h5>
-                    <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-                      <div>
-                        <p className="text-sm text-gray-500 dark:text-gray-400">
-                          Created At
-                        </p>
-                        <p className="text-sm font-medium text-gray-800 dark:text-white/90">
-                          {moment(selectedModule.createdAt).format(
-                            "MMM D, YYYY h:mm A",
-                          )}
-                        </p>
+                          ))}
+                        </ul>
                       </div>
+                    )}
+
+                    {/* Prerequisites */}
+                    {selectedModule.prerequisites?.length > 0 && (
                       <div>
-                        <p className="text-sm text-gray-500 dark:text-gray-400">
-                          Last Updated
-                        </p>
-                        <p className="text-sm font-medium text-gray-800 dark:text-white/90">
-                          {moment(selectedModule.updatedAt).format(
-                            "MMM D, YYYY h:mm A",
+                        <h5 className="mb-4 text-lg font-medium text-gray-800 dark:text-white/90">
+                          Prerequisites
+                        </h5>
+                        <ul className="space-y-2">
+                          {selectedModule.prerequisites.map(
+                            (prerequisite, index) => (
+                              <li key={index} className="flex items-start">
+                                <span className="mr-2 text-gray-500 dark:text-gray-400">
+                                  •
+                                </span>
+                                <span className="text-sm text-gray-800 dark:text-white/90">
+                                  {prerequisite}
+                                </span>
+                              </li>
+                            ),
                           )}
-                        </p>
+                        </ul>
+                      </div>
+                    )}
+
+                    {/* Dates */}
+                    <div>
+                      <h5 className="mb-4 text-lg font-medium text-gray-800 dark:text-white/90">
+                        Dates
+                      </h5>
+                      <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+                        <div>
+                          <p className="text-sm text-gray-500 dark:text-gray-400">
+                            Created At
+                          </p>
+                          <p className="text-sm font-medium text-gray-800 dark:text-white/90">
+                            {moment(selectedModule.createdAt).format(
+                              "MMM D, YYYY h:mm A",
+                            )}
+                          </p>
+                        </div>
+                        <div>
+                          <p className="text-sm text-gray-500 dark:text-gray-400">
+                            Last Updated
+                          </p>
+                          <p className="text-sm font-medium text-gray-800 dark:text-white/90">
+                            {moment(selectedModule.updatedAt).format(
+                              "MMM D, YYYY h:mm A",
+                            )}
+                          </p>
+                        </div>
                       </div>
                     </div>
                   </div>
-                </div>
-              )}
+                )}
+              </div>
+              <div className="flex items-center gap-3 px-2 mt-6 lg:justify-end">
+                <Button size="sm" variant="outline" onClick={closeModal}>
+                  Close
+                </Button>
+              </div>
             </div>
-            <div className="flex items-center gap-3 px-2 mt-6 lg:justify-end">
-              <Button size="sm" variant="outline" onClick={closeModal}>
-                Close
-              </Button>
-            </div>
           </div>
-        </div>
-      </Modal>
+        </Modal>
 
-      {/* Edit/Create Module Modal */}
-      <Modal
-        isOpen={editModalOpen}
-        onClose={() => setEditModalOpen(false)}
-        className="max-w-[900px]"
-      >
-        <div className="no-scrollbar relative w-full max-w-[900px] overflow-y-auto rounded-3xl bg-white p-4 dark:bg-gray-900 lg:p-6">
-          <div className="px-2 pr-14">
-            <h4 className=" text-2xl font-semibold text-gray-800 dark:text-white/90">
-              {selectedModule ? "Edit Module" : "Add New Module"}
-            </h4>
-            <p className="mb-2 text-sm text-gray-500 dark:text-gray-400">
-              {selectedModule
-                ? "Update module details below"
-                : "Create a new module for your course"}
-            </p>
-          </div>
-          <div className="custom-scrollbar h-[480px] overflow-y-auto py-3 px-2 pb-3">
-            <ModuleForm
-              module={selectedModule}
-              onSave={handleSaveSuccess}
-              onCancel={handleCancelForm}
-              courses={courses}
-              course={course}
-              from={from}
-            />
-          </div>
-        </div>
-      </Modal>
-
-      {/* Delete Confirmation Modal */}
-      <Modal
-        isOpen={isDeleteModalOpen}
-        onClose={() => setDeleteModalOpen(false)}
-        className="max-w-lg"
-      >
-        {selectedModule && (
-          <div className="no-scrollbar relative w-full overflow-y-auto rounded-3xl bg-white p-4 dark:bg-gray-900 lg:p-6">
+        {/* Edit/Create Module Modal */}
+        <Modal
+          isOpen={editModalOpen}
+          onClose={() => setEditModalOpen(false)}
+          className="max-w-2xl"
+        >
+          <div className="no-scrollbar relative w-full max-w-2xl overflow-y-auto rounded-3xl bg-white p-4 dark:bg-gray-900 lg:p-6">
             <div className="px-2 pr-14">
-              <h4 className="mb-2 text-2xl font-semibold text-gray-800 dark:text-white/90">
-                Confirm Deletion
+              <h4 className=" text-2xl font-semibold text-gray-800 dark:text-white/90">
+                {selectedModule ? "Edit Module" : "Add New Module"}
               </h4>
-              <p className="mb-2 text-sm text-gray-500 dark:text-gray-400 lg:mb-2">
-                Are you sure you want to delete this module? This action cannot
-                be undone.
+              <p className="mb-2 text-sm text-gray-500 dark:text-gray-400">
+                {selectedModule
+                  ? "Update module details below"
+                  : "Create a new module for your course"}
               </p>
             </div>
-            <div className="px-2">
-              <div className="rounded-md bg-red-50 p-2 py-4 dark:bg-red-900/20">
-                <div className="flex">
-                  <div className="ml-3">
-                    <h3 className="text-sm font-medium text-red-800 dark:text-red-200">
-                      Warning
-                    </h3>
-                    <div className="mt-2 text-sm text-red-700 dark:text-red-300">
-                      <p>
-                        Deleting "{selectedModule.title}" will permanently
-                        remove it from the system.
-                      </p>
+            <div className="custom-scrollbar max-h-[480px] overflow-y-auto py-3 px-2 pb-3">
+              <ModuleForm
+                module={selectedModule}
+                onSave={handleSaveSuccess}
+                onCancel={handleCancelForm}
+                courses={courses}
+                course={course}
+                from={from}
+              />
+            </div>
+          </div>
+        </Modal>
+
+        {/* Delete Confirmation Modal */}
+        <Modal
+          isOpen={isDeleteModalOpen}
+          onClose={() => setDeleteModalOpen(false)}
+          className="max-w-lg"
+        >
+          {selectedModule && (
+            <div className="no-scrollbar relative w-full overflow-y-auto rounded-3xl bg-white p-4 dark:bg-gray-900 lg:p-6">
+              <div className="px-2 pr-14">
+                <h4 className="mb-2 text-2xl font-semibold text-gray-800 dark:text-white/90">
+                  Confirm Deletion
+                </h4>
+                <p className="mb-2 text-sm text-gray-500 dark:text-gray-400 lg:mb-2">
+                  Are you sure you want to delete this module? This action
+                  cannot be undone.
+                </p>
+              </div>
+              <div className="px-2">
+                <div className="rounded-md bg-red-50 p-2 py-4 dark:bg-red-900/20">
+                  <div className="flex">
+                    <div className="ml-3">
+                      <h3 className="text-sm font-medium text-red-800 dark:text-red-200">
+                        Warning
+                      </h3>
+                      <div className="mt-2 text-sm text-red-700 dark:text-red-300">
+                        <p>
+                          Deleting "{selectedModule.title}" will permanently
+                          remove it from the system.
+                        </p>
+                      </div>
                     </div>
                   </div>
                 </div>
               </div>
+              <div className="flex items-center gap-3 px-2 mt-6 lg:justify-end">
+                <Button
+                  size="sm"
+                  variant="outline"
+                  onClick={() => setDeleteModalOpen(false)}
+                >
+                  Cancel
+                </Button>
+                <Button size="sm" variant="primary" onClick={deleteModule}>
+                  Delete Module
+                </Button>
+              </div>
             </div>
-            <div className="flex items-center gap-3 px-2 mt-6 lg:justify-end">
-              <Button
-                size="sm"
-                variant="outline"
-                onClick={() => setDeleteModalOpen(false)}
-              >
-                Cancel
-              </Button>
-              <Button size="sm" variant="primary" onClick={deleteModule}>
-                Delete Module
-              </Button>
-            </div>
-          </div>
-        )}
-      </Modal>
-    </div>
+          )}
+        </Modal>
+      </div>
+    </>
   );
 }
 
@@ -692,7 +727,7 @@ const ModuleForm = ({
     objectives: [""],
     prerequisites: [""],
     isPublished: false,
-  });
+  }) as any;
   const [errors, setErrors] = useState({});
   const [iconFile, setIconFile] = useState(null);
   const [loading, setLoading] = useState(false);
@@ -948,7 +983,7 @@ const ModuleForm = ({
         </div>
       </div>
 
-      <div>
+      {/* <div>
         <Label>Objectives</Label>
         <div className="space-y-2">
           {formData.objectives.map((objective, index) => (
@@ -980,9 +1015,9 @@ const ModuleForm = ({
             + Add Objective
           </button>
         </div>
-      </div>
+      </div> */}
 
-      <div>
+      {/* <div>
         <Label>Prerequisites</Label>
         <div className="space-y-2">
           {formData.prerequisites.map((prerequisite, index) => (
@@ -1014,9 +1049,9 @@ const ModuleForm = ({
             + Add Prerequisite
           </button>
         </div>
-      </div>
+      </div> */}
 
-      <div className="flex justify-between pt-4">
+      <div className="flex justify-between">
         <button
           disabled={loading}
           className="bg-white text-gray-700 ring-1 ring-inset ring-gray-300 hover:bg-gray-50 dark:bg-gray-800 dark:text-gray-400 dark:ring-gray-700 dark:hover:bg-white/[0.03] dark:hover:text-gray-300 inline-flex items-center justify-center gap-2 rounded-lg transition px-5 py-2"
@@ -1100,108 +1135,6 @@ const ModuleCard = ({ module, onView, onEdit, onDelete }: any) => {
           <Trash2 className="h-5 w-5" />
         </button>
       </div>
-    </div>
-  );
-};
-
-const IconDropzone = ({ value, onChange, onRemove, error }: any) => {
-  const [preview, setPreview] = useState(null);
-
-  const onDrop = useCallback(
-    (acceptedFiles) => {
-      const file = acceptedFiles[0];
-      if (file) {
-        if (preview) {
-          URL.revokeObjectURL(preview);
-        }
-        const previewUrl = URL.createObjectURL(file);
-        setPreview(previewUrl);
-        onChange(file);
-      }
-    },
-    [onChange, preview],
-  ); // Include preview in dependencies
-
-  const { getRootProps, getInputProps, isDragActive } = useDropzone({
-    onDrop,
-    accept: {
-      "image/svg+xml": [".svg"],
-    },
-    maxSize: 1 * 1024 * 1024,
-    multiple: false,
-    maxFiles: 1,
-  });
-
-  const handleRemove = () => {
-    if (preview) {
-      URL.revokeObjectURL(preview);
-      setPreview(null);
-    }
-    onRemove();
-  };
-
-  const imageSrc = preview || value?.url || null;
-
-  return (
-    <div className="space-y-2">
-      <div
-        {...getRootProps()}
-        className={`border-2 border-dashed rounded-lg p-4 text-center cursor-pointer transition-colors ${
-          isDragActive
-            ? "border-blue-500 bg-blue-50 dark:bg-blue-900/20"
-            : "border-gray-300 dark:border-gray-600 hover:border-gray-400 dark:hover:border-gray-500"
-        } ${error ? "border-red-500" : ""}`}
-      >
-        <input {...getInputProps()} />
-        {imageSrc ? (
-          <div className="flex flex-col items-center">
-            <img
-              src={imageSrc}
-              alt="Icon preview"
-              className="h-16 w-16 object-contain mb-2" // Adjust size as needed
-            />
-            <p className="text-xs text-gray-600 dark:text-gray-400">
-              Click to replace or drag & drop new SVG
-            </p>
-          </div>
-        ) : (
-          <div className="space-y-1">
-            <svg
-              className="mx-auto h-6 w-6 text-gray-400"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-              xmlns="http://www.w3.org/2000/svg"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth="2"
-                d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"
-              ></path>
-            </svg>
-            <p className="text-xs text-gray-600 dark:text-gray-400">
-              {isDragActive
-                ? "Drop the SVG here"
-                : "Drag & drop an SVG icon here, or click to select"}
-            </p>
-            <p className="text-xs text-gray-500 dark:text-gray-500">
-              SVG up to 1MB
-            </p>
-          </div>
-        )}
-      </div>
-      {imageSrc && (
-        <button
-          type="button"
-          onClick={handleRemove}
-          className="flex items-center text-xs text-red-600 hover:text-red-800 dark:text-red-400 dark:hover:text-red-300"
-        >
-          <Trash2 className="h-3 w-3 mr-1" />
-          Remove Icon
-        </button>
-      )}
-      {error && <p className="text-xs text-red-600">{error}</p>}
     </div>
   );
 };

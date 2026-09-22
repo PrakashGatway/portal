@@ -706,8 +706,8 @@ export default function CourseDetailPage() {
                           ...(course.mode == "sessions"
                             ? [{ id: "schedules", label: "Schedules" }]
                             : []),
-                          { id: "materials", label: "Materials" },
-                          { id: "tests", label: "Tests" },
+                          // { id: "materials", label: "Materials" },
+                          // { id: "tests", label: "Tests" },
                           // { id: "instructors", label: "Instructors" },
                           // { id: "faq", label: "FAQ" },
                         ].map((tab) => {
