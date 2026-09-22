@@ -32,6 +32,8 @@ import {
   EyeOff,
   Check,
   AlertCircle,
+  Minimize,
+  Maximize,
 } from "lucide-react";
 
 export type GRETestHeaderProps = {
@@ -758,6 +760,22 @@ export const GRETestHead: React.FC<GRETestHeaderProps> = React.memo(
     const [timerHidden, setTimerHidden] = useState(false);
     const [timeWarning, setTimeWarning] = useState(false);
 
+    const [isFullscreen, setIsFullscreen] = useState(false);
+
+    const handleFullscreen = async () => {
+      try {
+        if (!document.fullscreenElement) {
+          await document.documentElement.requestFullscreen();
+          setIsFullscreen(true);
+        } else {
+          await document.exitFullscreen();
+          setIsFullscreen(false);
+        }
+      } catch (error) {
+        console.error("Fullscreen error:", error);
+      }
+    };
+
     const formatTime = useCallback((seconds: number) => {
       if (seconds < 0) seconds = 0;
       const m = Math.floor(seconds / 60);
@@ -774,8 +792,7 @@ export const GRETestHead: React.FC<GRETestHeaderProps> = React.memo(
       }
     }, [timerSecondsLeft]);
 
-
-  const navigate = useNavigate();
+    const navigate = useNavigate();
 
     // State for popovers and modals
     const directionsRef = useRef<HTMLButtonElement | null>(null);
@@ -792,14 +809,14 @@ export const GRETestHead: React.FC<GRETestHeaderProps> = React.memo(
     const [helpOpen, setHelpOpen] = useState(false);
     const [complainOpen, setComplainOpen] = useState(false);
     const [settingsOpen, setSettingsOpen] = useState(false);
-      const [reportForm, setReportForm] = useState({
-    issueType: "",
-    description: "",
-    contentref: "",
-    message : ""
-  });
+    const [reportForm, setReportForm] = useState({
+      issueType: "",
+      description: "",
+      contentref: "",
+      message: "",
+    });
 
-    const [IsSubmitting,setIsSubmitting] =useState(false)
+    const [IsSubmitting, setIsSubmitting] = useState(false);
 
     // Settings state
     const [settings, setSettings] = useState({
@@ -809,46 +826,43 @@ export const GRETestHead: React.FC<GRETestHeaderProps> = React.memo(
       fontSize: "medium" as "small" | "medium" | "large",
     });
 
+    const handleReportSubmit = async (e) => {
+      e.preventDefault();
+      setIsSubmitting(true);
 
-      const handleReportSubmit = async (e) => {
-    e.preventDefault();
-    setIsSubmitting(true);
-
-    try {
-      const response = await api.post("/feedback", {
-        type: "report_issue",
-        issueType: reportForm.issueType,
-        description: reportForm.description,
-        contentref: "testTemplate",
-        message : {
+      try {
+        const response = await api.post("/feedback", {
+          type: "report_issue",
+          issueType: reportForm.issueType,
+          description: reportForm.description,
+          contentref: "testTemplate",
+          message: {
             currentquestionId: currentQuestion?.questionDoc?._id,
             currentquestionIndex: activeQuestionIndex,
-            testId : attempt?.testTemplate?._id
-        }
+            testId: attempt?.testTemplate?._id,
+          },
+        });
 
-      });
+        toast.success("Report Submit Successfully...");
 
-      toast.success("Report Submit Successfully...");
+        setComplainOpen(false);
 
-      setComplainOpen(false);
+        setReportForm({
+          issueType: "",
+          description: "",
+          contentref: "",
+          message: "",
+        });
+      } catch (error) {
+        console.log(
+          "Report submit error:",
+          error.response?.data || error.message,
+        );
+      } finally {
+        setIsSubmitting(false);
+      }
+    };
 
-      setReportForm({
-        issueType: "",
-        description: "",
-        contentref: "",
-        message : ""
-      });
-    } catch (error) {
-      console.log(
-        "Report submit error:",
-        error.response?.data || error.message,
-      );
-    } finally {
-      setIsSubmitting(false);
-    }
-  };
-
-  
     // Close all on ESC
     useEffect(() => {
       const onKey = (e: KeyboardEvent) => {
@@ -970,10 +984,9 @@ export const GRETestHead: React.FC<GRETestHeaderProps> = React.memo(
 
     return (
       <>
-      
         <div
-  style={{ borderBottomWidth: "3px" }}
-  className="
+          style={{ borderBottomWidth: "3px" }}
+          className="
     fixed
     xl:top-4
     top-0
@@ -985,9 +998,9 @@ export const GRETestHead: React.FC<GRETestHeaderProps> = React.memo(
     dark:bg-slate-900/95
     backdrop-blur
   "
->
-  <div
-    className="
+        >
+          <div
+            className="
       mx-auto
       grid
       grid-cols-[1fr_auto_1fr]
@@ -1003,14 +1016,14 @@ export const GRETestHead: React.FC<GRETestHeaderProps> = React.memo(
       lg:px-4
       py-2.5
     "
-  >
-    {/* =====================================================
+          >
+            {/* =====================================================
         LEFT - SECTION + DIRECTIONS
     ====================================================== */}
-    <div className="flex items-center min-w-0">
-      <div className="min-w-0">
-        <p
-          className="
+            <div className="flex items-center min-w-0">
+              <div className="min-w-0">
+                <p
+                  className="
             text-xs
             sm:text-sm
             lg:text-lg
@@ -1019,17 +1032,17 @@ export const GRETestHead: React.FC<GRETestHeaderProps> = React.memo(
             dark:text-slate-200
             truncate
           "
-        >
-          Section {activeSectionIndex + 1} :{" "}
-          {currentSection?.name || "Section"}
-        </p>
+                >
+                  Section {activeSectionIndex + 1} :{" "}
+                  {currentSection?.name || "Section"}
+                </p>
 
-        <button
-          ref={directionsRef}
-          onClick={() => {
-            setOpenDirections(!openDirections);
-          }}
-          className="
+                <button
+                  ref={directionsRef}
+                  onClick={() => {
+                    setOpenDirections(!openDirections);
+                  }}
+                  className="
             text-[11px]
             sm:text-xs
             lg:text-sm
@@ -1040,29 +1053,27 @@ export const GRETestHead: React.FC<GRETestHeaderProps> = React.memo(
             gap-1
             sm:gap-2
           "
-        >
-          <span className="font-medium">
-            Directions
-          </span>
+                >
+                  <span className="font-medium">Directions</span>
 
-          {openDirections ? (
-            <ChevronUp className="w-3 h-3 sm:w-4 sm:h-4" />
-          ) : (
-            <ChevronDown className="w-3 h-3 sm:w-4 sm:h-4" />
-          )}
-        </button>
-      </div>
-    </div>
+                  {openDirections ? (
+                    <ChevronUp className="w-3 h-3 sm:w-4 sm:h-4" />
+                  ) : (
+                    <ChevronDown className="w-3 h-3 sm:w-4 sm:h-4" />
+                  )}
+                </button>
+              </div>
+            </div>
 
-    {/* =====================================================
+            {/* =====================================================
         CENTER - TIMER
     ====================================================== */}
-    <div className="flex justify-center items-center min-w-0">
-      {currentSection?.durationMinutes &&
-      currentScreen !== "intro" &&
-      !timerHidden ? (
-        <div
-          className="
+            <div className="flex justify-center items-center min-w-0">
+              {currentSection?.durationMinutes &&
+              currentScreen !== "intro" &&
+              !timerHidden ? (
+                <div
+                  className="
             flex
             flex-col
             items-center
@@ -1071,31 +1082,31 @@ export const GRETestHead: React.FC<GRETestHeaderProps> = React.memo(
             sm:px-3
             py-1
           "
-        >
-          <span
-            className="
+                >
+                  <span
+                    className="
               text-sm
               sm:text-base
               lg:text-lg
               tabular-nums
               whitespace-nowrap
             "
-          >
-            {formatTime(timerSecondsLeft)}
-          </span>
+                  >
+                    {formatTime(timerSecondsLeft)}
+                  </span>
 
-          <button
-            onClick={() => setTimerHidden(true)}
-            className="
+                  <button
+                    onClick={() => setTimerHidden(true)}
+                    className="
               rounded-lg
               hover:bg-orange-100
               dark:hover:bg-slate-800
               transition-colors
             "
-            aria-label="Hide timer"
-          >
-            <EyeOff
-              className="
+                    aria-label="Hide timer"
+                  >
+                    <EyeOff
+                      className="
                 w-3.5
                 h-3.5
                 sm:w-4
@@ -1103,14 +1114,14 @@ export const GRETestHead: React.FC<GRETestHeaderProps> = React.memo(
                 text-[#F36D45]
                 dark:text-slate-400
               "
-            />
-          </button>
-        </div>
-      ) : currentSection?.durationMinutes &&
-        currentScreen !== "intro" ? (
-        <button
-          onClick={() => setTimerHidden(false)}
-          className="
+                    />
+                  </button>
+                </div>
+              ) : currentSection?.durationMinutes &&
+                currentScreen !== "intro" ? (
+                <button
+                  onClick={() => setTimerHidden(false)}
+                  className="
             flex
             items-center
             flex-col
@@ -1120,10 +1131,10 @@ export const GRETestHead: React.FC<GRETestHeaderProps> = React.memo(
             transition-colors
             group
           "
-        >
-          <div className="relative">
-            <Clock
-              className="
+                >
+                  <div className="relative">
+                    <Clock
+                      className="
                 w-5
                 h-5
                 sm:w-6
@@ -1131,11 +1142,11 @@ export const GRETestHead: React.FC<GRETestHeaderProps> = React.memo(
                 text-slate-600
                 dark:text-slate-400
               "
-            />
-          </div>
+                    />
+                  </div>
 
-          <Eye
-            className="
+                  <Eye
+                    className="
               w-3
               h-3
               sm:w-4
@@ -1146,16 +1157,16 @@ export const GRETestHead: React.FC<GRETestHeaderProps> = React.memo(
               dark:group-hover:text-blue-400
               transition-colors
             "
-          />
-        </button>
-      ) : null}
-    </div>
+                  />
+                </button>
+              ) : null}
+            </div>
 
-    {/* =====================================================
+            {/* =====================================================
         RIGHT - ACTIONS
     ====================================================== */}
-    <div
-      className="
+            <div
+              className="
         flex
         items-center
         justify-end
@@ -1164,13 +1175,11 @@ export const GRETestHead: React.FC<GRETestHeaderProps> = React.memo(
         lg:gap-3
         min-w-0
       "
-    >
-      {/* CALCULATOR */}
-      {currentSection?.name
-        ?.toLowerCase()
-        ?.includes("math") && (
-        <button
-          className="
+            >
+              {/* CALCULATOR */}
+              {currentSection?.name?.toLowerCase()?.includes("math") && (
+                <button
+                  className="
             flex
             flex-col
             items-center
@@ -1181,16 +1190,16 @@ export const GRETestHead: React.FC<GRETestHeaderProps> = React.memo(
             relative
             shrink-0
           "
-          onClick={() => {
-            setOpenCalculator(!openCalculator);
-            setOpenDirections(false);
-            setOpenReference(false);
-            setOpenMore(false);
-          }}
-          aria-label="Open calculator"
-        >
-          <CalculatorIcon
-            className="
+                  onClick={() => {
+                    setOpenCalculator(!openCalculator);
+                    setOpenDirections(false);
+                    setOpenReference(false);
+                    setOpenMore(false);
+                  }}
+                  aria-label="Open calculator"
+                >
+                  <CalculatorIcon
+                    className="
               w-4
               h-4
               sm:w-5
@@ -1201,10 +1210,10 @@ export const GRETestHead: React.FC<GRETestHeaderProps> = React.memo(
               dark:group-hover:text-blue-400
               transition-colors
             "
-          />
+                  />
 
-          <span
-            className="
+                  <span
+                    className="
               text-[9px]
               sm:text-xs
               mt-0.5
@@ -1213,16 +1222,39 @@ export const GRETestHead: React.FC<GRETestHeaderProps> = React.memo(
               text-slate-700
               dark:text-slate-300
             "
-          >
-            Calculator
-          </span>
-        </button>
-      )}
+                  >
+                    Calculator
+                  </span>
+                </button>
+              )}
 
-      {/* REFERENCE */}
-      <button
-        ref={referenceRef}
-        className="
+
+                 <button
+                type="button"
+                onClick={handleFullscreen}
+                className="flex flex-col items-center justify-center rounded-lg p-2 "
+                title={isFullscreen ? "Exit Full Screen" : "Full Screen"}
+              >
+                {isFullscreen ? <Minimize size={20} /> : <Maximize size={20} />}
+                <span
+                  className="
+            text-[9px]
+            sm:text-xs
+            mt-0.5
+            sm:mt-1
+            font-medium
+            text-slate-700
+            dark:text-slate-300
+          "
+                >
+                  Full Screen
+                </span>
+              </button>
+
+              {/* REFERENCE */}
+              <button
+                ref={referenceRef}
+                className="
           flex
           flex-col
           items-center
@@ -1232,15 +1264,15 @@ export const GRETestHead: React.FC<GRETestHeaderProps> = React.memo(
           relative
           shrink-0
         "
-        onClick={() => {
-          setOpenReference(!openReference);
-          setOpenDirections(false);
-          setOpenMore(false);
-        }}
-        aria-label="Reference materials"
-      >
-        <UserX2
-          className="
+                onClick={() => {
+                  setOpenReference(!openReference);
+                  setOpenDirections(false);
+                  setOpenMore(false);
+                }}
+                aria-label="Reference materials"
+              >
+                <UserX2
+                  className="
             w-4
             h-4
             sm:w-5
@@ -1251,10 +1283,10 @@ export const GRETestHead: React.FC<GRETestHeaderProps> = React.memo(
             dark:group-hover:text-purple-400
             transition-colors
           "
-        />
+                />
 
-        <span
-          className="
+                <span
+                  className="
             text-[9px]
             sm:text-xs
             mt-0.5
@@ -1263,16 +1295,18 @@ export const GRETestHead: React.FC<GRETestHeaderProps> = React.memo(
             text-slate-700
             dark:text-slate-300
           "
-        >
-          Reference
-        </span>
-      </button>
+                >
+                  Reference
+                </span>
+              </button>
 
-      {/* MORE */}
-      <div className="relative shrink-0">
-        <button
-          ref={moreRef}
-          className="
+           
+
+              {/* MORE */}
+              <div className="relative shrink-0">
+                <button
+                  ref={moreRef}
+                  className="
             flex
             flex-col
             items-center
@@ -1280,16 +1314,16 @@ export const GRETestHead: React.FC<GRETestHeaderProps> = React.memo(
             sm:p-2
             group
           "
-          onClick={() => {
-            setOpenMore(!openMore);
-            setOpenDirections(false);
-            setOpenReference(false);
-          }}
-          aria-haspopup="true"
-          aria-expanded={openMore}
-        >
-          <MoreVertical
-            className="
+                  onClick={() => {
+                    setOpenMore(!openMore);
+                    setOpenDirections(false);
+                    setOpenReference(false);
+                  }}
+                  aria-haspopup="true"
+                  aria-expanded={openMore}
+                >
+                  <MoreVertical
+                    className="
               w-4
               h-4
               sm:w-5
@@ -1300,10 +1334,10 @@ export const GRETestHead: React.FC<GRETestHeaderProps> = React.memo(
               dark:group-hover:text-slate-100
               transition-colors
             "
-          />
+                  />
 
-          <span
-            className="
+                  <span
+                    className="
               text-[9px]
               sm:text-xs
               mt-0.5
@@ -1312,18 +1346,17 @@ export const GRETestHead: React.FC<GRETestHeaderProps> = React.memo(
               text-slate-700
               dark:text-slate-300
             "
-          >
-            More
-          </span>
-        </button>
-      </div>
+                  >
+                    More
+                  </span>
+                </button>
+              </div>
 
-      {/* EXIT TEST */}
-      {(currentScreen === "results" || isCompleted) &&
-        navigateBack && (
-          <button
-            onClick={() => setShowExitModal(true)}
-            className="
+              {/* EXIT TEST */}
+              {(currentScreen === "results" || isCompleted) && navigateBack && (
+                <button
+                  onClick={() => setShowExitModal(true)}
+                  className="
               ml-0
               sm:ml-1
               lg:ml-2
@@ -1348,31 +1381,27 @@ export const GRETestHead: React.FC<GRETestHeaderProps> = React.memo(
               hover:shadow-lg
               shrink-0
             "
-          >
-            <span className="flex items-center gap-1 sm:gap-2">
-              <LogOut
-                className="
+                >
+                  <span className="flex items-center gap-1 sm:gap-2">
+                    <LogOut
+                      className="
                   w-3
                   h-3
                   sm:w-4
                   sm:h-4
                 "
-              />
+                    />
 
-              <span className="hidden sm:inline">
-                Exit Test
-              </span>
+                    <span className="hidden sm:inline">Exit Test</span>
 
-              {/* On very small screens only icon */}
-              <span className="inline sm:hidden">
-                Exit
-              </span>
-            </span>
-          </button>
-        )}
-    </div>
-  </div>
-</div>
+                    {/* On very small screens only icon */}
+                    <span className="inline sm:hidden">Exit</span>
+                  </span>
+                </button>
+              )}
+            </div>
+          </div>
+        </div>
 
         <Popover
           anchorRef={directionsRef}
@@ -1475,7 +1504,7 @@ export const GRETestHead: React.FC<GRETestHeaderProps> = React.memo(
                         </button> */}
 
             <button
-             onClick={() => setShowExitModal(true)}
+              onClick={() => setShowExitModal(true)}
               role="menuitem"
               className="
     w-full
@@ -1580,9 +1609,15 @@ export const GRETestHead: React.FC<GRETestHeaderProps> = React.memo(
                 <label className="block text-sm font-medium mb-2 text-slate-700 dark:text-slate-300">
                   Issue Type
                 </label>
-                <select className="w-full border border-slate-300 dark:border-slate-600 rounded-lg px-4 py-2 bg-white dark:bg-slate-800" onChange={(e)=> setReportForm((prev)=> ({
-                    ...prev, issueType : e.target.value
-                }))}>
+                <select
+                  className="w-full border border-slate-300 dark:border-slate-600 rounded-lg px-4 py-2 bg-white dark:bg-slate-800"
+                  onChange={(e) =>
+                    setReportForm((prev) => ({
+                      ...prev,
+                      issueType: e.target.value,
+                    }))
+                  }
+                >
                   <option>Technical problem</option>
                   <option>Content error</option>
                   <option>Timing issue</option>
@@ -1591,13 +1626,16 @@ export const GRETestHead: React.FC<GRETestHeaderProps> = React.memo(
               </div>
 
               <div>
-                <label className="block text-sm font-medium mb-2 text-slate-700 dark:text-slate-300" >
+                <label className="block text-sm font-medium mb-2 text-slate-700 dark:text-slate-300">
                   Description
                 </label>
                 <textarea
-                onChange={(e)=> setReportForm((prev)=>({
-                    ...prev, description: e.target.value
-                }))}
+                  onChange={(e) =>
+                    setReportForm((prev) => ({
+                      ...prev,
+                      description: e.target.value,
+                    }))
+                  }
                   placeholder="Describe your issue in detail..."
                   className="w-full border border-slate-300 dark:border-slate-600 rounded-lg p-4 min-h-[120px] bg-white dark:bg-slate-800"
                   rows={4}
@@ -1616,15 +1654,14 @@ export const GRETestHead: React.FC<GRETestHeaderProps> = React.memo(
 
             <div className="flex justify-between items-center">
               <button
-              type="submit"
-              disabled={IsSubmitting}
-               
+                type="submit"
+                disabled={IsSubmitting}
                 className="px-6 py-2 rounded-lg bg-gradient-to-r from-blue-500 to-purple-500 hover:from-blue-600 hover:to-purple-600 text-white font-medium transition-all shadow hover:shadow-lg"
               >
-                 {IsSubmitting ? "Submitting..." : "Submit Report"}
+                {IsSubmitting ? "Submitting..." : "Submit Report"}
               </button>
               <button
-              disabled={IsSubmitting}
+                disabled={IsSubmitting}
                 onClick={() => setComplainOpen(false)}
                 className="px-4 py-2 rounded-lg border border-slate-300 dark:border-slate-600 hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors"
               >
@@ -1745,100 +1782,97 @@ export const GRETestHead: React.FC<GRETestHeaderProps> = React.memo(
           </div>
         </Modal>
         {showExitModal && (
-  <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/60 px-4 py-5 backdrop-blur-[2px]">
-    <div className="relative w-full max-w-[520px] overflow-hidden rounded-xl bg-white shadow-2xl sm:rounded-2xl">
+          <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/60 px-4 py-5 backdrop-blur-[2px]">
+            <div className="relative w-full max-w-[520px] overflow-hidden rounded-xl bg-white shadow-2xl sm:rounded-2xl">
+              {/* Close Button */}
+              <button
+                type="button"
+                onClick={() => setShowExitModal(false)}
+                className="absolute right-4 top-4 z-10 flex h-8 w-8 items-center justify-center rounded-full text-slate-500 transition hover:bg-slate-100 hover:text-slate-800 sm:right-5 sm:top-5"
+                aria-label="Close"
+              >
+                <svg
+                  className="h-5 w-5"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    d="M6 6l12 12M18 6L6 18"
+                  />
+                </svg>
+              </button>
 
-      {/* Close Button */}
-      <button
-        type="button"
-        onClick={() => setShowExitModal(false)}
-        className="absolute right-4 top-4 z-10 flex h-8 w-8 items-center justify-center rounded-full text-slate-500 transition hover:bg-slate-100 hover:text-slate-800 sm:right-5 sm:top-5"
-        aria-label="Close"
-      >
-        <svg
-          className="h-5 w-5"
-          viewBox="0 0 24 24"
-          fill="none"
-          stroke="currentColor"
-          strokeWidth="2"
-        >
-          <path
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            d="M6 6l12 12M18 6L6 18"
-          />
-        </svg>
-      </button>
+              {/* Content */}
+              <div className="px-5 pb-5 pt-7 text-center sm:px-8 sm:pb-7 sm:pt-8">
+                {/* Exit Icon */}
+                <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-full bg-[#F36D45]/10 sm:mb-5 sm:h-16 sm:w-16">
+                  <svg
+                    className="h-7 w-7 text-[#F36D45] sm:h-8 sm:w-8"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="1.8"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      d="M10 17l5-5-5-5"
+                    />
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      d="M15 12H3"
+                    />
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      d="M21 19V5a2 2 0 00-2-2h-6"
+                    />
+                  </svg>
+                </div>
 
-      {/* Content */}
-      <div className="px-5 pb-5 pt-7 text-center sm:px-8 sm:pb-7 sm:pt-8">
+                {/* Heading */}
+                <h2 className="text-xl font-bold tracking-tight text-slate-900 sm:text-2xl">
+                  Do You Want to Exit this Practice Test?
+                </h2>
 
-        {/* Exit Icon */}
-        <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-full bg-[#F36D45]/10 sm:mb-5 sm:h-16 sm:w-16">
-          <svg
-            className="h-7 w-7 text-[#F36D45] sm:h-8 sm:w-8"
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            strokeWidth="1.8"
-          >
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              d="M10 17l5-5-5-5"
-            />
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              d="M15 12H3"
-            />
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              d="M21 19V5a2 2 0 00-2-2h-6"
-            />
-          </svg>
-        </div>
+                {/* Description */}
+                <p className="mx-auto mt-3 max-w-[440px] text-sm leading-5 text-slate-500 sm:text-[15px] sm:leading-6">
+                  If you exit now, your test will be submitted, and you won't be
+                  able to make further changes.
+                </p>
 
-        {/* Heading */}
-        <h2 className="text-xl font-bold tracking-tight text-slate-900 sm:text-2xl">
-          Do You Want to Exit this Practice Test?
-        </h2>
+                {/* Divider */}
+                <div className="my-5 h-px bg-slate-100 sm:my-6" />
 
-        {/* Description */}
-        <p className="mx-auto mt-3 max-w-[440px] text-sm leading-5 text-slate-500 sm:text-[15px] sm:leading-6">
-          If you exit now, your test will be submitted, and you won't be able
-          to make further changes.
-        </p>
+                {/* Buttons */}
+                <div className="flex flex-col-reverse gap-3 sm:flex-row sm:justify-end">
+                  {/* Continue */}
+                  <button
+                    type="button"
+                    onClick={() => setShowExitModal(false)}
+                    className="w-full rounded-full border border-[#F36D45] bg-white px-5 py-2.5 text-sm font-semibold text-[#F36D45] transition-all duration-200 hover:bg-[#F36D45]/5 focus:outline-none focus:ring-2 focus:ring-[#F36D45]/20 sm:w-auto sm:min-w-[190px]"
+                  >
+                    Continue Practice Test
+                  </button>
 
-        {/* Divider */}
-        <div className="my-5 h-px bg-slate-100 sm:my-6" />
-
-        {/* Buttons */}
-        <div className="flex flex-col-reverse gap-3 sm:flex-row sm:justify-end">
-
-          {/* Continue */}
-          <button
-            type="button"
-            onClick={() => setShowExitModal(false)}
-            className="w-full rounded-full border border-[#F36D45] bg-white px-5 py-2.5 text-sm font-semibold text-[#F36D45] transition-all duration-200 hover:bg-[#F36D45]/5 focus:outline-none focus:ring-2 focus:ring-[#F36D45]/20 sm:w-auto sm:min-w-[190px]"
-          >
-            Continue Practice Test
-          </button>
-
-          {/* Submit & Exit */}
-          <button
-            type="button"
-            onClick={navigateBack}
-            className="w-full rounded-full bg-[#F36D45] px-5 py-2.5 text-sm font-semibold text-white shadow-sm transition-all duration-200 hover:bg-[#e85d38] hover:shadow-md focus:outline-none focus:ring-2 focus:ring-[#F36D45]/30 active:scale-[0.98] sm:w-auto sm:min-w-[150px]"
-          >
-            Save and Exit
-          </button>
-        </div>
-      </div>
-    </div>
-  </div>
-)}
+                  {/* Submit & Exit */}
+                  <button
+                    type="button"
+                    onClick={navigateBack}
+                    className="w-full rounded-full bg-[#F36D45] px-5 py-2.5 text-sm font-semibold text-white shadow-sm transition-all duration-200 hover:bg-[#e85d38] hover:shadow-md focus:outline-none focus:ring-2 focus:ring-[#F36D45]/30 active:scale-[0.98] sm:w-auto sm:min-w-[150px]"
+                  >
+                    Save and Exit
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
       </>
     );
   },

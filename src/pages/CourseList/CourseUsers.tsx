@@ -135,7 +135,7 @@ const SORT_OPTIONS = [
 
 const ImageSlider = ({
   autoPlay = true,
-  interval = 5000,
+  interval = 2000,
   height = "h-40 md:h-[250px]",
 }) => {
   const [currentIndex, setCurrentIndex] = useState(0);
@@ -286,7 +286,7 @@ const ImageSlider = ({
               z-20
               -translate-y-1/2
               rounded-full
-              bg-black/40
+              bg-white/20
               p-2
               text-white
               backdrop-blur-sm
@@ -307,7 +307,7 @@ const ImageSlider = ({
               z-20
               -translate-y-1/2
               rounded-full
-              bg-black/40
+              bg-white/20
               p-2
               text-white
               backdrop-blur-sm
@@ -602,12 +602,7 @@ export default function CourseListingPage() {
   return (
     <div className="min-h-screen pb-12 ">
       <div className="max-w-7xl mx-auto px-5 py-6 space-y-4 bg-white rounded-2xl ">
-        <ImageSlider
-          images={heroImages}
-          autoPlay={true}
-          interval={6000}
-          height="h-26 md:h-[240px]"
-        />
+        <ImageSlider images={heroImages} autoPlay={true} interval={2000} height="h-26 md:h-[240px]" />
 
         <div className="flex items-end justify-between pt-2">
           <div>
@@ -627,10 +622,8 @@ export default function CourseListingPage() {
 
         <div ref={searchContainerRef} className="relative">
           <div
-            className="flex items-center w-full rounded-full border-2 transition-all duration-300 bg-white"
-            style={{
-              borderColor: showRecentSearches ? COLORS.primary : COLORS.border,
-            }}
+            className="flex items-center w-full rounded-full border border-[#FF8356] transition-all duration-300 bg-white"
+            
           >
             <Search
               className="ml-4 h-5 w-5 flex-shrink-0"

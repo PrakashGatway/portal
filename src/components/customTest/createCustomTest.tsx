@@ -12,6 +12,7 @@ import {
 
 import api from "../../axiosInstance";
 import StepOneSATDetails from "./step1";
+import CustomTestInstructionPopup from "./InstructionPopup";
 
 interface FilterSection {
   _id: string;
@@ -95,10 +96,12 @@ export default function CreateCustomTestPage() {
   const [loadingFilterQuestions, setLoadingFilterQuestions] = useState(false);
 
   const [step, setStep] = useState(1);
+  const [loadingStep, setLoadingStep] = useState(null);
 
   const [creating, setCreating] = useState(false);
 
   const [error, setError] = useState("");
+  const [showInstructions, setShowInstructions] = useState(false);
 
   const [tagInput, setTagInput] = useState("");
 
@@ -457,72 +460,99 @@ export default function CreateCustomTestPage() {
      CREATE CUSTOM TEST
   ========================================================= */
 
-  const handleCreate = async () => {
-    if (!validateStep()) {
-      return;
-    }
+ const handleCreate = async () => {
+  if (!validateStep()) return;
+  if (loadingStep) return;
 
-    try {
-      setCreating(true);
-      setError("");
+  try {
+    setError("");
+    setLoadingStep("creating");
 
-      const payload = {
-        exam: examId,
+    const payload = {
+      exam: examId,
 
-        title: title.trim() || "Custom SAT Practice Test",
+      title: title.trim() || "Custom SAT Practice Test",
 
-        description: description.trim(),
+      description: description.trim(),
 
-        testType,
+      testType,
 
-        selectionMode: "filters",
+      selectionMode: "filters",
 
-        durationMinutes: Number(durationMinutes),
+      durationMinutes: Number(durationMinutes),
 
-        questionIds: filteredQuestionIds,
+      questionIds: filteredQuestionIds,
 
-        filters: {
-          sections: filters.sections,
-          tags: filters.tags,
-          difficulties: filters.difficulties,
-          questionPool: filters.questionPool,
-          questionCount: Number(questionCount),
-        },
-      };
+      filters: {
+        sections: filters.sections,
+        tags: filters.tags,
+        difficulties: filters.difficulties,
+        questionPool: filters.questionPool,
+        questionCount: Number(questionCount),
+      },
+    };
 
-      const response = await api.post("/mcu/custom", payload);
+    // -----------------------------
+    // STEP 1: CREATE CUSTOM TEST
+    // -----------------------------
+    const response = await api.post("/mcu/custom", payload);
 
-      if (!response?.data?.success) {
-        throw new Error(
-          response?.data?.message || "Failed to create custom test.",
-        );
-      }
-
-      const customTest = response?.data?.data;
-
-      const startres = await api.post(`/mcu/custom/${customTest?._id}/start`);
-      if (!startres?.data?.success) {
-        throw new Error(
-          startres?.data?.message || "Failed to start custom test.",
-        );
-      }
-      const startTest = startres?.data?.data;
-
-      window.location.href = `/mcq/tests/${startTest?._id}?type=custom`;
-
-      return customTest;
-    } catch (error: any) {
-      console.error("Create custom test error:", error);
-
-      setError(
-        error?.response?.data?.message ||
-          error?.message ||
-          "Failed to create custom test.",
+    if (!response?.data?.success) {
+      throw new Error(
+        response?.data?.message || "Failed to create custom test."
       );
-    } finally {
-      setCreating(false);
     }
-  };
+
+    const customTest = response?.data?.data;
+
+    if (!customTest?._id) {
+      throw new Error("Custom test was created but no test ID was returned.");
+    }
+
+    // -----------------------------
+    // STEP 2: START CUSTOM TEST
+    // -----------------------------
+    setLoadingStep("loading");
+
+    const startres = await api.post(
+      `/mcu/custom/${customTest._id}/start`
+    );
+
+    if (!startres?.data?.success) {
+      throw new Error(
+        startres?.data?.message || "Failed to start custom test."
+      );
+    }
+
+    const startTest = startres?.data?.data;
+
+    if (!startTest?._id) {
+      throw new Error("Test started but no test ID was returned.");
+    }
+
+    // -----------------------------
+    // SUCCESS
+    // -----------------------------
+    window.location.href = `/mcq/tests/${startTest._id}?type=custom`;
+
+    return customTest;
+
+  } catch (error) {
+    console.error("Create custom test error:", error);
+
+    setError(
+      error?.response?.data?.message ||
+        error?.message ||
+        "Failed to create custom test."
+    );
+
+    // Allow user to try again after error
+    setLoadingStep(null);
+
+  } finally {
+  
+  }
+};
 
   const previousStep = () => {
     setError("");
@@ -560,83 +590,85 @@ export default function CreateCustomTestPage() {
 
   return (
     <div className="min-h-screen">
-      <div className="mx-auto max-w-7xl rounded-3xl bg-white p-4 sm:p-6">
-        <div className="mb-4 flex flex-col gap-5 lg:flex-row lg:items-end lg:justify-between">
-          <div>
-            <h1 className="text-2xl font-semibold text-slate-800 dark:text-white">
-              Create Custom Test
-            </h1>
+      <div className="mx-auto max-w-7xl rounded-3xl  p-4 sm:p-6">
+        <div className="bg-white p-5 rounded-2xl mb-6">
+          <div className="mb-4 flex flex-col gap-5 lg:flex-row lg:items-end lg:justify-between">
+            <div>
+              <h1 className="text-2xl font-bold text-black dark:text-white">
+                Create Custom Test
+              </h1>
 
-            <p className="mt-px max-w-2xl text-sm text-slate-600 md:text-base">
-              Build your own practice test by selecting filters and generating
-              your question pool.
-            </p>
+              <p className="mt-px max-w-2xl text-sm text-black md:text-base">
+                Build your own practice test by selecting filters and generating
+                your question pool.
+              </p>
+            </div>
+
+            <button
+              type="button"
+              onClick={resetBuilder}
+              className="inline-flex items-center justify-center gap-2 rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-sm font-semibold text-black hover:border-orange-300 hover:text-orange-600 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-300"
+            >
+              <RotateCcw size={16} />
+              Reset
+            </button>
           </div>
 
-          <button
-            type="button"
-            onClick={resetBuilder}
-            className="inline-flex items-center justify-center gap-2 rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-sm font-semibold text-slate-600 hover:border-orange-300 hover:text-orange-600 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-300"
-          >
-            <RotateCcw size={16} />
-            Reset
-          </button>
-        </div>
-
-        <div className="mb-6 max-w-2xl mx-auto">
-          <div className="flex items-center gap-3">
-            {[
-              {
-                number: 1,
-                label: "Test Details",
-              },
-              {
-                number: 2,
-                label: "Questions",
-              },
-            ].map((item, index) => (
-              <React.Fragment key={item.number}>
-                <button
-                  type="button"
-                  onClick={() => {
-                    if (item.number < step) {
-                      setStep(item.number);
-                    }
-                  }}
-                  className="flex items-center gap-2"
-                >
-                  <span
-                    className={`flex h-9 w-9 items-center justify-center rounded-full text-sm font-bold ${
-                      step >= item.number
-                        ? "bg-orange-500 text-white"
-                        : "bg-slate-100 text-slate-400 dark:bg-slate-800"
-                    }`}
+          <div className="mb-6 max-w-2xl mx-auto">
+            <div className="flex items-center gap-3">
+              {[
+                {
+                  number: 1,
+                  label: "Test Details",
+                },
+                {
+                  number: 2,
+                  label: "Questions",
+                },
+              ].map((item, index) => (
+                <React.Fragment key={item.number}>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      if (item.number < step) {
+                        setStep(item.number);
+                      }
+                    }}
+                    className="flex items-center gap-2"
                   >
-                    {step > item.number ? <Check size={16} /> : item.number}
-                  </span>
+                    <span
+                      className={`flex h-9 w-9 items-center justify-center rounded-full text-sm font-bold ${
+                        step >= item.number
+                          ? "bg-orange-500 text-white"
+                          : "bg-slate-100 text-slate-400 dark:bg-slate-800"
+                      }`}
+                    >
+                      {step > item.number ? <Check size={16} /> : item.number}
+                    </span>
 
-                  <span
-                    className={`hidden text-sm font-semibold sm:block ${
-                      step >= item.number
-                        ? "text-slate-900 dark:text-white"
-                        : "text-slate-400"
-                    }`}
-                  >
-                    {item.label}
-                  </span>
-                </button>
+                    <span
+                      className={`hidden text-sm font-semibold sm:block ${
+                        step >= item.number
+                          ? "text-slate-900 dark:text-white"
+                          : "text-slate-400"
+                      }`}
+                    >
+                      {item.label}
+                    </span>
+                  </button>
 
-                {index < 1 && (
-                  <div
-                    className={`h-px flex-1 ${
-                      step > item.number
-                        ? "bg-orange-500"
-                        : "bg-slate-200 dark:bg-slate-800"
-                    }`}
-                  />
-                )}
-              </React.Fragment>
-            ))}
+                  {index < 1 && (
+                    <div
+                      className={`h-px flex-1 ${
+                        step > item.number
+                          ? "bg-orange-500"
+                          : "bg-slate-200 dark:bg-slate-800"
+                      }`}
+                    />
+                  )}
+                </React.Fragment>
+              ))}
+            </div>
           </div>
         </div>
 
@@ -649,18 +681,21 @@ export default function CreateCustomTestPage() {
         )}
 
         {step === 1 && (
-          <div className="mx-auto rounded-2xl border border-slate-200 bg-white p-5 dark:border-slate-800 dark:bg-slate-900">
+          <div className="mx-auto rounded-2xl  bg-white p-5 dark:border-slate-800 dark:bg-slate-900">
             <div className="mb-8">
-              <h2 className="text-xl font-semibold text-slate-800 dark:text-white">
+              <h2 className="text-2xl font-bold text-slate-800 dark:text-white">
                 Test Details
               </h2>
 
-              <p className="mt-px text-sm text-slate-500">
+              <p className="mt-px text-sm text-black">
                 Review instructions & set your duration
               </p>
             </div>
 
-            <StepOneSATDetails durationMinutes={durationMinutes} setDurationMinutes={setDurationMinutes} />
+            <StepOneSATDetails
+              durationMinutes={durationMinutes}
+              setDurationMinutes={setDurationMinutes}
+            />
 
             <div className="pt-6 dark:border-slate-800">
               <button
@@ -669,7 +704,7 @@ export default function CreateCustomTestPage() {
                   setError("");
                   setStep(2);
                 }}
-                className="inline-flex items-center gap-2 rounded-full bg-orange-500 px-6 py-2.5 font-semibold text-white shadow-lg shadow-orange-500/20 hover:bg-orange-600"
+                className="inline-flex items-center gap-2 rounded-full bg-orange-500 px-6 py-2.5 font-semibold text-white   hover:bg-orange-600"
               >
                 Continue
                 <ArrowRight size={18} />
@@ -698,17 +733,17 @@ export default function CreateCustomTestPage() {
                 loading={loadingFilterQuestions || loadingFilters}
               />
 
-              <div className="h-fit rounded-2xl border border-slate-200 bg-white p-4 dark:border-slate-800 dark:bg-slate-900 lg:sticky lg:top-20">
+              <div className="h-fit rounded-2xl bg-white p-4 dark:border-slate-800 dark:bg-slate-900 lg:sticky lg:top-20">
                 <div className="mb-3">
-                  <h3 className="font-semibold">Selected Questions</h3>
+                  <h3 className="font-bold text-lg">Selected Questions</h3>
 
-                  <p className="mt-px text-xs text-slate-500">
+                  <p className="mt-px text-sm text-black">
                     Questions matching your selected filters.
                   </p>
                 </div>
 
-                <div className="mb-4 flex items-end justify-between rounded-2xl bg-orange-50 p-3 dark:bg-orange-500/10">
-                  <div className="text-sm font-medium text-slate-500">
+                <div className="mb-4 flex items-center justify-between rounded-2xl bg-orange-50 p-3 dark:bg-orange-500/10">
+                  <div className="text-sm font-medium text-black">
                     Total Questions
                   </div>
 
@@ -743,7 +778,7 @@ export default function CreateCustomTestPage() {
                       {filteredQuestionIds.map((id, index) => (
                         <div
                           key={id}
-                          className="relative flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-slate-200 dark:bg-slate-800"
+                          className="relative flex h-11 w-11 shrink-0 items-center justify-center rounded-full dark:bg-slate-800"
                           title={`Question ID: ${id}`}
                         >
                           <span className="flex h-10 w-10 items-center justify-center rounded-full bg-orange-500 text-sm font-semibold text-white">
@@ -758,71 +793,85 @@ export default function CreateCustomTestPage() {
                 {/* REQUESTED VS AVAILABLE */}
 
                 <div className="mt-4 rounded-xl bg-slate-50 p-3 dark:bg-slate-800">
-                  <div className="flex justify-between text-xs">
-                    <span className="text-slate-500">Requested</span>
+                  <div className="flex justify-between text-sm">
+                    <span className="text-black">Requested</span>
 
                     <span className="font-bold">
                       {questionCount === 0 ? "No Limit" : questionCount}
                     </span>
                   </div>
 
-                  <div className="mt-2 flex justify-between text-xs">
-                    <span className="text-slate-500">Available</span>
+                  <div className="mt-2 flex justify-between text-sm">
+                    <span className="text-black">Available</span>
 
                     <span className="font-bold text-orange-600">
                       {availableCount}
                     </span>
                   </div>
 
-                  <div className="mt-2 flex justify-between text-xs">
-                    <span className="text-slate-500">Selected</span>
+                  <div className="mt-2 flex justify-between text-sm">
+                    <span className="text-black">Selected</span>
 
                     <span className="font-bold text-orange-600">
                       {filteredQuestionIds.length}
                     </span>
                   </div>
                 </div>
+
+                <div className="mt-5 flex justify-between">
+                  <button
+                    type="button"
+                    onClick={previousStep}
+                    disabled={creating}
+                    className="inline-flex items-center gap-2 rounded-full px-5 py-2.5 font-semibold text-slate-600 hover:bg-slate-100 disabled:opacity-50 dark:text-slate-300 dark:hover:bg-slate-800"
+                  >
+                    <ArrowLeft size={18} />
+                    Back
+                  </button>
+
+                  {/* CREATE DIRECTLY - NO REVIEW STEP */}
+
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setShowInstructions(true);
+                    }}
+                    disabled={
+                      creating ||
+                      loadingFilterQuestions ||
+                      filteredQuestionIds.length === 0 ||
+                      availableCount === 0 ||
+                      (questionCount > 0 &&
+                        filteredQuestionIds.length < questionCount)
+                    }
+                    className="inline-flex items-center gap-2 rounded-full bg-orange-500 px-5 py-2.5 font-semibold text-white  hover:bg-orange-600 disabled:cursor-not-allowed disabled:opacity-50"
+                  >
+                    {creating ? (
+                      <Loader2 size={18} className="animate-spin" />
+                    ) : (
+                      <Check size={18} />
+                    )}
+
+                    {creating ? "Submitting..." : "Submit"}
+                  </button>
+                </div>
               </div>
-            </div>
-
-            <div className="mt-5 flex justify-between">
-              <button
-                type="button"
-                onClick={previousStep}
-                disabled={creating}
-                className="inline-flex items-center gap-2 rounded-full px-5 py-2.5 font-semibold text-slate-600 hover:bg-slate-100 disabled:opacity-50 dark:text-slate-300 dark:hover:bg-slate-800"
-              >
-                <ArrowLeft size={18} />
-                Back
-              </button>
-
-              {/* CREATE DIRECTLY - NO REVIEW STEP */}
-
-              <button
-                type="button"
-                onClick={handleCreate}
-                disabled={
-                  creating ||
-                  loadingFilterQuestions ||
-                  filteredQuestionIds.length === 0 ||
-                  availableCount === 0 ||
-                  (questionCount > 0 &&
-                    filteredQuestionIds.length < questionCount)
-                }
-                className="inline-flex items-center gap-2 rounded-full bg-orange-500 px-5 py-2.5 font-semibold text-white shadow-lg shadow-orange-500/20 hover:bg-orange-600 disabled:cursor-not-allowed disabled:opacity-50"
-              >
-                {creating ? (
-                  <Loader2 size={18} className="animate-spin" />
-                ) : (
-                  <Check size={18} />
-                )}
-
-                {creating ? "Creating..." : "Create Test"}
-              </button>
             </div>
           </div>
         )}
       </div>
+      {
+        <CustomTestInstructionPopup
+          isOpen={showInstructions}
+          onClose={() => {
+            if (!loadingStep) {
+              setShowInstructions(false);
+            }
+          }}
+          onStartTest={handleCreate}
+          loadingStep={loadingStep}
+        />
+      }
     </div>
   );
 }
@@ -876,48 +925,70 @@ function FilterSelection({
   loading: boolean;
 }) {
   return (
-    <div className="rounded-3xl border border-slate-200 bg-white p-5 dark:border-slate-800 dark:bg-slate-900 md:p-7">
+    <div className="rounded-2xl bg-white p-4  dark:border-slate-800 dark:bg-slate-900 sm:p-5 md:p-6">
       {/* =================================================
-          HEADER
-      ================================================= */}
+      HEADER
+  ================================================= */}
+      <div className="mb-5 flex items-center justify-between gap-4 border-b border-slate-100 pb-4 dark:border-slate-800">
+        <div>
+          <h2 className="text-lg font-bold text-black dark:text-white md:text-2xl">
+            Question Filters
+          </h2>
 
-      <div className="mb-7">
-        <div className="flex items-center justify-between">
-          <div>
-            <h2 className="text-xl font-bold">Question Filters</h2>
-
-            <p className="mt-1 text-sm text-slate-500">
-              Select filters to automatically generate your question pool.
-            </p>
-          </div>
-
-          {loading && (
-            <Loader2 size={20} className="animate-spin text-orange-500" />
-          )}
+          <p className="mt-1 text-xs text-black sm:text-sm">
+            Select filters to automatically generate your question pool.
+          </p>
         </div>
+
+        {loading && (
+          <Loader2
+            size={20}
+            className="shrink-0 animate-spin text-orange-500"
+          />
+        )}
       </div>
 
       {/* =================================================
-          NUMBER OF QUESTIONS
-      ================================================= */}
-
-      <div className="mb-7 rounded-2xl bg-orange-50 p-4 dark:bg-orange-500/10">
-        <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+      NUMBER OF QUESTIONS
+  ================================================= */}
+      <div className="mb-4 rounded-xl  bg-orange-50/70 p-4 dark:border-orange-900/40 dark:bg-orange-500/10">
+        <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
           <div>
-            <div className="flex items-center gap-2">
-              <h3 className="font-bold">Number of Questions</h3>
-            </div>
+            <h3 className="text-lg font-bold text-slate-900 dark:text-white">
+              Number of Questions
+            </h3>
 
-            <p className="mt-px text-sm text-slate-500">
+            <p className="mt-1 text-xs text-black">
               {availableCount} questions match your filters.
             </p>
           </div>
 
-          <div className="w-full sm:w-44">
+          {/* KEEPING YOUR EXISTING LOGIC */}
+          <div className="w-full sm:w-40">
             <select
               value={questionCount}
               onChange={(e) => setQuestionCount(Number(e.target.value))}
-              className="w-full appearance-none rounded-xl border border-orange-200 bg-white px-4 py-3 text-base font-bold text-slate-700 outline-none transition focus:border-orange-500 focus:ring-2 focus:ring-orange-500/10 dark:border-orange-900 dark:bg-slate-900 dark:text-white"
+              className="
+            w-full
+            appearance-none
+            rounded-lg
+            border
+            border-orange-200
+            bg-white
+            px-3
+            py-2.5
+            text-sm
+            font-bold
+            text-black
+            outline-none
+            transition
+            focus:border-orange-500
+            focus:ring-2
+            focus:ring-orange-500/10
+            dark:border-orange-900
+            dark:bg-slate-900
+            dark:text-white
+          "
             >
               <option value={0}>No Limit</option>
 
@@ -940,21 +1011,32 @@ function FilterSelection({
         </div>
       </div>
 
-      <div className="space-y-7">
+      {/* =================================================
+      FILTER SECTIONS
+  ================================================= */}
+      <div className="space-y-3">
         {/* =================================================
-            SECTIONS
-        ================================================= */}
+        SECTIONS
+    ================================================= */}
+        <div className="rounded-xl border border-slate-200 bg-white p-4 dark:border-slate-800 dark:bg-slate-900/50">
+          <div className="mb-3 flex items-center justify-between">
+            <label className="text-lg font-bold text-slate-900 dark:text-white">
+              Sections
+            </label>
 
-        <div>
-          <label className="mb-3 block text-sm font-bold">Sections</label>
+            {filters.sections.length > 0 && (
+              <span className="text-sm font-medium text-orange-500">
+                {filters.sections.length} selected
+              </span>
+            )}
+          </div>
 
           {sections.length === 0 ? (
             <p className="text-sm text-slate-400">No sections available.</p>
           ) : (
-            <div className="flex max-h-48 flex-wrap gap-2 overflow-y-auto">
+            <div className="flex flex-wrap gap-2">
               {sections.map((section) => {
                 const value = String(section._id);
-
                 const active = filters.sections.includes(value);
 
                 return (
@@ -962,11 +1044,21 @@ function FilterSelection({
                     type="button"
                     key={value}
                     onClick={() => toggleFilter("sections", value)}
-                    className={`rounded-xl border px-3.5 py-2 text-xs font-semibold transition ${
-                      active
-                        ? "border-orange-500 bg-orange-500 text-white"
-                        : "border-slate-200 bg-white text-slate-600 hover:border-orange-300 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-300"
-                    }`}
+                    className={`
+                  rounded-lg
+                  border
+                  px-3
+                  py-2
+                  text-sm
+                  font-semibold
+                  transition-all
+                  duration-200
+                  ${
+                    active
+                      ? "border-orange-500 bg-orange-500 text-white "
+                      : "border-slate-200 bg-white text-black hover:border-orange-300 hover:bg-orange-50 hover:text-orange-600 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-300 dark:hover:border-orange-500"
+                  }
+                `}
                   >
                     {section.name}
                   </button>
@@ -977,66 +1069,174 @@ function FilterSelection({
         </div>
 
         {/* =================================================
-            TAGS
-        ================================================= */}
+        SUBJECTS / TAGS
+    ================================================= */}
+        <div className="rounded-xl border border-slate-200 bg-white p-4 dark:border-slate-800 dark:bg-slate-900/50">
+          {/* Header */}
+          <div className="mb-3 flex items-center justify-between">
+            <div>
+              <label className="text-lg font-bold text-black dark:text-white">
+                Subjects
+              </label>
 
-        <div>
-          <label className="mb-3 block text-sm font-bold">Subjects</label>
-
-          {/* SELECTED TAGS */}
-
-          {filters.tags.length > 0 && (
-            <div className="mt-3 flex flex-wrap gap-2">
-              {filters.tags.map((tag) => (
-                <button
-                  type="button"
-                  key={tag}
-                  onClick={() => toggleFilter("tags", tag)}
-                  className="rounded-full bg-orange-100 px-3 py-1.5 text-xs font-bold text-orange-600 dark:bg-orange-500/10"
-                >
-                  {tag} ×
-                </button>
-              ))}
+              <p className="mt-0.5 text-[11px] text-black">
+                Select one or more subjects
+              </p>
             </div>
-          )}
 
-          {/* AVAILABLE TAGS */}
+            {filters.tags.length > 0 && (
+              <button
+                type="button"
+                onClick={() => {
+                  filters.tags.forEach((tag) => toggleFilter("tags", tag));
+                }}
+                className="
+          text-sm
+          font-semibold
+          text-orange-500
+          transition
+          hover:text-orange-600
+        "
+              >
+                Clear All
+              </button>
+            )}
+          </div>
 
+          {/* Selected count */}
+          <div className="mb-3 flex items-center justify-between rounded-lg bg-orange-50 px-3 py-2 dark:bg-orange-500/10">
+            <span className="text-base font-medium text-black dark:text-slate-400">
+              Selected Subjects
+            </span>
+
+            <span className="rounded-full bg-orange-500 px-2 py-0.5 text-[11px] font-bold text-white">
+              {filters.tags.length}
+            </span>
+          </div>
+
+          {/* Subjects */}
           {tags.length > 0 ? (
-            <div className="mt-4 flex max-h-40 flex-wrap gap-2 overflow-y-auto">
-              {tags
-                .filter((tag) => !filters.tags.includes(tag))
-                .map((tag) => (
-                  <button
-                    type="button"
-                    key={tag}
-                    onClick={() => toggleFilter("tags", tag)}
-                    className="rounded-full bg-slate-100 px-3 py-1.5 text-xs font-medium text-slate-600 hover:bg-orange-100 hover:text-orange-600 dark:bg-slate-800 dark:text-slate-300"
-                  >
-                    + {tag}
-                  </button>
-                ))}
+            <div className="max-h-44 overflow-y-auto pr-1">
+              <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
+                {tags.map((tag) => {
+                  const checked = filters.tags.includes(tag);
+
+                  return (
+                    <label
+                      key={tag}
+                      className={`
+                group
+                flex
+                cursor-pointer
+                items-center
+                gap-3
+                rounded-lg
+                border
+                px-3
+                py-2.5
+                transition-all
+                duration-200
+                ${
+                  checked
+                    ? `
+                      border-orange-300
+                      bg-orange-50
+                      dark:border-orange-500/40
+                      dark:bg-orange-500/10
+                    `
+                    : `
+                      border-slate-200
+                      bg-white
+                      hover:border-orange-200
+                      hover:bg-orange-50/50
+                      dark:border-slate-700
+                      dark:bg-slate-800
+                      dark:hover:border-orange-500/40
+                    `
+                }
+              `}
+                    >
+                      {/* Checkbox */}
+                      <input
+                        type="checkbox"
+                        checked={checked}
+                        onChange={() => toggleFilter("tags", tag)}
+                        className="
+                  h-4
+                  w-4
+                  shrink-0
+                  cursor-pointer
+                  rounded
+                  border-slate-300
+                  text-orange-500
+                  accent-orange-500
+                  focus:ring-orange-500
+                  dark:border-slate-600
+                "
+                      />
+
+                      {/* Subject name */}
+                      <span
+                        className={`
+                  min-w-0
+                  truncate
+                  text-sm
+                  font-medium
+                  ${
+                    checked
+                      ? "font-semibold text-orange-600 dark:text-orange-400"
+                      : "text-black dark:text-slate-300"
+                  }
+                `}
+                        title={tag}
+                      >
+                        {tag}
+                      </span>
+                    </label>
+                  );
+                })}
+              </div>
             </div>
           ) : (
-            <p className="text-sm text-slate-400">No tags available.</p>
+            <div className="flex items-center justify-center rounded-lg border border-dashed border-slate-200 py-8 dark:border-slate-700">
+              <p className="text-sm text-slate-400">No subjects available.</p>
+            </div>
           )}
         </div>
 
-        <FilterGroup
-          title="Difficulty"
-          values={difficulties}
-          selected={filters.difficulties}
-          onToggle={(value) => toggleFilter("difficulties", value)}
-        />
+        {/* =================================================
+        DIFFICULTY
+    ================================================= */}
+        <div className="rounded-xl border border-slate-200 bg-white p-4 dark:border-slate-800 dark:bg-slate-900/50">
+          <div className="mb-3 flex items-center justify-between">
+            <label className="text-lg font-bold text-black dark:text-white">
+              Difficulty
+            </label>
+
+            {filters.difficulties.length > 0 && (
+              <span className="text-sm font-medium text-orange-500">
+                {filters.difficulties.length} selected
+              </span>
+            )}
+          </div>
+
+          <FilterGroup
+            title=""
+            values={difficulties}
+            selected={filters.difficulties}
+            onToggle={(value) => toggleFilter("difficulties", value)}
+          />
+        </div>
 
         {/* =================================================
-            QUESTION POOL
-        ================================================= */}
+        QUESTION POOL
+    ================================================= */}
+        <div className="rounded-xl border border-slate-200 bg-white p-4 dark:border-slate-800 dark:bg-slate-900/50">
+          <label className="mb-3 block text-lg font-bold text-black dark:text-white">
+            Question Pool
+          </label>
 
-        <div>
-          <label className="mb-3 block text-sm font-bold">Question Pool</label>
-
-          <div className="grid gap-2 sm:grid-cols-3">
+          <div className="grid grid-cols-1 gap-2 sm:grid-cols-3">
             {[
               {
                 value: "unanswered",
@@ -1060,11 +1260,21 @@ function FilterSelection({
                   onClick={() =>
                     setQuestionPool(item.value as FilterState["questionPool"])
                   }
-                  className={`rounded-xl border px-4 py-3 text-sm font-semibold transition ${
-                    active
-                      ? "border-orange-500 bg-orange-500 text-white"
-                      : "border-slate-200 bg-white text-slate-600 hover:border-orange-300 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-300"
-                  }`}
+                  className={`
+                rounded-lg
+                border
+                px-3
+                py-2.5
+                text-sm
+                font-semibold
+                transition-all
+                duration-200
+                ${
+                  active
+                    ? "border-orange-500 bg-orange-500 text-white "
+                    : "border-slate-200 bg-white text-black hover:border-orange-300 hover:bg-orange-50 hover:text-orange-600 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-300"
+                }
+              `}
                 >
                   {item.label}
                 </button>
@@ -1075,16 +1285,33 @@ function FilterSelection({
       </div>
 
       {/* =================================================
-          CLEAR
-      ================================================= */}
+      FOOTER
+  ================================================= */}
+      <div className="mt-4 flex items-center justify-between border-t border-slate-100 pt-4 dark:border-slate-800">
+        <div className="text-sm text-black">
+          {availableCount} questions available
+        </div>
 
-      <div className="mt-8 flex justify-end border-t border-slate-200 pt-5 dark:border-slate-800">
         <button
           type="button"
           onClick={clearFilters}
-          className="inline-flex items-center gap-2 text-sm font-semibold text-slate-500 hover:text-orange-600"
+          className="
+        inline-flex
+        items-center
+        gap-1.5
+        rounded-lg
+        px-3
+        py-2
+        text-sm
+        font-semibold
+        text-black
+        transition
+        hover:bg-orange-50
+        hover:text-orange-600
+        dark:hover:bg-orange-500/10
+      "
         >
-          <RotateCcw size={15} />
+          <RotateCcw size={14} />
           Clear Filters
         </button>
       </div>
@@ -1123,10 +1350,10 @@ function FilterGroup({
                 type="button"
                 key={value}
                 onClick={() => onToggle(value)}
-                className={`rounded-xl border px-3.5 py-2 text-xs font-semibold capitalize transition ${
+                className={`rounded-xl border px-3.5 py-2 text-sm font-semibold capitalize transition ${
                   active
                     ? "border-orange-500 bg-orange-500 text-white"
-                    : "border-slate-200 bg-white text-slate-600 hover:border-orange-300 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-300"
+                    : "border-slate-200 bg-white text-black hover:border-orange-300 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-300"
                 }`}
               >
                 {value.replace(/_/g, " ")}

@@ -6,7 +6,7 @@ import Input from "../../components/form/input/InputField";
 import Label from "../../components/form/Label";
 import Select from "../../components/form/Select";
 import { toast } from "react-toastify";
-import api from "../../axiosInstance";
+import api, { ImageBaseUrl } from "../../axiosInstance";
 import { Pencil, Trash2, X, Plus, Image as ImageIcon, Bell, Layout, FileText } from "lucide-react";
 import RichTextEditor from "../../components/TextEditor";
 import NotificationManagement from "../../components/notificationManagement"; 
@@ -161,7 +161,7 @@ const ImagePreview: React.FC<{ url: string; alt: string; onRemove?: () => void }
         <img
           src={url}
           alt={alt}
-          className="w-16 h-16 object-cover cursor-pointer rounded border border-gray-200 dark:border-gray-600"
+          className="w-full h-full object-contain cursor-pointer rounded border border-gray-200 dark:border-gray-600"
           onClick={() => setIsOpen(true)}
         />
         {onRemove && (
@@ -178,12 +178,6 @@ const ImagePreview: React.FC<{ url: string; alt: string; onRemove?: () => void }
       {isOpen && (
         <Modal isOpen={isOpen} onClose={() => setIsOpen(false)} className="max-w-4xl">
           <div className="p-4">
-            <div className="flex justify-between items-center mb-4">
-              <h3 className="text-lg font-semibold">{alt || "Image Preview"}</h3>
-              <button onClick={() => setIsOpen(false)} className="text-gray-500 hover:text-gray-700">
-                <X className="w-6 h-6" />
-              </button>
-            </div>
             <img src={url} alt={alt} className="w-full h-auto max-h-[70vh] object-contain" />
           </div>
         </Modal>
@@ -214,6 +208,7 @@ const BannerPair: React.FC<BannerPairProps> = ({
   onRemove,
   isRemovable,
 }) => {
+
   return (
     <div className="border rounded-lg p-4 dark:border-gray-700 bg-gray-50 dark:bg-gray-800/50">
       <div className="flex justify-between items-center mb-4">
@@ -238,13 +233,13 @@ const BannerPair: React.FC<BannerPairProps> = ({
               type="file"
               accept="image/*"
               onChange={(e) => onFileUpload(e, index, "banner")}
-              className="flex-1"
+              className="flex-1 cursor-pointer"
               disabled={uploading}
             />
           </div>
           {pair.Banner.file && (
             <ImagePreview
-              url={pair.Banner.file}
+              url={`${ImageBaseUrl}/${pair.Banner.file}`}
               alt={pair.Banner.alt}
               onRemove={() => {
                 onAltChange(index, "banner", "");

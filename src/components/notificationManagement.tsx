@@ -1,8 +1,12 @@
-
-
 "use client";
 
-import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import React, {
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from "react";
 import {
   Bell,
   CheckCircle,
@@ -55,17 +59,13 @@ interface Notification {
   message: string;
   from?: string;
   to?: string;
-  Category?: {
-    _id: string;
-    name?: string;
-  } | string;
-  type:
-    | "course"
-    | "offer"
-    | "reminder"
-    | "announcement"
-    | "payment"
-    | "system";
+  Category?:
+    | {
+        _id: string;
+        name?: string;
+      }
+    | string;
+  type: "course" | "offer" | "reminder" | "announcement" | "payment" | "system";
   priority: "low" | "medium" | "high" | "urgent";
   isActive: boolean;
   data?: NotificationData;
@@ -105,13 +105,8 @@ interface CreateNotificationData {
   notificationKey?: string;
   title: string;
   message: string;
-  type:
-    | "course"
-    | "offer"
-    | "reminder"
-    | "announcement"
-    | "payment"
-    | "system";
+  image: string;
+  type: "course" | "offer" | "reminder" | "announcement" | "payment" | "system";
   priority: "low" | "medium" | "high" | "urgent";
   Category?: string;
   from?: string;
@@ -167,6 +162,8 @@ const NotificationManagement = () => {
 
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [creating, setCreating] = useState(false);
+  const [coverImageFile, setCoverImageFile] = useState(null);
+   const [coverImagePreview, setCoverImagePreview] = useState('');
 
   const [formData, setFormData] = useState<CreateNotificationData>({
     isGlobal: true,
@@ -179,6 +176,7 @@ const NotificationManagement = () => {
     Category: "",
     from: "",
     to: "",
+    image: "",
     courseId: "",
     contentId: "",
     testId: "",
@@ -239,7 +237,7 @@ const NotificationManagement = () => {
         "/notification/all",
         {
           params,
-        }
+        },
       );
 
       if (response.data.success) {
@@ -255,7 +253,7 @@ const NotificationManagement = () => {
       setError(
         err?.response?.data?.message ||
           err?.message ||
-          "Failed to fetch notifications"
+          "Failed to fetch notifications",
       );
     } finally {
       setLoading(false);
@@ -292,9 +290,7 @@ const NotificationManagement = () => {
       console.error("Fetch users error:", err);
 
       setError(
-        err?.response?.data?.message ||
-          err?.message ||
-          "Failed to fetch users"
+        err?.response?.data?.message || err?.message || "Failed to fetch users",
       );
     } finally {
       setLoadingUsers(false);
@@ -310,39 +306,35 @@ const NotificationManagement = () => {
       fetchUsers(selectedRole);
     }
   }, [showCreateModal, formData.isGlobal, selectedRole, fetchUsers]);
-  
-  
+
   const [Category, setCategory] = useState([]);
 
-useEffect(() => {
+  useEffect(() => {
     const fetchCategory = async () => {
-    try {
-      setLoadingUsers(true);
-      const response = await api.get("/categories", {
-        params: {
-          page: 1,
-          limit: 100
-        },
-      });
+      try {
+        setLoadingUsers(true);
+        const response = await api.get("/categories", {
+          params: {
+            page: 1,
+            limit: 100,
+          },
+        });
 
-      const data: any = response.data;
+        const data: any = response.data;
 
-      setCategory(data.data || []);
-      console.log(data.data || [],'alkjoijoijoijoijiojiojoijoi');
-    } catch (error: any) {
-      console.error("Error fetching users:", error);
-      setCategory([]);
-    } finally {
-      setLoadingUsers(false);
-    }
-  };
+        setCategory(data.data || []);
+        console.log(data.data || [], "alkjoijoijoijoijiojiojoijoi");
+      } catch (error: any) {
+        console.error("Error fetching users:", error);
+        setCategory([]);
+      } finally {
+        setLoadingUsers(false);
+      }
+    };
     fetchCategory();
-  
-},[]);
+  }, []);
 
   useEffect(() => {
-    
-
     return () => {
       if (successTimeoutRef.current) {
         clearTimeout(successTimeoutRef.current);
@@ -396,9 +388,12 @@ useEffect(() => {
         (!formData.recipients || formData.recipients.length === 0)
       ) {
         throw new Error(
-          "Please select at least one user for personal notification"
+          "Please select at least one user for personal notification",
         );
       }
+      
+
+     
 
       const payload: any = {
         isGlobal: formData.isGlobal,
@@ -408,7 +403,22 @@ useEffect(() => {
         priority: formData.priority,
         isActive: formData.isActive ?? true,
         sendPush: formData.sendPush ?? false,
+        image: formData.image
       };
+
+       let imageUrl = formData.image;
+
+      if (coverImageFile) {
+        const imageFormData = new FormData();
+        imageFormData.append("file", coverImageFile);
+        const uploadResponse = await api.post("/upload/cloud", imageFormData, {
+          headers: {
+            "Content-Type": "multipart/form-data",
+          },
+        });
+        imageUrl = uploadResponse.data?.url;
+        payload.image = imageUrl;
+      }
 
       if (!formData.isGlobal) {
         payload.recipients = formData.recipients;
@@ -435,9 +445,7 @@ useEffect(() => {
       }
 
       if (formData.scheduledFor) {
-        payload.scheduledFor = new Date(
-          formData.scheduledFor
-        ).toISOString();
+        payload.scheduledFor = new Date(formData.scheduledFor).toISOString();
       }
 
       const data: NotificationData = {};
@@ -466,10 +474,7 @@ useEffect(() => {
         payload.data = data;
       }
 
-      if (
-        formData.metaInfo &&
-        Object.keys(formData.metaInfo).length > 0
-      ) {
+      if (formData.metaInfo && Object.keys(formData.metaInfo).length > 0) {
         payload.metaInfo = formData.metaInfo;
       }
 
@@ -481,7 +486,7 @@ useEffect(() => {
         showSuccess(
           formData.isGlobal
             ? "Global notification created successfully"
-            : "Personal notification sent successfully"
+            : "Personal notification sent successfully",
         );
 
         setShowCreateModal(false);
@@ -491,7 +496,7 @@ useEffect(() => {
         await fetchNotifications();
       } else {
         throw new Error(
-          response.data?.message || "Failed to create notification"
+          response.data?.message || "Failed to create notification",
         );
       }
     } catch (err: any) {
@@ -500,7 +505,7 @@ useEffect(() => {
       setError(
         err?.response?.data?.message ||
           err?.message ||
-          "Failed to create notification"
+          "Failed to create notification",
       );
     } finally {
       setCreating(false);
@@ -509,7 +514,7 @@ useEffect(() => {
 
   const deleteNotification = async (notificationId: string) => {
     const confirmed = window.confirm(
-      "Are you sure you want to delete this notification?"
+      "Are you sure you want to delete this notification?",
     );
 
     if (!confirmed) {
@@ -521,7 +526,7 @@ useEffect(() => {
       setError("");
 
       const response = await api.delete(
-        `/notification/admin/${notificationId}`
+        `/notification/admin/${notificationId}`,
       );
 
       if (response.data?.success) {
@@ -529,7 +534,7 @@ useEffect(() => {
         await fetchNotifications();
       } else {
         throw new Error(
-          response.data?.message || "Failed to delete notification"
+          response.data?.message || "Failed to delete notification",
         );
       }
     } catch (err: any) {
@@ -538,7 +543,7 @@ useEffect(() => {
       setError(
         err?.response?.data?.message ||
           err?.message ||
-          "Failed to delete notification"
+          "Failed to delete notification",
       );
     } finally {
       setActionLoading(null);
@@ -576,16 +581,13 @@ useEffect(() => {
   const userOptions = useMemo<SelectOption[]>(() => {
     return users.map((user) => ({
       value: user._id,
-      label:
-        user.name ||
-        user.email ||
-        `User ${user._id.slice(-6)}`,
+      label: user.name || user.email || `User ${user._id.slice(-6)}`,
     }));
   }, [users]);
 
   const selectedUserOptions = useMemo(() => {
     return userOptions.filter((option) =>
-      formData.recipients?.includes(option.value)
+      formData.recipients?.includes(option.value),
     );
   }, [userOptions, formData.recipients]);
 
@@ -600,13 +602,26 @@ useEffect(() => {
       return (
         notification.title?.toLowerCase().includes(searchValue) ||
         notification.message?.toLowerCase().includes(searchValue) ||
-        notification.notificationKey
-          ?.toLowerCase()
-          .includes(searchValue) ||
+        notification.notificationKey?.toLowerCase().includes(searchValue) ||
         notification.type?.toLowerCase().includes(searchValue)
       );
     });
   }, [notifications, search]);
+
+  const handleCoverImageChange = (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    setCoverImageFile(file);
+    const previewUrl = URL.createObjectURL(file);
+    setCoverImagePreview(previewUrl);
+    setFormData((prev) => ({ ...prev, image: previewUrl }));
+  };
+
+  const triggerCoverImageInput = () => {
+        const fileInput = document.getElementById('cover-image-upload');
+        fileInput?.click();
+    };
 
   const formatDate = (date?: string) => {
     if (!date) return "N/A";
@@ -705,10 +720,7 @@ useEffect(() => {
     );
   };
 
-  const handleFilterChange = (
-    key: keyof FilterState,
-    value: string
-  ) => {
+  const handleFilterChange = (key: keyof FilterState, value: string) => {
     setCurrentPage(1);
 
     setFilter((prev) => ({
@@ -724,8 +736,6 @@ useEffect(() => {
     resetForm();
     setError("");
   };
-
-
 
   return (
     <div className="min-h-screen bg-gray-50 p-4 md:p-6">
@@ -799,9 +809,7 @@ useEffect(() => {
 
             <select
               value={filter.type}
-              onChange={(e) =>
-                handleFilterChange("type", e.target.value)
-              }
+              onChange={(e) => handleFilterChange("type", e.target.value)}
               className="h-11 rounded-xl border border-gray-200 px-3 text-sm outline-none focus:border-orange-400"
             >
               <option value="all">All Types</option>
@@ -815,9 +823,7 @@ useEffect(() => {
 
             <select
               value={filter.scope}
-              onChange={(e) =>
-                handleFilterChange("scope", e.target.value)
-              }
+              onChange={(e) => handleFilterChange("scope", e.target.value)}
               className="h-11 rounded-xl border border-gray-200 px-3 text-sm outline-none focus:border-orange-400"
             >
               <option value="all">All Scope</option>
@@ -827,9 +833,7 @@ useEffect(() => {
 
             <select
               value={filter.status}
-              onChange={(e) =>
-                handleFilterChange("status", e.target.value)
-              }
+              onChange={(e) => handleFilterChange("status", e.target.value)}
               className="h-11 rounded-xl border border-gray-200 px-3 text-sm outline-none focus:border-orange-400"
             >
               <option value="all">All Status</option>
@@ -839,9 +843,7 @@ useEffect(() => {
 
             <select
               value={filter.priority}
-              onChange={(e) =>
-                handleFilterChange("priority", e.target.value)
-              }
+              onChange={(e) => handleFilterChange("priority", e.target.value)}
               className="h-11 rounded-xl border border-gray-200 px-3 text-sm outline-none focus:border-orange-400"
             >
               <option value="all">All Priority</option>
@@ -866,9 +868,7 @@ useEffect(() => {
             disabled={loading}
             className="flex items-center gap-2 rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm text-gray-600 hover:bg-gray-50 disabled:opacity-50"
           >
-            <RefreshCw
-              className={`h-4 w-4 ${loading ? "animate-spin" : ""}`}
-            />
+            <RefreshCw className={`h-4 w-4 ${loading ? "animate-spin" : ""}`} />
             Refresh
           </button>
         </div>
@@ -952,7 +952,7 @@ useEffect(() => {
                       <td className="px-5 py-4">
                         <span
                           className={`inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-xs font-medium ${getTypeColor(
-                            notification.type
+                            notification.type,
                           )}`}
                         >
                           {getTypeIcon(notification.type)}
@@ -963,7 +963,7 @@ useEffect(() => {
                       <td className="px-5 py-4">
                         <span
                           className={`rounded-full border px-2.5 py-1 text-xs font-medium capitalize ${getPriorityColor(
-                            notification.priority
+                            notification.priority,
                           )}`}
                         >
                           {notification.priority}
@@ -993,12 +993,8 @@ useEffect(() => {
 
                           <button
                             type="button"
-                            onClick={() =>
-                              deleteNotification(notification._id)
-                            }
-                            disabled={
-                              actionLoading === notification._id
-                            }
+                            onClick={() => deleteNotification(notification._id)}
+                            disabled={actionLoading === notification._id}
                             className="rounded-lg border border-red-100 p-2 text-red-500 hover:bg-red-50 disabled:opacity-50"
                             title="Delete"
                           >
@@ -1058,7 +1054,7 @@ useEffect(() => {
 
                   <span
                     className={`inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-xs font-medium ${getTypeColor(
-                      notification.type
+                      notification.type,
                     )}`}
                   >
                     {getTypeIcon(notification.type)}
@@ -1067,7 +1063,7 @@ useEffect(() => {
 
                   <span
                     className={`rounded-full border px-2.5 py-1 text-xs font-medium capitalize ${getPriorityColor(
-                      notification.priority
+                      notification.priority,
                     )}`}
                   >
                     {notification.priority}
@@ -1082,9 +1078,7 @@ useEffect(() => {
                   <div className="flex gap-2">
                     <button
                       type="button"
-                      onClick={() =>
-                        viewNotificationDetails(notification)
-                      }
+                      onClick={() => viewNotificationDetails(notification)}
                       className="rounded-lg border border-gray-200 p-2 text-gray-500"
                     >
                       <Eye className="h-4 w-4" />
@@ -1092,12 +1086,8 @@ useEffect(() => {
 
                     <button
                       type="button"
-                      onClick={() =>
-                        deleteNotification(notification._id)
-                      }
-                      disabled={
-                        actionLoading === notification._id
-                      }
+                      onClick={() => deleteNotification(notification._id)}
+                      disabled={actionLoading === notification._id}
                       className="rounded-lg border border-red-100 p-2 text-red-500"
                     >
                       {actionLoading === notification._id ? (
@@ -1118,9 +1108,7 @@ useEffect(() => {
             <button
               type="button"
               disabled={currentPage <= 1}
-              onClick={() =>
-                setCurrentPage((prev) => Math.max(1, prev - 1))
-              }
+              onClick={() => setCurrentPage((prev) => Math.max(1, prev - 1))}
               className="flex items-center gap-1 rounded-lg border border-gray-200 px-3 py-2 text-sm text-gray-600 disabled:cursor-not-allowed disabled:opacity-40"
             >
               <ChevronLeft className="h-4 w-4" />
@@ -1135,9 +1123,7 @@ useEffect(() => {
               type="button"
               disabled={currentPage >= totalPages}
               onClick={() =>
-                setCurrentPage((prev) =>
-                  Math.min(totalPages, prev + 1)
-                )
+                setCurrentPage((prev) => Math.min(totalPages, prev + 1))
               }
               className="flex items-center gap-1 rounded-lg border border-gray-200 px-3 py-2 text-sm text-gray-600 disabled:cursor-not-allowed disabled:opacity-40"
             >
@@ -1204,9 +1190,7 @@ useEffect(() => {
                       <p className="font-semibold text-gray-900">
                         Global Notification
                       </p>
-                      <p className="text-xs text-gray-500">
-                        Send to all users
-                      </p>
+                      <p className="text-xs text-gray-500">Send to all users</p>
                     </div>
                   </div>
                 </label>
@@ -1272,9 +1256,7 @@ useEffect(() => {
 
                     <select
                       value={selectedRole}
-                      onChange={(e) =>
-                        handleRoleChange(e.target.value)
-                      }
+                      onChange={(e) => handleRoleChange(e.target.value)}
                       className="h-11 w-full rounded-xl border border-gray-200 bg-white px-3 text-sm outline-none focus:border-orange-400 focus:ring-2 focus:ring-orange-100"
                     >
                       <option value="all">All Users</option>
@@ -1297,17 +1279,13 @@ useEffect(() => {
                       options={userOptions}
                       value={selectedUserOptions}
                       placeholder={
-                        loadingUsers
-                          ? "Loading users..."
-                          : "Select users..."
+                        loadingUsers ? "Loading users..." : "Select users..."
                       }
-                      noOptionsMessage={() =>
-                        "No users found"
-                      }
+                      noOptionsMessage={() => "No users found"}
                       onChange={(selectedOptions) => {
-                        const values = (
-                          selectedOptions as SelectOption[]
-                        ).map((option) => option.value);
+                        const values = (selectedOptions as SelectOption[]).map(
+                          (option) => option.value,
+                        );
 
                         setFormData((prev) => ({
                           ...prev,
@@ -1319,9 +1297,7 @@ useEffect(() => {
                           ...base,
                           minHeight: 44,
                           borderRadius: 12,
-                          borderColor: state.isFocused
-                            ? "#f97316"
-                            : "#e5e7eb",
+                          borderColor: state.isFocused ? "#f97316" : "#e5e7eb",
                           boxShadow: state.isFocused
                             ? "0 0 0 2px rgba(249,115,22,0.1)"
                             : "none",
@@ -1418,19 +1394,19 @@ useEffect(() => {
                   <select
                     value={formData.type}
                     onChange={(e) =>
-                      setFormData((prev) => ({
+                     { setFormData((prev) => ({
                         ...prev,
                         type: e.target.value as CreateNotificationData["type"],
                       }))
+                      
+                    }
                     }
                     className="h-11 w-full rounded-xl border border-gray-200 px-3 text-sm outline-none focus:border-orange-400"
                   >
                     <option value="course">Course</option>
                     <option value="offer">Offer</option>
                     <option value="reminder">Reminder</option>
-                    <option value="announcement">
-                      Announcement
-                    </option>
+                    <option value="announcement">Announcement</option>
                     <option value="payment">Payment</option>
                     <option value="system">System</option>
                   </select>
@@ -1446,8 +1422,8 @@ useEffect(() => {
                     onChange={(e) =>
                       setFormData((prev) => ({
                         ...prev,
-                        priority:
-                          e.target.value as CreateNotificationData["priority"],
+                        priority: e.target
+                          .value as CreateNotificationData["priority"],
                       }))
                     }
                     className="h-11 w-full rounded-xl border border-gray-200 px-3 text-sm outline-none focus:border-orange-400"
@@ -1477,28 +1453,23 @@ useEffect(() => {
                     className="h-11 w-full rounded-xl border border-gray-200 px-3 text-sm outline-none focus:border-orange-400 focus:ring-2 focus:ring-orange-100"
                   /> */}
 
-                  
-                   <select
-                   value={
-                      formData.Category ||
-                      ""
-                    }
+                  <select
+                    value={formData.Category || ""}
                     onChange={(e) =>
-                      setFormData(
-                        (prev) => ({
-                          ...prev,
-                          Category:
-                            e.target.value,
-                        }),
-                      )}
+                      setFormData((prev) => ({
+                        ...prev,
+                        Category: e.target.value,
+                      }))
+                    }
                     className="h-11 w-full rounded-xl border border-gray-200 px-3 text-sm outline-none focus:border-orange-400 focus:ring-2 focus:ring-orange-100"
-                    >
-                    <option value="" hidden>Select an option</option>
-                    {Category.map(ele => (
+                  >
+                    <option value="" hidden>
+                      Select an option
+                    </option>
+                    {Category.map((ele) => (
                       <option value={ele?._id}>{ele?.name}</option>
                     ))}
                   </select>
-
                 </div>
 
                 <div>
@@ -1595,7 +1566,7 @@ useEffect(() => {
                   />
                 </div>
 
-                <div>
+                {formData.type !== "offer" && <div>
                   <label className="mb-2 block text-sm font-medium text-gray-700">
                     Test ID
                   </label>
@@ -1612,9 +1583,9 @@ useEffect(() => {
                     placeholder="Test ObjectId"
                     className="h-11 w-full rounded-xl border border-gray-200 px-3 text-sm outline-none focus:border-orange-400"
                   />
-                </div>
+                </div>}
 
-                <div>
+             {formData.type !== "offer" && <div>
                   <label className="mb-2 block text-sm font-medium text-gray-700">
                     Action URL
                   </label>
@@ -1631,9 +1602,9 @@ useEffect(() => {
                     placeholder="/courses/ielts"
                     className="h-11 w-full rounded-xl border border-gray-200 px-3 text-sm outline-none focus:border-orange-400"
                   />
-                </div>
+                </div>}
 
-                <div>
+               {formData.type !== "offer" && <div>
                   <label className="mb-2 block text-sm font-medium text-gray-700">
                     Action Text
                   </label>
@@ -1650,6 +1621,48 @@ useEffect(() => {
                     placeholder="View Course"
                     className="h-11 w-full rounded-xl border border-gray-200 px-3 text-sm outline-none focus:border-orange-400"
                   />
+                </div>}
+                <div className="md:col-span-2">
+                  <label>Cover Image</label>
+                  <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3">
+                    <input
+                      id="cover-image-upload"
+                      type="file"
+                      accept="image/*"
+                      onChange={handleCoverImageChange}
+                      className="hidden"
+                    />
+                    <button
+                      type="button"
+                      onClick={triggerCoverImageInput}
+                      className="flex items-center justify-center px-5 py-2.5 rounded-lg font-medium text-sm bg-indigo-600 hover:bg-indigo-700 text-white shadow-md hover:shadow-lg"
+                    >
+                      📎 Upload Image
+                    </button>
+                    {formData.image && (
+                      <span className="text-sm text-gray-600 dark:text-gray-400 max-w-xs truncate">
+                        {coverImageFile
+                          ? coverImageFile.name
+                          : "Image selected"}
+                      </span>
+                    )}
+                  </div>
+                  {coverImagePreview && (
+                    <div className="mt-3">
+                      <div className="inline-block p-1 bg-gray-100 dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700">
+                        <img
+                          src={coverImagePreview}
+                          alt="Preview"
+                          className="h-24 rounded object-cover transition-transform duration-200 hover:scale-105"
+                          style={{
+                            width: "160px",
+                            height: "96px",
+                            objectFit: "cover",
+                          }}
+                        />
+                      </div>
+                    </div>
+                  )}
                 </div>
               </div>
 
@@ -1728,8 +1741,7 @@ useEffect(() => {
                   creating ||
                   !formData.title.trim() ||
                   !formData.message.trim() ||
-                  (!formData.isGlobal &&
-                    !formData.recipients?.length)
+                  (!formData.isGlobal && !formData.recipients?.length)
                 }
                 className="flex items-center justify-center gap-2 rounded-xl bg-orange-500 px-5 py-3 text-sm font-semibold text-white hover:bg-orange-600 disabled:cursor-not-allowed disabled:opacity-50"
               >
@@ -1809,7 +1821,7 @@ useEffect(() => {
 
                   <span
                     className={`inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-xs font-medium ${getTypeColor(
-                      selectedNotification.type
+                      selectedNotification.type,
                     )}`}
                   >
                     {getTypeIcon(selectedNotification.type)}
@@ -1818,13 +1830,11 @@ useEffect(() => {
                 </div>
 
                 <div>
-                  <p className="mb-1 text-xs text-gray-400">
-                    Priority
-                  </p>
+                  <p className="mb-1 text-xs text-gray-400">Priority</p>
 
                   <span
                     className={`inline-block rounded-full border px-2.5 py-1 text-xs font-medium capitalize ${getPriorityColor(
-                      selectedNotification.priority
+                      selectedNotification.priority,
                     )}`}
                   >
                     {selectedNotification.priority}
@@ -1837,9 +1847,7 @@ useEffect(() => {
                 </div>
 
                 <div>
-                  <p className="mb-1 text-xs text-gray-400">
-                    Notification Key
-                  </p>
+                  <p className="mb-1 text-xs text-gray-400">Notification Key</p>
 
                   <p className="break-all text-sm text-gray-700">
                     {selectedNotification.notificationKey || "N/A"}
@@ -1847,9 +1855,7 @@ useEffect(() => {
                 </div>
 
                 <div>
-                  <p className="mb-1 text-xs text-gray-400">
-                    Created At
-                  </p>
+                  <p className="mb-1 text-xs text-gray-400">Created At</p>
 
                   <p className="text-sm text-gray-700">
                     {formatDate(selectedNotification.createdAt)}
@@ -1865,22 +1871,22 @@ useEffect(() => {
                     </p>
 
                     <div className="rounded-xl bg-gray-50 p-4">
-                      {Object.entries(
-                        selectedNotification.data
-                      ).map(([key, value]) => (
-                        <div
-                          key={key}
-                          className="flex flex-col border-b border-gray-200 py-2 last:border-0 sm:flex-row sm:justify-between sm:gap-4"
-                        >
-                          <span className="text-xs font-medium text-gray-500">
-                            {key}
-                          </span>
+                      {Object.entries(selectedNotification.data).map(
+                        ([key, value]) => (
+                          <div
+                            key={key}
+                            className="flex flex-col border-b border-gray-200 py-2 last:border-0 sm:flex-row sm:justify-between sm:gap-4"
+                          >
+                            <span className="text-xs font-medium text-gray-500">
+                              {key}
+                            </span>
 
-                          <span className="break-all text-sm text-gray-800">
-                            {String(value)}
-                          </span>
-                        </div>
-                      ))}
+                            <span className="break-all text-sm text-gray-800">
+                              {String(value)}
+                            </span>
+                          </div>
+                        ),
+                      )}
                     </div>
                   </div>
                 )}
@@ -1893,11 +1899,7 @@ useEffect(() => {
                     </p>
 
                     <pre className="overflow-x-auto rounded-xl bg-gray-900 p-4 text-xs text-gray-100">
-                      {JSON.stringify(
-                        selectedNotification.metaInfo,
-                        null,
-                        2
-                      )}
+                      {JSON.stringify(selectedNotification.metaInfo, null, 2)}
                     </pre>
                   </div>
                 )}
@@ -1910,10 +1912,3 @@ useEffect(() => {
 };
 
 export default NotificationManagement;
-
-
-
-
-
-
-

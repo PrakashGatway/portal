@@ -134,7 +134,7 @@ export const MockTestCard = ({
           <div className="absolute top-0 left-0 w-full h-[40%] bg-gradient-to-b from-[#ADADAC] to-[#ADADAC]/0" />
 
           {/* ================= IMAGE ================= */}
-          <div className="relative h-[170px] overflow-visible rounded-t-[18px] p-2">
+          <div className="relative h-[170px] overflow-visible rounded-t-[18px] p-2 z-10">
             <div
               style={{
                 borderRadius: "15px 15px 0px 0px",
@@ -161,7 +161,7 @@ export const MockTestCard = ({
             </div>
 
             {/* Image subtle overlay */}
-            <div className="absolute inset-0 bg-gradient-to-t from-black/10 via-transparent to-transparent" />
+            {/* <div className="absolute inset-0 bg-gradient-to-t from-black/10 via-transparent to-transparent" /> */}
 
             {/* Offer Badge */}
             {!test.isPurchased && !test.isFree && (
@@ -207,7 +207,7 @@ export const MockTestCard = ({
               {test.title}
             </h3> */}
 
-            <h3 className="text-[20px] leading-7 flex items-center font-medium text-[#111111] dark:text-white">
+            <h3 className="text-[20px] leading-7 flex items-center  font-medium text-[#111111] dark:text-white">
               {test.title}
 
               <span title={test.description || "No description available."}>
@@ -230,7 +230,7 @@ export const MockTestCard = ({
             </p> */}
 
             {/* ================= META ================= */}
-            <div className="mt-3 grid grid-cols-2 gap-y-2.5 text-[16px] text-gray-600">
+            <div className="mt-3 grid grid-cols-2 gap-y-2.5 text-[16px]">
               {/* Validity */}
               <div className="flex items-center gap-2">
                 <Clock className="h-[18px] w-[18px] shrink-0 text-[#FF5A3C]" />
@@ -450,7 +450,7 @@ export default function MockTests({ testType }: any) {
     <div className="min-h-[85vh]">
       <div className="max-w-7xl p-0 mx-auto sm:p-4 rounded-xl min-h-[87vh]">
         {/* Top Slider */}
-        <div className="grid max-h-[250px] grid-cols-1 lg:grid-cols-3 gap-1 rounded-3xl space-x-2 mb-4">
+        <div className="grid max-h-[250px] grid-cols-1 lg:grid-cols-3 gap-3 rounded-3xl space-x-2 mb-4">
           <LeftSlider />
           <RightOffer />
         </div>

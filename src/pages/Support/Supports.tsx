@@ -45,6 +45,7 @@ import {
   ShieldCheck,
   ThumbsUp,
   Users,
+  Info,
 } from "lucide-react";
 import { toast } from "react-toastify";
 import Button from "../../components/ui/button/Button";
@@ -110,7 +111,9 @@ const SupportPage = () => {
   const [loading, setLoading] = useState(true);
   const [selectedTicket, setSelectedTicket] = useState<Ticket | null>(null);
   const [showCreateForm, setShowCreateForm] = useState(false);
-  const [supportCategories, setSupportCategories] = useState<SupportCategory[]>([]);
+  const [supportCategories, setSupportCategories] = useState<SupportCategory[]>(
+    [],
+  );
   const [supportLoading, setSupportLoading] = useState(true);
   const [filters, setFilters] = useState({
     search: "",
@@ -118,14 +121,14 @@ const SupportPage = () => {
     priority: "all",
     category: "all",
   });
-  const {user} = useAuth();
+  const { user } = useAuth();
   const [replyMessage, setReplyMessage] = useState("");
   const [newTicket, setNewTicket] = useState<NewTicket>({
     subject: "",
     description: "",
     category: "general",
     priority: "medium",
-    assignedTo : user?._id || ""
+    assignedTo: user?._id || "",
   });
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [isSending, setIsSending] = useState(false);
@@ -141,7 +144,7 @@ const SupportPage = () => {
           "https://www.ooshasprep.com/api/article-category",
         );
         const resJson = await res.json();
-        
+
         // Handle different response structures
         let categories: SupportCategory[] = [];
         if (Array.isArray(resJson)) {
@@ -151,7 +154,7 @@ const SupportPage = () => {
         } else if (resJson.categories && Array.isArray(resJson.categories)) {
           categories = resJson.categories;
         }
-        
+
         setSupportCategories(categories);
       } catch (error) {
         console.error("Error fetching support categories:", error);
@@ -254,7 +257,19 @@ const SupportPage = () => {
   const stats = getTicketStats();
 
   // Icon mapping for categories - cycles through available icons
-  const iconList = [BookOpen, FileText, Users, HelpCircle, MessageSquare, Settings, Shield, GraduationCap, CreditCard, ClipboardList, UserRound];
+  const iconList = [
+    BookOpen,
+    FileText,
+    Users,
+    HelpCircle,
+    MessageSquare,
+    Settings,
+    Shield,
+    GraduationCap,
+    CreditCard,
+    ClipboardList,
+    UserRound,
+  ];
 
   const bgColorList = [
     "bg-orange-100 text-orange-600",
@@ -529,7 +544,7 @@ const SupportPage = () => {
               </div>
             ) : (
               /* Cards - Aligned properly */
-              <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+              <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 items-center justify-center">
                 {supportCategories.map((topic, index) => {
                   const Icon = iconList[index % iconList.length];
                   const bgColor = bgColorList[index % bgColorList.length];
@@ -540,8 +555,8 @@ const SupportPage = () => {
                       className="cursor-pointer block h-full"
                       to={`https://www.ooshasprep.com/guide?category=${topic?.slug}`}
                     >
-                      <div className="group relative flex h-full min-h-[100px] flex-col rounded-[15px] border border-[#E9E7E5] bg-white p-4 shadow-[0_1px_3px_rgba(0,0,0,0.02)] transition-all duration-300 hover:-translate-y-0.5 hover:border-[#E4DCD7] hover:shadow-[0_8px_24px_rgba(0,0,0,0.06)] sm:p-[17px]">
-                        <div className="flex items-start gap-3">
+                      <div className="group relative flex h-full min-h-[40px] flex-col rounded-[15px] border border-[#E9E7E5] bg-white p-4 shadow-[0_1px_3px_rgba(0,0,0,0.02)] transition-all duration-300 hover:-translate-y-0.5 hover:border-[#E4DCD7] hover:shadow-[0_8px_24px_rgba(0,0,0,0.06)] sm:p-[17px]">
+                        <div className="flex items-center gap-3">
                           {/* Icon */}
                           <div
                             className={`flex h-[43px] w-[43px] shrink-0 items-center justify-center rounded-full ${bgColor} transition-transform duration-300 group-hover:scale-105`}
@@ -551,16 +566,19 @@ const SupportPage = () => {
 
                           {/* Content */}
                           <div className="min-w-0 flex-1">
-                            <h3 className="pt-[1px] text-base font-semibold leading-[18px] text-[#242424]">
+                            <h3 className="flex items-center gap-1 pt-[1px] text-base font-semibold leading-[18px] text-[#242424]">
                               {topic.name}
-                            </h3>
 
-                            <div
-                              className="mt-2 text-sm line-clamp-2 text-gray-400"
-                              dangerouslySetInnerHTML={{
-                                __html: topic.description || "",
-                              }}
-                            />
+                              <span
+                                title={topic.description?.replace(
+                                  /<[^>]*>/g,
+                                  "",
+                                )}
+                                className="inline-flex cursor-help items-center text-gray-400"
+                              >
+                                <Info size={14} />
+                              </span>
+                            </h3>
                           </div>
                         </div>
 
@@ -593,9 +611,11 @@ const SupportPage = () => {
 
               {/* Left Content */}
               <div className="relative z-10 flex items-center gap-5 sm:gap-7">
-                
-                
-          <img src="/images/headphone.webp" alt="" className="w-20 h-20 scale-90" />
+                <img
+                  src="/images/headphone.webp"
+                  alt=""
+                  className="w-20 h-20 scale-90"
+                />
                 {/* <div className="relative flex h-[68px] w-[68px] shrink-0 items-center justify-center rounded-full bg-[#FFF0E8] sm:h-[76px] sm:w-[76px]">
                   <Headphones
                     size={42}
@@ -678,7 +698,15 @@ const SupportPage = () => {
         {/* Create Ticket Modal */}
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
           {showCreateForm && (
-           <CreateTicket setShowCreateForm={setShowCreateForm} newTicket={newTicket} setNewTicket={setNewTicket} categoryOptions={categoryOptions} priorityOptions={priorityOptions} handleCreateTicket={handleCreateTicket} errors={errors}/>
+            <CreateTicket
+              setShowCreateForm={setShowCreateForm}
+              newTicket={newTicket}
+              setNewTicket={setNewTicket}
+              categoryOptions={categoryOptions}
+              priorityOptions={priorityOptions}
+              handleCreateTicket={handleCreateTicket}
+              errors={errors}
+            />
           )}
         </div>
       </div>
@@ -688,167 +716,184 @@ const SupportPage = () => {
 
 export default SupportPage;
 
-export const CreateTicket=({setShowCreateForm,newTicket,setNewTicket,categoryOptions,priorityOptions,handleCreateTicket,errors,disabledSubject=false,title="Create New Ticket",disabledCategory=false,disabledPriority=false} , disabledAttach=false)=>{
-  return(<>
-   <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/40 px-4 py-6">
-              <motion.div
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                className="bg-white dark:bg-gray-800 rounded-3xl border border-gray-200/50 dark:border-gray-700 p-6 w-full max-w-3xl shadow-sm max-h-[90vh] overflow-y-auto"
+export const CreateTicket = (
+  {
+    setShowCreateForm,
+    newTicket,
+    setNewTicket,
+    categoryOptions,
+    priorityOptions,
+    handleCreateTicket,
+    errors,
+    disabledSubject = false,
+    title = "Create New Ticket",
+    disabledCategory = false,
+    disabledPriority = false,
+  },
+  disabledAttach = false,
+) => {
+  return (
+    <>
+      <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/40 px-4 py-6">
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="bg-white dark:bg-gray-800 rounded-3xl border border-gray-200/50 dark:border-gray-700 p-6 w-full max-w-3xl shadow-sm max-h-[90vh] overflow-y-auto"
+        >
+          <div className="flex items-center justify-between mb-6">
+            <div className="flex items-center gap-3">
+              <button
+                onClick={() => setShowCreateForm(false)}
+                className="lg:hidden p-2 rounded-xl hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
               >
-                <div className="flex items-center justify-between mb-6">
-                  <div className="flex items-center gap-3">
-                    <button
-                      onClick={() => setShowCreateForm(false)}
-                      className="lg:hidden p-2 rounded-xl hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
-                    >
-                      <ArrowLeft className="h-5 w-5" />
-                    </button>
-                    <div>
-                      <h2 className="text-xl font-bold text-gray-900 dark:text-white">
-                        {title}
-                      </h2>
-                      <p className="text-sm text-gray-500 dark:text-gray-400">
-                        We'll get back to you as soon as possible
-                      </p>
-                    </div>
-                  </div>
-                  <button
-                    onClick={() => setShowCreateForm(false)}
-                    className="p-2 rounded-xl hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
-                  >
-                    <X className="h-5 w-5" />
-                  </button>
-                </div>
+                <ArrowLeft className="h-5 w-5" />
+              </button>
+              <div>
+                <h2 className="text-xl font-bold text-gray-900 dark:text-white">
+                  {title}
+                </h2>
+                <p className="text-sm text-gray-500 dark:text-gray-400">
+                  We'll get back to you as soon as possible
+                </p>
+              </div>
+            </div>
+            <button
+              onClick={() => setShowCreateForm(false)}
+              className="p-2 rounded-xl hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
+            >
+              <X className="h-5 w-5" />
+            </button>
+          </div>
 
-                <div className="space-y-5">
-                  <div>
-                    <Label className="text-sm font-medium mb-1.5 block">
-                      Subject <span className="text-red-500">*</span>
-                    </Label>
-                    <input
-                      type="text"
-                      value={newTicket.subject}
-                      disabled={disabledSubject}
-                      onChange={(e) =>
-                        setNewTicket((prev) => ({
-                          ...prev,
-                          subject: e.target.value,
-                        }))
-                      }
-                      placeholder="Brief summary of your issue"
-                      className="w-full px-4 py-2.5 bg-gray-50 dark:bg-gray-700/50 border border-gray-200 dark:border-gray-600 rounded-xl focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent text-sm"
-                    />
-                    {errors.subject && (
-                      <p className="mt-1 text-sm text-red-500">
-                        {errors.subject}
-                      </p>
-                    )}
-                  </div>
+          <div className="space-y-5">
+            <div>
+              <Label className="text-sm font-medium mb-1.5 block">
+                Subject <span className="text-red-500">*</span>
+              </Label>
+              <input
+                type="text"
+                value={newTicket.subject}
+                disabled={disabledSubject}
+                onChange={(e) =>
+                  setNewTicket((prev) => ({
+                    ...prev,
+                    subject: e.target.value,
+                  }))
+                }
+                placeholder="Brief summary of your issue"
+                className="w-full px-4 py-2.5 bg-gray-50 dark:bg-gray-700/50 border border-gray-200 dark:border-gray-600 rounded-xl focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent text-sm"
+              />
+              {errors.subject && (
+                <p className="mt-1 text-sm text-red-500">{errors.subject}</p>
+              )}
+            </div>
 
-                  <div className="grid grid-cols-2 gap-4">
-                    <div>
-                      <Label className="text-sm font-medium mb-1.5 block">
-                        Category <span className="text-red-500">*</span>
-                      </Label>
-                      <select
-                        value={newTicket.category}
-                        disabled={disabledCategory}
-                        onChange={(e) =>
-                          setNewTicket((prev) => ({
-                            ...prev,
-                            category: e.target.value,
-                          }))
-                        }
-                        className="w-full px-4 py-2.5 bg-gray-50 dark:bg-gray-700/50 border border-gray-200 dark:border-gray-600 rounded-xl focus:outline-none focus:ring-2 focus:ring-orange-500 text-sm"
-                      >
-                        {categoryOptions
-                          .filter((opt) => opt.value !== "all")
-                          .map((opt) => (
-                            <option key={opt.value} value={opt.value}>
-                              {opt.label}
-                            </option>
-                          ))}
-                      </select>
-                    </div>
-                    <div>
-                      <Label className="text-sm font-medium mb-1.5 block">
-                        Priority <span className="text-red-500">*</span>
-                      </Label>
-                      <select
-                        value={newTicket.priority}
-                        disabled={disabledPriority}
-                        onChange={(e) =>
-                          setNewTicket((prev) => ({
-                            ...prev,
-                            priority: e.target.value,
-                          }))
-                        }
-                        className="w-full px-4 py-2.5 bg-gray-50 dark:bg-gray-700/50 border border-gray-200 dark:border-gray-600 rounded-xl focus:outline-none focus:ring-2 focus:ring-orange-500 text-sm"
-                      >
-                        {priorityOptions
-                          .filter((opt) => opt.value !== "all")
-                          .map((opt) => (
-                            <option key={opt.value} value={opt.value}>
-                              {opt.label}
-                            </option>
-                          ))}
-                      </select>
-                    </div>
-                  </div>
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <Label className="text-sm font-medium mb-1.5 block">
+                  Category <span className="text-red-500">*</span>
+                </Label>
+                <select
+                  value={newTicket.category}
+                  disabled={disabledCategory}
+                  onChange={(e) =>
+                    setNewTicket((prev) => ({
+                      ...prev,
+                      category: e.target.value,
+                    }))
+                  }
+                  className="w-full px-4 py-2.5 bg-gray-50 dark:bg-gray-700/50 border border-gray-200 dark:border-gray-600 rounded-xl focus:outline-none focus:ring-2 focus:ring-orange-500 text-sm"
+                >
+                  {categoryOptions
+                    .filter((opt) => opt.value !== "all")
+                    .map((opt) => (
+                      <option key={opt.value} value={opt.value}>
+                        {opt.label}
+                      </option>
+                    ))}
+                </select>
+              </div>
+              <div>
+                <Label className="text-sm font-medium mb-1.5 block">
+                  Priority <span className="text-red-500">*</span>
+                </Label>
+                <select
+                  value={newTicket.priority}
+                  disabled={disabledPriority}
+                  onChange={(e) =>
+                    setNewTicket((prev) => ({
+                      ...prev,
+                      priority: e.target.value,
+                    }))
+                  }
+                  className="w-full px-4 py-2.5 bg-gray-50 dark:bg-gray-700/50 border border-gray-200 dark:border-gray-600 rounded-xl focus:outline-none focus:ring-2 focus:ring-orange-500 text-sm"
+                >
+                  {priorityOptions
+                    .filter((opt) => opt.value !== "all")
+                    .map((opt) => (
+                      <option key={opt.value} value={opt.value}>
+                        {opt.label}
+                      </option>
+                    ))}
+                </select>
+              </div>
+            </div>
 
-                  <div>
-                    <Label className="text-sm font-medium mb-1.5 block">
-                      Description <span className="text-red-500">*</span>
-                    </Label>
-                    <textarea
-                      value={newTicket.description}
-                      onChange={(e) =>
-                        setNewTicket((prev) => ({
-                          ...prev,
-                          description: e.target.value,
-                        }))
-                      }
-                      rows={5}
-                      placeholder="Please provide as much detail as possible..."
-                      className="w-full px-4 py-2.5 bg-gray-50 dark:bg-gray-700/50 border border-gray-200 dark:border-gray-600 rounded-xl focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent text-sm resize-none"
-                    />
-                    {errors.description && (
-                      <p className="mt-1 text-sm text-red-500">
-                        {errors.description}
-                      </p>
-                    )}
-                  </div>
+            <div>
+              <Label className="text-sm font-medium mb-1.5 block">
+                Description <span className="text-red-500">*</span>
+              </Label>
+              <textarea
+                value={newTicket.description}
+                onChange={(e) =>
+                  setNewTicket((prev) => ({
+                    ...prev,
+                    description: e.target.value,
+                  }))
+                }
+                rows={5}
+                placeholder="Please provide as much detail as possible..."
+                className="w-full px-4 py-2.5 bg-gray-50 dark:bg-gray-700/50 border border-gray-200 dark:border-gray-600 rounded-xl focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent text-sm resize-none"
+              />
+              {errors.description && (
+                <p className="mt-1 text-sm text-red-500">
+                  {errors.description}
+                </p>
+              )}
+            </div>
 
-                 {disabledAttach && <div className="flex items-center gap-3 pt-2">
-                    <button className="flex items-center gap-1.5 px-4 py-2 text-sm text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 bg-gray-50 dark:bg-gray-700/50 rounded-xl transition-colors">
-                      <Paperclip className="h-4 w-4" />
-                      Attach files
-                    </button>
-                    <span className="text-xs text-gray-400">Max size 10MB</span>
-                  </div>}
+            {disabledAttach && (
+              <div className="flex items-center gap-3 pt-2">
+                <button className="flex items-center gap-1.5 px-4 py-2 text-sm text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 bg-gray-50 dark:bg-gray-700/50 rounded-xl transition-colors">
+                  <Paperclip className="h-4 w-4" />
+                  Attach files
+                </button>
+                <span className="text-xs text-gray-400">Max size 10MB</span>
+              </div>
+            )}
 
-                  <div className="flex justify-end gap-3 pt-4 border-t border-gray-100 dark:border-gray-700">
-                    <Button
-                      variant="outline"
-                      onClick={() => setShowCreateForm(false)}
-                      className="rounded-xl px-6"
-                    >
-                      Cancel
-                    </Button>
-                    <Button
-                      onClick={handleCreateTicket}
-                      className="bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 text-white rounded-xl px-8 shadow-lg shadow-orange-500/25"
-                    >
-                      <Send className="h-4 w-4 mr-2" />
-                      Create Ticket
-                    </Button>
-                  </div>
-                </div>
-              </motion.div>
-            </div></>)
-}
-
+            <div className="flex justify-end gap-3 pt-4 border-t border-gray-100 dark:border-gray-700">
+              <Button
+                variant="outline"
+                onClick={() => setShowCreateForm(false)}
+                className="rounded-xl px-6"
+              >
+                Cancel
+              </Button>
+              <Button
+                onClick={handleCreateTicket}
+                className="bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 text-white rounded-xl px-8 shadow-lg shadow-orange-500/25"
+              >
+                <Send className="h-4 w-4 mr-2" />
+                Create Ticket
+              </Button>
+            </div>
+          </div>
+        </motion.div>
+      </div>
+    </>
+  );
+};
 
 // // src/pages/SupportPage.jsx
 // import { useState, useEffect, useMemo } from "react";
@@ -1038,7 +1083,6 @@ export const CreateTicket=({setShowCreateForm,newTicket,setNewTicket,categoryOpt
 //     }
 //   };
 
-
 //   const categoryOptions = [
 //     { value: "all", label: "All Categories" },
 //     { value: "account", label: "Account" },
@@ -1076,8 +1120,6 @@ export const CreateTicket=({setShowCreateForm,newTicket,setNewTicket,categoryOpt
 //   };
 
 //   const stats = getTicketStats();
-
-  
 
 //   const Icons = {
 //     icon: [BookOpen, FileText, Users, HelpCircle],
@@ -1134,7 +1176,7 @@ export const CreateTicket=({setShowCreateForm,newTicket,setNewTicket,categoryOpt
 //                     className="
 //     flex flex-col gap-3
 //     sm:flex-row sm:items-center
-    
+
 //   "
 //                   >
 //                     {/* All Support Tickets */}
@@ -1711,7 +1753,7 @@ export const CreateTicket=({setShowCreateForm,newTicket,setNewTicket,categoryOpt
 //       flex items-center justify-center
 //       bg-black/40
 //       px-4 py-6
-      
+
 //        mx-auto
 //     "
 //             >

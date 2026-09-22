@@ -54,6 +54,10 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       ?.split("=")[1];
   };
 
+  
+
+
+
   // useEffect(() => {
   //   if (!user) return;
 

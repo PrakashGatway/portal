@@ -48,10 +48,10 @@ export default function StepOneSATDetails({durationMinutes ,setDurationMinutes}:
         <div className="">
           <div className="flex items-start gap-4">
             <div>
-              <h3 className="text-xl font-bold text-slate-800 dark:text-white">
+              <h3 className="text-xl font-medium text-slate-800 dark:text-white">
                 Digital SAT®
               </h3>
-              <p className="text-base text-slate-600 dark:text-slate-300 mt-1 leading-relaxed">
+              <p className="text-base text-black dark:text-slate-300 mt-1 leading-relaxed">
                 The SAT is a standardized test widely used for college
                 admissions. This custom test covers{" "}
                 <span className="font-semibold text-orange-600 dark:text-orange-400">
@@ -68,11 +68,11 @@ export default function StepOneSATDetails({durationMinutes ,setDurationMinutes}:
 
           {/* Instructions */}
           <div className="mt-4">
-            <h4 className="text-base font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 flex items-center gap-2 mb-2">
+            <h4 className="text-base font-bold uppercase tracking-wider text-black dark:text-slate-400 flex items-center gap-2 mb-2">
               <ListChecks size={14} className="text-orange-500" /> Test
               Instructions
             </h4>
-            <ul className="grid grid-cols-1 sm:grid-cols-1 gap-2 text-base text-slate-700 dark:text-slate-300">
+            <ul className="grid grid-cols-1 sm:grid-cols-1 gap-2 text-base text-black dark:text-slate-300">
               {[
                 "Calculator allowed in Math section",
                 "No penalty for wrong answers",
@@ -81,7 +81,7 @@ export default function StepOneSATDetails({durationMinutes ,setDurationMinutes}:
                 "Reading passages are included",
                 "Timer will auto-submit at 0:00",
               ].map((instruction) => (
-                <li key={instruction} className="flex items-start gap-2">
+                <li key={instruction} className="flex items-center gap-2">
                   <CheckCircle2
                     size={13}
                     className="text-green-500 mt-0.5 shrink-0"
@@ -143,7 +143,7 @@ export default function StepOneSATDetails({durationMinutes ,setDurationMinutes}:
 
             {/* Digital time & duration label */}
             <div className="mt-3 flex items-center gap-3">
-              <span className="text-2xl font-mono font-bold tracking-wider text-slate-800 dark:text-white">
+              <span className="text-2xl font-mono font-bold tracking-wider text-black dark:text-white">
                 {digitalTime}
               </span>
               <span className="text-xs font-medium bg-orange-100 text-orange-700 px-3 py-1 rounded-full dark:bg-orange-500/20 dark:text-orange-300">
@@ -156,7 +156,7 @@ export default function StepOneSATDetails({durationMinutes ,setDurationMinutes}:
           <div className="min-w-md mx-auto">
             <div className="flex items-center gap-3 mb-3">
               <div>
-                <div className="text-xs font-medium text-slate-500 dark:text-slate-400">
+                <div className="text-xs font-medium text-black dark:text-slate-400">
                   Set Duration
                 </div>
                 <div className="text-lg font-bold text-slate-800 dark:text-white">

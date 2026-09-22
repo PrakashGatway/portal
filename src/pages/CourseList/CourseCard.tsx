@@ -171,171 +171,196 @@ const CourseCard = ({
     //     </div>
     // </div>
 
-    <div className="w-full">
-      {/* Outer Gradient Border */}
-      <div className="rounded-3xl p-[1.5px] bg-gradient-to-b from-[#CFCFCF] via-[#ECECEC] to-black overflow-hidden">
-        <div className="relative rounded-3xl bg-white overflow-hidden h-full">
-          {/* ================= IMAGE ================= */}
-          <div className="p-2.5">
-            <div className="rounded-2xl p-2.5 bg-gradient-to-b from-[#CFCFCF] via-[#ECECEC] to-white">
-              <div className="rounded-2xl overflow-hidden h-full sm:h-full lg:h-[180px]">
-                <img
-                  src={
-                    !course.thumbnail?.url
-                      ? "/images/logo.png"
-                      : `${ImageBaseUrl}/${course.thumbnail.url}`
-                  }
-                  alt={course?.title}
-                  className="w-full h-full object-contain lg:object-cover"
-                />
-              </div>
-            </div>
-          </div>
+  <div className="w-full h-full">
+  {/* Outer Gradient Border */}
+  <div className="h-full rounded-3xl p-[1.5px] bg-gradient-to-b from-[#CFCFCF] via-[#ECECEC] to-black overflow-hidden">
+    
+    <div className="relative flex h-full flex-col rounded-3xl bg-white overflow-hidden">
 
-          {/* Discount Badge */}
-          {isEarlyBirdActive && (
-            <span className="absolute top-5 left-5 z-10 bg-gradient-to-r from-[#FF6B35] to-[#FF8A3D] text-white text-xs font-medium px-3 py-1.5 rounded-full">
-              Early Bird
-            </span>
-          )}
-
-          {/* Discount Badge */}
-          {normalDiscount > 0 && (
-            <span className="absolute top-5 right-5 z-10 bg-green-500 text-white px-3 py-1 rounded-full">
-              <span className="text-xs font-medium">{normalDiscount}% OFF</span>
-
-              {isEarlyBirdActive && (
-                <span className="ml-0.5 text-[10px] font-semibold ">
-                  +{earlyBirdDiscount}%
-                </span>
-              )}
-            </span>
-          )}
-
-          {/* ================= BODY ================= */}
-          <div
-            onClick={() => navigate(`/course/${course.slug}`)}
-            className="px-6 pb-4 cursor-pointer"
-          >
-            {/* Title */}
-            <h3 className="text-xl md:text-xl font-bold text-gray-900 leading-tight">
-              <span className="text-[#FF6736]">
-                {course?.title?.split(" ")[0]}
-              </span>{" "}
-              <span className="text-gray-900">
-                {course?.title?.split(" ").slice(1).join(" ")}
-              </span>
-            </h3>
-
-            {/* Description */}
-            <p className="text-[#FF6A3D] text-sm font-medium mt-2 line-clamp-2">
-              {course.shortDescription || course.subtitle}
-            </p>
-
-            {/* ================= META ================= */}
-            <div className="mt-3  text-gray-600 flex items-center gap-4 ">
-              {/* Instructor */}
-              <div className="flex items-center gap-1 text-base">
-                <BookOpen size={20} className="text-[#FF6736] shrink-0" />
-
-                <span className="text-sm">
-                  {course.instructors?.length || 1} Instructor
-                </span>
-              </div>
-
-              {/* Language */}
-              <div className="flex items-center gap-1 text-base">
-                <Languages size={20} className="text-[#FF6736] shrink-0" />
-
-                <span className="text-sm">{course.language || "English"}</span>
-              </div>
-
-              {/* Level */}
-              <div className="flex items-center gap-1 text-base">
-                <Clock size={20} className="text-[#FF6736] shrink-0" />
-
-                <span className="text-sm">{course.level || "Beginner"}</span>
-              </div>
-            </div>
-
-            {/* ================= PRICE ================= */}
-            <div className="mt-3 flex justify-between items-center gap-3">
-              <div>
-                {course?.isPurchased === true ? (
-                  <div className="flex items-center gap-1.5">
-                    <Check
-                      size={16}
-                      strokeWidth={3}
-                      className="text-green-600"
-                    />
-                    <span className="text-sm font-semibold text-green-600">
-                      Already Enrolled
-                    </span>
-                  </div>
-                ) : (
-                  <div className="flex flex-wrap items-center gap-1">
-                    <span className="text-gray-900 text-sm">
-                      {course?.pricing?.currency}
-                    </span>
-
-                    <span className="text-2xl font-bold text-gray-900">
-  {formatPrice(
-    Math.floor(price),
-    course.pricing.currency
-  )}
-</span>
-
-                    {normalDiscount > 0 && (
-                      <span className="line-through text-gray-400 text-sm">
-                        {formatPrice(realPrice, course.pricing.currency)}
-                      </span>
-                    )}
-                  </div>
-                )}
-              </div>
-
-              <div>
-                {/* Explore */}
-                {course?.isPurchased === true ? (
-                  <button
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      navigate(`/course/${course.slug}`);
-                    }}
-                    className="border border-[#FF6736] rounded-2xl px-5 py-2 text-[#FF6736] text-sm font-medium hover:bg-[#FF6736] hover:text-white transition-all duration-300 whitespace-nowrap"
-                  >
-                    Start Course
-                  </button>
-                ) : (
-                  <button
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      navigate(`/checkout/${course?.slug}`);
-                    }}
-                    className="border border-[#FF6736] rounded-2xl px-5 py-2 text-[#FF6736] text-sm font-medium hover:bg-[#FF6736] hover:text-white transition-all duration-300 whitespace-nowrap"
-                  >
-                    Enroll Now
-                  </button>
-                )}
-              </div>
-            </div>
-          </div>
-
-          {/* ================= FOOTER ================= */}
-          <div className="px-5 pb-2 mt-1 hidden lg:block">
-            <div className="rounded-full bg-[#FCE7D3] flex items-center p-2">
-              <span className="bg-[#FF6D42] text-white rounded-full px-4 py-1 text-xs font-semibold">
-                Ooshas Prep
-              </span>
-
-              <span className="ml-3 text-gray-700 text-xs">
-                Limited Time Offer
-              </span>
-            </div>
+      {/* ================= IMAGE ================= */}
+      <div className="shrink-0">
+        <div className="rounded-2xl p-2.5 bg-gradient-to-b from-[#CFCFCF] via-[#ECECEC] to-white">
+          <div className="rounded-2xl overflow-hidden h-full sm:h-full lg:h-[180px]">
+            <img
+              src={
+                !course.thumbnail?.url
+                  ? "/images/logo.png"
+                  : `${ImageBaseUrl}/${course.thumbnail.url}`
+              }
+              alt={course?.title}
+              className="w-full h-full object-contain lg:object-cover"
+            />
           </div>
         </div>
       </div>
+
+      {/* Discount Badge */}
+      {isEarlyBirdActive && (
+        <span className="absolute top-5 left-5 z-10 bg-gradient-to-r from-[#FF6B35] to-[#FF8A3D] text-white text-xs font-medium px-3 py-1.5 rounded-full">
+          Early Bird
+        </span>
+      )}
+
+    
+
+      {/* ================= BODY ================= */}
+      <div
+        onClick={() => navigate(`/course/${course.slug}`)}
+        className="flex flex-1 flex-col px-6 pb-4 cursor-pointer"
+      >
+        {/* Title */}
+        <div className="flex items-center justify-between gap-5">
+        <h3 className="text-xl md:text-lg font-bold text-gray-900 leading-tight line-clamp-1 w-55">
+          <span className="text-[#FF6736]">
+            {course?.title?.split(" ")[0]}
+          </span>{" "}
+          <span className="text-gray-900">
+            {course?.title?.split(" ").slice(1).join(" ")}
+          </span>
+        </h3>
+          {/* Discount Badge */}
+      {normalDiscount > 0 && (
+        <span className="flex z-10 bg-green-500 text-white px-3 py-1 rounded-full">
+          <span className="text-[10px] font-medium">
+            {Math.ceil(normalDiscount)}% OFF
+          </span>
+
+          {isEarlyBirdActive && (
+            <span className="ml-0.5 text-[10px] font-semibold">
+              +{earlyBirdDiscount}%
+            </span>
+          )}
+        </span>
+      )}
+        
+        </div>
+
+        {/* Description */}
+        <p className="text-gray-400 text-sm font-medium mt-2 line-clamp-1">
+          {course.shortDescription || course.subtitle}
+        </p>
+
+        {/* ================= META ================= */}
+        <div className="mt-3 text-gray-600 flex flex-wrap items-center gap-4">
+          {/* Instructor */}
+          <div className="flex items-center gap-1 text-base">
+            <BookOpen
+              size={20}
+              className="text-[#FF6736] shrink-0"
+            />
+
+            <span className="text-sm">
+              {course.instructors?.length || 1} Instructor
+            </span>
+          </div>
+
+          {/* Language */}
+          <div className="flex items-center gap-1 text-base line-clamp-1">
+            <Languages
+              size={20}
+              className="text-[#FF6736] shrink-0"
+            />
+
+            <span className="text-sm">
+              {course.language || "English"}
+            </span>
+          </div>
+
+          {/* Level */}
+          <div className="flex items-center gap-1 text-base">
+            <Clock
+              size={20}
+              className="text-[#FF6736] shrink-0"
+            />
+
+            <span className="text-sm">
+              {course.level || "Beginner"}
+            </span>
+          </div>
+        </div>
+
+        
+      </div>
+
+      {/* ================= FOOTER ================= */}
+      <div className="mt-auto shrink-0 px-5 pb-2 hidden lg:block">
+        {/* ================= PRICE ================= */}
+        <div className="mb-3 flex justify-between items-center gap-3">
+          <div>
+            {course?.isPurchased === true ? (
+              <div className="flex items-center gap-1.5">
+                <Check
+                  size={16}
+                  strokeWidth={3}
+                  className="text-green-600"
+                />
+
+                <span className="text-xs font-semibold text-green-600">
+                  Already Enrolled
+                </span>
+              </div>
+            ) : (
+              <div className="flex flex-wrap items-center gap-3">
+                <div>
+             
+
+                <span className="text-lg font-bold text-gray-900">
+                  {formatPrice(
+                    Math.floor(price),
+                    course.pricing.currency
+                  )}
+                </span></div>
+
+                {normalDiscount > 0 && (
+                  <span className="line-through text-gray-400 text-xs">
+                    {formatPrice(
+                      realPrice,
+                      course.pricing.currency
+                    )}
+                  </span>
+                )}
+              </div>
+            )}
+          </div>
+
+          <div>
+            {course?.isPurchased === true ? (
+              <button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  navigate(`/course/${course.slug}`);
+                }}
+                className="border border-[#FF6736] rounded-2xl px-5 py-2 text-[#FF6736] text-sm font-medium hover:bg-[#FF6736] hover:text-white transition-all duration-300 whitespace-nowrap"
+              >
+                Start Course
+              </button>
+            ) : (
+              <button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  navigate(`/checkout/${course?.slug}`);
+                }}
+                className="border border-[#FF6736] rounded-2xl px-5 py-2 text-[#FF6736] text-sm font-medium hover:bg-[#FF6736] hover:text-white transition-all duration-300 whitespace-nowrap"
+              >
+                Enroll Now
+              </button>
+            )}
+          </div>
+        </div>
+        <div className="rounded-full bg-[#FCE7D3] flex items-center p-2">
+          <span className="bg-[#FF6D42] text-white rounded-full px-4 py-1 text-xs font-semibold">
+            Ooshas Prep
+          </span>
+
+          <span className="ml-3 text-gray-700 text-xs">
+            Limited Time Offer
+          </span>
+        </div>
+      </div>
+
     </div>
+  </div>
+</div>
   );
 };
 
