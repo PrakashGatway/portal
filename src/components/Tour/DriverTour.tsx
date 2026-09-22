@@ -11,7 +11,7 @@ interface DriverTourProps {
   profile: any;
 }
 
-const aiImage = (css = "-left-[150px] md:-left-[250px] top-0") => `
+const aiImage = (css = "-left-[140px] md:-left-[160px] top-0",img="md:w-32 md:h-32") => `
   <div class="absolute ${css}
     max-md:static
     max-md:flex
@@ -25,8 +25,7 @@ const aiImage = (css = "-left-[150px] md:-left-[250px] top-0") => `
       alt="AI Assistant"
       class="
         w-32 h-32
-        md:w-64
-        md:h-64
+        ${img}
         object-contain
         drop-shadow-xl
       "
@@ -156,7 +155,7 @@ export default function DriverTour({
       description: `
         <div class="relative rounded-2xl bg-white">
 
-        ${aiImage("-left-[150px] md:-left-[250px] top-0")}
+        ${aiImage("-left-[150px] md:-left-[250px] top-0","md:w-64 md:h-64")}
 
           <div class="flex items-center max-md:block">
             <div class="w-full max-md:text-center">
@@ -217,7 +216,7 @@ export default function DriverTour({
         <div class="relative rounded-2xl bg-white">
 
         
-        ${aiImage("-left-[150px] md:-left-[250px] top-0")}
+        ${aiImage("-left-[150px] md:-left-[160px] top-0")}
 
           <div class="flex items-center max-md:block">
             <div class="w-full max-md:text-center">
@@ -256,7 +255,7 @@ export default function DriverTour({
         <div class="relative rounded-2xl bg-white">
 
         
-        ${aiImage("-left-[150px] md:-left-[250px] top-0")}
+        ${aiImage("-left-[150px] md:-left-[160px] top-0")}
 
           <div class="flex items-center max-md:block">
             <div class="w-full max-md:text-center">
@@ -294,7 +293,7 @@ export default function DriverTour({
         <div class="relative rounded-2xl bg-white">
 
         
-        ${aiImage("-left-[150px] md:-left-[250px] top-0")}
+        ${aiImage("-left-[150px] md:-left-[160px] top-0")}
 
           <div class="flex items-center max-md:block">
             <div class="w-full max-md:text-center">
@@ -333,7 +332,7 @@ export default function DriverTour({
         <div class="relative rounded-2xl bg-white">
 
         
-        ${aiImage("-right-[150px] md:-right-[250px] top-0")}
+        ${aiImage("-right-[150px] md:-right-[160px] top-0")}
 
           <div class="flex items-center max-md:block">
             <div class="w-full max-md:text-center">
@@ -371,7 +370,7 @@ export default function DriverTour({
       description: `
         <div class="relative rounded-2xl bg-white">
 
-          ${aiImage("-right-[150px] md:-right-[250px] top-0")}
+          ${aiImage("-right-[150px] md:-right-[160px] top-0")}
 
           <div class="flex items-center max-md:block">
             <div class="w-full max-md:text-center">
@@ -409,7 +408,7 @@ export default function DriverTour({
       description: `
         <div class="relative rounded-2xl bg-white">
 
-          ${aiImage("-right-[150px] md:-right-[250px] top-0")}
+          ${aiImage("-right-[150px] md:-right-[160px] top-0")}
 
           <div class="flex items-center max-md:block">
             <div class="w-full max-md:text-center">
@@ -446,7 +445,7 @@ export default function DriverTour({
       description: `
         <div class="relative rounded-2xl bg-white">
 
-          ${aiImage("-right-[150px] md:-right-[250px] top-0")}
+          ${aiImage("-right-[150px] md:-right-[160px] top-0")}
 
           <div class="flex items-center max-md:block">
             <div class="w-full max-md:text-center">
@@ -484,7 +483,7 @@ export default function DriverTour({
       description: `
         <div class="relative rounded-2xl bg-white">
 
-          ${aiImage("-right-[150px] md:-right-[250px] top-0")}
+          ${aiImage("-right-[150px] md:-right-[160px] top-0")}
 
           <div class="flex items-center max-md:block">
             <div class="w-full max-md:text-center">
@@ -522,7 +521,7 @@ export default function DriverTour({
       description: `
         <div class="relative rounded-2xl bg-white">
 
-          ${aiImage("-right-[150px] md:-right-[250px] top-0")}
+          ${aiImage("-right-[150px] md:-right-[160px] top-0")}
 
           <div class="flex items-center max-md:block">
             <div class="w-full max-md:text-center">
@@ -559,7 +558,7 @@ export default function DriverTour({
       description: `
         <div class="relative rounded-2xl bg-white">
 
-          ${aiImage("-right-[150px] md:-right-[250px] top-0")}
+          ${aiImage("-right-[150px] md:-right-[160px] top-0")}
 
           <div class="flex items-center max-md:block">
             <div class="w-full max-md:text-center">
@@ -597,7 +596,7 @@ export default function DriverTour({
       description: `
         <div class="relative rounded-2xl bg-white">
 
-          ${aiImage("-right-[150px] md:-right-[250px] top-0")}
+          ${aiImage("-right-[150px] md:-right-[160px] top-0")}
 
           <div class="flex items-center max-md:block">
             <div class="w-full max-md:text-center">
@@ -634,7 +633,7 @@ export default function DriverTour({
       description: `
         <div class="relative rounded-2xl bg-white">
 
-          ${aiImage("-right-[150px] md:-right-[250px] top-0")}
+          ${aiImage("-right-[150px] md:-right-[160px] top-0")}
 
           <div class="flex items-center max-md:block">
             <div class="w-full max-md:text-center">

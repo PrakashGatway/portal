@@ -26,6 +26,8 @@ import {
 } from "lucide-react";
 import { AnimatePresence, motion } from "framer-motion";
 import axios from "axios";
+import api from "../../axiosInstance";
+import { toast } from "react-toastify";
 
 const API_URL = "http://localhost:5000";
 
@@ -334,12 +336,12 @@ export default function OoshasChatbot() {
     abortControllerRef.current = controller;
 
     try {
-      const response = await fetch(`${API_URL}/api/chatbot/stream`, {
+      const response = await fetch(`${API_URL}/api/stream`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         credentials: "include",
         body: JSON.stringify({
-          message: text,
+          question: text,
           conversationId,
           articleId: selectedArticle?.id || null,
           articleTitle: selectedArticle?.title || null,
@@ -354,45 +356,66 @@ export default function OoshasChatbot() {
       const decoder = new TextDecoder();
       let buffer = "";
 
+      const processEvent = (event: string) => {
+        const lines = event.split("\n");
+        for (const line of lines) {
+          if (!line.startsWith("data:")) continue;
+          const rawData = line.replace("data:", "").trim();
+          if (!rawData) continue;
+
+          let data;
+          try {
+            data = JSON.parse(rawData);
+          } catch {
+            continue;
+          }
+
+          if (data.type === "conversation")
+            setConversationId(data.conversationId);
+
+          // The API may return the answer as { result: { answer } } instead
+          // of emitting token events.
+          const answer = data.result?.answer;
+          if (typeof answer === "string") {
+            setMessages((prev) =>
+              prev.map((msg) =>
+                msg.id === assistantId
+                  ? { ...msg, content: msg.content + answer }
+                  : msg,
+              ),
+            );
+            setIsStreaming(false);
+          }
+
+          if (data.type === "token") {
+            setMessages((prev) =>
+              prev.map((msg) =>
+                msg.id === assistantId
+                  ? { ...msg, content: msg.content + data.content }
+                  : msg,
+              ),
+            );
+          }
+          if (data.type === "complete") setIsStreaming(false);
+          if (data.type === "error") {
+            setError(data.message || "Something went wrong.");
+            setIsStreaming(false);
+          }
+        }
+      };
+
       while (true) {
         const { value, done } = await reader.read();
-        if (done) break;
+        if (done) {
+          buffer += decoder.decode();
+          if (buffer.trim()) processEvent(buffer);
+          break;
+        }
         buffer += decoder.decode(value, { stream: true });
         const events = buffer.split("\n\n");
         buffer = events.pop() || "";
 
-        for (const event of events) {
-          const lines = event.split("\n");
-          for (const line of lines) {
-            if (!line.startsWith("data:")) continue;
-            const rawData = line.replace("data:", "").trim();
-            if (!rawData) continue;
-
-            let data;
-            try {
-              data = JSON.parse(rawData);
-            } catch {
-              continue;
-            }
-
-            if (data.type === "conversation")
-              setConversationId(data.conversationId);
-            if (data.type === "token") {
-              setMessages((prev) =>
-                prev.map((msg) =>
-                  msg.id === assistantId
-                    ? { ...msg, content: msg.content + data.content }
-                    : msg,
-                ),
-              );
-            }
-            if (data.type === "complete") setIsStreaming(false);
-            if (data.type === "error") {
-              setError(data.message || "Something went wrong.");
-              setIsStreaming(false);
-            }
-          }
-        }
+        for (const event of events) processEvent(event);
       }
     } catch (error) {
       if (error?.name === "AbortError") return;
@@ -435,6 +458,15 @@ export default function OoshasChatbot() {
       sendMessage();
     }
   };
+
+
+
+  const [ticketForm, setTicketForm] = useState({
+    subject: "",
+    category: "General",
+    priority: "Medium",
+    description: "",
+  });
 
   /* =========================================================
      RENDER
@@ -501,14 +533,14 @@ export default function OoshasChatbot() {
                     <div>
                       <div className="flex items-center gap-2">
                         <h3 className="text-sm font-bold tracking-tight text-[#17243a]">
-                          Ooshas AI
+                          {view === 'ticket' ?"Create New Ticket":"Ooshas AI"}
                         </h3>
-                        <span className="rounded-full bg-[#ffd8c9] px-1.5 py-0.5 text-[10px] font-bold uppercase tracking-wide text-[#ff6040]">
+                        {view !== 'ticket' && <span className="rounded-full bg-[#ffd8c9] px-1.5 py-0.5 text-[10px] font-bold uppercase tracking-wide text-[#ff6040]">
                           AI
-                        </span>
+                        </span>}
                       </div>
                       <p className="mt-0.5 text-xs text-[#8791a3]">
-                        Your 24/7 study assistant
+                        {view === "ticket"? "We'll get back to you as soon as possible": "Your 24/7 study assistant"}
                       </p>
                     </div>
                   </div>
@@ -648,7 +680,6 @@ export default function OoshasChatbot() {
                   </div>
                 </motion.div>
 
-                {/* Topics */}
                 {/* Articles */}
                 <div className="px-4 py-5">
                   <div className="mb-3 flex items-center justify-between px-1">
@@ -703,7 +734,7 @@ export default function OoshasChatbot() {
                                 </span>
                               )}
                             </div>
-                            <p className="truncate text-sm font-bold text-[#17243a]">
+                            <p className="truncate text-sm font-semibold text-[#17243a]">
                               {article.title}
                             </p>
                             <p
@@ -788,7 +819,7 @@ export default function OoshasChatbot() {
                                 <Icon size={18} />
                               </div> */}
                               <div className="min-w-0 flex-1">
-                                <p className="text-xs font-bold text-[#17243a]">
+                                <p className="text-xs font-semibold text-[#17243a]">
                                   {topic.name}
                                 </p>
                                 {/* <p
@@ -815,7 +846,7 @@ export default function OoshasChatbot() {
                   <motion.button
                     whileHover={{ scale: 1.01, y: -1 }}
                     whileTap={{ scale: 0.98 }}
-                    onClick={() => setView("chat")}
+                    onClick={() => setView("ticket")}
                     className="relative flex w-full items-center gap-3 overflow-hidden rounded-2xl bg-[#17243a] px-4 py-4 text-left text-white shadow-[0_10px_30px_-8px_rgba(23,36,58,0.25)]"
                   >
                     {/* <div className="absolute -right-5 -top-8 h-24 w-24 rounded-full bg-[#ff704f]/30 blur-2xl" /> */}
@@ -1118,6 +1149,181 @@ export default function OoshasChatbot() {
                 </div>
               </div>
             )}
+
+
+          {/* CREATE NEW TICKET */}
+{view === "ticket" && (
+  <div className="flex min-h-0 flex-1 flex-col bg-white">
+  
+    {/* Form */}
+    <form
+      onSubmit={async (e) => {
+        e.preventDefault();
+
+        if (
+          !ticketForm.subject.trim() ||
+          !ticketForm.category ||
+          !ticketForm.priority ||
+          !ticketForm.description.trim()
+        ) {
+          setError("Please fill in all required fields.");
+          return;
+        }
+
+        try {
+          setError("");
+
+          // Add your ticket creation API here
+          // await createSupportTicket(ticketForm);
+          
+      // console.log
+      const res = await api.post("/support", ticketForm);
+      toast.success("Support ticket created successfully!");
+    
+
+          console.log("Ticket Data:", res?.data);
+
+          setTicketForm({
+            subject: "",
+            category: "general",
+            priority: "medium",
+            description: "",
+          });
+
+          closeChat();
+        } catch (err) {
+          setError("Unable to create ticket. Please try again.");
+        }
+      }}
+      className="flex min-h-0 flex-1 flex-col"
+    >
+      <div className="min-h-0 flex-1 overflow-y-auto px-4 py-6">
+        {/* Subject */}
+        <div>
+          <label className="text-[12px] font-semibold uppercase tracking-wider mb-1 px-2">
+            Subject <span className="text-[#ff6040]">*</span>
+          </label>
+
+          <input
+            type="text"
+            value={ticketForm.subject}
+            onChange={(e) =>
+              setTicketForm((prev) => ({
+                ...prev,
+                subject: e.target.value,
+              }))
+            }
+            placeholder="Brief summary of your issue"
+            className="h-[45px] w-full rounded-[10px] border border-[#dedede] bg-[#fafafa] px-5 text-[14px] text-[#17243a] outline-none transition placeholder:text-[#8791a3] focus:border-[#ff704f] focus:ring-2 focus:ring-[#ff704f]/10"
+          />
+        </div>
+
+        {/* Category and Priority */}
+        <div className="mt-4 grid grid-cols-1 gap-5 sm:grid-cols-2">
+          {/* Category */}
+          <div>
+            <label className="text-[12px] font-semibold uppercase tracking-wider mb-1 px-2">
+              Category <span className="text-[#ff6040]">*</span>
+            </label>
+
+            <select
+              value={ticketForm.category}
+              onChange={(e) =>
+                setTicketForm((prev) => ({
+                  ...prev,
+                  category: e.target.value,
+                }))
+              }
+              className="h-[45px] w-full rounded-[10px] border border-[#dedede] bg-[#fafafa] px-5 text-[14px] text-[#17243a] outline-none transition placeholder:text-[#8791a3] focus:border-[#ff704f] focus:ring-2 focus:ring-[#ff704f]/10"
+            >
+              <option value="general">General</option>
+              <option value="technical">Technical</option>
+              <option value="payment">Payment</option>
+              <option value="course">Course</option>
+              <option value="account">Account</option>
+              <option value="other">Other</option>
+            </select>
+          </div>
+
+          {/* Priority */}
+          <div>
+            <label className="text-[12px] font-semibold uppercase tracking-wider mb-1 px-2">
+              Priority <span className="text-[#ff6040]">*</span>
+            </label>
+
+            <select
+              value={ticketForm.priority}
+              onChange={(e) =>
+                setTicketForm((prev) => ({
+                  ...prev,
+                  priority: e.target.value,
+                }))
+              }
+              className="h-[45px] w-full rounded-[10px] border border-[#dedede] bg-[#fafafa] px-5 text-[14px] text-[#17243a] outline-none transition placeholder:text-[#8791a3] focus:border-[#ff704f] focus:ring-2 focus:ring-[#ff704f]/10"
+            >
+              <option value="low">Low</option>
+              <option value="medium">Medium</option>
+              <option value="high">High</option>
+              <option value="urgent">Urgent</option>
+            </select>
+          </div>
+        </div>
+
+        {/* Description */}
+        <div className="mt-4">
+          <label className="text-[12px] font-semibold uppercase tracking-wider mb-1 px-2">
+            Description <span className="text-[#ff6040]">*</span>
+          </label>
+
+          <textarea
+            value={ticketForm.description}
+            onChange={(e) =>
+              setTicketForm((prev) => ({
+                ...prev,
+                description: e.target.value,
+              }))
+            }
+            placeholder="Please provide as much detail as possible..."
+            rows={5}
+            className="min-h-[3rem] w-full resize-none rounded-[10px] border border-[#dedede] bg-[#fafafa] px-5 py-4 text-[14px] leading-relaxed text-[#17243a] outline-none transition placeholder:text-[#8791a3] focus:border-[#ff704f] focus:ring-2 focus:ring-[#ff704f]/10"
+          />
+        </div>
+      </div>
+
+      {/* Footer */}
+      <div className="shrink-0 border-t border-[#eeeeee] bg-white px-7 py-5">
+        <div className="flex flex-col-reverse justify-end gap-3 sm:flex-row">
+          
+                  <motion.button
+                    whileHover={{ scale: 1.01, y: -1 }}
+                    whileTap={{ scale: 0.98 }}
+                    // onClick={() => setView("ticket")}
+                    type="submit"
+                    className="relative flex w-full items-center gap-3 overflow-hidden rounded-2xl bg-[#17243a] px-4 py-4 text-left text-white shadow-[0_10px_30px_-8px_rgba(23,36,58,0.25)]"
+                  >
+                    <div className="relative flex-1">
+                      <p className="text-sm font-bold">Create Ticket</p>
+                    </div>
+                    <div className="absolute -right-5 -top-8 h-24 w-24 rounded-full bg-[#ff704f]/30 blur-2xl" />
+                    <div className="relative flex h-6 w-6 shrink-0 items-center justify-center rounded bg-[#ff704f] text-white">
+                      <Send size={18} />
+                    </div>
+                    {/* <ArrowRight size={18} className="relative" /> */}
+                  </motion.button>
+
+          {/* <button
+            type="submit"
+            className="flex h-[56px] items-center justify-center gap-3 rounded-[15px] bg-[#ff6815] px-9 text-[17px] font-medium text-white shadow-sm transition hover:bg-[#f45d0b]"
+          >
+            <Send size={20} strokeWidth={1.8} />
+            Create Ticket
+          </button> */}
+        </div>
+      </div>
+    </form>
+  </div>
+)}
+
           </motion.div>
         )}
       </AnimatePresence>
