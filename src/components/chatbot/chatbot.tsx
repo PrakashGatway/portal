@@ -29,32 +29,8 @@ import axios from "axios";
 import api from "../../axiosInstance";
 import { toast } from "react-toastify";
 
-const API_URL = "http://localhost:5000";
+const API_URL = "https://uat.gatewayabroadeducations.com";
 
-/* =========================================================
-   OOSHAS THEME (Warm Coral & Midnight Navy)
-   Palette is unchanged from the original build.
-========================================================= */
-
-const palette = {
-  primary: "#17243a", // deep midnight navy
-  primaryLight: "#26344b", // lighter navy
-  accent: "#ff704f", // warm coral
-  accentSoft: "#ff6040", // deeper coral
-  accentLight: "#ff9a82", // soft coral
-  accentPale: "#ffd8c9", // blush
-  accentCream: "#fff5f0", // warm background
-  accentLighter: "#fffaf6", // lightest warm
-  goldSoft: "#fff0bd", // subtle highlight
-  neutral200: "#eadfd9", // borders
-  neutral400: "#8791a3", // secondary text
-  success: "#16a77a", // online/positive
-  white: "#ffffff",
-};
-
-/* =========================================================
-   ANIMATION
-========================================================= */
 
 const spring = { type: "spring", stiffness: 380, damping: 30 };
 
