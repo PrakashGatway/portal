@@ -1052,7 +1052,9 @@ const GREDashboard = () => {
                     className="keen-slider overflow-hidden rounded-3xl"
                     ref={purchaseSliderRef}
                   >
-                    {purchase.map((item) => (
+                    {purchase.map((item) => {
+                      console.log(item)
+                      return(
                       <div
                         key={item?._id}
                         className="relative dark:bg-gray-800 bg-white rounded-3xl overflow-hidden p-6 lg:p-0 keen-slider__slide"
@@ -1237,7 +1239,7 @@ const GREDashboard = () => {
                           </button>
                         </div>
                       </div>
-                    ))}
+                    )})}
                   </div>
                 ) : (
                   <div className="bg-white dark:bg-gray-800 rounded-3xl p-5 md:px-6">
@@ -1454,8 +1456,9 @@ const GREDashboard = () => {
                       className="group flex flex-col items-center text-center cursor-pointer"
                       onClick={() => Router(`${item.url}`)}
                     >
-                      <div className="relative bg-white dark:bg-gray-800">
+                      <div className="relative bg-white dark:bg-gray-800 pendulum-hover">
                         <div className="absolute inset-0 bg-[#FFEFE7] dark:bg-gray-800 rounded-full blur-xl scale-110 opacity-70" />
+
                         <div className="relative flex items-center justify-center w-20 h-20 sm:w-28 sm:h-28 md:w-25 md:h-25 rounded-full bg-white dark:bg-gray-500 shadow-lg border p-1 border-[#F4F4F4]">
                           <div className="bg-orange-100 dark:bg-gray-600 w-full h-full rounded-full flex justify-center items-center">
                             <div>
@@ -1464,6 +1467,7 @@ const GREDashboard = () => {
                           </div>
                         </div>
                       </div>
+
                       <h3 className="lg:mt-1 text-sm sm:text-2xl md:text-xl font-bold text-[#171717] leading-tight dark:text-white">
                         {item.title}
                       </h3>
@@ -1587,53 +1591,53 @@ const GREDashboard = () => {
         )}
       </section>
 
-       <div className="block sm:hidden p-[2px] h-full rounded-3xl bg-gradient-to-b from-orange-500 via-orange-500 to-orange-200/40">
-          <div className="flex h-full flex-col rounded-3xl bg-white p-5 dark:bg-gray-800">
-            {/* Header */}
-            <div className="flex items-center gap-3">
-              <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-[#F36D45]/10 text-[#F36D45]">
-                <MessageCircleQuestion size={25} className="stroke-[1.5px]" />
-              </div>
-
-              <div className="min-w-0">
-                <p className="text-sm font-medium text-gray-500 dark:text-gray-400">
-                  Need Help?
-                </p>
-
-                <h3 className="mt-0.5 text-lg font-bold leading-tight text-[#F36D45]">
-                  Raise a Ticket
-                </h3>
-              </div>
+      <div className="block sm:hidden p-[2px] h-full rounded-3xl bg-gradient-to-b from-orange-500 via-orange-500 to-orange-200/40">
+        <div className="flex h-full flex-col rounded-3xl bg-white p-5 dark:bg-gray-800">
+          {/* Header */}
+          <div className="flex items-center gap-3">
+            <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-[#F36D45]/10 text-[#F36D45]">
+              <MessageCircleQuestion size={25} className="stroke-[1.5px]" />
             </div>
 
-            {/* Description */}
-            <p className="mt-4 text-sm leading-6 text-gray-600 font-medium dark:text-gray-400">
-              Get help with account, payment, course or class issues
-            </p>
+            <div className="min-w-0">
+              <p className="text-sm font-medium text-gray-500 dark:text-gray-400">
+                Need Help?
+              </p>
 
-            {/* Ticket Info */}
-            <div className="mt-2 flex items-center gap-2 rounded-xl bg-gray-50 px-3 py-2.5 dark:bg-gray-900/60">
-              <Clock size={16} className="shrink-0 text-[#F36D45]" />
-
-              <span className="text-xs font-medium text-gray-600 dark:text-gray-300">
-                Track your ticket status anytime
-              </span>
-            </div>
-
-            {/* CTA */}
-            <div className="mt-auto pt-3">
-              <Link
-                to="/support"
-                className="group flex w-full items-center justify-center gap-2 rounded-full bg-gradient-to-r from-[#FF6B2C] to-[#FF5123] px-5 py-2.5 text-sm font-semibold text-white shadow-sm transition-all duration-200 hover:-translate-y-0.5 hover:shadow-lg"
-              >
+              <h3 className="mt-0.5 text-lg font-bold leading-tight text-[#F36D45]">
                 Raise a Ticket
-                <span className="text-base transition-transform duration-200 group-hover:translate-x-1">
-                  →
-                </span>
-              </Link>
+              </h3>
             </div>
           </div>
+
+          {/* Description */}
+          <p className="mt-4 text-sm leading-6 text-gray-600 font-medium dark:text-gray-400">
+            Get help with account, payment, course or class issues
+          </p>
+
+          {/* Ticket Info */}
+          <div className="mt-2 flex items-center gap-2 rounded-xl bg-gray-50 px-3 py-2.5 dark:bg-gray-900/60">
+            <Clock size={16} className="shrink-0 text-[#F36D45]" />
+
+            <span className="text-xs font-medium text-gray-600 dark:text-gray-300">
+              Track your ticket status anytime
+            </span>
+          </div>
+
+          {/* CTA */}
+          <div className="mt-auto pt-3">
+            <Link
+              to="/support"
+              className="group flex w-full items-center justify-center gap-2 rounded-full bg-gradient-to-r from-[#FF6B2C] to-[#FF5123] px-5 py-2.5 text-sm font-semibold text-white shadow-sm transition-all duration-200 hover:-translate-y-0.5 hover:shadow-lg"
+            >
+              Raise a Ticket
+              <span className="text-base transition-transform duration-200 group-hover:translate-x-1">
+                →
+              </span>
+            </Link>
+          </div>
         </div>
+      </div>
     </div>
   );
 };
@@ -1678,11 +1682,11 @@ const AllCourseCard = ({ item }) => {
         </div>
 
         <div className="p-4">
-          <h3 className="text-xl font-bold leading-none line-clamp-2">
+          <h3 className="text font-bold leading-none line-clamp-1 text-base">
             <span className="text-orange-500">
               {item?.title?.split(" ")[0]}
             </span>{" "}
-            <span className="text-black dark:text-white text-base font-semibold">
+            <span className="text-black dark:text-white  font-semibold">
               {item?.title?.split(" ").slice(1).join(" ")}
             </span>
           </h3>
@@ -1695,7 +1699,7 @@ const AllCourseCard = ({ item }) => {
             }
             className="flex justify-center"
           >
-            <button className="mt-5 py-2 w-1/2 text-base rounded-xl border border-[#ff5b2e] text-[#ff5b2e] font-medium transition-all duration-300 hover:bg-[#ff5b2e] hover:text-white">
+            <button className="mt-5 py-2 w-1/2 text-sm rounded-xl border border-[#ff5b2e] text-[#ff5b2e] font-medium transition-all duration-300 hover:bg-[#ff5b2e] hover:text-white">
               Explore
             </button>
           </Link>

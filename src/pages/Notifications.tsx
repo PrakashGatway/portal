@@ -455,7 +455,7 @@ const Notifications = () => {
         {/* Header Banner */}
 
           
-        <div className=" rounded-[1rem_1rem_0_0] bg-gradient-to-r from-orange-500 to-orange-400 px-6 pt-6 pb-1 sm:px-8  shadow-sm">
+        <div className=" rounded-[1rem_1rem_0_0] bg-[#fb7048] px-6 pt-6 pb-1 sm:px-8  shadow-sm">
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
             <div>
               <h1 className="text-2xl sm:text-[26px] font-bold text-white tracking-tight">Notifications</h1>
@@ -489,7 +489,7 @@ const Notifications = () => {
               onClick={() => handleFilterChange(item.id)}
               className={`flex flex-shrink-0 items-center gap-1.5 rounded-full px-4 py-2 text-sm font-medium transition-all border ${
                 filter === item.id
-                  ? "bg-orange-500 text-white border-orange-500 shadow-sm"
+                  ? "bg-[#fb7048] text-white border-orange-500 shadow-sm"
                   : "bg-white text-gray-600 border-gray-200 hover:bg-gray-50"
               }`}
             >

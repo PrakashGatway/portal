@@ -272,7 +272,7 @@ export default function ReferAndEarnPage() {
                                     updateUrlTab(tab.id);
                                 }}
                                 className={`flex items-center px-3 py-2.5 rounded-full border border-gray-200 font-medium text-sm transition-all whitespace-nowrap ${activeTab === tab.id
-                                    ? "bg-orange-500 text-white shadow-lg"
+                                    ? "bg-[#fb7048] text-white shadow-lg"
                                     : "text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white hover:bg-gray-100 dark:hover:bg-gray-700/50"
                                     }`}
                             >

@@ -120,9 +120,8 @@ const QuestionRenderer: any = React.memo(
       rounded-2xl
       border-3 border-dashed border-orange-200
       h-full
-      xl:h-130
-      
-      pb-24
+      xl:h-75vh
+    
     "
   >
     {/* =========================================================

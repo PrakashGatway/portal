@@ -18,6 +18,7 @@ import {
   Radio,
   Calendar,
   MessageCircleQuestion,
+  Info,
 } from "lucide-react";
 import Button from "../components/ui/button/Button";
 import api, { ImageBaseUrl } from "../axiosInstance";
@@ -73,8 +74,8 @@ export const TestSeriesCard = ({ series }: { series: TestSeries }) => {
       100,
   );
   return (
-    <div className="p-[1.5px] rounded-2xl overflow-hidden w-full bg-gradient-to-b from-[#686868]/0 via-[#686868]/60 to-[#686868] ">
-      <div className="relative rounded-2xl h-full bg-white p-2 overflow-hidden">
+    <div className="p-[1.5px] rounded-2xl overflow-hidden w-full h-full bg-gradient-to-b from-[#686868]/0 via-[#686868]/60 to-[#686868] ">
+      <div className="relative rounded-2xl flex h-full  min-h-[100px] bg-white p-2 overflow-hidden flex-col">
         <div className="absolute top-0 left-0 w-full h-[40%] bg-gradient-to-b from-[#ADADAC] to-[#ADADAC]/0" />
 
         {offerPercentage > 0 && (
@@ -97,13 +98,16 @@ export const TestSeriesCard = ({ series }: { series: TestSeries }) => {
           onClick={() => navigate(`/test-series/${series?.slug}`)}
           className="py-2 px-1 space-y-1 cursor-pointer"
         >
-          <h3 className="text-lg font-medium capitalize text-gray-900">
+          <h3 className="text-lg font-medium capitalize text-gray-900 flex items-center">
             {series?.title}
+            <span title={series.description || "No description available."}>
+                <Info className="ml-2 h-5 w-5 shrink-0 cursor-help text-gray-400" />
+              </span>
           </h3>
 
-          <p className="text-sm text-[#FF6A3D] font-medium">
+          {/* <p className="text-sm text-gray-400 font-medium line-clamp-2">
             {series?.description || series?.exam?.name}
-          </p>
+          </p> */}
 
           {/* TAGS */}
           {/* <div className="flex flex-wrap gap-2">
@@ -369,13 +373,13 @@ export default function TestSeriesPage() {
                   placeholder="Search for test series..."
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
-                  className="w-full pl-12 pr-4 py-2.5 border-2 border-[#FD7149]/70 focus:border-[#FD7149] rounded-full bg-white text-base text-gray-900 placeholder-gray-500 focus:outline-none "
+                  className="w-full pl-12 pr-4 py-2.5 border border-[#FF8356] focus:border-[#FD7149] rounded-full bg-white text-base text-gray-900 placeholder-gray-500 focus:outline-none "
                 />
               </div>
               <div className="relative">
                 <button
                   onClick={() => setShowFilters(true)}
-                  className="flex items-center gap-2 px-4 py-3 rounded-2xl border-2 border-[#FD7149]/70 hover:border-[#FD7149] bg-white text-sm font-medium hover:bg-gray-50"
+                  className="flex items-center gap-2 px-4 py-3 rounded-2xl border border-[#FF8356] hover:border-[#FD7149] bg-white text-sm font-medium hover:bg-gray-50"
                 >
                   <Filter className="h-4 w-4" />
                   Filters

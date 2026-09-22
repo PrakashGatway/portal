@@ -3,78 +3,229 @@ import { useEffect, useState } from "react";
 import { UseBanner } from "../context/BannerContext";
 import { useLocation } from "react-router";
 import { ImageBaseUrl } from "../axiosInstance";
+import { ChevronLeft, ChevronRight } from "lucide-react";
 
 
 
 export function LeftSlider() {
   const [index, setIndex] = useState(0);
+
+  // 1 = next, -1 = previous
+  const [direction, setDirection] = useState<1 | -1>(1);
+
   const { banner } = UseBanner();
   const { pathname } = useLocation();
 
-  // Normalize pathname to handle trailing slashes
-  const cleanPath = pathname.replace(/\/+$/, '') || '/';
+  const cleanPath = pathname.replace(/\/+$/, "") || "/";
 
-  // Find matching banner safely
   const filterBanner = banner?.find((item) => {
-    const dbKey = item.key?.replace(/\/+$/, '') || '/';
+    const dbKey = item.key?.replace(/\/+$/, "") || "/";
     return dbKey === cleanPath;
   });
 
-  // ✅ CORRECTED: Map over the Banners array (not a single Banner object)
-  const slides = filterBanner?.Banners?.length > 0
-    ? filterBanner.Banners.map((item) => ({
-        image: `${ImageBaseUrl}/${item.Banner.file}`,
-        alt: item.Banner.alt || 'Banner',
-      }))
-    : [];
+  const slides =
+    filterBanner?.Banners?.length > 0
+      ? filterBanner.Banners.map((item) => ({
+          image: `${ImageBaseUrl}/${item.Banner.file}`,
+          alt: item.Banner.alt || "Banner",
+        }))
+      : [];
 
-  // Auto-play interval
-  useEffect(() => {
+  // -------------------------
+  // NEXT
+  // -------------------------
+  const goToNext = () => {
     if (slides.length <= 1) return;
-    const t = setInterval(() => {
-      setIndex((p) => (p + 1) % slides.length);
-    }, 4000);
-    return () => clearInterval(t);
-  }, [slides.length]);
 
-  // Reset index when route changes
+    setDirection(1);
+
+    setIndex((prev) => {
+      if (prev >= slides.length - 1) {
+        return 0;
+      }
+
+      return prev + 1;
+    });
+  };
+
+  // -------------------------
+  // PREVIOUS
+  // -------------------------
+  const goToPrevious = () => {
+    if (slides.length <= 1) return;
+
+    setDirection(-1);
+
+    setIndex((prev) => {
+      if (prev <= 0) {
+        return slides.length - 1;
+      }
+
+      return prev - 1;
+    });
+  };
+
+  // Reset when route changes
   useEffect(() => {
     setIndex(0);
+    setDirection(1);
   }, [cleanPath]);
 
-  // Don't render if no banners found
+  // Make sure index is valid
+  useEffect(() => {
+    if (slides.length > 0 && index >= slides.length) {
+      setIndex(0);
+    }
+  }, [slides.length, index]);
+
+  // -------------------------
+  // AUTOPLAY
+  // -------------------------
+  useEffect(() => {
+    if (slides.length <= 1) return;
+
+    const timer = setInterval(() => {
+      setDirection(1);
+
+      setIndex((prev) => {
+        if (prev >= slides.length - 1) {
+          return 0;
+        }
+
+        return prev + 1;
+      });
+    }, 2000);
+
+    return () => clearInterval(timer);
+  }, [slides.length]);
+
   if (!slides.length) return null;
 
+  // -------------------------
+  // SLIDE VARIANTS
+  // -------------------------
+  const slideVariants = {
+    enter: (dir: number) => ({
+      x: dir > 0 ? "100%" : "-100%",
+      opacity: 0,
+    }),
+
+    center: {
+      x: 0,
+      opacity: 1,
+      transition: {
+        duration: 0.5,
+        ease: "easeInOut",
+      },
+    },
+
+     exit: (dir: number) => ({
+      x: dir > 0 ? "-100%" : "100%",
+      opacity: 0,
+      transition: {
+        duration: 0.5,
+        ease: "easeInOut",
+      },
+    }),
+  };
+
   return (
-    <div className="p-[1.5px] h-full lg:col-span-2 relative overflow-hidden col-span-2 w-full bg-gradient-to-b from-[#686868]/0 via-[#686868]/50 to-[#686868] rounded-2xl">
-      <div className="w-full relative overflow-hidden h-full">
-        <AnimatePresence mode="wait">
+    <div className="relative col-span-2 h-full w-full overflow-hidden rounded-3xl bg-gradient-to-b from-[#686868]/0 via-[#686868]/50 to-[#686868] p-[1.5px] lg:col-span-2">
+      <div className="relative h-full w-full overflow-hidden rounded-3xl">
+
+        {/* SLIDER */}
+        <AnimatePresence
+          mode="popLayout"
+          initial={false}
+          custom={direction}
+        >
           <motion.div
             key={index}
-            initial={{ opacity: 0, x: 40 }}
-            animate={{ opacity: 1, x: 0 }}
-            exit={{ opacity: 0, x: -40 }}
-            transition={{ duration: 0.4 }}
-            className="h-full flex items-center"
+            custom={direction}
+            variants={slideVariants}
+            initial="enter"
+            animate="center"
+            exit="exit"
+            className="pointer-events-none h-full w-full"
           >
-            <div className="h-[90px] sm:h-[140px] md:h-[150px] lg:h-[240px] w-full">
+            <div className="h-[90px] w-full sm:h-[140px] md:h-[150px] lg:h-[240px]">
               <img
-                className="h-full w-full object-cover rounded-2xl"
-                src={slides[index].image}
-                alt={slides[index].alt}
+                src={slides[index]?.image}
+                alt={slides[index]?.alt}
+                className="h-full w-full rounded-2xl object-cover"
               />
             </div>
           </motion.div>
         </AnimatePresence>
+
+        {/* NAVIGATION */}
+        {slides.length > 1 && (
+          <>
+            {/* PREVIOUS */}
+            <button
+              type="button"
+              onClick={(e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                goToPrevious();
+              }}
+              className="
+                pointer-events-auto
+                absolute left-3 top-1/2 z-50
+                flex h-9 w-9
+                -translate-y-1/2
+                items-center justify-center
+                rounded-full
+                bg-white/20
+                text-white
+                backdrop-blur-sm
+                transition-all duration-200
+                hover:scale-110
+                hover:bg-black/70
+                active:scale-95
+              "
+              aria-label="Previous banner"
+            >
+              <ChevronLeft className="h-5 w-5" />
+            </button>
+
+            {/* NEXT */}
+            <button
+              type="button"
+              onClick={(e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                goToNext();
+              }}
+              className="
+                pointer-events-auto
+                absolute right-3 top-1/2 z-50
+                flex h-9 w-9
+                -translate-y-1/2
+                items-center justify-center
+                rounded-full
+                bg-white/20
+                text-white
+                backdrop-blur-sm
+                transition-all duration-200
+                hover:scale-110
+                hover:bg-black/70
+                active:scale-95
+              "
+              aria-label="Next banner"
+            >
+              <ChevronRight className="h-5 w-5" />
+            </button>
+          </>
+        )}
       </div>
     </div>
   );
 }
-
 export function RightOffer({ content }) {
     return (
-        <div  className="p-[1.5px] rounded-4xl hidden lg:block h-full relative overflow-hidden w-full bg-gradient-to-b from-[#686868]/0 via-[#686868]/60 to-[#686868]">
-            <div  className="flex rounded-4xl items-center h-full w-full justify-between overflow-hidden p-6 bg-gradient-to-r from-[#EBEBEB] via-[#ffffff] to-[#EBEBEB]">
+        <div  className="p-[1.5px] rounded-3xl hidden lg:block h-full relative overflow-hidden w-full bg-gradient-to-b from-[#686868]/0 via-[#686868]/60 to-[#686868]">
+            <div  className="flex rounded-3xl items-center h-full w-full justify-between overflow-hidden p-6 bg-gradient-to-r from-[#EBEBEB] via-[#ffffff] to-[#EBEBEB]">
                 {!content ? <>
                     <div className="space-y-2 text-[#838383]">
                         <p className="text-xl font-medium">

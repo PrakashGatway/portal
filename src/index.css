@@ -191,6 +191,36 @@ layer(base);
   }
 }
 
+@keyframes pendulum {
+  0% {
+    transform: rotate(0deg);
+  }
+
+  25% {
+    transform: rotate(5deg);
+  }
+
+  50% {
+    transform: rotate(-5deg);
+  }
+
+  75% {
+    transform: rotate(3deg);
+  }
+
+  100% {
+    transform: rotate(0deg);
+  }
+}
+
+.pendulum-hover {
+  transform-origin: 50% 0%;
+}
+
+.pendulum-hover:hover {
+  animation: pendulum 1.2s ease-in-out infinite;
+}
+
 @utility menu-item {
   @apply relative flex items-center w-full gap-3 px-3 py-2 font-medium rounded-lg text-theme-sm;
 }

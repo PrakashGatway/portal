@@ -215,8 +215,9 @@ export const TestSeriesTabs: React.FC<TestSeriesTabsProps> = ({
 }) => {
   let navigate = useNavigate();
   const [openIndex, setOpenIndex] = useState<number | null>(0);
-  const [isOpen,setisOpen] = useState(false)
-  const [itemid,setitemid] = useState(null)
+  const [isOpen, setisOpen] = useState(false);
+  const [itemid, setitemid] = useState(null);
+  const [type, settype] = useState("Full Length");
   const tabs = [
     { id: "overview", label: "Overview", icon: BookOpen },
     { id: "tests", label: "Tests", icon: ListChecks },
@@ -240,6 +241,18 @@ export const TestSeriesTabs: React.FC<TestSeriesTabsProps> = ({
     },
   ];
 
+  console.log(type);
+
+const filterType = testSeries.tests.filter((item) => {
+  const typeMap = {
+    "Full Length": "full_length",
+    "Sectional": "sectional",
+  };
+
+  return item?.testData?.testType?.includes(typeMap[type]);
+});
+  
+
   const renderTabContent = () => {
     switch (activeTab) {
       case "overview":
@@ -257,18 +270,60 @@ export const TestSeriesTabs: React.FC<TestSeriesTabsProps> = ({
               </span>
             </div>
 
+           
             <div>
-              {testSeries?.description && (
-                <p className="text-gray-800 text-lg leading-snug">
-                  {testSeries?.description}
-                </p>
-              )}
+              <>
+                <style jsx global>{`
+                  .overview-content {
+                    color: #374151;
+                    line-height: 1.8;
+                  }
+
+                  .overview-content p {
+                    margin-bottom: 16px !important;
+                  }
+
+                  .overview-content h1,
+                  .overview-content h2,
+                  .overview-content h3,
+                  .overview-content h4 {
+                    margin-top: 24px !important;
+                    margin-bottom: 12px !important;
+                    font-weight: 700 !important;
+                    color: #171717;
+                  }
+
+                  /* Features heading */
+                  .overview-content p:has(strong) {
+                    margin-bottom: 12px !important;
+                  }
+
+                  /* Feature paragraphs */
+                  .overview-content p:has(+ p) {
+                    /* normal paragraph spacing */
+                  }
+
+                  .overview-content strong {
+                    font-weight: 700 !important;
+                  }
+
+                  /* Mobile */
+                  @media (max-width: 640px) {
+                    .overview-content {
+                      line-height: 1.7;
+                    }
+                  }
+                `}</style>
+
+                <div
+                  className="overview-content text-gray-800"
+                  dangerouslySetInnerHTML={{
+                    __html: testSeries?.overview || "",
+                  }}
+                />
+              </>
             </div>
 
-            <div
-              className="text-gray-800"
-              dangerouslySetInnerHTML={{ __html: testSeries?.overview }}
-            />
             {!testSeries?.overview && (
               <>
                 <div>
@@ -347,8 +402,21 @@ export const TestSeriesTabs: React.FC<TestSeriesTabsProps> = ({
             animate={{ opacity: 1, y: 0 }}
             className="space-y-6 bg-white rounded-3xl p-4"
           >
-            <h3 className="text-xl font-bold text-gray-900 ">All Tests</h3>
-            {testSeries?.tests?.map((testItem, index) => {
+            <div className="flex justify-between items-center">
+              <h3 className="text-xl font-bold text-gray-900 ">All Tests</h3>
+              <div className="flex gap-2">
+                {["Full Length", "Sectional", "Custom"].map((item) => (
+                  <button
+                    onClick={() => settype(item)}
+                    key={item}
+                    className={`rounded-lg border px-4 py-2 ${type === item ? "text-orange-500" : "text-black"}`}
+                  >
+                    {item}
+                  </button>
+                ))}
+              </div>
+            </div>
+            {filterType.length > 0 ? filterType.map((testItem, index) => {
               const cardThemes = [
                 // Card 1 - Peach
                 {
@@ -396,7 +464,7 @@ export const TestSeriesTabs: React.FC<TestSeriesTabsProps> = ({
                           {testItem?.testData?.title}
                         </h3>
                         {/* Description */}
-                        <p className="text-sm text-gray-600 ">
+                        <p className="text-sm text-gray-600">
                           {testItem?.testData?.description}
                         </p>
 
@@ -407,7 +475,9 @@ export const TestSeriesTabs: React.FC<TestSeriesTabsProps> = ({
                             <span className="text-[#FF6A3D] font-semibold text-sm">
                               {testItem?.testData?.totalQuestions}
                             </span>
-                            <span className="ml-1 text-[#555] text-xs">Questions</span>
+                            <span className="ml-1 text-[#555] text-xs">
+                              Questions
+                            </span>
                           </div>
 
                           <span className="mx-3 text-gray-400 hidden sm:block">
@@ -418,7 +488,9 @@ export const TestSeriesTabs: React.FC<TestSeriesTabsProps> = ({
                             <span className="text-[#FF6A3D] font-semibold text-sm">
                               {testItem?.testData?.totalDurationMinutes}
                             </span>
-                            <span className="ml-1 text-[#555] text-xs">Mins</span>
+                            <span className="ml-1 text-[#555] text-xs">
+                              Mins
+                            </span>
                           </div>
 
                           <span className="mx-3 text-gray-400 hidden sm:block">
@@ -437,7 +509,9 @@ export const TestSeriesTabs: React.FC<TestSeriesTabsProps> = ({
                           </span>
 
                           <div>
-                            <span className="text-[#555] text-xs">Difficulty - </span>
+                            <span className="text-[#555] text-xs">
+                              Difficulty -{" "}
+                            </span>
                             <span className="text-[#FF6A3D] font-semibold uppercase text-sm">
                               {testItem?.testData?.difficultyLabel}
                             </span>
@@ -468,11 +542,10 @@ export const TestSeriesTabs: React.FC<TestSeriesTabsProps> = ({
                         {testItem?.isMandatory === false ||
                         testSeries?.isPurchased === true ? (
                           <button
-                            onClick={() =>{
-                              setitemid(testItem?.test)
-                              setisOpen(true)
-                            }
-                            }
+                            onClick={() => {
+                              setitemid(testItem?.test);
+                              setisOpen(true);
+                            }}
                             className="rounded-xl bg-[#FF7046] px-6 py-3 text-white font-semibold transition"
                           >
                             Start Test
@@ -480,7 +553,11 @@ export const TestSeriesTabs: React.FC<TestSeriesTabsProps> = ({
                         ) : (
                           <>
                             <div className="w-12 h-12 rounded-full bg-[#FFE8A3] flex items-center justify-center -mt-4">
-                             <img src="/images/lock.webp" alt="" className="h-6 w-6" />
+                              <img
+                                src="/images/lock.webp"
+                                alt=""
+                                className="h-6 w-6"
+                              />
                             </div>
 
                             <p className="text-base text-[#555] font-medium">
@@ -493,10 +570,18 @@ export const TestSeriesTabs: React.FC<TestSeriesTabsProps> = ({
                   </div>
                 </div>
               );
-            })}
-             {isOpen && <ConfirmationPopup isOpen={isOpen} onClose={()=> setisOpen(false)} onConfirm={()=>{
-                              navigate(`/gmat/tests/${itemid}`)
-            }} />}
+            }):(
+              <div className="text-black font-medium">No Data Found</div>
+            )}
+            {isOpen && (
+              <ConfirmationPopup
+                isOpen={isOpen}
+                onClose={() => setisOpen(false)}
+                onConfirm={() => {
+                  navigate(`/gmat/tests/${itemid}`);
+                }}
+              />
+            )}
           </motion.div>
         );
 
@@ -548,7 +633,6 @@ export const TestSeriesTabs: React.FC<TestSeriesTabsProps> = ({
                 </div>
               );
             })}
-           
           </div>
         );
       default:

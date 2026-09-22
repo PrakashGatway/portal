@@ -81,6 +81,7 @@ import IeltsResult from "./pages/ielts/ieltsResult";
 import OoshasChatbot from "./components/chatbot/chatbot";
 import CreateCustomTestPage from "./components/customTest/createCustomTest";
 import CustomTestsPage from "./components/customTest/customTestlisting";
+import { OfferProvider } from "./context/OfferContext";
 
 // Define roles
 export const ROLES = {
@@ -98,6 +99,7 @@ export default function App() {
     <Router>
 
       <AuthProvider>
+        <OfferProvider>
         <FirebaseNotifications />
         <OoshasChatbot/>
         <ToastContainer style={{ zIndex: 999999 }} />
@@ -329,6 +331,7 @@ export default function App() {
           </Route>
           <Route path="/unauthorized" element={<NotFound />} />
         </Routes>
+        </OfferProvider>
       </AuthProvider>
     </Router>
   );

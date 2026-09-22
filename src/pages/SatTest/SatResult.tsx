@@ -245,7 +245,6 @@ export const GRETestResults: React.FC<GRETestResultsProps> = React.memo(
       section.name?.toLowerCase().includes("math"),
     );
 
-    console.log(result);
 
     const renderModule = (section: any, moduleNumber: number) => {
       const correct = section?.stats?.correct || 0;
