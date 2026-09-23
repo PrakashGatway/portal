@@ -1,12 +1,6 @@
 "use client";
 
-import {
-  createContext,
-  useContext,
-  useEffect,
-  useRef,
-  useState,
-} from "react";
+import { createContext, useContext, useEffect, useRef, useState } from "react";
 import { X } from "lucide-react";
 import api from "../axiosInstance";
 import { useAuth } from "./UserContext";
@@ -37,13 +31,9 @@ export function OfferProvider({ children }) {
       try {
         const res = await api.get("/notification/all");
 
-        console.log("Notifications:", res?.data);
-
         if (!res?.data?.success) return;
 
         const notifications = res?.data?.data || [];
-
-        // User category
         const userCategoryName = user?.category?.name?.trim()?.toLowerCase();
 
         if (!userCategoryName) {
@@ -53,8 +43,9 @@ export function OfferProvider({ children }) {
 
         // Find matching active global offer
         const activeOffer = notifications.find((item) => {
-          const notificationCategoryName =
-            item?.Category?.name?.trim()?.toLowerCase();
+          const notificationCategoryName = item?.Category?.name
+            ?.trim()
+            ?.toLowerCase();
 
           return (
             item?.isGlobal === true &&
@@ -62,9 +53,6 @@ export function OfferProvider({ children }) {
             notificationCategoryName === userCategoryName
           );
         });
-
-        console.log("User Category:", userCategoryName);
-        console.log("Matched Offer:", activeOffer);
 
         if (activeOffer) {
           setOffer(activeOffer);
@@ -79,39 +67,7 @@ export function OfferProvider({ children }) {
     fetchOffer();
   }, [user?.role, user?.category?.name]);
 
-  // --------------------------------
-  // Offer Timer
-  // --------------------------------
-  // --------------------------------
-// Offer Timer - Show Only 2 Times
-// --------------------------------
-useEffect(() => {
-  // Clear existing timers
-  if (firstTimerRef.current) {
-    clearTimeout(firstTimerRef.current);
-  }
-
-  if (repeatTimerRef.current) {
-    clearTimeout(repeatTimerRef.current);
-  }
-
-  // Only show for normal users with matching offer
-  if (user?.role !== "user" || !offer) {
-    setShowOffer(false);
-    return;
-  }
-
-  // First offer after 15 seconds
-  firstTimerRef.current = setTimeout(() => {
-    setShowOffer(true);
-
-    // Second offer 30 seconds after first offer
-    repeatTimerRef.current = setTimeout(() => {
-      setShowOffer(true);
-    }, 30000);
-  }, 15000);
-
-  return () => {
+  useEffect(() => {
     if (firstTimerRef.current) {
       clearTimeout(firstTimerRef.current);
     }
@@ -119,8 +75,31 @@ useEffect(() => {
     if (repeatTimerRef.current) {
       clearTimeout(repeatTimerRef.current);
     }
-  };
-}, [offer, user?.role]);
+
+    if (user?.role !== "user" || !offer) {
+      setShowOffer(false);
+      return;
+    }
+
+    firstTimerRef.current = setTimeout(() => {
+      setShowOffer(true);
+
+      // Second offer 30 seconds after first offer
+      repeatTimerRef.current = setTimeout(() => {
+        setShowOffer(true);
+      }, 30000);
+    }, 15000);
+
+    return () => {
+      if (firstTimerRef.current) {
+        clearTimeout(firstTimerRef.current);
+      }
+
+      if (repeatTimerRef.current) {
+        clearTimeout(repeatTimerRef.current);
+      }
+    };
+  }, [offer, user?.role]);
 
   // --------------------------------
   // Close
@@ -144,7 +123,6 @@ useEffect(() => {
       {user?.role === "user" && showOffer && offer && (
         <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/60 p-4 backdrop-blur-sm">
           <div className="relative w-full max-w-[700px] overflow-hidden rounded-2xl bg-white shadow-2xl">
-
             {/* Close */}
             <button
               onClick={closeOffer}
@@ -159,7 +137,6 @@ useEffect(() => {
               <X size={18} />
             </button>
 
-            {/* Offer Image */}
             {offer?.image && (
               <img
                 src={offer.image}

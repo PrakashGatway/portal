@@ -11,7 +11,6 @@ import {
   useMemo,
 } from "react";
 import api from "../axiosInstance";
-import { listenForMessages } from "../firebase/messaging";
 
 type Theme = "light" | "dark";
 

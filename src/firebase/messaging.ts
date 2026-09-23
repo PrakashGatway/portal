@@ -27,15 +27,13 @@ export const getFCMToken = async (): Promise<string | null> => {
     const messaging = getMessaging(app);
 
     const token = await getToken(messaging, {
-      vapidKey: import.meta.env.VITE_FIREBASE_VAPID_KEY,
+      vapidKey: import.meta.env.VITE_FIREBASE_VAPID_KEY
     });
 
     if (!token) {
       console.log("FCM token not generated.");
       return null;
     }
-
-    console.log("FCM Token:", token);
 
     return token;
   } catch (error) {
@@ -65,30 +63,54 @@ export const getFCMToken = async (): Promise<string | null> => {
 // };
 
 
+// export const listenForMessages = (callback?: (payload: any) => void) => {
+//   try {
+//     const messaging = getMessaging(app);
+
+//     return onMessage(messaging, (payload) => {
+//        const audio = new Audio("/notify.mp3");
+
+//       audio.play().catch((error) => {
+//         console.warn("Notification sound blocked:", error);
+//       });
+
+//       toast(
+//         payload?.notification?.title || "New notification"
+//       );
+
+//       window.dispatchEvent(new CustomEvent('fcm-message', { detail: payload }));
+
+//       if (callback) callback(payload);
+//     });
+//   } catch (error) {
+//     console.error("FCM listener error:", error); 
+//     return undefined;
+//   }
+// };
+
 export const listenForMessages = (callback?: (payload: any) => void) => {
   try {
     const messaging = getMessaging(app);
 
     return onMessage(messaging, (payload) => {
-      console.log("Foreground notification:", payload);
-       const audio = new Audio("/notify.mp3");
+      const audio = new Audio("/notify.mp3");
 
       audio.play().catch((error) => {
         console.warn("Notification sound blocked:", error);
       });
 
-      toast(
-        payload?.notification?.title || "New notification"
+      toast(payload?.notification?.title || "New notification");
+      
+      window.dispatchEvent(
+        new CustomEvent("fcm-message", {
+          detail: payload,
+        })
       );
 
-      // 1. Dispatch a global browser event with the payload
-      window.dispatchEvent(new CustomEvent('fcm-message', { detail: payload }));
-
-      // 2. Still run the callback if provided
       if (callback) callback(payload);
     });
   } catch (error) {
-    console.error("FCM listener error:", error); 
+    console.error("FCM listener error:", error);
     return undefined;
   }
 };

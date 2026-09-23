@@ -270,9 +270,9 @@ export const MockTestCard = ({
                 style={{ borderRadius: "0px 0px 12px 15px" }}
                 className="flex-1 f bg-[#FF6A3D] text-center text-white text-3xl font-bold px-4 py-2"
               >
-                <span className="text-[36px] font-bold leading-none">
+                <span className="text-[32px] font-bold leading-none">
                   {test.isPurchased === true ? (
-                    "Enrolled"
+                    "Unlocked"
                   ) : test.isFree ? (
                     "Free"
                   ) : (
@@ -420,31 +420,6 @@ export default function MockTests({ testType }: any) {
       return matchesSearch && matchesExam && matchesDifficulty && matchesPrice;
     });
   }, [tests, searchQuery, filters]);
-
-  const tabs = [
-    {
-      id: "reading",
-      name: "Reading",
-      icon: BookOpen,
-    },
-    {
-      id: "writing",
-      name: "Writing",
-      icon: PenTool,
-    },
-    {
-      id: "speaking",
-      name: "Speaking",
-      icon: Mic,
-    },
-    {
-      id: "listening",
-      name: "Listening",
-      icon: Headphones,
-    },
-  ];
-
-  const active = "reading";
 
   return (
     <div className="min-h-[85vh]">
@@ -705,7 +680,7 @@ export default function MockTests({ testType }: any) {
           className="  my-6 rounded-2xl dark:bg-gray-800"
         >
           {loading ? (
-            <div className="grid grid-cols-2 md:grid-cols-2 xl:grid-cols-5 gap-5">
+            <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-5">
               {[...Array(6)].map((_, index) => (
                 <MockTestSkeleton key={index} />
               ))}

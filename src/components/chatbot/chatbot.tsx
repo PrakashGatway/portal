@@ -826,24 +826,11 @@ export default function OoshasChatbot() {
                   </motion.div>
                 )}
 
-                {/* AI CTA */}
-                <div className="px-4 pb-5 space-y-2">
-                  <motion.button
-                    whileHover={{ scale: 1.01, y: -1 }}
-                    whileTap={{ scale: 0.98 }}
-                    onClick={() => setView("ticket")}
-                    className="relative flex w-full items-center gap-3 overflow-hidden rounded-2xl bg-[#17243a] px-4 py-4 text-left text-white shadow-[0_10px_30px_-8px_rgba(23,36,58,0.25)]"
-                  >
-                    {/* <div className="absolute -right-5 -top-8 h-24 w-24 rounded-full bg-[#ff704f]/30 blur-2xl" /> */}
-                    <div className="relative flex h-6 w-6 shrink-0 items-center justify-center rounded bg-[#ff704f] text-white">
-                      <Ticket size={18} />
-                    </div>
-                    <div className="relative flex-1">
-                      <p className="text-sm font-bold">Raise Ticket</p>
-                    </div>
-                    <ArrowRight size={18} className="relative" />
-                  </motion.button>
+                <div className="py-16">
+                  
+
                 </div>
+
               </motion.div>
             )}
 

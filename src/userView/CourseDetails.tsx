@@ -707,7 +707,7 @@ export default function CourseDetailPage() {
                             ? [{ id: "schedules", label: "Schedules" }]
                             : []),
                           // { id: "materials", label: "Materials" },
-                          // { id: "tests", label: "Tests" },
+                          { id: "tests", label: "Tests" },
                           // { id: "instructors", label: "Instructors" },
                           // { id: "faq", label: "FAQ" },
                         ].map((tab) => {
@@ -1411,8 +1411,8 @@ export default function CourseDetailPage() {
                                 className="
                 group flex items-center gap-3
                 border-b border-[#F3E5DF]
-                px-4 py-3
-                last:border-b-0
+                px-4 py-2.5
+                 bg-[#fef7dd] last:border-b-0
                 hover:bg-[#FFF9F6]
                 transition-colors
                 sm:gap-4
@@ -1421,13 +1421,13 @@ export default function CourseDetailPage() {
                                 {/* DATE */}
                                 <div
                                   className="
-                  flex h-14 w-14 shrink-0
+                  flex h-12 w-12 shrink-0
                   flex-col items-center justify-center
                   rounded-xl
-                  bg-[#FFF1EB]
+                  bg-[#FF7147]
                 "
                                 >
-                                  <span className="text-[10px] font-semibold uppercase text-[#F4511E]">
+                                  <span className="text-[10px] font-semibold uppercase text-white">
                                     {scheduledStart.toLocaleDateString(
                                       "en-IN",
                                       {
@@ -1436,7 +1436,7 @@ export default function CourseDetailPage() {
                                     )}
                                   </span>
 
-                                  <span className="text-xl font-bold leading-5 text-[#172033]">
+                                  <span className="text-xl font-bold leading-5 text-white">
                                     {scheduledStart.getDate()}
                                   </span>
                                 </div>
@@ -1506,8 +1506,8 @@ export default function CourseDetailPage() {
                   flex h-9 w-9 shrink-0
                   items-center justify-center
                   rounded-full
-                  bg-[#FAF7F5]
-                  text-[#9B8A82]
+                  bg-white
+                  text-gray-800
                   transition-all
                   hover:bg-[#FFF0E9]
                   hover:text-[#F4511E]

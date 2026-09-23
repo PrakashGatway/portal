@@ -395,40 +395,6 @@ const ContentViewPage = () => {
     window.open(meetingUrl, "_blank", "noopener,noreferrer");
   };
 
-  const formatDate = (date: Date | null) => {
-    if (!date) return "Not scheduled";
-
-    return date.toLocaleDateString("en-IN", {
-      weekday: "long",
-      day: "2-digit",
-      month: "long",
-      year: "numeric",
-    });
-  };
-
-  const formatTimeOnly = (date: Date | null) => {
-    if (!date) return "--";
-
-    return date.toLocaleTimeString("en-IN", {
-      hour: "2-digit",
-      minute: "2-digit",
-      hour12: true,
-    });
-  };
-
-  const formatDuration = (seconds: number) => {
-    if (!seconds) return "0 min";
-
-    const hours = Math.floor(seconds / 3600);
-    const minutes = Math.floor((seconds % 3600) / 60);
-
-    if (hours > 0) {
-      return minutes > 0 ? `${hours}h ${minutes}m` : `${hours}h`;
-    }
-
-    return `${minutes} min`;
-  };
-
   const getSessionStatus = () => {
     if (!scheduledStart || !scheduledEnd) {
       return {
@@ -474,16 +440,10 @@ const ContentViewPage = () => {
 
                   <div className="h-4 w-64 rounded bg-[#F5CFC0] animate-pulse mb-4" />
 
-                  <div className="space-y-2 mb-5">
-                    <div className="h-7 w-full max-w-[440px] rounded-lg bg-[#F4C7B6] animate-pulse" />
-                    <div className="h-7 w-3/4 max-w-[330px] rounded-lg bg-[#F4C7B6] animate-pulse" />
-                  </div>
+                  <div className="space-y-2 mb-5"></div>
 
                   {/* Date */}
-                  <div className="flex items-center gap-3 mb-4">
-                    <div className="h-6 w-6 rounded bg-[#F7B89F] animate-pulse" />
-                    <div className="h-5 w-48 rounded bg-[#F3C8B8] animate-pulse" />
-                  </div>
+                  <div className="flex items-center gap-3 mb-4"></div>
 
                   {/* Time */}
                   <div className="flex items-center gap-3 mb-6">
@@ -499,25 +459,13 @@ const ContentViewPage = () => {
                 </div>
 
                 {/* Instructor Card */}
-                <div className="rounded-[24px] border border-[#FFD6C7] bg-[#FFF9F6] p-6 flex flex-col items-center justify-center min-h-[280px]">
-                  <div className="h-20 w-20 rounded-full bg-[#F5C7B7] animate-pulse mb-5" />
-
-                  <div className="h-4 w-28 rounded bg-[#F2CFC3] animate-pulse mb-3" />
-                  <div className="h-6 w-24 rounded bg-[#EFC0B0] animate-pulse mb-2" />
-                  <div className="h-4 w-28 rounded bg-[#F2CFC3] animate-pulse" />
-                </div>
+                <div className="rounded-[24px] border border-[#FFD6C7] bg-[#FFF9F6] p-6 flex flex-col items-center justify-center min-h-[280px]"></div>
 
                 {/* Countdown Card */}
                 <div className="rounded-[24px] bg-white p-6 flex flex-col items-center justify-center min-h-[280px]">
                   <div className="h-6 w-48 rounded bg-[#EBCDC2] animate-pulse mb-8" />
 
-                  <div className="flex items-center gap-2 mb-5">
-                    <div className="h-14 w-14 md:h-16 md:w-16 rounded-lg bg-[#FF8B68] animate-pulse" />
-                    <div className="h-10 w-3 rounded bg-[#FFD2C5] animate-pulse" />
-                    <div className="h-14 w-14 md:h-16 md:w-16 rounded-lg bg-[#FF8B68] animate-pulse" />
-                    <div className="h-10 w-3 rounded bg-[#FFD2C5] animate-pulse" />
-                    <div className="h-14 w-14 md:h-16 md:w-16 rounded-lg bg-[#FF8B68] animate-pulse" />
-                  </div>
+                  <div className="flex items-center gap-2 mb-5"></div>
 
                   <div className="flex gap-10 mb-7">
                     <div className="h-3 w-10 rounded bg-[#EACFC5] animate-pulse" />
@@ -664,7 +612,10 @@ const ContentViewPage = () => {
 
   return (
     <div className="min-h-screen">
-      <div className="mx-auto max-w-7xl px-4 py-0 sm:px-6 lg:px-8">
+      <div
+        className="mx-auto max-w-7xl px-4 py-2
+      "
+      >
         {/* BACK BUTTON */}
         <button
           onClick={() => navigate(-1)}
@@ -860,7 +811,7 @@ const ContentViewPage = () => {
                                 <img
                                   src={
                                     instructor?.profilePic
-                                      ? `${ImageBaseUrl}/${instructor.profilePic}`
+                                      ? `https://res.cloudinary.com/dd5s7qpsc/image/upload/${instructor?.profilePic}`
                                       : "https://cdn-icons-png.flaticon.com/512/10337/10337525.png"
                                   }
                                   alt="Trainer"
@@ -876,10 +827,6 @@ const ContentViewPage = () => {
                               <h3 className="text-base sm:text-lg md:text-lg xl:text-lg font-bold text-gray-900 text-left">
                                 {selectUpcomingSession?.instructor?.name}
                               </h3>
-
-                              <p className="text-gray-600 font-medium text-sm xl:text-base -mt-1">
-                                Pte expert
-                              </p>
 
                               <p className="text-gray-500 text-xs line-clamp-3 ">
                                 {
@@ -1168,13 +1115,11 @@ const ContentViewPage = () => {
 
         <div className="w-full max-w-7xl mx-auto px-4 sm:px-5 lg:px-0 ">
           <div className="grid grid-cols-1 xl:grid-cols-[1.5fr_0.5fr] items-start gap-2">
-          
             <div>
               {activeTab === "Overview" ? (
                 <div className="flex flex-col gap-4">
                   <div className="w-full">
                     {sessionStatus2 === "expired" ? (
-                      
                       <div
                         className="
       w-full
@@ -1338,19 +1283,24 @@ const ContentViewPage = () => {
                 border
                 border-[#ff633f]
                 bg-[#fff7f2]
-                aspect-[1.5/1]
+                aspect-[5/3]
               "
                             >
                               <img
-                                src={`${ImageBaseUrl}/${content?.thumbnailPic}`}
+                                src={
+                                  content?.thumbnailPic
+                                    ? `${ImageBaseUrl}/${content.thumbnailPic}`
+                                    : `${ImageBaseUrl}/${course?.thumbnail?.url}`
+                                }
                                 alt={content?.title || "Session"}
-                                className="
-                  absolute
-                  inset-0
-                  w-full
-                  h-full
-                  object-cover
-                "
+                                className="absolute inset-0 w-full h-full object-cover"
+                                onError={(e) => {
+                                  const img = e.currentTarget;
+
+                                  if (course?.thumbnail?.url) {
+                                    img.src = `${ImageBaseUrl}/${course.thumbnail.url}`;
+                                  }
+                                }}
                               />
                             </div>
                           </div>
@@ -1401,7 +1351,7 @@ const ContentViewPage = () => {
                                 <img
                                   src={
                                     instructor?.profilePic
-                                      ? `${ImageBaseUrl}/${instructor.profilePic}`
+                                      ? `https://res.cloudinary.com/dd5s7qpsc/image/upload/${instructor?.profilePic}`
                                       : "https://cdn-icons-png.flaticon.com/512/10337/10337525.png"
                                   }
                                   alt={instructor?.name || "Instructor"}
@@ -1434,7 +1384,7 @@ const ContentViewPage = () => {
                     mt-1
                   "
                                 >
-                                  PTE Expert & English Language Trainer
+                                  {instructor?.profile?.bio}
                                 </p>
                               </div>
                             </div>
@@ -1456,25 +1406,77 @@ const ContentViewPage = () => {
                             <div className="flex flex-wrap items-center gap-3">
                               {/* Countdown Timer */}
                               <div className="relative inline-flex items-center gap-2">
-                                <div
-                                  className="
-      inline-flex
-      items-center
-      justify-center
-      min-h-[34px]
-      px-4
-      sm:px-5
-      rounded-[9px]
-      bg-[#fff1eb]
-      border
-      border-[#ff7148]
-      text-[#ff7148]
-      text-[14px]
-      sm:text-[15px]
-      font-medium
-    "
-                                >
-                                  Starts in {formatTime2(timeLeft2)}
+                                <div className="flex flex-wrap items-center gap-3">
+                                  {/* Countdown */}
+                                  {!canJoin &&
+                                    timeRemaining?.type === "waiting" && (
+                                      <div
+                                        className="
+        inline-flex items-center justify-center
+        min-h-[34px]
+        px-4 sm:px-5
+        rounded-[9px]
+        bg-[#fff1eb]
+        border border-[#ff7148]
+        text-[#ff7148]
+        text-[14px] sm:text-[15px]
+        font-medium
+      "
+                                      >
+                                        Starts in{" "}
+                                        {String(timeRemaining.hours).padStart(
+                                          2,
+                                          "0",
+                                        )}
+                                        :
+                                        {String(timeRemaining.minutes).padStart(
+                                          2,
+                                          "0",
+                                        )}
+                                        :
+                                        {String(timeRemaining.seconds).padStart(
+                                          2,
+                                          "0",
+                                        )}
+                                      </div>
+                                    )}
+
+                                  {/* Join Now */}
+                                  {canJoin && (
+                                    <a
+                                      href={content?.meetingId || "#"}
+                                      target="_blank"
+                                      rel="noopener noreferrer"
+                                      className="
+        inline-flex
+        items-center
+        justify-center
+        gap-2
+        min-h-[34px]
+        px-4 sm:px-5
+        rounded-[9px]
+        bg-[#ff7148]
+        hover:bg-[#ff6338]
+        text-white
+        text-[14px] sm:text-[15px]
+        font-medium
+        transition-colors
+        duration-200
+        shadow-sm
+      "
+                                    >
+                                      <Video className="w-4 h-4" />
+                                      Join Now
+                                    </a>
+                                  )}
+
+                                  {/* Optional live indicator */}
+                                  {canJoin &&
+                                    timeRemaining?.type === "live" && (
+                                      <span className="text-sm font-medium text-green-600">
+                                        ● Live Now
+                                      </span>
+                                    )}
                                 </div>
 
                                 {/* i Icon */}
@@ -1515,7 +1517,7 @@ const ContentViewPage = () => {
                               </div>
 
                               {/* View Session */}
-                              {showSessionButton && (
+                              {/* {showSessionButton && (
                                 <Link to={content?.meetingId || "#"}>
                                   <button
                                     className="
@@ -1539,7 +1541,7 @@ const ContentViewPage = () => {
                                     View Session
                                   </button>
                                 </Link>
-                              )}
+                              )} */}
                             </div>
                           </div>
                         </div>
@@ -1549,7 +1551,6 @@ const ContentViewPage = () => {
 
                   <div className="flex flex-col gap-4">
                     {allcontent?.relatedMaterials?.length > 0 ? (
-                      
                       <div className="bg-gradient-to-b from-white via-gray-50 to-gray-300 p-[1.5px] rounded-[20px]">
                         <div
                           className="
@@ -1692,7 +1693,6 @@ const ContentViewPage = () => {
                         </div>
                       </div>
                     ) : (
-                      
                       <div className="bg-gradient-to-b from-white via-gray-50 to-gray-300 p-[1.5px] rounded-[20px]">
                         <div
                           className="
@@ -2015,18 +2015,15 @@ const ContentViewPage = () => {
                 </>
               ) : activeTab === "Trainer" ? (
                 <>
-                
-    <section className="w-full ">
-      <div className="mx-auto max-w-6xl">
-        <div className="relative min-h-[260px] overflow-hidden rounded-[24px] border border-[#f4d6c9] bg-[#fffdfb] shadow-sm">
-          {/* Orange Left Panel */}
-          <div className="absolute left-0 top-0 h-full w-[102px] bg-[#ff711f] md:w-[112px]" />
+                  <section className="w-full ">
+                    <div className="mx-auto max-w-6xl">
+                      <div className="relative min-h-[260px] overflow-hidden rounded-[24px] border border-[#f4d6c9] bg-[#fffdfb] shadow-sm">
+                        {/* Orange Left Panel */}
+                        <div className="absolute left-0 top-0 h-full w-[102px] bg-[#ff711f] md:w-[112px]" />
 
-          
-{/* Trainer Image */}
-<div className="absolute left-[20px] top-1/2 z-10 h-[170px] w-[170px] -translate-y-1/2 md:left-[38px] md:h-[150px] md:w-[150px]">
-
-  <div className="absolute -inset-2 rounded-full border-[7px] border-[#fce6d7] bg-white" />
+                        {/* Trainer Image */}
+                        <div className="absolute left-[20px] top-1/2 z-10 h-[170px] w-[170px] -translate-y-1/2 md:left-[38px] md:h-[150px] md:w-[150px]">
+                          <div className="absolute -inset-2 rounded-full border-[7px] border-[#fce6d7] bg-white" />
 
                           <div className="absolute inset-0 overflow-hidden rounded-full">
                             <img
@@ -2036,16 +2033,15 @@ const ContentViewPage = () => {
                             />
                           </div>
 
-  <img
-    src={`https://res.cloudinary.com/dd5s7qpsc/image/upload/${instructor?.profilePic}`}
-    alt=""
-    className="absolute left-1/2 top-[-40px] z-10 h-[220px] w-[170px] -translate-x-1/2 object-cover object-top"
-    style={{
-      clipPath: "inset(0 0 166px 0)",
-    }}
-  />
-
-</div>
+                          <img
+                            src={`https://res.cloudinary.com/dd5s7qpsc/image/upload/${instructor?.profilePic}`}
+                            alt=""
+                            className="absolute left-1/2 top-[-40px] z-10 h-[220px] w-[170px] -translate-x-1/2 object-cover object-top"
+                            style={{
+                              clipPath: "inset(0 0 166px 0)",
+                            }}
+                          />
+                        </div>
 
                         {/* Counter */}
                         <div className="absolute right-6 top-4 z-20 text-[12px] font-medium text-[#d99a7a]">
@@ -2059,52 +2055,53 @@ const ContentViewPage = () => {
                             {instructor?.name}
                           </h2>
 
-            {/* Designation */}
-            <div className="mt-1">
-              <span className="inline-block rounded-sm bg-[#fff0e8] px-2 py-[3px] text-[11px] font-semibold text-[#f47735]">
-                {instructor?.role || "Sinner trainer"}
-              </span>
-            </div>
+                          {/* Designation */}
+                          <div className="mt-1">
+                            <span className="inline-block rounded-sm bg-[#fff0e8] px-2 py-[3px] text-[11px] font-semibold text-[#f47735]">
+                              {"Senior trainer"}
+                            </span>
+                          </div>
 
-            {/* Info Row */}
-            <div className="mt-2 flex flex-wrap items-center gap-x-8 gap-y-1 text-[12px] text-[#555]">
-              <div className="flex items-center gap-1.5">
-                <Star size={12} className="fill-[#f6b900] text-[#f6b900]" />
-                <span>{instructor?.experience || '4 years'}</span>
-              </div>
-              {/* <div className="flex items-center gap-1.5">
+                          {/* Info Row */}
+                          <div className="mt-2 flex flex-wrap items-center gap-x-8 gap-y-1 text-[12px] text-[#555]">
+                            <div className="flex items-center gap-1.5">
+                              <Star
+                                size={12}
+                                className="fill-[#f6b900] text-[#f6b900]"
+                              />
+                              <span>{instructor?.experience || "4 years"}</span>
+                            </div>
+                            {/* <div className="flex items-center gap-1.5">
                 <span className="text-[#e58a52]">▤</span>
                 <span>{instructor?.certification || "--"}</span>
               </div> */}
                           </div>
 
-            {/* Specialization */}
-            <div className="mt-2">
-              <p className="text-[12px] font-medium text-[#f47735]">
-                Specialization
-              </p>
-              <p className="mt-0.5 text-[12px] text-[#555]">
-                {instructor?.skills?.join(' ,')}
-              </p>
-            </div>
+                          {/* Specialization */}
+                          <div className="mt-2">
+                            <p className="text-[12px] font-medium text-[#f47735]">
+                              Specialization
+                            </p>
+                            <p className="mt-0.5 text-[12px] text-[#555]">
+                              {instructor?.skills?.join(" ,")}
+                            </p>
+                          </div>
 
-            {/* About */}
-            <div className="mt-2 max-w-[720px]">
-              <h3 className="text-[16px] font-semibold text-[#f47735]">
-                About the Trainer
-              </h3>
-              <p className="mt-0.5 text-[12px] leading-[1.65] text-[#3f3f3f] md:text-[13px]">
-                {instructor?.profile?.bio}
-              </p>
-            </div>
-
-          </div>
-        </div>
-      </div>
-    </section>
-                 {/* <TrainerSection /> */}
+                          {/* About */}
+                          <div className="mt-2 max-w-[720px]">
+                            <h3 className="text-[16px] font-semibold text-[#f47735]">
+                              About the Trainer
+                            </h3>
+                            <p className="mt-0.5 text-[12px] leading-[1.65] text-[#3f3f3f] md:text-[13px]">
+                              {instructor?.profile?.bio}
+                            </p>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </section>
+                  {/* <TrainerSection /> */}
                 </>
-             
               ) : (
                 <div
                   className="
@@ -2119,13 +2116,10 @@ const ContentViewPage = () => {
       sm:py-5
     "
                 >
-                  {/* ================= MONTH HEADER ================= */}
-
-                  {/* ================= TIMELINE ================= */}
                   <div className="relative">
-                    {/* Vertical line */}
-                    <div
-                      className="
+                    {allcontent?.relatedSessions?.length > 0 && (
+                      <div
+                        className="
           absolute
           left-[21px]
           sm:left-0
@@ -2134,44 +2128,45 @@ const ContentViewPage = () => {
           w-[1px]
           bg-[#d8d8d8]
         "
-                    />
-
+                      />
+                    )}
                     <div className="space-y-3 sm:space-y-4">
-                      {allcontent?.relatedSessions?.map(
-                        (session: any, index: number) => {
-                          const startDate = session?.scheduledStart
-                            ? new Date(session.scheduledStart)
-                            : null;
+                      {allcontent?.relatedSessions?.length > 0 ? (
+                        allcontent?.relatedSessions?.map(
+                          (session: any, index: number) => {
+                            const startDate = session?.scheduledStart
+                              ? new Date(session.scheduledStart)
+                              : null;
 
-                          const endDate = session?.scheduledEnd
-                            ? new Date(session.scheduledEnd)
-                            : null;
+                            const endDate = session?.scheduledEnd
+                              ? new Date(session.scheduledEnd)
+                              : null;
 
-                          const date = startDate
-                            ? startDate
-                                .toLocaleDateString("en-GB", {
-                                  day: "2-digit",
-                                  month: "short",
-                                  weekday: "short",
-                                })
-                                .toUpperCase()
-                            : "";
-
-                          const time =
-                            startDate && endDate
-                              ? `${startDate.toLocaleTimeString("en-US", {
-                                  hour: "2-digit",
-                                  minute: "2-digit",
-                                })} to ${endDate.toLocaleTimeString("en-US", {
-                                  hour: "2-digit",
-                                  minute: "2-digit",
-                                })}`
+                            const date = startDate
+                              ? startDate
+                                  .toLocaleDateString("en-GB", {
+                                    day: "2-digit",
+                                    month: "short",
+                                    weekday: "short",
+                                  })
+                                  .toUpperCase()
                               : "";
 
-                          return (
-                            <div
-                              key={session?.id || index}
-                              className="
+                            const time =
+                              startDate && endDate
+                                ? `${startDate.toLocaleTimeString("en-US", {
+                                    hour: "2-digit",
+                                    minute: "2-digit",
+                                  })} to ${endDate.toLocaleTimeString("en-US", {
+                                    hour: "2-digit",
+                                    minute: "2-digit",
+                                  })}`
+                                : "";
+
+                            return (
+                              <div
+                                key={session?.id || index}
+                                className="
     relative
     grid
     grid-cols-[125px_minmax(0,1fr)]
@@ -2180,10 +2175,10 @@ const ContentViewPage = () => {
     sm:gap-4
     items-center
   "
-                            >
-                              {/* ================= TIMELINE DOT ================= */}
-                              <div
-                                className="
+                              >
+                                {/* ================= TIMELINE DOT ================= */}
+                                <div
+                                  className="
       absolute
       left-[16px]
       sm:left-0
@@ -2197,16 +2192,16 @@ const ContentViewPage = () => {
       border-white
       bg-[#ffe3d7]
     "
-                              />
+                                />
 
-                              {/* 
+                                {/* 
      2. UPDATED ACTIVE DOT LOGIC 
      Shows if it's the first item (index === 0) OR if it's the currently hovered item 
   */}
-                              {(index === 0 ||
-                                hoveredSessionIndex === index) && (
-                                <div
-                                  className="
+                                {(index === 0 ||
+                                  hoveredSessionIndex === index) && (
+                                  <div
+                                    className="
         absolute
         left-[16px]
         sm:left-0
@@ -2221,12 +2216,12 @@ const ContentViewPage = () => {
         border-white
         transition-all duration-200
       "
-                                />
-                              )}
+                                  />
+                                )}
 
-                              {/* ================= DATE CARD ================= */}
-                              <div
-                                className="
+                                {/* ================= DATE CARD ================= */}
+                                <div
+                                  className="
       relative
       ml-[29px]
       sm:ml-[22px]
@@ -2237,10 +2232,10 @@ const ContentViewPage = () => {
       shadow-[0_2px_8px_rgba(0,0,0,0.06)]
       overflow-hidden
     "
-                              >
-                                {/* Date */}
-                                <div
-                                  className="
+                                >
+                                  {/* Date */}
+                                  <div
+                                    className="
         mx-1
         mt-1
         rounded-[8px]
@@ -2249,23 +2244,23 @@ const ContentViewPage = () => {
         py-2
         text-center
       "
-                                >
-                                  <p
-                                    className="
+                                  >
+                                    <p
+                                      className="
           text-[11px]
           sm:text-[12px]
           font-semibold
           text-[#ff7148]
           uppercase
         "
-                                  >
-                                    {date}
-                                  </p>
-                                </div>
+                                    >
+                                      {date}
+                                    </p>
+                                  </div>
 
-                                {/* Time */}
-                                <p
-                                  className="
+                                  {/* Time */}
+                                  <p
+                                    className="
         px-2
         py-2
         text-center
@@ -2274,21 +2269,21 @@ const ContentViewPage = () => {
         text-gray-800
         whitespace-nowrap
       "
-                                >
-                                  {time}
-                                </p>
-                              </div>
+                                  >
+                                    {time}
+                                  </p>
+                                </div>
 
-                              {/* ================= SESSION CARD ================= */}
-                              <div
-                                // 3. ADDED onMouseEnter and onMouseLeave handlers
-                                onMouseEnter={() =>
-                                  setHoveredSessionIndex(index)
-                                }
-                                onMouseLeave={() =>
-                                  setHoveredSessionIndex(null)
-                                }
-                                className={`
+                                {/* ================= SESSION CARD ================= */}
+                                <div
+                                  // 3. ADDED onMouseEnter and onMouseLeave handlers
+                                  onMouseEnter={() =>
+                                    setHoveredSessionIndex(index)
+                                  }
+                                  onMouseLeave={() =>
+                                    setHoveredSessionIndex(null)
+                                  }
+                                  className={`
       relative
       min-w-0
       rounded-[13px]
@@ -2307,9 +2302,9 @@ const ContentViewPage = () => {
           : "border-[#eeeeee] hover:bg-gradient-to-r from-[#ffeee2] to-[#fff4ef] hover:border-[#ffd3c4] hover:shadow-[0_3px_10px_rgba(255,113,72,0.10)]"
       }
     `}
-                              >
-                                <div
-                                  className="
+                                >
+                                  <div
+                                    className="
         flex
         flex-col
         gap-3
@@ -2317,12 +2312,12 @@ const ContentViewPage = () => {
         sm:items-center
         sm:justify-between
       "
-                                >
-                                  {/* ================= SESSION INFO ================= */}
-                                  <div className="min-w-0 flex-1">
-                                    {/* Session number */}
-                                    <p
-                                      className="
+                                  >
+                                    {/* ================= SESSION INFO ================= */}
+                                    <div className="min-w-0 flex-1">
+                                      {/* Session number */}
+                                      <p
+                                        className="
             text-[9px]
             sm:text-[10px]
             uppercase
@@ -2331,13 +2326,13 @@ const ContentViewPage = () => {
             leading-none
             mb-0.5
           "
-                                    >
-                                      SESSION {index+1}
-                                    </p>
+                                      >
+                                        SESSION {index + 1}
+                                      </p>
 
-                                    {/* Title */}
-                                    <h3
-                                      className="
+                                      {/* Title */}
+                                      <h3
+                                        className="
             text-[13px]
             sm:text-base
             font-semibold
@@ -2346,13 +2341,13 @@ const ContentViewPage = () => {
             line-clamp-2
             sm:w-90
           "
-                                    >
-                                      {session?.title}
-                                    </h3>
+                                      >
+                                        {session?.title}
+                                      </h3>
 
-                                    {/* Category */}
-                                    <p
-                                      className="
+                                      {/* Category */}
+                                      <p
+                                        className="
             text-[10px]
             sm:text-sm
             font-medium
@@ -2360,40 +2355,41 @@ const ContentViewPage = () => {
             leading-tight
             mt-0.5
           "
-                                    >
-                                      IELTS English
-                                    </p>
+                                      >
+                                        IELTS English
+                                      </p>
 
-                                    {/* Instructor */}
-                                    <div
-                                      className="
+                                      {/* Instructor */}
+                                      <div
+                                        className="
             flex
             items-center
             gap-1
             mt-1
           "
-                                    >
-                                      <User
-                                        className="w-[14px] h-[14px] text-[#ff7148]"
-                                        strokeWidth={2.5}
-                                        fill="#f36d45"
-                                      />
+                                      >
+                                        <User
+                                          className="w-[14px] h-[14px] text-[#ff7148]"
+                                          strokeWidth={2.5}
+                                          fill="#f36d45"
+                                        />
 
-                                      <span
-                                        className="
+                                        <span
+                                          className="
               text-[10px]
               sm:text-sm
               text-[#4f4f4f]
             "
-                                      >
-                                        {session?.instructor?.name || "Rashmi"}
-                                      </span>
+                                        >
+                                          {session?.instructor?.name ||
+                                            "Rashmi"}
+                                        </span>
+                                      </div>
                                     </div>
-                                  </div>
 
-                                  {/* ================= RIGHT SIDE ================= */}
-                                  <div
-                                    className="
+                                    {/* ================= RIGHT SIDE ================= */}
+                                    <div
+                                      className="
           flex
           items-center
           justify-between
@@ -2403,10 +2399,10 @@ const ContentViewPage = () => {
           gap-2
           shrink-0
         "
-                                  >
-                                    {/* Status */}
-                                    <span
-                                      className="
+                                    >
+                                      {/* Status */}
+                                      <span
+                                        className="
             inline-flex
             items-center
             justify-center
@@ -2423,17 +2419,17 @@ const ContentViewPage = () => {
             font-medium
             text-[#ff7148]
           "
-                                    >
-                                      Upcoming
-                                    </span>
+                                      >
+                                        Upcoming
+                                      </span>
 
-                                    {/* Join button */}
-                                    <Link
-                                      to={`/sessions/${session?.slug}`}
-                                      onClick={() => {
-                                        setActiveTab("Overview");
-                                      }}
-                                      className="
+                                      {/* Join button */}
+                                      <Link
+                                        to={`/sessions/${session?.slug}`}
+                                        onClick={() => {
+                                          setActiveTab("Overview");
+                                        }}
+                                        className="
             inline-flex
             items-center
             justify-center
@@ -2450,16 +2446,89 @@ const ContentViewPage = () => {
             font-medium
             transition-colors
           "
-                                    >
-                                      Join Class
-                                      <span className="ml-1">›</span>
-                                    </Link>
+                                      >
+                                        Join Class
+                                        <span className="ml-1">›</span>
+                                      </Link>
+                                    </div>
                                   </div>
                                 </div>
                               </div>
+                            );
+                          },
+                        )
+                      ) : (
+                        <>
+                          <div
+                            className="
+            w-full
+            min-h-[220px]
+            rounded-[20px]
+            bg-white
+            px-5
+            py-8
+            sm:px-6
+            md:px-7
+            flex
+            flex-col
+            items-center
+            justify-center
+            text-center
+          "
+                          >
+                            {/* Icon */}
+                            <div
+                              className="
+              w-[58px]
+              h-[58px]
+              sm:w-[64px]
+              sm:h-[64px]
+              rounded-full
+              bg-[#fff1eb]
+              border
+              border-[#ffd8ca]
+              flex
+              items-center
+              justify-center
+              mb-4
+            "
+                            >
+                              <FileText
+                                className="w-7 h-7 sm:w-8 sm:h-8 text-[#ff7148]"
+                                strokeWidth={1.8}
+                              />
                             </div>
-                          );
-                        },
+
+                            {/* Title */}
+                            <h2
+                              className="
+              text-[17px]
+              sm:text-[18px]
+              font-semibold
+              text-[#202020]
+              mb-1.5
+            "
+                            >
+                              No Sessions Found
+                            </h2>
+
+                            {/* Description */}
+                            <p
+                              className="
+              max-w-[420px]
+              text-[13px]
+              sm:text-[14px]
+              leading-relaxed
+              text-[#888888]
+            "
+                            >
+                              There are no upcoming sessions for this module. It
+                              may be completed, or sessions may not have been
+                              scheduled yet. You can continue to the next
+                              module.
+                            </p>
+                          </div>
+                        </>
                       )}
                     </div>
                   </div>
@@ -2646,7 +2715,6 @@ export const UpcomingSessionCard = ({
                       xl:min-h-[122px]
                   "
       >
-        
         <div
           className="
                           pointer-events-none

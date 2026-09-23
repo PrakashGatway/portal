@@ -133,10 +133,9 @@ export default function App() {
             
               <Route path="/resources" element={<StudyMaterialPage />} />
 
+              <Route path="/custom-test" element={< CreateCustomTestPage/>} />
+              <Route path="/custom" element={< CustomTestsPage/>} />
 
-              <Route path="/custom-test" element={< CustomTestsPage/>} />
-
-              <Route path="/custom-test/create" element={< CreateCustomTestPage/>} />
 
               <Route
                 path="/resources/:slug"
@@ -288,7 +287,7 @@ export default function App() {
               path="/course/category"
               element={<CategorySelectionPage />}
             />
-            {/* <Route path="/checkout/:slug" element={<CheckoutPage />} /> */}
+            <Route path="/checkouts/:slug" element={<CheckoutPage />} />
             <Route path="/checkout/:slug" element={<ComingSoon />} />
 
             <Route path="/payment-status" element={<PaymentStatusPage />} />

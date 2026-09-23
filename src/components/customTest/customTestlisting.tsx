@@ -1,1167 +1,874 @@
-import React, { useCallback, useEffect, useMemo, useState } from "react";
-import axios from "axios";
-import { useNavigate } from "react-router";
+"use client";
+
+import React, { useEffect, useState } from "react";
 import {
-  AlertCircle,
   ArrowRight,
+  Award,
   BookOpen,
   CalendarDays,
   CheckCircle2,
+  ChevronRight,
   Clock3,
   FileQuestion,
-  Filter,
-  Loader2,
-  MoreVertical,
+  Flame,
+  Info,
+  Layers3,
   Play,
   Plus,
   RefreshCw,
-  Search,
   Sparkles,
   Target,
-  Trash2,
   Trophy,
-  X,
+  WalletCards,
   XCircle,
+  Zap,
 } from "lucide-react";
-import api from "../../axiosInstance";
-type CustomTestStatus =
-  | "draft"
-  | "ready"
-  | "started"
-  | "completed"
-  | "cancelled"
-  | "expired";
 
-interface Exam {
-  _id: string;
-  name?: string;
-  title?: string;
-  code?: string;
-}
+// ============================================================
+// TYPES
+// ============================================================
 
-interface CustomTest {
-  _id: string;
-  user?: string | { _id: string };
-
-  exam?: Exam | string;
-
+interface RecentTest {
+  id: string;
   title: string;
-  description?: string;
-
-  testType: "quiz" | "sectional" | "full_length";
-  selectionMode: "questions" | "filters";
-
-  totalQuestions: number;
-  durationMinutes: number;
-
-  status: CustomTestStatus;
-
-  questionIds?: string[];
-
-  selectedQuestions?: Array<{
-    question: string | { _id: string };
-    order: number;
-  }>;
-
-  filters?: {
-    sections?: string[];
-    questionTypes?: string[];
-    difficulties?: string[];
-    tags?: string[];
-    questionCount?: number;
-  };
-
-  attempt?: string | {
-    _id: string;
-    status?: string;
-  };
-
-  startedAt?: string;
-  completedAt?: string;
-  expiresAt?: string;
-
+  exam: string;
+  category: string;
+  questions: number;
+  duration: number;
+  score?: number;
+  maxScore?: number;
+  status: "completed" | "in-progress" | "not-started";
   createdAt: string;
-  updatedAt?: string;
+  difficulty: "Easy" | "Medium" | "Hard";
 }
 
-interface ApiResponse {
-  success?: boolean;
-  message?: string;
-  customTests?: CustomTest[];
-  tests?: CustomTest[];
-  data?: CustomTest[] | {
-    customTests?: CustomTest[];
-    tests?: CustomTest[];
-    items?: CustomTest[];
-  };
-}
+// ============================================================
+// DUMMY DATA
+// ============================================================
 
-const statusConfig: Record<
-  CustomTestStatus,
-  {
-    label: string;
-    className: string;
-    icon: React.ElementType;
-  }
-> = {
-  draft: {
-    label: "Draft",
-    className:
-      "bg-gray-100 text-gray-700 dark:bg-gray-700 dark:text-gray-200",
-    icon: FileQuestion,
-  },
-  ready: {
-    label: "Ready",
-    className:
-      "bg-orange-100 text-orange-700 dark:bg-orange-500/15 dark:text-orange-300",
-    icon: Sparkles,
-  },
-  started: {
-    label: "In Progress",
-    className:
-      "bg-blue-100 text-blue-700 dark:bg-blue-500/15 dark:text-blue-300",
-    icon: Play,
-  },
-  completed: {
-    label: "Completed",
-    className:
-      "bg-green-100 text-green-700 dark:bg-green-500/15 dark:text-green-300",
-    icon: CheckCircle2,
-  },
-  cancelled: {
-    label: "Cancelled",
-    className:
-      "bg-red-100 text-red-700 dark:bg-red-500/15 dark:text-red-300",
-    icon: XCircle,
-  },
-  expired: {
-    label: "Expired",
-    className:
-      "bg-yellow-100 text-yellow-700 dark:bg-yellow-500/15 dark:text-yellow-300",
-    icon: Clock3,
-  },
+const dummyUser = {
+  name: "Prakash",
+  tokens: 8,
+  totalTokens: 10,
 };
 
-const getExamName = (exam?: Exam | string) => {
-  if (!exam) return "Custom Practice";
-
-  if (typeof exam === "string") {
-    return exam;
-  }
-
-  return exam.name || exam.title || exam.code || "Custom Practice";
-};
-
-const formatDate = (date?: string) => {
-  if (!date) return "-";
-
-  return new Intl.DateTimeFormat("en-IN", {
-    day: "2-digit",
-    month: "short",
-    year: "numeric",
-  }).format(new Date(date));
-};
-
-const getStatus = (status?: CustomTestStatus): CustomTestStatus => {
-  return status || "draft";
-};
-
-export default function CustomTestsPage() {
-  const navigate = useNavigate();
-
-  const [tests, setTests] = useState<CustomTest[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [refreshing, setRefreshing] = useState(false);
-
-  const [search, setSearch] = useState("");
-  const [statusFilter, setStatusFilter] = useState<
-    "all" | CustomTestStatus
-  >("all");
-  const [examFilter, setExamFilter] = useState("all");
-
-  const [openMenu, setOpenMenu] = useState<string | null>(null);
-
-  const [deleteTest, setDeleteTest] = useState<CustomTest | null>(null);
-  const [deleting, setDeleting] = useState(false);
-
-  const [startingTestId, setStartingTestId] = useState<string | null>(null);
-
-  const [error, setError] = useState("");
-
-  /*
-   * ---------------------------------------------------------
-   * GET CUSTOM TESTS
-   * ---------------------------------------------------------
-   */
-
-  const fetchCustomTests = useCallback(
-    async (showLoader = true) => {
-      try {
-        setError("");
-
-        if (showLoader) {
-          setLoading(true);
-        } else {
-          setRefreshing(true);
-        }
-
-        const response = await api.get("/mcu/custom");
-
-        const responseData = response.data;
-
-        let list: CustomTest[] = [];
-
-        if (Array.isArray(responseData?.customTests)) {
-          list = responseData.customTests;
-        } else if (Array.isArray(responseData?.tests)) {
-          list = responseData.tests;
-        } else if (Array.isArray(responseData?.data)) {
-          list = responseData.data;
-        } else if (
-          responseData?.data &&
-          !Array.isArray(responseData.data)
-        ) {
-          list =
-            responseData.data.customTests ||
-            responseData.data.tests ||
-            responseData.data.items ||
-            [];
-        }
-
-        setTests(list);
-      } catch (err: any) {
-        console.error("Fetch custom tests error:", err);
-
-        setError(
-          err?.response?.data?.message ||
-            "Unable to load your custom tests.",
-        );
-      } finally {
-        setLoading(false);
-        setRefreshing(false);
-      }
+const examDetails = {
+  name: "SAT",
+  description:
+    "Build a personalized SAT practice test by selecting the sections, difficulty, question types, and number of questions you want to practice.",
+  sections: [
+    {
+      name: "Reading & Writing",
+      questions: "27–54",
+      duration: "32–64 min",
+      icon: BookOpen,
     },
-    [],
-  );
+    {
+      name: "Math",
+      questions: "22–44",
+      duration: "35–70 min",
+      icon: Target,
+    },
+  ],
+  features: [
+    "Choose specific sections",
+    "Select difficulty level",
+    "Customize question count",
+    "Practice specific question types",
+  ],
+};
+
+const recentTests: RecentTest[] = [
+  {
+    id: "1",
+    title: "SAT Math – Algebra Practice",
+    exam: "SAT",
+    category: "Math",
+    questions: 20,
+    duration: 35,
+    score: 17,
+    maxScore: 20,
+    status: "completed",
+    createdAt: "Today, 10:30 AM",
+    difficulty: "Medium",
+  },
+  {
+    id: "2",
+    title: "SAT Reading & Writing Drill",
+    exam: "SAT",
+    category: "Reading & Writing",
+    questions: 25,
+    duration: 40,
+    score: 21,
+    maxScore: 25,
+    status: "completed",
+    createdAt: "Yesterday, 6:20 PM",
+    difficulty: "Hard",
+  },
+  {
+    id: "3",
+    title: "SAT Mixed Practice Test",
+    exam: "SAT",
+    category: "Mixed",
+    questions: 40,
+    duration: 60,
+    status: "in-progress",
+    createdAt: "Sep 21, 2026",
+    difficulty: "Medium",
+  },
+  {
+    id: "4",
+    title: "SAT Math – Easy Warm Up",
+    exam: "SAT",
+    category: "Math",
+    questions: 15,
+    duration: 25,
+    status: "not-started",
+    createdAt: "Sep 20, 2026",
+    difficulty: "Easy",
+  },
+];
+
+// ============================================================
+// SKELETONS
+// ============================================================
+
+const TokenSkeleton = () => (
+  <div className="animate-pulse">
+    <div className="h-4 w-28 rounded bg-gray-200 dark:bg-gray-700" />
+    <div className="mt-3 h-10 w-32 rounded-lg bg-gray-200 dark:bg-gray-700" />
+    <div className="mt-3 h-2 w-full rounded-full bg-gray-200 dark:bg-gray-700" />
+  </div>
+);
+
+const TestCardSkeleton = () => (
+  <div className="rounded-2xl border border-gray-200 bg-white p-5 dark:border-gray-700 dark:bg-gray-800">
+    <div className="animate-pulse">
+      <div className="h-5 w-3/4 rounded bg-gray-200 dark:bg-gray-700" />
+
+      <div className="mt-3 h-4 w-1/2 rounded bg-gray-200 dark:bg-gray-700" />
+
+      <div className="mt-5 grid grid-cols-3 gap-3">
+        <div className="h-14 rounded-xl bg-gray-200 dark:bg-gray-700" />
+        <div className="h-14 rounded-xl bg-gray-200 dark:bg-gray-700" />
+        <div className="h-14 rounded-xl bg-gray-200 dark:bg-gray-700" />
+      </div>
+
+      <div className="mt-5 h-10 rounded-xl bg-gray-200 dark:bg-gray-700" />
+    </div>
+  </div>
+);
+
+// ============================================================
+// HELPERS
+// ============================================================
+
+const getStatusConfig = (status: RecentTest["status"]) => {
+  switch (status) {
+    case "completed":
+      return {
+        label: "Completed",
+        icon: CheckCircle2,
+        className:
+          "bg-green-50 text-green-700 border-green-200 dark:bg-green-500/10 dark:text-green-400 dark:border-green-500/20",
+      };
+
+    case "in-progress":
+      return {
+        label: "In Progress",
+        icon: RefreshCw,
+        className:
+          "bg-orange-50 text-orange-700 border-orange-200 dark:bg-orange-500/10 dark:text-orange-400 dark:border-orange-500/20",
+      };
+
+    default:
+      return {
+        label: "Not Started",
+        icon: Clock3,
+        className:
+          "bg-gray-50 text-gray-600 border-gray-200 dark:bg-gray-700/40 dark:text-gray-300 dark:border-gray-600",
+      };
+  }
+};
+
+const getDifficultyClass = (difficulty: RecentTest["difficulty"]) => {
+  switch (difficulty) {
+    case "Easy":
+      return "bg-green-50 text-green-700 dark:bg-green-500/10 dark:text-green-400";
+
+    case "Hard":
+      return "bg-red-50 text-red-700 dark:bg-red-500/10 dark:text-red-400";
+
+    default:
+      return "bg-orange-50 text-orange-700 dark:bg-orange-500/10 dark:text-orange-400";
+  }
+};
+
+// ============================================================
+// MAIN PAGE
+// ============================================================
+
+const CustomTestPage = () => {
+  const [loading, setLoading] = useState(true);
+  const [user] = useState(dummyUser);
 
   useEffect(() => {
-    fetchCustomTests();
-  }, [fetchCustomTests]);
+    const timer = setTimeout(() => {
+      setLoading(false);
+    }, 1200);
 
-  /*
-   * ---------------------------------------------------------
-   * EXAM FILTER OPTIONS
-   * ---------------------------------------------------------
-   */
+    return () => clearTimeout(timer);
+  }, []);
 
-  const exams = useMemo(() => {
-    const map = new Map<string, string>();
-
-    tests.forEach((test) => {
-      if (!test.exam) return;
-
-      if (typeof test.exam === "string") {
-        map.set(test.exam, test.exam);
-      } else {
-        const id = test.exam._id;
-
-        map.set(
-          id,
-          test.exam.name ||
-            test.exam.title ||
-            test.exam.code ||
-            "Exam",
-        );
-      }
-    });
-
-    return Array.from(map.entries()).map(([id, name]) => ({
-      id,
-      name,
-    }));
-  }, [tests]);
-
-  /*
-   * ---------------------------------------------------------
-   * FILTERED TESTS
-   * ---------------------------------------------------------
-   */
-
-  const filteredTests = useMemo(() => {
-    const query = search.trim().toLowerCase();
-
-    return tests.filter((test) => {
-      const examName = getExamName(test.exam).toLowerCase();
-
-      const matchesSearch =
-        !query ||
-        test.title?.toLowerCase().includes(query) ||
-        test.description?.toLowerCase().includes(query) ||
-        examName.includes(query);
-
-      const matchesStatus =
-        statusFilter === "all" ||
-        getStatus(test.status) === statusFilter;
-
-      const matchesExam =
-        examFilter === "all" ||
-        (typeof test.exam === "string"
-          ? test.exam === examFilter
-          : test.exam?._id === examFilter);
-
-      return matchesSearch && matchesStatus && matchesExam;
-    });
-  }, [tests, search, statusFilter, examFilter]);
-
-  /*
-   * ---------------------------------------------------------
-   * STATS
-   * ---------------------------------------------------------
-   */
-
-  const stats = useMemo(() => {
-    return {
-      total: tests.length,
-
-      inProgress: tests.filter(
-        (test) => test.status === "started",
-      ).length,
-
-      completed: tests.filter(
-        (test) => test.status === "completed",
-      ).length,
-
-      ready: tests.filter(
-        (test) => test.status === "ready",
-      ).length,
-    };
-  }, [tests]);
-
-  /*
-   * ---------------------------------------------------------
-   * START / CONTINUE TEST
-   * ---------------------------------------------------------
-   */
-
-  const handleStart = async (test: CustomTest) => {
-    try {
-      setStartingTestId(test._id);
-      setError("");
-
-      /*
-       * If your backend route is:
-       *
-       * POST /custom-tests/:id/start
-       *
-       * use this.
-       */
-
-      const response = await api.post(
-        `/mcu/custom/${test._id}/start`,
-      );
-
-      const attempt =
-        response.data?.attempt ||
-        response.data?.data?.attempt ||
-        response.data?.testAttempt;
-
-      const attemptId =
-        typeof attempt === "string"
-          ? attempt
-          : attempt?._id;
-
-      if (attemptId) {
-        navigate(`/test-attempt/${attemptId}`);
-        return;
-      }
-
-      /*
-       * Fallback if backend directly returns attempt ID.
-       */
-
-      if (response.data?.attemptId) {
-        navigate(`/test-attempt/${response.data.attemptId}`);
-        return;
-      }
-
-      /*
-       * If API only updates CustomTest, refresh the list.
-       */
-
-      await fetchCustomTests(false);
-
-      setError(
-        "Test started, but the attempt ID was not returned by the server.",
-      );
-    } catch (err: any) {
-      console.error("Start custom test error:", err);
-
-      setError(
-        err?.response?.data?.message ||
-          "Unable to start this custom test.",
-      );
-    } finally {
-      setStartingTestId(null);
-    }
-  };
-
-  /*
-   * ---------------------------------------------------------
-   * DELETE
-   * ---------------------------------------------------------
-   */
-
-  const handleDelete = async () => {
-    if (!deleteTest) return;
-
-    try {
-      setDeleting(true);
-      setError("");
-
-      await api.delete(`/custom-tests/${deleteTest._id}`);
-
-      setTests((prev) =>
-        prev.filter((item) => item._id !== deleteTest._id),
-      );
-
-      setDeleteTest(null);
-    } catch (err: any) {
-      console.error("Delete custom test error:", err);
-
-      setError(
-        err?.response?.data?.message ||
-          "Unable to delete this custom test.",
-      );
-    } finally {
-      setDeleting(false);
-    }
-  };
-
-  /*
-   * ---------------------------------------------------------
-   * ACTION BUTTON
-   * ---------------------------------------------------------
-   */
-
-  const getPrimaryAction = (test: CustomTest) => {
-    if (test.status === "started") {
-      return {
-        label: "Continue Test",
-        icon: Play,
-      };
-    }
-
-    if (test.status === "completed") {
-      return {
-        label: "View Result",
-        icon: Trophy,
-      };
-    }
-
-    if (
-      test.status === "ready" ||
-      test.status === "draft"
-    ) {
-      return {
-        label: "Start Test",
-        icon: Play,
-      };
-    }
-
-    return {
-      label: "View Test",
-      icon: ArrowRight,
-    };
-  };
-
-  const handlePrimaryAction = (test: CustomTest) => {
-    if (test.status === "completed") {
-      if (typeof test.attempt === "string") {
-        navigate(`/test-result/${test.attempt}`);
-      } else if (test.attempt?._id) {
-        navigate(`/test-result/${test.attempt._id}`);
-      } else {
-        navigate(`/custom-tests/${test._id}/result`);
-      }
-
-      return;
-    }
-
-    if (
-      test.status === "ready" ||
-      test.status === "draft" ||
-      test.status === "started"
-    ) {
-      handleStart(test);
-      return;
-    }
-
-    navigate(`/custom-tests/${test._id}`);
-  };
-
-  /*
-   * ---------------------------------------------------------
-   * LOADING
-   * ---------------------------------------------------------
-   */
-
-  if (loading) {
-    return (
-      <div className="min-h-screen bg-gray-50 dark:bg-gray-950">
-        <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
-          <div className="animate-pulse space-y-6">
-            <div className="h-10 w-64 rounded-xl bg-gray-200 dark:bg-gray-800" />
-
-            <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
-              {[1, 2, 3, 4].map((item) => (
-                <div
-                  key={item}
-                  className="h-28 rounded-2xl bg-gray-200 dark:bg-gray-800"
-                />
-              ))}
-            </div>
-
-            <div className="h-16 rounded-2xl bg-gray-200 dark:bg-gray-800" />
-
-            <div className="grid gap-5 md:grid-cols-2 xl:grid-cols-3">
-              {[1, 2, 3, 4, 5, 6].map((item) => (
-                <div
-                  key={item}
-                  className="h-72 rounded-3xl bg-gray-200 dark:bg-gray-800"
-                />
-              ))}
-            </div>
-          </div>
-        </div>
-      </div>
-    );
-  }
+  const tokenPercentage = Math.min(
+    (user.tokens / user.totalTokens) * 100,
+    100
+  );
 
   return (
-    <div
-      className="min-h-screen bg-gray-50 text-gray-900 dark:bg-gray-950 dark:text-white"
-      onClick={() => setOpenMenu(null)}
-    >
-      <div className="mx-auto max-w-7xl px-4 py-6 sm:px-6 lg:px-8 lg:py-8">
-        {/* =====================================================
-            HEADER
-        ====================================================== */}
+    <div className="min-h-screen bg-gray-50 text-gray-900 dark:bg-gray-950 dark:text-white">
+      {/* =====================================================
+          HERO
+      ====================================================== */}
 
-        <div className="mb-7 flex flex-col gap-5 lg:flex-row lg:items-center lg:justify-between">
-          <div>
-            <div className="mb-2 inline-flex items-center gap-2 rounded-full bg-orange-100 px-3 py-1 text-xs font-semibold text-orange-700 dark:bg-orange-500/10 dark:text-orange-300">
-              <Sparkles size={14} />
-              Personalized Practice
-            </div>
+      <section className="relative overflow-hidden border-b border-gray-200 bg-white dark:border-gray-800 dark:bg-gray-900">
+        {/* Background decorations */}
+        <div className="pointer-events-none absolute -right-32 -top-32 h-80 w-80 rounded-full bg-orange-200/30 blur-3xl dark:bg-orange-500/10" />
 
-            <h1 className="text-2xl font-bold tracking-tight sm:text-3xl">
-              My Custom Tests
-            </h1>
+        <div className="pointer-events-none absolute -bottom-40 left-1/3 h-80 w-80 rounded-full bg-amber-200/20 blur-3xl dark:bg-amber-500/10" />
 
-            <p className="mt-1 max-w-2xl text-sm text-gray-500 dark:text-gray-400">
-              Create, manage and practice tests built specifically
-              for your preparation.
-            </p>
-          </div>
+        <div className="relative mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8 lg:py-12">
+          <div className="grid gap-8 lg:grid-cols-[1fr_360px] lg:items-center">
+            {/* Hero content */}
+            <div>
+              <div className="mb-4 inline-flex items-center gap-2 rounded-full border border-orange-200 bg-orange-50 px-3 py-1.5 text-sm font-medium text-orange-700 dark:border-orange-500/20 dark:bg-orange-500/10 dark:text-orange-400">
+                <Sparkles size={15} />
+                Personalized Practice
+              </div>
 
-          <div className="flex items-center gap-2">
-            <button
-              type="button"
-              onClick={(e) => {
-                e.stopPropagation();
-                fetchCustomTests(false);
-              }}
-              disabled={refreshing}
-              className="inline-flex h-11 items-center justify-center gap-2 rounded-xl border border-gray-200 bg-white px-4 text-sm font-semibold transition hover:bg-gray-50 disabled:opacity-60 dark:border-gray-800 dark:bg-gray-900 dark:hover:bg-gray-800"
-            >
-              <RefreshCw
-                size={17}
-                className={refreshing ? "animate-spin" : ""}
-              />
-              <span className="hidden sm:inline">Refresh</span>
-            </button>
+              <h1 className="max-w-3xl text-3xl font-bold tracking-tight sm:text-4xl lg:text-5xl">
+                Create Your{" "}
+                <span className="text-orange-500">Custom Test</span>
+              </h1>
 
-            <button
-              type="button"
-              onClick={(e) => {
-                e.stopPropagation();
-                navigate("/custom-tests/create");
-              }}
-              className="inline-flex h-11 items-center justify-center gap-2 rounded-xl bg-orange-500 px-4 text-sm font-bold text-white shadow-lg shadow-orange-500/20 transition hover:bg-orange-600 active:scale-[0.98]"
-            >
-              <Plus size={18} />
-              Create Custom Test
-            </button>
-          </div>
-        </div>
+              <p className="mt-4 max-w-2xl text-base leading-7 text-gray-600 dark:text-gray-400 sm:text-lg">
+                Build a practice test that matches exactly what you want to
+                practice. Choose your exam, sections, difficulty, question
+                types, and test length.
+              </p>
 
-        {/* =====================================================
-            ERROR
-        ====================================================== */}
-
-        {error && (
-          <div
-            onClick={(e) => e.stopPropagation()}
-            className="mb-6 flex items-start gap-3 rounded-2xl border border-red-200 bg-red-50 p-4 text-red-700 dark:border-red-900/50 dark:bg-red-950/30 dark:text-red-300"
-          >
-            <AlertCircle className="mt-0.5 shrink-0" size={18} />
-
-            <div className="flex-1 text-sm font-medium">
-              {error}
-            </div>
-
-            <button
-              type="button"
-              onClick={() => setError("")}
-              className="rounded-lg p-1 hover:bg-red-100 dark:hover:bg-red-900/30"
-            >
-              <X size={16} />
-            </button>
-          </div>
-        )}
-
-        {/* =====================================================
-            STATS
-        ====================================================== */}
-
-
-        {/* =====================================================
-            FILTER BAR
-        ====================================================== */}
-
-        <div
-          onClick={(e) => e.stopPropagation()}
-          className="mb-7 rounded-2xl border border-gray-200 bg-white p-3 shadow-sm dark:border-gray-800 dark:bg-gray-900"
-        >
-          <div className="flex flex-col gap-3 lg:flex-row">
-            {/* Search */}
-
-            <div className="relative flex-1">
-              <Search
-                size={18}
-                className="absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400"
-              />
-
-              <input
-                value={search}
-                onChange={(e) => setSearch(e.target.value)}
-                placeholder="Search custom tests..."
-                className="h-11 w-full rounded-xl border border-gray-200 bg-gray-50 pl-10 pr-10 text-sm outline-none transition placeholder:text-gray-400 focus:border-orange-400 focus:ring-2 focus:ring-orange-500/10 dark:border-gray-700 dark:bg-gray-800 dark:focus:border-orange-500"
-              />
-
-              {search && (
+              <div className="mt-7 flex flex-col gap-3 sm:flex-row">
                 <button
                   type="button"
-                  onClick={() => setSearch("")}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-700 dark:hover:text-white"
+                  className="
+                    group inline-flex items-center justify-center gap-2
+                    rounded-xl bg-orange-500 px-6 py-3.5
+                    text-sm font-semibold text-white
+                    shadow-lg shadow-orange-500/20
+                    transition
+                    hover:bg-orange-600
+                    hover:shadow-xl hover:shadow-orange-500/25
+                  "
                 >
-                  <X size={16} />
+                  <Plus size={19} />
+
+                  Start Creating Test
+
+                  <ArrowRight
+                    size={17}
+                    className="transition-transform group-hover:translate-x-1"
+                  />
                 </button>
-              )}
-            </div>
 
-            {/* Status */}
-
-            <div className="relative min-w-[170px]">
-              <Filter
-                size={16}
-                className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400"
-              />
-
-              <select
-                value={statusFilter}
-                onChange={(e) =>
-                  setStatusFilter(
-                    e.target.value as
-                      | "all"
-                      | CustomTestStatus,
-                  )
-                }
-                className="h-11 w-full appearance-none rounded-xl border border-gray-200 bg-gray-50 pl-9 pr-8 text-sm font-medium outline-none focus:border-orange-400 dark:border-gray-700 dark:bg-gray-800"
-              >
-                <option value="all">All Status</option>
-                <option value="draft">Draft</option>
-                <option value="ready">Ready</option>
-                <option value="started">In Progress</option>
-                <option value="completed">Completed</option>
-                <option value="cancelled">Cancelled</option>
-                <option value="expired">Expired</option>
-              </select>
-            </div>
-
-            {/* Exam */}
-
-            <select
-              value={examFilter}
-              onChange={(e) => setExamFilter(e.target.value)}
-              className="h-11 min-w-[170px] rounded-xl border border-gray-200 bg-gray-50 px-3 text-sm font-medium outline-none focus:border-orange-400 dark:border-gray-700 dark:bg-gray-800"
-            >
-              <option value="all">All Exams</option>
-
-              {exams.map((exam) => (
-                <option key={exam.id} value={exam.id}>
-                  {exam.name}
-                </option>
-              ))}
-            </select>
-          </div>
-        </div>
-
-        {/* =====================================================
-            RESULT COUNT
-        ====================================================== */}
-
-        <div className="mb-4 flex items-center justify-between">
-          <div className="text-sm text-gray-500 dark:text-gray-400">
-            Showing{" "}
-            <span className="font-semibold text-gray-900 dark:text-white">
-              {filteredTests.length}
-            </span>{" "}
-            {filteredTests.length === 1 ? "test" : "tests"}
-          </div>
-
-          {(search ||
-            statusFilter !== "all" ||
-            examFilter !== "all") && (
-            <button
-              type="button"
-              onClick={() => {
-                setSearch("");
-                setStatusFilter("all");
-                setExamFilter("all");
-              }}
-              className="text-xs font-semibold text-orange-600 hover:text-orange-700 dark:text-orange-400"
-            >
-              Clear filters
-            </button>
-          )}
-        </div>
-
-        {/* =====================================================
-            EMPTY STATE
-        ====================================================== */}
-
-        {filteredTests.length === 0 ? (
-          <div className="rounded-3xl border border-dashed border-gray-300 bg-white px-6 py-16 text-center dark:border-gray-700 dark:bg-gray-900">
-            <div className="mx-auto mb-5 flex h-16 w-16 items-center justify-center rounded-2xl bg-orange-100 text-orange-600 dark:bg-orange-500/10 dark:text-orange-400">
-              <FileQuestion size={30} />
-            </div>
-
-            <h2 className="text-lg font-bold">
-              {tests.length === 0
-                ? "No custom tests yet"
-                : "No tests found"}
-            </h2>
-
-            <p className="mx-auto mt-2 max-w-md text-sm text-gray-500 dark:text-gray-400">
-              {tests.length === 0
-                ? "Build your own personalized practice test by selecting questions or applying filters."
-                : "Try changing your search or filters to find another custom test."}
-            </p>
-
-            {tests.length === 0 ? (
-              <button
-                type="button"
-                onClick={() =>
-                  navigate("/custom-tests/create")
-                }
-                className="mt-6 inline-flex h-11 items-center gap-2 rounded-xl bg-orange-500 px-5 text-sm font-bold text-white transition hover:bg-orange-600"
-              >
-                <Plus size={18} />
-                Create Your First Test
-              </button>
-            ) : (
-              <button
-                type="button"
-                onClick={() => {
-                  setSearch("");
-                  setStatusFilter("all");
-                  setExamFilter("all");
-                }}
-                className="mt-6 rounded-xl border border-gray-200 px-5 py-2.5 text-sm font-semibold dark:border-gray-700"
-              >
-                Clear Filters
-              </button>
-            )}
-          </div>
-        ) : (
-          /* =====================================================
-             TEST GRID
-          ====================================================== */
-
-          <div className="grid gap-5 md:grid-cols-2 xl:grid-cols-3">
-            {filteredTests.map((test) => {
-              const status = getStatus(test.status);
-              const config = statusConfig[status];
-              const StatusIcon = config.icon;
-
-              const primaryAction = getPrimaryAction(test);
-              const PrimaryIcon = primaryAction.icon;
-
-              const isStarting =
-                startingTestId === test._id;
-
-              return (
-                <div
-                  key={test._id}
-                  onClick={(e) => e.stopPropagation()}
-                  className="group relative overflow-hidden rounded-3xl border border-gray-200 bg-white shadow-sm transition duration-300 hover:-translate-y-1 hover:shadow-xl hover:shadow-gray-200/50 dark:border-gray-800 dark:bg-gray-900 dark:hover:shadow-black/20"
+                <button
+                  type="button"
+                  className="
+                    inline-flex items-center justify-center gap-2
+                    rounded-xl border border-gray-200
+                    bg-white px-6 py-3.5
+                    text-sm font-semibold text-gray-700
+                    transition hover:bg-gray-50
+                    dark:border-gray-700 dark:bg-gray-800
+                    dark:text-gray-200 dark:hover:bg-gray-750
+                  "
                 >
-                  {/* Orange top accent */}
+                  <Info size={18} />
+                  How It Works
+                </button>
+              </div>
+            </div>
 
-                  <div className="absolute inset-x-0 top-0 h-1 bg-gradient-to-r from-orange-400 via-orange-500 to-yellow-400" />
+            {/* Token Card */}
+            <div
+              className="
+                relative overflow-hidden rounded-3xl
+                border border-orange-200
+                bg-gradient-to-br from-orange-500 via-orange-500 to-amber-500
+                p-6 text-white shadow-xl shadow-orange-500/20
+              "
+            >
+              <div className="absolute -right-12 -top-12 h-32 w-32 rounded-full bg-white/10" />
+              <div className="absolute -bottom-16 -left-12 h-36 w-36 rounded-full bg-white/10" />
 
-                  <div className="p-5 sm:p-6">
-                    {/* Card Header */}
+              {loading ? (
+                <div className="relative rounded-2xl bg-white/10 p-4">
+                  <div className="animate-pulse">
+                    <div className="h-4 w-32 rounded bg-white/20" />
+                    <div className="mt-4 h-12 w-28 rounded bg-white/20" />
+                    <div className="mt-5 h-2 rounded-full bg-white/20" />
+                  </div>
+                </div>
+              ) : (
+                <div className="relative">
+                  <div className="flex items-start justify-between">
+                    <div>
+                      <p className="text-sm font-medium text-orange-100">
+                        Your Available Tokens
+                      </p>
 
-                    <div className="mb-5 flex items-start justify-between gap-3">
-                      <div className="flex min-w-0 items-center gap-3">
-                        <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-orange-100 text-orange-600 dark:bg-orange-500/10 dark:text-orange-400">
-                          <BookOpen size={21} />
-                        </div>
+                      <div className="mt-2 flex items-end gap-2">
+                        <span className="text-4xl font-bold">
+                          {user.tokens}
+                        </span>
 
-                        <div className="min-w-0">
-                          <p className="truncate text-xs font-semibold uppercase tracking-wide text-orange-600 dark:text-orange-400">
-                            {getExamName(test.exam)}
-                          </p>
-
-                          <p className="mt-0.5 text-xs text-gray-400">
-                            {test.testType
-                              .replace("_", " ")
-                              .replace(/\b\w/g, (c) =>
-                                c.toUpperCase(),
-                              )}
-                          </p>
-                        </div>
-                      </div>
-
-                      {/* Menu */}
-
-                      <div className="relative">
-                        <button
-                          type="button"
-                          onClick={(e) => {
-                            e.stopPropagation();
-
-                            setOpenMenu((current) =>
-                              current === test._id
-                                ? null
-                                : test._id,
-                            );
-                          }}
-                          className="flex h-9 w-9 items-center justify-center rounded-xl text-gray-400 transition hover:bg-gray-100 hover:text-gray-700 dark:hover:bg-gray-800 dark:hover:text-white"
-                        >
-                          <MoreVertical size={18} />
-                        </button>
-
-                        {openMenu === test._id && (
-                          <div
-                            onClick={(e) => e.stopPropagation()}
-                            className="absolute right-0 top-10 z-20 w-44 overflow-hidden rounded-xl border border-gray-200 bg-white p-1.5 shadow-xl dark:border-gray-700 dark:bg-gray-900"
-                          >
-                            <button
-                              type="button"
-                              onClick={() => {
-                                setOpenMenu(null);
-                                navigate(
-                                 test.status !== "started" ? `/custom-tests/${test._id}` : `/mcq/tests/${test.attempt}?type=custom`
-                                );
-                              }}
-                              className="flex w-full items-center gap-2 rounded-lg px-3 py-2.5 text-left text-sm font-medium hover:bg-gray-100 dark:hover:bg-gray-800"
-                            >
-                              <ArrowRight size={16} />
-                              View Details
-                            </button>
-
-                            {test.status !== "completed" && (
-                              <button
-                                type="button"
-                                onClick={() => {
-                                  setOpenMenu(null);
-                                  handlePrimaryAction(test);
-                                }}
-                                className="flex w-full items-center gap-2 rounded-lg px-3 py-2.5 text-left text-sm font-medium hover:bg-gray-100 dark:hover:bg-gray-800"
-                              >
-                                <Play size={16} />
-                                {test.status === "started"
-                                  ? "Continue"
-                                  : "Start Test"}
-                              </button>
-                            )}
-
-                            <button
-                              type="button"
-                              onClick={() => {
-                                setOpenMenu(null);
-                                setDeleteTest(test);
-                              }}
-                              className="flex w-full items-center gap-2 rounded-lg px-3 py-2.5 text-left text-sm font-medium text-red-600 hover:bg-red-50 dark:text-red-400 dark:hover:bg-red-950/30"
-                            >
-                              <Trash2 size={16} />
-                              Delete
-                            </button>
-                          </div>
-                        )}
+                        <span className="mb-1 text-sm text-orange-100">
+                          tokens
+                        </span>
                       </div>
                     </div>
 
-                    {/* Status */}
+                    <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-white/15 backdrop-blur-sm">
+                      <Zap size={24} />
+                    </div>
+                  </div>
 
-                    <div className="mb-3">
-                      <span
-                        className={`inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-xs font-bold ${config.className}`}
-                      >
-                        <StatusIcon size={13} />
-                        {config.label}
+                  <div className="mt-5">
+                    <div className="mb-2 flex items-center justify-between text-xs text-orange-100">
+                      <span>Token usage</span>
+                      <span>
+                        {user.tokens}/{user.totalTokens}
                       </span>
                     </div>
 
-                    {/* Title */}
-
-                    <h2 className="line-clamp-2 min-h-[56px] text-lg font-bold leading-7 text-gray-900 dark:text-white">
-                      {test.title}
-                    </h2>
-
-                    <p className="mt-2 line-clamp-2 min-h-[40px] text-sm leading-5 text-gray-500 dark:text-gray-400">
-                      {test.description ||
-                        "Personalized practice test created from your selected questions."}
-                    </p>
-
-                    {/* Stats */}
-
-                    <div className="my-5 grid grid-cols-2 gap-2">
-                      <InfoItem
-                        icon={FileQuestion}
-                        label="Questions"
-                        value={test.totalQuestions}
-                      />
-
-                      <InfoItem
-                        icon={Clock3}
-                        label="Duration"
-                        value={`${test.durationMinutes} min`}
+                    <div className="h-2 overflow-hidden rounded-full bg-black/10">
+                      <div
+                        className="h-full rounded-full bg-white transition-all"
+                        style={{ width: `${tokenPercentage}%` }}
                       />
                     </div>
-
-                    {/* Selection */}
-
-                    <div className="mb-5 rounded-xl bg-gray-50 px-3.5 py-3 dark:bg-gray-800/70">
-                      <div className="flex items-center justify-between gap-3">
-                        <span className="text-xs font-medium text-gray-500 dark:text-gray-400">
-                          Created using
-                        </span>
-
-                        <span className="text-xs font-bold text-gray-800 dark:text-gray-200">
-                          {test.selectionMode ===
-                          "questions"
-                            ? "Selected Questions"
-                            : "Smart Filters"}
-                        </span>
-                      </div>
-
-                      {test.selectionMode ===
-                        "filters" &&
-                        test.filters && (
-                          <div className="mt-2 flex flex-wrap gap-1.5">
-                            {test.filters.difficulties
-                              ?.slice(0, 3)
-                              .map((difficulty) => (
-                                <span
-                                  key={difficulty}
-                                  className="rounded-md bg-orange-100 px-2 py-1 text-[10px] font-semibold text-orange-700 dark:bg-orange-500/10 dark:text-orange-300"
-                                >
-                                  {difficulty}
-                                </span>
-                              ))}
-
-                            {test.filters.questionCount && (
-                              <span className="rounded-md bg-gray-200 px-2 py-1 text-[10px] font-semibold text-gray-600 dark:bg-gray-700 dark:text-gray-300">
-                                {test.filters.questionCount} selected
-                              </span>
-                            )}
-                          </div>
-                        )}
-                    </div>
-
-                    {/* Date */}
-
-                    <div className="mb-5 flex items-center gap-2 text-xs text-gray-400">
-                      <CalendarDays size={14} />
-                      Created {formatDate(test.createdAt)}
-                    </div>
-
-                    {/* Primary Action */}
-
-                    <button
-                      type="button"
-                      disabled={isStarting}
-                      onClick={() =>
-                        handlePrimaryAction(test)
-                      }
-                      className="flex h-11 w-full items-center justify-center gap-2 rounded-xl bg-orange-500 px-4 text-sm font-bold text-white shadow-md shadow-orange-500/20 transition hover:bg-orange-600 disabled:cursor-not-allowed disabled:opacity-60"
-                    >
-                      {isStarting ? (
-                        <>
-                          <Loader2
-                            size={17}
-                            className="animate-spin"
-                          />
-                          Starting...
-                        </>
-                      ) : (
-                        <>
-                          <PrimaryIcon size={17} />
-                          {primaryAction.label}
-                          <ArrowRight
-                            size={16}
-                            className="ml-auto"
-                          />
-                        </>
-                      )}
-                    </button>
                   </div>
+
+                  <p className="mt-4 text-xs leading-5 text-orange-100">
+                    1 token is used whenever you create a new custom test.
+                  </p>
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* =====================================================
+          EXAM DETAILS
+      ====================================================== */}
+
+      <main className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8 lg:py-10">
+        <section>
+          <div className="mb-5 flex items-end justify-between gap-4">
+            <div>
+              <div className="mb-2 flex items-center gap-2">
+                <span className="h-2 w-2 rounded-full bg-orange-500" />
+
+                <span className="text-sm font-semibold uppercase tracking-wider text-orange-500">
+                  Selected Exam
+                </span>
+              </div>
+
+              <h2 className="text-2xl font-bold sm:text-3xl">
+                {examDetails.name} Custom Test
+              </h2>
+            </div>
+
+            <button
+              type="button"
+              className="hidden items-center gap-1 text-sm font-semibold text-orange-500 hover:text-orange-600 sm:flex"
+            >
+              Change Exam
+              <ChevronRight size={16} />
+            </button>
+          </div>
+
+          <div className="overflow-hidden rounded-3xl border border-gray-200 bg-white shadow-sm dark:border-gray-800 dark:bg-gray-900">
+            <div className="grid lg:grid-cols-[1.1fr_1fr]">
+              {/* Description */}
+              <div className="border-b border-gray-200 p-6 dark:border-gray-800 lg:border-b-0 lg:border-r lg:p-8">
+                <div className="flex items-start gap-4">
+                  <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl bg-orange-100 text-orange-600 dark:bg-orange-500/10 dark:text-orange-400">
+                    <Award size={27} />
+                  </div>
+
+                  <div>
+                    <h3 className="text-xl font-bold">SAT</h3>
+
+                    <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
+                      Digital SAT
+                    </p>
+                  </div>
+                </div>
+
+                <p className="mt-6 leading-7 text-gray-600 dark:text-gray-400">
+                  {examDetails.description}
+                </p>
+
+                <div className="mt-6 grid gap-3 sm:grid-cols-2">
+                  {examDetails.features.map((feature) => (
+                    <div
+                      key={feature}
+                      className="flex items-center gap-2 text-sm text-gray-700 dark:text-gray-300"
+                    >
+                      <CheckCircle2
+                        size={17}
+                        className="shrink-0 text-green-500"
+                      />
+
+                      {feature}
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              {/* Sections */}
+              <div className="p-6 lg:p-8">
+                <div className="mb-5">
+                  <h3 className="font-bold">SAT Sections</h3>
+
+                  <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
+                    Choose one or both sections while creating your test.
+                  </p>
+                </div>
+
+                <div className="space-y-3">
+                  {examDetails.sections.map((section) => {
+                    const Icon = section.icon;
+
+                    return (
+                      <div
+                        key={section.name}
+                        className="
+                          flex items-center gap-4 rounded-2xl
+                          border border-gray-200 p-4
+                          transition hover:border-orange-300
+                          hover:bg-orange-50/40
+                          dark:border-gray-700
+                          dark:hover:border-orange-500/40
+                          dark:hover:bg-orange-500/5
+                        "
+                      >
+                        <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-gray-100 text-gray-600 dark:bg-gray-800 dark:text-gray-300">
+                          <Icon size={20} />
+                        </div>
+
+                        <div className="min-w-0 flex-1">
+                          <h4 className="truncate text-sm font-semibold">
+                            {section.name}
+                          </h4>
+
+                          <div className="mt-1 flex flex-wrap gap-x-4 gap-y-1 text-xs text-gray-500 dark:text-gray-400">
+                            <span>{section.questions} questions</span>
+                            <span>{section.duration}</span>
+                          </div>
+                        </div>
+
+                        <ChevronRight
+                          size={18}
+                          className="text-gray-400"
+                        />
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        {/* =====================================================
+            PROCESS
+        ====================================================== */}
+
+        <section className="mt-12">
+          <div className="mb-6">
+            <div className="mb-2 flex items-center gap-2">
+              <span className="h-2 w-2 rounded-full bg-orange-500" />
+
+              <span className="text-sm font-semibold uppercase tracking-wider text-orange-500">
+                Simple Process
+              </span>
+            </div>
+
+            <h2 className="text-2xl font-bold sm:text-3xl">
+              How to attempt a Custom Test
+            </h2>
+
+            <p className="mt-2 max-w-2xl text-gray-500 dark:text-gray-400">
+              Create a test in a few simple steps and start practicing
+              exactly what you need.
+            </p>
+          </div>
+
+          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+            {[
+              {
+                step: "01",
+                title: "Choose Exam",
+                description:
+                  "Select the exam and section you want to practice.",
+                icon: Layers3,
+              },
+              {
+                step: "02",
+                title: "Customize",
+                description:
+                  "Select question count, difficulty and question types.",
+                icon: SlidersHorizontalIcon,
+              },
+              {
+                step: "03",
+                title: "Create Test",
+                description:
+                  "Use one token to generate your personalized test.",
+                icon: Sparkles,
+              },
+              {
+                step: "04",
+                title: "Start Attempt",
+                description:
+                  "Begin your test and review your performance afterwards.",
+                icon: Play,
+              },
+            ].map((item) => {
+              const Icon = item.icon;
+
+              return (
+                <div
+                  key={item.step}
+                  className="
+                    relative rounded-2xl border border-gray-200
+                    bg-white p-5 shadow-sm
+                    dark:border-gray-800 dark:bg-gray-900
+                  "
+                >
+                  <div className="flex items-center justify-between">
+                    <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-orange-50 text-orange-500 dark:bg-orange-500/10">
+                      <Icon size={21} />
+                    </div>
+
+                    <span className="text-3xl font-black text-gray-100 dark:text-gray-800">
+                      {item.step}
+                    </span>
+                  </div>
+
+                  <h3 className="mt-5 font-bold">{item.title}</h3>
+
+                  <p className="mt-2 text-sm leading-6 text-gray-500 dark:text-gray-400">
+                    {item.description}
+                  </p>
                 </div>
               );
             })}
           </div>
-        )}
-      </div>
+        </section>
 
-      {/* =======================================================
-          DELETE MODAL
-      ======================================================== */}
+        {/* =====================================================
+            RECENT TESTS
+        ====================================================== */}
 
-      {deleteTest && (
-        <div
-          className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4 backdrop-blur-sm"
-          onClick={() => !deleting && setDeleteTest(null)}
-        >
-          <div
-            onClick={(e) => e.stopPropagation()}
-            className="w-full max-w-md rounded-3xl border border-gray-200 bg-white p-6 shadow-2xl dark:border-gray-800 dark:bg-gray-900"
-          >
-            <div className="mb-5 flex h-12 w-12 items-center justify-center rounded-xl bg-red-100 text-red-600 dark:bg-red-500/10 dark:text-red-400">
-              <Trash2 size={22} />
+        <section className="mt-12">
+          <div className="mb-6 flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
+            <div>
+              <div className="mb-2 flex items-center gap-2">
+                <span className="h-2 w-2 rounded-full bg-orange-500" />
+
+                <span className="text-sm font-semibold uppercase tracking-wider text-orange-500">
+                  Your Practice
+                </span>
+              </div>
+
+              <h2 className="text-2xl font-bold sm:text-3xl">
+                Recent Custom Tests
+              </h2>
+
+              <p className="mt-2 text-sm text-gray-500 dark:text-gray-400">
+                Continue an unfinished test or review your previous attempts.
+              </p>
             </div>
 
-            <h3 className="text-lg font-bold">
-              Delete custom test?
-            </h3>
+            <button
+              type="button"
+              className="hidden items-center gap-1 text-sm font-semibold text-orange-500 sm:flex"
+            >
+              View All
+              <ArrowRight size={16} />
+            </button>
+          </div>
 
-            <p className="mt-2 text-sm leading-6 text-gray-500 dark:text-gray-400">
-              Are you sure you want to delete{" "}
-              <span className="font-semibold text-gray-800 dark:text-gray-200">
-                "{deleteTest.title}"
-              </span>
-              ? This action cannot be undone.
-            </p>
+          {loading ? (
+            <div className="grid gap-4 md:grid-cols-2">
+              <TestCardSkeleton />
+              <TestCardSkeleton />
+              <TestCardSkeleton />
+              <TestCardSkeleton />
+            </div>
+          ) : recentTests.length > 0 ? (
+            <div className="grid gap-4 md:grid-cols-2">
+              {recentTests.map((test) => {
+                const status = getStatusConfig(test.status);
+                const StatusIcon = status.icon;
 
-            <div className="mt-6 flex gap-3">
+                const percentage =
+                  test.score && test.maxScore
+                    ? Math.round((test.score / test.maxScore) * 100)
+                    : 0;
+
+                return (
+                  <div
+                    key={test.id}
+                    className="
+                      group rounded-2xl border border-gray-200
+                      bg-white p-5 shadow-sm
+                      transition-all duration-200
+                      hover:-translate-y-0.5
+                      hover:border-orange-200
+                      hover:shadow-lg hover:shadow-orange-500/5
+                      dark:border-gray-800
+                      dark:bg-gray-900
+                      dark:hover:border-orange-500/30
+                    "
+                  >
+                    {/* Header */}
+                    <div className="flex items-start justify-between gap-4">
+                      <div className="flex min-w-0 items-start gap-3">
+                        <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-orange-50 text-orange-500 dark:bg-orange-500/10">
+                          <FileQuestion size={21} />
+                        </div>
+
+                        <div className="min-w-0">
+                          <h3 className="truncate font-bold">
+                            {test.title}
+                          </h3>
+
+                          <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">
+                            {test.exam} • {test.category}
+                          </p>
+                        </div>
+                      </div>
+
+                      <span
+                        className={`shrink-0 rounded-full px-2.5 py-1 text-[11px] font-semibold ${getDifficultyClass(
+                          test.difficulty
+                        )}`}
+                      >
+                        {test.difficulty}
+                      </span>
+                    </div>
+
+                    {/* Status */}
+                    <div className="mt-5 flex items-center justify-between gap-3">
+                      <span
+                        className={`inline-flex items-center gap-1.5 rounded-full border px-2.5 py-1 text-xs font-medium ${status.className}`}
+                      >
+                        <StatusIcon size={13} />
+
+                        {status.label}
+                      </span>
+
+                      <span className="flex items-center gap-1 text-xs text-gray-400">
+                        <CalendarDays size={13} />
+                        {test.createdAt}
+                      </span>
+                    </div>
+
+                    {/* Stats */}
+                    <div className="mt-5 grid grid-cols-3 gap-2">
+                      <div className="rounded-xl bg-gray-50 p-3 dark:bg-gray-800">
+                        <p className="text-[11px] text-gray-400">
+                          Questions
+                        </p>
+
+                        <p className="mt-1 font-bold">{test.questions}</p>
+                      </div>
+
+                      <div className="rounded-xl bg-gray-50 p-3 dark:bg-gray-800">
+                        <p className="text-[11px] text-gray-400">Duration</p>
+
+                        <p className="mt-1 font-bold">{test.duration} min</p>
+                      </div>
+
+                      <div className="rounded-xl bg-gray-50 p-3 dark:bg-gray-800">
+                        <p className="text-[11px] text-gray-400">
+                          {test.status === "completed" ? "Score" : "Progress"}
+                        </p>
+
+                        <p className="mt-1 font-bold">
+                          {test.status === "completed"
+                            ? `${percentage}%`
+                            : test.status === "in-progress"
+                              ? "Continue"
+                              : "Ready"}
+                        </p>
+                      </div>
+                    </div>
+
+                    {/* Score Progress */}
+                    {test.status === "completed" && (
+                      <div className="mt-4">
+                        <div className="mb-1.5 flex justify-between text-xs">
+                          <span className="text-gray-500">Performance</span>
+
+                          <span className="font-semibold text-green-600 dark:text-green-400">
+                            {test.score}/{test.maxScore}
+                          </span>
+                        </div>
+
+                        <div className="h-1.5 overflow-hidden rounded-full bg-gray-100 dark:bg-gray-800">
+                          <div
+                            className="h-full rounded-full bg-green-500"
+                            style={{ width: `${percentage}%` }}
+                          />
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Action */}
+                    <button
+                      type="button"
+                      className={`
+                        mt-5 flex w-full items-center justify-center gap-2
+                        rounded-xl px-4 py-3 text-sm font-semibold
+                        transition
+                        ${
+                          test.status === "completed"
+                            ? "border border-gray-200 bg-white text-gray-700 hover:bg-gray-50 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-200 dark:hover:bg-gray-800"
+                            : "bg-orange-500 text-white hover:bg-orange-600"
+                        }
+                      `}
+                    >
+                      {test.status === "completed" ? (
+                        <>
+                          <Trophy size={17} />
+                          View Result
+                        </>
+                      ) : test.status === "in-progress" ? (
+                        <>
+                          <Play size={17} />
+                          Continue Test
+                        </>
+                      ) : (
+                        <>
+                          <Play size={17} />
+                          Start Test
+                        </>
+                      )}
+
+                      <ArrowRight size={16} />
+                    </button>
+                  </div>
+                );
+              })}
+            </div>
+          ) : (
+            <div className="rounded-3xl border border-dashed border-gray-300 bg-white p-10 text-center dark:border-gray-700 dark:bg-gray-900">
+              <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl bg-orange-50 text-orange-500 dark:bg-orange-500/10">
+                <FileQuestion size={25} />
+              </div>
+
+              <h3 className="mt-4 font-bold">No Custom Tests Yet</h3>
+
+              <p className="mx-auto mt-2 max-w-md text-sm text-gray-500 dark:text-gray-400">
+                Create your first personalized test and start practicing
+                according to your preparation needs.
+              </p>
+
               <button
                 type="button"
-                disabled={deleting}
-                onClick={() => setDeleteTest(null)}
-                className="h-11 flex-1 rounded-xl border border-gray-200 px-4 text-sm font-semibold hover:bg-gray-50 disabled:opacity-50 dark:border-gray-700 dark:hover:bg-gray-800"
+                className="mt-5 rounded-xl bg-orange-500 px-5 py-3 text-sm font-semibold text-white hover:bg-orange-600"
               >
-                Cancel
+                Create Your First Test
               </button>
+            </div>
+          )}
+        </section>
+
+        {/* =====================================================
+            TOKEN INFO
+        ====================================================== */}
+
+        <section className="mt-12">
+          <div className="overflow-hidden rounded-3xl border border-orange-200 bg-gradient-to-r from-orange-50 to-amber-50 p-6 dark:border-orange-500/20 dark:from-orange-500/5 dark:to-amber-500/5 sm:p-8">
+            <div className="flex flex-col gap-6 lg:flex-row lg:items-center lg:justify-between">
+              <div className="flex items-start gap-4">
+                <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-orange-500 text-white shadow-lg shadow-orange-500/20">
+                  <WalletCards size={23} />
+                </div>
+
+                <div>
+                  <h3 className="font-bold">
+                    Need more Custom Test tokens?
+                  </h3>
+
+                  <p className="mt-1 max-w-xl text-sm leading-6 text-gray-600 dark:text-gray-400">
+                    Your tokens are used to create personalized tests. Check
+                    available token plans if you need more practice.
+                  </p>
+                </div>
+              </div>
 
               <button
                 type="button"
-                disabled={deleting}
-                onClick={handleDelete}
-                className="flex h-11 flex-1 items-center justify-center gap-2 rounded-xl bg-red-600 px-4 text-sm font-bold text-white hover:bg-red-700 disabled:opacity-60"
+                className="inline-flex shrink-0 items-center justify-center gap-2 rounded-xl border border-orange-200 bg-white px-5 py-3 text-sm font-semibold text-orange-600 transition hover:bg-orange-50 dark:border-orange-500/20 dark:bg-gray-900 dark:text-orange-400 dark:hover:bg-orange-500/10"
               >
-                {deleting ? (
-                  <>
-                    <Loader2
-                      size={17}
-                      className="animate-spin"
-                    />
-                    Deleting...
-                  </>
-                ) : (
-                  <>
-                    <Trash2 size={17} />
-                    Delete Test
-                  </>
-                )}
+                View Token Plans
+                <ArrowRight size={16} />
               </button>
             </div>
           </div>
-        </div>
-      )}
+        </section>
+      </main>
     </div>
   );
-}
+};
 
-/*
-|--------------------------------------------------------------------------
-| STAT CARD
-|--------------------------------------------------------------------------
-*/
+// ============================================================
+// SMALL ICON WRAPPER
+// ============================================================
 
-function StatCard({
-  icon: Icon,
-  label,
-  value,
+const SlidersHorizontalIcon = ({
+  size = 24,
 }: {
-  icon: React.ElementType;
-  label: string;
-  value: number;
-}) {
+  size?: number;
+}) => {
   return (
-    <div className="rounded-2xl border border-gray-200 bg-white p-4 shadow-sm dark:border-gray-800 dark:bg-gray-900">
-      <div className="flex items-center gap-3">
-        <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-orange-100 text-orange-600 dark:bg-orange-500/10 dark:text-orange-400">
-          <Icon size={19} />
-        </div>
-
-        <div>
-          <p className="text-xs font-medium text-gray-500 dark:text-gray-400">
-            {label}
-          </p>
-
-          <p className="mt-0.5 text-xl font-bold">
-            {value}
-          </p>
-        </div>
-      </div>
-    </div>
+    <svg
+      width={size}
+      height={size}
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    >
+      <line x1="4" y1="21" x2="4" y2="14" />
+      <line x1="4" y1="10" x2="4" y2="3" />
+      <line x1="12" y1="21" x2="12" y2="12" />
+      <line x1="12" y1="8" x2="12" y2="3" />
+      <line x1="20" y1="21" x2="20" y2="16" />
+      <line x1="20" y1="12" x2="20" y2="3" />
+      <line x1="1" y1="14" x2="7" y2="14" />
+      <line x1="9" y1="8" x2="15" y2="8" />
+      <line x1="17" y1="16" x2="23" y2="16" />
+    </svg>
   );
-}
+};
 
-/*
-|--------------------------------------------------------------------------
-| INFO ITEM
-|--------------------------------------------------------------------------
-*/
-
-function InfoItem({
-  icon: Icon,
-  label,
-  value,
-}: {
-  icon: React.ElementType;
-  label: string;
-  value: string | number;
-}) {
-  return (
-    <div className="rounded-xl border border-gray-100 bg-white px-3 py-2.5 dark:border-gray-700 dark:bg-gray-900">
-      <div className="flex items-center gap-2">
-        <Icon
-          size={15}
-          className="text-orange-500"
-        />
-
-        <span className="text-[11px] font-medium text-gray-400">
-          {label}
-        </span>
-      </div>
-
-      <p className="mt-1 text-sm font-bold text-gray-800 dark:text-gray-200">
-        {value}
-      </p>
-    </div>
-  );
-}
+export default CustomTestPage;
