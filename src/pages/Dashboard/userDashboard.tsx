@@ -715,12 +715,10 @@ const GREDashboard = () => {
   const [courses, setCourses] = useState([]);
   const [allCourses, setAllCourses] = useState([]);
   const [searchTerm, setSearchTerm] = useState("");
-  const [filteredCourses, setFilteredCourses] = useState([]);
   const [debouncedSearch, setDebouncedSearch] = useState("");
   const [loading2, setLoading2] = useState(true);
   const [sort, setSort] = useState("-createdAt");
   const [purchase, setPurchase] = useState([]);
-  const [notification, setNotification] = useState([]);
   const [promo, setPromo] = useState([]);
 
   const filterBanner = banner.find((item) => item.key === pathname);
@@ -731,7 +729,6 @@ const GREDashboard = () => {
       try {
         const response = await api.get("/purchase");
         setPurchase(response.data.data);
-        
       } catch (error) {
         toast.error("something went wrong...");
       }
@@ -770,8 +767,10 @@ const GREDashboard = () => {
         sort,
       };
       try {
-        const res = await api.get(`courses`, { params });
-        const res2 = await api.get("/courses");
+        const [res, res2] = await Promise.all([
+          api.get(`courses`, { params }),
+          api.get(`/courses?ninCategory=${user?.category?._id}`),
+        ]);
         setCourses(res?.data?.data || []);
         setAllCourses(res2?.data?.data || []);
       } catch {
@@ -1053,193 +1052,197 @@ const GREDashboard = () => {
                     ref={purchaseSliderRef}
                   >
                     {purchase.map((item) => {
-                      console.log(item)
-                      return(
-                      <div
-                        key={item?._id}
-                        className="relative dark:bg-gray-800 bg-white rounded-3xl overflow-hidden p-6 lg:p-0 keen-slider__slide"
-                      >
-                        <div className="grid grid-cols-1 xl:grid-cols-[0.9fr_1.1fr] lg:gap-4 py-4 sm:px-4">
-                          <div className="flex flex-col gap-4 lg:py-0">
-                            <div>
-                              <h2 className="text-xl lg:-mt-0 lg:mb-4 lg:text-2xl font-bold text-[#202020] dark:text-white">
-                                My Courses
-                              </h2>
+                      console.log(item);
+                      return (
+                        <div
+                          key={item?._id}
+                          className="relative dark:bg-gray-800 bg-white rounded-3xl overflow-hidden p-6 lg:p-0 keen-slider__slide"
+                        >
+                          <div className="grid grid-cols-1 xl:grid-cols-[0.9fr_1.1fr] lg:gap-4 py-4 sm:px-4">
+                            <div className="flex flex-col gap-4 lg:py-0">
+                              <div>
+                                <h2 className="text-xl lg:-mt-0 lg:mb-4 lg:text-2xl font-bold text-[#202020] dark:text-white">
+                                  My Courses
+                                </h2>
+                              </div>
+                              <div className="rounded-xl overflow-hidden">
+                                <img
+                                  src={
+                                    item?.item?.thumbnail?.url
+                                      ? `${ImageBaseUrl}/${item.item.thumbnail.url}`
+                                      : "/images/course-thumbnail.webp"
+                                  }
+                                  alt=""
+                                  className="w-full h-full sm:h-[140px] lg:h-full object-contain"
+                                />
+                              </div>
                             </div>
-                            <div className="rounded-xl overflow-hidden">
-                              <img
-                                src={
-                                  item?.item?.thumbnail?.url
-                                    ? `${ImageBaseUrl}/${item.item.thumbnail.url}`
-                                    : "/images/course-thumbnail.webp"
-                                }
-                                alt=""
-                                className="w-full h-full sm:h-[140px] lg:h-full object-contain"
-                              />
-                            </div>
-                          </div>
 
-                          <div className="flex flex-col gap-4">
-                            <div className="xl:col-span-3  lg:px-0">
-                              <div className="flex gap-2">
-                                <div>
-                                  <h3 className="text-lg sm:text-2xl font-semibold capitalize text-gray-900 dark:text-white sm:line-clamp-1">
-                                    {item?.item?.title}
-                                  </h3>
-                                  <p className="text-gray-600 sm:hidden text-sm dark:text-gray-400 ">
-                                    {item?.item?.shortDescription?.length > 100
-                                      ? item.item.shortDescription.substring(
+                            <div className="flex flex-col gap-4">
+                              <div className="xl:col-span-3  lg:px-0">
+                                <div className="flex gap-2">
+                                  <div>
+                                    <h3 className="text-lg sm:text-2xl font-semibold capitalize text-gray-900 dark:text-white sm:line-clamp-1">
+                                      {item?.item?.title}
+                                    </h3>
+                                    <p className="text-gray-600 sm:hidden text-sm dark:text-gray-400 ">
+                                      {item?.item?.shortDescription?.length >
+                                      100
+                                        ? item.item.shortDescription.substring(
+                                            0,
+                                            100,
+                                          ) + "..."
+                                        : item?.item?.shortDescription}
+                                    </p>
+                                  </div>
+                                </div>
+                              </div>
+
+                              <div className="grid grid-cols-2 lg:grid-cols-2 gap-8 lg:gap-0 justify-center items-center">
+                                <div className="space-y-2">
+                                  <div className="flex gap-3 items-start">
+                                    <div className="w-10 h-10 rounded-xl bg-orange-50 dark:bg-gray-600 hidden sm:flex items-center justify-center">
+                                      <Clock3
+                                        size={22}
+                                        className="text-black dark:text-white"
+                                      />
+                                    </div>
+                                    <div>
+                                      <p className="text-gray-500 dark:text-white text-xs sm:text-sm">
+                                        Duration
+                                      </p>
+                                      <h3 className="font-bold text-xs sm:text-sm dark:text-white">
+                                        {item?.item?.schedule_pattern?.duration
+                                          ? `${item.item.schedule_pattern.duration} Hours`
+                                          : "Flexible"}
+                                      </h3>
+                                    </div>
+                                  </div>
+                                  <hr />
+                                  <div className="flex gap-3 items-start">
+                                    <div className="w-10 h-10 rounded-xl bg-orange-50 hidden sm:flex items-center justify-center dark:bg-gray-600">
+                                      <Users2
+                                        size={22}
+                                        className="text-black dark:text-white"
+                                      />
+                                    </div>
+                                    <div>
+                                      <p className="text-gray-500 dark:text-white text-xs sm:text-sm">
+                                        Instructor
+                                      </p>
+                                      <h3 className="font-bold text-xs sm:text-sm dark:text-white">
+                                        {item?.instructorNames?.[0]?.name ||
+                                          "Expert Instructor"}
+                                      </h3>
+                                    </div>
+                                  </div>
+                                  <hr />
+                                  <div className="flex gap-3 items-start">
+                                    <div className="w-10 h-10 rounded-xl bg-orange-50 hidden sm:flex items-center justify-center dark:bg-gray-600">
+                                      <Video
+                                        size={22}
+                                        className="text-black dark:text-white"
+                                      />
+                                    </div>
+                                    <div>
+                                      <p className="text-gray-500 dark:text-white text-xs sm:text-sm">
+                                        Mode
+                                      </p>
+                                      <h3 className="font-bold text-xs sm:text-sm dark:text-white">
+                                        {item?.item?.mode === "sessions"
+                                          ? "Live Sessions"
+                                          : item?.item?.mode || "Online"}
+                                      </h3>
+                                    </div>
+                                  </div>
+                                </div>
+
+                                <div className="space-y-2 lg:pl-6">
+                                  <div className="flex gap-4 items-start">
+                                    <div className="w-10 h-10 rounded-xl bg-orange-50 dark:bg-gray-600 hidden sm:flex items-center justify-center">
+                                      <BookOpen
+                                        size={22}
+                                        className="text-black dark:text-white"
+                                      />
+                                    </div>
+                                    <div>
+                                      <p className="text-gray-500 dark:text-white text-xs sm:text-sm">
+                                        Language
+                                      </p>
+                                      <h3 className="font-bold text-xs sm:text-sm dark:text-white">
+                                        {item?.item?.language}
+                                      </h3>
+                                    </div>
+                                  </div>
+                                  <hr />
+                                  <div className="flex gap-4 items-start">
+                                    <div className="w-10 h-10 rounded-xl bg-orange-50 hidden sm:flex items-center justify-center dark:bg-gray-600">
+                                      <Clock3
+                                        size={22}
+                                        className="text-black dark:text-white"
+                                      />
+                                    </div>
+                                    <div>
+                                      <p className="text-gray-500 dark:text-white text-xs sm:text-sm">
+                                        Level
+                                      </p>
+                                      <h3 className="font-bold text-xs sm:text-sm dark:text-white">
+                                        {item?.item?.level}
+                                      </h3>
+                                    </div>
+                                  </div>
+                                  <hr />
+                                  <div className="flex gap-4 items-start">
+                                    <div className="w-10 h-10 rounded-xl bg-orange-50 hidden sm:flex items-center justify-center dark:bg-gray-600">
+                                      <CalendarDays
+                                        size={22}
+                                        className="text-black dark:text-white"
+                                      />
+                                    </div>
+                                    <div>
+                                      <p className="text-gray-500 dark:text-white text-xs sm:text-sm">
+                                        Days Left
+                                      </p>
+                                      <h3 className="font-bold text-xs sm:text-sm text-[#FF5A14]">
+                                        {Math.max(
                                           0,
-                                          100,
-                                        ) + "..."
-                                      : item?.item?.shortDescription}
-                                  </p>
-                                </div>
-                              </div>
-                            </div>
-
-                            <div className="grid grid-cols-2 lg:grid-cols-2 gap-8 lg:gap-0 justify-center items-center">
-                              <div className="space-y-2">
-                                <div className="flex gap-3 items-start">
-                                  <div className="w-10 h-10 rounded-xl bg-orange-50 dark:bg-gray-600 hidden sm:flex items-center justify-center">
-                                    <Clock3
-                                      size={22}
-                                      className="text-black dark:text-white"
-                                    />
-                                  </div>
-                                  <div>
-                                    <p className="text-gray-500 dark:text-white text-xs sm:text-sm">
-                                      Duration
-                                    </p>
-                                    <h3 className="font-bold text-xs sm:text-sm dark:text-white">
-                                      {item?.item?.schedule_pattern?.duration
-                                        ? `${item.item.schedule_pattern.duration} Hours`
-                                        : "Flexible"}
-                                    </h3>
-                                  </div>
-                                </div>
-                                <hr />
-                                <div className="flex gap-3 items-start">
-                                  <div className="w-10 h-10 rounded-xl bg-orange-50 hidden sm:flex items-center justify-center dark:bg-gray-600">
-                                    <Users2
-                                      size={22}
-                                      className="text-black dark:text-white"
-                                    />
-                                  </div>
-                                  <div>
-                                    <p className="text-gray-500 dark:text-white text-xs sm:text-sm">
-                                      Instructor
-                                    </p>
-                                    <h3 className="font-bold text-xs sm:text-sm dark:text-white">
-                                      {item?.instructorNames?.[0]?.name ||
-                                        "Expert Instructor"}
-                                    </h3>
-                                  </div>
-                                </div>
-                                <hr />
-                                <div className="flex gap-3 items-start">
-                                  <div className="w-10 h-10 rounded-xl bg-orange-50 hidden sm:flex items-center justify-center dark:bg-gray-600">
-                                    <Video
-                                      size={22}
-                                      className="text-black dark:text-white"
-                                    />
-                                  </div>
-                                  <div>
-                                    <p className="text-gray-500 dark:text-white text-xs sm:text-sm">
-                                      Mode
-                                    </p>
-                                    <h3 className="font-bold text-xs sm:text-sm dark:text-white">
-                                      {item?.item?.mode === "sessions"
-                                        ? "Live Sessions"
-                                        : item?.item?.mode || "Online"}
-                                    </h3>
+                                          Math.ceil(
+                                            (new Date(item?.accessExpiresAt) -
+                                              new Date()) /
+                                              (1000 * 60 * 60 * 24),
+                                          ),
+                                        )}{" "}
+                                        Days
+                                      </h3>
+                                    </div>
                                   </div>
                                 </div>
                               </div>
-
-                              <div className="space-y-2 lg:pl-6">
-                                <div className="flex gap-4 items-start">
-                                  <div className="w-10 h-10 rounded-xl bg-orange-50 dark:bg-gray-600 hidden sm:flex items-center justify-center">
-                                    <BookOpen
-                                      size={22}
-                                      className="text-black dark:text-white"
-                                    />
-                                  </div>
-                                  <div>
-                                    <p className="text-gray-500 dark:text-white text-xs sm:text-sm">
-                                      Language
-                                    </p>
-                                    <h3 className="font-bold text-xs sm:text-sm dark:text-white">
-                                      {item?.item?.language}
-                                    </h3>
-                                  </div>
-                                </div>
-                                <hr />
-                                <div className="flex gap-4 items-start">
-                                  <div className="w-10 h-10 rounded-xl bg-orange-50 hidden sm:flex items-center justify-center dark:bg-gray-600">
-                                    <Clock3
-                                      size={22}
-                                      className="text-black dark:text-white"
-                                    />
-                                  </div>
-                                  <div>
-                                    <p className="text-gray-500 dark:text-white text-xs sm:text-sm">
-                                      Level
-                                    </p>
-                                    <h3 className="font-bold text-xs sm:text-sm dark:text-white">
-                                      {item?.item?.level}
-                                    </h3>
-                                  </div>
-                                </div>
-                                <hr />
-                                <div className="flex gap-4 items-start">
-                                  <div className="w-10 h-10 rounded-xl bg-orange-50 hidden sm:flex items-center justify-center dark:bg-gray-600">
-                                    <CalendarDays
-                                      size={22}
-                                      className="text-black dark:text-white"
-                                    />
-                                  </div>
-                                  <div>
-                                    <p className="text-gray-500 dark:text-white text-xs sm:text-sm">
-                                      Days Left
-                                    </p>
-                                    <h3 className="font-bold text-xs sm:text-sm text-[#FF5A14]">
-                                      {Math.max(
-                                        0,
-                                        Math.ceil(
-                                          (new Date(item?.accessExpiresAt) -
-                                            new Date()) /
-                                            (1000 * 60 * 60 * 24),
-                                        ),
-                                      )}{" "}
-                                      Days
-                                    </h3>
-                                  </div>
-                                </div>
+                              <div className="flex items-center gap-2 w-full">
+                                <Link
+                                  to={`/course/${item?.item?.slug}?isCurriculum=true`}
+                                  className="bg-[#FF5A14] hover:bg-[#f04d08] text-xs text-white rounded-xl py-3 px-4 flex gap-2 items-center justify-center font-semibold transition"
+                                >
+                                  <Play size={18} fill="white" />
+                                  CONTINUE LEARNING
+                                </Link>
                               </div>
-                            </div>
-                            <div className="flex items-center gap-2 w-full">
-                              <Link
-                                to={`/course/${item?.item?.slug}?isCurriculum=true`}
-                                className="bg-[#FF5A14] hover:bg-[#f04d08] text-xs text-white rounded-xl py-3 px-4 flex gap-2 items-center justify-center font-semibold transition"
-                              >
-                                <Play size={18} fill="white" />
-                                CONTINUE LEARNING
-                              </Link>
                             </div>
                           </div>
-                        </div>
 
-                        <div className="flex justify-end items-center gap-6 absolute right-5 bottom-5">
-                          <button
-                            onClick={() => purchaseInstanceRef.current?.next()}
-                            className="hidden xl:flex w-10 h-10 rounded-full border items-center justify-center hover:bg-orange-50"
-                          >
-                            <ChevronRight className="text-[#FF5A14]" />
-                          </button>
+                          <div className="flex justify-end items-center gap-6 absolute right-5 bottom-5">
+                            <button
+                              onClick={() =>
+                                purchaseInstanceRef.current?.next()
+                              }
+                              className="hidden xl:flex w-10 h-10 rounded-full border items-center justify-center hover:bg-orange-50"
+                            >
+                              <ChevronRight className="text-[#FF5A14]" />
+                            </button>
+                          </div>
                         </div>
-                      </div>
-                    )})}
+                      );
+                    })}
                   </div>
                 ) : (
                   <div className="bg-white dark:bg-gray-800 rounded-3xl p-5 md:px-6">
@@ -1563,33 +1566,35 @@ const GREDashboard = () => {
         </div>
       </div>
 
-      <section className="w-full rounded-3xl bg-white dark:bg-gray-800 p-4 sm:p-6 lg:p-7 lg:my-5">
-        <h2 className="mb-6 text-xl md:text-2xl font-bold text-[#222] dark:text-white">
-          Explore Other Test Preps
-        </h2>
+      {allCourses.length > 0 && (
+        <section className="w-full rounded-3xl bg-white dark:bg-gray-800 p-4 sm:p-6 lg:p-7 lg:my-5">
+          <h2 className="mb-6 text-xl md:text-2xl font-bold text-[#222] dark:text-white">
+            Explore Other Test Preps
+          </h2>
 
-        {useAllCoursesSlider ? (
-          <div ref={allCoursesSliderRef} className="keen-slider">
-            {allCourses.map((item) => (
-              <AllCourseCard
-                key={item._id || item.id}
-                item={item}
-                user={user}
-              />
-            ))}
-          </div>
-        ) : (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-2 xl:grid-cols-4 gap-6">
-            {allCourses.map((item) => (
-              <AllCourseCard
-                key={item._id || item.id}
-                item={item}
-                user={user}
-              />
-            ))}
-          </div>
-        )}
-      </section>
+          {useAllCoursesSlider ? (
+            <div ref={allCoursesSliderRef} className="keen-slider">
+              {allCourses.map((item) => (
+                <AllCourseCard
+                  key={item._id || item.id}
+                  item={item}
+                  user={user}
+                />
+              ))}
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-2 xl:grid-cols-4 gap-6">
+              {allCourses.map((item) => (
+                <AllCourseCard
+                  key={item._id || item.id}
+                  item={item}
+                  user={user}
+                />
+              ))}
+            </div>
+          )}
+        </section>
+      )}
 
       <div className="block sm:hidden p-[2px] h-full rounded-3xl bg-gradient-to-b from-orange-500 via-orange-500 to-orange-200/40">
         <div className="flex h-full flex-col rounded-3xl bg-white p-5 dark:bg-gray-800">

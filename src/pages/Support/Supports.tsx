@@ -543,7 +543,6 @@ const SupportPage = () => {
                 <p className="mt-3 text-gray-500">No help topics available</p>
               </div>
             ) : (
-              /* Cards - Aligned properly */
               <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 items-center justify-center">
                 {supportCategories.map((topic, index) => {
                   const Icon = iconList[index % iconList.length];
@@ -559,14 +558,14 @@ const SupportPage = () => {
                         <div className="flex items-center gap-3">
                           {/* Icon */}
                           <div
-                            className={`flex h-[43px] w-[43px] shrink-0 items-center justify-center rounded-full ${bgColor} transition-transform duration-300 group-hover:scale-105`}
+                            className={`flex shrink-0 p-2 items-center justify-center rounded-full ${bgColor} transition-transform duration-300 group-hover:scale-105`}
                           >
                             {Icon && <Icon className="h-5 w-5" />}
                           </div>
 
                           {/* Content */}
                           <div className="min-w-0 flex-1">
-                            <h3 className="flex items-center gap-1 pt-[1px] text-base font-semibold leading-[18px] text-[#242424]">
+                            <h3 className="text-base flex gap-1 font-semibold leading-[18px] text-[#242424]">
                               {topic.name}
 
                               <span
@@ -574,9 +573,9 @@ const SupportPage = () => {
                                   /<[^>]*>/g,
                                   "",
                                 )}
-                                className="inline-flex cursor-help items-center text-gray-400"
+                                className="inline-flex cursor-help items-center text-red-400"
                               >
-                                <Info size={14} />
+                                <Info size={16} />
                               </span>
                             </h3>
                           </div>
