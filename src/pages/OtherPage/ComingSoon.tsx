@@ -6,8 +6,8 @@ export default function ComingSoon() {
     return (
         <>
             <PageMeta
-                title="Coming Soon | Gateway Abroad"
-                description="Something exciting is coming soon to Gateway Abroad. Stay tuned for new features and updates."
+                title="Coming Soon | OoshasPrep"
+                description="Something exciting is coming soon to OoshasPrep. Stay tuned for new features and updates."
             />
 
             <div className="relative min-h-screen overflow-hidden bg-gray-50 px-4 py-10 dark:bg-gray-950 sm:px-6 lg:px-8">

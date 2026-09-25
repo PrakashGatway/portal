@@ -13,6 +13,8 @@ import {
 import api from "../../axiosInstance";
 import StepOneSATDetails from "./step1";
 import CustomTestInstructionPopup from "./InstructionPopup";
+import { useLocation } from "react-router";
+import { useAuth } from "../../context/UserContext";
 
 interface FilterSection {
   _id: string;
@@ -65,12 +67,14 @@ function useDebounce<T>(value: T, delay = 500): T {
 export default function CreateCustomTestPage() {
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
+  const { user } = useAuth();
+  const location = useLocation();
+
+  const examId = location.state?.examId;
 
   const [testType, setTestType] = useState<TestType>("quiz");
 
   const [durationMinutes, setDurationMinutes] = useState(30);
-
-  const [examId, setExamId] = useState("6924328024d744b891c17172");
 
   const [filterData, setFilterData] = useState<FilterApiData>({
     sections: [],
@@ -460,99 +464,92 @@ export default function CreateCustomTestPage() {
      CREATE CUSTOM TEST
   ========================================================= */
 
- const handleCreate = async () => {
-  if (!validateStep()) return;
-  if (loadingStep) return;
+  const handleCreate = async () => {
+    if (!validateStep()) return;
+    if (loadingStep) return;
 
-  try {
-    setError("");
-    setLoadingStep("creating");
+    try {
+      setError("");
+      setLoadingStep("creating");
 
-    const payload = {
-      exam: examId,
+      const payload = {
+        exam: examId,
 
-      title: title.trim() || "Custom SAT Practice Test",
+        title: title.trim() || "Custom SAT Practice Test",
 
-      description: description.trim(),
+        description: description.trim(),
 
-      testType,
+        testType,
 
-      selectionMode: "filters",
+        selectionMode: "filters",
 
-      durationMinutes: Number(durationMinutes),
+        durationMinutes: Number(durationMinutes),
 
-      questionIds: filteredQuestionIds,
+        questionIds: filteredQuestionIds,
 
-      filters: {
-        sections: filters.sections,
-        tags: filters.tags,
-        difficulties: filters.difficulties,
-        questionPool: filters.questionPool,
-        questionCount: Number(questionCount),
-      },
-    };
+        filters: {
+          sections: filters.sections,
+          tags: filters.tags,
+          difficulties: filters.difficulties,
+          questionPool: filters.questionPool,
+          questionCount: Number(questionCount),
+        },
+      };
 
-    // -----------------------------
-    // STEP 1: CREATE CUSTOM TEST
-    // -----------------------------
-    const response = await api.post("/mcu/custom", payload);
+      // -----------------------------
+      // STEP 1: CREATE CUSTOM TEST
+      // -----------------------------
+      const response = await api.post("/mcu/custom", payload);
 
-    if (!response?.data?.success) {
-      throw new Error(
-        response?.data?.message || "Failed to create custom test."
+      if (!response?.data?.success) {
+        throw new Error(
+          response?.data?.message || "Failed to create custom test.",
+        );
+      }
+
+      const customTest = response?.data?.data;
+
+      if (!customTest?._id) {
+        throw new Error("Custom test was created but no test ID was returned.");
+      }
+
+      // -----------------------------
+      // STEP 2: START CUSTOM TEST
+      // -----------------------------
+      setLoadingStep("loading");
+
+      const startres = await api.post(`/mcu/custom/${customTest._id}/start`);
+
+      if (!startres?.data?.success) {
+        throw new Error(
+          startres?.data?.message || "Failed to start custom test.",
+        );
+      }
+
+      const startTest = startres?.data?.data;
+
+      if (!startTest?._id) {
+        throw new Error("Test started but no test ID was returned.");
+      }
+
+      // -----------------------------
+      // SUCCESS
+      // -----------------------------
+      window.location.href = `/mcq/tests/${startTest._id}?type=custom`;
+
+      return customTest;
+    } catch (error) {
+      console.error("Create custom test error:", error);
+      setError(
+        error?.response?.data?.message ||
+          error?.message ||
+          "Failed to create custom test.",
       );
+      setLoadingStep(null);
+    } finally {
+      setShowInstructions(false);
     }
-
-    const customTest = response?.data?.data;
-
-    if (!customTest?._id) {
-      throw new Error("Custom test was created but no test ID was returned.");
-    }
-
-    // -----------------------------
-    // STEP 2: START CUSTOM TEST
-    // -----------------------------
-    setLoadingStep("loading");
-
-    const startres = await api.post(
-      `/mcu/custom/${customTest._id}/start`
-    );
-
-    if (!startres?.data?.success) {
-      throw new Error(
-        startres?.data?.message || "Failed to start custom test."
-      );
-    }
-
-    const startTest = startres?.data?.data;
-
-    if (!startTest?._id) {
-      throw new Error("Test started but no test ID was returned.");
-    }
-
-    // -----------------------------
-    // SUCCESS
-    // -----------------------------
-    window.location.href = `/mcq/tests/${startTest._id}?type=custom`;
-
-    return customTest;
-
-  } catch (error) {
-    console.error("Create custom test error:", error);
-
-    setError(
-      error?.response?.data?.message ||
-        error?.message ||
-        "Failed to create custom test."
-    );
-
-    // Allow user to try again after error
-    setLoadingStep(null);
-
-  } finally {
-  
-  }
-};
+  };
 
   const previousStep = () => {
     setError("");
@@ -563,8 +560,6 @@ export default function CreateCustomTestPage() {
   const resetBuilder = () => {
     setTitle("");
     setDescription("");
-
-    setExamId("6924328024d744b891c17172");
 
     setTestType("quiz");
 
@@ -682,7 +677,7 @@ export default function CreateCustomTestPage() {
 
         {step === 1 && (
           <div className="mx-auto rounded-2xl  bg-white p-5 dark:border-slate-800 dark:bg-slate-900">
-            <div className="mb-8">
+            <div className="mb-4">
               <h2 className="text-2xl font-bold text-slate-800 dark:text-white">
                 Test Details
               </h2>
@@ -693,6 +688,7 @@ export default function CreateCustomTestPage() {
             </div>
 
             <StepOneSATDetails
+              category={user.category}
               durationMinutes={durationMinutes}
               setDurationMinutes={setDurationMinutes}
             />

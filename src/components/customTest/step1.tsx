@@ -1,11 +1,11 @@
 import { useState, useEffect, useMemo } from "react";
-import {
-  CheckCircle2,
-  ListChecks,
-  Hourglass,
-} from "lucide-react";
+import { CheckCircle2, ListChecks, Hourglass } from "lucide-react";
 
-export default function StepOneSATDetails({durationMinutes ,setDurationMinutes}:any) {
+export default function StepOneSATDetails({
+  category,
+  durationMinutes,
+  setDurationMinutes,
+}: any) {
   const [secondAngle, setSecondAngle] = useState(0);
 
   // Animate the second hand smoothly
@@ -23,7 +23,7 @@ export default function StepOneSATDetails({durationMinutes ,setDurationMinutes}:
     const mins = Math.min(180, Math.max(15, durationMinutes));
     return {
       minuteDeg: (mins * 6) % 360,
-      hourDeg: (mins * 0.5) % 360, 
+      hourDeg: (mins * 0.5) % 360,
     };
   }, [durationMinutes]);
 
@@ -49,47 +49,13 @@ export default function StepOneSATDetails({durationMinutes ,setDurationMinutes}:
           <div className="flex items-start gap-4">
             <div>
               <h3 className="text-xl font-medium text-slate-800 dark:text-white">
-                Digital SAT®
+                {category.name}
               </h3>
-              <p className="text-base text-black dark:text-slate-300 mt-1 leading-relaxed">
-                The SAT is a standardized test widely used for college
-                admissions. This custom test covers{" "}
-                <span className="font-semibold text-orange-600 dark:text-orange-400">
-                  Math
-                </span>{" "}
-                and{" "}
-                <span className="font-semibold text-orange-600 dark:text-orange-400">
-                  Evidence-Based Reading & Writing
-                </span>
-                .
-              </p>
+              <div
+                className="text-base text-black dark:text-slate-300 mt-1 leading-relaxed"
+                dangerouslySetInnerHTML={{ __html: category.description }}
+              />
             </div>
-          </div>
-
-          {/* Instructions */}
-          <div className="mt-4">
-            <h4 className="text-base font-bold uppercase tracking-wider text-black dark:text-slate-400 flex items-center gap-2 mb-2">
-              <ListChecks size={14} className="text-orange-500" /> Test
-              Instructions
-            </h4>
-            <ul className="grid grid-cols-1 sm:grid-cols-1 gap-2 text-base text-black dark:text-slate-300">
-              {[
-                "Calculator allowed in Math section",
-                "No penalty for wrong answers",
-                "Each question has 4 answer choices",
-                "You can flag questions for review",
-                "Reading passages are included",
-                "Timer will auto-submit at 0:00",
-              ].map((instruction) => (
-                <li key={instruction} className="flex items-center gap-2">
-                  <CheckCircle2
-                    size={13}
-                    className="text-green-500 mt-0.5 shrink-0"
-                  />
-                  {instruction}
-                </li>
-              ))}
-            </ul>
           </div>
         </div>
 

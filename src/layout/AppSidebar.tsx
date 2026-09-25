@@ -135,7 +135,9 @@ const navItemsUser: NavItem[] = [
   // },
   { icon: "🧪", name: "Mock Tests", path: "/tests", id: 'mock-test' },
   { icon: "📝", name: "Practice Tests", path: "/practice-tests", id: 'practice-test' },
-  { icon: "✨", name: "Quiz", path: "/quiz", id:'quiz' },
+  // { icon: "✨", name: "Quiz", path: "/quiz", id:'quiz' },
+  { icon: "✍️", name: "Custom Test", path: "/custom-test", id:'custom_test' },
+
   // { icon: "📁", name: "Resources", path: "/resources" },
   { icon: "🔔", name: "Notification", path: "/notifications" },
   { icon: "💰", name: "Refer & Earn", path: "/referrals" },

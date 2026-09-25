@@ -358,7 +358,7 @@ export default function FeaturedCourseSlider({
                     src={
                       currentCourse?.thumbnail?.url
                         ? `${ImageBaseUrl}/${currentCourse?.thumbnail.url}`
-                        : "https://www.gatewayabroadeducations.com/images/logo.svg"
+                        : "https://www.ooshasprep.com/image/logo.png"
                     }
                     alt={currentCourse?.title}
                     className="w-full h-full object-cover rounded-2xl"

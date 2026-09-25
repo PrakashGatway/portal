@@ -123,7 +123,7 @@ export default function ReferAndEarnPage() {
 
     // Copy full link
     const copyToClipboard = () => {
-        const link = `https://www.gatewayabroadeducations.com?ref=${referralCode}`;
+        const link = `https://www.ooshasprep.com/auth?ref=${referralCode}`;
         navigator.clipboard.writeText(link);
         setCopied(true);
         setTimeout(() => setCopied(false), 2000);
@@ -137,8 +137,8 @@ export default function ReferAndEarnPage() {
     };
 
     // Share config
-    const shareLink = `https://www.gatewayabroadeducations.com?ref=${referralCode}`;
-    const shareText = encodeURIComponent("Join me on Gateway Abroad and get started! Use my link:");
+    const shareLink = `https://www.ooshasprep.com/auth?ref=${referralCode}`;
+    const shareText = encodeURIComponent("Join me on OoshasPrep and get started! Use my link:");
 
     const shareOptions = [
         {
@@ -1157,7 +1157,7 @@ export default function ReferAndEarnPage() {
 
 //     // Share config
 //     const shareLink = `https://www.gatewayabroadeducations.com?ref=${referralCode}`;
-//     const shareText = encodeURIComponent("Join me on Gateway Abroad and get started! Use my link:");
+//     const shareText = encodeURIComponent("Join me on OoshasPrep and get started! Use my link:");
 
 //     const shareOptions = [
 //         {

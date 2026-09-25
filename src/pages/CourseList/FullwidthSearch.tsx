@@ -188,7 +188,7 @@ export default function FullWidthSearch({
                           src={
                             course.thumbnail?.url
                               ? `${ImageBaseUrl}/${course.thumbnail.url}`
-                              : "https://www.gatewayabroadeducations.com/images/logo.svg"
+                              : "https://www.ooshasprep.com/image/logo.png"
                           }
                           alt={course.title}
                           className="w-20 h-12 object-cover rounded-md flex-shrink-0 mr-3"

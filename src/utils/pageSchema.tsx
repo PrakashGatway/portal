@@ -1294,7 +1294,7 @@ export const PAGE_TYPES_SCHEMA = {
 
       {
         type: "resources",
-        label: "People behind Gateway Abroad",
+        label: "People behind OoshasPrep",
 
         fields: [
           {

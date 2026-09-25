@@ -260,7 +260,7 @@ const BulkImportModal = ({
           errors.push({ row: row._rowIndex, errors: rowErrors, data: row });
         } else {
           const { _rowIndex, ...cleanRow } = row;
-          validData.push(cleanRow);
+          validData.push(row);
         }
       });
 

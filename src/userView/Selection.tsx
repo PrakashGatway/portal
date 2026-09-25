@@ -190,12 +190,9 @@ const CompactWallOfFame = () => {
   const fetchData = async () => {
     try {
       const [api, api2] = await Promise.all([
-        axios.get("https://www.ooshasprep.com/api/admin/student"),
+        axios.get("https://www.ooshasprep.com/api/admin/student?limit=100"),
         axios.get("https://www.ooshasprep.com/api/admin/student?limit=6"),
       ]);
-
-
-      console.log(api?.data?.data, "all data");
       if (api?.data?.data) {
         setstudents2(api.data.data);
         setstudents(
@@ -229,7 +226,7 @@ const CompactWallOfFame = () => {
     <>
       <div className="flex items-center justify-center">
         <section className="w-full px-4 py-2 sm:px-6 lg:px-8">
-          <div className="relative mx-auto max-w-[1450px] overflow-hidden rounded-[28px] border border-[#f4d9c9] bg-[#fffaf5] shadow-[0_15px_50px_rgba(246,103,60,0.10)]">
+          <div className="relative mx-auto max-w-[1450px] overflow-hidden rounded-[28px] bg-[#fffaf5]">
             {/* BACKGROUND DECORATIONS */}
             <div className="pointer-events-none absolute right-[-120px] top-[-180px] h-[500px] w-[650px] rounded-full bg-[#ffad87]/55 blur-[110px]" />
             <div className="pointer-events-none absolute left-[-180px] top-[-150px] h-[400px] w-[500px] rounded-full bg-[#fff8ef] blur-[100px]" />
@@ -460,12 +457,7 @@ const CompactWallOfFame = () => {
                       {student.name}
                     </h3>
 
-                    <div
-                      className="mx-auto mt-2 h-1 w-7 rounded-full"
-                      style={{
-                        backgroundColor: "#FF9B76",
-                      }}
-                    />
+                  
 
                     {/* View Profile Button */}
                     <button

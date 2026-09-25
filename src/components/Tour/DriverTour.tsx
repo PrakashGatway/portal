@@ -52,7 +52,7 @@ export default function DriverTour({
       "#test",
       "#mock-test",
       "#practice-test",
-      "#quiz",
+      // "#quiz",
       "#my-courses",
       "#support",
       "#settings",
@@ -514,42 +514,42 @@ export default function DriverTour({
     },
   },
 
-  {
-    element: "#quiz",
+  // {
+  //   element: "#quiz",
 
-    popover: {
-      description: `
-        <div class="relative rounded-2xl bg-white">
+  //   popover: {
+  //     description: `
+  //       <div class="relative rounded-2xl bg-white">
 
-          ${aiImage("-right-[150px] md:-right-[160px] top-0")}
+  //         ${aiImage("-right-[150px] md:-right-[160px] top-0")}
 
-          <div class="flex items-center max-md:block">
-            <div class="w-full max-md:text-center">
+  //         <div class="flex items-center max-md:block">
+  //           <div class="w-full max-md:text-center">
 
-              <h2 class="text-xl font-bold text-gray-900 mb-3">
-                🧠 Quizzes
-              </h2>
+  //             <h2 class="text-xl font-bold text-gray-900 mb-3">
+  //               🧠 Quizzes
+  //             </h2>
 
-              <p class="text-gray-600 text-sm leading-6">
-                Take quick quizzes to test your understanding of different
-                topics and reinforce what you have learned.
-              </p>
+  //             <p class="text-gray-600 text-sm leading-6">
+  //               Take quick quizzes to test your understanding of different
+  //               topics and reinforce what you have learned.
+  //             </p>
 
-              <div class="mt-3 text-sm text-orange-600 font-medium">
-                ✓ Challenge yourself with quick quizzes.
-              </div>
+  //             <div class="mt-3 text-sm text-orange-600 font-medium">
+  //               ✓ Challenge yourself with quick quizzes.
+  //             </div>
 
-            </div>
-          </div>
-        </div>
-      `,
+  //           </div>
+  //         </div>
+  //       </div>
+  //     `,
 
-      side: isMobile ? "top" : "right",
-      align: "center",
+  //     side: isMobile ? "top" : "right",
+  //     align: "center",
 
-      popoverClass: getPopoverClass("#quiz"),
-    },
-  },
+  //     popoverClass: getPopoverClass("#quiz"),
+  //   },
+  // },
 
   {
     element: "#my-courses",

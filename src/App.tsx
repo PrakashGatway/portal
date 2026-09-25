@@ -133,8 +133,8 @@ export default function App() {
             
               <Route path="/resources" element={<StudyMaterialPage />} />
 
-              <Route path="/custom-test" element={< CreateCustomTestPage/>} />
-              <Route path="/custom" element={< CustomTestsPage/>} />
+              <Route path="/custom-test/create" element={< CreateCustomTestPage/>} />
+              <Route path="/custom-test" element={< CustomTestsPage/>} />
 
 
               <Route
