@@ -14,7 +14,7 @@ import {
 } from "lucide-react";
 import { useAuth } from "../../context/UserContext";
 import api from "../../axiosInstance";
-import { Link } from "react-router";
+import { Link, useNavigate } from "react-router";
 
 // ============================================================
 // TYPES
@@ -101,6 +101,21 @@ const CustomTestPage = () => {
   const [examDetails, setExamDetail] = useState();
   const [recentTests, setRecentTests] = useState<any[]>([]);
 
+  const navigate = useNavigate();
+
+const handleStartCreating = () => {
+  if (!wallet.customTestToken || wallet.customTestToken <= 0) {
+    alert("You don't have any tokens. Please get a token to create a custom test.");
+    return;
+  }
+
+  navigate("/custom-test/create", {
+    state: {
+      examId: examDetails?._id,
+    },
+  });
+};
+
   useEffect(() => {
     if (!user.category) return;
     const fetchExamDetail = async () => {
@@ -165,20 +180,20 @@ const CustomTestPage = () => {
               and test length.
             </p>
 
-            <Link
-              to={"/custom-test/create"}
-              state={{ examId: examDetails?._id }}
-              className="
-          mt-5 inline-flex items-center justify-center
-          rounded-full bg-white px-4 py-2
-          text-sm font-semibold text-gray-700
-          shadow-sm transition-all duration-200
-          hover:-translate-y-0.5 hover:bg-gray-50
-          hover:shadow-md
-        "
-            >
-              Start Creating Test
-            </Link>
+           <button
+  type="button"
+  onClick={handleStartCreating}
+  className="
+    mt-5 inline-flex items-center justify-center
+    rounded-full bg-white px-4 py-2
+    text-sm font-semibold text-gray-700
+    shadow-sm transition-all duration-200
+    hover:-translate-y-0.5 hover:bg-gray-50
+    hover:shadow-md
+  "
+>
+  Start Creating Test
+</button>
           </div>
 
           {/* Illustration */}
