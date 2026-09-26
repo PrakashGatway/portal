@@ -338,11 +338,11 @@ const CourseCard = ({
               <button
                 onClick={(e) => {
                   e.stopPropagation();
-                  navigate(`/checkout/${course?.slug}`);
+                  navigate(`/course/${course?.slug}`);
                 }}
                 className="border border-[#FF6736] rounded-2xl px-5 py-2 text-[#FF6736] text-sm font-medium hover:bg-[#FF6736] hover:text-white transition-all duration-300 whitespace-nowrap"
               >
-                Enroll Now
+                Explore Now
               </button>
             )}
           </div>

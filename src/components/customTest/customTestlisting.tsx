@@ -1,17 +1,7 @@
 "use client";
 
 import React, { useEffect, useState } from "react";
-import {
-  ArrowRight,
-  BookOpen,
-  CheckCircle2,
-  ChevronRight,
-  CircleQuestionMarkIcon,
-  Clock3,
-  FileQuestion,
-  RefreshCw,
-  Target,
-} from "lucide-react";
+import { ArrowRight, ChevronRight, CircleQuestionMarkIcon } from "lucide-react";
 import { useAuth } from "../../context/UserContext";
 import api from "../../axiosInstance";
 import { Link, useNavigate } from "react-router";
@@ -52,34 +42,6 @@ const TestCardSkeleton = () => (
   </div>
 );
 
-const getStatusConfig = (status: RecentTest["status"]) => {
-  switch (status) {
-    case "completed":
-      return {
-        label: "Completed",
-        icon: CheckCircle2,
-        className:
-          "bg-green-50 text-green-700 border-green-200 dark:bg-green-500/10 dark:text-green-400 dark:border-green-500/20",
-      };
-
-    case "started":
-      return {
-        label: "In Progress",
-        icon: RefreshCw,
-        className:
-          "bg-orange-50 text-orange-700 border-orange-200 dark:bg-orange-500/10 dark:text-orange-400 dark:border-orange-500/20",
-      };
-
-    default:
-      return {
-        label: "Not Started",
-        icon: Clock3,
-        className:
-          "bg-gray-50 text-gray-600 border-gray-200 dark:bg-gray-700/40 dark:text-gray-300 dark:border-gray-600",
-      };
-  }
-};
-
 const getDifficultyClass = (difficulty: RecentTest["difficulty"]) => {
   switch (difficulty) {
     case "Easy":
@@ -97,33 +59,39 @@ const CustomTestPage = () => {
   const [loading, setLoading] = useState(true);
   const [loading2, setLoading2] = useState(true);
 
-  const { user, wallet } = useAuth();
+  const { user } = useAuth();
+  const [wallet, setWallet] = useState();
   const [examDetails, setExamDetail] = useState();
   const [recentTests, setRecentTests] = useState<any[]>([]);
 
   const navigate = useNavigate();
 
-const handleStartCreating = () => {
-  if (!wallet.customTestToken || wallet.customTestToken <= 0) {
-    alert("You don't have any tokens. Please get a token to create a custom test.");
-    return;
-  }
+  const handleStartCreating = () => {
+    if (!wallet.customTestToken || wallet.customTestToken <= 0) {
+      alert(
+        "You don't have any tokens. Please get a token to create a custom test.",
+      );
+      return;
+    }
 
-  navigate("/custom-test/create", {
-    state: {
-      examId: examDetails?._id,
-    },
-  });
-};
+    navigate("/custom-test/create", {
+      state: {
+        examId: examDetails?._id,
+      },
+    });
+  };
 
   useEffect(() => {
     if (!user.category) return;
     const fetchExamDetail = async () => {
       try {
         setLoading(true);
-        const response = await api.get(
-          `/test/exams/category/${user?.category?._id}`,
-        );
+        const [response, userData] = await Promise.all([
+          api.get(`/test/exams/category/${user?.category?._id}`),
+          api.get(`/auth/me`),
+        ]);
+
+        setWallet(userData?.data?.wallet)
         setExamDetail(response.data.data);
       } catch (error) {
         console.error("Failed to fetch exam detail:", error);
@@ -180,10 +148,10 @@ const handleStartCreating = () => {
               and test length.
             </p>
 
-           <button
-  type="button"
-  onClick={handleStartCreating}
-  className="
+            <button
+              type="button"
+              onClick={handleStartCreating}
+              className="
     mt-5 inline-flex items-center justify-center
     rounded-full bg-white px-4 py-2
     text-sm font-semibold text-gray-700
@@ -191,9 +159,9 @@ const handleStartCreating = () => {
     hover:-translate-y-0.5 hover:bg-gray-50
     hover:shadow-md
   "
->
-  Start Creating Test
-</button>
+            >
+              Start Creating Test
+            </button>
           </div>
 
           {/* Illustration */}
@@ -611,7 +579,10 @@ const handleStartCreating = () => {
                     {/* Action */}
                     <div className="mt-4 flex">
                       <Link
-                        to={test?.attempt && `/mcq/tests/${test?.attempt}?type=custom`}
+                        to={
+                          test?.attempt &&
+                          `/mcq/tests/${test?.attempt}?type=custom`
+                        }
                         className="
                   inline-flex items-center gap-1.5
                   rounded-full bg-orange-500
