@@ -437,6 +437,7 @@ export default function TestSeriesManagementPage() {
         category: series.category?._id || "",
         exam: series.exam || "",
         slug: series.slug || "",
+        customTest:series.customTest || 0,
         overview: series.overview || "",
         thumbnailPic: series.thumbnailPic || "",
         thumbnailFile: null,
@@ -530,6 +531,7 @@ export default function TestSeriesManagementPage() {
         overview: values.overview,
         category: values.category,
         slug: values.slug.trim(),
+        customTest:values.customTest,
         thumbnailPic, // ✅ saved image path
         defaultTestType: values.defaultTestType,
         tests: values.tests,
@@ -1066,7 +1068,7 @@ export default function TestSeriesManagementPage() {
                         }
                         header={false}
                       />
-                    
+
                       {/* <textarea
                         className="w-full rounded-xl border border-gray-200 bg-white px-3 py-2 text-sm text-gray-900 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100"
                         placeholder="Describe this test series bundle..."
@@ -1084,7 +1086,22 @@ export default function TestSeriesManagementPage() {
                         value={watch("slug")}
                         onChange={(e) => setValue("slug", e.target.value)}
                         error={!!errors.slug}
-                        hint={errors.slug?.message}
+                      />
+                    </div>
+
+                    <div>
+                      <Label>Custom Test</Label>
+
+                      <Input
+                        type="number"
+                        placeholder="1"
+                        min="0"
+                        value={watch("customTest")}
+                        onChange={(e) =>
+                          setValue("customTest", Number(e.target.value))
+                        }
+                        error={!!errors.customTest}
+                        className="[appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none"
                       />
                     </div>
 

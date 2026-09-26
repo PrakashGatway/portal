@@ -218,6 +218,7 @@ const CourseSteppedForm = ({
     instructors: [],
     level: "beginner",
     language: "English",
+    customTest:0,
     thumbnail: {
       url: "",
       publicId: "",
@@ -290,6 +291,7 @@ const CourseSteppedForm = ({
         instructors: instructorIds,
         level: course.level || "beginner",
         language: course.language || "English",
+        customTest:course.customTest || 0,
         thumbnail: {
           url: course.thumbnail?.url || "",
           publicId: course.thumbnail?.publicId || "",
@@ -336,6 +338,7 @@ const CourseSteppedForm = ({
           },
           duration: course.schedule_pattern?.duration || 0,
         },
+        customTest:course.customTest || 0,
         features: course.features?.length ? [...course.features] : [""],
         requirements: course.requirements?.length
           ? [...course.requirements]
@@ -361,6 +364,7 @@ const CourseSteppedForm = ({
         instructors: [],
         level: "beginner",
         language: "English",
+        customTest:0,
         thumbnail: {
           url: "",
           publicId: "",
@@ -1082,6 +1086,16 @@ const CourseSteppedForm = ({
             type="number"
             name="schedule_pattern.duration"
             value={formData.schedule_pattern.duration}
+            onChange={handleChange}
+            min="0"
+          />
+        </div>
+        <div>
+          <Label>Custom Test</Label>
+          <Input
+            type="number"
+            name="customTest"
+            value={formData.customTest}
             onChange={handleChange}
             min="0"
           />

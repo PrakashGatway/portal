@@ -371,29 +371,6 @@ const ContentViewPage = () => {
       />
     );
   };
-  const formatTime2 = (seconds: number) => {
-    const days = Math.floor(seconds / 86400);
-    const hours = Math.floor((seconds % 86400) / 3600);
-    const minutes = Math.floor((seconds % 3600) / 60);
-    const secs = seconds % 60;
-
-    if (days > 0) {
-      return `${days}d ${String(hours).padStart(2, "0")}h ${String(
-        minutes,
-      ).padStart(2, "0")}m ${String(secs).padStart(2, "0")}s`;
-    }
-
-    return `${String(hours).padStart(2, "0")}:${String(minutes).padStart(
-      2,
-      "0",
-    )}:${String(secs).padStart(2, "0")}`;
-  };
-
-  const handleJoinMeeting = () => {
-    if (!canJoin || !meetingUrl) return;
-
-    window.open(meetingUrl, "_blank", "noopener,noreferrer");
-  };
 
   const getSessionStatus = () => {
     if (!scheduledStart || !scheduledEnd) {
@@ -427,7 +404,7 @@ const ContentViewPage = () => {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-[#FFF7F2] p-4 md:p-6">
+      <div className="min-h-screen sm:p-4">
         <div className="grid grid-cols-1 xl:grid-cols-[minmax(0,1fr)_360px] gap-4 md:gap-6">
           {/* ================= MAIN CONTENT ================= */}
           <div className="min-w-0 space-y-4 md:space-y-6">
@@ -613,13 +590,13 @@ const ContentViewPage = () => {
   return (
     <div className="min-h-screen">
       <div
-        className="mx-auto max-w-7xl px-4 py-2
+        className="mx-auto max-w-7xl px-2 sm:px-4 py-2
       "
       >
         {/* BACK BUTTON */}
         <button
           onClick={() => navigate(-1)}
-          className="mb-6 inline-flex items-center gap-2 text-sm font-semibold text-gray-600 transition hover:text-gray-900"
+          className="mb-4 inline-flex items-center gap-2 text-sm font-semibold text-gray-600 transition hover:text-gray-900"
         >
           <ArrowLeft className="h-4 w-4" />
           Back to Content
@@ -629,7 +606,7 @@ const ContentViewPage = () => {
           HERO SECTION
       ================================================== */}
 
-        <div className="p-4 md:p-6 lg:p-0 mb-2 ">
+        <div className=" mb-2 ">
           <div className="">
             {/* Main Content Grid */}
             <div className="h-full">
@@ -1113,7 +1090,7 @@ const ContentViewPage = () => {
           </div>
         </div>
 
-        <div className="w-full max-w-7xl mx-auto px-4 sm:px-5 lg:px-0 ">
+        <div className="w-full max-w-7xl mx-auto">
           <div className="grid grid-cols-1 xl:grid-cols-[1.5fr_0.5fr] items-start gap-2">
             <div>
               {activeTab === "Overview" ? (
@@ -1246,68 +1223,12 @@ const ContentViewPage = () => {
                         <div
                           className="
             grid
+            p-3
             grid-cols-1
-            md:grid-cols-[300px_minmax(0,1fr)]
-            lg:grid-cols-[325px_minmax(0,1fr)]
-            gap-6
-            lg:gap-8
+
             items-start
           "
                         >
-                          {/* =================================================== */}
-                          {/* SESSION THUMBNAIL */}
-                          {/* =================================================== */}
-
-                          <div className="w-full min-w-0">
-                            <h2
-                              className="
-                text-[24px]
-                sm:text-[25px]
-                lg:text-[26px]
-                leading-tight
-                font-semibold
-                text-[#111827]
-                mb-5
-              "
-                            >
-                              <span className="text-[#ff613f]">Session</span>
-                            </h2>
-
-                            {/* Thumbnail */}
-                            <div
-                              className="
-                relative
-                w-full
-                overflow-hidden
-                rounded-[11px]
-                border
-                border-[#ff633f]
-                bg-[#fff7f2]
-                aspect-[5/3]
-              "
-                            >
-                              <img
-                                src={
-                                  content?.thumbnailPic
-                                    ? `${ImageBaseUrl}/${content.thumbnailPic}`
-                                    : `${ImageBaseUrl}/${course?.thumbnail?.url}`
-                                }
-                                alt={content?.title || "Session"}
-                                className="absolute inset-0 w-full h-full object-cover"
-                                onError={(e) => {
-                                  const img = e.currentTarget;
-
-                                  if (course?.thumbnail?.url) {
-                                    img.src = `${ImageBaseUrl}/${course.thumbnail.url}`;
-                                  }
-                                }}
-                              />
-                            </div>
-                          </div>
-
-                          {/* =================================================== */}
-                          {/* SESSION INFORMATION */}
-                          {/* =================================================== */}
 
                           <div className="w-full min-w-0">
                             {/* Title */}
@@ -1320,26 +1241,20 @@ const ContentViewPage = () => {
                 leading-[1.08]
                 font-semibold
                 tracking-[-0.4px]
-                text-[#10152f]
+                text-[#10152f] capitalize
                 mb-5
               "
                             >
                               <span>{content?.title.split(" ")[0]}</span>{" "}
-                              <span className="text-[#ff613f]">
+                              <span className="text-[#ff613f] ">
                                 {content?.title.split(" ").slice(1).join(" ")}
                               </span>
                             </h1>
-
-                            {/* ================================================= */}
-                            {/* INSTRUCTOR */}
-                            {/* ================================================= */}
-
                             <div className="flex items-center gap-3 mb-3">
-                              {/* Instructor Image */}
                               <div
                                 className="
-                  w-[52px]
-                  h-[52px]
+                  w-[72px]
+                  h-[72px]
                   shrink-0
                   rounded-full
                   border-2
@@ -1363,23 +1278,21 @@ const ContentViewPage = () => {
                               <div className="min-w-0">
                                 <p
                                   className="
-                    text-[15px]
-                    sm:text-[16px]
+                    text-lg
                     leading-tight
                     font-semibold
                     text-[#15182d]
                   "
                                 >
-                                  Instructor:{" "}
+                                  Instructor : {" "}
                                   <span className="text-[#ff613f]">
-                                    {instructor?.name}
+                                      {instructor?.name}
                                   </span>
                                 </p>
 
                                 <p
                                   className="
-                    text-[13px]
-                    sm:text-[14px]
+                    text-sm font-medium
                     text-[#777777]
                     mt-1
                   "
@@ -1391,13 +1304,11 @@ const ContentViewPage = () => {
 
                             <p
                               className="
-                max-w-[620px]
-                text-[14px]
-                sm:text-[15px]
+               
                 leading-[1.45]
                 text-[#606060]
-                mb-5
-                line-clamp-3
+                mb-5 font-medium
+                line-clamp-5
               "
                             >
                               {course?.description}
