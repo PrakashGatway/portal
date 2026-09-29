@@ -91,7 +91,7 @@ const getIconConfig = (notification: Notification) => {
 };
 
 // Emoji-style icon box for the list rows (matches the reference screenshot)
-const IconBadge = ({ notification }: { notification: Notification }) => {
+const IconBadge = ({ notification,isUnread }: { notification: Notification }) => {
   const title = notification.title?.toLowerCase() || "";
   const type = notification.type?.toLowerCase() || "";
   const base = "flex h-11 w-11 flex-shrink-0 items-center justify-center rounded-xl text-lg leading-none";
@@ -115,7 +115,7 @@ const IconBadge = ({ notification }: { notification: Notification }) => {
     return <div className={`${base} bg-purple-50`}>🏆</div>;
   }
   if (type.includes("offer") || title.includes("discount") || title.includes("sale") || type.includes("promotion")) {
-    return <div className={`${base} bg-pink-50`}>🏷️</div>;
+    return <div className={`${base}  ${isUnread ? "bg-white" : "bg-[#fef7dd]"}`}>🏷️</div>;
   }
   if (type.includes("payment") || title.includes("payment") || title.includes("subscription") || title.includes("expiring")) {
     return <div className={`${base} bg-red-50`}>💳</div>;
@@ -450,7 +450,7 @@ const Notifications = () => {
   ];
 
   return (
-    <div className="min-h-screen p-4 ">
+    <div className="min-h-screen p-4  ">
       <div className="mx-auto max-w-7xl">
         {/* Header Banner */}
 
@@ -554,9 +554,9 @@ const Notifications = () => {
                       <div
                         key={notification._id}
                         onClick={() => handleViewDetails(notification)}
-                        className={`group relative rounded-xl border p-5 shadow-sm transition-colors cursor-pointer hover:shadow-md ${
+                        className={`group relative rounded-xl  p-5  transition-colors cursor-pointer hover:shadow-md ${
                           isUnread
-                            ? "bg-amber-50/70 border-amber-100"
+                            ? "bg-[#fef7dd] border border-orange-500"
                             : "bg-white border-gray-100"
                         }`}
                       >
@@ -565,7 +565,7 @@ const Notifications = () => {
                         )}
 
                         <div className="flex gap-4 pr-4">
-                          <IconBadge notification={notification} />
+                          <IconBadge notification={notification} isUnread={isUnread} />
 
                           <div className="flex-1 min-w-0">
                             <div className="flex items-start justify-between gap-4">

@@ -184,7 +184,7 @@ const Popover: React.FC<{
                 whileHover={{ scale: 1.03 }}
                 whileTap={{ scale: 0.98 }}
                 onClick={onClose}
-                className="px-4 py-2 rounded-full bg-gradient-to-r from-blue-500 to-purple-500 hover:from-blue-600 hover:to-purple-600 text-white font-semibold shadow-lg transition-all"
+                className="px-4 py-2 rounded-full bg-[#f36d45] text-white font-semibold shadow-lg transition-all"
               >
                 Close
               </motion.button>
@@ -877,82 +877,492 @@ export const GRETestHead: React.FC<GRETestHeaderProps> = React.memo(
       return () => window.removeEventListener("keydown", onKey);
     }, []);
 
-    // Sample content
-    const directionsContent = useMemo(
-      () => (
-        <>
-          <p className="mb-4">
-            The questions in this section address a number of important reading
-            and writing skills. Each question includes one or more passages,
-            which may include a table or graph. Read each passage and question
-            carefully, and then choose the best answer to the question based on
-            the passage(s).
-          </p>
-          <p className="mb-4">
-            All questions in this section are multiple-choice with four answer
-            choices. Each question has a single best answer.
-          </p>
-          <div className="bg-blue-50 dark:bg-blue-900/20 rounded-lg p-4 my-4">
-            <h4 className="font-semibold text-blue-700 dark:text-blue-300 mb-2">
-              Important:
-            </h4>
-            <ul className="list-disc pl-5 space-y-1 text-sm">
-              <li>You can skip questions and return to them later</li>
-              <li>Use the "Mark for Review" feature to flag questions</li>
-              <li>The calculator is available for quantitative sections</li>
-            </ul>
-          </div>
-        </>
-      ),
-      [],
-    );
+    console.log(attempt.sections[activeSectionIndex])
 
-    const referenceContent = useMemo(
-      () => (
-        <>
-          <div className="grid grid-cols-2 gap-4">
-            <div>
-              <h4 className="font-semibold text-slate-700 dark:text-slate-300 mb-2">
-                Math Formulas
-              </h4>
-              <ul className="space-y-2 text-sm">
-                <li className="flex items-center gap-2">
-                  <Hash className="w-4 h-4" /> Area of circle: πr²
-                </li>
-                <li className="flex items-center gap-2">
-                  <Hash className="w-4 h-4" /> Quadratic formula: x = [-b ±
-                  √(b²-4ac)]/2a
-                </li>
-                <li className="flex items-center gap-2">
-                  <Hash className="w-4 h-4" /> Pythagorean: a² + b² = c²
-                </li>
-              </ul>
-            </div>
-            <div>
-              <h4 className="font-semibold text-slate-700 dark:text-slate-300 mb-2">
-                Quick Reference
-              </h4>
-              <ul className="space-y-2 text-sm">
-                <li className="flex items-center gap-2">
-                  <Type className="w-4 h-4" /> Common prefixes/suffixes
-                </li>
-                <li className="flex items-center gap-2">
-                  <Grid3X3 className="w-4 h-4" /> Coordinate geometry rules
-                </li>
-                <li className="flex items-center gap-2">
-                  <Brain className="w-4 h-4" /> Logical fallacies
-                </li>
-              </ul>
-            </div>
-          </div>
-          <p className="mt-4 text-xs text-slate-500 dark:text-slate-400">
-            Tip: You can copy these references to your notes panel for quick
-            access.
-          </p>
-        </>
-      ),
-      [],
+    // Sample content
+   const directionsContent = useMemo(() => {
+  const currentSection = attempt?.sections?.[activeSectionIndex];
+
+  const refer = currentSection?.refer;
+
+  console.log("Current Refer:", refer);
+
+  // SAT Reading & Writing
+  if (refer === "SAT READING & WRITING") {
+    return (
+      <>
+        <p className="mb-4">
+          The questions in this section address a number of important reading
+          and writing skills. Each question includes one or more passages,
+          which may include a table or graph. Read each passage and question
+          carefully, and then choose the best answer to the question based on
+          the passage(s).
+        </p>
+
+        <p className="mb-4">
+          All questions in this section are multiple-choice with four answer
+          choices. Each question has a single best answer.
+        </p>
+      </>
     );
+  }
+
+  // SAT Math
+  if (refer === "SAT MATH") {
+    return (
+      <>
+        <p className="mb-4">
+          The questions in this section address a number of important math
+          skills.
+        </p>
+
+        <p className="mb-4">
+          Use of a calculator is permitted for all questions. A reference
+          sheet, calculator, and these directions can be accessed throughout
+          the test.
+        </p>
+
+        <p className="mb-4">
+          Unless otherwise indicated:
+        </p>
+
+        <ul className="list-disc pl-5 space-y-2 mb-4">
+          <li>All variables and expressions represent real numbers.</li>
+          <li>Figures provided are drawn to scale.</li>
+          <li>All figures lie in a plane.</li>
+          <li>
+            The domain of a given function f is the set of all real numbers x
+            for which f(x) is a real number.
+          </li>
+        </ul>
+
+        <p className="mb-4">
+          For multiple-choice questions, solve each problem and choose the
+          correct answer from the choices provided. Each multiple-choice
+          question has a single correct answer.
+        </p>
+
+        <p className="mb-4">
+          For student-produced response questions, solve each problem and enter
+          your answer as described below.
+        </p>
+
+        <ul className="list-disc pl-5 space-y-2 mb-4">
+          <li>
+            If you find more than one correct answer, enter only one answer.
+          </li>
+          <li>
+            You can enter up to 5 characters for a positive answer and up to 6
+            characters (including the negative sign) for a negative answer.
+          </li>
+          <li>
+            If your answer is a fraction that doesn’t fit in the provided
+            space, enter the decimal equivalent.
+          </li>
+          <li>
+            If your answer is a decimal that doesn’t fit in the provided
+            space, enter it by truncating or rounding at the appropriate place.
+          </li>
+          <li>
+            If your answer is a mixed number (such as 3½), enter it as an
+            improper fraction (7/2) or its decimal equivalent (3.5).
+          </li>
+          <li>
+            Don’t enter symbols such as a percent sign (%), comma (,), or
+            dollar sign ($).
+          </li>
+        </ul>
+
+        <h4 className="font-medium mb-3">
+          Examples
+        </h4>
+
+        <div className="mb-5">
+          <p className="font-medium mb-2">Answer: 3.5</p>
+
+          <p className="font-medium">
+            Acceptable ways to enter answer:
+          </p>
+
+          <ul className="list-disc pl-5 mb-2">
+            <li>3.5</li>
+            <li>3.50</li>
+            <li>7/2</li>
+          </ul>
+
+          <p className="font-medium">
+            Unacceptable: Will NOT receive credit:
+          </p>
+
+          <ul className="list-disc pl-5">
+            <li>31/2</li>
+            <li>3 1/2</li>
+          </ul>
+        </div>
+
+        <div className="mb-5">
+          <p className="font-medium mb-2">Answer: 2/3</p>
+
+          <p className="font-medium">
+            Acceptable ways to enter answer:
+          </p>
+
+          <ul className="list-disc pl-5 mb-2">
+            <li>2/3</li>
+            <li>.6666</li>
+            <li>.6667</li>
+            <li>0.666</li>
+            <li>0.667</li>
+          </ul>
+
+          <p className="font-medium">
+            Unacceptable: Will NOT receive credit:
+          </p>
+
+          <ul className="list-disc pl-5">
+            <li>0.66</li>
+            <li>.66</li>
+            <li>0.67</li>
+          </ul>
+        </div>
+
+        <div className="mb-5">
+          <p className="font-medium mb-2">Answer: -1/3</p>
+
+          <p className="font-medium">
+            Acceptable ways to enter answer:
+          </p>
+
+          <ul className="list-disc pl-5 mb-2">
+            <li>1/3</li>
+            <li>.3333</li>
+            <li>0.333</li>
+          </ul>
+
+          <p className="font-medium">
+            Unacceptable: Will NOT receive credit:
+          </p>
+
+          <ul className="list-disc pl-5">
+            <li>-.33</li>
+            <li>-0.33</li>
+          </ul>
+        </div>
+
+        <div className="bg-orange-50 dark:bg-blue-900/20 rounded-lg p-4 my-4">
+          <h4 className="font-medium text-orange-700 dark:text-orange-300 mb-2">
+            Important:
+          </h4>
+
+          <p className="text-sm">
+            For decimal answers, truncate or round at the fourth digit.
+          </p>
+        </div>
+      </>
+    );
+  }
+
+  // Default directions
+  return (
+    <p className="mb-4">
+      Please read the directions carefully before starting this section.
+    </p>
+  );
+}, [attempt, activeSectionIndex]);
+
+   const referenceContent = useMemo(
+  () => (
+    <div className="w-full space-y-8 text-sm text-slate-800">
+      <h3 className="text-lg font-semibold">
+        Reference section
+      </h3>
+
+      {/* Volume formulas */}
+      <section className="space-y-8">
+        {/* Rectangular Prism */}
+        <div>
+          <div className="mb-3">
+            <svg
+              viewBox="0 0 300 180"
+              className="w-full max-w-[300px]"
+            >
+              <path
+                d="M55 55 L170 55 L205 25 L90 25 Z"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="1.5"
+              />
+
+              <path
+                d="M55 55 L55 140 L170 140 L170 55"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="1.5"
+              />
+
+              <path
+                d="M170 55 L205 25 L205 110 L170 140"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="1.5"
+              />
+
+              <text x="110" y="20" fontSize="14">
+                b
+              </text>
+
+              <text x="110" y="160" fontSize="14">
+                l
+              </text>
+
+              <text x="215" y="75" fontSize="14">
+                h
+              </text>
+            </svg>
+          </div>
+
+          <p className="font-semibold">
+            Volume (V): l × b × h
+          </p>
+        </div>
+
+        {/* Cylinder */}
+        <div>
+          <svg
+            viewBox="0 0 300 200"
+            className="w-full max-w-[300px]"
+          >
+            <ellipse
+              cx="120"
+              cy="45"
+              rx="65"
+              ry="22"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="1.5"
+            />
+
+            <line
+              x1="55"
+              y1="45"
+              x2="55"
+              y2="140"
+              stroke="currentColor"
+              strokeWidth="1.5"
+            />
+
+            <line
+              x1="185"
+              y1="45"
+              x2="185"
+              y2="140"
+              stroke="currentColor"
+              strokeWidth="1.5"
+            />
+
+            <ellipse
+              cx="120"
+              cy="140"
+              rx="65"
+              ry="22"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="1.5"
+            />
+
+            <line
+              x1="120"
+              y1="45"
+              x2="120"
+              y2="140"
+              stroke="currentColor"
+              strokeDasharray="4 4"
+            />
+
+            <text x="135" y="95" fontSize="14">
+              h
+            </text>
+
+            <text x="145" y="40" fontSize="14">
+              r
+            </text>
+          </svg>
+
+          <p className="font-semibold">
+            Volume (V): πr²h
+          </p>
+        </div>
+
+        {/* Cone */}
+        <div>
+          <svg
+            viewBox="0 0 300 220"
+            className="w-full max-w-[300px]"
+          >
+            <path
+              d="M120 25 L55 160"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="1.5"
+            />
+
+            <path
+              d="M120 25 L185 160"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="1.5"
+            />
+
+            <ellipse
+              cx="120"
+              cy="160"
+              rx="65"
+              ry="20"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="1.5"
+            />
+
+            <line
+              x1="120"
+              y1="25"
+              x2="120"
+              y2="160"
+              stroke="currentColor"
+              strokeDasharray="4 4"
+            />
+
+            <text x="130" y="95" fontSize="14">
+              h
+            </text>
+
+            <text x="150" y="95" fontSize="14">
+              l
+            </text>
+
+            <text x="150" y="180" fontSize="14">
+              r
+            </text>
+          </svg>
+
+          <p className="font-semibold">
+            Volume (V): (1/3)πr²h
+          </p>
+        </div>
+      </section>
+
+      {/* Sphere */}
+      <section>
+        <svg
+          viewBox="0 0 300 200"
+          className="w-full max-w-[300px]"
+        >
+          <circle
+            cx="120"
+            cy="90"
+            r="65"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="1.5"
+          />
+
+          <ellipse
+            cx="120"
+            cy="90"
+            rx="65"
+            ry="20"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="1"
+            strokeDasharray="4 4"
+          />
+
+          <line
+            x1="120"
+            y1="90"
+            x2="185"
+            y2="90"
+            stroke="currentColor"
+            strokeWidth="1.5"
+          />
+
+          <text x="145" y="82" fontSize="14">
+            r
+          </text>
+        </svg>
+
+        <p className="font-semibold">
+          Volume (V): (4/3)πr³
+        </p>
+      </section>
+
+      {/* Pyramid */}
+      <section>
+        <svg
+          viewBox="0 0 350 220"
+          className="w-full max-w-[350px]"
+        >
+          {/* pyramid sides */}
+          <path
+            d="M175 20 L90 165 L260 165 Z"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="1.5"
+          />
+
+          {/* base */}
+          <path
+            d="M90 165 L145 190 L260 165 L210 145"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="1.5"
+          />
+
+          {/* height */}
+          <line
+            x1="175"
+            y1="20"
+            x2="175"
+            y2="165"
+            stroke="currentColor"
+            strokeDasharray="4 4"
+          />
+
+          <text x="182" y="95" fontSize="14">
+            h
+          </text>
+
+          <text x="145" y="185" fontSize="14">
+            b
+          </text>
+        </svg>
+
+        <p className="font-semibold">
+          Volume (V): (1/3) × b × h
+        </p>
+      </section>
+
+      {/* General Rules */}
+      <section className="space-y-2 border-t border-slate-200 pt-5">
+        <p>
+          The number of degrees of arc in a circle is{' '}
+          <strong>360°</strong>.
+        </p>
+
+        <p>
+          The number of radians of arc in a circle is{' '}
+          <strong>2π</strong>.
+        </p>
+
+        <p>
+          The sum of the measures in degrees of the angles of a triangle is{' '}
+          <strong>180°</strong>.
+        </p>
+      </section>
+    </div>
+  ),
+  [],
+);
 
     // Dropdown action handlers
     const handleHelp = () => {
@@ -1411,7 +1821,7 @@ export const GRETestHead: React.FC<GRETestHeaderProps> = React.memo(
           maxHeight="70vh"
           title="Section Directions & Guidelines"
         >
-          {directionsContent}
+        {directionsContent}
         </Popover>
 
         <Popover
@@ -1451,7 +1861,7 @@ export const GRETestHead: React.FC<GRETestHeaderProps> = React.memo(
                 className={`w-4 h-4 ${savingProgress ? "animate-pulse" : ""}`}
               />
               <div className="flex-1">
-                <span className="font-medium">Save Progress</span>
+                <span className="font-medium text-sm">Save Progress</span>
                 {savingProgress && (
                   <span className="text-xs text-slate-500 ml-2">Saving...</span>
                 )}
@@ -1468,7 +1878,7 @@ export const GRETestHead: React.FC<GRETestHeaderProps> = React.memo(
             >
               <HelpCircle className="w-4 h-4" />
               <div>
-                <span className="font-medium">Help & Support</span>
+                <span className="font-medium text-sm">Help & Support</span>
                 <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
                   Get assistance during test
                 </p>
@@ -1482,7 +1892,7 @@ export const GRETestHead: React.FC<GRETestHeaderProps> = React.memo(
             >
               <AlertCircle className="w-4 h-4" />
               <div>
-                <span className="font-medium">Report Issue</span>
+                <span className="font-medium text-sm">Report Issue</span>
                 <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
                   Technical problems or concerns
                 </p>
@@ -1523,7 +1933,7 @@ export const GRETestHead: React.FC<GRETestHeaderProps> = React.memo(
               <LogOut className="w-4 h-4" />
 
               <div>
-                <span className="font-medium">Exit Test</span>
+                <span className="font-medium text-sm">Exit Test</span>
 
                 <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
                   Leave the test and return to the previous page

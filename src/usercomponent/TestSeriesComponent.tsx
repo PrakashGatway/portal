@@ -241,7 +241,7 @@ export const TestSeriesTabs: React.FC<TestSeriesTabsProps> = ({
     },
   ];
 
-  console.log(type);
+ 
 
 const filterType = testSeries.tests.filter((item) => {
   const typeMap = {
@@ -402,20 +402,33 @@ const filterType = testSeries.tests.filter((item) => {
             animate={{ opacity: 1, y: 0 }}
             className="space-y-6 bg-white rounded-3xl p-4"
           >
-            <div className="flex justify-between items-center">
-              <h3 className="text-xl font-bold text-gray-900 ">All Tests</h3>
-              <div className="flex gap-2">
-                {["Full Length", "Sectional", "Custom"].map((item) => (
-                  <button
-                    onClick={() => settype(item)}
-                    key={item}
-                    className={`rounded-lg border px-4 py-2 ${type === item ? "text-orange-500" : "text-black"}`}
-                  >
-                    {item}
-                  </button>
-                ))}
-              </div>
-            </div>
+            <div className="flex gap-2">
+  {["Full Length", "Sectional", "Custom"].map((item) => (
+    <button
+      key={item}
+      onClick={() => settype(item)}
+      className={`relative rounded-lg px-4 py-2 transition-colors duration-300 ${
+        type === item
+          ? "text-orange-500"
+          : "text-black hover:text-orange-500"
+      }`}
+    >
+      {item}
+
+      {type === item && (
+        <motion.span
+          layoutId="activeTestType"
+          className="absolute bottom-0 left-0 right-0 h-[2px] rounded-full bg-orange-500"
+          transition={{
+            type: "spring",
+            stiffness: 400,
+            damping: 30,
+          }}
+        />
+      )}
+    </button>
+  ))}
+</div>
             {filterType.length > 0 ? filterType.map((testItem, index) => {
               const cardThemes = [
                 // Card 1 - Peach

@@ -45,7 +45,7 @@ const LayoutContent: React.FC = () => {
           isExpanded || isHovered ? "lg:ml-[260px]" : "lg:ml-[120px]"
         } ${isMobileOpen ? "ml-0" : ""}`}
       >
-        <div className="p-2 sm:p-4 mx-auto bg-[#FDF4EF] dark:bg-gray-900  md:p-4">
+        <div className="p-2 sm:p-4 mx-auto bg-[#fef4f2] dark:bg-gray-900  md:p-4">
           <Outlet />
         </div>
       </div>

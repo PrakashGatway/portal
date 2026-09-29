@@ -5,11 +5,14 @@ import { AlertTriangle } from "lucide-react";
 import Button from "../../components/ui/button/Button";
 import { toast } from "react-toastify";
 import api from "../../axiosInstance";
-import FullScreenLoader from "../../components/fullScreeLoader";
+import FullScreenLoader, { Loader } from "../../components/fullScreeLoader";
 import QuestionRenderer, {
   BreakComponent,
+  ModuleCompleteLoader,
+  ModuleCompleteSubmitLoader,
   SectionInstructions,
   SectionReview,
+  TestInformation,
 } from "./SatComponents";
 import { GRETestHead } from "./SatHeader";
 import { GRETestResults } from "./SatResult";
@@ -120,6 +123,8 @@ export default function SatExamPage() {
   const [starting, setStarting] = useState(false);
   const [savingProgress, setSavingProgress] = useState(false);
   const [submitting, setSubmitting] = useState(false);
+  const [finalSubmitting, setFinalSubmitting] = useState(false);
+
   const [error, setError] = useState<string | null>(null);
   const [breakSeconds, setBreakSeconds] = useState(10 * 60);
 
@@ -130,9 +135,16 @@ export default function SatExamPage() {
   const [timerRunning, setTimerRunning] = useState(false);
   const [showingReviewScreen, setShowingReviewScreen] = useState(false);
 
-  const [currentScreen, setCurrentScreen] = useState<GreScreen>("question");
+  const [LoaderAfterReview,setLoaderAfterReview] = useState(false)
+  const [isLast,setisLast] = useState(false)
+
+  const [currentScreen, setCurrentScreen] = useState<GreScreen>(
+    "section_instructions",
+  );
 
   const isCompleted = attempt?.status === "completed";
+
+  console.log(attempt);
 
   const testTitle =
     attempt?.testTemplate?.title ||
@@ -174,9 +186,10 @@ export default function SatExamPage() {
       setAttempt(loaded);
 
       const meta = loaded.gmatMeta;
+
       let secIdx = 0;
       let qIdx = 0;
-      let nextScreen: GreScreen = "question";
+      let nextScreen: GreScreen = "section_instructions";
 
       if (loaded.status === "completed") {
         setCurrentScreen("results");
@@ -187,26 +200,22 @@ export default function SatExamPage() {
       if (meta && typeof meta.currentSectionIndex === "number") {
         secIdx = meta.currentSectionIndex;
         qIdx = meta.currentQuestionIndex || 0;
-        if (meta.phase === "in_section") nextScreen = "question";
-        else if (meta.phase === "review") nextScreen = "section_review";
-        else nextScreen = "question";
-      } else {
-        outer: for (let s = 0; s < loaded.sections.length; s++) {
-          const sec = loaded.sections[s];
-          for (let i = 0; i < sec.questions.length; i++) {
-            if (!sec.questions[i].isAnswered) {
-              secIdx = s;
-              qIdx = i;
-              nextScreen = "question";
-              break outer;
-            }
-          }
+
+        if (meta.phase === "in_section") {
+          nextScreen = "question";
+        } else if (meta.phase === "review") {
+          nextScreen = "section_review";
+        } else if (meta.phase === "section_instructions") {
+          nextScreen = "section_instructions";
         }
+      } else {
+        // NEW TEST → show instructions first
+        nextScreen = "section_instructions";
       }
 
       setActiveSectionIndex(secIdx);
       setActiveQuestionIndex(qIdx);
-      setCurrentScreen(nextScreen || "question");
+      setCurrentScreen(nextScreen);
     } catch (err: any) {
       console.error("startAttempt error:", err);
       setError(
@@ -240,6 +249,8 @@ export default function SatExamPage() {
   );
 
   const qDoc = currentQuestion?.questionDoc || null;
+
+  
 
   useEffect(() => {
     if (!attempt || !currentSection) return;
@@ -374,6 +385,7 @@ export default function SatExamPage() {
       } finally {
         setSavingProgress(false);
         setSubmitting(false);
+        setLoaderAfterReview(false)
       }
     },
     [
@@ -475,11 +487,15 @@ export default function SatExamPage() {
 
   const isLastSection =
     !!attempt && activeSectionIndex >= attempt.sections.length - 1;
+  
 
   const isNextDisabled = isCompleted || submitting;
 
   const handleFinishSectionReview = async () => {
     if (!attempt || !currentSection) return;
+
+    setLoaderAfterReview(true)
+
 
     await saveCurrentQuestionProgress({
       silent: true,
@@ -491,6 +507,7 @@ export default function SatExamPage() {
     if (isLastSection) {
       submitTestAttempt();
       setCurrentScreen("results");
+      setisLast(true)
       return;
     }
 
@@ -512,26 +529,24 @@ export default function SatExamPage() {
   };
 
   useEffect(() => {
-  window.history.pushState(null, "", window.location.href);
+    window.history.pushState(null, "", window.location.href);
 
-  const handleBackButton = () => {
-    const confirmBack = window.confirm(
-      "Are you sure you want to go back?"
-    );
+    const handleBackButton = () => {
+      const confirmBack = window.confirm("Are you sure you want to go back?");
 
-    if (confirmBack) {
-      window.history.back();
-    } else {
-      window.history.pushState(null, "", window.location.href);
-    }
-  };
+      if (confirmBack) {
+        window.history.back();
+      } else {
+        window.history.pushState(null, "", window.location.href);
+      }
+    };
 
-  window.addEventListener("popstate", handleBackButton);
+    window.addEventListener("popstate", handleBackButton);
 
-  return () => {
-    window.removeEventListener("popstate", handleBackButton);
-  };
-}, []);
+    return () => {
+      window.removeEventListener("popstate", handleBackButton);
+    };
+  }, []);
 
   useEffect(() => {
     if (currentScreen !== "break") return;
@@ -547,6 +562,7 @@ export default function SatExamPage() {
 
     return () => clearInterval(timer);
   }, [currentScreen, breakSeconds]);
+  console.log(submitting,"ss")
 
   const submitTestAttempt = async () => {
     if (!attempt || isCompleted) return;
@@ -558,6 +574,7 @@ export default function SatExamPage() {
 
     try {
       setSubmitting(true);
+      setFinalSubmitting(true)
       setTimerRunning(false);
       await saveCurrentQuestionProgress({
         silent: true,
@@ -590,8 +607,11 @@ export default function SatExamPage() {
       toast.error(err.response?.data?.message || "Failed to submit GRE test");
     } finally {
       setSubmitting(false);
+      setFinalSubmitting(false)
     }
   };
+
+  console.log(LoaderAfterReview,"loader")
 
   // Helper to update the current question partially and immutably
   const updateCurrentQuestion = (patch: Partial<AttemptQuestion>) => {
@@ -642,10 +662,12 @@ export default function SatExamPage() {
 
   return (
     <>
-      <div className="relative min-h-screen bg-white  dark:bg-slate-900 text-slate-900 dark:text-slate-50">
-        <div className="h-[16px] w-full bg-gradient-to-r from-[#fff1dc] via-[#ffd19f] to-[#ff947d]" />
+     { 
+       LoaderAfterReview ? (<ModuleCompleteLoader currentScreen={currentScreen} isCompleted={isCompleted} islastsection={isLastSection}/>)
+      :(<div className="relative min-h-screen bg-white  dark:bg-slate-900 text-slate-900 dark:text-slate-50">
+      {currentScreen!== "section_instructions" &&  <div className="h-[16px] w-full bg-gradient-to-r from-[#fff1dc] via-[#ffd19f] to-[#ff947d]" />}
 
-        {currentScreen !== "results" && (
+        {currentScreen !== "results" && currentScreen!== "section_instructions" && finalSubmitting=== false && (
           <GRETestHead
             testTitle={testTitle}
             attempt={attempt}
@@ -667,7 +689,7 @@ export default function SatExamPage() {
 
         {/* Scrollable main area between header & footer */}
         <div className="pt-14 ">
-          {currentScreen === "question" &&
+          { currentScreen === "question" &&
             currentSection &&
             currentQuestion && (
               <QuestionRenderer
@@ -710,14 +732,19 @@ export default function SatExamPage() {
             />
           )}
 
-          {currentScreen === "results" && attempt && (
-            <GRETestResults
-              attempt={attempt}
-              navigateBack={() => navigate(-1)}
-              onTakeAnotherTest={() => navigate("/practice-tests")}
-              saving={savingProgress}
-            />
-          )}
+         {finalSubmitting ? (
+  <ModuleCompleteSubmitLoader />
+) : (
+  currentScreen === "results" &&
+  attempt && (
+    <GRETestResults
+      attempt={attempt}
+      navigateBack={() => navigate(-1)}
+      onTakeAnotherTest={() => navigate("/practice-tests")}
+      saving={savingProgress}
+    />
+  )
+)}
 
           {currentScreen === "break" && (
             <BreakComponent
@@ -726,8 +753,27 @@ export default function SatExamPage() {
               setCurrentScreen={setCurrentScreen}
             />
           )}
+
+          {currentScreen === "section_instructions" && (
+            <TestInformation
+              onStart={async () => {
+                await saveCurrentQuestionProgress({
+                  silent: true,
+                  phase: "in_section",
+                  metaSectionIndex: activeSectionIndex,
+                  metaQuestionIndex: 0,
+                });
+
+                setCurrentScreen("question");
+              }}
+            />
+          )}
         </div>
+
+      </div>)}
+      <div>
       </div>
+
     </>
   );
 }
