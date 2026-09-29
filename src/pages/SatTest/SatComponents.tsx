@@ -1472,7 +1472,7 @@ export const BreakComponent = ({
   setCurrentScreen,
 }) => {
   return (
-    <div className="relative xl:h-164  w-full overflow-hidden bg-[#17233D] text-white">
+    <div className="relative xl:min-h-screen  w-full overflow-hidden bg-[#17233D] text-white">
       {/* Main Content */}
       <div className="relative z-10 flex  w-full items-center justify-center px-5 py-12 sm:px-8 lg:px-12">
         <div className="grid w-full max-w-6xl grid-cols-1 items-center gap-10 lg:grid-cols-[1fr_1fr] lg:gap-16 mx-auto">
@@ -1574,8 +1574,7 @@ export const BreakComponent = ({
         </div>
       </div>
 
-      {/* Bottom Accent */}
-      <div className="absolute bottom-0 left-0 right-0 h-3 bg-gradient-to-r from-[#fff1dc] via-[#ffd19f] to-[#ff947d]" />
+     
     </div>
   );
 };

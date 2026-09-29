@@ -7,10 +7,18 @@ import Label from "../../components/form/Label";
 import Select from "../../components/form/Select";
 import { toast } from "react-toastify";
 import api, { ImageBaseUrl } from "../../axiosInstance";
-import { Pencil, Trash2, X, Plus, Image as ImageIcon, Bell, Layout, FileText } from "lucide-react";
+import {
+  Pencil,
+  Trash2,
+  X,
+  Plus,
+  Image as ImageIcon,
+  Bell,
+  Layout,
+  FileText,
+} from "lucide-react";
 import RichTextEditor from "../../components/TextEditor";
-import NotificationManagement from "../../components/notificationManagement"; 
-
+import NotificationManagement from "../../components/notificationManagement";
 
 const BANNER_TYPE = "Banner";
 const OTHER_TYPE = "other";
@@ -21,7 +29,6 @@ const LAYOUT_OPTIONS = [
   { value: "layout-3", label: "Layout 3 (30:70)" },
   { value: "layout-4", label: "Layout 4 (100%)" },
 ];
-
 
 interface BannerItem {
   Banner: {
@@ -76,8 +83,7 @@ interface Filters {
 
 type BannerType = typeof BANNER_TYPE | typeof OTHER_TYPE;
 
-
-const INITIAL_FORM_DATA: FormData = {
+const INITIAL_FORM_DATA: any = {
   name: "",
   description: "",
   key: "",
@@ -90,10 +96,7 @@ const INITIAL_FORM_DATA: FormData = {
         file: "",
         alt: "",
       },
-      subBanner: {
-        file: "",
-        alt: "",
-      },
+      Category: null,
     },
   ],
 };
@@ -105,7 +108,6 @@ const INITIAL_FILTERS: Filters = {
   isActive: "",
   search: "",
 };
-
 
 const useDebounce = <T,>(value: T, delay: number): T => {
   const [debouncedValue, setDebouncedValue] = useState<T>(value);
@@ -123,7 +125,6 @@ const useDebounce = <T,>(value: T, delay: number): T => {
   return debouncedValue;
 };
 
-
 const bannerService = {
   fetchAll: (params: any) => api.get("/Banner", { params }),
   create: (data: any) => api.post("/Banner", data),
@@ -131,7 +132,7 @@ const bannerService = {
   delete: (id: string) => api.delete(`/Banner/${id}`),
   toggleStatus: (id: string, status: boolean) =>
     api.put(`/Banner/${id}`, { isActive: status }),
-  uploadImage: ({file, oldFile}: any) => {
+  uploadImage: ({ file, oldFile }: any) => {
     const formData = new FormData();
     formData.append("image", file);
     if (oldFile) {
@@ -143,14 +144,12 @@ const bannerService = {
   },
 };
 
-
-
 // Image Preview Component
-const ImagePreview: React.FC<{ url: string; alt: string; onRemove?: () => void }> = ({
-  url,
-  alt,
-  onRemove,
-}) => {
+const ImagePreview: React.FC<{
+  url: string;
+  alt: string;
+  onRemove?: () => void;
+}> = ({ url, alt, onRemove }) => {
   const [isOpen, setIsOpen] = useState(false);
 
   if (!url) return null;
@@ -176,9 +175,17 @@ const ImagePreview: React.FC<{ url: string; alt: string; onRemove?: () => void }
 
       {/* Image Preview Modal */}
       {isOpen && (
-        <Modal isOpen={isOpen} onClose={() => setIsOpen(false)} className="max-w-4xl">
+        <Modal
+          isOpen={isOpen}
+          onClose={() => setIsOpen(false)}
+          className="max-w-4xl"
+        >
           <div className="p-4">
-            <img src={url} alt={alt} className="w-full h-auto max-h-[70vh] object-contain" />
+            <img
+              src={url}
+              alt={alt}
+              className="w-full h-auto max-h-[70vh] object-contain"
+            />
           </div>
         </Modal>
       )}
@@ -192,10 +199,20 @@ interface BannerPairProps {
   pair: BannerItem;
   errors: Record<string, string>;
   uploading: boolean;
-  onFileUpload: (e: React.ChangeEvent<HTMLInputElement>, index: number, type: "banner" | "subBanner") => void;
-  onAltChange: (index: number, type: "banner" | "subBanner", value: string) => void;
+  onFileUpload: (
+    e: React.ChangeEvent<HTMLInputElement>,
+    index: number,
+    type: "banner" | "subBanner",
+  ) => void;
+  onAltChange: (
+    index: number,
+    type: "banner" | "subBanner",
+    value: string,
+  ) => void;
   onRemove: (index: number) => void;
   isRemovable: boolean;
+  category: any;
+  setFormData: any;
 }
 
 const BannerPair: React.FC<BannerPairProps> = ({
@@ -206,9 +223,10 @@ const BannerPair: React.FC<BannerPairProps> = ({
   onFileUpload,
   onAltChange,
   onRemove,
+  category,
   isRemovable,
+  setFormData,
 }) => {
-
   return (
     <div className="border rounded-lg p-4 dark:border-gray-700 bg-gray-50 dark:bg-gray-800/50">
       <div className="flex justify-between items-center mb-4">
@@ -244,14 +262,18 @@ const BannerPair: React.FC<BannerPairProps> = ({
               onRemove={() => {
                 onAltChange(index, "banner", "");
                 // Reset file input
-                const input = document.querySelector(`input[data-index="${index}"][data-type="banner"]`) as HTMLInputElement;
+                const input = document.querySelector(
+                  `input[data-index="${index}"][data-type="banner"]`,
+                ) as HTMLInputElement;
                 if (input) input.value = "";
               }}
             />
           )}
         </div>
         {errors[`banner_${index}`] && (
-          <p className="mt-1 text-sm text-red-600">{errors[`banner_${index}`]}</p>
+          <p className="mt-1 text-sm text-red-600">
+            {errors[`banner_${index}`]}
+          </p>
         )}
       </div>
 
@@ -266,59 +288,75 @@ const BannerPair: React.FC<BannerPairProps> = ({
           className={errors[`banner_alt_${index}`] ? "border-red-500" : ""}
         />
         {errors[`banner_alt_${index}`] && (
-          <p className="mt-1 text-sm text-red-600">{errors[`banner_alt_${index}`]}</p>
+          <p className="mt-1 text-sm text-red-600">
+            {errors[`banner_alt_${index}`]}
+          </p>
         )}
       </div>
 
-      {/* Sub-Banner Image */}
+     
       <div className="mb-4">
-        <Label>Sub-Banner Image</Label>
-        <div className="flex items-center gap-3 flex-wrap">
-          <div className="flex-1 min-w-[200px]">
-            <Input
-              type="file"
-              accept="image/*"
-              onChange={(e) => onFileUpload(e, index, "subBanner")}
-              className="flex-1"
-              disabled={uploading}
-            />
-          </div>
-          {pair.subBanner.file && (
-            <ImagePreview
-              url={pair.subBanner.file}
-              alt={pair.subBanner.alt}
-              onRemove={() => {
-                onAltChange(index, "subBanner", "");
-                const input = document.querySelector(`input[data-index="${index}"][data-type="subBanner"]`) as HTMLInputElement;
-                if (input) input.value = "";
-              }}
-            />
-          )}
-        </div>
-        {errors[`subbanner_${index}`] && (
-          <p className="mt-1 text-sm text-red-600">{errors[`subbanner_${index}`]}</p>
-        )}
-      </div>
+        <Label>Category</Label>
 
-      {/* Sub-Banner Alt Text */}
-      <div>
-        <Label>Sub-Banner Alt Text</Label>
-        <Input
-          type="text"
-          value={pair.subBanner.alt}
-          onChange={(e) => onAltChange(index, "subBanner", e.target.value)}
-          placeholder="Enter sub-banner alt text"
-          className={errors[`subbanner_alt_${index}`] ? "border-red-500" : ""}
-        />
-        {errors[`subbanner_alt_${index}`] && (
-          <p className="mt-1 text-sm text-red-600">{errors[`subbanner_alt_${index}`]}</p>
+        <div className="relative mt-2">
+          <select
+            name="category"
+            value={pair.Category}
+            onChange={(e) => {
+              setFormData((prev) => ({
+                ...prev,
+                Banners: prev.Banners.map((banner, i) =>
+                  i === index
+                    ? {
+                        ...banner,
+                        Category: e.target.value,
+                      }
+                    : banner,
+                ),
+              }));
+            }}
+            id={`category_${index}`}
+            className="w-full appearance-none rounded-lg border border-gray-300 bg-white px-4 py-3 pr-10 text-sm text-gray-700 shadow-sm outline-none transition-all focus:border-[#f36d45] focus:ring-2 focus:ring-[#f36d45]/20 hover:border-gray-400"
+            defaultValue=""
+          >
+            <option value="" disabled>
+              Select Category
+            </option>
+
+            {category?.data?.map((item) => (
+              <option key={item._id} value={item._id}>
+                {item.name}
+              </option>
+            ))}
+          </select>
+
+          {/* Dropdown arrow */}
+          <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-3 text-gray-500">
+            <svg
+              className="h-4 w-4"
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke="currentColor"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M19 9l-7 7-7-7"
+              />
+            </svg>
+          </div>
+        </div>
+
+        {errors[`subbanner_${index}`] && (
+          <p className="mt-1 text-sm text-red-600">
+            {errors[`subbanner_${index}`]}
+          </p>
         )}
       </div>
     </div>
   );
 };
-
-
 
 // Section Header Component
 interface SectionHeaderProps {
@@ -369,7 +407,9 @@ const BannerSection: React.FC<{
   filters: Filters;
   total: number;
   loadingStates: Record<string, boolean>;
-  onFilterChange: (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => void;
+  onFilterChange: (
+    e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>,
+  ) => void;
   onResetFilters: () => void;
   onPageChange: (page: number) => void;
   onToggleStatus: (id: string, status: boolean) => void;
@@ -395,9 +435,10 @@ const BannerSection: React.FC<{
       ...banner,
       formattedDate: moment(banner.createdAt).format("MMM D, YYYY"),
       bannerCount: banner.Banners?.length || 0,
-      displayType: banner.bannerLayout && banner.bannerLayout.startsWith('layout-') 
-        ? 'Banner' 
-        : 'Other',
+      displayType:
+        banner.bannerLayout && banner.bannerLayout.startsWith("layout-")
+          ? "Banner"
+          : "Other",
     }));
   }, [banners]);
 
@@ -516,11 +557,13 @@ const BannerSection: React.FC<{
                       </span>
                     </td>
                     <td className="whitespace-nowrap px-2 py-4">
-                      <span className={`text-sm px-2 py-1 rounded-full ${
-                        banner.displayType === 'Banner' 
-                          ? 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200'
-                          : 'bg-purple-100 text-purple-800 dark:bg-purple-900 dark:text-purple-200'
-                      }`}>
+                      <span
+                        className={`text-sm px-2 py-1 rounded-full ${
+                          banner.displayType === "Banner"
+                            ? "bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200"
+                            : "bg-purple-100 text-purple-800 dark:bg-purple-900 dark:text-purple-200"
+                        }`}
+                      >
                         {banner.displayType}
                       </span>
                     </td>
@@ -536,7 +579,9 @@ const BannerSection: React.FC<{
                     </td>
                     <td className="whitespace-nowrap px-2 py-4 text-sm text-gray-500 dark:text-gray-300">
                       <span
-                        onClick={() => onToggleStatus(banner._id, banner.isActive)}
+                        onClick={() =>
+                          onToggleStatus(banner._id, banner.isActive)
+                        }
                         className={`inline-flex cursor-pointer rounded-full px-2 text-xs font-semibold leading-5 ${
                           loadingStates[banner._id]
                             ? "opacity-50 cursor-not-allowed"
@@ -550,8 +595,8 @@ const BannerSection: React.FC<{
                         {loadingStates[banner._id]
                           ? "Updating..."
                           : banner.isActive
-                          ? "Active"
-                          : "Inactive"}
+                            ? "Active"
+                            : "Inactive"}
                       </span>
                     </td>
                     <td className="whitespace-nowrap px-2 py-4 text-sm text-gray-500 dark:text-gray-300">
@@ -629,11 +674,11 @@ const BannerSection: React.FC<{
             </button>
             {Array.from(
               { length: Math.ceil(total / filters.limit) },
-              (_, i) => i + 1
+              (_, i) => i + 1,
             )
               .slice(
                 Math.max(0, filters.page - 3),
-                Math.min(Math.ceil(total / filters.limit), filters.page + 2)
+                Math.min(Math.ceil(total / filters.limit), filters.page + 2),
               )
               .map((pageNum) => (
                 <button
@@ -673,7 +718,9 @@ const OtherContentSection: React.FC<{
   filters: Filters;
   total: number;
   loadingStates: Record<string, boolean>;
-  onFilterChange: (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => void;
+  onFilterChange: (
+    e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>,
+  ) => void;
   onResetFilters: () => void;
   onPageChange: (page: number) => void;
   onToggleStatus: (id: string, status: boolean) => void;
@@ -694,14 +741,16 @@ const OtherContentSection: React.FC<{
   onDelete,
   onAdd,
 }) => {
-  const otherBanners = banners.filter(b => !b.bannerLayout || !b.bannerLayout.startsWith('layout-'));
-  
+  const otherBanners = banners.filter(
+    (b) => !b.bannerLayout || !b.bannerLayout.startsWith("layout-"),
+  );
+
   const memoizedOtherBanners = useMemo(() => {
     return otherBanners.map((banner) => ({
       ...banner,
       formattedDate: moment(banner.createdAt).format("MMM D, YYYY"),
       bannerCount: banner.Banners?.length || 0,
-      displayType: 'Other',
+      displayType: "Other",
     }));
   }, [otherBanners]);
 
@@ -709,7 +758,9 @@ const OtherContentSection: React.FC<{
     <div className="bg-white dark:bg-gray-800 rounded-2xl border border-gray-200 dark:border-gray-700 p-4">
       <SectionHeader
         title="Other Content"
-        icon={<FileText className="w-5 h-5 text-purple-600 dark:text-purple-400" />}
+        icon={
+          <FileText className="w-5 h-5 text-purple-600 dark:text-purple-400" />
+        }
         count={otherBanners.length}
         onAdd={onAdd}
         addButtonText="Add Content"
@@ -725,22 +776,17 @@ const OtherContentSection: React.FC<{
           <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
             <thead className="bg-gray-50 dark:bg-gray-800">
               <tr>
-                {[
-                  "Name",
-                  "Key",
-                  "Content",
-                  "Status",
-                  "Created",
-                  "Actions",
-                ].map((header) => (
-                  <th
-                    key={header}
-                    scope="col"
-                    className="px-2 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500 dark:text-gray-300"
-                  >
-                    {header}
-                  </th>
-                ))}
+                {["Name", "Key", "Content", "Status", "Created", "Actions"].map(
+                  (header) => (
+                    <th
+                      key={header}
+                      scope="col"
+                      className="px-2 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500 dark:text-gray-300"
+                    >
+                      {header}
+                    </th>
+                  ),
+                )}
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-200 bg-white dark:divide-gray-700 dark:bg-gray-800">
@@ -762,12 +808,14 @@ const OtherContentSection: React.FC<{
                     </td>
                     <td className="px-2 py-4">
                       <div className="text-sm text-gray-500 dark:text-gray-300 max-w-xs truncate">
-                        {banner.extraData ? 'Content available' : 'No content'}
+                        {banner.extraData ? "Content available" : "No content"}
                       </div>
                     </td>
                     <td className="whitespace-nowrap px-2 py-4 text-sm text-gray-500 dark:text-gray-300">
                       <span
-                        onClick={() => onToggleStatus(banner._id, banner.isActive)}
+                        onClick={() =>
+                          onToggleStatus(banner._id, banner.isActive)
+                        }
                         className={`inline-flex cursor-pointer rounded-full px-2 text-xs font-semibold leading-5 ${
                           loadingStates[banner._id]
                             ? "opacity-50 cursor-not-allowed"
@@ -781,8 +829,8 @@ const OtherContentSection: React.FC<{
                         {loadingStates[banner._id]
                           ? "Updating..."
                           : banner.isActive
-                          ? "Active"
-                          : "Inactive"}
+                            ? "Active"
+                            : "Inactive"}
                       </span>
                     </td>
                     <td className="whitespace-nowrap px-2 py-4 text-sm text-gray-500 dark:text-gray-300">
@@ -839,15 +887,12 @@ const OtherContentSection: React.FC<{
 const NotificationSection: React.FC = () => {
   return (
     <div className="bg-white dark:bg-gray-800 rounded-2xl border border-gray-200 dark:border-gray-700 p-4">
-     
       <NotificationManagement />
     </div>
   );
 };
 
-
 export default function BannerManagement() {
-  
   const [banners, setBanners] = useState<Banner[]>([]);
   const [loading, setLoading] = useState(true);
   const [total, setTotal] = useState(0);
@@ -859,11 +904,25 @@ export default function BannerManagement() {
   const [formData, setFormData] = useState<FormData>(INITIAL_FORM_DATA);
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [uploading, setUploading] = useState(false);
-  const [loadingStates, setLoadingStates] = useState<Record<string, boolean>>({});
-  const [activeSection, setActiveSection] = useState<'banners' | 'content' | 'notifications'>('banners');
+  const [loadingStates, setLoadingStates] = useState<Record<string, boolean>>(
+    {},
+  );
+  const [activeSection, setActiveSection] = useState<
+    "banners" | "content" | "notifications"
+  >("banners");
 
   // Debounced search
   const debouncedSearch = useDebounce(filters.search, 500);
+
+  const [category, setCategory] = useState([]);
+
+  useEffect(() => {
+    const fetchCategory = async () => {
+      const res = await api.get("categories");
+      setCategory(res.data);
+    };
+    fetchCategory();
+  }, []);
 
   // Fetch banners
   const fetchBanners = useCallback(async () => {
@@ -892,7 +951,10 @@ export default function BannerManagement() {
   }, [fetchBanners, debouncedSearch]);
 
   // Upload image helper
-  const uploadImage = async ({file, oldFile}: any): Promise<string | null> => {
+  const uploadImage = async ({
+    file,
+    oldFile,
+  }: any): Promise<string | null> => {
     if (!file) return null;
 
     // Validate file size (5MB)
@@ -908,7 +970,7 @@ export default function BannerManagement() {
     }
 
     try {
-      const { data } = await bannerService.uploadImage({file, oldFile});
+      const { data } = await bannerService.uploadImage({ file, oldFile });
       return data?.file?.filename || data?.file?.path || null;
     } catch (error) {
       console.error("Upload failed:", error);
@@ -921,7 +983,7 @@ export default function BannerManagement() {
   const handleBannerFileUpload = async (
     e: React.ChangeEvent<HTMLInputElement>,
     index: number,
-    type: "banner" | "subBanner"
+    type: "banner" | "subBanner",
   ) => {
     const file = e.target.files?.[0];
     if (!file) return;
@@ -930,7 +992,7 @@ export default function BannerManagement() {
     const oldFile = formData.Banners[index]?.[field]?.file || "";
 
     setUploading(true);
-    const uploadedUrl = await uploadImage({file, oldFile});
+    const uploadedUrl = await uploadImage({ file, oldFile });
     setUploading(false);
 
     if (!uploadedUrl) return;
@@ -952,7 +1014,7 @@ export default function BannerManagement() {
   const handleAltChange = (
     index: number,
     type: "banner" | "subBanner",
-    value: string
+    value: string,
   ) => {
     const field = type === "banner" ? "Banner" : "subBanner";
 
@@ -977,7 +1039,7 @@ export default function BannerManagement() {
         ...prev.Banners,
         {
           Banner: { file: "", alt: "" },
-          subBanner: { file: "", alt: "" },
+          Category: "",
         },
       ],
     }));
@@ -1004,7 +1066,7 @@ export default function BannerManagement() {
         bannerLayout: formData.bannerLayout,
         Banners: formData.Banners,
         extraData: formData.extraData,
-        isActive: formData.isActive
+        isActive: formData.isActive,
       };
 
       if (selectedBanner) {
@@ -1022,17 +1084,24 @@ export default function BannerManagement() {
       const errorMessage =
         error.response?.status === 409
           ? "A banner with this key already exists"
-          : error.response?.data?.message || error.message || "Failed to save banner";
+          : error.response?.data?.message ||
+            error.message ||
+            "Failed to save banner";
       toast.error(errorMessage);
     }
   };
 
   // Toggle status
-  const toggleBannerStatus = async (bannerId: string, currentStatus: boolean) => {
+  const toggleBannerStatus = async (
+    bannerId: string,
+    currentStatus: boolean,
+  ) => {
     setLoadingStates((prev) => ({ ...prev, [bannerId]: true }));
     try {
       await bannerService.toggleStatus(bannerId, !currentStatus);
-      toast.success(`Banner ${currentStatus ? "deactivated" : "activated"} successfully`);
+      toast.success(
+        `Banner ${currentStatus ? "deactivated" : "activated"} successfully`,
+      );
       fetchBanners();
     } catch (error) {
       console.error("Error toggling status:", error);
@@ -1072,13 +1141,14 @@ export default function BannerManagement() {
   };
 
   const openEditModal = (banner: Banner) => {
-    const type = banner.bannerLayout && banner.bannerLayout.startsWith('layout-') 
-      ? BANNER_TYPE 
-      : OTHER_TYPE;
-    
+    const type =
+      banner.bannerLayout && banner.bannerLayout.startsWith("layout-")
+        ? BANNER_TYPE
+        : OTHER_TYPE;
+
     setBannerType(type);
     setSelectedBanner(banner);
-    
+
     setFormData({
       name: banner.name || "",
       description: banner.description || "",
@@ -1086,25 +1156,23 @@ export default function BannerManagement() {
       isActive: banner.isActive !== undefined ? banner.isActive : true,
       bannerLayout: banner.bannerLayout || "",
       extraData: banner.extraData || "",
-      Banners: banner.Banners?.length > 0
-        ? banner.Banners.map(bannerPair => ({
-            Banner: {
-              file: bannerPair.Banner?.file || "",
-              alt: bannerPair.Banner?.alt || "",
-            },
-            subBanner: {
-              file: bannerPair.subBanner?.file || "",
-              alt: bannerPair.subBanner?.alt || "",
-            },
-          }))
-        : [
-            {
-              Banner: { file: "", alt: "" },
-              subBanner: { file: "", alt: "" },
-            },
-          ],
+      Banners:
+        banner.Banners?.length > 0
+          ? banner.Banners.map((bannerPair) => ({
+              Banner: {
+                file: bannerPair.Banner?.file || "",
+                alt: bannerPair.Banner?.alt || "",
+              },
+              Category: bannerPair.Category,
+            }))
+          : [
+              {
+                Banner: { file: "", alt: "" },
+                subBanner: { file: "", alt: "" },
+              },
+            ],
     });
-    
+
     setErrors({});
     setEditModalOpen(true);
   };
@@ -1118,7 +1186,7 @@ export default function BannerManagement() {
 
   // Filter handlers
   const handleFilterChange = (
-    e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>
+    e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>,
   ) => {
     const { name, value } = e.target;
     setFilters((prev) => ({
@@ -1136,16 +1204,17 @@ export default function BannerManagement() {
     setFilters(INITIAL_FILTERS);
   };
 
+  console.log(formData);
+
   // Section navigation
   const sections = [
-    { id: 'banners', label: 'Banners', icon: Layout },
-    { id: 'content', label: 'Other Content', icon: FileText },
-    { id: 'notifications', label: 'Notifications', icon: Bell },
+    { id: "banners", label: "Banners", icon: Layout },
+    { id: "content", label: "Other Content", icon: FileText },
+    { id: "notifications", label: "Notifications", icon: Bell },
   ] as const;
 
   return (
     <div className="w-full">
-      
       <div className="p-4 border border-gray-200 rounded-2xl dark:border-gray-800 lg:p-4 mb-3 bg-white dark:border-gray-700 dark:bg-gray-800 dark:text-gray-400">
         <div className="flex flex-col gap-5 xl:flex-row xl:items-center xl:justify-between">
           <div className="flex flex-col items-center w-full gap-6 xl:flex-row">
@@ -1181,7 +1250,6 @@ export default function BannerManagement() {
         </div>
       </div>
 
-
       <div className="mb-4 border-b border-gray-200 dark:border-gray-700">
         <nav className="flex space-x-4" aria-label="Tabs">
           {sections.map((section) => {
@@ -1192,9 +1260,10 @@ export default function BannerManagement() {
                 onClick={() => setActiveSection(section.id)}
                 className={`
                   flex items-center gap-2 px-4 py-3 text-sm font-medium border-b-2 transition-colors
-                  ${activeSection === section.id
-                    ? 'border-blue-500 text-blue-600 dark:text-blue-400'
-                    : 'border-transparent text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-300'
+                  ${
+                    activeSection === section.id
+                      ? "border-blue-500 text-blue-600 dark:text-blue-400"
+                      : "border-transparent text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-300"
                   }
                 `}
               >
@@ -1206,12 +1275,13 @@ export default function BannerManagement() {
         </nav>
       </div>
 
-
       <div className="space-y-4">
         {/* Banners Section */}
-        {activeSection === 'banners' && (
+        {activeSection === "banners" && (
           <BannerSection
-            banners={banners.filter(b => b.bannerLayout && b.bannerLayout.startsWith('layout-'))}
+            banners={banners.filter(
+              (b) => b.bannerLayout && b.bannerLayout.startsWith("layout-"),
+            )}
             loading={loading}
             filters={filters}
             total={total}
@@ -1230,7 +1300,7 @@ export default function BannerManagement() {
         )}
 
         {/* Other Content Section */}
-        {activeSection === 'content' && (
+        {activeSection === "content" && (
           <OtherContentSection
             banners={banners}
             loading={loading}
@@ -1251,11 +1321,8 @@ export default function BannerManagement() {
         )}
 
         {/* Notifications Section */}
-        {activeSection === 'notifications' && (
-          <NotificationSection />
-        )}
+        {activeSection === "notifications" && <NotificationSection />}
       </div>
-
 
       <Modal
         isOpen={editModalOpen}
@@ -1343,7 +1410,9 @@ export default function BannerManagement() {
                       }}
                       rows={3}
                       className={`w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-200 focus:border-blue-500 dark:bg-gray-800 dark:border-gray-600 dark:text-white ${
-                        errors.description ? "border-red-500" : "border-gray-300"
+                        errors.description
+                          ? "border-red-500"
+                          : "border-gray-300"
                       }`}
                       placeholder="Enter banner description"
                     />
@@ -1395,6 +1464,8 @@ export default function BannerManagement() {
                             onFileUpload={handleBannerFileUpload}
                             onAltChange={handleAltChange}
                             onRemove={removeBannerPair}
+                            setFormData={setFormData}
+                            category={category}
                             isRemovable={formData.Banners.length > 1}
                           />
                         ))}
@@ -1457,14 +1528,13 @@ export default function BannerManagement() {
                 {uploading
                   ? "Uploading..."
                   : selectedBanner
-                  ? "Update"
-                  : "Create"}
+                    ? "Update"
+                    : "Create"}
               </button>
             </div>
           </form>
         </div>
       </Modal>
-
 
       <Modal
         isOpen={isDeleteModalOpen}
@@ -1481,8 +1551,8 @@ export default function BannerManagement() {
                 Confirm Deletion
               </h4>
               <p className="mb-2 text-sm text-gray-500 dark:text-gray-400 lg:mb-2">
-                Are you sure you want to delete this item? This action cannot
-                be undone.
+                Are you sure you want to delete this item? This action cannot be
+                undone.
               </p>
             </div>
             <div className="px-2">
@@ -1528,14 +1598,6 @@ export default function BannerManagement() {
   );
 }
 
-
-
-
-
-
-
-
-
 // import { useState, useEffect, useCallback, useMemo, useRef } from "react";
 // import moment from "moment";
 // import { Modal } from "../../components/ui/modal";
@@ -1547,8 +1609,7 @@ export default function BannerManagement() {
 // import api from "../../axiosInstance";
 // import { Pencil, Trash2, X, Plus, Image as ImageIcon, Bell, Layout, FileText } from "lucide-react";
 // import RichTextEditor from "../../components/TextEditor";
-// import NotificationManagement from "../../components/notificationManagement"; 
-
+// import NotificationManagement from "../../components/notificationManagement";
 
 // const BANNER_TYPE = "Banner";
 // const OTHER_TYPE = "other";
@@ -1559,7 +1620,6 @@ export default function BannerManagement() {
 //   { value: "layout-3", label: "Layout 3 (30:70)" },
 //   { value: "layout-4", label: "Layout 4 (100%)" },
 // ];
-
 
 // interface BannerItem {
 //   Banner: {
@@ -1614,7 +1674,6 @@ export default function BannerManagement() {
 
 // type BannerType = typeof BANNER_TYPE | typeof OTHER_TYPE;
 
-
 // const INITIAL_FORM_DATA: FormData = {
 //   name: "",
 //   description: "",
@@ -1644,7 +1703,6 @@ export default function BannerManagement() {
 //   search: "",
 // };
 
-
 // const useDebounce = <T,>(value: T, delay: number): T => {
 //   const [debouncedValue, setDebouncedValue] = useState<T>(value);
 
@@ -1660,7 +1718,6 @@ export default function BannerManagement() {
 
 //   return debouncedValue;
 // };
-
 
 // const bannerService = {
 //   fetchAll: (params: any) => api.get("/Banner", { params }),
@@ -1678,8 +1735,6 @@ export default function BannerManagement() {
 //     });
 //   },
 // };
-
-
 
 // // Image Preview Component
 // const ImagePreview: React.FC<{ url: string; alt: string; onRemove?: () => void }> = ({
@@ -1859,8 +1914,6 @@ export default function BannerManagement() {
 //   );
 // };
 
-
-
 // // Section Header Component
 // interface SectionHeaderProps {
 //   title: string;
@@ -1936,8 +1989,8 @@ export default function BannerManagement() {
 //       ...banner,
 //       formattedDate: moment(banner.createdAt).format("MMM D, YYYY"),
 //       bannerCount: banner.Banners?.length || 0,
-//       displayType: banner.bannerLayout && banner.bannerLayout.startsWith('layout-') 
-//         ? 'Banner' 
+//       displayType: banner.bannerLayout && banner.bannerLayout.startsWith('layout-')
+//         ? 'Banner'
 //         : 'Other',
 //     }));
 //   }, [banners]);
@@ -2058,7 +2111,7 @@ export default function BannerManagement() {
 //                     </td>
 //                     <td className="whitespace-nowrap px-2 py-4">
 //                       <span className={`text-sm px-2 py-1 rounded-full ${
-//                         banner.displayType === 'Banner' 
+//                         banner.displayType === 'Banner'
 //                           ? 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200'
 //                           : 'bg-purple-100 text-purple-800 dark:bg-purple-900 dark:text-purple-200'
 //                       }`}>
@@ -2236,7 +2289,7 @@ export default function BannerManagement() {
 //   onAdd,
 // }) => {
 //   const otherBanners = banners.filter(b => !b.bannerLayout || !b.bannerLayout.startsWith('layout-'));
-  
+
 //   const memoizedOtherBanners = useMemo(() => {
 //     return otherBanners.map((banner) => ({
 //       ...banner,
@@ -2380,15 +2433,14 @@ export default function BannerManagement() {
 // const NotificationSection: React.FC = () => {
 //   return (
 //     <div className="bg-white dark:bg-gray-800 rounded-2xl border border-gray-200 dark:border-gray-700 p-4">
-     
+
 //       <NotificationManagement />
 //     </div>
 //   );
 // };
 
-
 // export default function BannerManagement() {
-  
+
 //   const [banners, setBanners] = useState<Banner[]>([]);
 //   const [loading, setLoading] = useState(true);
 //   const [total, setTotal] = useState(0);
@@ -2613,13 +2665,13 @@ export default function BannerManagement() {
 //   };
 
 //   const openEditModal = (banner: Banner) => {
-//     const type = banner.bannerLayout && banner.bannerLayout.startsWith('layout-') 
-//       ? BANNER_TYPE 
+//     const type = banner.bannerLayout && banner.bannerLayout.startsWith('layout-')
+//       ? BANNER_TYPE
 //       : OTHER_TYPE;
-    
+
 //     setBannerType(type);
 //     setSelectedBanner(banner);
-    
+
 //     setFormData({
 //       name: banner.name || "",
 //       description: banner.description || "",
@@ -2645,7 +2697,7 @@ export default function BannerManagement() {
 //             },
 //           ],
 //     });
-    
+
 //     setErrors({});
 //     setEditModalOpen(true);
 //   };
@@ -2686,7 +2738,7 @@ export default function BannerManagement() {
 
 //   return (
 //     <div className="w-full">
-      
+
 //       <div className="p-4 border border-gray-200 rounded-2xl dark:border-gray-800 lg:p-4 mb-3 bg-white dark:border-gray-700 dark:bg-gray-800 dark:text-gray-400">
 //         <div className="flex flex-col gap-5 xl:flex-row xl:items-center xl:justify-between">
 //           <div className="flex flex-col items-center w-full gap-6 xl:flex-row">
@@ -2722,7 +2774,6 @@ export default function BannerManagement() {
 //         </div>
 //       </div>
 
-
 //       <div className="mb-4 border-b border-gray-200 dark:border-gray-700">
 //         <nav className="flex space-x-4" aria-label="Tabs">
 //           {sections.map((section) => {
@@ -2746,7 +2797,6 @@ export default function BannerManagement() {
 //           })}
 //         </nav>
 //       </div>
-
 
 //       <div className="space-y-4">
 //         {/* Banners Section */}
@@ -2796,7 +2846,6 @@ export default function BannerManagement() {
 //           <NotificationSection />
 //         )}
 //       </div>
-
 
 //       <Modal
 //         isOpen={editModalOpen}
@@ -3006,7 +3055,6 @@ export default function BannerManagement() {
 //         </div>
 //       </Modal>
 
-
 //       <Modal
 //         isOpen={isDeleteModalOpen}
 //         onClose={() => {
@@ -3068,13 +3116,3 @@ export default function BannerManagement() {
 //     </div>
 //   );
 // }
-
-
-
-
-
-
-
-
-
-

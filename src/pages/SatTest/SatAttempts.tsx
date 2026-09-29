@@ -135,8 +135,8 @@ export default function SatExamPage() {
   const [timerRunning, setTimerRunning] = useState(false);
   const [showingReviewScreen, setShowingReviewScreen] = useState(false);
 
-  const [LoaderAfterReview,setLoaderAfterReview] = useState(false)
-  const [isLast,setisLast] = useState(false)
+  const [LoaderAfterReview, setLoaderAfterReview] = useState(false);
+  const [isLast, setisLast] = useState(false);
 
   const [currentScreen, setCurrentScreen] = useState<GreScreen>(
     "section_instructions",
@@ -249,8 +249,6 @@ export default function SatExamPage() {
   );
 
   const qDoc = currentQuestion?.questionDoc || null;
-
-  
 
   useEffect(() => {
     if (!attempt || !currentSection) return;
@@ -385,7 +383,7 @@ export default function SatExamPage() {
       } finally {
         setSavingProgress(false);
         setSubmitting(false);
-        setLoaderAfterReview(false)
+        setLoaderAfterReview(false);
       }
     },
     [
@@ -487,15 +485,13 @@ export default function SatExamPage() {
 
   const isLastSection =
     !!attempt && activeSectionIndex >= attempt.sections.length - 1;
-  
 
   const isNextDisabled = isCompleted || submitting;
 
   const handleFinishSectionReview = async () => {
     if (!attempt || !currentSection) return;
 
-    setLoaderAfterReview(true)
-
+    setLoaderAfterReview(true);
 
     await saveCurrentQuestionProgress({
       silent: true,
@@ -507,7 +503,7 @@ export default function SatExamPage() {
     if (isLastSection) {
       submitTestAttempt();
       setCurrentScreen("results");
-      setisLast(true)
+      setisLast(true);
       return;
     }
 
@@ -562,7 +558,7 @@ export default function SatExamPage() {
 
     return () => clearInterval(timer);
   }, [currentScreen, breakSeconds]);
-  console.log(submitting,"ss")
+  console.log(submitting, "ss");
 
   const submitTestAttempt = async () => {
     if (!attempt || isCompleted) return;
@@ -574,7 +570,7 @@ export default function SatExamPage() {
 
     try {
       setSubmitting(true);
-      setFinalSubmitting(true)
+      setFinalSubmitting(true);
       setTimerRunning(false);
       await saveCurrentQuestionProgress({
         silent: true,
@@ -607,11 +603,11 @@ export default function SatExamPage() {
       toast.error(err.response?.data?.message || "Failed to submit GRE test");
     } finally {
       setSubmitting(false);
-      setFinalSubmitting(false)
+      setFinalSubmitting(false);
     }
   };
 
-  console.log(LoaderAfterReview,"loader")
+  console.log(LoaderAfterReview, "loader");
 
   // Helper to update the current question partially and immutably
   const updateCurrentQuestion = (patch: Partial<AttemptQuestion>) => {
@@ -662,118 +658,130 @@ export default function SatExamPage() {
 
   return (
     <>
-     { 
-       LoaderAfterReview ? (<ModuleCompleteLoader currentScreen={currentScreen} isCompleted={isCompleted} islastsection={isLastSection}/>)
-      :(<div className="relative min-h-screen bg-white  dark:bg-slate-900 text-slate-900 dark:text-slate-50">
-      {currentScreen!== "section_instructions" &&  <div className="h-[16px] w-full bg-gradient-to-r from-[#fff1dc] via-[#ffd19f] to-[#ff947d]" />}
+      {LoaderAfterReview ? (
+        <ModuleCompleteLoader
+          currentScreen={currentScreen}
+          isCompleted={isCompleted}
+          islastsection={isLastSection}
+        />
+      ) : (
+        <div className="relative min-h-screen bg-white  dark:bg-slate-900 text-slate-900 dark:text-slate-50">
+          {currentScreen !== "section_instructions" && currentScreen !== "break" && (
+            <div className="h-[16px] w-full bg-gradient-to-r from-[#fff1dc] via-[#ffd19f] to-[#ff947d]" />
+          )}
 
-        {currentScreen !== "results" && currentScreen!== "section_instructions" && finalSubmitting=== false && (
-          <GRETestHead
-            testTitle={testTitle}
-            attempt={attempt}
-            currentSection={currentSection}
-            currentQuestion={currentQuestion}
-            activeSectionIndex={activeSectionIndex}
-            totalSections={attempt?.sections.length || 0}
-            timerSecondsLeft={timerSecondsLeft}
-            currentScreen={currentScreen}
-            activeQuestionIndex={activeQuestionIndex}
-            isCompleted={isCompleted}
-            savingProgress={savingProgress}
-            saveCurrentQuestionProgress={() =>
-              saveCurrentQuestionProgress({ silent: false })
-            }
-            navigateBack={() => navigate(-1)}
-          />
-        )}
-
-        {/* Scrollable main area between header & footer */}
-        <div className="pt-14 ">
-          { currentScreen === "question" &&
-            currentSection &&
-            currentQuestion && (
-              <QuestionRenderer
-                qDoc={qDoc}
-                sectionQuestions={currentSection.questions}
+          {currentScreen !== "results" &&
+            currentScreen !== "section_instructions" &&
+            finalSubmitting === false &&
+            currentScreen !== "break" && (
+              <GRETestHead
+                testTitle={testTitle}
+                attempt={attempt}
+                currentSection={currentSection}
                 currentQuestion={currentQuestion}
-                onReviewSection={setCurrentScreen}
-                isCompleted={isCompleted}
-                handleOptionClick={handleOptionClick}
-                handleTextAnswerChange={handleTextAnswerChange}
-                toggleMarkForReview={toggleMarkForReview}
-                updateCurrentQuestion={updateCurrentQuestion}
-                saveCurrentQuestionProgress={saveCurrentQuestionProgress}
+                activeSectionIndex={activeSectionIndex}
+                totalSections={attempt?.sections.length || 0}
+                timerSecondsLeft={timerSecondsLeft}
+                currentScreen={currentScreen}
                 activeQuestionIndex={activeQuestionIndex}
-                sectionTotal={currentSection.questions.length}
-                isLastQuestionInCurrentSection={isLastQuestionInCurrentSection}
-                isNextDisabled={isNextDisabled}
-                goToQuestion={goToQuestion}
-                goNextQuestion={goNextQuestion}
-                submitting={submitting}
+                isCompleted={isCompleted}
+                savingProgress={savingProgress}
+                saveCurrentQuestionProgress={() =>
+                  saveCurrentQuestionProgress({ silent: false })
+                }
+                navigateBack={() => navigate(-1)}
               />
             )}
 
-          {currentScreen === "section_review" && attempt && currentSection && (
-            <SectionReview
-              currentSection={currentSection}
-              attempt={attempt}
-              activeQuestionIndex={activeQuestionIndex}
-              isLastSection={isLastSection}
-              submitting={submitting}
-              showingReviewScreen={showingReviewScreen}
-              filter={filter}
-              setFilter={setFilter}
-              timerSecondsLeft={timerSecondsLeft}
-              setShowingReviewScreen={setShowingReviewScreen}
-              setActiveQuestionIndex={setActiveQuestionIndex}
-              setCurrentScreen={(screen) => setCurrentScreen(screen)}
-              saveCurrentQuestionProgress={saveCurrentQuestionProgress}
-              handleFinishSectionReview={handleFinishSectionReview}
-            />
-          )}
+          {/* Scrollable main area between header & footer */}
+          <div className={`${currentScreen !== "break" ? "pt-14" : "" }  `}>
+            {currentScreen === "question" &&
+              currentSection &&
+              currentQuestion && (
+                <QuestionRenderer
+                  qDoc={qDoc}
+                  sectionQuestions={currentSection.questions}
+                  currentQuestion={currentQuestion}
+                  onReviewSection={setCurrentScreen}
+                  isCompleted={isCompleted}
+                  handleOptionClick={handleOptionClick}
+                  handleTextAnswerChange={handleTextAnswerChange}
+                  toggleMarkForReview={toggleMarkForReview}
+                  updateCurrentQuestion={updateCurrentQuestion}
+                  saveCurrentQuestionProgress={saveCurrentQuestionProgress}
+                  activeQuestionIndex={activeQuestionIndex}
+                  sectionTotal={currentSection.questions.length}
+                  isLastQuestionInCurrentSection={
+                    isLastQuestionInCurrentSection
+                  }
+                  isNextDisabled={isNextDisabled}
+                  goToQuestion={goToQuestion}
+                  goNextQuestion={goNextQuestion}
+                  submitting={submitting}
+                />
+              )}
 
-         {finalSubmitting ? (
-  <ModuleCompleteSubmitLoader />
-) : (
-  currentScreen === "results" &&
-  attempt && (
-    <GRETestResults
-      attempt={attempt}
-      navigateBack={() => navigate(-1)}
-      onTakeAnotherTest={() => navigate("/practice-tests")}
-      saving={savingProgress}
-    />
-  )
-)}
+            {currentScreen === "section_review" &&
+              attempt &&
+              currentSection && (
+                <SectionReview
+                  currentSection={currentSection}
+                  attempt={attempt}
+                  activeQuestionIndex={activeQuestionIndex}
+                  isLastSection={isLastSection}
+                  submitting={submitting}
+                  showingReviewScreen={showingReviewScreen}
+                  filter={filter}
+                  setFilter={setFilter}
+                  timerSecondsLeft={timerSecondsLeft}
+                  setShowingReviewScreen={setShowingReviewScreen}
+                  setActiveQuestionIndex={setActiveQuestionIndex}
+                  setCurrentScreen={(screen) => setCurrentScreen(screen)}
+                  saveCurrentQuestionProgress={saveCurrentQuestionProgress}
+                  handleFinishSectionReview={handleFinishSectionReview}
+                />
+              )}
 
-          {currentScreen === "break" && (
-            <BreakComponent
-              setBreakSeconds={setBreakSeconds}
-              breakSeconds={breakSeconds}
-              setCurrentScreen={setCurrentScreen}
-            />
-          )}
+            {finalSubmitting ? (
+              <ModuleCompleteSubmitLoader />
+            ) : (
+              currentScreen === "results" &&
+              attempt && (
+                <GRETestResults
+                  attempt={attempt}
+                  navigateBack={() => navigate(-1)}
+                  onTakeAnotherTest={() => navigate("/practice-tests")}
+                  saving={savingProgress}
+                />
+              )
+            )}
 
-          {currentScreen === "section_instructions" && (
-            <TestInformation
-              onStart={async () => {
-                await saveCurrentQuestionProgress({
-                  silent: true,
-                  phase: "in_section",
-                  metaSectionIndex: activeSectionIndex,
-                  metaQuestionIndex: 0,
-                });
+            {currentScreen === "break" && (
+              <BreakComponent
+                setBreakSeconds={setBreakSeconds}
+                breakSeconds={breakSeconds}
+                setCurrentScreen={setCurrentScreen}
+              />
+            )}
 
-                setCurrentScreen("question");
-              }}
-            />
-          )}
+            {currentScreen === "section_instructions" && (
+              <TestInformation
+                onStart={async () => {
+                  await saveCurrentQuestionProgress({
+                    silent: true,
+                    phase: "in_section",
+                    metaSectionIndex: activeSectionIndex,
+                    metaQuestionIndex: 0,
+                  });
+
+                  setCurrentScreen("question");
+                }}
+              />
+            )}
+          </div>
         </div>
-
-      </div>)}
-      <div>
-      </div>
-
+      )}
+      <div></div>
     </>
   );
 }
