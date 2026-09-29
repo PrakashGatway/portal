@@ -1,26 +1,25 @@
-import React, { useEffect, useRef, useState, useCallback, useMemo, use, } from "react";
+import React, {
+  useEffect,
+  useRef,
+  useState,
+  useCallback,
+  useMemo,
+  use,
+} from "react";
 import * as Recharts from "recharts";
 
-import {
-  AlertTriangle,
-  BookOpen,
-  Edit3,
-  BarChart3,
-  Headphones,
-  BarChart,
-  Bar,
-  XAxis,
-  YAxis,
-  CartesianGrid,
-  Tooltip,
-  ResponsiveContainer,
-  PieChart,
-  Pie,
-  Cell,
-
-} from "lucide-react";
-import SpeakingQuestion, { RecordingOnlyComponent, TTSPlayer } from "./SpeakingQuestion";
-import PTEFillDrag, { PTEFillListeningInput, PTEFillSelect, PTEHighlightText, PTEMCQMultiple, PTEReorder } from "./DragandFill";
+import { AlertTriangle, BookOpen, Edit3, Headphones } from "lucide-react";
+import SpeakingQuestion, {
+  RecordingOnlyComponent,
+  TTSPlayer,
+} from "./SpeakingQuestion";
+import PTEFillDrag, {
+  PTEFillListeningInput,
+  PTEFillSelect,
+  PTEHighlightText,
+  PTEMCQMultiple,
+  PTEReorder,
+} from "./DragandFill";
 
 import {
   Flag,
@@ -28,16 +27,8 @@ import {
   LogOut,
   BookmarkCheck,
   BookmarkIcon,
-  ChevronDown,
   Clock,
-  ChevronUp,
-  Volume2,
   Mic,
-  Play,
-  Pause,
-  StopCircle,
-  Check,
-  X,
 } from "lucide-react";
 import Button from "../../components/ui/button/Button";
 
@@ -57,7 +48,7 @@ const QuestionRenderer: any = React.memo(
     goToQuestion,
     isLastSection,
     goNextQuestion,
-    sectionQuestions
+    sectionQuestions,
   }: any) => {
     const questionNumber = currentQuestion.order || activeQuestionIndex + 1;
     const containerRef = useRef<HTMLDivElement | null>(null);
@@ -66,9 +57,15 @@ const QuestionRenderer: any = React.memo(
     const [showEliminationMode, setShowEliminationMode] = useState(true);
     const [crossedOptions, setCrossedOptions] = useState<number[]>([]);
     const [isPaletteOpen, setIsPaletteOpen] = useState(false);
+    const [uploadingAudio, setUploadingAudio] = useState(false);
+    const recordingRef = useRef<{
+      stopRecording: () => Promise<Blob | null>;
+    } | null>(null);
 
     const [recordedAudio, setRecordedAudio] = useState<Blob | null>(null);
-    const [startRecordingCountdown, setStartRecordingCountdown] = useState<(() => void) | null>(null);
+    const [startRecordingCountdown, setStartRecordingCountdown] = useState<
+      (() => void) | null
+    >(null);
 
     const [showRecordFirstPopup, setShowRecordFirstPopup] = useState(false);
     const [showConfirmNextPopup, setShowConfirmNextPopup] = useState(false);
@@ -88,7 +85,6 @@ const QuestionRenderer: any = React.memo(
     //   return () => window.removeEventListener("beforeunload", handleBeforeUnload);
     // }, []);
 
-
     // useEffect(() => {
     //   if (refreshHandledRef.current) return;
 
@@ -102,12 +98,60 @@ const QuestionRenderer: any = React.memo(
     //   }
     // }, [navigate]);
 
+    const handleConfirmNext = useCallback(async () => {
+      try {
+        setUploadingAudio(true);
+        setShowConfirmNextPopup(false);
+
+        let audioBlob: Blob | null = recordedAudio;
+
+        // 🔥 If recording is currently running,
+        // stop it and WAIT for the final Blob.
+        if (!audioBlob && recordingRef.current) {
+          console.log("🛑 Stopping active recording...");
+
+          audioBlob = await recordingRef.current.stopRecording();
+
+          console.log("🎤 Received Blob:", audioBlob);
+          console.log("🎤 Blob size:", audioBlob?.size);
+        }
+
+        let audioPath: string | undefined;
+
+        // 🔥 Upload BEFORE navigation
+        if (audioBlob && audioBlob.size > 0) {
+          console.log("⬆️ Uploading audio...");
+
+          audioPath = await uploadAudioAndGetPath(audioBlob);
+
+          console.log("✅ Audio uploaded:", audioPath);
+        }
+
+        // 🔥 Only now move to next question
+        await goNextQuestion(
+          audioPath
+            ? {
+                answerText: audioPath,
+                isAnswered: true,
+              }
+            : undefined,
+        );
+
+        setRecordedAudio(null);
+        setCrossedOptions([]);
+      } catch (error) {
+        console.error("❌ Next question error:", error);
+        toast.error("Failed to save recording.");
+      } finally {
+        setUploadingAudio(false);
+      }
+    }, [recordedAudio, goNextQuestion]);
+
     const handleRecordingComplete = useCallback(async (audioBlob: Blob) => {
       setRecordedAudio(audioBlob);
-      const audioPath = await uploadAudioAndGetPath(audioBlob);
-      handleTextAnswerChange({ target: { value: audioPath } })
-    }, [])
-
+      // const audioPath = await uploadAudioAndGetPath(audioBlob);
+      // handleTextAnswerChange({ target: { value: audioPath } })
+    }, []);
 
     const handleStartCountdownCallback = useCallback((startFn: () => void) => {
       setStartRecordingCountdown(() => startFn);
@@ -120,7 +164,10 @@ const QuestionRenderer: any = React.memo(
     }, [startRecordingCountdown]);
 
     useEffect(() => {
-      if (qDoc?.questionType === "describe_image" || qDoc?.questionType === "read_aloud" && startRecordingCountdown) {
+      if (
+        qDoc?.questionType === "describe_image" ||
+        (qDoc?.questionType === "read_aloud" && startRecordingCountdown)
+      ) {
         const timer = setTimeout(() => {
           startRecordingCountdown();
         }, 100);
@@ -136,7 +183,6 @@ const QuestionRenderer: any = React.memo(
       };
     }, [currentQuestion?._id, qDoc?._id]); // Clean up when question ID changes
 
-
     const onDividerDown = (e: React.MouseEvent) => {
       draggingRef.current = true;
       document.body.style.userSelect = "none";
@@ -150,7 +196,6 @@ const QuestionRenderer: any = React.memo(
         </div>
       );
     }
-
 
     const uploadAudioAndGetPath = async (audioBlob: Blob) => {
       const formData = new FormData();
@@ -170,13 +215,15 @@ const QuestionRenderer: any = React.memo(
 
     const isMCQ = Array.isArray(qDoc.options) && qDoc.options.length > 0;
     const type = qDoc.questionType || "";
-    const isPTE = type.startsWith("pte_") || [
-      "read_aloud",
-      "repeat_sentence",
-      "describe_image",
-      "retell_lesson",
-      "short_answer"
-    ].includes(type);
+    const isPTE =
+      type.startsWith("pte_") ||
+      [
+        "read_aloud",
+        "repeat_sentence",
+        "describe_image",
+        "retell_lesson",
+        "short_answer",
+      ].includes(type);
 
     const renderPassage = () => {
       if (qDoc.stimulus) {
@@ -242,8 +289,7 @@ const QuestionRenderer: any = React.memo(
       return (
         <div className="space-y-3 mt-4">
           {qDoc.options.map((opt: any, i: number) => {
-            const selected =
-              currentQuestion.answerOptionIndexes?.includes(i);
+            const selected = currentQuestion.answerOptionIndexes?.includes(i);
             const isCrossed = crossedOptions.includes(i);
 
             return (
@@ -252,16 +298,18 @@ const QuestionRenderer: any = React.memo(
                   <button
                     onClick={() => onOptionClick(i)}
                     disabled={isCompleted}
-                    className={`w-full text-left rounded-lg border-2 px-4 py-2 flex items-start gap-3 transition ${selected
-                      ? "border-indigo-600 bg-indigo-50 dark:bg-indigo-900/30 shadow-sm"
-                      : "border-slate-300 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-800"
-                      } ${isCrossed && !selected ? "opacity-60" : "opacity-100"}`}
+                    className={`w-full text-left rounded-lg border-2 px-4 py-2 flex items-start gap-3 transition ${
+                      selected
+                        ? "border-indigo-600 bg-indigo-50 dark:bg-indigo-900/30 shadow-sm"
+                        : "border-slate-300 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-800"
+                    } ${isCrossed && !selected ? "opacity-60" : "opacity-100"}`}
                   >
                     <div
-                      className={`flex h-7 w-7 flex-shrink-0 items-center justify-center rounded-full text-xs font-bold ${selected
-                        ? "bg-indigo-600 text-white"
-                        : "border border-slate-400 text-slate-700 dark:border-slate-500 dark:text-slate-300"
-                        }`}
+                      className={`flex h-7 w-7 flex-shrink-0 items-center justify-center rounded-full text-xs font-bold ${
+                        selected
+                          ? "bg-indigo-600 text-white"
+                          : "border border-slate-400 text-slate-700 dark:border-slate-500 dark:text-slate-300"
+                      }`}
                     >
                       {String.fromCharCode(65 + i)}
                     </div>
@@ -302,7 +350,6 @@ const QuestionRenderer: any = React.memo(
     };
 
     const renderPTEQuestion = () => {
-
       switch (type) {
         case "read_aloud":
           return (
@@ -316,18 +363,19 @@ const QuestionRenderer: any = React.memo(
                   __html: qDoc.questionText || "Question missing",
                 }}
               />
-              <div className="w-full md:w-3/5
-mx-auto">
+              <div
+                className="w-full md:w-3/5
+mx-auto"
+              >
                 <RecordingOnlyComponent
+                  ref={recordingRef}
                   key={qDoc._id}
                   recordingDurationSeconds={35}
                   preRecordingWaitSeconds={40}
                   onRecordingComplete={handleRecordingComplete}
                   onStartCountdown={handleStartCountdownCallback}
                 />
-
               </div>
-
             </div>
           );
         case "repeat_sentence":
@@ -338,15 +386,18 @@ mx-auto">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <TTSPlayer
                   key={`player-${qDoc._id}`}
-                  audioUrl={qDoc.typeSpecific?.audio
-                    ? audioBaseUrl + qDoc.typeSpecific.audio
-                    : undefined}
-                  text={qDoc.questionText}   // 🔁 fallback
+                  audioUrl={
+                    qDoc.typeSpecific?.audio
+                      ? audioBaseUrl + qDoc.typeSpecific.audio
+                      : undefined
+                  }
+                  text={qDoc.questionText} // 🔁 fallback
                   delayBeforePlay={3000}
                   onPlaybackEnd={onTTSFinished}
                 />
 
                 <RecordingOnlyComponent
+                  ref={recordingRef}
                   key={qDoc._id}
                   recordingDurationSeconds={20}
                   preRecordingWaitSeconds={10}
@@ -370,6 +421,7 @@ mx-auto">
                   }}
                 />
                 <RecordingOnlyComponent
+                  ref={recordingRef}
                   key={qDoc._id}
                   recordingDurationSeconds={40}
                   preRecordingWaitSeconds={25}
@@ -383,40 +435,50 @@ mx-auto">
         case "retell_lesson":
         case "pte_situational":
         case "short_answer":
-          return qDoc && (
-            <div className="bg-white rounded dark:bg-slate-900 p-4 min-h-[65vh] overflow-y-auto">
-              {/* {renderHeader()} */}
-              <div className="flex-block">
-                {qDoc?.stimulus && (
-                  <div
-                    className="prose text-base prose-sm dark:prose-invert max-w-none mb-6"
-                    dangerouslySetInnerHTML={{ __html: qDoc.stimulus }}
+          return (
+            qDoc && (
+              <div className="bg-white rounded dark:bg-slate-900 p-4 min-h-[65vh] overflow-y-auto">
+                {/* {renderHeader()} */}
+                <div className="flex-block">
+                  {qDoc?.stimulus && (
+                    <div
+                      className="prose text-base prose-sm dark:prose-invert max-w-none mb-6"
+                      dangerouslySetInnerHTML={{ __html: qDoc.stimulus }}
+                    />
+                  )}
+                  {qDoc?.questionType != "retell_lesson" && (
+                    <div className="mb-6">
+                      <h2
+                        className=""
+                        dangerouslySetInnerHTML={{ __html: qDoc?.questionText }}
+                      />
+                    </div>
+                  )}
+                </div>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <TTSPlayer
+                    key={`player-${qDoc._id}`}
+                    audioUrl={
+                      qDoc.typeSpecific?.audio
+                        ? audioBaseUrl + qDoc.typeSpecific.audio
+                        : undefined
+                    }
+                    text={qDoc.questionText}
+                    delayBeforePlay={3000}
+                    onPlaybackEnd={onTTSFinished}
                   />
-                )}
-                {qDoc?.questionType != "retell_lesson" && <div className="mb-6">
-                  <h2 className="" dangerouslySetInnerHTML={{ __html: qDoc?.questionText }} />
-                </div>}
-              </div>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <TTSPlayer
-                  key={`player-${qDoc._id}`}
-                  audioUrl={qDoc.typeSpecific?.audio
-                    ? audioBaseUrl + qDoc.typeSpecific.audio
-                    : undefined}
-                  text={qDoc.questionText}
-                  delayBeforePlay={3000}
-                  onPlaybackEnd={onTTSFinished}
-                />
 
-                <RecordingOnlyComponent
-                  key={qDoc._id}
-                  recordingDurationSeconds={40}
-                  preRecordingWaitSeconds={10}
-                  onRecordingComplete={handleRecordingComplete}
-                  onStartCountdown={handleStartCountdownCallback}
-                />
+                  <RecordingOnlyComponent
+                    ref={recordingRef}
+                    key={qDoc._id}
+                    recordingDurationSeconds={40}
+                    preRecordingWaitSeconds={10}
+                    onRecordingComplete={handleRecordingComplete}
+                    onStartCountdown={handleStartCountdownCallback}
+                  />
+                </div>
               </div>
-            </div>
+            )
           );
 
         case "summarize_group_discussions":
@@ -426,14 +488,17 @@ mx-auto">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <TTSPlayer
                   key={`player-${qDoc._id}`}
-                  audioUrl={qDoc.typeSpecific?.audio
-                    ? audioBaseUrl + qDoc.typeSpecific.audio
-                    : undefined}
+                  audioUrl={
+                    qDoc.typeSpecific?.audio
+                      ? audioBaseUrl + qDoc.typeSpecific.audio
+                      : undefined
+                  }
                   text={qDoc.questionText}
                   delayBeforePlay={3000}
                   onPlaybackEnd={onTTSFinished}
                 />
                 <RecordingOnlyComponent
+                  ref={recordingRef}
                   key={qDoc._id}
                   recordingDurationSeconds={120}
                   preRecordingWaitSeconds={10}
@@ -468,10 +533,12 @@ mx-auto">
               {/* {renderQuestionText()} */}
               <TTSPlayer
                 key={`player-${qDoc._id}`}
-                audioUrl={qDoc.typeSpecific?.audio
-                  ? audioBaseUrl + qDoc.typeSpecific.audio
-                  : undefined}
-                text={qDoc.questionText}   // 🔁 fallback
+                audioUrl={
+                  qDoc.typeSpecific?.audio
+                    ? audioBaseUrl + qDoc.typeSpecific.audio
+                    : undefined
+                }
+                text={qDoc.questionText} // 🔁 fallback
                 delayBeforePlay={3000}
                 onPlaybackEnd={onTTSFinished}
               />
@@ -509,13 +576,17 @@ mx-auto">
               {renderPassage()}
               {/* <SpeakingQuestion key={qDoc?._id} qDoc={qDoc} /> */}
 
-
               <TTSPlayer
                 key={"player-" + qDoc._id}
-                audioUrl={qDoc.typeSpecific?.audio
-                  ? audioBaseUrl + qDoc.typeSpecific.audio
-                  : undefined}
-                text={qDoc?.typeSpecific?.listeningText || "Describe the image shown."}
+                audioUrl={
+                  qDoc.typeSpecific?.audio
+                    ? audioBaseUrl + qDoc.typeSpecific.audio
+                    : undefined
+                }
+                text={
+                  qDoc?.typeSpecific?.listeningText ||
+                  "Describe the image shown."
+                }
                 delayBeforePlay={5000}
                 onPlaybackEnd={() => null}
                 rate={0.7}
@@ -557,10 +628,15 @@ mx-auto">
               {renderPassage()}
               <TTSPlayer
                 key={"dfdf" + qDoc._id}
-                audioUrl={qDoc.typeSpecific?.audio
-                  ? audioBaseUrl + qDoc.typeSpecific.audio
-                  : undefined}
-                text={qDoc?.typeSpecific?.listeningText || "Describe the image shown."}
+                audioUrl={
+                  qDoc.typeSpecific?.audio
+                    ? audioBaseUrl + qDoc.typeSpecific.audio
+                    : undefined
+                }
+                text={
+                  qDoc?.typeSpecific?.listeningText ||
+                  "Describe the image shown."
+                }
                 delayBeforePlay={5000} // 1 second
                 onPlaybackEnd={onTTSFinished}
                 rate={0.8}
@@ -578,7 +654,7 @@ mx-auto">
                 />
               </div>
             </div>
-          )
+          );
         case "pte_mcq_single_listening":
           return (
             <div className="bg-white rounded dark:bg-slate-900 p-4 min-h-[65vh] overflow-y-auto">
@@ -588,10 +664,15 @@ mx-auto">
 
                 <TTSPlayer
                   key={qDoc._id}
-                  audioUrl={qDoc.typeSpecific?.audio
-                    ? audioBaseUrl + qDoc.typeSpecific.audio
-                    : undefined}
-                  text={qDoc?.typeSpecific?.listeningText || "Describe the image shown."}
+                  audioUrl={
+                    qDoc.typeSpecific?.audio
+                      ? audioBaseUrl + qDoc.typeSpecific.audio
+                      : undefined
+                  }
+                  text={
+                    qDoc?.typeSpecific?.listeningText ||
+                    "Describe the image shown."
+                  }
                   delayBeforePlay={5000} // 1 second
                   onPlaybackEnd={onTTSFinished}
                   rate={0.8}
@@ -605,10 +686,14 @@ mx-auto">
             </div>
           );
         case "pte_mcq_multiple":
-          const mainSelected = new Set<number>(currentQuestion.answerOptionIndexes || []);
+          const mainSelected = new Set<number>(
+            currentQuestion.answerOptionIndexes || [],
+          );
           const toggleMainOption = (idx: number) => {
             if (isCompleted) return;
-            const set = new Set<number>(currentQuestion.answerOptionIndexes || []);
+            const set = new Set<number>(
+              currentQuestion.answerOptionIndexes || [],
+            );
             if (set.has(idx)) set.delete(idx);
             else set.add(idx);
             const arr = Array.from(set);
@@ -632,13 +717,16 @@ mx-auto">
                           key={idx}
                           onClick={() => toggleMainOption(idx)}
                           disabled={isCompleted}
-                          className={`flex items-start w-full gap-3 rounded-xl border-2 px-4 py-3 text-left transition ${selected
-                            ? "border-indigo-300 bg-indigo-50 dark:bg-indigo-500/20"
-                            : "border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 hover:border-indigo-300"
-                            }`}
+                          className={`flex items-start w-full gap-3 rounded-xl border-2 px-4 py-3 text-left transition ${
+                            selected
+                              ? "border-indigo-300 bg-indigo-50 dark:bg-indigo-500/20"
+                              : "border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 hover:border-indigo-300"
+                          }`}
                         >
                           <span className="font-semibold">{label}.</span>
-                          <span dangerouslySetInnerHTML={{ __html: opt.text }} />
+                          <span
+                            dangerouslySetInnerHTML={{ __html: opt.text }}
+                          />
                         </button>
                       );
                     })}
@@ -648,10 +736,14 @@ mx-auto">
             </div>
           );
         case "pte_mcq_multiple_listening":
-          const mainSelected1 = new Set<number>(currentQuestion.answerOptionIndexes || []);
+          const mainSelected1 = new Set<number>(
+            currentQuestion.answerOptionIndexes || [],
+          );
           const toggleMainOption1 = (idx: number) => {
             if (isCompleted) return;
-            const set = new Set<number>(currentQuestion.answerOptionIndexes || []);
+            const set = new Set<number>(
+              currentQuestion.answerOptionIndexes || [],
+            );
             if (set.has(idx)) set.delete(idx);
             else set.add(idx);
             const arr = Array.from(set);
@@ -667,10 +759,15 @@ mx-auto">
 
                 <TTSPlayer
                   key={qDoc._id}
-                  audioUrl={qDoc.typeSpecific?.audio
-                    ? audioBaseUrl + qDoc.typeSpecific.audio
-                    : undefined}
-                  text={qDoc?.typeSpecific?.listeningText || "Describe the image shown."}
+                  audioUrl={
+                    qDoc.typeSpecific?.audio
+                      ? audioBaseUrl + qDoc.typeSpecific.audio
+                      : undefined
+                  }
+                  text={
+                    qDoc?.typeSpecific?.listeningText ||
+                    "Describe the image shown."
+                  }
                   delayBeforePlay={5000} // 1 second
                   onPlaybackEnd={onTTSFinished}
                   rate={0.8}
@@ -688,13 +785,16 @@ mx-auto">
                           key={idx}
                           onClick={() => toggleMainOption1(idx)}
                           disabled={isCompleted}
-                          className={`flex items-start w-full gap-3 rounded-xl border-2 px-4 py-3 text-left transition ${selected
-                            ? "border-indigo-300 bg-indigo-50 dark:bg-indigo-500/20"
-                            : "border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 hover:border-indigo-300"
-                            }`}
+                          className={`flex items-start w-full gap-3 rounded-xl border-2 px-4 py-3 text-left transition ${
+                            selected
+                              ? "border-indigo-300 bg-indigo-50 dark:bg-indigo-500/20"
+                              : "border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 hover:border-indigo-300"
+                          }`}
                         >
                           <span className="font-semibold">{label}.</span>
-                          <span dangerouslySetInnerHTML={{ __html: opt.text }} />
+                          <span
+                            dangerouslySetInnerHTML={{ __html: opt.text }}
+                          />
                         </button>
                       );
                     })}
@@ -744,17 +844,21 @@ mx-auto">
               {/* {renderHeader()} */}
               {renderPassage()}
 
-              {["pte_summarize_spoken"].includes(type) && <TTSPlayer
-                key={qDoc._id}
-                audioUrl={qDoc.typeSpecific?.audio
-                  ? audioBaseUrl + qDoc.typeSpecific.audio
-                  : undefined}
-                text={qDoc?.questionText || "Describe the image shown."}
-                delayBeforePlay={5000} // 1 second
-                onPlaybackEnd={onTTSFinished}
-                rate={0.8}
-                pitch={0.8}
-              />}
+              {["pte_summarize_spoken"].includes(type) && (
+                <TTSPlayer
+                  key={qDoc._id}
+                  audioUrl={
+                    qDoc.typeSpecific?.audio
+                      ? audioBaseUrl + qDoc.typeSpecific.audio
+                      : undefined
+                  }
+                  text={qDoc?.questionText || "Describe the image shown."}
+                  delayBeforePlay={5000} // 1 second
+                  onPlaybackEnd={onTTSFinished}
+                  rate={0.8}
+                  pitch={0.8}
+                />
+              )}
               {/* {renderQuestionText()} */}
               <WritingEditor
                 value={currentQuestion.answerText || ""}
@@ -836,18 +940,16 @@ mx-auto">
 
     return (
       <>
-
-        <div className="flex items-center justify-between py-[6px] bg-white-300">
-        </div>
-        <div className="flex items-center justify-between py-4 bg-[#0080a3] ">
-        </div>
-        <div className="max-w-7xl mx-auto p-2 space-y-4">
+        <div className="flex items-center justify-between py-[3px] bg-white-300"></div>
+        <div className="flex items-center justify-between py-4 bg-[#0080a3] "></div>
+        <div className="max-w-7xl mx-auto space-y-4">
           {renderPTEQuestion()}
 
           {/* Question Palette */}
           <div
-            className={`fixed left-0 right-0 z-30 max-w-3xl mx-auto transition-transform duration-300 ease-out ${isPaletteOpen ? "translate-y-0" : "translate-y-[200%]"
-              } bottom-10 sm:bottom-12`}
+            className={`fixed left-0 right-0 z-30 max-w-3xl mx-auto transition-transform duration-300 ease-out ${
+              isPaletteOpen ? "translate-y-0" : "translate-y-[200%]"
+            } bottom-10 sm:bottom-12`}
           >
             <div className="mx-auto max-w-3xl min-h-[50vh] rounded-t-2xl border border-slate-300 dark:border-slate-700 bg-slate-200 dark:bg-slate-900 shadow-xl p-6">
               <div className="">
@@ -855,7 +957,6 @@ mx-auto">
                   <div className="font-semibold text-lg text-slate-800 dark:text-slate-100">
                     Question
                   </div>
-
                 </div>
 
                 <div className="flex flex-wrap gap-3 text-sm mb-4 text-slate-700 dark:text-slate-300">
@@ -912,76 +1013,47 @@ mx-auto">
             </div>
           </div>
 
-
-
           {/* BOTTOM BAR */}
-          {!mode && <div className="fixed bottom-0 left-0 right-0 z-40  dark:border-slate-700 bg-[#bfbbbc]  backdrop-blur">
-            <div className="mx-auto max-w-7xl px-4 py-3 ">
-              <div className="grid grid-cols-2 items-center gap-3">
-                <div className="flex text-lg text-slate-900 dark:text-slate-100 flex-wrap gap-2">
-                  PTE Practice
-                </div>
+          {!mode && (
+            <div className="fixed bottom-0 left-0 right-0 z-40  dark:border-slate-700 bg-[#bfbbbc]  backdrop-blur">
+              <div className="mx-auto max-w-7xl px-4 py-3 ">
+                <div className="grid grid-cols-2 items-center gap-3">
+                  <div className="flex text-lg text-slate-900 dark:text-slate-100 flex-wrap gap-2">
+                    PTE Practice
+                  </div>
 
-                <div className="flex justify-end gap-2">
-                  {activeQuestionIndex > 0 && (
+                  <div className="flex justify-end gap-2">
+                    {/* {activeQuestionIndex > 0 && (
+                      <button
+                        className="p-1.5 bg-slate-800 text-slate-100 font-semibold border-slate-200 rounded-full px-4"
+                        disabled={activeQuestionIndex <= 0 || isCompleted}
+                        onClick={() => {
+                          goToQuestion(Math.max(0, activeQuestionIndex - 1));
+                          setCrossedOptions([]);
+                        }}
+                      >
+                        Previous
+                      </button>
+                    )} */}
+
                     <button
-                      className="p-1.5 bg-slate-800 text-slate-100 font-semibold border-slate-200 rounded-full px-4"
-                      disabled={activeQuestionIndex <= 0 || isCompleted}
+                      className="p-1.5 bg-[#027291] text-slate-100 font-semibold border-slate-200 rounded px-4"
+                      disabled={isNextDisabled}
                       onClick={() => {
-                        goToQuestion(Math.max(0, activeQuestionIndex - 1));
-                        setCrossedOptions([]);
+                        setShowConfirmNextPopup(true);
                       }}
                     >
-                      Previous
+                      {isLastQuestionInCurrentSection
+                        ? isLastSection
+                          ? "Submit"
+                          : "Next Section"
+                        : "Next"}
                     </button>
-                  )}
-
-                  <button
-                    className="p-1.5 bg-[#027291] text-slate-100 font-semibold border-slate-200 rounded-full px-4"
-                    disabled={isNextDisabled}
-                    onClick={async () => {
-                      const isSpeakingQuestion = [
-                        "read_aloud",
-                        "repeat_sentence",
-                        "describe_image",
-                        "retell_lesson",
-                        "short_answer",
-                        "pte_situational",
-                        "summarize_group_discussions"
-                      ].includes(qDoc?.questionType || "");
-
-                      // if (isSpeakingQuestion && !recordedAudio && !isRecordingInProgress) {
-                      //   setShowRecordFirstPopup(true);
-                      //   return;
-                      // }
-
-                      // if (isRecordingInProgress) {
-                      //   setShowConfirmNextPopup(true);
-                      //   return;
-                      // }
-
-                      // if (recordedAudio) {
-                      //   const audioPath = await uploadAudioAndGetPath(recordedAudio);
-                      //   await updateCurrentQuestionAsync({
-                      //     answerText: audioPath,
-                      //     isAnswered: true,
-                      //   });
-                      //   setRecordedAudio(null);
-                      // }
-                      goNextQuestion();
-                      setCrossedOptions([]);
-                    }}
-                  >
-                    {isLastQuestionInCurrentSection
-                      ? isLastSection
-                        ? "Submit"
-                        : "Next Section"
-                      : "Next"}
-                  </button>
+                  </div>
                 </div>
               </div>
             </div>
-          </div>}
+          )}
         </div>
 
         {/* Return statement ke andar, sabse last mein */}
@@ -989,39 +1061,83 @@ mx-auto">
           <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
             <div className="bg-white rounded-xl max-w-md w-full mx-4 p-6">
               <h3 className="text-lg font-bold mb-4">Recording Required</h3>
-              <p className="mb-4">Please record your response before proceeding.</p>
+              <p className="mb-4">
+                Please record your response before proceeding.
+              </p>
               <div className="flex justify-end gap-3">
-                <button onClick={() => setShowRecordFirstPopup(false)} className="px-4 py-2">Cancel</button>
-                <button onClick={() => setShowRecordFirstPopup(false)} className="px-4 py-2 bg-blue-600 text-white">OK</button>
+                <button
+                  onClick={() => setShowRecordFirstPopup(false)}
+                  className="px-4 py-2"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={() => setShowRecordFirstPopup(false)}
+                  className="px-4 py-2 bg-blue-600 text-white"
+                >
+                  OK
+                </button>
               </div>
             </div>
           </div>
         )}
 
         {showConfirmNextPopup && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
-            <div className="bg-white rounded-xl max-w-md w-full mx-4 p-6">
-              <h3 className="text-lg font-bold mb-4">Confirm Navigation</h3>
-              <p className="mb-4">Recording is in progress. Proceeding will stop the recording.</p>
+          <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/20 px-4">
+            <div className="w-full max-w-md rounded-2xl bg-white p-6 shadow-2xl dark:bg-slate-900">
+              <div className="mb-4 flex items-center gap-3">
+               
+                <div>
+                  <h3 className="text-lg font-bold text-slate-900 dark:text-white">
+                    Confirm Next
+                  </h3>
+
+                  <p className="text-sm text-slate-500 dark:text-slate-400">
+                    Question {questionNumber}
+                  </p>
+                </div>
+              </div>
+
+              <p className="mb-6 text-sm leading-6 text-slate-600 dark:text-slate-300">
+                Are you sure you want to go to the next question?
+              </p>
+
               <div className="flex justify-end gap-3">
-                <button onClick={() => setShowConfirmNextPopup(false)} className="px-4 py-2">Cancel</button>
-                <button onClick={() => {
-                  setShowConfirmNextPopup(false);
-                  goNextQuestion();
-                  setCrossedOptions([]);
-                }} className="px-4 py-2 bg-blue-600 text-white">Proceed</button>
+                <button
+                  type="button"
+                  disabled={uploadingAudio}
+                  onClick={() => setShowConfirmNextPopup(false)}
+                  className="rounded-lg border border-slate-300 px-4 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50 disabled:opacity-50 dark:border-slate-700 dark:text-slate-300"
+                >
+                  Cancel
+                </button>
+
+                <button
+                  type="button"
+                  disabled={uploadingAudio}
+                  onClick={handleConfirmNext}
+                  className="rounded-lg bg-[#027291] px-5 py-2 text-sm font-semibold text-white hover:bg-[#01627d] disabled:cursor-not-allowed disabled:opacity-60"
+                >
+                  {uploadingAudio ? (
+                    <span className="flex items-center gap-2">
+                      <span className="h-4 w-4 animate-spin rounded-full border-2 border-white/30 border-t-white" />
+                      Saving...
+                    </span>
+                  ) : (
+                    "Yes, Go Next"
+                  )}
+                </button>
               </div>
             </div>
           </div>
         )}
       </>
     );
-  }
+  },
 );
 
 export default QuestionRenderer;
 export { QuestionRenderer as PteQuestionPreviewRenderer };
-
 
 interface SectionInstructionsProps {
   currentSection: {
@@ -1034,87 +1150,94 @@ interface SectionInstructionsProps {
   saveCurrentQuestionProgress: (opts?: { silent?: boolean }) => Promise<void>;
 }
 
-export const SectionInstructions: React.FC<SectionInstructionsProps> = React.memo(
-  ({ currentSection, activeSectionIndex, setCurrentScreen, saveCurrentQuestionProgress }) => {
-    if (!currentSection) return null;
+export const SectionInstructions: React.FC<SectionInstructionsProps> =
+  React.memo(
+    ({
+      currentSection,
+      activeSectionIndex,
+      setCurrentScreen,
+      saveCurrentQuestionProgress,
+    }) => {
+      if (!currentSection) return null;
 
-    const sectionName =
-      currentSection.name || `Section ${activeSectionIndex + 1}`;
-    const sectionDuration = currentSection.durationMinutes;
-    const questionCount = currentSection.questions.length;
+      const sectionName =
+        currentSection.name || `Section ${activeSectionIndex + 1}`;
+      const sectionDuration = currentSection.durationMinutes;
+      const questionCount = currentSection.questions.length;
 
-    const timedText = sectionDuration
-      ? `${sectionDuration} minutes`
-      : "Untimed (no countdown)";
+      const timedText = sectionDuration
+        ? `${sectionDuration} minutes`
+        : "Untimed (no countdown)";
 
+      const handleStartSection = async () => {
+        await saveCurrentQuestionProgress({
+          silent: true,
+          phase: "in_section",
+          metaSectionIndex: activeSectionIndex,
+          metaQuestionIndex: 0,
+        });
+        setCurrentScreen("question");
+      };
 
-    const handleStartSection = async () => {
-      await saveCurrentQuestionProgress({
-        silent: true,
-        phase: "in_section",
-        metaSectionIndex: activeSectionIndex,
-        metaQuestionIndex: 0,
-      });
-      setCurrentScreen("question");
-    };
+      return (
+        <div className="max-w-7xl mx-auto p-6">
+          <h2 className="mb-4 text-2xl font-bold text-slate-900 dark:text-slate-50">
+            {sectionName} — Instructions
+          </h2>
+          <p className="mb-4">
+            This section is <b>{timedText}</b> and contains{" "}
+            <b>{questionCount}</b> questions.
+          </p>
+          <p className="mb-4">
+            You may move backward and forward among questions in this section.
+            You can mark questions for review and change your answers as many
+            times as you like while you remain in this section or its review
+            screen.
+          </p>
+          <p className="mb-4">
+            Once you move to the next section, you will not be able to return to
+            this one.
+          </p>
 
-    return (
-      <div className="max-w-7xl mx-auto p-6">
-        <h2 className="mb-4 text-2xl font-bold text-slate-900 dark:text-slate-50">
-          {sectionName} — Instructions
-        </h2>
-        <p className="mb-4">
-          This section is <b>{timedText}</b> and contains{" "}
-          <b>{questionCount}</b> questions.
-        </p>
-        <p className="mb-4">
-          You may move backward and forward among questions in this section. You
-          can mark questions for review and change your answers as many times as
-          you like while you remain in this section or its review screen.
-        </p>
-        <p className="mb-4">
-          Once you move to the next section, you will not be able to return to
-          this one.
-        </p>
+          {/* Fixed bottom nav */}
+          <div className="fixed bottom-0 left-0 right-0 z-50 border-t border-slate-200 dark:border-slate-700 bg-white/95 dark:bg-slate-900/95 backdrop-blur supports-backdrop-blur:bg-white/60">
+            <div className="mx-auto max-w-7xl px-4 py-4">
+              <div className="flex flex-wrap items-center justify-between gap-4">
+                <div className="flex flex-wrap items-center gap-3">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="flex items-center gap-2 rounded-xl border-2 border-slate-300 dark:border-slate-600 px-4 py-2 text-sm font-semibold text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-800"
+                    onClick={() => null}
+                    disabled={true}
+                  >
+                    <Save className="h-4 w-4" />
+                    Save
+                  </Button>
+                </div>
 
-        {/* Fixed bottom nav */}
-        <div className="fixed bottom-0 left-0 right-0 z-50 border-t border-slate-200 dark:border-slate-700 bg-white/95 dark:bg-slate-900/95 backdrop-blur supports-backdrop-blur:bg-white/60">
-          <div className="mx-auto max-w-7xl px-4 py-4">
-            <div className="flex flex-wrap items-center justify-between gap-4">
-              <div className="flex flex-wrap items-center gap-3">
-                <Button
-                  variant="outline"
-                  size="sm"
-                  className="flex items-center gap-2 rounded-xl border-2 border-slate-300 dark:border-slate-600 px-4 py-2 text-sm font-semibold text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-800"
-                  onClick={() => null}
-                  disabled={true}
-                >
-                  <Save className="h-4 w-4" />
-                  Save
-                </Button>
-              </div>
-
-              <div className="flex items-center gap-3">
-                <Button
-                  size="sm"
-                  className="flex items-center gap-2 rounded-xl border-2 border-slate-300 dark:border-slate-600 px-5 py-2 text-sm font-semibold text-slate-700 dark:text-slate-200 hover:bg-slate-50 hover:text-slate-900 dark:hover:bg-slate-800"
-                  onClick={handleStartSection}
-                >
-                  Start Section
-                </Button>
+                <div className="flex items-center gap-3">
+                  <Button
+                    size="sm"
+                    className="flex items-center gap-2 rounded-xl border-2 border-slate-300 dark:border-slate-600 px-5 py-2 text-sm font-semibold text-slate-700 dark:text-slate-200 hover:bg-slate-50 hover:text-slate-900 dark:hover:bg-slate-800"
+                    onClick={handleStartSection}
+                  >
+                    Start Section
+                  </Button>
+                </div>
               </div>
             </div>
           </div>
         </div>
-      </div>
-    );
-  }
-);
+      );
+    },
+  );
 
 import { Eye, ArrowLeft, CheckCircle2 } from "lucide-react";
 import api, { audioBaseUrl } from "../../axiosInstance";
 import { useNavigate } from "react-router";
 import WritingEditor from "../Tests/WritingEditor";
+import { toast } from "sonner";
 
 interface SectionReviewProps {
   currentSection: any;
@@ -1149,7 +1272,9 @@ export const SectionReview: React.FC<SectionReviewProps> = React.memo(
     handleFinishSectionReview,
   }) => {
     const total = currentSection.questions.length;
-    const answeredCount = currentSection.questions.filter((q) => q.isAnswered).length;
+    const answeredCount = currentSection.questions.filter(
+      (q) => q.isAnswered,
+    ).length;
 
     const filtered = useMemo(() => {
       return currentSection.questions
@@ -1169,18 +1294,29 @@ export const SectionReview: React.FC<SectionReviewProps> = React.memo(
           <aside className=" max-w-4xl flex-shrink-0 mx-auto">
             <div className="">
               <div className="py-6">
-                <h4 className="text-3xl text-center font-semibold text-slate-900 dark:text-slate-50">Check Your Work</h4>
-                <div className="text-base text-center text-slate-500">On the test day you will not be able to return to this section review. and go to next section without time completed</div>
+                <h4 className="text-3xl text-center font-semibold text-slate-900 dark:text-slate-50">
+                  Check Your Work
+                </h4>
+                <div className="text-base text-center text-slate-500">
+                  On the test day you will not be able to return to this section
+                  review. and go to next section without time completed
+                </div>
               </div>
               <div className="rounded-2xl bg-white dark:bg-slate-900/60 border border-slate-200 dark:border-slate-700 p-6">
                 <div className="mt-3 flex gap-1 flex-wrap">
-                  {(["all", "answered", "not_answered", "flagged"] as const).map((f) => {
+                  {(
+                    ["all", "answered", "not_answered", "flagged"] as const
+                  ).map((f) => {
                     const isActive = filter === f;
-                    let bgClass = "bg-slate-50 dark:bg-slate-800 text-slate-700 dark:text-slate-200";
+                    let bgClass =
+                      "bg-slate-50 dark:bg-slate-800 text-slate-700 dark:text-slate-200";
                     if (isActive) {
-                      if (f === "answered") bgClass = "bg-emerald-600 text-white";
-                      else if (f === "not_answered") bgClass = "bg-yellow-500 text-white";
-                      else if (f === "flagged") bgClass = "bg-indigo-700 text-white";
+                      if (f === "answered")
+                        bgClass = "bg-emerald-600 text-white";
+                      else if (f === "not_answered")
+                        bgClass = "bg-yellow-500 text-white";
+                      else if (f === "flagged")
+                        bgClass = "bg-indigo-700 text-white";
                       else bgClass = "bg-indigo-600 text-white";
                     }
                     return (
@@ -1189,7 +1325,9 @@ export const SectionReview: React.FC<SectionReviewProps> = React.memo(
                         onClick={() => setFilter(f)}
                         className={`px-3 py-1 rounded-full ${bgClass}`}
                       >
-                        {f === "not_answered" ? "Not answered" : f.charAt(0).toUpperCase() + f.slice(1)}
+                        {f === "not_answered"
+                          ? "Not answered"
+                          : f.charAt(0).toUpperCase() + f.slice(1)}
                       </button>
                     );
                   })}
@@ -1207,24 +1345,25 @@ export const SectionReview: React.FC<SectionReviewProps> = React.memo(
                             setActiveQuestionIndex(idx);
                             setCurrentScreen("question");
                           }}
-                          className={`group flex flex-col items-center justify-center gap-1 p-2 rounded-xl border transition-colors ${isBookmarked
-                            ? "border-purple-300 bg-purple-50 dark:bg-purple-500/10"
-                            : isAnsweredLocal
-                              ? "border-emerald-200 bg-emerald-50"
-                              : "border-slate-200 bg-white dark:bg-slate-900 hover:border-indigo-300"
-                            }`}
+                          className={`group flex flex-col items-center justify-center gap-1 p-2 rounded-xl border transition-colors ${
+                            isBookmarked
+                              ? "border-purple-300 bg-purple-50 dark:bg-purple-500/10"
+                              : isAnsweredLocal
+                                ? "border-emerald-200 bg-emerald-50"
+                                : "border-slate-200 bg-white dark:bg-slate-900 hover:border-indigo-300"
+                          }`}
                         >
                           <div
-                            className={`h-10 w-10 rounded-full flex items-center justify-center font-semibold ${isBookmarked
-                              ? "bg-purple-500 text-white"
-                              : isAnsweredLocal
-                                ? "bg-emerald-500 text-white"
-                                : "bg-slate-200 text-slate-700"
-                              }`}
+                            className={`h-10 w-10 rounded-full flex items-center justify-center font-semibold ${
+                              isBookmarked
+                                ? "bg-purple-500 text-white"
+                                : isAnsweredLocal
+                                  ? "bg-emerald-500 text-white"
+                                  : "bg-slate-200 text-slate-700"
+                            }`}
                           >
                             {q.order || idx + 1}
                           </div>
-
                         </button>
                       );
                     })}
@@ -1245,15 +1384,11 @@ export const SectionReview: React.FC<SectionReviewProps> = React.memo(
               </div>
 
               <div className="flex gap-2">
-
-
                 <button
                   className="p-1.5 bg-blue-800 text-slate-100 font-semibold border-slate-200 rounded-full px-4"
                   onClick={handleFinishSectionReview}
                   disabled={submitting}
-
                 >
-
                   {isLastSection ? "Submit" : "Next"}
                 </button>
               </div>
@@ -1262,10 +1397,8 @@ export const SectionReview: React.FC<SectionReviewProps> = React.memo(
         </div>
       </div>
     );
-  }
+  },
 );
-
-
 
 const scale10to90 = (correct: number, total: number): number => {
   if (!total || total <= 0) return 10;
@@ -1280,8 +1413,6 @@ const normalizeSectionName = (name: string) => {
   return null;
 };
 
-
-
 interface GRETestResultsProps {
   attempt: any;
   navigateBack: () => void;
@@ -1292,8 +1423,6 @@ export const GRETestResults: React.FC<GRETestResultsProps> = React.memo(
   ({ attempt, navigateBack, onTakeAnotherTest }) => {
     const overall = attempt.overallStats;
 
-
-
     // ================= PTE CALCULATION =================
     const sectionStats = {
       listening: { correct: 0, total: 0 },
@@ -1301,11 +1430,11 @@ export const GRETestResults: React.FC<GRETestResultsProps> = React.memo(
       speakingWriting: { correct: 0, total: 0 },
     };
 
-    attempt.sections.forEach(section => {
+    attempt.sections.forEach((section) => {
       const key = normalizeSectionName(section.name);
       if (!key) return;
 
-      section.questions.forEach(q => {
+      section.questions.forEach((q) => {
         sectionStats[key].total += 1;
         if (q.isCorrect === true) {
           sectionStats[key].correct += 1;
@@ -1316,22 +1445,20 @@ export const GRETestResults: React.FC<GRETestResultsProps> = React.memo(
     const pteScores = {
       listening: scale10to90(
         sectionStats.listening.correct,
-        sectionStats.listening.total
+        sectionStats.listening.total,
       ),
       reading: scale10to90(
         sectionStats.reading.correct,
-        sectionStats.reading.total
+        sectionStats.reading.total,
       ),
       speakingWriting: scale10to90(
         sectionStats.speakingWriting.correct,
-        sectionStats.speakingWriting.total
+        sectionStats.speakingWriting.total,
       ),
     };
 
     const overallPTE = Math.round(
-      (pteScores.listening +
-        pteScores.reading +
-        pteScores.speakingWriting) / 3
+      (pteScores.listening + pteScores.reading + pteScores.speakingWriting) / 3,
     );
 
     // ================= RECHARTS DATA =================
@@ -1341,9 +1468,9 @@ export const GRETestResults: React.FC<GRETestResultsProps> = React.memo(
         score: pteScores.listening,
         accuracy: sectionStats.listening.total
           ? Math.round(
-            (sectionStats.listening.correct /
-              sectionStats.listening.total) * 100
-          )
+              (sectionStats.listening.correct / sectionStats.listening.total) *
+                100,
+            )
           : 0,
       },
       {
@@ -1351,9 +1478,8 @@ export const GRETestResults: React.FC<GRETestResultsProps> = React.memo(
         score: pteScores.reading,
         accuracy: sectionStats.reading.total
           ? Math.round(
-            (sectionStats.reading.correct /
-              sectionStats.reading.total) * 100
-          )
+              (sectionStats.reading.correct / sectionStats.reading.total) * 100,
+            )
           : 0,
       },
       {
@@ -1361,9 +1487,10 @@ export const GRETestResults: React.FC<GRETestResultsProps> = React.memo(
         score: pteScores.speakingWriting,
         accuracy: sectionStats.speakingWriting.total
           ? Math.round(
-            (sectionStats.speakingWriting.correct /
-              sectionStats.speakingWriting.total) * 100
-          )
+              (sectionStats.speakingWriting.correct /
+                sectionStats.speakingWriting.total) *
+                100,
+            )
           : 0,
       },
     ];
@@ -1383,13 +1510,8 @@ export const GRETestResults: React.FC<GRETestResultsProps> = React.memo(
       },
     ];
 
-
-
-
-
-
     // ✅ State for active tab
-    const [activeTab, setActiveTab] = useState('');
+    const [activeTab, setActiveTab] = useState("");
 
     // ✅ Get unique section names from attempt
     const sectionNames = attempt.sections.reduce((acc, section) => {
@@ -1403,19 +1525,19 @@ export const GRETestResults: React.FC<GRETestResultsProps> = React.memo(
       if (!activeTab) {
         return [];
       }
-      return attempt.sections.filter(section => section.name === activeTab);
+      return attempt.sections.filter((section) => section.name === activeTab);
     };
 
     const activeSections = getSectionsForActiveTab();
 
     // ✅ Get icon for section
     const getSectionIcon = (sectionName: string) => {
-      const name = sectionName?.toLowerCase() || '';
-      if (name.includes('speaking') || name.includes('writing')) {
+      const name = sectionName?.toLowerCase() || "";
+      if (name.includes("speaking") || name.includes("writing")) {
         return Mic;
-      } else if (name.includes('reading')) {
+      } else if (name.includes("reading")) {
         return BookOpen;
-      } else if (name.includes('listening')) {
+      } else if (name.includes("listening")) {
         return Headphones;
       }
       return BookOpen;
@@ -1423,20 +1545,20 @@ export const GRETestResults: React.FC<GRETestResultsProps> = React.memo(
 
     // ✅ Audio URL check function
     const isAudioUrl = (text: string) => {
-      return text && (
-        text.includes('.mp3') ||
-        text.includes('.wav') ||
-        text.includes('.webm') ||
-        text.includes('.ogg') ||
-        text.startsWith('/uploads/') ||
-        text.includes('blob:')
+      return (
+        text &&
+        (text.includes(".mp3") ||
+          text.includes(".wav") ||
+          text.includes(".webm") ||
+          text.includes(".ogg") ||
+          text.startsWith("/uploads/") ||
+          text.includes("blob:"))
       );
     };
 
     const formatStructuredAnswer = (answer: any) => {
       try {
-        const parsed =
-          typeof answer === "string" ? JSON.parse(answer) : answer;
+        const parsed = typeof answer === "string" ? JSON.parse(answer) : answer;
 
         // ✅ ARRAY CASE
         if (Array.isArray(parsed)) {
@@ -1461,8 +1583,6 @@ export const GRETestResults: React.FC<GRETestResultsProps> = React.memo(
         return null;
       }
     };
-
-
 
     // ✅ Render user answer
     const renderUserAnswer = (q: any, qd: any) => {
@@ -1509,8 +1629,7 @@ export const GRETestResults: React.FC<GRETestResultsProps> = React.memo(
       const getOptionLabel = (idx: number) => {
         if (!qd?.options || !qd.options[idx]) return "--";
         return (
-          qd.options[idx].label ||
-          String.fromCharCode("A".charCodeAt(0) + idx)
+          qd.options[idx].label || String.fromCharCode("A".charCodeAt(0) + idx)
         );
       };
 
@@ -1520,8 +1639,6 @@ export const GRETestResults: React.FC<GRETestResultsProps> = React.memo(
 
       return "--";
     };
-
-
 
     // ✅ Render correct answer
     const renderCorrectAnswer = (qd: any, q: any) => {
@@ -1533,12 +1650,14 @@ export const GRETestResults: React.FC<GRETestResultsProps> = React.memo(
 
       return (
         <div className="space-y-3">
-
           {/* MCQ correct answers */}
           {correctLabels?.length > 0 && (
             <div className="space-y-1">
               {correctLabels.map((label: string, idx: number) => (
-                <div key={idx} className="text-emerald-700 dark:text-emerald-300">
+                <div
+                  key={idx}
+                  className="text-emerald-700 dark:text-emerald-300"
+                >
                   {label}
                 </div>
               ))}
@@ -1565,26 +1684,27 @@ export const GRETestResults: React.FC<GRETestResultsProps> = React.memo(
             </div>
           )}
 
-
           {evaluationMeta && (
             <div className="rounded-lg border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/60 p-3 space-y-3">
-
               <div className="text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">
                 Evaluation Feedback
               </div>
 
               {evaluationMeta.transcript && (
                 <p className="text-sm text-slate-800 dark:text-slate-200">
-                  <span className="font-bold">Transcript :</span> {evaluationMeta.transcript}
+                  <span className="font-bold">Transcript :</span>{" "}
+                  {evaluationMeta.transcript}
                 </p>
               )}
 
               {typeof evaluationMeta.accuracy === "number" && (
                 <div className="flex items-center gap-2">
-                  <p className="text-sm text-slate-800 dark:text-slate-200"><span className="font-bold">Accuracy :</span> <span className="text-xs font-bold">
-                    {Math.round(evaluationMeta.accuracy * 100)}%
-                  </span></p>
-
+                  <p className="text-sm text-slate-800 dark:text-slate-200">
+                    <span className="font-bold">Accuracy :</span>{" "}
+                    <span className="text-xs font-bold">
+                      {Math.round(evaluationMeta.accuracy * 100)}%
+                    </span>
+                  </p>
                 </div>
               )}
 
@@ -1595,14 +1715,12 @@ export const GRETestResults: React.FC<GRETestResultsProps> = React.memo(
                 </div>
               )}
 
-
               {evaluationMeta.extraWords?.length > 0 && (
                 <div className="text-sm text-amber-600">
                   <span className="font-bold">Extra Words: </span>
                   {evaluationMeta.extraWords.join(", ")}
                 </div>
               )}
-
             </div>
           )}
 
@@ -1615,8 +1733,6 @@ export const GRETestResults: React.FC<GRETestResultsProps> = React.memo(
       );
     };
 
-
-
     useEffect(() => {
       if (sectionNames.length > 0 && !activeTab) {
         setActiveTab(sectionNames[0]);
@@ -1628,7 +1744,11 @@ export const GRETestResults: React.FC<GRETestResultsProps> = React.memo(
       if (typeof q.isCorrect === "boolean") {
         return q.isCorrect ? "correct" : "incorrect";
       }
-      if (qd && typeof qd.correctOptionIndex === "number" && qd.correctOptionIndex >= 0) {
+      if (
+        qd &&
+        typeof qd.correctOptionIndex === "number" &&
+        qd.correctOptionIndex >= 0
+      ) {
         const userIdx = q.answerOptionIndexes[0];
         return userIdx === qd.correctOptionIndex ? "correct" : "incorrect";
       }
@@ -1637,19 +1757,27 @@ export const GRETestResults: React.FC<GRETestResultsProps> = React.memo(
 
     const getStatusColor = (status: string) => {
       switch (status) {
-        case "correct": return "bg-gradient-to-r from-emerald-500 to-emerald-600 text-white shadow-emerald-200 dark:shadow-emerald-900/30";
-        case "incorrect": return "bg-gradient-to-r from-red-500 to-red-600 text-white shadow-red-200 dark:shadow-red-900/30";
-        case "skipped": return "bg-gradient-to-r from-slate-400 to-slate-500 text-white shadow-slate-200 dark:shadow-slate-900/30";
-        default: return "bg-gradient-to-r from-indigo-500 to-indigo-600 text-white shadow-indigo-200 dark:shadow-indigo-900/30";
+        case "correct":
+          return "bg-gradient-to-r from-emerald-500 to-emerald-600 text-white shadow-emerald-200 dark:shadow-emerald-900/30";
+        case "incorrect":
+          return "bg-gradient-to-r from-red-500 to-red-600 text-white shadow-red-200 dark:shadow-red-900/30";
+        case "skipped":
+          return "bg-gradient-to-r from-slate-400 to-slate-500 text-white shadow-slate-200 dark:shadow-slate-900/30";
+        default:
+          return "bg-gradient-to-r from-indigo-500 to-indigo-600 text-white shadow-indigo-200 dark:shadow-indigo-900/30";
       }
     };
 
     const getStatusIcon = (status: string) => {
       switch (status) {
-        case "correct": return <CheckCircle2 className="h-4 w-4 mr-1.5" />;
-        case "incorrect": return <AlertTriangle className="h-4 w-4 mr-1.5" />;
-        case "skipped": return <Clock className="h-4 w-4 mr-1.5" />;
-        default: return <Edit3 className="h-4 w-4 mr-1.5" />;
+        case "correct":
+          return <CheckCircle2 className="h-4 w-4 mr-1.5" />;
+        case "incorrect":
+          return <AlertTriangle className="h-4 w-4 mr-1.5" />;
+        case "skipped":
+          return <Clock className="h-4 w-4 mr-1.5" />;
+        default:
+          return <Edit3 className="h-4 w-4 mr-1.5" />;
       }
     };
 
@@ -1660,7 +1788,6 @@ export const GRETestResults: React.FC<GRETestResultsProps> = React.memo(
       return text.replace(/\{\{\d+\}\}/g, "_____");
     };
 
-
     const formatTimeSpent = (seconds: number) => {
       const m = Math.floor(seconds / 60);
       const s = seconds % 60;
@@ -1669,14 +1796,11 @@ export const GRETestResults: React.FC<GRETestResultsProps> = React.memo(
 
     if (!attempt) return null;
 
-
     const radius = 40;
     const circumference = 2 * Math.PI * radius;
 
     // overallPTE is already calculated by you
-    const dashOffset =
-      circumference - (overallPTE / 90) * circumference;
-
+    const dashOffset = circumference - (overallPTE / 90) * circumference;
 
     return (
       <div className="max-w-7xl mx-auto p-4 md:p-6 space-y-6">
@@ -1708,18 +1832,19 @@ export const GRETestResults: React.FC<GRETestResultsProps> = React.memo(
               <LogOut className="h-4 w-4 mr-2" />
               Back to Dashboard
             </Button>
-            <Button variant="outline" size="sm" className="border-slate-300 mx-2 dark:border-slate-600" onClick={() => window.print()}>
+            <Button
+              variant="outline"
+              size="sm"
+              className="border-slate-300 mx-2 dark:border-slate-600"
+              onClick={() => window.print()}
+            >
               Print Results
             </Button>
           </div>
-
-
         </div>
-
 
         {/* ================= PTE RESULT ANALYSIS ================= */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-
           {/* Chart 1: PTE Score */}
           <div className="bg-white dark:bg-slate-900 rounded-xl border p-4">
             <h3 className="font-semibold mb-3">PTE Score (10–90)</h3>
@@ -1729,10 +1854,13 @@ export const GRETestResults: React.FC<GRETestResultsProps> = React.memo(
                 <Recharts.XAxis dataKey="name" />
                 <Recharts.YAxis domain={[10, 90]} />
                 <Recharts.Tooltip />
-                <Recharts.Bar dataKey="score" fill="#3b82f6" radius={[6, 6, 0, 0]} />
+                <Recharts.Bar
+                  dataKey="score"
+                  fill="#3b82f6"
+                  radius={[6, 6, 0, 0]}
+                />
               </Recharts.BarChart>
             </Recharts.ResponsiveContainer>
-
           </div>
 
           {/* Chart 2: Accuracy */}
@@ -1744,10 +1872,13 @@ export const GRETestResults: React.FC<GRETestResultsProps> = React.memo(
                 <Recharts.XAxis dataKey="name" />
                 <Recharts.YAxis domain={[0, 100]} />
                 <Recharts.Tooltip formatter={(v) => `${v}%`} />
-                <Recharts.Bar dataKey="accuracy" fill="#22c55e" radius={[6, 6, 0, 0]} />
+                <Recharts.Bar
+                  dataKey="accuracy"
+                  fill="#22c55e"
+                  radius={[6, 6, 0, 0]}
+                />
               </Recharts.BarChart>
             </Recharts.ResponsiveContainer>
-
           </div>
 
           {/* Chart 3: Contribution */}
@@ -1774,17 +1905,11 @@ export const GRETestResults: React.FC<GRETestResultsProps> = React.memo(
                 <Recharts.Tooltip />
               </Recharts.PieChart>
             </Recharts.ResponsiveContainer>
-
           </div>
-
         </div>
 
-
-
         <div className="bg-white rounded-xl border p-6 mt-8">
-          <h3 className="font-semibold mb-4 text-lg">
-            Skills Breakdown
-          </h3>
+          <h3 className="font-semibold mb-4 text-lg">Skills Breakdown</h3>
 
           <Recharts.ResponsiveContainer width="100%" height={120}>
             <Recharts.BarChart
@@ -1825,10 +1950,6 @@ export const GRETestResults: React.FC<GRETestResultsProps> = React.memo(
           </Recharts.ResponsiveContainer>
         </div>
 
-
-
-
-
         {/* Overall Stats */}
         {overall && (
           <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
@@ -1842,7 +1963,7 @@ export const GRETestResults: React.FC<GRETestResultsProps> = React.memo(
               {
                 label: "Attempted",
                 value: `${overall.totalAttempted} (${Math.round(
-                  (overall.totalAttempted / overall.totalQuestions) * 100
+                  (overall.totalAttempted / overall.totalQuestions) * 100,
                 )}%)`,
                 icon: Edit3,
                 color: "blue",
@@ -1850,7 +1971,7 @@ export const GRETestResults: React.FC<GRETestResultsProps> = React.memo(
               {
                 label: "Correct",
                 value: `${overall.totalCorrect} (${Math.round(
-                  (overall.totalCorrect / overall.totalQuestions) * 100
+                  (overall.totalCorrect / overall.totalQuestions) * 100,
                 )}%)`,
                 icon: CheckCircle2,
                 color: "emerald",
@@ -1858,7 +1979,7 @@ export const GRETestResults: React.FC<GRETestResultsProps> = React.memo(
               {
                 label: "Incorrect",
                 value: `${overall.totalIncorrect} (${Math.round(
-                  (overall.totalIncorrect / overall.totalQuestions) * 100
+                  (overall.totalIncorrect / overall.totalQuestions) * 100,
                 )}%)`,
                 icon: AlertTriangle,
                 color: "red",
@@ -1873,12 +1994,10 @@ export const GRETestResults: React.FC<GRETestResultsProps> = React.memo(
               const colorMap: any = {
                 indigo:
                   "from-indigo-500/10 to-indigo-500/0 text-indigo-600 dark:text-indigo-400 bg-indigo-100 dark:bg-indigo-900/30",
-                blue:
-                  "from-blue-500/10 to-blue-500/0 text-blue-600 dark:text-blue-400 bg-blue-100 dark:bg-blue-900/30",
+                blue: "from-blue-500/10 to-blue-500/0 text-blue-600 dark:text-blue-400 bg-blue-100 dark:bg-blue-900/30",
                 emerald:
                   "from-emerald-500/10 to-emerald-500/0 text-emerald-600 dark:text-emerald-400 bg-emerald-100 dark:bg-emerald-900/30",
-                red:
-                  "from-red-500/10 to-red-500/0 text-red-600 dark:text-red-400 bg-red-100 dark:bg-red-900/30",
+                red: "from-red-500/10 to-red-500/0 text-red-600 dark:text-red-400 bg-red-100 dark:bg-red-900/30",
                 purple:
                   "from-purple-500/10 to-purple-500/0 text-purple-600 dark:text-purple-400 bg-purple-100 dark:bg-purple-900/30",
               };
@@ -1896,7 +2015,6 @@ export const GRETestResults: React.FC<GRETestResultsProps> = React.memo(
             hover:-translate-y-1 hover:shadow-xl
           "
                 >
-
                   <div
                     className={`absolute inset-0 bg-gradient-to-br ${colorMap[item.color].split(" ")[0]} pointer-events-none`}
                   />
@@ -1925,17 +2043,18 @@ export const GRETestResults: React.FC<GRETestResultsProps> = React.memo(
           </div>
         )}
 
-
         {/* Performance Summary */}
         {overall && (
-          <div className="
+          <div
+            className="
     relative overflow-hidden rounded-2xl
     border border-slate-200/60 dark:border-slate-700/60
     bg-white/70 dark:bg-slate-900/60
     backdrop-blur-xl
     shadow-xl
     p-6
-  ">
+  "
+          >
             {/* Soft background glow */}
             <div className="absolute -top-24 -right-24 h-64 w-64 rounded-full bg-indigo-500/10 blur-3xl" />
             <div className="absolute -bottom-24 -left-24 h-64 w-64 rounded-full bg-emerald-500/10 blur-3xl" />
@@ -1945,10 +2064,8 @@ export const GRETestResults: React.FC<GRETestResultsProps> = React.memo(
             </h3>
 
             <div className="relative grid grid-cols-1 md:grid-cols-2 gap-6">
-
               {/* ===== LEFT: METRICS ===== */}
               <div className="space-y-6">
-
                 {/* Accuracy */}
                 <div className="space-y-2">
                   <div className="flex items-center justify-between">
@@ -1957,8 +2074,12 @@ export const GRETestResults: React.FC<GRETestResultsProps> = React.memo(
                     </span>
                     <span className="text-xl font-bold bg-gradient-to-r from-emerald-600 to-cyan-600 dark:from-emerald-400 dark:to-cyan-400 bg-clip-text text-transparent">
                       {overall.totalAttempted > 0
-                        ? ((overall.totalCorrect / overall.totalAttempted) * 100).toFixed(1)
-                        : "0"}%
+                        ? (
+                            (overall.totalCorrect / overall.totalAttempted) *
+                            100
+                          ).toFixed(1)
+                        : "0"}
+                      %
                     </span>
                   </div>
 
@@ -1966,10 +2087,12 @@ export const GRETestResults: React.FC<GRETestResultsProps> = React.memo(
                     <div
                       className="h-full rounded-full bg-gradient-to-r from-emerald-400 to-emerald-600 transition-all duration-700 ease-out"
                       style={{
-                        width: `${overall.totalAttempted > 0
-                          ? (overall.totalCorrect / overall.totalAttempted) * 100
-                          : 0
-                          }%`
+                        width: `${
+                          overall.totalAttempted > 0
+                            ? (overall.totalCorrect / overall.totalAttempted) *
+                              100
+                            : 0
+                        }%`,
                       }}
                     />
                   </div>
@@ -1982,7 +2105,11 @@ export const GRETestResults: React.FC<GRETestResultsProps> = React.memo(
                       Completion Rate
                     </span>
                     <span className="text-xl font-bold bg-gradient-to-r from-blue-600 to-indigo-600 dark:from-blue-400 dark:to-indigo-400 bg-clip-text text-transparent">
-                      {((overall.totalAttempted / overall.totalQuestions) * 100).toFixed(1)}%
+                      {(
+                        (overall.totalAttempted / overall.totalQuestions) *
+                        100
+                      ).toFixed(1)}
+                      %
                     </span>
                   </div>
 
@@ -1990,7 +2117,7 @@ export const GRETestResults: React.FC<GRETestResultsProps> = React.memo(
                     <div
                       className="h-full rounded-full bg-gradient-to-r from-blue-400 to-blue-600 transition-all duration-700 ease-out"
                       style={{
-                        width: `${(overall.totalAttempted / overall.totalQuestions) * 100}%`
+                        width: `${(overall.totalAttempted / overall.totalQuestions) * 100}%`,
                       }}
                     />
                   </div>
@@ -2000,13 +2127,12 @@ export const GRETestResults: React.FC<GRETestResultsProps> = React.memo(
               {/* ===== RIGHT: SCORE CIRCLE ===== */}
               <div className="flex items-center justify-center">
                 <div className="relative h-44 w-44">
-
-
-
-
                   {/* SVG Ring */}
                   <div className="relative h-40 w-40">
-                    <svg className="h-full w-full -rotate-90" viewBox="0 0 100 100">
+                    <svg
+                      className="h-full w-full -rotate-90"
+                      viewBox="0 0 100 100"
+                    >
                       {/* Background */}
                       <circle
                         cx="50"
@@ -2033,7 +2159,13 @@ export const GRETestResults: React.FC<GRETestResultsProps> = React.memo(
                       />
 
                       <defs>
-                        <linearGradient id="scoreGradient" x1="0%" y1="0%" x2="100%" y2="0%">
+                        <linearGradient
+                          id="scoreGradient"
+                          x1="0%"
+                          y1="0%"
+                          x2="100%"
+                          y2="0%"
+                        >
                           <stop offset="0%" stopColor="#6366f1" />
                           <stop offset="100%" stopColor="#8b5cf6" />
                         </linearGradient>
@@ -2045,29 +2177,28 @@ export const GRETestResults: React.FC<GRETestResultsProps> = React.memo(
                       <span className="text-4xl font-bold text-indigo-600 dark:text-indigo-400">
                         {overallPTE}
                       </span>
-                      <span className="text-xs text-gray-500">Overall Score</span>
+                      <span className="text-xs text-gray-500">
+                        Overall Score
+                      </span>
                     </div>
                   </div>
-
                 </div>
               </div>
-
             </div>
           </div>
         )}
-
-
 
         <div className="bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-700 overflow-hidden">
           {/* Tabs Navigation */}
           <div className="flex overflow-x-auto border-b border-slate-200 dark:border-slate-700">
             {/* All Sections Tab */}
 
-
             {/* Individual Section Tabs */}
             {sectionNames.map((sectionName) => {
               const Icon = getSectionIcon(sectionName);
-              const sectionData = attempt.sections.find(sec => sec.name === sectionName);
+              const sectionData = attempt.sections.find(
+                (sec) => sec.name === sectionName,
+              );
               const sectionStats = sectionData?.stats || {};
               const sectionQuestions = sectionData?.questions?.length || 0;
 
@@ -2075,20 +2206,25 @@ export const GRETestResults: React.FC<GRETestResultsProps> = React.memo(
                 <button
                   key={sectionName}
                   onClick={() => setActiveTab(sectionName)}
-                  className={`flex-shrink-0 flex items-center justify-center p-4 gap-3 transition-colors ${activeTab === sectionName
-                    ? ' border-b-2 border-indigo-600'
-                    : 'hover:bg-slate-50 dark:hover:bg-slate-800'
-                    }`}
+                  className={`flex-shrink-0 flex items-center justify-center p-4 gap-3 transition-colors ${
+                    activeTab === sectionName
+                      ? " border-b-2 border-indigo-600"
+                      : "hover:bg-slate-50 dark:hover:bg-slate-800"
+                  }`}
                 >
-                  <div className={`h-10 w-10 rounded-lg flex items-center justify-center ${activeTab === sectionName
-                    ? 'bg-indigo-600 text-white'
-                    : 'bg-slate-200 dark:bg-slate-700 text-slate-600 dark:text-slate-400'
-                    }`}>
+                  <div
+                    className={`h-10 w-10 rounded-lg flex items-center justify-center ${
+                      activeTab === sectionName
+                        ? "bg-indigo-600 text-white"
+                        : "bg-slate-200 dark:bg-slate-700 text-slate-600 dark:text-slate-400"
+                    }`}
+                  >
                     <Icon className="h-5 w-5" />
                   </div>
                   <div className="text-left">
-                    <div className="font-semibold text-slate-800 dark:text-slate-100">{sectionName}</div>
-
+                    <div className="font-semibold text-slate-800 dark:text-slate-100">
+                      {sectionName}
+                    </div>
                   </div>
                 </button>
               );
@@ -2105,8 +2241,6 @@ export const GRETestResults: React.FC<GRETestResultsProps> = React.memo(
                     key={sIdx}
                     className="rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 overflow-hidden transition-all duration-200 hover:shadow-lg"
                   >
-
-
                     {/* ✅ UPDATED: Questions in Card/Block Layout */}
                     <div className="p-4 space-y-4">
                       {sec.questions.map((q, qIdx) => {
@@ -2117,33 +2251,44 @@ export const GRETestResults: React.FC<GRETestResultsProps> = React.memo(
                         return (
                           <div
                             key={qIdx}
-                            className={`rounded-lg border ${status === "correct"
-                              ? "border-emerald-200 dark:border-emerald-800 bg-emerald-50/30 dark:bg-emerald-900/10"
-                              : status === "incorrect"
-                                ? "border-red-200 dark:border-red-800 bg-red-50/30 dark:bg-red-900/10"
-                                : "border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800"
-                              } p-4 transition-all duration-200 hover:shadow-md`}
+                            className={`rounded-lg border ${
+                              status === "correct"
+                                ? "border-emerald-200 dark:border-emerald-800 bg-emerald-50/30 dark:bg-emerald-900/10"
+                                : status === "incorrect"
+                                  ? "border-red-200 dark:border-red-800 bg-red-50/30 dark:bg-red-900/10"
+                                  : "border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800"
+                            } p-4 transition-all duration-200 hover:shadow-md`}
                           >
                             {/* Question Header */}
                             <div className="flex items-center justify-between mb-4">
                               <div className="flex items-center gap-3">
-                                <div className={`h-8 w-8 rounded-lg flex items-center justify-center ${status === "correct"
-                                  ? "bg-emerald-100 dark:bg-emerald-900/30 text-emerald-600 dark:text-emerald-400"
-                                  : status === "incorrect"
-                                    ? "bg-red-100 dark:bg-red-900/30 text-red-600 dark:text-red-400"
-                                    : "bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400"
-                                  }`}>
-                                  <span className="font-bold text-sm">{q.order || qIdx + 1}</span>
+                                <div
+                                  className={`h-8 w-8 rounded-lg flex items-center justify-center ${
+                                    status === "correct"
+                                      ? "bg-emerald-100 dark:bg-emerald-900/30 text-emerald-600 dark:text-emerald-400"
+                                      : status === "incorrect"
+                                        ? "bg-red-100 dark:bg-red-900/30 text-red-600 dark:text-red-400"
+                                        : "bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400"
+                                  }`}
+                                >
+                                  <span className="font-bold text-sm">
+                                    {q.order || qIdx + 1}
+                                  </span>
                                 </div>
-                                <span className={`inline-flex items-center rounded-full px-3 py-1 text-xs font-medium shadow-sm ${statusClass}`}>
+                                <span
+                                  className={`inline-flex items-center rounded-full px-3 py-1 text-xs font-medium shadow-sm ${statusClass}`}
+                                >
                                   {getStatusIcon(status)}
-                                  {status.charAt(0).toUpperCase() + status.slice(1)}
+                                  {status.charAt(0).toUpperCase() +
+                                    status.slice(1)}
                                 </span>
                               </div>
 
                               <div className="flex items-center text-slate-600 dark:text-slate-400">
                                 <Clock className="h-3.5 w-3.5 mr-1.5" />
-                                <span className="font-mono text-xs">{formatTimeSpent(q.timeSpentSeconds)}</span>
+                                <span className="font-mono text-xs">
+                                  {formatTimeSpent(q.timeSpentSeconds)}
+                                </span>
                               </div>
                             </div>
 
@@ -2168,18 +2313,22 @@ export const GRETestResults: React.FC<GRETestResultsProps> = React.memo(
                               )}
                             </div>
 
-
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                               {/* Correct Answer */}
                               <div>
                                 <div className="flex items-center gap-2 mb-2">
                                   <div className="h-2 w-2 rounded-full bg-emerald-500"></div>
-                                  <h5 className="text-sm font-medium text-emerald-700 dark:text-emerald-300">Correct Answer</h5>
+                                  <h5 className="text-sm font-medium text-emerald-700 dark:text-emerald-300">
+                                    Correct Answer
+                                  </h5>
                                 </div>
-                                <div className={`p-3 rounded-lg ${status === "correct"
-                                  ? "bg-emerald-50 dark:bg-emerald-900/20 border border-emerald-200 dark:border-emerald-800 "
-                                  : "bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700"
-                                  }`}>
+                                <div
+                                  className={`p-3 rounded-lg ${
+                                    status === "correct"
+                                      ? "bg-emerald-50 dark:bg-emerald-900/20 border border-emerald-200 dark:border-emerald-800 "
+                                      : "bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700"
+                                  }`}
+                                >
                                   {renderCorrectAnswer(qd, q)}
                                 </div>
                               </div>
@@ -2187,31 +2336,45 @@ export const GRETestResults: React.FC<GRETestResultsProps> = React.memo(
                               {/* User's Answer */}
                               <div>
                                 <div className="flex items-center gap-2 mb-2">
-                                  <div className={`h-2 w-2 rounded-full ${status === "correct"
-                                    ? "bg-emerald-500"
-                                    : status === "incorrect"
-                                      ? "bg-red-500"
-                                      : "bg-slate-500"
-                                    }`}></div>
-                                  <h5 className={`text-sm font-medium ${status === "correct"
-                                    ? "text-emerald-700 dark:text-emerald-300"
-                                    : status === "incorrect"
-                                      ? "text-red-700 dark:text-red-300"
-                                      : "text-slate-700 dark:text-slate-300"
-                                    }`}>Your Answer</h5>
+                                  <div
+                                    className={`h-2 w-2 rounded-full ${
+                                      status === "correct"
+                                        ? "bg-emerald-500"
+                                        : status === "incorrect"
+                                          ? "bg-red-500"
+                                          : "bg-slate-500"
+                                    }`}
+                                  ></div>
+                                  <h5
+                                    className={`text-sm font-medium ${
+                                      status === "correct"
+                                        ? "text-emerald-700 dark:text-emerald-300"
+                                        : status === "incorrect"
+                                          ? "text-red-700 dark:text-red-300"
+                                          : "text-slate-700 dark:text-slate-300"
+                                    }`}
+                                  >
+                                    Your Answer
+                                  </h5>
                                 </div>
-                                <div className={`p-3 rounded-lg ${status === "correct"
-                                  ? "bg-emerald-50 dark:bg-emerald-900/20 border border-emerald-200 dark:border-emerald-800"
-                                  : status === "incorrect"
-                                    ? "bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800"
-                                    : "bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700"
-                                  }`}>
-                                  <div className={` ${status === "correct"
-                                    ? "text-emerald-700 dark:text-emerald-300"
-                                    : status === "incorrect"
-                                      ? "text-red-700  dark:text-red-300"
-                                      : "text-slate-700 dark:text-slate-300"
-                                    }`}>
+                                <div
+                                  className={`p-3 rounded-lg ${
+                                    status === "correct"
+                                      ? "bg-emerald-50 dark:bg-emerald-900/20 border border-emerald-200 dark:border-emerald-800"
+                                      : status === "incorrect"
+                                        ? "bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800"
+                                        : "bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700"
+                                  }`}
+                                >
+                                  <div
+                                    className={` ${
+                                      status === "correct"
+                                        ? "text-emerald-700 dark:text-emerald-300"
+                                        : status === "incorrect"
+                                          ? "text-red-700  dark:text-red-300"
+                                          : "text-slate-700 dark:text-slate-300"
+                                    }`}
+                                  >
                                     {renderUserAnswer(q, qd)}
                                   </div>
                                 </div>
@@ -2228,13 +2391,32 @@ export const GRETestResults: React.FC<GRETestResultsProps> = React.memo(
                         {sec.stats && (
                           <div className="flex items-center gap-2">
                             {[
-                              { label: "Correct", count: sec.stats.correct, color: "emerald" },
-                              { label: "Incorrect", count: sec.stats.incorrect, color: "red" },
-                              { label: "Skipped", count: sec.stats.skipped, color: "slate" },
+                              {
+                                label: "Correct",
+                                count: sec.stats.correct,
+                                color: "emerald",
+                              },
+                              {
+                                label: "Incorrect",
+                                count: sec.stats.incorrect,
+                                color: "red",
+                              },
+                              {
+                                label: "Skipped",
+                                count: sec.stats.skipped,
+                                color: "slate",
+                              },
                             ].map((item) => (
-                              <div key={item.label} className="flex items-center gap-1">
-                                <div className={`h-2 w-2 rounded-full bg-${item.color}-500`}></div>
-                                <span>{item.label}: {item.count}</span>
+                              <div
+                                key={item.label}
+                                className="flex items-center gap-1"
+                              >
+                                <div
+                                  className={`h-2 w-2 rounded-full bg-${item.color}-500`}
+                                ></div>
+                                <span>
+                                  {item.label}: {item.count}
+                                </span>
                               </div>
                             ))}
                           </div>
@@ -2257,10 +2439,7 @@ export const GRETestResults: React.FC<GRETestResultsProps> = React.memo(
             )}
           </div>
         </div>
-
-
-
       </div>
     );
-  }
+  },
 );

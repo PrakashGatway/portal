@@ -278,7 +278,7 @@ export const MockTestCard = ({
                   ) : (
                     <>
                       <span className="mr-1 text-[25px] align-middle">₹</span>
-                      {test?.pricing?.price}
+                      {test?.pricing?.salePrice}
 
                       {test.pricing?.price && (
                         <span

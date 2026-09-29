@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef, useCallback, memo } from "react"
+import React, { useState, useEffect, useRef, useCallback, memo, useImperativeHandle } from "react"
 import { Volume2, Mic, Clock, Volume2Icon, Play, Pause, StopCircle , Square } from "lucide-react"
 import { audioBaseUrl } from "../../axiosInstance"
 
@@ -47,12 +47,6 @@ const levelAudioCtxRef = useRef<AudioContext | null>(null);
 const levelAnimRef = useRef<number | null>(null);
 
 const [micLevel, setMicLevel] = useState(0); // 0–100
-
-
-
-
-
-
 
    const setupMicLevel = (stream: MediaStream) => {
   const ctx = new AudioContext();
@@ -586,13 +580,21 @@ const stopMicLevel = () => {
 
 export default React.memo(SpeakingQuestion)
 
+export type RecordingOnlyRef = {
+  stopRecording: () => Promise<Blob | null>;
+};
 
-export const RecordingOnlyComponent = memo(({
-    recordingDurationSeconds = 40,
-    preRecordingWaitSeconds = 10,
-    onRecordingComplete,
-    onStartCountdown
-}: any) => {
+export const RecordingOnlyComponent = memo(
+  React.forwardRef<RecordingOnlyRef, any>(
+    (
+      {
+        recordingDurationSeconds = 40,
+        preRecordingWaitSeconds = 10,
+        onRecordingComplete,
+        onStartCountdown,
+      },
+      ref
+    ) => {
     const [isRecording, setIsRecording] = useState(false);
     const [recordingTime, setRecordingTime] = useState(0);
     const [countdown, setCountdown] = useState(-1);
@@ -608,6 +610,7 @@ export const RecordingOnlyComponent = memo(({
     const recordingTimerRef = useRef(null);
     const countdownTimerRef = useRef(null);
     const streamRef = useRef(null);
+    const stopResolveRef = useRef<((blob: Blob | null) => void) | null>(null);
 
     const levelAnalyserRef = useRef<AnalyserNode | null>(null);
 const levelAudioCtxRef = useRef<AudioContext | null>(null);
@@ -741,6 +744,33 @@ const stopMicLevel = () => {
 };
 
 
+const stopRecording = (): Promise<Blob | null> => {
+  return new Promise((resolve) => {
+    const recorder = mediaRecorderRef.current;
+
+    if (!recorder) {
+      resolve(null);
+      return;
+    }
+
+    if (recorder.state === "inactive") {
+      resolve(null);
+      return;
+    }
+
+    // Store resolver.
+    // onstop() will resolve it after Blob is created.
+    stopResolveRef.current = resolve;
+
+    recorder.stop();
+  });
+};
+
+useImperativeHandle(ref, () => ({
+  stopRecording,
+}));
+
+
    const startRecording = async () => {
   if (hasRecorded) return;
 
@@ -770,19 +800,55 @@ const stopMicLevel = () => {
       if (e.data.size > 0) chunksRef.current.push(e.data);
     };
 
-    mediaRecorderRef.current.onstop = () => {
-      const blob = new Blob(chunksRef.current, { type: mimeType });
-      const url = URL.createObjectURL(blob);
-      setAudioPreviewUrl(url);
-      setAudioSizeKB((blob.size / 1024).toFixed(2));
-      setHasRecorded(true);
-      setStatus("Recording complete");
+mediaRecorderRef.current.onstop = () => {
+  const blob = new Blob(chunksRef.current, {
+    type: mimeType,
+  });
 
-      // ✅ ADD THIS (stop mic indicator)
-      stopMicLevel();
+  console.log("🎤 Recording stopped");
+  console.log("🎤 Blob size:", blob.size);
 
-      if (onRecordingComplete) onRecordingComplete(blob);
-    };
+  // Preview
+  const url = URL.createObjectURL(blob);
+
+  setAudioPreviewUrl(url);
+  setAudioSizeKB(Number(blob.size / 1024).toFixed(2));
+  setHasRecorded(true);
+  setIsRecording(false);
+  setStatus("Recording complete");
+
+  // Stop mic level
+  stopMicLevel();
+
+  // Stop microphone
+  if (streamRef.current) {
+    streamRef.current.getTracks().forEach((track) => track.stop());
+    streamRef.current = null;
+  }
+
+  // Clear recording timer
+  if (recordingTimerRef.current) {
+    clearInterval(recordingTimerRef.current);
+    recordingTimerRef.current = null;
+  }
+
+  // Notify parent
+  if (onRecordingComplete) {
+    onRecordingComplete(blob);
+  }
+
+  // 🔥 IMPORTANT
+  // Return blob to QuestionRenderer
+  if (stopResolveRef.current) {
+    stopResolveRef.current(blob);
+    stopResolveRef.current = null;
+  }
+
+  // Clear chunks
+  chunksRef.current = [];
+
+  mediaRecorderRef.current = null;
+};
 
     mediaRecorderRef.current.start();
     setIsRecording(true);
@@ -908,9 +974,6 @@ const stopMicLevel = () => {
   
   </div>
 )}
-
-
-            {/* Recording preview */}
             {audioPreviewUrl && hasRecorded && (
                 <div className="p-4 bg-green-50 dark:bg-green-900/20 rounded-lg border border-green-200 dark:border-green-800">
                     <h3 className="text-lg font-semibold mb-3 text-green-900 dark:text-green-100">
@@ -920,20 +983,10 @@ const stopMicLevel = () => {
             )}
         </div>
     );
-});
-// TTSPlayerWithUI.tsx
-interface TTSPlayerWithUIProps {
-    audioUrl?: string;
-    text: string;
-    delayBeforePlay?: number; // ms, default 0
-    onPlaybackEnd?: () => void;
-    voiceNamePattern?: RegExp;
-    rate?: number;
-    pitch?: number;
-    volume?: number; // initial volume 0-1, default 1.0
-}
+}))
 
-const TTSPlayerWithUI: React.FC<TTSPlayerWithUIProps> = ({
+
+const TTSPlayerWithUI: React.FC<any> = ({
     audioUrl,
     text,
     delayBeforePlay = 0,

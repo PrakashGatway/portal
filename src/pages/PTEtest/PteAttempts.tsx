@@ -1,22 +1,17 @@
-import React, {
-  useCallback,
-  useEffect,
-  useMemo,
-  useState,
-  memo,
-} from "react";
+import React, { useCallback, useEffect, useMemo, useState, memo } from "react";
 import { useParams, useNavigate } from "react-router";
-import {
-  AlertTriangle
-} from "lucide-react";
+import { AlertTriangle } from "lucide-react";
 
 import Button from "../../components/ui/button/Button";
 import { toast } from "react-toastify";
 import api from "../../axiosInstance";
 import FullScreenLoader from "../../components/fullScreeLoader";
-import QuestionRenderer, { GRETestResults, SectionInstructions, SectionReview } from "./Components";
+import QuestionRenderer, {
+  GRETestResults,
+  SectionInstructions,
+  SectionReview,
+} from "./Components";
 import { GRETestHead } from "./PteHeader";
-import { IntroScreen } from "../mcu/GreComponents";
 import { PteIntroScreen } from "./instructions";
 
 interface QuestionDoc {
@@ -73,7 +68,6 @@ interface OverallStats {
   totalSkipped: number;
   rawScore: number;
 }
-
 
 type AttemptPhase = "section_instructions" | "in_section" | "review";
 
@@ -137,20 +131,22 @@ export default function PteExamPage() {
   const [timerRunning, setTimerRunning] = useState(false);
   const [showingReviewScreen, setShowingReviewScreen] = useState(false);
 
-
-  const [filter, setFilter] = useState<"all" | "answered" | "not_answered" | "flagged">("all");
+  const [filter, setFilter] = useState<
+    "all" | "answered" | "not_answered" | "flagged"
+  >("all");
 
   const isCompleted = attempt?.status === "completed";
 
   const [introPage, setIntroPage] = useState(1);
-  const [currentScreen, setCurrentScreen] = useState('intro');
+  const [currentScreen, setCurrentScreen] = useState("intro");
 
   // Memoize derived values - MOVE ALL HOOKS TO TOP LEVEL
-  const testTitle = useMemo(() =>
-    attempt?.testTemplate.title ||
-    (attempt as any)?.testTemplate?.name ||
-    "Practice Test",
-    [attempt]
+  const testTitle = useMemo(
+    () =>
+      attempt?.testTemplate.title ||
+      (attempt as any)?.testTemplate?.name ||
+      "Practice Test",
+    [attempt],
   );
 
   const currentSection = useMemo(
@@ -158,124 +154,118 @@ export default function PteExamPage() {
       attempt && attempt.sections[activeSectionIndex]
         ? attempt.sections[activeSectionIndex]
         : null,
-    [attempt, activeSectionIndex]
+    [attempt, activeSectionIndex],
   );
 
   const currentQuestion = useMemo(
     () =>
-      currentSection &&
-        currentSection.questions[activeQuestionIndex]
+      currentSection && currentSection.questions[activeQuestionIndex]
         ? currentSection.questions[activeQuestionIndex]
         : null,
-    [currentSection, activeQuestionIndex]
+    [currentSection, activeQuestionIndex],
   );
 
   const qDoc = useMemo(
     () => currentQuestion?.questionDoc || null,
-    [currentQuestion?.questionDoc]
+    [currentQuestion?.questionDoc],
   );
 
   const isLastQuestionInCurrentSection = useMemo(
-    () => !!currentSection &&
+    () =>
+      !!currentSection &&
       activeQuestionIndex >= currentSection.questions.length - 1,
-    [currentSection, activeQuestionIndex]
+    [currentSection, activeQuestionIndex],
   );
 
   const isLastSection = useMemo(
     () => !!attempt && activeSectionIndex >= attempt.sections.length - 1,
-    [attempt, activeSectionIndex]
+    [attempt, activeSectionIndex],
   );
 
   const isNextDisabled = useMemo(
     () => isCompleted || submitting,
-    [isCompleted, submitting]
+    [isCompleted, submitting],
   );
 
-
-  const sectionQuestions = useMemo(() =>
-    currentSection?.questions || [],
-    [currentSection?.questions]
+  const sectionQuestions = useMemo(
+    () => currentSection?.questions || [],
+    [currentSection?.questions],
   );
 
+  const startAttempt = useCallback(async () => {
+    if (!testTemplateId) {
+      setError("Missing testTemplateId in route");
+      setLoading(false);
+      return;
+    }
 
-  const startAttempt = useCallback(
-    async () => {
-      if (!testTemplateId) {
-        setError("Missing testTemplateId in route");
+    try {
+      setStarting(true);
+      setError(null);
+
+      const startRes = await api.post("/mcu/start", { testTemplateId });
+      if (!startRes.data?.success) {
+        throw new Error(startRes.data?.message || "Failed to start attempt");
+      }
+
+      const loaded: TestAttempt = startRes.data.data;
+      const testType = loaded?.testType;
+      if (!loaded.sections || loaded.sections.length === 0) {
+        setError("This GRE test has no sections configured.");
         setLoading(false);
         return;
       }
 
-      try {
-        setStarting(true);
-        setError(null);
+      setAttempt(loaded);
 
-        const startRes = await api.post("/mcu/start", { testTemplateId });
-        if (!startRes.data?.success) {
-          throw new Error(startRes.data?.message || "Failed to start attempt");
-        }
+      const meta = loaded.gmatMeta;
+      let secIdx = 0;
+      let qIdx = 0;
+      let nextScreen: GreScreen =
+        testType !== "full_length" ? "question" : "intro";
 
-       const loaded: TestAttempt = startRes.data.data;
-        const testType = loaded?.testType;
-        if (!loaded.sections || loaded.sections.length === 0) {
-          setError("This GRE test has no sections configured.");
-          setLoading(false);
-          return;
-        }
+      if (loaded.status === "completed") {
+        setCurrentScreen("results");
+        setLoading(false);
+        return;
+      }
 
-        setAttempt(loaded);
-
-        const meta = loaded.gmatMeta;
-        let secIdx = 0;
-        let qIdx = 0;
-        let nextScreen: GreScreen = (testType !== "full_length") ? "question" : "intro";
-
-        if (loaded.status === "completed") {
-          setCurrentScreen("results");
-          setLoading(false);
-          return;
-        }
-
-        if (meta && typeof meta.currentSectionIndex === "number") {
-          secIdx = meta.currentSectionIndex;
-          qIdx = meta.currentQuestionIndex || 0;
-          if (meta.phase === "in_section") nextScreen = "question";
-          else if (meta.phase === "review") nextScreen = "section_review";
-          else nextScreen = (testType !== "full_length") ? "question" : "intro";
-        } else {
-          outer: for (let s = 0; s < loaded.sections.length; s++) {
-            const sec = loaded.sections[s];
-            for (let i = 0; i < sec.questions.length; i++) {
-              if (!sec.questions[i].isAnswered) {
-                secIdx = s;
-                qIdx = i;
-                nextScreen = "intro";
-                break outer;
-              }
+      if (meta && typeof meta.currentSectionIndex === "number") {
+        secIdx = meta.currentSectionIndex;
+        qIdx = meta.currentQuestionIndex || 0;
+        if (meta.phase === "in_section") nextScreen = "question";
+        else if (meta.phase === "review") nextScreen = "section_review";
+        else nextScreen = testType !== "full_length" ? "question" : "intro";
+      } else {
+        outer: for (let s = 0; s < loaded.sections.length; s++) {
+          const sec = loaded.sections[s];
+          for (let i = 0; i < sec.questions.length; i++) {
+            if (!sec.questions[i].isAnswered) {
+              secIdx = s;
+              qIdx = i;
+              nextScreen = "intro";
+              break outer;
             }
           }
         }
-
-        setActiveSectionIndex(secIdx);
-        setActiveQuestionIndex(qIdx);
-        setCurrentScreen(nextScreen || "intro");
-      } catch (err: any) {
-        console.error("startAttempt error:", err);
-        setError(
-          err?.response?.data?.message ||
-          err.message ||
-          "Failed to start GRE test"
-        );
-        toast.error(
-          err?.response?.data?.message || "Failed to start GRE test"
-        );
-      } finally {
-        setStarting(false);
-        setLoading(false);
       }
-    },
-    [testTemplateId]
-  );
+
+      setActiveSectionIndex(secIdx);
+      setActiveQuestionIndex(qIdx);
+      setCurrentScreen(nextScreen || "intro");
+    } catch (err: any) {
+      console.error("startAttempt error:", err);
+      setError(
+        err?.response?.data?.message ||
+          err.message ||
+          "Failed to start GRE test",
+      );
+      toast.error(err?.response?.data?.message || "Failed to start GRE test");
+    } finally {
+      setStarting(false);
+      setLoading(false);
+    }
+  }, [testTemplateId]);
 
   useEffect(() => {
     startAttempt();
@@ -295,18 +285,17 @@ export default function PteExamPage() {
     const secDurationSeconds = secDurationMinutes * 60;
     const usedInSection = currentSection.questions.reduce(
       (sum, q) => sum + (q.timeSpentSeconds || 0),
-      0
+      0,
     );
     const left = Math.max(0, secDurationSeconds - usedInSection);
     setTimerSecondsLeft(left);
     setTimerRunning(
       attempt.status === "in_progress" &&
-      left > 0 &&
-      !isCompleted &&
-      currentScreen === "question"
+        left > 0 &&
+        !isCompleted &&
+        currentScreen === "question",
     );
   }, [attempt, currentSection, currentScreen, isCompleted]);
-
 
   useEffect(() => {
     if (!attempt) return;
@@ -327,10 +316,7 @@ export default function PteExamPage() {
         clone.totalTimeUsedSeconds = (clone.totalTimeUsedSeconds || 0) + 1;
         const sIdx = activeSectionIndex;
         const qIdx = activeQuestionIndex;
-        if (
-          clone.sections[sIdx] &&
-          clone.sections[sIdx].questions[qIdx]
-        ) {
+        if (clone.sections[sIdx] && clone.sections[sIdx].questions[qIdx]) {
           clone.sections[sIdx].questions[qIdx].timeSpentSeconds =
             (clone.sections[sIdx].questions[qIdx].timeSpentSeconds || 0) + 1;
         }
@@ -350,7 +336,6 @@ export default function PteExamPage() {
     currentSection,
   ]);
 
-
   useEffect(() => {
     if (!attempt || !currentSection) return;
     if (!currentSection.durationMinutes) return;
@@ -359,18 +344,10 @@ export default function PteExamPage() {
 
     if (timerSecondsLeft === 0) {
       setTimerRunning(false);
-      toast.info(
-        "Time is up for this section. Moving to section review."
-      );
+      toast.info("Time is up for this section. Moving to section review.");
       setCurrentScreen("section_review");
     }
-  }, [
-    timerSecondsLeft,
-    timerRunning,
-    attempt,
-    currentSection,
-    currentScreen,
-  ]);
+  }, [timerSecondsLeft, timerRunning, attempt, currentSection, currentScreen]);
 
   // Memoize saveCurrentQuestionProgress
   const saveCurrentQuestionProgress = useCallback(
@@ -379,92 +356,134 @@ export default function PteExamPage() {
       phase?: AttemptPhase;
       metaSectionIndex?: number;
       metaQuestionIndex?: number;
+
+      // ADD THESE
+      answerTextOverride?: string;
+      isAnsweredOverride?: boolean;
     }) => {
       if (!attempt || !currentSection || !currentQuestion) return;
       if (attempt.status !== "in_progress") return;
+
       const silent = opts?.silent ?? true;
+
       try {
         setSavingProgress(!silent);
 
         const sectionIndex = activeSectionIndex;
         const questionIndex = activeQuestionIndex;
 
+        const answerText =
+          opts?.answerTextOverride !== undefined
+            ? opts.answerTextOverride
+            : currentQuestion.answerText || "";
+
+        const isAnswered =
+          opts?.isAnsweredOverride !== undefined
+            ? opts.isAnsweredOverride
+            : currentQuestion.isAnswered;
+
         const body: any = {
           updates: [
             {
               sectionIndex,
               questionIndex,
+
               answerOptionIndexes: currentQuestion.answerOptionIndexes || [],
-              answerText: currentQuestion.answerText || "",
-              isAnswered: currentQuestion.isAnswered,
+
+              answerText,
+
+              isAnswered,
+
               markedForReview: currentQuestion.markedForReview,
+
               timeSpentSeconds: currentQuestion.timeSpentSeconds || 0,
             },
           ],
+
           totalTimeUsedSeconds: attempt.totalTimeUsedSeconds || 0,
         };
 
         if (opts?.phase) {
           body.gmatPhase = opts.phase;
+
           body.currentSectionIndex = opts.metaSectionIndex ?? sectionIndex;
+
           body.currentQuestionIndex = opts.metaQuestionIndex ?? questionIndex;
         }
 
-        await api.patch(
-          `/mcu/attempts/${attempt._id}/save-progress`,
-          body
-        );
+        await api.patch(`/mcu/attempts/${attempt._id}/save-progress`, body);
 
         if (!silent) {
           toast.success("Progress saved");
         }
       } catch (err: any) {
         if (!silent) {
-          toast.error(
-            err.response?.data?.message || "Failed to save progress"
-          );
+          toast.error(err.response?.data?.message || "Failed to save progress");
         }
       } finally {
         setSavingProgress(false);
       }
     },
-    [attempt, currentSection, currentQuestion, activeSectionIndex, activeQuestionIndex]
+    [
+      attempt,
+      currentSection,
+      currentQuestion,
+      activeSectionIndex,
+      activeQuestionIndex,
+    ],
   );
 
   // Memoize event handlers
-  const handleOptionClick = useCallback((optionIndex: number) => {
-    if (!attempt || !currentSection || !currentQuestion) return;
-    if (isCompleted) return;
+  const handleOptionClick = useCallback(
+    (optionIndex: number) => {
+      if (!attempt || !currentSection || !currentQuestion) return;
+      if (isCompleted) return;
 
-    setAttempt((prev) => {
-      if (!prev) return prev;
-      const clone = structuredClone(prev) as TestAttempt;
-      const s = clone.sections[activeSectionIndex];
-      const q = s.questions[activeQuestionIndex];
-      q.answerOptionIndexes = [optionIndex];
-      q.isAnswered = true;
-      return clone;
-    });
-  }, [attempt, currentSection, currentQuestion, isCompleted, activeSectionIndex, activeQuestionIndex]);
+      setAttempt((prev) => {
+        if (!prev) return prev;
+        const clone = structuredClone(prev) as TestAttempt;
+        const s = clone.sections[activeSectionIndex];
+        const q = s.questions[activeQuestionIndex];
+        q.answerOptionIndexes = [optionIndex];
+        q.isAnswered = true;
+        return clone;
+      });
+    },
+    [
+      attempt,
+      currentSection,
+      currentQuestion,
+      isCompleted,
+      activeSectionIndex,
+      activeQuestionIndex,
+    ],
+  );
 
-  const handleTextAnswerChange = useCallback((
-    e: any
-  ) => {
-    const value = e.target.value;
-    if (!attempt || !currentSection || !currentQuestion) return;
-    if (isCompleted) return;
+  const handleTextAnswerChange = useCallback(
+    (e: any) => {
+      const value = e.target.value;
+      if (!attempt || !currentSection || !currentQuestion) return;
+      if (isCompleted) return;
 
-    setAttempt((prev) => {
-      if (!prev) return prev;
-      const clone = structuredClone(prev) as TestAttempt;
-      const s = clone.sections[activeSectionIndex];
-      const q = s.questions[activeQuestionIndex];
-      q.answerText = value;
-      q.isAnswered = value.trim().length > 0;
-      return clone;
-    });
-
-  }, [attempt, currentSection, currentQuestion, isCompleted, activeSectionIndex, activeQuestionIndex]);
+      setAttempt((prev) => {
+        if (!prev) return prev;
+        const clone = structuredClone(prev) as TestAttempt;
+        const s = clone.sections[activeSectionIndex];
+        const q = s.questions[activeQuestionIndex];
+        q.answerText = value;
+        q.isAnswered = value.trim().length > 0;
+        return clone;
+      });
+    },
+    [
+      attempt,
+      currentSection,
+      currentQuestion,
+      isCompleted,
+      activeSectionIndex,
+      activeQuestionIndex,
+    ],
+  );
 
   const toggleMarkForReview = useCallback(() => {
     if (!attempt || !currentSection || !currentQuestion) return;
@@ -478,82 +497,59 @@ export default function PteExamPage() {
       q.markedForReview = !q.markedForReview;
       return clone;
     });
-  }, [attempt, currentSection, currentQuestion, isCompleted, activeSectionIndex, activeQuestionIndex]);
+  }, [
+    attempt,
+    currentSection,
+    currentQuestion,
+    isCompleted,
+    activeSectionIndex,
+    activeQuestionIndex,
+  ]);
 
-  const goToQuestion = useCallback(async (qIndex: number) => {
+const goToQuestion = useCallback(
+  async (
+    qIndex: number,
+    answerPatch?: {
+      answerText?: string;
+      isAnswered?: boolean;
+    }
+  ) => {
     if (!attempt || !currentSection) return;
-    if (qIndex < 0 || qIndex >= currentSection.questions.length) return;
+
+    if (
+      qIndex < 0 ||
+      qIndex >= currentSection.questions.length
+    ) {
+      return;
+    }
 
     await saveCurrentQuestionProgress({
       silent: true,
       phase: "in_section",
+
       metaSectionIndex: activeSectionIndex,
       metaQuestionIndex: qIndex,
+
+      answerTextOverride: answerPatch?.answerText,
+      isAnsweredOverride: answerPatch?.isAnswered,
     });
 
     setActiveQuestionIndex(qIndex);
     setCurrentScreen("question");
-  }, [attempt, currentSection, saveCurrentQuestionProgress, activeSectionIndex]);
-
-  const goNextQuestion = useCallback(async () => {
-    if (!attempt || !currentSection || !currentQuestion) return;
-
-    const isLastQuestionInSection = activeQuestionIndex >= currentSection.questions.length - 1;
-
-    if (!isLastQuestionInSection) {
-      await goToQuestion(activeQuestionIndex + 1);
-      return;
-    }
-
-    await saveCurrentQuestionProgress({
-      silent: true,
-      phase: "section_instructions",
-      metaSectionIndex: activeSectionIndex,
-      metaQuestionIndex: activeQuestionIndex,
-    });
-
-    if (isLastSection) {
-      submitTestAttempt();
-      setCurrentScreen("results");
-      return;
-    }
-
-    const nextIndex = activeSectionIndex + 1;
-    setActiveSectionIndex(nextIndex);
-    setActiveQuestionIndex(0);
-    toast.info(
-      "You've reached the end of this section. Review your answers before moving on."
-    );
-    setCurrentScreen("section_instructions");
-  }, [attempt, currentSection, currentQuestion, activeQuestionIndex, goToQuestion, saveCurrentQuestionProgress, activeSectionIndex]);
-
-  const handleFinishSectionReview = useCallback(async () => {
-    if (!attempt || !currentSection) return;
-
-    await saveCurrentQuestionProgress({
-      silent: true,
-      phase: "in_section",
-      metaSectionIndex: activeSectionIndex,
-      metaQuestionIndex: activeQuestionIndex,
-    });
-
-    if (isLastSection) {
-      submitTestAttempt();
-      setCurrentScreen("results");
-      return;
-    }
-
-    const nextIndex = activeSectionIndex + 1;
-    setActiveSectionIndex(nextIndex);
-    setActiveQuestionIndex(0);
-    setCurrentScreen("section_instructions");
-  }, [attempt, currentSection, saveCurrentQuestionProgress, activeSectionIndex, activeQuestionIndex, isLastSection]);
+  },
+  [
+    attempt,
+    currentSection,
+    saveCurrentQuestionProgress,
+    activeSectionIndex,
+  ]
+);
 
   const submitTestAttempt = useCallback(async () => {
     if (!attempt || isCompleted) return;
 
     const confirmed = window.confirm(
-      "Are you sure you want to submit your test? You won't be able to change your answers afterwards."
+      "Are you sure you want to submit your test? You won't be able to change your answers afterwards.",
     );
     if (!confirmed) return;
 
@@ -586,37 +582,136 @@ export default function PteExamPage() {
       toast.success("test submitted successfully");
     } catch (err: any) {
       console.error("submitTestAttempt error:", err);
-      toast.error(
-        err.response?.data?.message || "Failed to submit GRE test"
-      );
+      toast.error(err.response?.data?.message || "Failed to submit GRE test");
     } finally {
       setSubmitting(false);
     }
-  }, [attempt, isCompleted, saveCurrentQuestionProgress, activeSectionIndex, activeQuestionIndex]);
+  }, [
+    attempt,
+    isCompleted,
+    saveCurrentQuestionProgress,
+    activeSectionIndex,
+    activeQuestionIndex,
+  ]);
+
+const goNextQuestion = useCallback(
+  async (
+    answerPatch?: {
+      answerText?: string;
+      isAnswered?: boolean;
+    }
+  ) => {
+    if (!attempt || !currentSection || !currentQuestion) return;
+
+    const isLastQuestionInSection =
+      activeQuestionIndex >=
+      currentSection.questions.length - 1;
+
+    if (!isLastQuestionInSection) {
+      await goToQuestion(
+        activeQuestionIndex + 1,
+        answerPatch
+      );
+      return;
+    }
+
+    await saveCurrentQuestionProgress({
+      silent: true,
+      phase: "section_instructions",
+      metaSectionIndex: activeSectionIndex,
+      metaQuestionIndex: activeQuestionIndex,
+
+      answerTextOverride: answerPatch?.answerText,
+      isAnsweredOverride: answerPatch?.isAnswered,
+    });
+
+    if (isLastSection) {
+      submitTestAttempt();
+      setCurrentScreen("results");
+      return;
+    }
+
+    const nextIndex = activeSectionIndex + 1;
+
+    setActiveSectionIndex(nextIndex);
+    setActiveQuestionIndex(0);
+
+    toast.info(
+      "You've reached the end of this section. Review your answers before moving on."
+    );
+
+    setCurrentScreen("section_instructions");
+  },
+  [
+    attempt,
+    currentSection,
+    currentQuestion,
+    activeQuestionIndex,
+    goToQuestion,
+    saveCurrentQuestionProgress,
+    activeSectionIndex,
+    isLastSection,
+    submitTestAttempt,
+  ]
+);
+
+  const handleFinishSectionReview = useCallback(async () => {
+    if (!attempt || !currentSection) return;
+
+    await saveCurrentQuestionProgress({
+      silent: true,
+      phase: "in_section",
+      metaSectionIndex: activeSectionIndex,
+      metaQuestionIndex: activeQuestionIndex,
+    });
+
+    if (isLastSection) {
+      submitTestAttempt();
+      setCurrentScreen("results");
+      return;
+    }
+
+    const nextIndex = activeSectionIndex + 1;
+    setActiveSectionIndex(nextIndex);
+    setActiveQuestionIndex(0);
+    setCurrentScreen("section_instructions");
+  }, [
+    attempt,
+    currentSection,
+    saveCurrentQuestionProgress,
+    activeSectionIndex,
+    activeQuestionIndex,
+    isLastSection,
+  ]);
+
+
 
   // Memoize updateCurrentQuestion function
-  const updateCurrentQuestion = useCallback((patch: Partial<AttemptQuestion>) => {
-    if (!attempt) return;
+  const updateCurrentQuestion = useCallback(
+    (patch: Partial<AttemptQuestion>) => {
+      if (!attempt) return;
 
-    setAttempt(prev => {
-      if (!prev) return prev;
-      const clone = { ...prev };
-      const sIdx = activeSectionIndex;
-      const qIdx = activeQuestionIndex;
-      const section = { ...clone.sections[sIdx] };
-      const questions = [...section.questions];
-      const question = { ...questions[qIdx], ...(patch || {}) };
-      questions[qIdx] = question;
-      section.questions = questions;
-      clone.sections = [...clone.sections];
-      clone.sections[sIdx] = section;
-      return clone;
-    });
-  }, [attempt, activeSectionIndex, activeQuestionIndex]);
+      setAttempt((prev) => {
+        if (!prev) return prev;
+        const clone = { ...prev };
+        const sIdx = activeSectionIndex;
+        const qIdx = activeQuestionIndex;
+        const section = { ...clone.sections[sIdx] };
+        const questions = [...section.questions];
+        const question = { ...questions[qIdx], ...(patch || {}) };
+        questions[qIdx] = question;
+        section.questions = questions;
+        clone.sections = [...clone.sections];
+        clone.sections[sIdx] = section;
+        return clone;
+      });
+    },
+    [attempt, activeSectionIndex, activeQuestionIndex],
+  );
 
   const updateCurrentQuestionAsync = (patch) => {
     return new Promise<void>((resolve) => {
-      setAttempt(prev => {
+      setAttempt((prev) => {
         if (!prev) return prev;
 
         const clone = structuredClone(prev);
@@ -630,7 +725,6 @@ export default function PteExamPage() {
       });
     });
   };
-
 
   // Memoize setCurrentScreen function
   const memoizedSetCurrentScreen = useCallback((screen: GreScreen) => {
@@ -648,9 +742,12 @@ export default function PteExamPage() {
   }, []);
 
   // Memoize setFilter function
-  const memoizedSetFilter = useCallback((filterValue: "all" | "answered" | "not_answered" | "flagged") => {
-    setFilter(filterValue);
-  }, []);
+  const memoizedSetFilter = useCallback(
+    (filterValue: "all" | "answered" | "not_answered" | "flagged") => {
+      setFilter(filterValue);
+    },
+    [],
+  );
 
   // Memoize navigateBack function
   const memoizedNavigateBack = useCallback(() => {
@@ -673,14 +770,9 @@ export default function PteExamPage() {
               <h2 className="font-semibold">Unable to load test</h2>
             </div>
             <p className="mb-3">
-              {error ||
-                "Something went wrong while loading your attempt."}
+              {error || "Something went wrong while loading your attempt."}
             </p>
-            <Button
-              onClick={memoizedNavigateBack}
-              variant="outline"
-              size="sm"
-            >
+            <Button onClick={memoizedNavigateBack} variant="outline" size="sm">
               Go Back
             </Button>
           </div>
@@ -692,8 +784,6 @@ export default function PteExamPage() {
   return (
     <>
       <div className="relative min-h-screen bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-50">
-
-
         <GRETestHead
           testTitle={testTitle}
           currentSection={currentSection}
@@ -704,13 +794,13 @@ export default function PteExamPage() {
           currentScreen={currentScreen}
           isCompleted={isCompleted}
           savingProgress={savingProgress}
-          saveCurrentQuestionProgress={() => saveCurrentQuestionProgress({ silent: false })}
+          saveCurrentQuestionProgress={() =>
+            saveCurrentQuestionProgress({ silent: false })
+          }
           navigateBack={memoizedNavigateBack}
         />
 
-
         <div className="pt-14 pb-14">
-
           {currentScreen === "intro" && (
             <PteIntroScreen
               introPage={introPage}
@@ -718,8 +808,6 @@ export default function PteExamPage() {
               setCurrentScreen={setCurrentScreen}
             />
           )}
-
-
 
           {currentScreen === "section_instructions" && currentSection && (
             <SectionInstructions
@@ -729,29 +817,31 @@ export default function PteExamPage() {
               saveCurrentQuestionProgress={saveCurrentQuestionProgress}
             />
           )}
-          {currentScreen === "question" && currentSection && currentQuestion && (
-            <QuestionRenderer
-              key={`question-${currentQuestion.question}-${activeQuestionIndex}`}
-              qDoc={qDoc}
-              sectionQuestions={sectionQuestions}
-              currentQuestion={currentQuestion}
-              onReviewSection={memoizedSetCurrentScreen}
-              isCompleted={isCompleted}
-              handleOptionClick={handleOptionClick}
-              handleTextAnswerChange={handleTextAnswerChange}
-              toggleMarkForReview={toggleMarkForReview}
-              updateCurrentQuestion={updateCurrentQuestion}
-              updateCurrentQuestionAsync={updateCurrentQuestionAsync}
-              saveCurrentQuestionProgress={saveCurrentQuestionProgress}
-              activeQuestionIndex={activeQuestionIndex}
-              sectionTotal={currentSection.questions.length}
-              isLastQuestionInCurrentSection={isLastQuestionInCurrentSection}
-              isNextDisabled={isNextDisabled}
-              goToQuestion={goToQuestion}
-              goNextQuestion={goNextQuestion}
-               isLastSection={isLastSection}
-            />
-          )}
+          {currentScreen === "question" &&
+            currentSection &&
+            currentQuestion && (
+              <QuestionRenderer
+                key={`question-${currentQuestion.question}-${activeQuestionIndex}`}
+                qDoc={qDoc}
+                sectionQuestions={sectionQuestions}
+                currentQuestion={currentQuestion}
+                onReviewSection={memoizedSetCurrentScreen}
+                isCompleted={isCompleted}
+                handleOptionClick={handleOptionClick}
+                handleTextAnswerChange={handleTextAnswerChange}
+                toggleMarkForReview={toggleMarkForReview}
+                updateCurrentQuestion={updateCurrentQuestion}
+                updateCurrentQuestionAsync={updateCurrentQuestionAsync}
+                saveCurrentQuestionProgress={saveCurrentQuestionProgress}
+                activeQuestionIndex={activeQuestionIndex}
+                sectionTotal={currentSection.questions.length}
+                isLastQuestionInCurrentSection={isLastQuestionInCurrentSection}
+                isNextDisabled={isNextDisabled}
+                goToQuestion={goToQuestion}
+                goNextQuestion={goNextQuestion}
+                isLastSection={isLastSection}
+              />
+            )}
 
           {currentScreen === "results" && attempt && (
             <GRETestResults
