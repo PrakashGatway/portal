@@ -98,6 +98,7 @@ const navItems: NavItem[] = [
       { name: "Article", path: "/article", icon: "✍️" },
       { name: "Blogs", path: "/blogs", icon: "📝" },
       { name: "FaQs", path: "/faqs", icon: "📝" },
+      { name: "FaQs Category", path: "/faqs/category", icon: "📝" },
       { name: "Comments", path: "/comments", icon: "💭" },
       { name: "Categories", path: "/blog-categories", icon: "🏷️" },
     ],

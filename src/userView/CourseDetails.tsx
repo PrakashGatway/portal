@@ -1917,7 +1917,7 @@ export default function CourseDetailPage() {
                   transition={{ delay: 0.3 }}
                   className="sticky top-20"
                 >
-                  <div className="p-[1.3px] rounded-2xl overflow-hidden w-full bg-gradient-to-b from-[#686868]/0 via-[#686868]/60 to-[#686868]">
+                  <div className="p-[1.3px] shadow-xl mtpx rounded-2xl overflow-hidden w-full bg-gradient-to-b from-[#686868]/0 via-[#686868]/60 to-[#686868]">
                     <div className="relative rounded-2xl h-full bg-white p-2 overflow-hidden">
                       <div className="absolute top-0 left-0 w-full h-[50%] bg-gradient-to-b from-[#ADADAC] to-[#ADADAC]/0" />
                       <div
@@ -1939,7 +1939,13 @@ export default function CourseDetailPage() {
                                 const videoId =
                                   match?.[2]?.length === 11 ? match[2] : null;
                                 if (videoId) {
-                                  embedUrl = `https://www.youtube.com/embed/${videoId}?autoplay=1&mute=0&rel=0&controls=1`;
+                                  embedUrl =
+                                    `https://www.youtube.com/embed/${videoId}` +
+                                    `?autoplay=1` +
+                                    `&rel=0` +
+                                    `&controls=1` +
+                                    `&playsinline=1` +
+                                    `&fs=0`;
                                 }
                               }
                               // Vimeo
@@ -2024,7 +2030,7 @@ export default function CourseDetailPage() {
                                 <span className="text-base font-bold"></span>
 
                                 <span className="text-2xl font-bold ">
-                                  {price}
+                                  {price.toFixed()}
                                 </span>
 
                                 <span className="line-through text-gray-400 text-base dark:text-white">

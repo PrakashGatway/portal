@@ -82,6 +82,7 @@ import OoshasChatbot from "./components/chatbot/chatbot";
 import CreateCustomTestPage from "./components/customTest/createCustomTest";
 import CustomTestsPage from "./components/customTest/customTestlisting";
 import { OfferProvider } from "./context/OfferContext";
+import FaqCategoryManagement from "./pages/Website/FaqCategory";
 
 // Define roles
 export const ROLES = {
@@ -279,6 +280,8 @@ export default function App() {
                 <Route path="/article" element={<ArticleManagement />} />
                 <Route path="/blogs" element={<BlogsManagement />} />
                 <Route path="/faqs" element={<FaqsManagement />} />
+                <Route path="/faqs/category" element={<FaqCategoryManagement />} />
+
                 <Route path="/comments" element={<CommentsManagement />} />
               </Route>
             </Route>
@@ -320,12 +323,10 @@ export default function App() {
               path="/ielts/tests/:testId"
               element={<IeltsTestPlatform />}
             />
-
             <Route
               path="/ielts/result/:attemptId"
               element={<IeltsResult />}
             />
-            
             <Route path="*" element={<ComingSoon />} />
           </Route>
           <Route path="/unauthorized" element={<NotFound />} />
