@@ -229,7 +229,7 @@ const QuestionRenderer: any = React.memo(
       if (qDoc.stimulus) {
         return (
           <div
-            className="prose text-base prose-sm dark:prose-invert max-w-none mb-3"
+            className="prose text-base prose-sm font-medium dark:prose-invert max-w-none mb-2"
             dangerouslySetInnerHTML={{ __html: qDoc.stimulus }}
           />
         );
@@ -383,6 +383,7 @@ mx-auto"
             <div className="bg-white rounded dark:bg-slate-900 p-4 min-h-[65vh] overflow-y-auto">
               {/* {renderHeader()} */}
               {renderPassage()}
+              {renderQuestionText()}
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <TTSPlayer
                   key={`player-${qDoc._id}`}
@@ -440,20 +441,8 @@ mx-auto"
               <div className="bg-white rounded dark:bg-slate-900 p-4 min-h-[65vh] overflow-y-auto">
                 {/* {renderHeader()} */}
                 <div className="flex-block">
-                  {qDoc?.stimulus && (
-                    <div
-                      className="prose text-base prose-sm dark:prose-invert max-w-none mb-6"
-                      dangerouslySetInnerHTML={{ __html: qDoc.stimulus }}
-                    />
-                  )}
-                  {qDoc?.questionType != "retell_lesson" && (
-                    <div className="mb-6">
-                      <h2
-                        className=""
-                        dangerouslySetInnerHTML={{ __html: qDoc?.questionText }}
-                      />
-                    </div>
-                  )}
+                  {renderPassage()}
+                  {renderQuestionText()}
                 </div>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <TTSPlayer
@@ -485,6 +474,7 @@ mx-auto"
           return (
             <div className="bg-white rounded dark:bg-slate-900 p-4 min-h-[65vh] overflow-y-auto">
               {renderPassage()}
+              {renderQuestionText()}
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <TTSPlayer
                   key={`player-${qDoc._id}`}
@@ -529,8 +519,7 @@ mx-auto"
           return (
             <div className="bg-white rounded dark:bg-slate-900 p-4 min-h-[65vh] overflow-y-auto">
               {renderPassage()}
-
-              {/* {renderQuestionText()} */}
+              {renderQuestionText()}
               <TTSPlayer
                 key={`player-${qDoc._id}`}
                 audioUrl={
@@ -825,6 +814,8 @@ mx-auto"
           return (
             <div className="bg-white rounded dark:bg-slate-900 p-4 min-h-[65vh] overflow-y-auto">
               {/* {renderHeader()} */}
+              {renderPassage()}
+
               {renderQuestionText()}
 
               <PTEReorder
@@ -843,6 +834,7 @@ mx-auto"
             <div className="bg-white rounded dark:bg-slate-900 p-4 min-h-[65vh] overflow-y-auto">
               {/* {renderHeader()} */}
               {renderPassage()}
+              {renderQuestionText()}
 
               {["pte_summarize_spoken"].includes(type) && (
                 <TTSPlayer
@@ -903,7 +895,7 @@ mx-auto"
                   style={{ width: `${100 - leftPercent}%` }}
                   className="bg-white rounded dark:bg-slate-900 p-2 min-h-[65vh] overflow-y-auto"
                 >
-                  {renderHeader()}
+                  {/* {renderHeader()} */}
                   {renderQuestionText()}
                   {renderOptions()}
                 </div>
@@ -912,7 +904,7 @@ mx-auto"
           } else if (isMCQ) {
             return (
               <div className="bg-white rounded dark:bg-slate-900 p-2 min-h-[65vh] max-h-[65vh] overflow-y-auto">
-                {renderHeader()}
+                {/* {renderHeader()} */}
                 {renderQuestionText()}
                 {renderOptions()}
               </div>
@@ -920,7 +912,8 @@ mx-auto"
           } else {
             return (
               <div className="bg-white rounded dark:bg-slate-900 p-2 min-h-[65vh] max-h-[65vh] overflow-y-auto">
-                {renderHeader()}
+                {/* {renderHeader()} */}
+                {renderPassage()}
                 {renderQuestionText()}
                 <div className="space-y-3 mt-4">
                   <WritingEditor

@@ -91,7 +91,7 @@ const CustomTestPage = () => {
           api.get(`/auth/me`),
         ]);
 
-        setWallet(userData?.data?.wallet)
+        setWallet(userData?.data?.wallet);
         setExamDetail(response.data.data);
       } catch (error) {
         console.error("Failed to fetch exam detail:", error);
@@ -99,18 +99,21 @@ const CustomTestPage = () => {
         setLoading(false);
       }
     };
+    fetchExamDetail();
+  }, [user]);
+
+  useEffect(() => {
+    if (!examDetails?._id) return;
     const fetchRecentTests = async () => {
       try {
         setLoading2(true);
-
         const response = await api.get("/mcu/custom", {
           params: {
             page: 1,
             limit: 4,
-            // exam: examId || undefined,
+            exam: examDetails._id || undefined,
           },
         });
-
         if (response.data.success) {
           setRecentTests(response.data.data || []);
         }
@@ -123,8 +126,7 @@ const CustomTestPage = () => {
     };
 
     fetchRecentTests();
-    fetchExamDetail();
-  }, [user]);
+  }, [examDetails]);
 
   if (loading) return <TestCardSkeleton />;
 
@@ -578,11 +580,22 @@ const CustomTestPage = () => {
 
                     {/* Action */}
                     <div className="mt-4 flex">
-                      <Link
-                        to={
-                          test?.attempt &&
-                          `/mcq/tests/${test?.attempt}?type=custom`
-                        }
+                      <button
+                        onClick={() => {
+                          if (!test?.attempt) return;
+                          const examName =
+                            user.category?.name?.toLowerCase() || "";
+                          if (examName.includes("gmat"))
+                            navigate(
+                              `/gmat/tests/${test?.attempt}?type=custom`,
+                            );
+                          else if (examName.includes("pte"))
+                            navigate(`/pte/tests/${test?.attempt}?type=custom`);
+                          else if (examName.includes("gre"))
+                            navigate(`/gre/tests/${test?.attempt}?type=custom`);
+                          else
+                            navigate(`/mcq/tests/${test?.attempt}?type=custom`);
+                        }}
                         className="
                   inline-flex items-center gap-1.5
                   rounded-full bg-orange-500
@@ -600,7 +613,7 @@ const CustomTestPage = () => {
                             : "Start Test"}
 
                         <ArrowRight size={13} />
-                      </Link>
+                      </button>
                     </div>
                   </div>
                 );

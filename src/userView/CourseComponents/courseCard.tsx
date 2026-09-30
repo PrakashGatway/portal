@@ -13,7 +13,6 @@ const NextLiveClassCard: React.FC<NextLiveClassCardProps> = ({
 }) => {
   if (!session) return null;
 
-  console.log("NextLiveClassCard session:", session);
 
   const formatDate = (date?: string) => {
     if (!date) return "";
@@ -71,7 +70,7 @@ const NextLiveClassCard: React.FC<NextLiveClassCardProps> = ({
       {/* Content */}
       <div className="flex items-center gap-[12px] w-full overflow-hidden">
         {/* Thumbnail */}
-        <div className="relative h-[60px] w-[100px] flex-shrink-0 overflow-hidden rounded-[7px]">
+        {/* <div className="relative h-[60px] w-[100px] flex-shrink-0 overflow-hidden rounded-[7px]">
           <img
             src={thumbnail}
             alt={session?.title || "Live Class"}
@@ -82,7 +81,7 @@ const NextLiveClassCard: React.FC<NextLiveClassCardProps> = ({
                 "https://dpcpa.com/app/uploads/2015/01/thumbnail-default.jpg";
             }}
           />
-        </div>
+        </div> */}
 
         {/* Details */}
         <div className="min-w-0 flex-1">

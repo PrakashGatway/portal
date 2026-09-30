@@ -194,6 +194,7 @@ const isPTEType = (questionType: string) => {
     [
       "repeat_sentence",
       "retell_lesson",
+      "short_answer",
       "pte_writing_listening",
       "summarize_group_discussions",
       "pte_summarize_listening",
@@ -236,6 +237,7 @@ const isMCQType = (questionType: string) => {
       "pte_fill_in_blanks",
       "pte_summarize_writing",
       "retell_lesson",
+      "short_answer",
       "describe_image",
       "sat_value",
       "repeat_sentence",

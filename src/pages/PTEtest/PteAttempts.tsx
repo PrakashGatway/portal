@@ -117,6 +117,7 @@ type GreScreen =
 export default function PteExamPage() {
   const { testTemplateId } = useParams<{ testTemplateId: string }>();
   const navigate = useNavigate();
+  const type = new URLSearchParams(window.location.search).get("type");
   const [attempt, setAttempt] = useState<TestAttempt | null>(null);
   const [loading, setLoading] = useState(true);
   const [starting, setStarting] = useState(false);
@@ -143,7 +144,7 @@ export default function PteExamPage() {
   // Memoize derived values - MOVE ALL HOOKS TO TOP LEVEL
   const testTitle = useMemo(
     () =>
-      attempt?.testTemplate.title ||
+      attempt?.testTemplate?.title ||
       (attempt as any)?.testTemplate?.name ||
       "Practice Test",
     [attempt],
@@ -203,9 +204,17 @@ export default function PteExamPage() {
       setStarting(true);
       setError(null);
 
-      const startRes = await api.post("/mcu/start", { testTemplateId });
-      if (!startRes.data?.success) {
-        throw new Error(startRes.data?.message || "Failed to start attempt");
+      let startRes;
+      if (type == "custom") {
+        startRes = await api.get(`/mcu/attempts/${testTemplateId}`);
+        if (!startRes.data?.success) {
+          throw new Error(startRes.data?.message || "Failed to start attempt");
+        }
+      } else {
+        startRes = await api.post("/mcu/start", { testTemplateId });
+        if (!startRes.data?.success) {
+          throw new Error(startRes.data?.message || "Failed to start attempt");
+        }
       }
 
       const loaded: TestAttempt = startRes.data.data;

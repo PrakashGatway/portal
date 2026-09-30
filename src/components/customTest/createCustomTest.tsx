@@ -13,7 +13,7 @@ import {
 import api from "../../axiosInstance";
 import StepOneSATDetails from "./step1";
 import CustomTestInstructionPopup from "./InstructionPopup";
-import { useLocation } from "react-router";
+import { useLocation, useNavigate } from "react-router";
 import { useAuth } from "../../context/UserContext";
 
 interface FilterSection {
@@ -108,6 +108,8 @@ export default function CreateCustomTestPage() {
   const [showInstructions, setShowInstructions] = useState(false);
 
   const [tagInput, setTagInput] = useState("");
+
+  const navigate = useNavigate()
 
   const debouncedFilters = useDebounce(
     {
@@ -495,10 +497,6 @@ export default function CreateCustomTestPage() {
           questionCount: Number(questionCount),
         },
       };
-
-      // -----------------------------
-      // STEP 1: CREATE CUSTOM TEST
-      // -----------------------------
       const response = await api.post("/mcu/custom", payload);
 
       if (!response?.data?.success) {
@@ -513,9 +511,6 @@ export default function CreateCustomTestPage() {
         throw new Error("Custom test was created but no test ID was returned.");
       }
 
-      // -----------------------------
-      // STEP 2: START CUSTOM TEST
-      // -----------------------------
       setLoadingStep("loading");
 
       const startres = await api.post(`/mcu/custom/${customTest._id}/start`);
@@ -531,11 +526,12 @@ export default function CreateCustomTestPage() {
       if (!startTest?._id) {
         throw new Error("Test started but no test ID was returned.");
       }
-
-      // -----------------------------
-      // SUCCESS
-      // -----------------------------
-      window.location.href = `/mcq/tests/${startTest._id}?type=custom`;
+      // window.location.href = `/mcq/tests/${startTest._id}?type=custom`;
+      const examName = user.category?.name?.toLowerCase() || "";
+      if (examName.includes("gmat")) navigate(`/gmat/tests/${startTest._id}?type=custom`);
+      else if (examName.includes("pte")) navigate(`/pte/tests/${startTest._id}?type=custom`);
+      else if (examName.includes("gre")) navigate(`/gre/tests/${startTest._id}?type=custom`);
+      else navigate(`/mcq/tests/${startTest._id}?type=custom`);
 
       return customTest;
     } catch (error) {
