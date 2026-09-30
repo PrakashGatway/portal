@@ -609,7 +609,7 @@ export default function CourseDetailPage() {
               {/* Left: Course Info */}
               <div className="lg:col-span-7 space-y-4">
                 <div className="flex flex-col md:flex-row gap-4">
-                  <div className="flex-shrink-0 w-full md:w-[310px] h-[210px] lg:h-[200px] rounded-2xl overflow-hidden bg-gray-100 dark:bg-gray-700">
+                  <div className="flex-shrink-0 w-full md:w-[320px] h-[190px] rounded-2xl overflow-hidden bg-gray-100 dark:bg-gray-700">
                     <img
                       src={
                         course?.thumbnail?.url
