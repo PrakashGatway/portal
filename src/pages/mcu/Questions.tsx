@@ -229,7 +229,7 @@ const isMCQType = (questionType: string) => {
       "pte_fill_listening",
       "pte_writing_listening",
       "summarize_group_discussions",
-      "pte_summarize_listening",
+      // "pte_summarize_listening",
       "pte_highlight",
       "pte_summarize_spoken",
       "pte_fill_drag",

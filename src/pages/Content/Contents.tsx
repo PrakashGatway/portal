@@ -1188,7 +1188,7 @@ const ContentTableRow = ({
             {content.__t === "StudyMaterials" &&
               content.materialType !== "link" && (
                 <div className="flex items-center gap-2">
-                  {content.file.url ? (
+                  {content?.file?.url ? (
                     <>
                       <button
                         type="button"

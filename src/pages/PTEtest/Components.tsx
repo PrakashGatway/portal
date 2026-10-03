@@ -515,7 +515,6 @@ mx-auto"
             </div>
           );
         case "pte_writing_listening":
-        case "pte_summarize_listening":
           return (
             <div className="bg-white rounded dark:bg-slate-900 p-4 min-h-[65vh] overflow-y-auto">
               {renderPassage()}
@@ -601,11 +600,11 @@ mx-auto"
             <div className="bg-white rounded dark:bg-slate-900 p-4 min-h-[65vh] overflow-y-auto">
               {/* {renderHeader()} */}
               <div className="grid grid-cols-2 gap-6">
-                {renderPassage()}
                 <div>
+                  {renderPassage()}
                   {renderQuestionText()}
-                  {renderOptions()}
                 </div>
+                <div>{renderOptions()}</div>
               </div>
             </div>
           );
@@ -645,12 +644,14 @@ mx-auto"
             </div>
           );
         case "pte_mcq_single_listening":
+        case "pte_summarize_listening":
+
           return (
             <div className="bg-white rounded dark:bg-slate-900 p-4 min-h-[65vh] overflow-y-auto">
               {/* {renderHeader()} */}
               <div className="">
                 {renderPassage()}
-
+                {renderQuestionText()}
                 <TTSPlayer
                   key={qDoc._id}
                   audioUrl={
@@ -667,10 +668,7 @@ mx-auto"
                   rate={0.8}
                   pitch={0.8}
                 />
-                <div className="mt-4">
-                  {renderQuestionText()}
-                  {renderOptions()}
-                </div>
+                <div className="mt-4">{renderOptions()}</div>
               </div>
             </div>
           );
@@ -694,9 +692,12 @@ mx-auto"
           return (
             <div className="bg-white rounded dark:bg-slate-900 p-4 min-h-[65vh] overflow-y-auto">
               <div className="grid grid-cols-2 gap-4">
-                {renderPassage()}
                 <div>
+                  {renderPassage()}
                   {renderQuestionText()}
+                </div>
+
+                <div>
                   <div className="space-y-2">
                     {qDoc.options?.map((opt, idx) => {
                       const selected = mainSelected.has(idx);
@@ -1016,7 +1017,7 @@ mx-auto"
                   </div>
 
                   <div className="flex justify-end gap-2">
-                    {/* {activeQuestionIndex > 0 && (
+                    {activeQuestionIndex > 0 && (
                       <button
                         className="p-1.5 bg-slate-800 text-slate-100 font-semibold border-slate-200 rounded-full px-4"
                         disabled={activeQuestionIndex <= 0 || isCompleted}
@@ -1027,7 +1028,7 @@ mx-auto"
                       >
                         Previous
                       </button>
-                    )} */}
+                    )}
 
                     <button
                       className="p-1.5 bg-[#027291] text-slate-100 font-semibold border-slate-200 rounded px-4"
@@ -1079,7 +1080,6 @@ mx-auto"
           <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/20 px-4">
             <div className="w-full max-w-md rounded-2xl bg-white p-6 shadow-2xl dark:bg-slate-900">
               <div className="mb-4 flex items-center gap-3">
-               
                 <div>
                   <h3 className="text-lg font-bold text-slate-900 dark:text-white">
                     Confirm Next
