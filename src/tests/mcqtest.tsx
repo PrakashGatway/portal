@@ -61,18 +61,6 @@ export const MockTestCard = ({
     return "Free";
   };
 
-  const getDifficultyColor = (diff: string) => {
-    switch (diff) {
-      case "Easy":
-        return "bg-green-100 text-green-700";
-      case "Medium":
-        return "bg-yellow-100 text-yellow-700";
-      case "Hard":
-        return "bg-red-100 text-red-700";
-      default:
-        return "bg-orange-50 text-black";
-    }
-  };
 
   const handleAction = () => {
     if (test.isPurchased === true || test.isFree === true) {
@@ -112,11 +100,11 @@ export const MockTestCard = ({
 
   const testType = (type: string) => {
     if (type === "full_length") {
-      return "Full Test Series";
+      return "Full Mock Test";
     }
 
     if (type === "quiz") {
-      return "Quiz Test Series";
+      return "Quiz Test";
     }
 
     if (type === "sectional") {

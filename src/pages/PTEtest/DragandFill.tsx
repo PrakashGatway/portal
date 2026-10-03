@@ -900,7 +900,7 @@ export const PTEFillSelect: React.FC<PTEFillSelectProps> = memo(
             className="mx-1 px-2 py-1 border rounded-md bg-white dark:bg-slate-800 border-slate-400 dark:border-slate-600 text-sm"
           >
             <option value="">---</option>
-             {options(key).map((opt, idx) => (
+             {options(key)?.map((opt, idx) => (
               <option key={`${key}-${idx}`} value={opt}>
                 {opt}
               </option>
